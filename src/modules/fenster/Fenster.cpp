@@ -33,10 +33,16 @@ void FensterGame::updateKeys()
 	for (unsigned int i = 0; i < 256; ++i)
 	{
 		int& pressed = f->keys[i];
-		if (keys[i] != pressed)
+	  auto keyIter = keys.find(i);
+	  if (keyIter == keys.end())
+	  {
+		  goto _pressed;
+	  }
+		if (keyIter->second != pressed)
 		{
 			callKeyPressHandler(i, pressed);
 		}
+_pressed:
 		if (pressed)
 		{
 		  callKeyUpdateHandler(i);

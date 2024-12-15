@@ -64,9 +64,12 @@ void IGame::callKeyPressHandler(const unsigned int &key, const int &pressed)
     if (handlersIter == keyHandlers.end())
       return;
     auto& handlersMap = handlersIter->second.second;
-    for (auto& handlerPair : handlersMap)
+    std::vector<std::function<void(const bool&)>> handlersCopy;
+    for (const auto& pair : handlersMap)
+      handlersCopy.push_back(pair.second);
+    for (auto& handler : handlersCopy)
     {
-      handlerPair.second(!!pressed);
+      handler(!!pressed);
     }
   }
 };
@@ -76,9 +79,12 @@ void IGame::callKeyUpdateHandler(const unsigned int &key)
   if (handlersIter == keyUpdateHandlers.end())
     return;
   auto& handlersMap = handlersIter->second.second;
-  for (auto& handlerPair : handlersMap)
+  std::vector<std::function<void()>> handlersCopy;
+  for (const auto& pair : handlersMap)
+    handlersCopy.push_back(pair.second);
+  for (auto& handler : handlersCopy)
   {
-    handlerPair.second();
+    handler();
   }
 };
 std::shared_ptr<IScene> IGame::setIScene(const std::shared_ptr<IScene>& scene)
