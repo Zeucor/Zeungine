@@ -10,7 +10,6 @@ FensterGame::FensterGame(const int &windowWidth, const int &windowHeight):
 };
 FensterGame::~FensterGame()
 {
-	awaitWindowThread();
 	delete f;
 };
 void FensterGame::startWindow()
