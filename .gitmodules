@@ -1,0 +1,3 @@
+[submodule "vendor/fenster"]
+	path = vendor/fenster
+	url = git@github.com:ZeunO8/fenster.git
