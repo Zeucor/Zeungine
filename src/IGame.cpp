@@ -44,21 +44,26 @@ unsigned int IGame::addKeyUpdateHandler(const unsigned int& key, const std::func
 };
 void IGame::removeKeyUpdateHandler(const unsigned int& key, unsigned int& id)
 {
-  auto& handlersPair = keyUpdateHandlers[key];
-  auto handlerIter = handlersPair.second.find(id);
-  if (handlerIter == handlersPair.second.end())
+  auto handlersIter = keyUpdateHandlers.find(key);
+  if (handlersIter == keyUpdateHandlers.end())
+    return;
+  auto &handlers = handlersIter->second.second;
+  auto handlerIter = handlers.find(id);
+  if (handlerIter == handlers.end())
   {
     return;
   }
-  handlersPair.second.erase(handlerIter);
+  handlers.erase(handlerIter);
   id = 0;
 };
 void IGame::callKeyPressHandler(const unsigned int &key, const int &pressed)
 {
   keys[key] = pressed;
   {
-    auto& handlersPair = keyHandlers[key];
-    auto& handlersMap = handlersPair.second;
+    auto handlersIter = keyHandlers.find(key);
+    if (handlersIter == keyHandlers.end())
+      return;
+    auto& handlersMap = handlersIter->second.second;
     for (auto& handlerPair : handlersMap)
     {
       handlerPair.second(!!pressed);
@@ -67,8 +72,10 @@ void IGame::callKeyPressHandler(const unsigned int &key, const int &pressed)
 };
 void IGame::callKeyUpdateHandler(const unsigned int &key)
 {
-  auto& handlersPair = keyUpdateHandlers[key];
-  auto& handlersMap = handlersPair.second;
+  auto handlersIter = keyUpdateHandlers.find(key);
+  if (handlersIter == keyUpdateHandlers.end())
+    return;
+  auto& handlersMap = handlersIter->second.second;
   for (auto& handlerPair : handlersMap)
   {
     handlerPair.second();
