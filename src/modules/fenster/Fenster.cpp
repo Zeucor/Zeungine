@@ -91,7 +91,7 @@ void anex::modules::fenster::fenster_circle(struct fenster* f, int x, int y, int
   {
     for (int dx = -r; dx <= r; dx++)
     {
-      if (dx * dx + dy * dy <= r * r)
+      if (dx * dx + dy * dy <= r * r && x + dx >= 0 && y + dy >= 0 && x + dx < f->width && y + dy < f->height)
       {
         fenster_pixel(f, x + dx, y + dy) = c;
       }
