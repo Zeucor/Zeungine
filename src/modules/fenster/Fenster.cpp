@@ -24,7 +24,7 @@ void FensterGame::startWindow()
 		fenster_rect(f, 0, 0, windowWidth, windowHeight, 0x00000000);
 		render();
 		int64_t time = fenster_time();
-		if (time - now < 1000 / 60)
+		if (time - now < 1000 / framerate)
 			fenster_sleep(time - now);
 		now = time;
 	}
