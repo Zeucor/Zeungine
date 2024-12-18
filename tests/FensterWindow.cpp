@@ -2,6 +2,6 @@
 using namespace anex::modules::fenster;
 int main()
 {
-  FensterGame game(640, 480);
+  FensterGame game("FensterWindow", 640, 480);
   game.awaitWindowThread();
 };

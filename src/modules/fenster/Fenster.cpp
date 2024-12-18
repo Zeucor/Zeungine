@@ -1,10 +1,11 @@
 #include <anex/modules/fenster/Fenster.hpp>
 #include <fenster.hpp>
 using namespace anex::modules::fenster;
-FensterGame::FensterGame(const int &windowWidth, const int &windowHeight):
+FensterGame::FensterGame(const char* title, const int &windowWidth, const int &windowHeight, const int &framerate):
 	IGame(windowWidth, windowHeight),
 	buf((uint32_t*)malloc(windowWidth * windowHeight * sizeof(uint32_t)), free),
-	f(new struct fenster({"pong", windowWidth, windowHeight, buf.get()}))
+	f(new struct fenster({title, windowWidth, windowHeight, buf.get()})),
+  framerate(framerate)
 {
   run();
 };

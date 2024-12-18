@@ -5,9 +5,10 @@ namespace anex::modules::fenster
 {
 	struct FensterGame : IGame
 	{
-    std::shared_ptr<uint32_t> buf;
-    struct fenster *f = 0;
-		FensterGame(const int &windowWidth, const int &windowHeight);
+	    std::shared_ptr<uint32_t> buf;
+	    struct fenster *f = 0;
+		int framerate = 60;
+		FensterGame(const char *title, const int &windowWidth, const int &windowHeight, const int &framerate = 60);
 		~FensterGame();
 		void startWindow() override;
 		void updateKeys() override;
