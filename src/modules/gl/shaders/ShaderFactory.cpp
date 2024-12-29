@@ -2,46 +2,113 @@
 #include <stdexcept>
 using namespace anex::modules::gl::shaders;
 ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
-    {Shader::ShaderType::Vertex, {
-      {"layout", {
-        {"Color", {{[]()->std::string{
-          return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec4 inColor;";
-        }, []()->std::string{
-          return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec4 outColor;";
-        }}}},
-        {"Position", {{[]()->std::string{
-          return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inPosition;";
-        }, []()->std::string{
-          return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec3 outPosition;";
-        }}}}
-      }},
-      {"preInMain", {
-        {"Color", {{[]()->std::string{
-          return "  outColor = inColor;";
-        }}}},
-        {"Position", {{[]()->std::string{
-          return "  gl_Position = vec4(inPosition, 1);";
-        }}}}
-      }}
-    }},
-    {Shader::ShaderType::Fragment, {
-        {"layout", {
-          {"Color", {{[]()->std::string{
-            return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec4 inColor;";
-          }, []()->std::string{
-            return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec4 FragColor;";
-          }}}},
-          {"Position", {{[]()->std::string{
-            return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inPosition;";
-          }}}}
-        }},
-        {"preInMain", {
-          {"Color", {{[]()->std::string{
-            return "  FragColor = inColor;";
-          }}}}
-        }}
-    }}
+  {
+    Shader::ShaderType::Vertex, {
+      {
+        "layout", {
+          {
+            "Color", {
+              {
+                ++ShaderFactory::hooksCount, []()->std::string{
+                  return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec4 inColor;";
+                }
+              },
+              {
+                ++ShaderFactory::hooksCount, []()->std::string{
+                  return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec4 outColor;";
+                }
+              }
+            }
+          },
+          {
+            "Position", {
+              {
+                ++ShaderFactory::hooksCount, []()->std::string{
+                  return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inPosition;";
+                }
+              },
+              {
+                ++ShaderFactory::hooksCount,  []()->std::string{
+                  return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec3 outPosition;";
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "preInMain", {
+          {
+            "Color", {
+              {
+                ++ShaderFactory::hooksCount, []()->std::string{
+                  return "  outColor = inColor;";
+                }
+              }
+            }
+          },
+          {
+            "Position", {
+              {
+                ++ShaderFactory::hooksCount, []()->std::string{
+                  return "  gl_Position = vec4(inPosition, 1);";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    Shader::ShaderType::Fragment, {
+      {
+        "layout",
+        {
+          {
+            "Color", {
+              {
+                ++ShaderFactory::hooksCount, []()->std::string{
+                  return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec4 inColor;";
+                },
+              },
+              {
+                ++ShaderFactory::hooksCount, []()->std::string{
+                  return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec4 FragColor;";
+                }
+              }
+            }
+          },
+          {
+            "Position", {
+              {
+                ++ShaderFactory::hooksCount, []()->std::string{
+                  return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inPosition;";
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "preInMain",
+        {
+          {
+            "Color", {
+              {
+                ++ShaderFactory::hooksCount, []()->std::string{
+                  return "  FragColor = inColor;";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 };
+uint32_t ShaderFactory::hooksCount = 0;
+ShaderFactory::ShaderHookInfoMap ShaderFactory::shaderHookInfos;
 ShaderFactory::ShaderTypeMap ShaderFactory::shaderTypes = {
   {Shader::ShaderType::Vertex, GL_VERTEX_SHADER},
   {Shader::ShaderType::Geometry, GL_GEOMETRY_SHADER},
@@ -95,7 +162,7 @@ void ShaderFactory::appendHooks(std::string &shaderString, RuntimeHooksMap &runt
     const auto &constantHooks = runtimeHooks[constant];
     for (auto &hook : constantHooks)
     {
-      shaderString += hook() + "\n";
+      shaderString += hook.second() + "\n";
     }
   }
 }
@@ -161,7 +228,26 @@ void ShaderFactory::deleteProgram(Shader &shader)
 {
   glDeleteProgram(shader.program);
 };
-void ShaderFactory::addHook(const Shader::ShaderType &shaderType, const std::string &hookName, const std::string &runtimeConstant, const Shader::ShaderHook &hook)
+uint32_t ShaderFactory::addHook(const Shader::ShaderType &shaderType, const std::string &hookName, const std::string &runtimeConstant, const Shader::ShaderHook &hook)
 {
-  hooks[shaderType][hookName][runtimeConstant].push_back(hook);
+  auto id = ++hooksCount;
+  hooks[shaderType][hookName][runtimeConstant].emplace(id, hook);
+  shaderHookInfos[id] = {shaderType, hookName, runtimeConstant};
+  return id;
+};
+void ShaderFactory::deleteHook(const uint32_t& id)
+{
+  auto infoIter = shaderHookInfos.find(id);
+  if (infoIter == shaderHookInfos.end())
+    return;
+  auto hooksIter = hooks.find(std::get<0>(infoIter->second));
+  if (hooksIter == hooks.end())
+    return;
+  auto hookIter = hooksIter->second.find(std::get<1>(infoIter->second));
+  if (hookIter == hooksIter->second.end())
+    return;
+  auto runtimeHookIter = hookIter->second.find(std::get<2>(infoIter->second));
+  if (runtimeHookIter == hookIter->second.end())
+    return;
+  runtimeHookIter->second.erase(id);
 };
