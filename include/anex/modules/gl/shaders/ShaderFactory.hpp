@@ -19,9 +19,10 @@ namespace anex::modules::gl::shaders
     static ShaderNameMap shaderNames;
     static uint32_t currentInLayoutIndex;
     static uint32_t currentOutLayoutIndex;
-    static Shader::ShaderMap generateShaderMap(const RuntimeConstants &constants);
-		static Shader::ShaderPair generateShader(const Shader::ShaderType &shaderType, const RuntimeConstants &runtimeConstants);
-    static void appendHooks(std::string &shaderString, RuntimeHooksMap &runtimeHooks, const RuntimeConstants &constants);
+		static uint32_t currentBindingIndex;
+    static Shader::ShaderMap generateShaderMap(const RuntimeConstants &constants, Shader &shader);
+		static Shader::ShaderPair generateShader(const Shader::ShaderType &shaderType, const RuntimeConstants &runtimeConstants, Shader &shader);
+    static void appendHooks(std::string &shaderString, RuntimeHooksMap &runtimeHooks, const RuntimeConstants &constants, Shader &shader);
     static bool compileShader(const Shader::ShaderType &shaderType, Shader::ShaderPair &shaderPair);
     static bool compileProgram(const Shader::ShaderMap &shaderMap, GLuint &program);
 		static const bool checkCompileErrors(const GLuint& id, const bool& isShader, const char* shaderType);

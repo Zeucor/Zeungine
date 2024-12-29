@@ -1,5 +1,7 @@
 #include <anex/modules/gl/shaders/ShaderFactory.hpp>
+#include <anex/IWindow.hpp>
 #include <stdexcept>
+#include <glm/fwd.hpp>
 using namespace anex::modules::gl::shaders;
 ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
   {
@@ -9,12 +11,12 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           {
             "Color", {
               {
-                ++ShaderFactory::hooksCount, []()->std::string{
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
                   return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec4 inColor;";
                 }
               },
               {
-                ++ShaderFactory::hooksCount, []()->std::string{
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
                   return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec4 outColor;";
                 }
               }
@@ -23,15 +25,45 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           {
             "Position", {
               {
-                ++ShaderFactory::hooksCount, []()->std::string{
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
                   return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inPosition;";
                 }
               },
               {
-                ++ShaderFactory::hooksCount,  []()->std::string{
+                ++ShaderFactory::hooksCount,  [](auto &shader, const auto &constants)->std::string{
                   return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec3 outPosition;";
                 }
               }
+            }
+          },
+          {
+            "View",
+            {
+              {
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
+                {
+                  auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addUBO("UBOView", sizeof(glm::mat4), bindingIndex);
+                  return "layout(binding = " + std::to_string(bindingIndex) + ") uniform UBOView {\n" +
+                    " mat4 matrix;\n" +
+                    "} view;";
+                }
+              }
+            }
+          },
+          {
+            "Projection",
+            {
+                {
+                  ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
+                  {
+                    auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                    shader.addUBO("UBOProjection", sizeof(glm::mat4), bindingIndex);
+                    return "layout(binding = " + std::to_string(bindingIndex) + ") uniform UBOProjection {\n" +
+                      " mat4 matrix;\n" +
+                      "} projection;";
+                  }
+                }
             }
           }
         }
@@ -41,7 +73,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           {
             "Color", {
               {
-                ++ShaderFactory::hooksCount, []()->std::string{
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
                   return "  outColor = inColor;";
                 }
               }
@@ -50,8 +82,18 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           {
             "Position", {
               {
-                ++ShaderFactory::hooksCount, []()->std::string{
-                  return "  gl_Position = vec4(inPosition, 1);";
+                ++ShaderFactory::hooksCount, [](auto &shader, const RuntimeConstants &constants)->std::string{
+                  std::string string = "  gl_Position = ";
+                  if (std::find(constants.begin(), constants.end(), "Projection") != constants.end())
+                  {
+                    string += "projection.matrix * ";
+                  }
+                  if (std::find(constants.begin(), constants.end(), "View") != constants.end())
+                  {
+                    string += "view.matrix * ";
+                  }
+                  string += "vec4(inPosition, 1);";
+                  return string;
                 }
               }
             }
@@ -68,12 +110,12 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           {
             "Color", {
               {
-                ++ShaderFactory::hooksCount, []()->std::string{
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
                   return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec4 inColor;";
                 },
               },
               {
-                ++ShaderFactory::hooksCount, []()->std::string{
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
                   return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec4 FragColor;";
                 }
               }
@@ -82,7 +124,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           {
             "Position", {
               {
-                ++ShaderFactory::hooksCount, []()->std::string{
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
                   return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inPosition;";
                 }
               }
@@ -96,7 +138,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           {
             "Color", {
               {
-                ++ShaderFactory::hooksCount, []()->std::string{
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
                   return "  FragColor = inColor;";
                 }
               }
@@ -127,14 +169,15 @@ ShaderFactory::ShaderNameMap ShaderFactory::shaderNames = {
 };
 uint32_t ShaderFactory::currentInLayoutIndex = 0;
 uint32_t ShaderFactory::currentOutLayoutIndex = 0;
-Shader::ShaderMap ShaderFactory::generateShaderMap(const RuntimeConstants &constants)
+uint32_t ShaderFactory::currentBindingIndex = 0;
+Shader::ShaderMap ShaderFactory::generateShaderMap(const RuntimeConstants &constants, Shader &shader)
 {
   Shader::ShaderMap shaderMap;
-  shaderMap[Shader::ShaderType::Vertex] = generateShader(Shader::ShaderType::Vertex, constants);
-  shaderMap[Shader::ShaderType::Fragment] = generateShader(Shader::ShaderType::Fragment, constants);
+  shaderMap[Shader::ShaderType::Vertex] = generateShader(Shader::ShaderType::Vertex, constants, shader);
+  shaderMap[Shader::ShaderType::Fragment] = generateShader(Shader::ShaderType::Fragment, constants, shader);
   return shaderMap;
 };
-Shader::ShaderPair ShaderFactory::generateShader(const Shader::ShaderType &shaderType, const RuntimeConstants &constants)
+Shader::ShaderPair ShaderFactory::generateShader(const Shader::ShaderType &shaderType, const RuntimeConstants &constants, Shader &shader)
 {
   Shader::ShaderPair shaderPair;
   auto &shaderString = shaderPair.first;
@@ -142,27 +185,28 @@ Shader::ShaderPair ShaderFactory::generateShader(const Shader::ShaderType &shade
   shaderString += "#version 430 core\n";
   currentInLayoutIndex = 0;
   currentOutLayoutIndex = 0;
-  appendHooks(shaderString, shaderHooks["layout"], constants);
-  appendHooks(shaderString, shaderHooks["preMain"], constants);
+  currentBindingIndex = 0;
+  appendHooks(shaderString, shaderHooks["layout"], constants, shader);
+  appendHooks(shaderString, shaderHooks["preMain"], constants, shader);
   shaderString += "void main()\n{\n";
-  appendHooks(shaderString, shaderHooks["preInMain"], constants);
-  appendHooks(shaderString, shaderHooks["postInMain"], constants);
+  appendHooks(shaderString, shaderHooks["preInMain"], constants, shader);
+  appendHooks(shaderString, shaderHooks["postInMain"], constants, shader);
   shaderString += "}\n";
-  appendHooks(shaderString, shaderHooks["postMain"], constants);
+  appendHooks(shaderString, shaderHooks["postMain"], constants, shader);
   if (!compileShader(shaderType, shaderPair))
   {
     throw std::runtime_error("Failed to compile fragment shader");
   }
   return shaderPair;
 };
-void ShaderFactory::appendHooks(std::string &shaderString, RuntimeHooksMap &runtimeHooks, const RuntimeConstants &constants)
+void ShaderFactory::appendHooks(std::string &shaderString, RuntimeHooksMap &runtimeHooks, const RuntimeConstants &constants, Shader &shader)
 {
   for (const std::string &constant : constants)
   {
     const auto &constantHooks = runtimeHooks[constant];
     for (auto &hook : constantHooks)
     {
-      shaderString += hook.second() + "\n";
+      shaderString += hook.second(shader, constants) + "\n";
     }
   }
 }

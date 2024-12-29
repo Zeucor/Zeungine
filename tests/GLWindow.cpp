@@ -13,7 +13,7 @@ struct TestTriangle : anex::IEntity, vaos::VAO
   std::array<glm::vec3, 3> positions;
   TestTriangle(anex::IWindow &window):
     IEntity(window),
-    VAO({"Color", "Position"}, 3),
+    VAO({"Color", "Position", "View", "Projection"}, 3),
     shader(constants),
     indices(0, 1, 2),
     colors({{1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}}),
@@ -22,6 +22,8 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     updateIndices(indices);
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
+    shader.setBlock("UBOView", glm::lookAt({0, 0, -10}, {0, 0, 0}, glm::vec3{0, 1, 0}));
+    shader.setBlock("UBOProjection", glm::perspective(glm::radians(81.f), (float)window.windowWidth / (float)window.windowHeight, 0.1f, 100.f));
   };
   void render() override
   {
