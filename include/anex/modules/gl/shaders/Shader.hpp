@@ -24,8 +24,8 @@ namespace anex::modules::gl::shaders
     using ShaderHook = std::function<std::string()>;
     ShaderMap shaders;
     GLuint program = 0;
-	Shader(const RuntimeConstants& constants);
-	~Shader();
-	void use(const bool &useProgram);
+		Shader(const RuntimeConstants& constants);
+		~Shader();
+		void use(const bool &useProgram);
   };
 }

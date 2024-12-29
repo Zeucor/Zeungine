@@ -1,6 +1,10 @@
 #include <anex/modules/gl/GL.hpp>
 #include <array>
 using namespace anex::modules::gl;
+struct TestScene : anex::IScene
+{
+  TestScene(anex::IWindow &window);
+};
 struct TestTriangle : anex::IEntity, vaos::VAO
 {
   shaders::Shader shader;
@@ -26,13 +30,10 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     shader.use(false);
   };
 };
-struct TestScene : anex::IScene
+TestScene::TestScene(anex::IWindow& window):
+  IScene(window)
 {
-  TestScene(anex::IWindow &window):
-    IScene(window)
-  {
-    addEntity(std::make_shared<TestTriangle>(window));
-  };
+  addEntity(std::make_shared<TestTriangle>(window));
 };
 int main()
 {
