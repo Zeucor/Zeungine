@@ -2,10 +2,9 @@
 #include <fenster.hpp>
 using namespace anex::modules::fenster;
 FensterWindow::FensterWindow(const char* title, const int &windowWidth, const int &windowHeight, const int &framerate):
-	IWindow(windowWidth, windowHeight),
+	IWindow(windowWidth, windowHeight, framerate),
 	buf((uint32_t*)malloc(windowWidth * windowHeight * sizeof(uint32_t)), free),
-	f(new struct fenster({title, windowWidth, windowHeight, buf.get()})),
-  framerate(framerate)
+	f(new struct fenster({title, windowWidth, windowHeight, buf.get()}))
 {
   run();
 };
@@ -20,6 +19,7 @@ void FensterWindow::startWindow()
 	int64_t now = fenster_time();
 	while (fenster_loop(f) == 0)
 	{
+	  runRunnables();
 		updateKeys();
 		fenster_rect(f, 0, 0, windowWidth, windowHeight, 0x00000000);
 		render();

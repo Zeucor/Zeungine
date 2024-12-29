@@ -1,0 +1,19 @@
+#pragma once
+#include "../shaders/Shader.hpp"
+namespace anex::modules::gl::vaos
+{
+	using namespace shaders;
+	struct VAO
+  {
+		shaders::RuntimeConstants constants;
+    GLuint vao;
+    GLuint vbo;
+    GLuint ebo;
+		uint32_t indiceCount;
+    VAO(const RuntimeConstants &constants, const uint32_t &indiceCount);
+		~VAO();
+		void updateIndices(const uint32_t *indices);
+		void updateElements(const std::string &constant, const void *elements);
+		void vaoDraw();
+  };
+};

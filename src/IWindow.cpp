@@ -1,12 +1,13 @@
 #include <anex/IWindow.hpp>
 using namespace anex;
-IWindow::IWindow(const int& windowWidth, const int& windowHeight):
+IWindow::IWindow(const int& windowWidth, const int& windowHeight, const int &framerate):
   windowWidth(windowWidth),
-  windowHeight(windowHeight)
+  windowHeight(windowHeight),
+  framerate(framerate)
 {};
 void IWindow::awaitWindowThread()
 {
-  windowThread->join();;
+  windowThread->join();
 }
 void IWindow::run()
 {
@@ -91,4 +92,17 @@ std::shared_ptr<IScene> IWindow::setIScene(const std::shared_ptr<IScene>& scene)
 {
   this->scene = scene;
   return scene;
+};
+void IWindow::runOnThread(const Runnable &runnable)
+{
+  runnables.push(runnable);
+};
+void IWindow::runRunnables()
+{
+  while (!runnables.empty())
+  {
+    auto runnable = runnables.front();
+    runnables.pop();
+    runnable(*this);
+  }
 };
