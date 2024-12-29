@@ -1,7 +1,7 @@
 #include <anex/IScene.hpp>
 using namespace anex;
-IScene::IScene(IGame& game):
-	game(game)
+IScene::IScene(IWindow& window):
+	window(window)
 {
 };
 unsigned int IScene::addEntity(const std::shared_ptr<IEntity>& entity)

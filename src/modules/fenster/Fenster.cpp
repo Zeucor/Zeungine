@@ -1,19 +1,19 @@
 #include <anex/modules/fenster/Fenster.hpp>
 #include <fenster.hpp>
 using namespace anex::modules::fenster;
-FensterGame::FensterGame(const char* title, const int &windowWidth, const int &windowHeight, const int &framerate):
-	IGame(windowWidth, windowHeight),
+FensterWindow::FensterWindow(const char* title, const int &windowWidth, const int &windowHeight, const int &framerate):
+	IWindow(windowWidth, windowHeight),
 	buf((uint32_t*)malloc(windowWidth * windowHeight * sizeof(uint32_t)), free),
 	f(new struct fenster({title, windowWidth, windowHeight, buf.get()})),
   framerate(framerate)
 {
   run();
 };
-FensterGame::~FensterGame()
+FensterWindow::~FensterWindow()
 {
 	delete f;
 };
-void FensterGame::startWindow()
+void FensterWindow::startWindow()
 {
 	fenster_open(f);
 	uint32_t t = 0;
@@ -29,7 +29,7 @@ void FensterGame::startWindow()
 		now = time;
 	}
 };
-void FensterGame::updateKeys()
+void FensterWindow::updateKeys()
 {
 	for (unsigned int i = 0; i < 256; ++i)
 	{
@@ -44,10 +44,26 @@ void FensterGame::updateKeys()
 		}
 	}
 };
-void FensterGame::close()
+void FensterWindow::close()
 {
 	open = false;
 	fenster_close(f);
+};
+void FensterWindow::drawLine(int x0, int y0, int x1, int y1, uint32_t color)
+{
+  fenster_line(f, x0, y0, x1, y1, color);
+};
+void FensterWindow::drawRectangle(int x, int y, int w, int h, uint32_t color)
+{
+  fenster_rect(f, x, y, w, h, color);
+};
+void FensterWindow::drawCircle(int x, int y, int radius, uint32_t color)
+{
+  fenster_circle(f, x, y, radius, color);
+};
+void FensterWindow::drawText(int x, int y, const char* text, int scale, uint32_t color)
+{
+  fenster_text(f, x, y, text, scale, color);
 };
 void anex::modules::fenster::fenster_line(struct fenster* f, int x0, int y0, int x1, int y1,
                   uint32_t c)

@@ -4,13 +4,13 @@
 #include "./IEntity.hpp"
 namespace anex
 {
-	struct IGame;
+	struct IWindow;
 	struct IScene
 	{
-		IGame &game;
+		IWindow &window;
 		std::unordered_map<unsigned int, std::shared_ptr<IEntity>> entities;
 		unsigned int entitiesCount;
-		IScene(IGame &game);
+		IScene(IWindow &window);
 		virtual ~IScene() = default;
 		unsigned int addEntity(const std::shared_ptr<IEntity> &entity);
 		void removeEntity(const unsigned int &id);

@@ -1,11 +1,11 @@
 #pragma once
 namespace anex
 {
-	struct IGame;
+	struct IWindow;
 	struct IEntity
 	{
-		IGame &game;
-		IEntity(IGame &game);
+		IWindow &window;
+		IEntity(IWindow &window);
 		virtual ~IEntity() = default;
 		virtual void render() = 0;
   };

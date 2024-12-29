@@ -1,5 +1,5 @@
 #include <anex/IEntity.hpp>
 using namespace anex;
-IEntity::IEntity(IGame &game):
-	game(game)
+IEntity::IEntity(IWindow &window):
+	window(window)
 {};

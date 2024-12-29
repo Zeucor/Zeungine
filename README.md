@@ -30,7 +30,7 @@ ctest --test-dir build --rerun-failed -VV -C Debug
 using namespace anex::modules::fenster;
 int main()
 {
-    FensterGame game(640, 480);
+    FensterWindow game(640, 480);
     game.awaitWindowThread();
 };
 ```

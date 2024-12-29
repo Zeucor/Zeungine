@@ -11,7 +11,7 @@ add_library(abstractnexus
         STATIC
         src/IEntity.cpp
         src/IScene.cpp
-        src/IGame.cpp
+        src/IWindow.cpp
         src/modules/fenster/Fenster.cpp
 )
 
