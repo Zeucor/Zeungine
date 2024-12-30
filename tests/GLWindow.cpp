@@ -35,14 +35,19 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     {
       position = glm::translate(glm::mat4(1.0f), glm::vec3(coords.x, coords.y, 0));
     });
-    window.addMousePressHandler(3, [&](const auto &pressed)
+    window.addMousePressHandler(5, [&](const auto &pressed)
     {
       colors[0] = pressed ? glm::vec4(1, 1, 1, 1) : glm::vec4(1, 0, 0, 1);
       updateElements("Color", colors.data());
     });
-    window.addMousePressHandler(4, [&](const auto &pressed)
+    window.addMousePressHandler(6, [&](const auto &pressed)
     {
       colors[1] = pressed ? glm::vec4(1, 1, 1, 1) : glm::vec4(0, 1, 0, 1);
+      updateElements("Color", colors.data());
+    });
+    window.addMousePressHandler(0, [&](const auto &pressed)
+    {
+      colors[2] = pressed ? glm::vec4(1, 1, 1, 1) : glm::vec4(0, 0, 1, 1);
       updateElements("Color", colors.data());
     });
   };

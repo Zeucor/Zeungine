@@ -14,7 +14,7 @@ namespace anex::modules::gl
 		HGLRC hRenderingContext;
 #endif
 		int windowKeys[256];
-		int windowButtons[5];
+		int windowButtons[7];
 		bool mouseMoved = false;
 		glm::vec2 mouseCoords;
 		int mod = 0;

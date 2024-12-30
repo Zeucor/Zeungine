@@ -8,7 +8,7 @@ GLWindow::GLWindow(const char* title, const int& windowWidth, const int& windowH
 	title(title)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
-	memset(windowButtons, 0, 5 * sizeof(int));
+	memset(windowButtons, 0, 7 * sizeof(int));
 	run();
 };
 
@@ -69,22 +69,30 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 	case WM_MBUTTONUP:
 		glWindow->windowButtons[2] = (msg == WM_MBUTTONDOWN);
 		break;
+		case WM_MOUSEWHEEL:
+		{
+			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam); // This gives the scroll amount
+			if (zDelta > 0)
+			{
+				glWindow->windowButtons[3] = 1; // Wheel scrolled up
+			}
+			else
+			{
+				glWindow->windowButtons[4] = 1; // Wheel scrolled down
+			}
+			break;
+		};
 	case WM_XBUTTONDOWN:
 	case WM_XBUTTONUP:
 	{
 		WORD button = GET_XBUTTON_WPARAM(wParam);
 		if (button == XBUTTON2) // Back button
 		{
-			if (!(msg == WM_XBUTTONDOWN))
-			{
-				int x = 1;
-				x *= 2;
-			}
-			glWindow->windowButtons[3] = (msg == WM_XBUTTONDOWN);
+			glWindow->windowButtons[5] = (msg == WM_XBUTTONDOWN);
 		}
 		else if (button == XBUTTON1) // Forward button
 		{
-			glWindow->windowButtons[4] = (msg == WM_XBUTTONDOWN);
+			glWindow->windowButtons[6] = (msg == WM_XBUTTONDOWN);
 		}
 		break;
 	};
@@ -232,12 +240,18 @@ void GLWindow::updateKeyboard()
 
 void GLWindow::updateMouse()
 {
-	for (unsigned int i = 0; i < 5; ++i)
+	for (unsigned int i = 0; i < 7; ++i)
 	{
+_checkPressed:
 		auto& pressed = windowButtons[i];
 		if (buttons[i] != pressed)
 		{
 			callMousePressHandler(i, pressed);
+			if ((i == 3 || i == 4) && pressed)
+			{
+				windowButtons[i] = false;
+				goto _checkPressed;
+			}
 		}
 	}
 	if (mouseMoved)
