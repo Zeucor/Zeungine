@@ -31,6 +31,73 @@ namespace anex::modules::gl::shaders
 		~Shader();
 		void use(const bool &useProgram);
 		template <typename T>
+		void setUniform(const std::string &name, const T& value, const uint32_t &size = 0)
+		{
+			auto pointerSize = size ? size : sizeof(value);
+			GLint location = glGetUniformLocation(program, name.c_str());
+			auto pointer = &value;
+			if (location == -1)
+			{
+				return;
+			}
+			if constexpr (std::is_same_v<T, bool>)
+			{
+				glUniform1i(location, (int32_t)(*(bool*)pointer));
+				return;
+			}
+			else if constexpr (std::is_same_v<T, int32_t>)
+			{
+				glUniform1i(location, *(int32_t*)pointer);
+				return;
+			}
+			else if constexpr (std::is_same_v<T, uint32_t>)
+			{
+				glUniform1ui(location, *(uint32_t*)pointer);
+				return;
+			}
+			else if constexpr (std::is_same_v<T, float*>)
+			{
+				glUniform1fv(location, pointerSize, &((float**)pointer)[0][0]);
+				return;
+			}
+			else if constexpr (std::is_same_v<T, float>)
+			{
+				glUniform1f(location, *(float*)pointer);
+				return;
+			}
+			else if constexpr (std::is_same_v<T, glm::vec2>)
+			{
+				glUniform2fv(location, 1, &(*(glm::vec2*)pointer)[0]);
+				return;
+			}
+			else if constexpr (std::is_same_v<T, glm::vec3>)
+			{
+				glUniform3fv(location, 1, &(*(glm::vec3*)pointer)[0]);
+				return;
+			}
+			else if constexpr (std::is_same_v<T, glm::vec4>)
+			{
+				glUniform4fv(location, 1, &(*(glm::vec4*)pointer)[0]);
+				return;
+			}
+			else if constexpr (std::is_same_v<T, glm::mat2>)
+			{
+				glUniformMatrix2fv(location, 1, GL_FALSE, &(*(glm::mat2*)pointer)[0][0]);
+				return;
+			}
+			else if constexpr (std::is_same_v<T, glm::mat3>)
+			{
+				glUniformMatrix3fv(location, 1, GL_FALSE, &(*(glm::mat3*)pointer)[0][0]);
+				return;
+			}
+			else if constexpr (std::is_same_v<T, glm::mat4>)
+			{
+				glUniformMatrix4fv(location, 1, GL_FALSE, &(*(glm::mat4*)pointer)[0][0]);
+				return;
+			}
+			throw std::runtime_error("setUniform: unsupported type");
+		};
+		template <typename T>
 		void setBlock(const std::string &name, const T& value, const uint32_t &size = 0)
 		{
 			auto blockIndex = glGetUniformBlockIndex(program, name.c_str());
