@@ -1,5 +1,5 @@
 #pragma once
-#include <unordered_map>
+#include <map>
 #include <memory>
 #include "./IEntity.hpp"
 namespace anex
@@ -8,7 +8,7 @@ namespace anex
 	struct IScene
 	{
 		IWindow &window;
-		std::unordered_map<unsigned int, std::shared_ptr<IEntity>> entities;
+		std::map<unsigned int, std::shared_ptr<IEntity>> entities;
 		unsigned int entitiesCount;
 		IScene(IWindow &window);
 		virtual ~IScene() = default;
