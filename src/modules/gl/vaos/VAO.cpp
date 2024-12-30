@@ -36,10 +36,8 @@ void VAO::updateElements(const std::string &constant, const void *elements)
 void VAO::vaoDraw()
 {
   glBindVertexArray(vao);
-  // glBindBuffer(GL_ARRAY_BUFFER, vbo);
   GLenum drawMode = GL_TRIANGLES;
   GLenum polygonMode = GL_FILL;
   glPolygonMode(GL_FRONT_AND_BACK, polygonMode);
   glDrawElements(drawMode, indiceCount, GL_UNSIGNED_INT, 0);
-  // glBindVertexArray(0);
 };
