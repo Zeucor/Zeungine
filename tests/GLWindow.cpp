@@ -11,7 +11,7 @@ struct TestScene : anex::IScene
 };
 struct TestTriangle : anex::IEntity, vaos::VAO
 {
-  shaders::Shader shader;
+  shaders::Shader &shader;
   uint32_t indices[3];
   std::array<glm::vec4, 3> colors;
   std::array<glm::vec3, 3> positions;
@@ -22,7 +22,7 @@ struct TestTriangle : anex::IEntity, vaos::VAO
   TestTriangle(anex::IWindow &window, TestScene &testScene):
     IEntity(window),
     VAO({"Color", "Position", "View", "Projection", "Model", "Fog", "CameraPosition"}, 3),
-    shader(constants),
+    shader(*shaders::ShaderManager::getShaderByConstants(constants).second),
     indices(2, 1, 0),
     colors({{1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}}),
     positions({{0, 100, 0}, {100, -100, 0}, {-100, -100, 0}}),
@@ -73,7 +73,7 @@ struct TestTriangle : anex::IEntity, vaos::VAO
 };
 struct TestCube : anex::IEntity, vaos::VAO
 {
-  shaders::Shader shader;
+  shaders::Shader &shader;
   uint32_t indices[36]; // 6 faces * 2 triangles * 3 vertices
   std::array<glm::vec4, 24> colors;
   std::array<glm::vec3, 24> positions;
@@ -85,7 +85,7 @@ struct TestCube : anex::IEntity, vaos::VAO
   TestCube(anex::IWindow &window, TestScene &testScene)
     : IEntity(window),
       VAO({"Color", "Position", "View", "Projection", "Model", "Fog", "CameraPosition"}, 36),
-      shader(constants),
+      shader(*shaders::ShaderManager::getShaderByConstants(constants).second),
       indices{
         0, 1, 2,  2, 3, 0,   // Front face
         4, 7, 6,  6, 5, 4,   // Back face

@@ -1,6 +1,7 @@
 #include <anex/modules/gl/GL.hpp>
 #include <stdexcept>
 #include <iostream>
+#include <anex/modules/gl/shaders/ShaderManager.hpp>
 using namespace anex::modules::gl;
 
 GLWindow::GLWindow(const char* title, const int& windowWidth, const int& windowHeight, const int& framerate):
@@ -165,6 +166,7 @@ void GLWindow::startWindow()
 #endif
 _exit:
 	scene.reset();
+	shaders::ShaderManager::deleteShaders();
 #ifdef _WIN32
 	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(hRenderingContext);

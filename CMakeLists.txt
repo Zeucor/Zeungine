@@ -14,7 +14,8 @@ option(BUILD_OPENGL "Whether to build OpenGL module" ON)
 set(ANEX_SOURCES
     src/IEntity.cpp
     src/IScene.cpp
-    src/IWindow.cpp)
+    src/IWindow.cpp
+    src/crypto/vector.cpp)
 
 if(BUILD_FENSTER)
     list(APPEND ANEX_SOURCES src/modules/fenster/Fenster.cpp)
@@ -24,6 +25,7 @@ if(BUILD_OPENGL)
         src/modules/gl/GL.cpp
         src/modules/gl/shaders/Shader.cpp
         src/modules/gl/shaders/ShaderFactory.cpp
+        src/modules/gl/shaders/ShaderManager.cpp
         src/modules/gl/vaos/VAO.cpp
         src/modules/gl/vaos/VAOFactory.cpp
         src/modules/gl/glad.c)

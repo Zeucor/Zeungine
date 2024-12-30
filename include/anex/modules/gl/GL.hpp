@@ -1,6 +1,7 @@
 #pragma once
 #include <anex/IWindow.hpp>
 #include <anex/modules/gl/shaders/Shader.hpp>
+#include <anex/modules/gl/shaders/ShaderManager.hpp>
 #include <anex/modules/gl/vaos/VAO.hpp>
 #include "./common.hpp"
 namespace anex::modules::gl
