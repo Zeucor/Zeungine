@@ -71,7 +71,7 @@ struct TestCube : anex::IEntity, vaos::VAO
   uint32_t indices[36]; // 6 faces * 2 triangles * 3 vertices
   std::array<glm::vec4, 24> colors;
   std::array<glm::vec3, 24> positions;
-  glm::mat4 position;
+  glm::vec3 position;
   glm::mat4 rotation;
   float rotationAmount = 0;
   TestScene &testScene;
@@ -103,20 +103,36 @@ struct TestCube : anex::IEntity, vaos::VAO
         { -50,  50, -50}, { -50,  50,  50}, {  50,  50,  50}, {  50,  50, -50}, // Top
         { -50, -50, -50}, { -50, -50,  50}, {  50, -50,  50}, {  50, -50, -50}  // Bottom
       }),
-      position(glm::translate(glm::mat4(1.0f), glm::vec3(window.windowWidth / 2, window.windowHeight / 2, 0))),
+      position(window.windowWidth / 2, window.windowHeight / 2, 0),
       rotation(glm::mat4(1.0f)),
       testScene(testScene)
   {
     updateIndices(indices);
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
+    window.addKeyUpdateHandler(20, [&]()
+    {
+      position.x -= 500.f * window.deltaTime;
+    });
+    window.addKeyUpdateHandler(19, [&]()
+    {
+      position.x += 500.f * window.deltaTime;
+    });
+    window.addKeyUpdateHandler(17, [&]()
+    {
+      position.y += 500.f * window.deltaTime;
+    });
+    window.addKeyUpdateHandler(18, [&]()
+    {
+      position.y -= 500.f * window.deltaTime;
+    });
   };
 
   void render() override
   {
     rotationAmount += glm::radians(0.01f);
     rotation = glm::rotate(glm::mat4(1.0f), rotationAmount, glm::vec3(0, 1, 0));
-    auto model = position * rotation;
+    auto model = glm::translate(glm::mat4(1.0f), position) * rotation;
     shader.setBlock("Model", model);
 
     shader.setBlock("View", testScene.view);
