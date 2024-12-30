@@ -15,6 +15,7 @@ void IWindow::run()
 }
 void IWindow::render()
 {
+  updateDeltaTime();
   if (scene)
     scene->render();
 };
@@ -170,4 +171,11 @@ void IWindow::runRunnables()
     runnables.pop();
     runnable(*this);
   }
+};
+void IWindow::updateDeltaTime()
+{
+  auto currentTime = std::chrono::steady_clock::now();
+  std::chrono::duration<float> duration = currentTime - lastFrameTime;
+  deltaTime = duration.count();
+  lastFrameTime = currentTime;
 };

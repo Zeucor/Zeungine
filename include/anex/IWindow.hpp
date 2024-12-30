@@ -39,6 +39,8 @@ namespace anex
 		std::shared_ptr<IScene> scene;
 		bool open = true;
 		glm::vec4 clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		std::chrono::steady_clock::time_point lastFrameTime;
+		float deltaTime = 0;
 		IWindow(const int &windowWidth, const int &windowHeight, const int &framerate);
 		virtual ~IWindow() = default;
 		void run();
@@ -64,6 +66,7 @@ namespace anex
 		std::shared_ptr<IScene> setIScene(const std::shared_ptr<IScene> &scene);
 		void runOnThread(const Runnable &runnable);
 		void runRunnables();
+		void updateDeltaTime();
 		virtual void close() = 0;
 		virtual void drawLine(int x0, int y0, int x1, int y1, uint32_t color) = 0;
 		virtual void drawRectangle(int x, int y, int w, int h, uint32_t color) = 0;
