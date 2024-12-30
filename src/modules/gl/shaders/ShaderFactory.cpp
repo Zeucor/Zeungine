@@ -272,7 +272,6 @@ Shader::ShaderPair ShaderFactory::generateShader(const Shader::ShaderType &shade
   shaderString += "#version 430 core\n";
   currentInLayoutIndex = 0;
   currentOutLayoutIndex = 0;
-  currentBindingIndex = 0;
   appendHooks(shaderString, shaderHooks["layout"], constants, shader);
   appendHooks(shaderString, shaderHooks["preMain"], constants, shader);
   shaderString += "void main()\n{\n";
