@@ -3,9 +3,11 @@
 using namespace anex::modules::gl;
 struct TestScene : anex::IScene
 {
+  glm::vec3 cameraPosition;
   glm::mat4 view;
   glm::mat4 projection;
   TestScene(anex::IWindow &window);
+  void updateView();
 };
 struct TestTriangle : anex::IEntity, vaos::VAO
 {
@@ -19,7 +21,7 @@ struct TestTriangle : anex::IEntity, vaos::VAO
   TestScene &testScene;
   TestTriangle(anex::IWindow &window, TestScene &testScene):
     IEntity(window),
-    VAO({"Color", "Position", "View", "Projection", "Model"}, 3),
+    VAO({"Color", "Position", "View", "Projection", "Model", "Fog", "CameraPosition"}, 3),
     shader(constants),
     indices(2, 1, 0),
     colors({{1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}}),
@@ -31,6 +33,10 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     updateIndices(indices);
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
+    shader.use(true);
+    shader.setUniform("fogDensity", 0.0015f);
+    shader.setUniform("fogColor", glm::vec4(1, 1, 1, 1));
+    shader.use(false);
     window.addMouseMoveHandler([&](const auto &coords)
     {
       position = glm::translate(glm::mat4(1.0f), glm::vec3(coords.x, coords.y, 0));
@@ -56,11 +62,11 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     // rotationAmount += glm::radians(0.01f);
     // rotation = glm::rotate(glm::mat4(1.0f), rotationAmount, glm::vec3(0, 0, 1));
     auto model = position * rotation;
+    shader.use(true);
     shader.setBlock("Model", model);
-
     shader.setBlock("View", testScene.view);
     shader.setBlock("Projection", testScene.projection);
-    shader.use(true);
+    shader.setUniform("CameraPosition", testScene.cameraPosition);
     vaoDraw();
     shader.use(false);
   };
@@ -78,7 +84,7 @@ struct TestCube : anex::IEntity, vaos::VAO
 
   TestCube(anex::IWindow &window, TestScene &testScene)
     : IEntity(window),
-      VAO({"Color", "Position", "View", "Projection", "Model"}, 36),
+      VAO({"Color", "Position", "View", "Projection", "Model", "Fog", "CameraPosition"}, 36),
       shader(constants),
       indices{
         0, 1, 2,  2, 3, 0,   // Front face
@@ -110,21 +116,19 @@ struct TestCube : anex::IEntity, vaos::VAO
     updateIndices(indices);
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
-    window.addKeyUpdateHandler(20, [&]()
+    shader.use(true);
+    shader.setUniform("fogDensity", 0.0015f);
+    shader.setUniform("fogColor", glm::vec4(1, 1, 1, 1));
+    shader.use(false);
+    window.addMousePressHandler(3, [&](const auto &pressed)
     {
-      position.x -= 500.f * window.deltaTime;
+      if (pressed)
+        position.z -= 10.f;
     });
-    window.addKeyUpdateHandler(19, [&]()
+    window.addMousePressHandler(4, [&](const auto &pressed)
     {
-      position.x += 500.f * window.deltaTime;
-    });
-    window.addKeyUpdateHandler(17, [&]()
-    {
-      position.y += 500.f * window.deltaTime;
-    });
-    window.addKeyUpdateHandler(18, [&]()
-    {
-      position.y -= 500.f * window.deltaTime;
+      if (pressed)
+        position.z += 10.f;
     });
   };
 
@@ -133,24 +137,50 @@ struct TestCube : anex::IEntity, vaos::VAO
     rotationAmount += glm::radians(0.01f);
     rotation = glm::rotate(glm::mat4(1.0f), rotationAmount, glm::vec3(0, 1, 0));
     auto model = glm::translate(glm::mat4(1.0f), position) * rotation;
+    shader.use(true);
     shader.setBlock("Model", model);
-
     shader.setBlock("View", testScene.view);
     shader.setBlock("Projection", testScene.projection);
-    shader.use(true);
+    shader.setUniform("CameraPosition", testScene.cameraPosition);
     vaoDraw();
     shader.use(false);
   };
 };
 TestScene::TestScene(anex::IWindow& window):
   IScene(window),
-  view(glm::lookAt({window.windowWidth / 2, window.windowHeight / 2 - window.windowHeight / 2, window.windowWidth}, {window.windowWidth / 2, window.windowHeight / 2, 0}, glm::vec3{0, 1, 0})),
+  cameraPosition(window.windowWidth / 2, window.windowHeight / 2 - window.windowHeight / 2, window.windowWidth),
   // projection(glm::ortho(0.f, (float)window.windowWidth, 0.f, (float)window.windowHeight,0.1f, 100.f))
   projection(glm::perspective(glm::radians(81.f), (float)window.windowWidth / window.windowHeight, 0.1f, 10000.f))
 {
   addEntity(std::make_shared<TestTriangle>(window, *this));
   addEntity(std::make_shared<TestCube>(window, *this));
+  window.addKeyUpdateHandler(20, [&]()
+  {
+    cameraPosition.x -= 500.f * window.deltaTime;
+    updateView();
+  });
+  window.addKeyUpdateHandler(19, [&]()
+  {
+    cameraPosition.x += 500.f * window.deltaTime;
+    updateView();
+  });
+  window.addKeyUpdateHandler(17, [&]()
+  {
+    cameraPosition.y += 500.f * window.deltaTime;
+    updateView();
+  });
+  window.addKeyUpdateHandler(18, [&]()
+  {
+    cameraPosition.y -= 500.f * window.deltaTime;
+    updateView();
+  });
+  updateView();
 };
+void TestScene::updateView()
+{
+  view = glm::lookAt(cameraPosition, {window.windowWidth / 2, window.windowHeight / 2, 0}, glm::vec3{0, 1, 0});
+}
+
 int main()
 {
   GLWindow window("GLWindow", 640, 480);

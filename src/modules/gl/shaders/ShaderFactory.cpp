@@ -149,8 +149,45 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 }
               }
             }
+          },
+          {
+            "CameraPosition",
+            {
+                    {
+                      ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
+                      {
+                        auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                        shader.addUBO("CameraPosition", sizeof(glm::vec3), bindingIndex);
+                        return "layout(binding = " + std::to_string(bindingIndex) + ") uniform CameraPosition {\n" +
+                          " vec3 value;\n" +
+                          "} cameraPosition;";
+                      }
+                    }
+            }
+          },
+          {
+            "Fog", {
+                {
+                  ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string {
+                    return "uniform float fogDensity;\nuniform vec4 fogColor;";
+                  }
+                }
+            }
           }
         }
+      },
+      {
+        "preMain", {
+              {
+                "Fog", {
+                  {
+                    ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string {
+                      return "float calculateFogFactor(float distance, float density);";
+                    }
+                  }
+                }
+              }
+        },
       },
       {
         "preInMain",
@@ -164,6 +201,36 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               }
             }
           }
+        }
+      },
+      {
+        "postInMain", {
+                {
+                  "Fog", {
+                    {
+                      ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
+                        return std::string("float distance = length(inPosition - cameraPosition.value);") +
+                          "float fogFactor = calculateFogFactor(distance, fogDensity);" +
+                          "FragColor = mix(fogColor, FragColor, fogFactor);";
+                      }
+                    }
+                  }
+                }
+        }
+      },
+      {
+        "postMain", {
+              {
+                "Fog", {
+                  {
+                    ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
+                      return std::string("float calculateFogFactor(float distance, float density) {\n") +
+                        " return exp(-density * distance);\n" +
+                        "}";
+                    }
+                  }
+                }
+              }
         }
       }
     }
