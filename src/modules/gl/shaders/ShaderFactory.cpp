@@ -111,7 +111,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   {
                     string += "model.matrix * ";
                   }
-                  string += "vec4(inPosition, 1);";
+                  string += "vec4(inPosition, 1);\n";
+                  string += "outPosition = vec3(gl_Position);";
                   return string;
                 }
               }
