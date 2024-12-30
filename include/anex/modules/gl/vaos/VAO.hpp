@@ -10,6 +10,7 @@ namespace anex::modules::gl::vaos
     GLuint vbo;
     GLuint ebo;
 		uint32_t indiceCount;
+		uint32_t stride;
     VAO(const RuntimeConstants &constants, const uint32_t &indiceCount);
 		~VAO();
 		void updateIndices(const uint32_t *indices);

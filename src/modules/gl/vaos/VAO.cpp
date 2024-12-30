@@ -3,7 +3,8 @@
 using namespace anex::modules::gl::vaos;
 VAO::VAO(const RuntimeConstants &constants, const uint32_t &indiceCount):
   constants(constants),
-  indiceCount(indiceCount)
+  indiceCount(indiceCount),
+  stride(VAOFactory::getStride(constants))
 {
   VAOFactory::generateVAO(constants, vao, vbo, ebo, indiceCount);
 };
@@ -22,10 +23,8 @@ void VAO::updateIndices(const uint32_t *indices)
 void VAO::updateElements(const std::string &constant, const void *elements)
 {
   glBindVertexArray(vao);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
   auto &constantSize = VAOFactory::constantSizes[constant];
   auto offset = VAOFactory::getOffset(constants, constant);
-  auto stride = VAOFactory::getStride(constants);
   auto elementStride = std::get<0>(constantSize) * std::get<1>(constantSize);
   auto elementsAsChar = (uint8_t *)elements;
   for (size_t index = offset, c = 1, elementIndex = 0; c <= indiceCount; index += stride, c++, elementIndex += elementStride)
