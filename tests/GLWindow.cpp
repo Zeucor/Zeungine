@@ -34,7 +34,7 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
     shader.use(true);
-    shader.setUniform("fogDensity", 0.0015f);
+    shader.setUniform("fogDensity", 0.0035f);
     shader.setUniform("fogColor", glm::vec4(1, 1, 1, 1));
     shader.use(false);
     window.addMouseMoveHandler([&](const auto &coords)
@@ -117,7 +117,7 @@ struct TestCube : anex::IEntity, vaos::VAO
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
     shader.use(true);
-    shader.setUniform("fogDensity", 0.0015f);
+    shader.setUniform("fogDensity", 0.0035f);
     shader.setUniform("fogColor", glm::vec4(1, 1, 1, 1));
     shader.use(false);
     window.addMousePressHandler(3, [&](const auto &pressed)
