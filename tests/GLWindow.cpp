@@ -21,7 +21,7 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     IEntity(window),
     VAO({"Color", "Position", "View", "Projection", "Model"}, 3),
     shader(constants),
-    indices(0, 1, 2),
+    indices(2, 1, 0),
     colors({{1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}}),
     positions({{0, 100, 0}, {100, -100, 0}, {-100, -100, 0}}),
     position(glm::translate(glm::mat4(1.0f), glm::vec3(0, 100, 0))),
@@ -81,12 +81,12 @@ struct TestCube : anex::IEntity, vaos::VAO
       VAO({"Color", "Position", "View", "Projection", "Model"}, 36),
       shader(constants),
       indices{
-        0, 1, 2, 2, 3, 0,  // Front face
-        4, 5, 6, 6, 7, 4,  // Back face
+        0, 1, 2,  2, 3, 0,   // Front face
+        4, 7, 6,  6, 5, 4,   // Back face
         8, 9, 10, 10, 11, 8,  // Left face
-        12, 13, 14, 14, 15, 12,  // Right face
-        16, 17, 18, 18, 19, 16,  // Top face
-        20, 21, 22, 22, 23, 20   // Bottom face
+        12, 15, 14, 14, 13, 12, // Right face
+        16, 17, 18, 18, 19, 16, // Top face
+        20, 23, 22, 22, 21, 20  // Bottom face
       },
       colors({{1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 0, 1}, // Front face
               {0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, // Back face
@@ -96,12 +96,12 @@ struct TestCube : anex::IEntity, vaos::VAO
               {1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1} // Bottom face
              }),
       positions({
-        { -50, -50,  50}, { 50, -50,  50}, { 50,  50,  50}, { -50,  50,  50}, // Front
-        { -50, -50, -50}, { 50, -50, -50}, { 50,  50, -50}, { -50,  50, -50}, // Back
+        { -50, -50,  50}, {  50, -50,  50}, {  50,  50,  50}, { -50,  50,  50}, // Front
+        { -50, -50, -50}, {  50, -50, -50}, {  50,  50, -50}, { -50,  50, -50}, // Back
         { -50, -50, -50}, { -50, -50,  50}, { -50,  50,  50}, { -50,  50, -50}, // Left
-        { 50, -50, -50}, { 50, -50,  50}, { 50,  50,  50}, { 50,  50, -50}, // Right
-        { -50,  50, -50}, { -50,  50,  50}, { 50,  50,  50}, { 50,  50, -50}, // Top
-        { -50, -50, -50}, { -50, -50,  50}, { 50, -50,  50}, { 50, -50, -50}  // Bottom
+        {  50, -50, -50}, {  50, -50,  50}, {  50,  50,  50}, {  50,  50, -50}, // Right
+        { -50,  50, -50}, { -50,  50,  50}, {  50,  50,  50}, {  50,  50, -50}, // Top
+        { -50, -50, -50}, { -50, -50,  50}, {  50, -50,  50}, {  50, -50, -50}  // Bottom
       }),
       position(glm::translate(glm::mat4(1.0f), glm::vec3(window.windowWidth / 2, window.windowHeight / 2, 0))),
       rotation(glm::mat4(1.0f)),
@@ -128,8 +128,9 @@ struct TestCube : anex::IEntity, vaos::VAO
 };
 TestScene::TestScene(anex::IWindow& window):
   IScene(window),
-  view(glm::lookAt({0, 0, 10}, {0, 0, 0}, glm::vec3{0, 1, 0})),
-  projection(glm::ortho(0.f, (float)window.windowWidth, 0.f, (float)window.windowHeight,0.1f, 100.f))
+  view(glm::lookAt({window.windowWidth / 2, window.windowHeight / 2 - window.windowHeight / 2, window.windowWidth}, {window.windowWidth / 2, window.windowHeight / 2, 0}, glm::vec3{0, 1, 0})),
+  // projection(glm::ortho(0.f, (float)window.windowWidth, 0.f, (float)window.windowHeight,0.1f, 100.f))
+  projection(glm::perspective(glm::radians(81.f), (float)window.windowWidth / window.windowHeight, 0.1f, 10000.f))
 {
   addEntity(std::make_shared<TestTriangle>(window, *this));
   addEntity(std::make_shared<TestCube>(window, *this));
@@ -137,7 +138,7 @@ TestScene::TestScene(anex::IWindow& window):
 int main()
 {
   GLWindow window("GLWindow", 640, 480);
-  window.clearColor = {1, 0, 0, 1};
+  window.clearColor = {0, 0, 0, 1};
   window.runOnThread([](auto &window)
   {
     window.setIScene(std::make_shared<TestScene>(window));
