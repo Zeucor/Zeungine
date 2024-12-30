@@ -20,9 +20,10 @@ void IScene::removeEntity(const unsigned int& id)
 };
 void IScene::render()
 {
-	for (auto& entityPair : entities)
+	auto it = entities.begin();
+	auto end = entities.end();
+	for (; it != end; it++)
 	{
-		auto& entity = entityPair.second;
-		entity->render();
+		it->second->render();
 	}
 };
