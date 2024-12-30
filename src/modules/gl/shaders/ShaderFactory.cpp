@@ -43,8 +43,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO("UBOView", sizeof(glm::mat4), bindingIndex);
-                  return "layout(binding = " + std::to_string(bindingIndex) + ") uniform UBOView {\n" +
+                  shader.addUBO("View", sizeof(glm::mat4), bindingIndex);
+                  return "layout(binding = " + std::to_string(bindingIndex) + ") uniform View {\n" +
                     " mat4 matrix;\n" +
                     "} view;";
                 }
@@ -58,12 +58,27 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
                   {
                     auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                    shader.addUBO("UBOProjection", sizeof(glm::mat4), bindingIndex);
-                    return "layout(binding = " + std::to_string(bindingIndex) + ") uniform UBOProjection {\n" +
+                    shader.addUBO("Projection", sizeof(glm::mat4), bindingIndex);
+                    return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Projection {\n" +
                       " mat4 matrix;\n" +
                       "} projection;";
                   }
                 }
+            }
+          },
+          {
+            "Model",
+            {
+                  {
+                    ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
+                    {
+                      auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                      shader.addUBO("Model", sizeof(glm::mat4), bindingIndex);
+                      return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Model {\n" +
+                        " mat4 matrix;\n" +
+                        "} model;";
+                    }
+                  }
             }
           }
         }
@@ -91,6 +106,10 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   if (std::find(constants.begin(), constants.end(), "View") != constants.end())
                   {
                     string += "view.matrix * ";
+                  }
+                  if (std::find(constants.begin(), constants.end(), "Model") != constants.end())
+                  {
+                    string += "model.matrix * ";
                   }
                   string += "vec4(inPosition, 1);";
                   return string;

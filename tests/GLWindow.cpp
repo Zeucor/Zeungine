@@ -22,8 +22,8 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     updateIndices(indices);
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
-    shader.setBlock("UBOView", glm::lookAt({0, 0, -10}, {0, 0, 0}, glm::vec3{0, 1, 0}));
-    shader.setBlock("UBOProjection", glm::perspective(glm::radians(81.f), (float)window.windowWidth / (float)window.windowHeight, 0.1f, 100.f));
+    shader.setBlock("View", glm::lookAt({0, 0, -10}, {0, 0, 0}, glm::vec3{0, 1, 0}));
+    shader.setBlock("Projection", glm::perspective(glm::radians(81.f), (float)window.windowWidth / (float)window.windowHeight, 0.1f, 100.f));
   };
   void render() override
   {
