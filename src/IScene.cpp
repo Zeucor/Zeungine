@@ -25,4 +25,4 @@ void IScene::render()
 		auto& entity = entityPair.second;
 		entity->render();
 	}
-}
+};
