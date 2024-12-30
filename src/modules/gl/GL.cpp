@@ -209,11 +209,12 @@ void GLWindow::renderInit()
 	wglMakeCurrent(hDeviceContext, hRenderingContext);
 	gladLoadGL();
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-	glDisable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 	glViewport(0, 0, windowWidth, windowHeight);
-	glClearDepth(0.0);
+	glClearDepth(1.0);
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
