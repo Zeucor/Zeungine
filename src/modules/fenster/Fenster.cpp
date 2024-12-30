@@ -20,7 +20,7 @@ void FensterWindow::startWindow()
 	while (fenster_loop(f) == 0)
 	{
 	  runRunnables();
-		updateKeys();
+		updateKeyboard();
 		fenster_rect(f, 0, 0, windowWidth, windowHeight, 0x00000000);
 		render();
 		int64_t time = fenster_time();
@@ -29,7 +29,7 @@ void FensterWindow::startWindow()
 		now = time;
 	}
 };
-void FensterWindow::updateKeys()
+void FensterWindow::updateKeyboard()
 {
 	for (unsigned int i = 0; i < 256; ++i)
 	{

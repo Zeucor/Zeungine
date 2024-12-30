@@ -7,6 +7,8 @@ GLWindow::GLWindow(const char* title, const int& windowWidth, const int& windowH
 	IWindow(windowWidth, windowHeight, framerate),
 	title(title)
 {
+	memset(windowKeys, 0, 256 * sizeof(int));
+	memset(windowButtons, 0, 5 * sizeof(int));
 	run();
 };
 
@@ -17,6 +19,7 @@ GLWindow::~GLWindow()
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
 typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALEXTPROC) (int interval);
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
+static const uint8_t GL_KEYCODES[] = {0,27,49,50,51,52,53,54,55,56,57,48,45,61,8,9,81,87,69,82,84,89,85,73,79,80,91,93,10,0,65,83,68,70,71,72,74,75,76,59,39,96,0,92,90,88,67,86,66,78,77,44,46,47,0,0,0,32,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,17,3,0,20,0,19,0,5,18,4,26,127};
 static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 																	LPARAM lParam)
 {
@@ -56,19 +59,47 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 		break;
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
-		// f->mouse = (msg == WM_LBUTTONDOWN);
+		glWindow->windowButtons[0] = (msg == WM_LBUTTONDOWN);
 		break;
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+		glWindow->windowButtons[1] = (msg == WM_RBUTTONDOWN);
+		break;
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+		glWindow->windowButtons[2] = (msg == WM_MBUTTONDOWN);
+		break;
+	case WM_XBUTTONDOWN:
+	case WM_XBUTTONUP:
+	{
+		WORD button = GET_XBUTTON_WPARAM(wParam);
+		if (button == XBUTTON2) // Back button
+		{
+			if (!(msg == WM_XBUTTONDOWN))
+			{
+				int x = 1;
+				x *= 2;
+			}
+			glWindow->windowButtons[3] = (msg == WM_XBUTTONDOWN);
+		}
+		else if (button == XBUTTON1) // Forward button
+		{
+			glWindow->windowButtons[4] = (msg == WM_XBUTTONDOWN);
+		}
+		break;
+	};
 	case WM_MOUSEMOVE:
-		// f->y = HIWORD(lParam), f->x = LOWORD(lParam);
+		glWindow->mouseCoords.y = glWindow->windowHeight - HIWORD(lParam), glWindow->mouseCoords.x = LOWORD(lParam);
+		glWindow->mouseMoved = true;
 		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 		{
-			// f->mod = ((GetKeyState(VK_CONTROL) & 0x8000) >> 15) |
-			// 				 ((GetKeyState(VK_SHIFT) & 0x8000) >> 14) |
-			// 				 ((GetKeyState(VK_MENU) & 0x8000) >> 13) |
-			// 				 (((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) >> 12);
-			// f->keys[FENSTER_KEYCODES[HIWORD(lParam) & 0x1ff]] = !((lParam >> 31) & 1);
+			glWindow->mod = ((GetKeyState(VK_CONTROL) & 0x8000) >> 15) |
+							 ((GetKeyState(VK_SHIFT) & 0x8000) >> 14) |
+							 ((GetKeyState(VK_MENU) & 0x8000) >> 13) |
+							 (((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) >> 12);
+			glWindow->windowKeys[GL_KEYCODES[HIWORD(lParam) & 0x1ff]] = !((lParam >> 31) & 1);
 		}
 		break;
 	case WM_DESTROY:
@@ -116,6 +147,8 @@ void GLWindow::startWindow()
 			DispatchMessage(&msg);
 		}
 		runRunnables();
+		updateKeyboard();
+		updateMouse();
 		glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		render();
@@ -181,12 +214,11 @@ void GLWindow::renderInit()
 #endif
 };
 
-void GLWindow::updateKeys()
+void GLWindow::updateKeyboard()
 {
 	for (unsigned int i = 0; i < 256; ++i)
 	{
-		int pressed = false;
-		//		int& pressed = f->keys[i];
+		auto& pressed = windowKeys[i];
 		if (keys[i] != pressed)
 		{
 			callKeyPressHandler(i, pressed);
@@ -195,6 +227,23 @@ void GLWindow::updateKeys()
 		{
 			callKeyUpdateHandler(i);
 		}
+	}
+};
+
+void GLWindow::updateMouse()
+{
+	for (unsigned int i = 0; i < 5; ++i)
+	{
+		auto& pressed = windowButtons[i];
+		if (buttons[i] != pressed)
+		{
+			callMousePressHandler(i, pressed);
+		}
+	}
+	if (mouseMoved)
+	{
+		callMouseMoveHandler(mouseCoords);
+		mouseMoved = false;
 	}
 };
 

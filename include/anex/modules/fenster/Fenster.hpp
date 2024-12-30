@@ -11,7 +11,7 @@ namespace anex::modules::fenster
 		FensterWindow(const char *title, const int &windowWidth, const int &windowHeight, const int &framerate = 60);
 		~FensterWindow();
 		void startWindow() override;
-		void updateKeys() override;
+		void updateKeyboard() override;
 		void close() override;
 		void drawLine(int x0, int y0, int x1, int y1, uint32_t color) override;
 		void drawRectangle(int x, int y, int w, int h, uint32_t color) override;

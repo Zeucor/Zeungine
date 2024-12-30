@@ -18,16 +18,17 @@ void IWindow::render()
   if (scene)
     scene->render();
 };
-unsigned int IWindow::addKeyHandler(const unsigned int& key, const std::function<void(const bool&)>& callback)
+// Keyboard
+IWindow::EventIdentifier IWindow::addKeyPressHandler(const Key& key, const KeyPressHandler& callback)
 {
-  auto& handlersPair = keyHandlers[key];
+  auto& handlersPair = keyPressHandlers[key];
   auto id = ++handlersPair.first;
   handlersPair.second[id] = callback;
   return id;
 };
-void IWindow::removeKeyHandler(const unsigned int& key, unsigned int& id)
+void IWindow::removeKeyPressHandler(const Key& key, EventIdentifier& id)
 {
-  auto& handlersPair = keyHandlers[key];
+  auto& handlersPair = keyPressHandlers[key];
   auto handlerIter = handlersPair.second.find(id);
   if (handlerIter == handlersPair.second.end())
   {
@@ -36,14 +37,14 @@ void IWindow::removeKeyHandler(const unsigned int& key, unsigned int& id)
   handlersPair.second.erase(handlerIter);
   id = 0;
 };
-unsigned int IWindow::addKeyUpdateHandler(const unsigned int& key, const std::function<void()>& callback)
+IWindow::EventIdentifier IWindow::addKeyUpdateHandler(const Key& key, const KeyUpdateHandler& callback)
 {
   auto& handlersPair = keyUpdateHandlers[key];
   auto id = ++handlersPair.first;
   handlersPair.second[id] = callback;
   return id;
 };
-void IWindow::removeKeyUpdateHandler(const unsigned int& key, unsigned int& id)
+void IWindow::removeKeyUpdateHandler(const Key& key, EventIdentifier& id)
 {
   auto handlersIter = keyUpdateHandlers.find(key);
   if (handlersIter == keyUpdateHandlers.end())
@@ -57,15 +58,15 @@ void IWindow::removeKeyUpdateHandler(const unsigned int& key, unsigned int& id)
   handlers.erase(handlerIter);
   id = 0;
 };
-void IWindow::callKeyPressHandler(const unsigned int &key, const int &pressed)
+void IWindow::callKeyPressHandler(const Key &key, const int &pressed)
 {
   keys[key] = pressed;
   {
-    auto handlersIter = keyHandlers.find(key);
-    if (handlersIter == keyHandlers.end())
+    auto handlersIter = keyPressHandlers.find(key);
+    if (handlersIter == keyPressHandlers.end())
       return;
     auto& handlersMap = handlersIter->second.second;
-    std::vector<std::function<void(const bool&)>> handlersCopy;
+    std::vector<KeyPressHandler> handlersCopy;
     for (const auto& pair : handlersMap)
       handlersCopy.push_back(pair.second);
     for (auto& handler : handlersCopy)
@@ -74,18 +75,82 @@ void IWindow::callKeyPressHandler(const unsigned int &key, const int &pressed)
     }
   }
 };
-void IWindow::callKeyUpdateHandler(const unsigned int &key)
+void IWindow::callKeyUpdateHandler(const Key &key)
 {
   auto handlersIter = keyUpdateHandlers.find(key);
   if (handlersIter == keyUpdateHandlers.end())
     return;
   auto& handlersMap = handlersIter->second.second;
-  std::vector<std::function<void()>> handlersCopy;
+  std::vector<KeyUpdateHandler> handlersCopy;
   for (const auto& pair : handlersMap)
     handlersCopy.push_back(pair.second);
   for (auto& handler : handlersCopy)
   {
     handler();
+  }
+};
+// Mouse
+IWindow::EventIdentifier IWindow::addMousePressHandler(const Button& button, const MousePressHandler& callback)
+{
+  auto& handlersPair = mousePressHandlers[button];
+  auto id = ++handlersPair.first;
+  handlersPair.second[id] = callback;
+  return id;
+};
+void IWindow::removeMousePressHandler(const Button& button, EventIdentifier& id)
+{
+  auto& handlersPair = keyPressHandlers[button];
+  auto handlerIter = handlersPair.second.find(id);
+  if (handlerIter == handlersPair.second.end())
+  {
+    return;
+  }
+  handlersPair.second.erase(handlerIter);
+  id = 0;
+};
+IWindow::EventIdentifier IWindow::addMouseMoveHandler(const MouseMoveHandler& callback)
+{
+  auto id = ++mouseMoveHandlers.first;
+  mouseMoveHandlers.second[id] = callback;
+  return id;
+};
+void IWindow::removeMouseMoveHandler(EventIdentifier& id)
+{
+  auto &handlers = mouseMoveHandlers.second;
+  auto handlerIter = handlers.find(id);
+  if (handlerIter == handlers.end())
+  {
+    return;
+  }
+  handlers.erase(handlerIter);
+  id = 0;
+};
+void IWindow::callMousePressHandler(const Button &button, const int &pressed)
+{
+  buttons[button] = pressed;
+  {
+    auto handlersIter = mousePressHandlers.find(button);
+    if (handlersIter == mousePressHandlers.end())
+      return;
+    auto& handlersMap = handlersIter->second.second;
+    std::vector<MousePressHandler> handlersCopy;
+    for (const auto& pair : handlersMap)
+      handlersCopy.push_back(pair.second);
+    for (auto& handler : handlersCopy)
+    {
+      handler(!!pressed);
+    }
+  }
+};
+void IWindow::callMouseMoveHandler(const glm::vec2 &coords)
+{
+  auto& handlersMap = mouseMoveHandlers.second;
+  std::vector<MouseMoveHandler> handlersCopy;
+  for (const auto& pair : handlersMap)
+    handlersCopy.push_back(pair.second);
+  for (auto& handler : handlersCopy)
+  {
+    handler(coords);
   }
 };
 std::shared_ptr<IScene> IWindow::setIScene(const std::shared_ptr<IScene>& scene)

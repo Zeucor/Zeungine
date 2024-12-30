@@ -13,11 +13,17 @@ namespace anex::modules::gl
 		HDC hDeviceContext;
 		HGLRC hRenderingContext;
 #endif
+		int windowKeys[256];
+		int windowButtons[5];
+		bool mouseMoved = false;
+		glm::vec2 mouseCoords;
+		int mod = 0;
 		GLWindow(const char *title, const int &windowWidth, const int &windowHeight, const int &framerate = 60);
 		~GLWindow();
 		void startWindow() override;
 		void renderInit();
-		void updateKeys() override;
+		void updateKeyboard() override;
+		void updateMouse() override;
 		void close() override;
 		void drawLine(int x0, int y0, int x1, int y1, uint32_t color) override;
 		void drawRectangle(int x, int y, int w, int h, uint32_t color) override;
