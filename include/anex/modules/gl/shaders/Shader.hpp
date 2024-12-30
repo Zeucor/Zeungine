@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <stdexcept>
+#include "../../../glm.hpp"
 namespace anex::modules::gl::shaders
 {
 	using RuntimeConstants = std::vector<std::string>;
