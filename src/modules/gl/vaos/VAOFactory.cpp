@@ -4,12 +4,20 @@ using namespace anex::modules::gl::vaos;
 VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {
 	{"Indice", {3, sizeof(uint32_t), GL_UNSIGNED_INT}},
   {"Color", {4, sizeof(float), GL_FLOAT}},
-  {"Position", {3, sizeof(float), GL_FLOAT}}
+	{"Position", {3, sizeof(float), GL_FLOAT}},
+	{"Normal", {3, sizeof(float), GL_FLOAT}}
 };
 VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Indice", false},
   {"Color", true},
-  {"Position", true}
+	{"Position", true},
+	{"Normal", true},
+	{"View", false},
+	{"Projection", false},
+	{"Model", false},
+	{"CameraPosition", false},
+	{"Fog", false},
+	{"Lighting", false}
 };
 void VAOFactory::generateVAO(const RuntimeConstants &constants, GLuint& vao, GLuint& vbo, GLuint& ebo, const uint32_t &indiceCount)
 {
@@ -70,7 +78,7 @@ size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::strin
 };
 bool VAOFactory::isVAOConstant(const std::string &constant)
 {
-  return VAOConstants.find(constant) != VAOConstants.end();
+  return VAOConstants[constant];
 }
 void VAOFactory::destroyVAO(VAO &vao)
 {

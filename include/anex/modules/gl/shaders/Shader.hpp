@@ -25,11 +25,14 @@ namespace anex::modules::gl::shaders
     using ShaderMap = std::map<ShaderType, ShaderPair>;
     using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
 		std::unordered_map<std::string, std::tuple<uint32_t, GLuint>> uboBindings;
+		std::unordered_map<std::string, std::tuple<uint32_t, GLuint>> ssboBindings;
     ShaderMap shaders;
     GLuint program = 0;
 		Shader(const RuntimeConstants& constants);
 		~Shader();
 		void use(const bool &useProgram);
+		void addSSBO(const std::string& name, const uint32_t &size, const uint32_t &bindingIndex);
+		void addUBO(const std::string &name, const uint32_t &size, const uint32_t &bindingIndex);
 		template <typename T>
 		void setUniform(const std::string &name, const T& value, const uint32_t &size = 0)
 		{
@@ -114,6 +117,6 @@ namespace anex::modules::gl::shaders
 			glBufferData(GL_UNIFORM_BUFFER, pointerSize, &value, GL_STATIC_DRAW);
 			glBindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, pointerSize);
 		};
-		void addUBO(const std::string &name, const uint32_t &size, const uint32_t &bindingIndex);
+		void setSSBO(const std::string &name, const void *pointer, const uint32_t &size);
   };
 }

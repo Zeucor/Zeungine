@@ -1,11 +1,17 @@
 #include <anex/modules/gl/GL.hpp>
+#include <anex/modules/gl/shaders/Lights.hpp>
 #include <array>
 using namespace anex::modules::gl;
+struct TestTriangle;
 struct TestScene : anex::IScene
 {
   glm::vec3 cameraPosition;
   glm::mat4 view;
   glm::mat4 projection;
+  std::vector<shaders::PointLight> pointLights;
+  std::vector<shaders::DirectionalLight> directionalLights;
+  std::vector<shaders::SpotLight> spotLights;
+  std::shared_ptr<TestTriangle> triangleEntity;
   TestScene(anex::IWindow &window);
   void updateView();
 };
@@ -15,13 +21,14 @@ struct TestTriangle : anex::IEntity, vaos::VAO
   uint32_t indices[3];
   std::array<glm::vec4, 3> colors;
   std::array<glm::vec3, 3> positions;
+  std::array<glm::vec3, 3> normals;
   glm::mat4 position;
   glm::mat4 rotation;
   float rotationAmount = 0;
   TestScene &testScene;
   TestTriangle(anex::IWindow &window, TestScene &testScene):
     IEntity(window),
-    VAO({"Color", "Position", "View", "Projection", "Model", "Fog", "CameraPosition"}, 3),
+    VAO({"Color", "Position", "Normal", "View", "Projection", "Model", "Fog", "CameraPosition", "Lighting"}, 3),
     shader(*shaders::ShaderManager::getShaderByConstants(constants).second),
     indices(2, 1, 0),
     colors({{1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}}),
@@ -30,9 +37,11 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     rotation(glm::mat4(1.0f)),
     testScene(testScene)
   {
+    computeNormals(3, indices, positions, normals);
     updateIndices(indices);
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
+    updateElements("Normal", normals.data());
     shader.use(true);
     shader.setUniform("fogDensity", 0.0035f);
     shader.setUniform("fogColor", glm::vec4(1, 1, 1, 1));
@@ -77,14 +86,15 @@ struct TestCube : anex::IEntity, vaos::VAO
   uint32_t indices[36]; // 6 faces * 2 triangles * 3 vertices
   std::array<glm::vec4, 24> colors;
   std::array<glm::vec3, 24> positions;
+  std::array<glm::vec3, 24> normals;
   glm::vec3 position;
   glm::mat4 rotation;
   float rotationAmount = 0;
   TestScene &testScene;
 
-  TestCube(anex::IWindow &window, TestScene &testScene)
+  TestCube(anex::IWindow &window, TestScene &testScene, const glm::vec3 &position, const glm::vec3 &size)
     : IEntity(window),
-      VAO({"Color", "Position", "View", "Projection", "Model", "Fog", "CameraPosition"}, 36),
+      VAO({"Color", "Position", "Normal", "View", "Projection", "Model", "Fog", "CameraPosition", "Lighting"}, 36),
       shader(*shaders::ShaderManager::getShaderByConstants(constants).second),
       indices{
         0, 1, 2,  2, 3, 0,   // Front face
@@ -102,40 +112,42 @@ struct TestCube : anex::IEntity, vaos::VAO
               {1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1} // Bottom face
              }),
       positions({
-        { -50, -50,  50}, {  50, -50,  50}, {  50,  50,  50}, { -50,  50,  50}, // Front
-        { -50, -50, -50}, {  50, -50, -50}, {  50,  50, -50}, { -50,  50, -50}, // Back
-        { -50, -50, -50}, { -50, -50,  50}, { -50,  50,  50}, { -50,  50, -50}, // Left
-        {  50, -50, -50}, {  50, -50,  50}, {  50,  50,  50}, {  50,  50, -50}, // Right
-        { -50,  50, -50}, { -50,  50,  50}, {  50,  50,  50}, {  50,  50, -50}, // Top
-        { -50, -50, -50}, { -50, -50,  50}, {  50, -50,  50}, {  50, -50, -50}  // Bottom
+        { -size.x / 2, -size. y / 2,  size.z / 2}, {  size.x / 2, -size. y / 2,  size.z / 2}, {  size.x / 2,  size. y / 2,  size.z / 2}, { -size.x / 2,  size. y / 2,  size.z / 2}, // Front
+        { -size.x / 2, -size. y / 2, -size.z / 2}, {  size.x / 2, -size. y / 2, -size.z / 2}, {  size.x / 2,  size. y / 2, -size.z / 2}, { -size.x / 2,  size. y / 2, -size.z / 2}, // Back
+        { -size.x / 2, -size. y / 2, -size.z / 2}, { -size.x / 2, -size. y / 2,  size.z / 2}, { -size.x / 2,  size. y / 2,  size.z / 2}, { -size.x / 2,  size. y / 2, -size.z / 2}, // Left
+        {  size.x / 2, -size. y / 2, -size.z / 2}, {  size.x / 2, -size. y / 2,  size.z / 2}, {  size.x / 2,  size. y / 2,  size.z / 2}, {  size.x / 2,  size. y / 2, -size.z / 2}, // Right
+        { -size.x / 2,  size. y / 2, -size.z / 2}, { -size.x / 2,  size. y / 2,  size.z / 2}, {  size.x / 2,  size. y / 2,  size.z / 2}, {  size.x / 2,  size. y / 2, -size.z / 2}, // Top
+        { -size.x / 2, -size. y / 2, -size.z / 2}, { -size.x / 2, -size. y / 2,  size.z / 2}, {  size.x / 2, -size. y / 2,  size.z / 2}, {  size.x / 2, -size. y / 2, -size.z / 2}  // Bottom
       }),
-      position(window.windowWidth / 2, window.windowHeight / 2, 0),
+      position(position),
       rotation(glm::mat4(1.0f)),
       testScene(testScene)
   {
+    computeNormals(36, indices, positions, normals);
     updateIndices(indices);
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
+    updateElements("Normal", normals.data());
     shader.use(true);
     shader.setUniform("fogDensity", 0.0035f);
     shader.setUniform("fogColor", glm::vec4(1, 1, 1, 1));
     shader.use(false);
-    window.addMousePressHandler(3, [&](const auto &pressed)
-    {
-      if (pressed)
-        position.z -= 10.f;
-    });
-    window.addMousePressHandler(4, [&](const auto &pressed)
-    {
-      if (pressed)
-        position.z += 10.f;
-    });
+    // window.addMousePressHandler(3, [&](const auto &pressed)
+    // {
+    //   if (pressed)
+    //     position.z -= 10.f;
+    // });
+    // window.addMousePressHandler(4, [&](const auto &pressed)
+    // {
+    //   if (pressed)
+    //     position.z += 10.f;
+    // });
   };
 
   void render() override
   {
-    rotationAmount += glm::radians(0.01f);
-    rotation = glm::rotate(glm::mat4(1.0f), rotationAmount, glm::vec3(0, 1, 0));
+    // rotationAmount += glm::radians(0.01f);
+    // rotation = glm::rotate(glm::mat4(1.0f), rotationAmount, glm::vec3(0, 1, 0));
     auto model = glm::translate(glm::mat4(1.0f), position) * rotation;
     shader.use(true);
     shader.setBlock("Model", model);
@@ -152,8 +164,41 @@ TestScene::TestScene(anex::IWindow& window):
   // projection(glm::ortho(0.f, (float)window.windowWidth, 0.f, (float)window.windowHeight,0.1f, 100.f))
   projection(glm::perspective(glm::radians(81.f), (float)window.windowWidth / window.windowHeight, 0.1f, 10000.f))
 {
-  addEntity(std::make_shared<TestTriangle>(window, *this));
-  addEntity(std::make_shared<TestCube>(window, *this));
+  pointLights.push_back({
+  {window.windowWidth / 2, window.windowHeight, 0},
+  {1, 0, 0},
+  5000,
+  1000
+  });
+  // pointLights.push_back({
+  // {window.windowWidth / 2, 0, 0},
+  // {0, 1, 0},
+  // 5000,
+  // 1000
+  // });
+  directionalLights.push_back({
+    {0, -1, 0},
+    {1, 1, 1},
+    0.5
+  });
+  spotLights.push_back({
+    glm::vec3(320.0f, 480.0f, 200.0f),
+    glm::normalize(glm::vec3(0.0f, -1.0f, -1.0f)),
+    glm::vec3(0.0f, 0.0f, 1.0f),
+    1.0f,
+    glm::cos(glm::radians(25.0f)),
+    glm::cos(glm::radians(50.0f))
+  });
+  triangleEntity = std::dynamic_pointer_cast<TestTriangle>(std::make_shared<TestTriangle>(window, *this));
+  addEntity(triangleEntity);
+  addEntity(std::make_shared<TestCube>(window, *this, glm::vec3(window.windowWidth / 2, window.windowHeight / 2, 0), glm::vec3(50, 50, 50)));
+  addEntity(std::make_shared<TestCube>(window, *this, glm::vec3(window.windowWidth / 2, 0, 0), glm::vec3(5000, 25, 5000)));
+  auto &shader = triangleEntity->shader;
+  shader.use(true);
+  shader.setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(shaders::PointLight));
+  shader.setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(shaders::DirectionalLight));
+  shader.setSSBO("SpotLights", spotLights.data(), spotLights.size() * sizeof(shaders::SpotLight));
+  shader.use(false);
   window.addKeyUpdateHandler(20, [&]()
   {
     cameraPosition.x -= 500.f * window.deltaTime;
@@ -189,7 +234,7 @@ int main()
   {
     window.setIScene(std::make_shared<TestScene>(window));
   });
-  std::this_thread::sleep_for(std::chrono::seconds(20));
-  window.close();
+  // std::this_thread::sleep_for(std::chrono::seconds(20));
+  // window.close();
   window.awaitWindowThread();
 };

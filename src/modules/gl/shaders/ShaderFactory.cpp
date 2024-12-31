@@ -1,4 +1,5 @@
 #include <anex/modules/gl/shaders/ShaderFactory.hpp>
+#include <anex/modules/gl/shaders/Lights.hpp>
 #include <anex/IWindow.hpp>
 #include <stdexcept>
 #include <glm/fwd.hpp>
@@ -80,6 +81,21 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     }
                   }
             }
+          },
+          {
+            "Normal", {
+                {
+                  ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
+                    return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inNormal;";
+                  }
+                },
+                {
+                  ++ShaderFactory::hooksCount,  [](auto &shader, const auto &constants)->std::string{
+                    return std::string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec3 outFragPosition;\n") +
+                      "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec3 outNormal;";
+                  }
+                }
+            }
           }
         }
       },
@@ -112,8 +128,18 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     string += "model.matrix * ";
                   }
                   string += "vec4(inPosition, 1);\n";
-                  string += "outPosition = vec3(gl_Position);";
+                  string += "  outPosition = vec3(gl_Position);";
                   return string;
+                }
+              }
+            }
+          },
+          {
+            "Normal", {
+              {
+                ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
+                  return std::string("  outFragPosition = vec3(model.matrix * vec4(inPosition, 1.0));\n") +
+                    "  outNormal = mat3(transpose(inverse(model.matrix))) * inNormal;";
                 }
               }
             }
@@ -173,6 +199,62 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   }
                 }
             }
+          },
+          {
+            "Normal", {
+                {
+                  ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
+                    return std::string("layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inFragPosition;\n") +
+                      "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inNormal;";
+                  }
+                }
+            }
+          },
+          {
+            "Lighting",
+            {
+                      {
+                        ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
+                        {
+                          std::string string;
+                          string += std::string("struct PointLight{\n") +
+                            " vec3 position;\n" +
+                            " vec3 color;\n" +
+                            " float intensity;\n" +
+                            " float range;\n" +
+                            "};\n" +
+                            "struct DirectionalLight{\n" +
+                            " vec3 direction;\n" +
+                            " vec3 color;\n" +
+                            " float intensity;\n" +
+                            "};\n" +
+                            "struct SpotLight{\n" +
+                            " vec3 position;\n" +
+                            " vec3 direction;\n" +
+                            " vec3 color;\n" +
+                            " float intensity;\n" +
+                            " float cutoff;\n" +
+                            " float outerCutoff;\n" +
+                            "};\n";
+                          auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                          shader.addSSBO("PointLights", sizeof(PointLight), bindingIndex);
+                          string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer PointLightBuffer {\n" +
+                            " PointLight pointLights[];\n" +
+                            "};\n";
+                          bindingIndex = ShaderFactory::currentBindingIndex++;
+                          shader.addSSBO("DirectionalLights", sizeof(DirectionalLight), bindingIndex);
+                          string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer DirectionalLightBuffer {\n" +
+                            " DirectionalLight directionalLights[];\n" +
+                            "};\n";
+                          bindingIndex = ShaderFactory::currentBindingIndex++;
+                          shader.addSSBO("SpotLights", sizeof(SpotLight), bindingIndex);
+                          string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer SpotLightBuffer {\n" +
+                            " SpotLight spotLights[];\n" +
+                            "};";
+                          return string;
+                        }
+                      }
+            }
           }
         }
       },
@@ -182,9 +264,20 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 "Fog", {
                   {
                     ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string {
-                      return "float calculateFogFactor(float distance, float density);";
+                      return "float calculateFogFactor(in float distance, in float density);";
                     }
                   }
+                }
+              },
+              {
+                "Lighting", {
+                    {
+                      ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string {
+                        return std::string("vec3 calculatePointLight(in PointLight light, in vec3 fragPos, in vec3 normal, in vec3 viewDir);\n") +
+                          "vec3 calculateDirectionalLight(in DirectionalLight light, in vec3 normal, in vec3 viewDir);" +
+                          "vec3 calculateSpotLight(in SpotLight light, in vec3 fragPos, in vec3 normal, in vec3 viewDir);";
+                      }
+                    }
                 }
               }
         },
@@ -209,11 +302,35 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   "Fog", {
                     {
                       ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
-                        return std::string("float distance = length(inPosition - cameraPosition.value);") +
-                          "float fogFactor = calculateFogFactor(distance, fogDensity);" +
-                          "FragColor = mix(fogColor, FragColor, fogFactor);";
+                        return std::string("  float distance = length(inPosition - cameraPosition.value);\n") +
+                          "  float fogFactor = calculateFogFactor(distance, fogDensity);\n" +
+                          "  FragColor = mix(fogColor, FragColor, fogFactor);";
                       }
                     }
+                  }
+                },
+                {
+                  "Lighting", {
+                      {
+                        ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
+                          return std::string("  vec3 normal = normalize(inNormal);\n") +
+                            "  vec3 viewDir = normalize(cameraPosition.value - inFragPosition);\n" +
+                            "  vec3 lightingColor = vec3(0.0);\n" +
+                            "  uint pointLightCount = pointLights.length();\n" +
+                            "  uint directionalLightCount = directionalLights.length();\n" +
+                            "  uint spotLightCount = spotLights.length();\n" +
+                            "  for (uint i = 0; i < pointLightCount; ++i){\n" +
+                            "    lightingColor += calculatePointLight(pointLights[i], inFragPosition, normal, viewDir);\n" +
+                            "  }\n" +
+                            "  for (uint i = 0; i < directionalLightCount; ++i){\n" +
+                            "    lightingColor += calculateDirectionalLight(directionalLights[i], normal, viewDir);\n" +
+                            "  }\n" +
+                            "  for (uint i = 0; i < spotLightCount; ++i){\n" +
+                            "    lightingColor += calculateSpotLight(spotLights[i], inFragPosition, normal, viewDir);\n" +
+                            "  }\n" +
+                            "  FragColor = FragColor * vec4(lightingColor, 1.0);";
+                        }
+                      }
                   }
                 }
         }
@@ -224,11 +341,56 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 "Fog", {
                   {
                     ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
-                      return std::string("float calculateFogFactor(float distance, float density) {\n") +
-                        " return exp(-density * distance);\n" +
+                      return std::string("float calculateFogFactor(in float distance, in float density) {\n") +
+                        "  return exp(-density * distance);\n" +
                         "}";
                     }
                   }
+                }
+              },
+              {
+                "Lighting", {
+                    {
+                      ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
+                        return std::string("vec3 calculatePointLight(in PointLight light, in vec3 fragPos, in vec3 normal, in vec3 viewDir){\n") +
+                          "  vec3 lightDir = normalize(light.position - fragPos);\n" +
+                          "  float distance = length(light.position - fragPos);\n" +
+                          "  float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * (distance * distance));\n" +
+                          "  if (distance > light.range) attenuation = 0.0;\n" +
+                          "  float diff = max(dot(normal, lightDir), 0.0);\n" +
+                          "  vec3 reflectDir = reflect(-lightDir, normal);\n" +
+                          "  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n" +
+                          "  vec3 ambient = 0.1 * light.color;\n" +
+                          "  vec3 diffuse = diff * light.color * light.intensity * attenuation;\n" +
+                          "  vec3 specular = spec * light.color * light.intensity * attenuation;\n" +
+                          "  return ambient + diffuse + specular;\n" +
+                          "}\n" +
+                          "vec3 calculateDirectionalLight(in DirectionalLight light, in vec3 normal, in vec3 viewDir){\n" +
+                          "  vec3 lightDir = normalize(-light.direction);\n" +
+                          "  float diff = max(dot(normal, lightDir), 0.0);\n" +
+                          "  vec3 reflectDir = reflect(-lightDir, normal);\n" +
+                          "  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n" +
+                          "  vec3 ambient = 0.1 * light.color;\n" +
+                          "  vec3 diffuse = diff * light.color * light.intensity;\n" +
+                          "  vec3 specular = spec * light.color * light.intensity;\n" +
+                          "  return ambient + diffuse + specular;\n" +
+                          "}\n" +
+                          "vec3 calculateSpotLight(in SpotLight light, in vec3 fragPos, in vec3 normal, in vec3 viewDir){\n" +
+                          "  vec3 lightDir = normalize(light.position - fragPos);\n" +
+                          "  float theta = dot(lightDir, normalize(-light.direction));\n" +
+                          "  float epsilon = light.cutoff - light.outerCutoff;\n" +
+                          "  float intensity = clamp((theta - light.outerCutoff) / epsilon, 0.0, 1.0);\n" +
+                          "  if (theta < light.outerCutoff) intensity = 0.0;\n" +
+                          "  float diff = max(dot(normal, lightDir), 0.0);\n" +
+                          "  vec3 reflectDir = reflect(-lightDir, normal);\n" +
+                          "  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n" +
+                          "  vec3 ambient = 0.1 * light.color;\n" +
+                          "  vec3 diffuse = diff * light.color * light.intensity * intensity;\n" +
+                          "  vec3 specular = spec * light.color * light.intensity * intensity;\n" +
+                          "  return ambient + diffuse + specular;\n" +
+                          "}";
+                      }
+                    }
                 }
               }
         }
