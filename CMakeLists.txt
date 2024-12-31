@@ -15,6 +15,7 @@ set(ANEX_SOURCES
     src/IEntity.cpp
     src/IScene.cpp
     src/IWindow.cpp
+    src/Logger.cpp
     src/crypto/vector.cpp)
 
 if(BUILD_FENSTER)
@@ -23,9 +24,15 @@ endif()
 if(BUILD_OPENGL)
     list(APPEND ANEX_SOURCES
         src/modules/gl/GL.cpp
+        src/modules/gl/lights/DirectionalLight.cpp
         src/modules/gl/shaders/Shader.cpp
         src/modules/gl/shaders/ShaderFactory.cpp
         src/modules/gl/shaders/ShaderManager.cpp
+        src/modules/gl/textures/Texture.cpp
+        src/modules/gl/textures/TextureFactory.cpp
+        src/modules/gl/textures/TextureLoader.cpp
+        src/modules/gl/textures/Framebuffer.cpp
+        src/modules/gl/textures/FramebufferFactory.cpp
         src/modules/gl/vaos/VAO.cpp
         src/modules/gl/vaos/VAOFactory.cpp
         src/modules/gl/glad.c)

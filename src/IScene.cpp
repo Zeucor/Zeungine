@@ -20,6 +20,7 @@ void IScene::removeEntity(const unsigned int& id)
 };
 void IScene::render()
 {
+	preRender();
 	auto it = entities.begin();
 	auto end = entities.end();
 	for (; it != end; it++)

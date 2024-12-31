@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <anex/modules/gl/shaders/ShaderManager.hpp>
+#include <anex/Logger.hpp>
 using namespace anex::modules::gl;
 
 GLWindow::GLWindow(const char* title, const int& windowWidth, const int& windowHeight, const int& framerate):
@@ -34,27 +35,8 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)glWindow);
 			glWindow->hDeviceContext = GetDC(hwnd);
 			glWindow->renderInit();
+			break;
 		};
-	case WM_PAINT:
-		{
-			// PAINTSTRUCT ps;
-			// HDC hdc = BeginPaint(hwnd, &ps);
-			// HDC memdc = CreateCompatibleDC(hdc);
-			// HBITMAP hbmp = CreateCompatibleBitmap(hdc, f->width, f->height);
-			// HBITMAP oldbmp = static_cast<HBITMAP>(SelectObject(memdc, hbmp));
-			// BINFO bi = {{sizeof(bi), f->width, -f->height, 1, 32, BI_BITFIELDS}};
-			// bi.bmiColors[0].rgbRed = 0xff;
-			// bi.bmiColors[1].rgbGreen = 0xff;
-			// bi.bmiColors[2].rgbBlue = 0xff;
-			// SetDIBitsToDevice(memdc, 0, 0, f->width, f->height, 0, 0, 0, f->height,
-			// 									f->buf, (BITMAPINFO *)&bi, DIB_RGB_COLORS);
-			// BitBlt(hdc, 0, 0, f->width, f->height, memdc, 0, 0, SRCCOPY);
-			// SelectObject(memdc, oldbmp);
-			// DeleteObject(hbmp);
-			// DeleteDC(memdc);
-			// EndPaint(hwnd, &ps);
-		}
-		break;
 	case WM_CLOSE:
 		DestroyWindow(hwnd);
 		break;
@@ -124,13 +106,13 @@ void GLWindow::startWindow()
 {
 #ifdef _WIN32
 	HINSTANCE hInstance = GetModuleHandle(NULL);
-	WNDCLASSEX wc = {0};
-	wc.cbSize = sizeof(WNDCLASSEX);
+	WNDCLASS wc = {0};
+	// wc.cbSize = sizeof(WNDCLASS);
 	wc.style = CS_VREDRAW | CS_HREDRAW;
 	wc.lpfnWndProc = gl_wndproc;
 	wc.hInstance = hInstance;
 	wc.lpszClassName = title;
-	RegisterClassEx(&wc);
+	RegisterClass(&wc);
 	RECT desiredRect = {0, 0, windowWidth, windowHeight};
 	AdjustWindowRectEx(&desiredRect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_CLIENTEDGE);
 	int adjustedWidth = desiredRect.right - desiredRect.left;
@@ -159,7 +141,9 @@ void GLWindow::startWindow()
 		updateKeyboard();
 		updateMouse();
 		glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+		GLcheck("glClearColor");
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		GLcheck("glClear");
 		render();
 		SwapBuffers(hDeviceContext);
 	}
@@ -206,19 +190,33 @@ void GLWindow::renderInit()
 	gladLoadGL();
 	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
 	wglMakeCurrent(nullptr, nullptr);
-	hRenderingContext = wglCreateContextAttribsARB(hDeviceContext, 0, 0);
+	int attribList[] = {
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+		0
+	};
+	hRenderingContext = wglCreateContextAttribsARB(hDeviceContext, 0, attribList);
 	wglDeleteContext(hTempRC);
 	wglMakeCurrent(hDeviceContext, hRenderingContext);
 	gladLoadGL();
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 	glEnable(GL_DEPTH_TEST);
+	GLcheck("glEnable");
 	glEnable(GL_CULL_FACE);
+	GLcheck("glEnable");
 	glCullFace(GL_BACK);
+	GLcheck("glCullFace");
 	glFrontFace(GL_CCW);
+	GLcheck("glFrontFace");
 	glViewport(0, 0, windowWidth, windowHeight);
+	GLcheck("glViewport");
 	glClearDepth(1.0);
+	GLcheck("glClearDepth");
 	glEnable(GL_DEBUG_OUTPUT);
+	GLcheck("glEnable");
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	GLcheck("glEnable");
 	glDebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
 			std::cerr << "OpenGL Debug Message: " << message << std::endl;
 	}, nullptr);
@@ -270,19 +268,149 @@ void GLWindow::close()
   PostMessage(hwnd, WM_CLOSE, 0, 0);
 #endif
 };
-
 void GLWindow::drawLine(int x0, int y0, int x1, int y1, uint32_t color)
 {
 };
-
 void GLWindow::drawRectangle(int x, int y, int w, int h, uint32_t color)
 {
 };
-
 void GLWindow::drawCircle(int x, int y, int radius, uint32_t color)
 {
 };
-
 void GLWindow::drawText(int x, int y, const char* text, int scale, uint32_t color)
 {
+};
+const bool anex::modules::gl::GLcheck(const char* fn, const bool& egl)
+{
+	while (true)
+	{
+		uint32_t err = 0;
+		if (!egl)
+			err = glGetError();
+#if defined(_Android)
+		else if (egl)
+			err = eglGetError();
+#endif
+		if (err == GL_NO_ERROR
+#if defined(_Android)
+			|| err == EGL_SUCCESS
+#endif
+			)
+		{
+			/*|
+			  |*/
+			break;
+		}
+		switch (err)
+		{
+		case GL_INVALID_ENUM:
+		{
+			Logger::print(Logger::Error, "GL_INVALID_ENUM", "(", fn, "): ", "An unacceptable value is specified for an enumerated argument. The offending command is ignored and has no other side effect than to set the error flag.");
+			break;
+		};
+		case GL_INVALID_VALUE:
+		{
+			Logger::print(Logger::Error, "GL_INVALID_VALUE", "(", fn, "): ", "A numeric argument is out of range. The offending command is ignored and has no other side effect than to set the error flag.");
+			break;
+		};
+		case GL_INVALID_OPERATION:
+		{
+			Logger::print(Logger::Error, "GL_INVALID_OPERATION", "(", fn, "): ", "The specified operation is not allowed in the current state. The offending command is ignored and has no other side effect than to set the error flag.");
+			break;
+		};
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+		{
+			Logger::print(Logger::Error, "GL_INVALID_FRAMEBUFFER_OPERATION", "(", fn, "): ", "The framebuffer object is not complete. The offending command is ignored and has no other side effect than to set the error flag.");
+			break;
+		};
+		case GL_OUT_OF_MEMORY:
+		{
+			Logger::print(Logger::Error, "GL_OUT_OF_MEMORY", "(", fn, "): ", "There is not enough memory left to execute the command. The state of the GL is undefined, except for the state of the error flags, after this error is recorded.");
+			break;
+		};
+		case GL_STACK_UNDERFLOW:
+		{
+			Logger::print(Logger::Error, "GL_STACK_UNDERFLOW", "(", fn, "): ", "An attempt has been made to perform an operation that would cause an internal stack to underflow.");
+			break;
+		};
+		case GL_STACK_OVERFLOW:
+		{
+			Logger::print(Logger::Error, "GL_STACK_OVERFLOW", "(", fn, "): ", "An attempt has been made to perform an operation that would cause an internal stack to overflow.");
+			break;
+		};
+#if defined(_Android)
+		case EGL_NOT_INITIALIZED:
+		{
+			Logger::print(Logger::Error, "EGL_NOT_INITIALIZED", "(", fn, "): ", "EGL is not initialized, or could not be initialized, for the specified EGL display connection.");
+			break;
+		};
+		case EGL_BAD_ACCESS:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_ACCESS", "(", fn, "): ", "EGL cannot access a requested resource (for example a context is bound in another thread).");
+			break;
+		};
+		case EGL_BAD_ALLOC:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_ALLOC", "(", fn, "): ", "EGL failed to allocate resources for the requested operation.");
+			break;
+		};
+		case EGL_BAD_ATTRIBUTE:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_ATTRIBUTE", "(", fn, "): ", "An unrecognized attribute or attribute value was passed in the attribute list.");
+			break;
+		};
+		case EGL_BAD_CONTEXT:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_CONTEXT", "(", fn, "): ", "An EGLContext argument does not name a valid EGL rendering context.");
+			break;
+		};
+		case EGL_BAD_CONFIG:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_CONFIG", "(", fn, "): ", "An EGLConfig argument does not name a valid EGL frame buffer configuration.");
+			break;
+		};
+		case EGL_BAD_CURRENT_SURFACE:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_CURRENT_SURFACE", "(", fn, "): ", "The current surface of the calling thread is a window, pixel buffer or pixmap that is no longer valid.");
+			break;
+		};
+		case EGL_BAD_DISPLAY:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_DISPLAY", "(", fn, "): ", "An EGLDisplay argument does not name a valid EGL display connection.");
+			break;
+		};
+		case EGL_BAD_SURFACE:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_SURFACE", "(", fn, "): ", "An EGLSurface argument does not name a valid surface (window, pixel buffer or pixmap) configured for GL rendering.");
+			break;
+		};
+		case EGL_BAD_MATCH:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_MATCH", "(", fn, "): ", "Arguments are inconsistent (for example, a valid context requires buffers not supplied by a valid surface).");
+			break;
+		};
+		case EGL_BAD_PARAMETER:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_PARAMETER", "(", fn, "): ", "One or more argument values are invalid.");
+			break;
+		};
+		case EGL_BAD_NATIVE_PIXMAP:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_NATIVE_PIXMAP", "(", fn, "): ", "A NativePixmapType argument does not refer to a valid native pixmap.");
+			break;
+		};
+		case EGL_BAD_NATIVE_WINDOW:
+		{
+			Logger::print(Logger::Error, "EGL_BAD_NATIVE_WINDOW", "(", fn, "): ", "A NativeWindowType argument does not refer to a valid native window.");
+			break;
+		};
+		case EGL_CONTEXT_LOST:
+		{
+			Logger::print(Logger::Error, "EGL_CONTEXT_LOST", "(", fn, "): ", "A power management event has occurred. The application must destroy all contexts and reinitialise OpenGL ES state and objects to continue rendering.");
+			break;
+		};
+#endif
+		}
+	}
+	return true;
 };

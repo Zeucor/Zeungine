@@ -39,6 +39,7 @@ struct TestScene : anex::IScene
     addEntity(std::make_shared<TestCircleEntity>(window));
     addEntity(std::make_shared<TestTextEntity>(window));
   };
+  void preRender() override {};
 };
 int main()
 {

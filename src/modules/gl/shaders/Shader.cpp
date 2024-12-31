@@ -11,10 +11,12 @@ Shader::~Shader()
   for (auto& bindingPair : ssboBindings)
   {
     glDeleteBuffers(1, &std::get<1>(bindingPair.second));
+    GLcheck("glDeleteBuffers");
   }
   for (auto& bindingPair : uboBindings)
   {
     glDeleteBuffers(1, &std::get<1>(bindingPair.second));
+    GLcheck("glDeleteBuffers");
   }
   ShaderFactory::deleteProgram(*this);
 };
@@ -23,24 +25,28 @@ void Shader::use(const bool &useProgram)
   if (useProgram)
   {
     glUseProgram(program);
+    GLcheck("glUseProgram");
   }
   else
   {
     glUseProgram(0);
+    GLcheck("glUseProgram");
   }
 };
-void Shader::addSSBO(const std::string& name, const uint32_t &size, const uint32_t &bindingIndex)
+void Shader::addSSBO(const std::string& name, const uint32_t &bindingIndex)
 {
   GLuint ssboBufferID;
   glGenBuffers(1, &ssboBufferID);
+  GLcheck("glGenBuffers");
   auto& ssboBinding = ssboBindings[name];
   std::get<0>(ssboBinding) = bindingIndex;
   std::get<1>(ssboBinding) = ssboBufferID;
 };
-void Shader::addUBO(const std::string &name, const uint32_t &size, const uint32_t &bindingIndex)
+void Shader::addUBO(const std::string &name, const uint32_t &bindingIndex)
 {
   GLuint uboBufferID;
   glGenBuffers(1, &uboBufferID);
+  GLcheck("glGenBuffers");
   auto& uboBinding = uboBindings[name];
   std::get<0>(uboBinding) = bindingIndex;
   std::get<1>(uboBinding) = uboBufferID;
@@ -55,6 +61,9 @@ void Shader::setSSBO(const std::string &name, const void *pointer, const uint32_
   auto& bindingIndex = std::get<0>(ssboIter->second);
   auto& buffer = std::get<1>(ssboIter->second);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingIndex, buffer);
+  GLcheck("glBindBufferBase");
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+  GLcheck("glBindBuffer");
   glBufferData(GL_SHADER_STORAGE_BUFFER, size, pointer, GL_STATIC_DRAW);
+  GLcheck("glBufferData");
 };

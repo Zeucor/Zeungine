@@ -1,6 +1,6 @@
 #pragma once
 #include "../../../glm.hpp"
-namespace anex::modules::gl::shaders
+namespace anex::modules::gl::lights
 {
 	struct PointLight
 	{
@@ -11,6 +11,7 @@ namespace anex::modules::gl::shaders
 	};
 	struct DirectionalLight
 	{
+		alignas(16) glm::vec3 position;
 		alignas(16) glm::vec3 direction;
 		alignas(16) glm::vec3 color;
 		float intensity;

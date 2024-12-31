@@ -17,18 +17,25 @@ VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Model", false},
 	{"CameraPosition", false},
 	{"Fog", false},
-	{"Lighting", false}
+	{"Lighting", false},
+	{"LightSpaceMatrix", false}
 };
 void VAOFactory::generateVAO(const RuntimeConstants &constants, GLuint& vao, GLuint& vbo, GLuint& ebo, const uint32_t &indiceCount)
 {
 	glGenVertexArrays(1, &vao);
+	GLcheck("glGenVertexArrays");
 	glGenBuffers(1, &ebo);
+	GLcheck("glGenBuffers");
 	glGenBuffers(1, &vbo);
+	GLcheck("glGenBuffers");
   glBindVertexArray(vao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	GLcheck("glBindBuffer");
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	GLcheck("glBindBuffer");
   auto stride = getStride(constants);
 	glBufferData(GL_ARRAY_BUFFER, stride * indiceCount, 0, GL_STATIC_DRAW);
+	GLcheck("glBufferData");
   size_t attribIndex = 0;
   size_t offset = 0;
 	for (auto &constant: constants)
@@ -36,14 +43,17 @@ void VAOFactory::generateVAO(const RuntimeConstants &constants, GLuint& vao, GLu
     if (!isVAOConstant(constant))
       continue;
 	  glEnableVertexAttribArray(attribIndex);
+	  GLcheck("glEnableVertexAttribArray");
 	  auto &constantSize = constantSizes[constant];
 		if (std::get<2>(constantSize) == GL_FLOAT)
 	  {
 	    glVertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), GL_FALSE, stride, (const void*)offset);
+	    GLcheck("glVertexAttribPointer");
 	  }
 	  else
 	  {
 	    glVertexAttribIPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), stride, (const void*)offset);
+	    GLcheck("glVertexAttribIPointer");
 	  }
     offset += std::get<0>(constantSize) * std::get<1>(constantSize);
 		attribIndex++;
@@ -83,6 +93,9 @@ bool VAOFactory::isVAOConstant(const std::string &constant)
 void VAOFactory::destroyVAO(VAO &vao)
 {
   glDeleteVertexArrays(1, &vao.vao);
+  GLcheck("glDeleteVertexArrays");
   glDeleteBuffers(1, &vao.vbo);
+  GLcheck("glDeleteBuffers");
   glDeleteBuffers(1, &vao.ebo);
+  GLcheck("glDeleteBuffers");
 };

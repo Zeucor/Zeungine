@@ -1,5 +1,6 @@
 #include <anex/modules/gl/GL.hpp>
-#include <anex/modules/gl/shaders/Lights.hpp>
+#include <anex/modules/gl/lights/Lights.hpp>
+#include <anex/modules/gl/lights/DirectionalLight.hpp>
 #include <array>
 using namespace anex::modules::gl;
 struct TestTriangle;
@@ -8,12 +9,14 @@ struct TestScene : anex::IScene
   glm::vec3 cameraPosition;
   glm::mat4 view;
   glm::mat4 projection;
-  std::vector<shaders::PointLight> pointLights;
-  std::vector<shaders::DirectionalLight> directionalLights;
-  std::vector<shaders::SpotLight> spotLights;
+  std::vector<lights::PointLight> pointLights;
+  std::vector<lights::DirectionalLight> directionalLights;
+  std::vector<lights::DirectionalLightShadow> directionalLightShadows;
+  std::vector<lights::SpotLight> spotLights;
   std::shared_ptr<TestTriangle> triangleEntity;
   TestScene(anex::IWindow &window);
   void updateView();
+  void preRender() override;
 };
 struct TestTriangle : anex::IEntity, vaos::VAO
 {
@@ -75,7 +78,7 @@ struct TestTriangle : anex::IEntity, vaos::VAO
     shader.setBlock("Model", model);
     shader.setBlock("View", testScene.view);
     shader.setBlock("Projection", testScene.projection);
-    shader.setUniform("CameraPosition", testScene.cameraPosition);
+    shader.setBlock("CameraPosition", testScene.cameraPosition, 16);
     vaoDraw();
     shader.use(false);
   };
@@ -153,7 +156,7 @@ struct TestCube : anex::IEntity, vaos::VAO
     shader.setBlock("Model", model);
     shader.setBlock("View", testScene.view);
     shader.setBlock("Projection", testScene.projection);
-    shader.setUniform("CameraPosition", testScene.cameraPosition);
+    shader.setBlock("CameraPosition", testScene.cameraPosition, 16);
     vaoDraw();
     shader.use(false);
   };
@@ -177,14 +180,16 @@ TestScene::TestScene(anex::IWindow& window):
   // 1000
   // });
   directionalLights.push_back({
+    {window.windowWidth / 2, window.windowHeight, 0},
     {0, -1, 0},
     {1, 1, 1},
     0.5
   });
+  // directionalLightShadows.push_back({directionalLights[0]});
   spotLights.push_back({
-    glm::vec3(320.0f, 480.0f, 200.0f),
+    {window.windowWidth / 2, window.windowHeight, 0},
     glm::normalize(glm::vec3(0.0f, -1.0f, -1.0f)),
-    glm::vec3(0.0f, 0.0f, 1.0f),
+    {0.0f, 0.0f, 1.0f},
     1.0f,
     glm::cos(glm::radians(25.0f)),
     glm::cos(glm::radians(50.0f))
@@ -195,9 +200,9 @@ TestScene::TestScene(anex::IWindow& window):
   addEntity(std::make_shared<TestCube>(window, *this, glm::vec3(window.windowWidth / 2, 0, 0), glm::vec3(5000, 25, 5000)));
   auto &shader = triangleEntity->shader;
   shader.use(true);
-  shader.setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(shaders::PointLight));
-  shader.setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(shaders::DirectionalLight));
-  shader.setSSBO("SpotLights", spotLights.data(), spotLights.size() * sizeof(shaders::SpotLight));
+  shader.setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
+  shader.setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(lights::DirectionalLight));
+  shader.setSSBO("SpotLights", spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
   shader.use(false);
   window.addKeyUpdateHandler(20, [&]()
   {
@@ -224,7 +229,25 @@ TestScene::TestScene(anex::IWindow& window):
 void TestScene::updateView()
 {
   view = glm::lookAt(cameraPosition, {window.windowWidth / 2, window.windowHeight / 2, 0}, glm::vec3{0, 1, 0});
-}
+};
+void TestScene::preRender()
+{
+  // for (auto &directionaLightShadow : directionalLightShadows)
+  // {
+  //   directionaLightShadow.framebuffer.use(true);
+  //   directionaLightShadow.shader.use(true);
+  //   for (auto &entityPair : entities)
+  //   {
+  //     auto &entityPointer = entityPair.second;
+  //     auto &vbo = *std::dynamic_pointer_cast<vaos::VAO>(entityPointer);
+  //     vbo.vaoDraw();
+  //   }
+  //   directionaLightShadow.shader.use(false);
+  //   directionaLightShadow.framebuffer.use(false);
+  // }
+  // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+};
 
 int main()
 {

@@ -1,5 +1,5 @@
 #include <anex/modules/gl/shaders/ShaderFactory.hpp>
-#include <anex/modules/gl/shaders/Lights.hpp>
+#include <anex/modules/gl/lights/Lights.hpp>
 #include <anex/IWindow.hpp>
 #include <stdexcept>
 #include <glm/fwd.hpp>
@@ -44,7 +44,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO("View", sizeof(glm::mat4), bindingIndex);
+                  shader.addUBO("View", bindingIndex);
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform View {\n" +
                     " mat4 matrix;\n" +
                     "} view;";
@@ -59,7 +59,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
                   {
                     auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                    shader.addUBO("Projection", sizeof(glm::mat4), bindingIndex);
+                    shader.addUBO("Projection", bindingIndex);
                     return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Projection {\n" +
                       " mat4 matrix;\n" +
                       "} projection;";
@@ -74,7 +74,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
                     {
                       auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                      shader.addUBO("Model", sizeof(glm::mat4), bindingIndex);
+                      shader.addUBO("Model", bindingIndex);
                       return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Model {\n" +
                         " mat4 matrix;\n" +
                         "} model;";
@@ -91,10 +91,26 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 },
                 {
                   ++ShaderFactory::hooksCount,  [](auto &shader, const auto &constants)->std::string{
-                    return std::string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec3 outFragPosition;\n") +
-                      "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec3 outNormal;";
+                    auto string = std::string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec3 outFragPosition;\n");
+                    string += "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) + ") out vec3 outNormal;";
+                    return string;
                   }
                 }
+            }
+          },
+          {
+            "LightSpaceMatrix",
+            {
+                    {
+                      ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
+                      {
+                        auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                        shader.addUBO("LightSpaceMatrix", bindingIndex);
+                        return "layout(binding = " + std::to_string(bindingIndex) + ") uniform LightSpaceMatrix {\n" +
+                          " mat4 matrix;\n" +
+                          "} lightSpaceMatrix;";
+                      }
+                    }
             }
           }
         }
@@ -115,6 +131,10 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto &shader, const RuntimeConstants &constants)->std::string{
                   std::string string = "  gl_Position = ";
+                  if (std::find(constants.begin(), constants.end(), "LightSpaceMatrix") != constants.end())
+                  {
+                    string += "lightSpaceMatrix.matrix * ";
+                  }
                   if (std::find(constants.begin(), constants.end(), "Projection") != constants.end())
                   {
                     string += "projection.matrix * ";
@@ -183,7 +203,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                       ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string
                       {
                         auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                        shader.addUBO("CameraPosition", sizeof(glm::vec3), bindingIndex);
+                        shader.addUBO("CameraPosition", bindingIndex);
                         return "layout(binding = " + std::to_string(bindingIndex) + ") uniform CameraPosition {\n" +
                           " vec3 value;\n" +
                           "} cameraPosition;";
@@ -204,8 +224,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
             "Normal", {
                 {
                   ++ShaderFactory::hooksCount, [](auto &shader, const auto &constants)->std::string{
-                    return std::string("layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inFragPosition;\n") +
-                      "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inNormal;";
+                    auto string = std::string("layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inFragPosition;\n");
+                    string += "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) + ") in vec3 inNormal;";
+                    return string;
                   }
                 }
             }
@@ -224,6 +245,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                             " float range;\n" +
                             "};\n" +
                             "struct DirectionalLight{\n" +
+                            " vec3 position;\n" +
                             " vec3 direction;\n" +
                             " vec3 color;\n" +
                             " float intensity;\n" +
@@ -237,17 +259,17 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                             " float outerCutoff;\n" +
                             "};\n";
                           auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                          shader.addSSBO("PointLights", sizeof(PointLight), bindingIndex);
+                          shader.addSSBO("PointLights", bindingIndex);
                           string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer PointLightBuffer {\n" +
                             " PointLight pointLights[];\n" +
                             "};\n";
                           bindingIndex = ShaderFactory::currentBindingIndex++;
-                          shader.addSSBO("DirectionalLights", sizeof(DirectionalLight), bindingIndex);
+                          shader.addSSBO("DirectionalLights", bindingIndex);
                           string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer DirectionalLightBuffer {\n" +
                             " DirectionalLight directionalLights[];\n" +
                             "};\n";
                           bindingIndex = ShaderFactory::currentBindingIndex++;
-                          shader.addSSBO("SpotLights", sizeof(SpotLight), bindingIndex);
+                          shader.addSSBO("SpotLights", bindingIndex);
                           string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer SpotLightBuffer {\n" +
                             " SpotLight spotLights[];\n" +
                             "};";

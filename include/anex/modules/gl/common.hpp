@@ -5,3 +5,7 @@
 #include <GL/glext.h>
 #include <GL/wglext.h>
 #endif
+namespace anex::modules::gl
+{
+	const bool GLcheck(const char* fn, const bool& egl = false);
+}

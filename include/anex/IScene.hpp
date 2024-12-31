@@ -14,6 +14,7 @@ namespace anex
 		virtual ~IScene() = default;
 		unsigned int addEntity(const std::shared_ptr<IEntity> &entity);
 		void removeEntity(const unsigned int &id);
+		virtual void preRender() = 0;
 		void render();
 	};
 }
