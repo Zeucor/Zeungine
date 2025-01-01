@@ -113,6 +113,7 @@ void GLWindow::startWindow()
 	wc.lpfnWndProc = gl_wndproc;
 	wc.hInstance = hInstance;
 	wc.lpszClassName = title;
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	RegisterClassEx(&wc);
 	RECT desiredRect = {0, 0, windowWidth, windowHeight};
 	AdjustWindowRectEx(&desiredRect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_CLIENTEDGE);
