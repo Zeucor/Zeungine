@@ -106,13 +106,14 @@ void GLWindow::startWindow()
 {
 #ifdef _WIN32
 	HINSTANCE hInstance = GetModuleHandle(NULL);
-	WNDCLASS wc = {0};
+	WNDCLASSEX wc = {0};
 	// wc.cbSize = sizeof(WNDCLASS);
+	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_VREDRAW | CS_HREDRAW;
 	wc.lpfnWndProc = gl_wndproc;
 	wc.hInstance = hInstance;
 	wc.lpszClassName = title;
-	RegisterClass(&wc);
+	RegisterClassEx(&wc);
 	RECT desiredRect = {0, 0, windowWidth, windowHeight};
 	AdjustWindowRectEx(&desiredRect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_CLIENTEDGE);
 	int adjustedWidth = desiredRect.right - desiredRect.left;
