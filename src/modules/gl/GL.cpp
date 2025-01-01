@@ -4,7 +4,11 @@
 #include <anex/modules/gl/shaders/ShaderManager.hpp>
 #include <anex/Logger.hpp>
 using namespace anex::modules::gl;
-
+// enable optimus!
+extern "C" {
+	_declspec(dllexport) DWORD NvOptimusEnablement = 1;
+	_declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
 GLWindow::GLWindow(const char* title, const int& windowWidth, const int& windowHeight, const int& framerate):
 	IWindow(windowWidth, windowHeight, framerate),
 	title(title)
