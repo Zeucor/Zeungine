@@ -226,6 +226,7 @@ void GLWindow::renderInit()
 	glDebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
 			std::cerr << "OpenGL Debug Message: " << message << std::endl;
 	}, nullptr);
+	wglSwapIntervalEXT(0);
 #endif
 };
 
