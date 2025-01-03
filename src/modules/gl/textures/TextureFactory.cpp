@@ -33,7 +33,9 @@ void TextureFactory::initTexture(Texture &texture, const void *data)
 {
 	glGenTextures(1, &texture.id);
 	GLcheck("glGenTextures");
-  if (texture.size.y == 0)
+  if (texture.size.w > 0)
+    texture.target = GL_TEXTURE_CUBE_MAP;
+  else if (texture.size.y == 0)
     texture.target = GL_TEXTURE_1D;
   else if (texture.size.z <= 1)
     texture.target = GL_TEXTURE_2D;
@@ -56,6 +58,13 @@ void TextureFactory::initTexture(Texture &texture, const void *data)
   {
     glTexImage3D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, texture.size.z, 0, formats[texture.format], types[{texture.format, texture.type}], data);
     GLcheck("glTexImage3D");
+  }
+  else if (texture.target == GL_TEXTURE_CUBE_MAP)
+  {
+    for (uint8_t face = 0; face < 6; ++face)
+    {
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormats[texture.format], texture.size.x, texture.size.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+    }
   }
   GLenum filterType;
   switch (texture.filterType)

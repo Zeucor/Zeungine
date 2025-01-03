@@ -5,10 +5,9 @@ using namespace anex::modules::gl::lights;
 DirectionalLightShadow::DirectionalLightShadow(DirectionalLight &directionalLight):
 	shader(*shaders::ShaderManager::getShaderByConstants({"Color", "Position", "Normal", "Model", "LightSpaceMatrix"}).second),
 	directionalLight(directionalLight),
-  texture(glm::ivec3(2048, 2048, 1), 0, textures::Texture::Depth, textures::Texture::Float),
+  texture(glm::ivec4(2048, 2048, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
 	framebuffer(texture)
 {
-  shader.bind();
 	float near_plane = 0.1f, far_plane = 4000.f;
 	glm::vec2 projectionDimensions = {1024, 1024};
 	glm::mat4 lightProjection = glm::ortho(-projectionDimensions.x, projectionDimensions.x, -projectionDimensions.y, projectionDimensions.y, near_plane, far_plane);
@@ -25,6 +24,4 @@ DirectionalLightShadow::DirectionalLightShadow(DirectionalLight &directionalLigh
 																	lightTarget,
 																	correctedUp);
 	lightSpaceMatrix = lightProjection * lightView;
-  shader.setBlock("LightSpaceMatrix", lightSpaceMatrix, sizeof(glm::mat4));
-	shader.unbind();
 };

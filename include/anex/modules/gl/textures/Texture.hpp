@@ -27,13 +27,13 @@ namespace anex::modules::gl::textures
 			Linear = 1,
 			Nearest
 		};
-    glm::ivec3 size;
+    glm::ivec4 size;
     GLuint id = 0;
     GLenum target;
     Format format;
     Type type;
     FilterType filterType;
-    Texture(const glm::ivec3 &size, const void *data = 0, const Format &format = RGBA8, const Type &type = UnsignedByte, const FilterType &filterType = Linear);
+    Texture(const glm::ivec4 &size, const void *data = 0, const Format &format = RGBA8, const Type &type = UnsignedByte, const FilterType &filterType = Linear);
     void bind() const;
 	void unbind() const;
   };

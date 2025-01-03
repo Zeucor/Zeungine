@@ -1,7 +1,7 @@
 #include <anex/modules/gl/textures/Texture.hpp>
 #include <anex/modules/gl/textures/TextureFactory.hpp>
 using namespace anex::modules::gl::textures;
-Texture::Texture(const glm::ivec3 &size, const void *data, const Format &format, const Type &type, const FilterType &filterType):
+Texture::Texture(const glm::ivec4 &size, const void *data, const Format &format, const Type &type, const FilterType &filterType):
 	size(size),
   format(format),
   type(type),

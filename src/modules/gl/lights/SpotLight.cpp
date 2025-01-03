@@ -5,7 +5,7 @@ using namespace anex::modules::gl::lights;
 SpotLightShadow::SpotLightShadow(SpotLight &spotLight):
 	shader(*shaders::ShaderManager::getShaderByConstants({"Color", "Position", "Normal", "Model", "LightSpaceMatrix"}).second),
 	spotLight(spotLight),
-  texture(glm::ivec3(4096, 4096, 1), 0, textures::Texture::Depth, textures::Texture::Float),
+  texture(glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
 	framebuffer(texture)
 {
 	float near_plane = 1.f, far_plane = 2500.0f; // Adjust according to your spotlight's range
