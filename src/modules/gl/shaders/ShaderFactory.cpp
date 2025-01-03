@@ -648,16 +648,19 @@ uint32_t ShaderFactory::currentInLayoutIndex = 0;
 uint32_t ShaderFactory::currentOutLayoutIndex = 0;
 uint32_t ShaderFactory::currentBindingIndex = 0;
 
-Shader::ShaderMap ShaderFactory::generateShaderMap(const RuntimeConstants& constants, Shader& shader)
+Shader::ShaderMap ShaderFactory::generateShaderMap(const RuntimeConstants& constants, Shader& shader, const std::vector<Shader::ShaderType> &shaderTypes)
 {
   Shader::ShaderMap shaderMap;
-  shaderMap[Shader::ShaderType::Vertex] = generateShader(Shader::ShaderType::Vertex, constants, shader);
-  shaderMap[Shader::ShaderType::Fragment] = generateShader(Shader::ShaderType::Fragment, constants, shader);
+  for (auto &shaderType : shaderTypes)
+  {
+    shaderMap[shaderType] = generateShader(shaderType, constants, shader);
+  }
   return shaderMap;
 };
 
 Shader::ShaderPair ShaderFactory::generateShader(const Shader::ShaderType& shaderType,
-                                                 const RuntimeConstants& constants, Shader& shader)
+                                                 const RuntimeConstants& constants,
+                                                 Shader& shader)
 {
   Shader::ShaderPair shaderPair;
   auto& shaderString = shaderPair.first;

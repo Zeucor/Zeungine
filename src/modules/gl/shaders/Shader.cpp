@@ -2,8 +2,8 @@
 #include <anex/modules/gl/shaders/ShaderFactory.hpp>
 #include <anex/modules/gl/textures/Texture.hpp>
 using namespace anex::modules::gl::shaders;
-Shader::Shader(const RuntimeConstants &constants):
-	shaders(ShaderFactory::generateShaderMap(constants, *this))
+Shader::Shader(const RuntimeConstants &constants, const std::vector<ShaderType> &shaderTypes):
+	shaders(ShaderFactory::generateShaderMap(constants, *this, shaderTypes))
 {
   ShaderFactory::compileProgram(shaders, program);
 };

@@ -6,40 +6,45 @@
 #include <functional>
 #include <stdexcept>
 #include "../../../glm.hpp"
+
 namespace anex::modules::gl::textures
 {
-  struct Texture;
+	struct Texture;
 }
+
 namespace anex::modules::gl::shaders
 {
 	using RuntimeConstants = std::vector<std::string>;
+
 	struct Shader
-  {
+	{
 		enum class ShaderType
-    {
-      Unknown = 0,
-      Vertex,
-      Geometry,
-      Fragment,
-      TessellationControl,
-      TessellationEvaluation,
-      Compute
-    };
-    using ShaderPair = std::pair<std::string, GLuint>;
-    using ShaderMap = std::map<ShaderType, ShaderPair>;
-    using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
+		{
+			Unknown = 0,
+			Vertex,
+			Geometry,
+			Fragment,
+			TessellationControl,
+			TessellationEvaluation,
+			Compute
+		};
+
+		using ShaderPair = std::pair<std::string, GLuint>;
+		using ShaderMap = std::map<ShaderType, ShaderPair>;
+		using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
 		std::unordered_map<std::string, std::tuple<uint32_t, GLuint>> uboBindings;
 		std::unordered_map<std::string, std::tuple<uint32_t, GLuint>> ssboBindings;
-    ShaderMap shaders;
-    GLuint program = 0;
-		Shader(const RuntimeConstants& constants);
+		ShaderMap shaders;
+		GLuint program = 0;
+		Shader(const RuntimeConstants& constants, const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
 		~Shader();
 		void bind() const;
 		void unbind() const;
-		void addSSBO(const std::string& name, const uint32_t &bindingIndex);
-		void addUBO(const std::string &name, const uint32_t &bindingIndex);
+		void addSSBO(const std::string& name, const uint32_t& bindingIndex);
+		void addUBO(const std::string& name, const uint32_t& bindingIndex);
+
 		template <typename T>
-		void setUniform(const std::string &name, const T& value, const uint32_t &size = 0)
+		void setUniform(const std::string& name, const T& value, const uint32_t& size = 0)
 		{
 			auto pointerSize = size ? size : sizeof(value);
 			GLint location = glGetUniformLocation(program, name.c_str());
@@ -117,8 +122,9 @@ namespace anex::modules::gl::shaders
 			}
 			throw std::runtime_error("setUniform: unsupported type");
 		};
+
 		template <typename T>
-		void setBlock(const std::string &name, const T& value, const uint32_t &size = 0)
+		void setBlock(const std::string& name, const T& value, const uint32_t& size = 0)
 		{
 			auto blockIndex = glGetUniformBlockIndex(program, name.c_str());
 			if (blockIndex == -1)
@@ -138,7 +144,7 @@ namespace anex::modules::gl::shaders
 			glBindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, pointerSize);
 			GLcheck("glBindBufferRange");
 		};
-		void setSSBO(const std::string &name, const void *pointer, const uint32_t &size);
-		void setTexture(const std::string &name, const textures::Texture &texture, const int32_t &unit);
-  };
+		void setSSBO(const std::string& name, const void* pointer, const uint32_t& size);
+		void setTexture(const std::string& name, const textures::Texture& texture, const int32_t& unit);
+	};
 }
