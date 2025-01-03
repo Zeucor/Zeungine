@@ -1,5 +1,6 @@
 #include <anex/modules/gl/shaders/Shader.hpp>
 #include <anex/modules/gl/shaders/ShaderFactory.hpp>
+#include <anex/modules/gl/textures/Texture.hpp>
 using namespace anex::modules::gl::shaders;
 Shader::Shader(const RuntimeConstants &constants):
 	shaders(ShaderFactory::generateShaderMap(constants, *this))
@@ -20,18 +21,15 @@ Shader::~Shader()
   }
   ShaderFactory::deleteProgram(*this);
 };
-void Shader::use(const bool &useProgram)
+void Shader::bind() const
 {
-  if (useProgram)
-  {
-    glUseProgram(program);
-    GLcheck("glUseProgram");
-  }
-  else
-  {
-    glUseProgram(0);
-    GLcheck("glUseProgram");
-  }
+  glUseProgram(program);
+  GLcheck("glUseProgram");
+};
+void Shader::unbind() const
+{
+  glUseProgram(0);
+  GLcheck("glUseProgram");
 };
 void Shader::addSSBO(const std::string& name, const uint32_t &bindingIndex)
 {
@@ -66,4 +64,12 @@ void Shader::setSSBO(const std::string &name, const void *pointer, const uint32_
   GLcheck("glBindBuffer");
   glBufferData(GL_SHADER_STORAGE_BUFFER, size, pointer, GL_STATIC_DRAW);
   GLcheck("glBufferData");
+};
+void Shader::setTexture(const std::string &name, const textures::Texture &texture, const int32_t &unit)
+{
+  bind();
+  setUniform(name, unit);
+  glActiveTexture(GL_TEXTURE0 + unit);
+  texture.bind();
+  unbind();
 };

@@ -224,7 +224,11 @@ void GLWindow::renderInit()
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	GLcheck("glEnable");
 	glDebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
-			std::cerr << "OpenGL Debug Message: " << message << std::endl;
+		if (type == GL_DEBUG_TYPE_OTHER)
+		{
+			return;
+		}
+		std::cerr << "OpenGL Debug Message: " << message << std::endl;
 	}, nullptr);
 	wglSwapIntervalEXT(0);
 #endif

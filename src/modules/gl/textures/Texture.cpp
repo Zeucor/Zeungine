@@ -9,16 +9,13 @@ Texture::Texture(const glm::ivec3 &size, const void *data, const Format &format,
 {
   TextureFactory::initTexture(*this, data);
 };
-void Texture::use(const bool &useTexture)
+void Texture::bind() const
 {
-  if (useTexture)
-  {
-    glBindTexture(target, id);
-    GLcheck("glBindTexture");
-  }
-  else
-  {
-    glBindTexture(target, 0);
-    GLcheck("glBindTexture");
-  }
+  glBindTexture(target, id);
+  GLcheck("glBindTexture");
+};
+void Texture::unbind() const
+{
+  glBindTexture(target, 0);
+  GLcheck("glBindTexture");
 };

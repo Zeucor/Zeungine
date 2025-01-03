@@ -5,13 +5,13 @@
 #include "./Lights.hpp"
 namespace anex::modules::gl::lights
 {
-	struct DirectionalLightShadow
+	struct SpotLightShadow
   {
     shaders::Shader &shader;
-    DirectionalLight &directionalLight;
+    SpotLight &spotLight;
     textures::Texture texture;
 		textures::Framebuffer framebuffer;
 		glm::mat4 lightSpaceMatrix;
-    DirectionalLightShadow(DirectionalLight &directionalLight);
+    SpotLightShadow(SpotLight &spotLight);
   };
 }

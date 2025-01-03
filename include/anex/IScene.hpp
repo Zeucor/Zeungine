@@ -15,6 +15,7 @@ namespace anex
 		unsigned int addEntity(const std::shared_ptr<IEntity> &entity);
 		void removeEntity(const unsigned int &id);
 		virtual void preRender() = 0;
-		void render();
+		virtual void render();
+		virtual void entityPreRender(IEntity &entity);
 	};
 }

@@ -6,8 +6,9 @@ namespace anex::modules::gl::textures
 	struct Framebuffer
   {
     GLuint id = 0;
-		const Texture &texture;
+	const Texture &texture;
     Framebuffer(const Texture &texture);
-		void use(const bool &useFramebuffer);
+	void bind() const;
+	void unbind() const;
   };
 }

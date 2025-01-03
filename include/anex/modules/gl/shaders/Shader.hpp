@@ -6,6 +6,10 @@
 #include <functional>
 #include <stdexcept>
 #include "../../../glm.hpp"
+namespace anex::modules::gl::textures
+{
+  struct Texture;
+}
 namespace anex::modules::gl::shaders
 {
 	using RuntimeConstants = std::vector<std::string>;
@@ -30,7 +34,8 @@ namespace anex::modules::gl::shaders
     GLuint program = 0;
 		Shader(const RuntimeConstants& constants);
 		~Shader();
-		void use(const bool &useProgram);
+		void bind() const;
+		void unbind() const;
 		void addSSBO(const std::string& name, const uint32_t &bindingIndex);
 		void addUBO(const std::string &name, const uint32_t &bindingIndex);
 		template <typename T>
@@ -134,5 +139,6 @@ namespace anex::modules::gl::shaders
 			GLcheck("glBindBufferRange");
 		};
 		void setSSBO(const std::string &name, const void *pointer, const uint32_t &size);
+		void setTexture(const std::string &name, const textures::Texture &texture, const int32_t &unit);
   };
 }

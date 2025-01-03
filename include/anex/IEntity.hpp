@@ -7,6 +7,6 @@ namespace anex
 		IWindow &window;
 		IEntity(IWindow &window);
 		virtual ~IEntity() = default;
-		virtual void render() = 0;
+		virtual void render();
   };
 }

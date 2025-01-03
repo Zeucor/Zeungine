@@ -28,3 +28,6 @@ void IScene::render()
 		it->second->render();
 	}
 };
+void IScene::entityPreRender(IEntity &entity)
+{
+};

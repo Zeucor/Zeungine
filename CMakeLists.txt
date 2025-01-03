@@ -24,7 +24,10 @@ endif()
 if(BUILD_OPENGL)
     list(APPEND ANEX_SOURCES
         src/modules/gl/GL.cpp
+        src/modules/gl/GLEntity.cpp
+        src/modules/gl/GLScene.cpp
         src/modules/gl/lights/DirectionalLight.cpp
+        src/modules/gl/lights/SpotLight.cpp
         src/modules/gl/shaders/Shader.cpp
         src/modules/gl/shaders/ShaderFactory.cpp
         src/modules/gl/shaders/ShaderManager.cpp

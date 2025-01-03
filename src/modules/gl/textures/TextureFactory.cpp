@@ -39,7 +39,7 @@ void TextureFactory::initTexture(Texture &texture, const void *data)
     texture.target = GL_TEXTURE_2D;
   else
     texture.target = GL_TEXTURE_3D;
-  texture.use(true);
+  texture.bind();
   glPixelStorei(GL_PACK_ALIGNMENT, 1);
   GLcheck("glPixelStorei");
   if (texture.target == GL_TEXTURE_1D)
@@ -75,5 +75,5 @@ void TextureFactory::initTexture(Texture &texture, const void *data)
   GLcheck("glTexParameteri");
   glTexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   GLcheck("glTexParameteri");
-  texture.use(false);
+  texture.unbind();
 };
