@@ -154,7 +154,7 @@ struct TestCube : anex::modules::gl::GLEntity
   };
 };
 TestScene::TestScene(anex::IWindow& window):
-  GLScene(window, { window.windowWidth / 2, window.windowHeight / 2 - window.windowHeight / 2, -window.windowWidth}, glm::normalize(glm::vec3(0, -1, 1)), 81.f)
+  GLScene(window, { window.windowWidth / 2, window.windowHeight, -window.windowWidth}, glm::normalize(glm::vec3(0, -1, 1)), 81.f)
 {
   pointLights.push_back({
   {window.windowWidth / 2, window.windowHeight, 0},
