@@ -9,7 +9,7 @@ namespace anex::modules::gl::shaders
 		static std::unordered_map<std::size_t, std::pair<uint32_t, std::shared_ptr<Shader>>> shadersByHash;
     static uint32_t shaderCount;
     static Shader& getShaderByID(const uint32_t &id);
-    static std::pair<uint32_t, std::shared_ptr<Shader>> getShaderByConstants(const RuntimeConstants &constants);
+    static std::pair<uint32_t, std::shared_ptr<Shader>> getShaderByConstants(const RuntimeConstants &constants, const std::vector<Shader::ShaderType> &shaderTypes = {Shader::ShaderType::Vertex, Shader::ShaderType::Fragment});
     static void deleteShaders();
   };
 }

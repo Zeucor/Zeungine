@@ -12,13 +12,13 @@ Shader& ShaderManager::getShaderByID(const uint32_t &id)
     throw std::runtime_error("Shader not found");
   return *shaderIter->second;
 };
-std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants(const RuntimeConstants &constants)
+std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants(const RuntimeConstants &constants, const std::vector<Shader::ShaderType> &shaderTypes)
 {
   auto hash = crypto::hashVectorOfStrings(constants);
   auto hashIter = shadersByHash.find(hash);
   if (hashIter != shadersByHash.end())
     return hashIter->second;
-  auto shaderPointer = std::make_shared<Shader>(constants);
+  auto shaderPointer = std::make_shared<Shader>(constants, shaderTypes);
   auto id = ++shaderCount;
   shaders[id] = shaderPointer;
   std::pair<uint32_t, std::shared_ptr<Shader>> pair(id, shaderPointer);
