@@ -162,12 +162,14 @@ TestScene::TestScene(anex::IWindow& window):
   5000,
   10000
   });
-  // pointLights.push_back({
-  // {window.windowWidth / 2, 0, 0},
-  // {0, 1, 0},
-  // 5000,
-  // 1000
-  // });
+  pointLights.push_back({
+    {window.windowWidth * 2, window.windowHeight, 0},
+    {0, 1, 0},
+    5000,
+    10000,
+    0.1f,
+    4000.f
+  });
   directionalLights.push_back({
     {window.windowWidth / 2, 2500, 2000}, // position
     glm::normalize(glm::vec3(0, -1, -1)), // direction

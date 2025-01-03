@@ -1,6 +1,7 @@
 #pragma once
 #include <anex/IScene.hpp>
 #include "./lights/Lights.hpp"
+#include "./lights/PointLight.hpp"
 #include "./lights/DirectionalLight.hpp"
 #include "./lights/SpotLight.hpp"
 namespace anex::modules::gl
@@ -14,9 +15,10 @@ namespace anex::modules::gl
 		glm::mat4 projection;
 		std::vector<lights::PointLight> pointLights;
 		std::vector<lights::DirectionalLight> directionalLights;
+		std::vector<lights::SpotLight> spotLights;
+		std::vector<lights::PointLightShadow> pointLightShadows;
 		std::vector<lights::DirectionalLightShadow> directionalLightShadows;
 		std::vector<lights::SpotLightShadow> spotLightShadows;
-		std::vector<lights::SpotLight> spotLights;
     GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const float &fov);
     void updateView();
     void preRender() override;

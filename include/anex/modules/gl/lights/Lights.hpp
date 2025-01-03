@@ -8,6 +8,8 @@ namespace anex::modules::gl::lights
 		alignas(16) glm::vec3 color;
 		float intensity;
 		float range;
+		float nearPlane;
+		float farPlane;
 	};
 	struct DirectionalLight
 	{

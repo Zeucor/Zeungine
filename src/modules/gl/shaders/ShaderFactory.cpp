@@ -326,6 +326,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  vec3 color;\n" +
                     "  float intensity;\n" +
                     "  float range;\n" +
+                    "  float nearPlane;\n" +
+                    "  float farPlane;\n" +
                     "};\n" +
                     "struct DirectionalLight{\n" +
                     "  vec3 position;\n" +
