@@ -64,6 +64,7 @@ void TextureFactory::initTexture(Texture &texture, const void *data)
     for (uint8_t face = 0; face < 6; ++face)
     {
       glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormats[texture.format], texture.size.x, texture.size.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+      GLcheck("glTexImage2D");
     }
   }
   GLenum filterType;

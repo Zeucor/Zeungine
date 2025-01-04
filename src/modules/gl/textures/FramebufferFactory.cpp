@@ -11,10 +11,20 @@ void FramebufferFactory::initFramebuffer(Framebuffer &framebuffer)
   {
     case Texture::Depth:
       frameBufferTarget = GL_DEPTH_ATTACHMENT;
+      glDrawBuffer(GL_NONE);
+      glReadBuffer(GL_NONE);
       break;
   }
-  glFramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, framebuffer.texture.id, 0);
-  GLcheck("glFramebufferTexture2D");
+  if (framebuffer.texture.target == GL_TEXTURE_CUBE_MAP)
+  {
+    glFramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, framebuffer.texture.id, 0);
+    GLcheck("glFramebufferTexture");
+  }
+  else
+  {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, framebuffer.texture.id, 0);
+    GLcheck("glFramebufferTexture2D");
+  }
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   GLcheck("glBindFramebuffer");
 };

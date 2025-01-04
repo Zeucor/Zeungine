@@ -32,6 +32,7 @@ struct TestTriangle : anex::modules::gl::GLEntity
       "Lighting",
       "DirectionalLightShadowMaps",
       "SpotLightShadowMaps",
+      "PointLightShadowMaps",
       "LightSpacePosition"
     }, 3, position, rotation, scale),
     indices(2, 1, 0),
@@ -44,10 +45,6 @@ struct TestTriangle : anex::modules::gl::GLEntity
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
     updateElements("Normal", normals.data());
-    window.addMouseMoveHandler([&](const auto &coords)
-    {
-      this->position = {coords.x, coords.y, 0};
-    });
     window.addMousePressHandler(5, [&](const auto &pressed)
     {
       colors[0] = pressed ? glm::vec4(1, 1, 1, 1) : glm::vec4(1, 0, 0, 1);
@@ -93,7 +90,7 @@ struct TestCube : anex::modules::gl::GLEntity
   float rotationAmount = 0;
   TestScene &testScene;
 
-  TestCube(anex::IWindow &window, TestScene &testScene, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale, const glm::vec3 &size):
+  TestCube(anex::IWindow &window, TestScene &testScene, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale, const glm::vec3 &size, const bool &mouseMove = false):
     GLEntity(window, {
       "Color",
       "Position",
@@ -106,6 +103,7 @@ struct TestCube : anex::modules::gl::GLEntity
       "Lighting",
       "DirectionalLightShadowMaps",
       "SpotLightShadowMaps",
+      "PointLightShadowMaps",
       "LightSpacePosition"
     }, 36, position, rotation, scale),
     indices{
@@ -139,6 +137,11 @@ struct TestCube : anex::modules::gl::GLEntity
     updateElements("Color", colors.data());
     updateElements("Position", positions.data());
     updateElements("Normal", normals.data());
+    // if (mouseMove)
+    //   window.addMouseMoveHandler([&](const auto &coords)
+    //   {
+    //     this->position = {0, coords.y / window.windowHeight, 0};
+    //   });
   };
 
   void preRender() override
@@ -154,46 +157,41 @@ struct TestCube : anex::modules::gl::GLEntity
   };
 };
 TestScene::TestScene(anex::IWindow& window):
-  GLScene(window, { window.windowWidth / 2, window.windowHeight, -window.windowWidth}, glm::normalize(glm::vec3(0, -1, 1)), 81.f)
+  GLScene(window, { 0, 3, 7}, glm::normalize(glm::vec3(0, -1, -1)), 81.f)
 {
   pointLights.push_back({
-  {window.windowWidth / 2, window.windowHeight, 0},
-  {1, 0, 0},
-  5000,
-  10000
-  });
-  pointLights.push_back({
-    {window.windowWidth * 2, window.windowHeight, 0},
+    {0, 10, 0},
     {0, 1, 0},
-    5000,
-    10000,
-    0.1f,
-    4000.f
+    0.8,
+    100,
+    1.f,
+    25.f
   });
-  directionalLights.push_back({
-    {window.windowWidth / 2, 2500, 2000}, // position
-    glm::normalize(glm::vec3(0, -1, -1)), // direction
-    {1, 1, 1}, // color
-    0.5 // intensity
-  });
-  directionalLightShadows.emplace_back(directionalLights[0]);
-  spotLights.push_back({
-    {window.windowWidth / 2, 500, -800}, // position
-    glm::normalize(glm::vec3(0, -1, 1)), // direction
-    {0.0f, 0.0f, 1.0f}, // color
-    1.0f, // intensity
-    glm::cos(glm::radians(25.0f)), // cutoff
-    glm::cos(glm::radians(50.0f)) // outerCutoff
-  });
-  spotLightShadows.emplace_back(spotLights[0]);
-  triangleEntity = std::dynamic_pointer_cast<TestTriangle>(std::make_shared<TestTriangle>(window, *this, glm::vec3(0, 100, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1)));
-  addEntity(triangleEntity);
+  pointLightShadows.emplace_back(pointLights[0]);
+  // directionalLights.push_back({
+  //   {window.windowWidth / 2, 2500, 2000}, // position
+  //   glm::normalize(glm::vec3(0, -1, -1)), // direction
+  //   {1, 1, 1}, // color
+  //   0.5 // intensity
+  // });
+  // directionalLightShadows.emplace_back(directionalLights[0]);
+  // spotLights.push_back({
+  //   {window.windowWidth / 2, 500, -800}, // position
+  //   glm::normalize(glm::vec3(0, -1, 1)), // direction
+  //   {0.0f, 0.0f, 1.0f}, // color
+  //   1.0f, // intensity
+  //   glm::cos(glm::radians(25.0f)), // cutoff
+  //   glm::cos(glm::radians(50.0f)) // outerCutoff
+  // });
+  // spotLightShadows.emplace_back(spotLights[0]);
+  triangleEntity = std::dynamic_pointer_cast<TestTriangle>(std::make_shared<TestTriangle>(window, *this, glm::vec3(1, 1, -1), glm::vec3(0, glm::radians(90.f), 0), glm::vec3(1, 1, 1)));
+  // addEntity(triangleEntity);
   addEntity(std::make_shared<TestCube>(window, *this,
-    glm::vec3(window.windowWidth / 2, window.windowHeight / 2, 0), // position
+    glm::vec3(0, 3, 0), // position
     glm::vec3(0, 0, 0), // rotation
     glm::vec3(1, 1, 1), // scale
-    glm::vec3(50, 50, 50))); // size
-  addEntity(std::make_shared<TestCube>(window, *this, glm::vec3(window.windowWidth / 2, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec3(5000, 25, 5000)));
+    glm::vec3(1, 1, 1), false)); // size
+  addEntity(std::make_shared<TestCube>(window, *this, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec3(25, 1, 25)));
   auto &shader = triangleEntity->shader;
   shader.bind();
   shader.setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
@@ -204,22 +202,22 @@ TestScene::TestScene(anex::IWindow& window):
   shader.unbind();
   window.addKeyUpdateHandler(20, [&]()
   {
-    cameraPosition.x -= 500.f * window.deltaTime;
+    cameraPosition.x -= 1.f * window.deltaTime;
     updateView();
   });
   window.addKeyUpdateHandler(19, [&]()
   {
-    cameraPosition.x += 500.f * window.deltaTime;
+    cameraPosition.x += 1.f * window.deltaTime;
     updateView();
   });
   window.addKeyUpdateHandler(17, [&]()
   {
-    cameraPosition.y += 500.f * window.deltaTime;
+    cameraPosition.y += 1.f * window.deltaTime;
     updateView();
   });
   window.addKeyUpdateHandler(18, [&]()
   {
-    cameraPosition.y -= 500.f * window.deltaTime;
+    cameraPosition.y -= 1.f * window.deltaTime;
     updateView();
   });
   updateView();
@@ -227,7 +225,7 @@ TestScene::TestScene(anex::IWindow& window):
 
 int main()
 {
-  GLWindow window("GLWindow", 640, 480);
+  GLWindow window("GLWindow", 1280, 720);
   window.clearColor = {0, 0, 0, 1};
   window.runOnThread([](auto &window)
   {

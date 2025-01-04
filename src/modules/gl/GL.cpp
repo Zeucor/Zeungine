@@ -219,6 +219,8 @@ void GLWindow::renderInit()
 	GLcheck("glViewport");
 	glClearDepth(1.0);
 	GLcheck("glClearDepth");
+	glDepthRange(0.0, 1.0);
+	GLcheck("glDepthRange");
 	glEnable(GL_DEBUG_OUTPUT);
 	GLcheck("glEnable");
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);

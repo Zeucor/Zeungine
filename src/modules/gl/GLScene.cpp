@@ -51,6 +51,26 @@ void GLScene::preRender()
 		spotLightShadow.shader.unbind();
 		spotLightShadow.framebuffer.unbind();
 	}
+	for (auto &pointLightShadow : pointLightShadows)
+	{
+		pointLightShadow.framebuffer.bind();
+		pointLightShadow.shader.bind();
+		pointLightShadow.shader.setBlock("PointLightSpaceMatrix", pointLightShadow.shadowTransforms, sizeof(glm::mat4) * 6);
+		pointLightShadow.shader.setUniform("nearPlane", pointLightShadow.pointLight.nearPlane);
+		pointLightShadow.shader.setUniform("farPlane", pointLightShadow.pointLight.farPlane);
+		pointLightShadow.shader.setUniform("lightPos", pointLightShadow.pointLight.position);
+		for (auto &entityPair : entities)
+		{
+			auto &entityPointer = entityPair.second;
+			auto &vbo = *std::dynamic_pointer_cast<vaos::VAO>(entityPointer);
+			auto &glEntity = *std::dynamic_pointer_cast<gl::GLEntity>(entityPointer);
+			const auto &model = glEntity.getModelMatrix();
+			pointLightShadow.shader.setBlock("Model", model);
+			vbo.vaoDraw();
+		}
+		pointLightShadow.shader.unbind();
+		pointLightShadow.framebuffer.unbind();
+	}
 	glViewport(0, 0, window.windowWidth, window.windowHeight);
 	GLcheck("glViewport");
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -103,5 +123,13 @@ void GLScene::entityPreRender(IEntity &entity)
 		++unit;
 		--unitRemaining;
 	}
+	index = 0;
 	unit += unitRemaining;
+	unitRemaining = 4;
+	for (auto &pointLightShadow : pointLightShadows)
+	{
+		glEntity.shader.setTexture("pointLightSamplers[" + std::to_string(index) + "]", pointLightShadow.texture, unit);
+		++unit;
+		--unitRemaining;
+	}
 }
