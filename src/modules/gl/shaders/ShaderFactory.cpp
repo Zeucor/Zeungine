@@ -505,7 +505,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  return "uniform sampler2D directionalLightSamplers[4];";
+                  std::string string("layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex) + ") uniform sampler2D directionalLightSamplers[4];");
+                  currentBindingIndex += 4;
+                  return string;
                 }
               }
             }
@@ -516,7 +518,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  return "uniform sampler2D spotLightSamplers[4];";
+                  std::string string("layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex) + ") uniform sampler2D spotLightSamplers[4];");
+                  currentBindingIndex += 4;
+                  return string;
                 }
               }
             }
@@ -527,7 +531,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
-                    return "uniform samplerCube pointLightSamplers[4];";
+                    std::string string("layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex) + ") uniform samplerCube pointLightSamplers[4];");
+                    currentBindingIndex += 4;
+                    return string;
                   }
                 }
             }
