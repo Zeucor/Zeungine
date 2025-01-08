@@ -560,9 +560,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
-                    return std::string("uniform vec3 lightPos;\nuniform float nearPlane;\nuniform float farPlane;\n") +
-                      "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
-                      ") out float FragDepth;";
+                    return std::string("uniform vec3 lightPos;\nuniform float nearPlane;\nuniform float farPlane;\n");
                   }
                 }
             }
