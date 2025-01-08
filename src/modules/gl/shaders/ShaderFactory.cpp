@@ -693,22 +693,20 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  for (uint i = 0; i < pointLightCount; ++i){\n"
                     "    vec3 lightDir = normalize(pointLights[i].position - inFragPosition.xyz);\n"
                     "    float shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[i], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal);\n"
-                    // "    FragColor = vec4(vec3(shadowFactor), 1.0);\n"
                     "    lightingColor += calculatePointLight(pointLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
                     "  }\n"
-                    // "  for (uint i = 0; i < directionalLightCount; ++i){\n" +
-                    // "    vec3 lightDir = normalize(-directionalLights[i].direction);\n" +
-                    // "    float shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[i], normal, lightDir);\n"
-                    // +
-                    // "    lightingColor += calculateDirectionalLight(directionalLights[i], normal, viewDir, shadowFactor, lightDir);\n"
-                    // +
-                    // "  }\n" +
-                    // "  for (uint i = 0; i < spotLightCount; ++i){\n" +
-                    // "    vec3 lightDir = normalize(spotLights[i].position - inFragPosition.xyz);\n" +
-                    // "    float shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[i], normal, lightDir);\n"
-                    // +
-                    // "    lightingColor += calculateSpotLight(spotLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n" +
-                    // "  }\n" +
+                    "  for (uint i = 0; i < directionalLightCount; ++i){\n" +
+                    "    vec3 lightDir = normalize(-directionalLights[i].direction);\n" +
+                    "    float shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[i], normal, lightDir);\n"
+                    "    lightingColor += calculateDirectionalLight(directionalLights[i], normal, viewDir, shadowFactor, lightDir);\n"
+                    +
+                    "  }\n"
+                    "  for (uint i = 0; i < spotLightCount; ++i){\n"
+                    "    vec3 lightDir = normalize(spotLights[i].position - inFragPosition.xyz);\n"
+                    "    float shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[i], normal, lightDir);\n"
+                    +
+                    "    lightingColor += calculateSpotLight(spotLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
+                    "  }\n"
                     "  FragColor = FragColor * vec4(lightingColor, 1.0);";
                 }
               }
