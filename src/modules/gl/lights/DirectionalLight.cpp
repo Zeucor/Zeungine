@@ -8,8 +8,8 @@ DirectionalLightShadow::DirectionalLightShadow(DirectionalLight &directionalLigh
   texture(glm::ivec4(2048, 2048, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
 	framebuffer(texture)
 {
-	float near_plane = 0.1f, far_plane = 4000.f;
-	glm::vec2 projectionDimensions = {1024, 1024};
+	float near_plane = 1.0f, far_plane = 256.f;
+	glm::vec2 projectionDimensions = {128, 128};
 	glm::mat4 lightProjection = glm::ortho(-projectionDimensions.x, projectionDimensions.x, -projectionDimensions.y, projectionDimensions.y, near_plane, far_plane);
 	glm::vec3 lightDirection = glm::normalize(directionalLight.direction);
 	glm::vec3 lightTarget = directionalLight.position + lightDirection;
