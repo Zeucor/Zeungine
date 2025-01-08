@@ -32,22 +32,22 @@ namespace anex::modules::gl::shaders
 		using ShaderPair = std::pair<std::string, GLuint>;
 		using ShaderMap = std::map<ShaderType, ShaderPair>;
 		using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
-		std::unordered_map<std::string, std::tuple<uint32_t, GLuint>> uboBindings;
-		std::unordered_map<std::string, std::tuple<uint32_t, GLuint>> ssboBindings;
+		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> uboBindings;
+		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> ssboBindings;
 		ShaderMap shaders;
 		GLuint program = 0;
 		Shader(const RuntimeConstants& constants, const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
 		~Shader();
 		void bind() const;
 		void unbind() const;
-		void addSSBO(const std::string& name, const uint32_t& bindingIndex);
-		void addUBO(const std::string& name, const uint32_t& bindingIndex);
+		void addSSBO(const std::string_view& name, const uint32_t& bindingIndex);
+		void addUBO(const std::string_view& name, const uint32_t& bindingIndex);
 
 		template <typename T>
-		void setUniform(const std::string& name, const T& value, const uint32_t& size = 0)
+		void setUniform(const std::string_view& name, const T& value, const uint32_t& size = 0)
 		{
 			auto pointerSize = size ? size : sizeof(value);
-			GLint location = glGetUniformLocation(program, name.c_str());
+			GLint location = glGetUniformLocation(program, name.data());
 			GLcheck("glGetUniformLocation");
 			auto pointer = &value;
 			if (location == -1)
@@ -124,9 +124,9 @@ namespace anex::modules::gl::shaders
 		};
 
 		template <typename T>
-		void setBlock(const std::string& name, const T& value, const uint32_t& size = 0)
+		void setBlock(const std::string_view& name, const T& value, const uint32_t& size = 0)
 		{
-			auto blockIndex = glGetUniformBlockIndex(program, name.c_str());
+			auto blockIndex = glGetUniformBlockIndex(program, name.data());
 			if (blockIndex == -1)
 			{
 				return;
@@ -144,7 +144,7 @@ namespace anex::modules::gl::shaders
 			glBindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, pointerSize);
 			GLcheck("glBindBufferRange");
 		};
-		void setSSBO(const std::string& name, const void* pointer, const uint32_t& size);
-		void setTexture(const std::string& name, const textures::Texture& texture, const int32_t& unit);
+		void setSSBO(const std::string_view& name, const void* pointer, const uint32_t& size);
+		void setTexture(const std::string_view& name, const textures::Texture& texture, const int32_t& unit);
 	};
 }
