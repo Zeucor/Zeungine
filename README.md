@@ -4,9 +4,15 @@
 
 A library that simplifies Game abstraction written in C++
 
-Comes with some modules, starting with a `Fenster` module for simple graphics drawing
+Comes with some modules, A `Fenster` module for 2D graphics drawing, and a `GL` module for 3D rendering
 
 Uses CMake for it's build system and comes with some included tests
+
+## Cloning
+
+```bash
+git clone git@github.com:ZeunO8/AbstractNexus.git --recurse-submodules
+```
 
 ### Building
 
