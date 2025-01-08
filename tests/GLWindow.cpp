@@ -3,6 +3,7 @@
 #include <anex/modules/gl/GLScene.hpp>
 #include <anex/modules/gl/lights/Lights.hpp>
 #include <anex/modules/gl/lights/DirectionalLight.hpp>
+#include <anex/Logger.hpp>
 #include <array>
 using namespace anex::modules::gl;
 struct TestTriangle;
@@ -86,9 +87,10 @@ struct TestCube : anex::modules::gl::GLEntity
   std::array<glm::vec4, 24> colors;
   std::array<glm::vec3, 24> positions;
   std::array<glm::vec3, 24> normals;
-  glm::mat4 rotation;
-  float rotationAmount = 0;
   TestScene &testScene;
+  bool mouseMove;
+  float oscillationParam = 0;
+  glm::vec3 startPosition;
 
   TestCube(anex::IWindow &window, TestScene &testScene, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale, const glm::vec3 &size, const bool &mouseMove = false):
     GLEntity(window, {
@@ -129,8 +131,9 @@ struct TestCube : anex::modules::gl::GLEntity
       { -size.x / 2,  size. y / 2, -size.z / 2}, { -size.x / 2,  size. y / 2,  size.z / 2}, {  size.x / 2,  size. y / 2,  size.z / 2}, {  size.x / 2,  size. y / 2, -size.z / 2}, // Top
       { -size.x / 2, -size. y / 2, -size.z / 2}, { -size.x / 2, -size. y / 2,  size.z / 2}, {  size.x / 2, -size. y / 2,  size.z / 2}, {  size.x / 2, -size. y / 2, -size.z / 2}  // Bottom
     }),
-    rotation(glm::mat4(1.0f)),
-    testScene(testScene)
+    testScene(testScene),
+    mouseMove(mouseMove),
+    startPosition(position)
   {
     computeNormals(36, indices, positions, normals);
     updateIndices(indices);
@@ -146,6 +149,16 @@ struct TestCube : anex::modules::gl::GLEntity
 
   void preRender() override
   {
+    if (mouseMove)
+    {
+      static constexpr float rotationSpeed = glm::radians(90.0f);
+      rotation.y += rotationSpeed * window.deltaTime;
+      if (rotation.y > glm::two_pi<float>())
+      {
+        rotation.y -= glm::two_pi<float>();
+      }
+      oscillateBetween(startPosition, startPosition + glm::vec3(5, 0, 0), window.deltaTime);
+    }
     const auto &model = getModelMatrix();
     shader.bind();
     testScene.entityPreRender(*this);
@@ -155,17 +168,54 @@ struct TestCube : anex::modules::gl::GLEntity
     shader.setBlock("CameraPosition", testScene.cameraPosition, 16);
     shader.unbind();
   };
+  void oscillateBetween(const glm::vec3 &positionA, const glm::vec3 &positionB, float deltaTime)
+  {
+    constexpr float oscillationSpeed = 1.0f;
+    oscillationParam += oscillationSpeed * (std::min)(deltaTime, 1.0f / 144.f);
+    if (oscillationParam > 2.0f)
+    {
+      oscillationParam -= 2.0f;
+    }
+    if (oscillationParam <= 1.0f)
+    {
+      position = glm::mix(positionA, positionB, oscillationParam);
+    }
+    else
+    {
+      position = glm::mix(positionB, positionA, oscillationParam - 1.0f);
+    }
+  };
+};
+void rotateLightPosition(anex::IWindow &window, GLScene &scene, lights::PointLight &light, lights::PointLightShadow &pointLightShadow, float angleSpeed, shaders::Shader &shader)
+{
+  window.runOnThread([&, angleSpeed](auto &window) mutable
+  {
+    auto &deltaTime = window.deltaTime;
+    auto adjustedDeltaTime = (std::min)(1.0f / 144.f, deltaTime);
+    auto adjustedCurrentAngleSpeed = adjustedDeltaTime * angleSpeed;
+    static const glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), adjustedCurrentAngleSpeed, glm::vec3(0, 1, 0));
+    glm::vec4 newPosition = rotationMatrix * glm::vec4(light.position, 1.0f);
+    light.position = glm::vec3(newPosition);
+    pointLightShadow.updateShadowTransforms();
+    shader.bind();
+    shader.setSSBO("PointLights", scene.pointLights.data(), scene.pointLights.size() * sizeof(lights::PointLight));
+    shader.unbind();
+    window.runOnThread([&, angleSpeed](auto &window)
+    {
+      rotateLightPosition(window, scene, light, pointLightShadow, angleSpeed, shader);
+    });
+  });
 };
 TestScene::TestScene(anex::IWindow& window):
-  GLScene(window, { 0, 3, 7}, glm::normalize(glm::vec3(0, -1, -1)), 81.f)
+  GLScene(window, { 0, 15, 7}, glm::normalize(glm::vec3(0, -1, -1)), 81.f)
 {
   pointLights.push_back({
-    {0, 10, 0},
-    {0, 1, 0},
-    0.8,
-    100,
+    {5, 10, 0},
+    {1, 1, 1},
+    2.8,
+    10000,
     1.f,
-    25.f
+    250.f
   });
   pointLightShadows.emplace_back(pointLights[0]);
   // directionalLights.push_back({
@@ -190,9 +240,10 @@ TestScene::TestScene(anex::IWindow& window):
     glm::vec3(0, 3, 0), // position
     glm::vec3(0, 0, 0), // rotation
     glm::vec3(1, 1, 1), // scale
-    glm::vec3(1, 1, 1), false)); // size
-  addEntity(std::make_shared<TestCube>(window, *this, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec3(25, 1, 25)));
+    glm::vec3(1, 1, 1), true)); // size
+  addEntity(std::make_shared<TestCube>(window, *this, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec3(250, 1, 250)));
   auto &shader = triangleEntity->shader;
+  rotateLightPosition(window, *this, pointLights[0], pointLightShadows[0], glm::radians(180.0f), shader);
   shader.bind();
   shader.setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
   shader.setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(lights::DirectionalLight));
@@ -219,6 +270,11 @@ TestScene::TestScene(anex::IWindow& window):
   {
     cameraPosition.y -= 1.f * window.deltaTime;
     updateView();
+  });
+  window.addKeyPressHandler(27, [&](const auto &pressed)
+  {
+    if (!pressed)
+      window.close();
   });
   updateView();
 };

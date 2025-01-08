@@ -654,7 +654,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
                     return std::string("  float lightDistance = length(inFragPosition.xyz - lightPos);\n") +
-                      "  FragDepth = lightDistance;\n";
+                      "  gl_FragDepth = lightDistance / farPlane;\n";
                   }
                 }
             }
@@ -669,7 +669,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   return std::string("  float distance = length(inPosition.xyz - cameraPosition.value);\n") +
-                    "  float fogFactor = calculateFogFactor(distance, fogDensity);\n" +
+                    "  float fogFactor = calculateFogFactor(distance, fogDensity);\n"
                     "  FragColor = mix(fogColor, FragColor, fogFactor);";
                 }
               }
@@ -689,9 +689,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  for (uint i = 0; i < pointLightCount; ++i){\n"
                     "    vec3 lightDir = normalize(pointLights[i].position - inFragPosition.xyz);\n"
                     "    float shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[i], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal);\n"
-                    "    FragColor = vec4(vec3(shadowFactor), 1.0);\n" +
-                    // "    lightingColor += calculatePointLight(pointLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
-                    "  }\n";// +
+                    // "    FragColor = vec4(vec3(shadowFactor), 1.0);\n"
+                    "    lightingColor += calculatePointLight(pointLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
+                    "  }\n"
                     // "  for (uint i = 0; i < directionalLightCount; ++i){\n" +
                     // "    vec3 lightDir = normalize(-directionalLights[i].direction);\n" +
                     // "    float shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[i], normal, lightDir);\n"
@@ -705,7 +705,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     // +
                     // "    lightingColor += calculateSpotLight(spotLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n" +
                     // "  }\n" +
-                    // "  FragColor = FragColor * vec4(lightingColor, 1.0);";
+                    "  FragColor = FragColor * vec4(lightingColor, 1.0);";
                 }
               }
             }
@@ -743,7 +743,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  vec3 ambient = 0.1 * light.color;\n" +
                     "  vec3 diffuse = diff * light.color * light.intensity * attenuation * (1.0 - shadowFactor);\n" +
                     "  vec3 specular = spec * light.color * light.intensity * attenuation * (1.0 - shadowFactor);\n" +
-                    "  return ambient + diffuse + specular;\n" +
+                    "  return (ambient + diffuse + specular);\n" +
                     "}\n" +
                     "vec3 calculateDirectionalLight(in DirectionalLight light, in vec3 normal, in vec3 viewDir, in float shadowFactor, in vec3 lightDir){\n"
                     +
@@ -818,12 +818,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   {
                     return std::string("float calculatePointLightShadowFactor(in vec3 fragPos, in samplerCube shadowMap, in vec3 lightPos, in float nearPlane, in float farPlane, in vec3 normal, in vec3 lightDir){\n") +
                       "  vec3 lightToFrag = fragPos - lightPos;\n" +
-                      "  float currentDepth = length(lightToFrag);\n" +
-                      "  float closestDepth = (texture(shadowMap, normalize(lightToFrag)).r + 1.0) / 2.0;\n" +
-                      // "  closestDepth = closestDepth * (farPlane - nearPlane) + nearPlane;\n" +
-                      // "  return closestDepth;\n" +
-                      "  currentDepth = (currentDepth - nearPlane) / (farPlane - nearPlane);\n" +
-                      "  return currentDepth;\n" +
+                      "  float currentDepth = length(lightToFrag) / farPlane;\n" +
+                      "  float closestDepth = texture(shadowMap, normalize(lightToFrag)).r;\n" +
                       "  float bias = 0.005;\n" +
                       "  return (currentDepth - bias) > closestDepth ? 1.0 : 0.0;\n" +
                       "}";

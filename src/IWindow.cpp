@@ -165,10 +165,13 @@ void IWindow::runOnThread(const Runnable &runnable)
 };
 void IWindow::runRunnables()
 {
+  std::queue<Runnable> runnablesCopy = runnables;
   while (!runnables.empty())
-  {
-    auto runnable = runnables.front();
     runnables.pop();
+  while (!runnablesCopy.empty())
+  {
+    auto runnable = runnablesCopy.front();
+    runnablesCopy.pop();
     runnable(*this);
   }
 };

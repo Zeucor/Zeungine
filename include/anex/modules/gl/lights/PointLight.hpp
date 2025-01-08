@@ -10,8 +10,9 @@ namespace anex::modules::gl::lights
     shaders::Shader &shader;
     PointLight &pointLight;
     textures::Texture texture;
-		textures::Framebuffer framebuffer;
-		glm::mat4 shadowTransforms[6];
+	textures::Framebuffer framebuffer;
+	glm::mat4 shadowTransforms[6];
     PointLightShadow(PointLight &pointLight);
+	void updateShadowTransforms();
   };
 }

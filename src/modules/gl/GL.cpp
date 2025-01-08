@@ -232,7 +232,7 @@ void GLWindow::renderInit()
 		}
 		std::cerr << "OpenGL Debug Message: " << message << std::endl;
 	}, nullptr);
-	wglSwapIntervalEXT(0);
+	wglSwapIntervalEXT(1);
 #endif
 };
 

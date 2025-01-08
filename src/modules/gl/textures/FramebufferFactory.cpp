@@ -11,6 +11,7 @@ void FramebufferFactory::initFramebuffer(Framebuffer &framebuffer)
   {
     case Texture::Depth:
       frameBufferTarget = GL_DEPTH_ATTACHMENT;
+
       glDrawBuffer(GL_NONE);
       glReadBuffer(GL_NONE);
       break;
