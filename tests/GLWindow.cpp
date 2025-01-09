@@ -28,13 +28,13 @@ struct TestTriangle : anex::modules::gl::GLEntity
       "View",
       "Projection",
       "Model",
-      "Fog",
       "CameraPosition",
       "Lighting",
       "DirectionalLightShadowMaps",
       "SpotLightShadowMaps",
       "PointLightShadowMaps",
-      "LightSpacePosition"
+      "LightSpacePosition",
+      "Fog"
     }, 3, position, rotation, scale),
     indices(2, 1, 0),
     colors({{1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}}),
@@ -100,13 +100,13 @@ struct TestCube : anex::modules::gl::GLEntity
       "View",
       "Projection",
       "Model",
-      "Fog",
       "CameraPosition",
       "Lighting",
       "DirectionalLightShadowMaps",
       "SpotLightShadowMaps",
       "PointLightShadowMaps",
-      "LightSpacePosition"
+      "LightSpacePosition",
+      "Fog"
     }, 36, position, rotation, scale),
     indices{
       0, 1, 2,  2, 3, 0,   // Front face
@@ -252,7 +252,7 @@ TestScene::TestScene(anex::IWindow& window):
   shader.setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
   shader.setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(lights::DirectionalLight));
   shader.setSSBO("SpotLights", spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
-  shader.setUniform("fogDensity", 0.0035f);
+  shader.setUniform("fogDensity", 0.035f);
   shader.setUniform("fogColor", glm::vec4(1, 1, 1, 1));
   shader.unbind();
   window.addKeyUpdateHandler(20, [&]()
