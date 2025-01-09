@@ -8,9 +8,8 @@ SpotLightShadow::SpotLightShadow(SpotLight &spotLight):
   texture(glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
 	framebuffer(texture)
 {
-	float near_plane = 1.f, far_plane = 2500.0f; // Adjust according to your spotlight's range
 	float fov = glm::acos(glm::clamp(spotLight.outerCutoff, -1.0f, 1.0f)) * 2.0;
-	glm::mat4 lightProjection = glm::perspective(fov, 1.f, near_plane, far_plane);
+	glm::mat4 lightProjection = glm::perspective(fov, 1.f, spotLight.nearPlane, spotLight.farPlane);
 	glm::vec3 lightDirection = glm::normalize(spotLight.direction);
 	glm::vec3 lightTarget = spotLight.position + lightDirection;
 	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);

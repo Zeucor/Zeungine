@@ -17,6 +17,8 @@ namespace anex::modules::gl::lights
 		alignas(16) glm::vec3 direction;
 		alignas(16) glm::vec3 color;
 		float intensity;
+		float nearPlane;
+		float farPlane;
 	};
 	struct SpotLight
 	{
@@ -26,5 +28,7 @@ namespace anex::modules::gl::lights
 		float intensity;
 		float cutoff;
 		float outerCutoff;
+		float nearPlane;
+		float farPlane;
 	};
 }

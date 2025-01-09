@@ -207,12 +207,12 @@ void rotateLightPosition(anex::IWindow &window, GLScene &scene, lights::PointLig
   });
 };
 TestScene::TestScene(anex::IWindow& window):
-  GLScene(window, { 0, 10, 10}, glm::normalize(glm::vec3(0, -1, -1)), 81.f)
+  GLScene(window, { 5, 10, 10}, glm::normalize(glm::vec3(0, -1, -1)), 81.f)
 {
   pointLights.push_back({
     {5, 10, 0},
     {1, 1, 1},
-    2.8,
+    1.0,
     10000,
     1.f,
     250.f
@@ -222,7 +222,9 @@ TestScene::TestScene(anex::IWindow& window):
     {0, 25, 20}, // position
     glm::normalize(glm::vec3(0, -1, -1)), // direction
     {1, 1, 1}, // color
-    0.5 // intensity
+    0.5, // intensity,
+    1.f, // nearPlane
+    250.f // farPlane
   });
   directionalLightShadows.emplace_back(directionalLights[0]);
   spotLights.push_back({
@@ -231,7 +233,9 @@ TestScene::TestScene(anex::IWindow& window):
     {0.0f, 0.0f, 1.0f}, // color
     1.0f, // intensity
     glm::cos(glm::radians(25.0f)), // cutoff
-    glm::cos(glm::radians(50.0f)) // outerCutoff
+    glm::cos(glm::radians(50.0f)), // outerCutoff
+    1.f,
+    250.f
   });
   spotLightShadows.emplace_back(spotLights[0]);
   triangleEntity = std::dynamic_pointer_cast<TestTriangle>(std::make_shared<TestTriangle>(window, *this, glm::vec3(1, 1, -1), glm::vec3(0, glm::radians(90.f), 0), glm::vec3(1, 1, 1)));

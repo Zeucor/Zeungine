@@ -455,26 +455,30 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   std::string string;
                   string += std::string("struct PointLight{\n") +
-                    "  vec3 position;\n" +
-                    "  vec3 color;\n" +
-                    "  float intensity;\n" +
-                    "  float range;\n" +
-                    "  float nearPlane;\n" +
-                    "  float farPlane;\n" +
-                    "};\n" +
-                    "struct DirectionalLight{\n" +
-                    "  vec3 position;\n" +
-                    "  vec3 direction;\n" +
-                    "  vec3 color;\n" +
-                    "  float intensity;\n" +
-                    "};\n" +
-                    "struct SpotLight{\n" +
-                    "  vec3 position;\n" +
-                    "  vec3 direction;\n" +
-                    "  vec3 color;\n" +
-                    "  float intensity;\n" +
-                    "  float cutoff;\n" +
-                    "  float outerCutoff;\n" +
+                    "  vec3 position;\n"
+                    "  vec3 color;\n"
+                    "  float intensity;\n"
+                    "  float range;\n"
+                    "  float nearPlane;\n"
+                    "  float farPlane;\n"
+                    "};\n"
+                    "struct DirectionalLight{\n"
+                    "  vec3 position;\n"
+                    "  vec3 direction;\n"
+                    "  vec3 color;\n"
+                    "  float intensity;\n"
+                    "  float nearPlane;\n"
+                    "  float farPlane;\n"
+                    "};\n"
+                    "struct SpotLight{\n"
+                    "  vec3 position;\n"
+                    "  vec3 direction;\n"
+                    "  vec3 color;\n"
+                    "  float intensity;\n"
+                    "  float cutoff;\n"
+                    "  float outerCutoff;\n"
+                    "  float nearPlane;\n"
+                    "  float farPlane;\n"
                     "};\n";
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addSSBO("PointLights", bindingIndex);
