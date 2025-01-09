@@ -12,7 +12,7 @@ VAO::~VAO()
 {
   VAOFactory::destroyVAO(*this);
 };
-void VAO::updateIndices(const uint32_t *indices)
+void VAO::updateIndices(const uint32_t *indices) const
 {
   glBindVertexArray(vao);
   GLcheck("glBindVertexArray");
@@ -24,7 +24,7 @@ void VAO::updateIndices(const uint32_t *indices)
   glBindVertexArray(0);
   GLcheck("glBindVertexArray");
 };
-void VAO::updateElements(const std::string_view &constant, const void *elements)
+void VAO::updateElements(const std::string_view &constant, const void *elements) const
 {
   glBindVertexArray(vao);
   GLcheck("glBindVertexArray");
@@ -40,7 +40,7 @@ void VAO::updateElements(const std::string_view &constant, const void *elements)
   glBindVertexArray(0);
   GLcheck("glBindVertexArray");
 };
-void VAO::vaoDraw()
+void VAO::vaoDraw() const
 {
   glBindVertexArray(vao);
   GLcheck("glBindVertexArray");

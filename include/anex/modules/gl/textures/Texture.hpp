@@ -35,6 +35,6 @@ namespace anex::modules::gl::textures
     FilterType filterType;
     Texture(const glm::ivec4 &size, const void *data = 0, const Format &format = RGBA8, const Type &type = UnsignedByte, const FilterType &filterType = Linear);
     void bind() const;
-	void unbind() const;
+		void unbind() const;
   };
 }

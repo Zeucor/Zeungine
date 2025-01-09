@@ -13,8 +13,8 @@ namespace anex::modules::gl::vaos
 		uint32_t stride;
     VAO(const RuntimeConstants &constants, const uint32_t &indiceCount);
 		~VAO();
-		void updateIndices(const uint32_t *indices);
-		void updateElements(const std::string_view &constant, const void *elements);
-		void vaoDraw();
+		void updateIndices(const uint32_t *indices) const;
+		void updateElements(const std::string_view &constant, const void *elements) const;
+		void vaoDraw() const;
   };
 };

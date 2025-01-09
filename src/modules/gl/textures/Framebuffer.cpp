@@ -18,7 +18,7 @@ void Framebuffer::bind() const
   glClear(clearBitfield);
   GLcheck("glClear");
 };
-void Framebuffer::unbind() const
+void Framebuffer::unbind()
 {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   GLcheck("glBindFramebuffer");
