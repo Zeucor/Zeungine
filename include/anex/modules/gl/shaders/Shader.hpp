@@ -14,7 +14,7 @@ namespace anex::modules::gl::textures
 
 namespace anex::modules::gl::shaders
 {
-	using RuntimeConstants = std::vector<std::string>;
+	using RuntimeConstants = std::vector<std::string_view>;
 
 	struct Shader
 	{

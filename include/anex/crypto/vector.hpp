@@ -5,5 +5,5 @@
 namespace anex::crypto
 {
 	std::size_t combineHashes(const std::size_t &hash1, const std::size_t &hash2);
-	std::size_t hashVectorOfStrings(const std::vector<std::string>& vec);
+	std::size_t hashVectorOfStringViews(const std::vector<std::string_view>& vec);
 }

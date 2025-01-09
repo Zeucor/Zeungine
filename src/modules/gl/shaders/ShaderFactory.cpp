@@ -894,7 +894,7 @@ Shader::ShaderPair ShaderFactory::generateShader(const Shader::ShaderType& shade
 void ShaderFactory::appendHooks(std::string& shaderString, RuntimeHooksMap& runtimeHooks,
                                 const RuntimeConstants& constants, Shader& shader)
 {
-  for (const std::string& constant : constants)
+  for (const auto& constant : constants)
   {
     const auto& constantHooks = runtimeHooks[constant];
     for (auto& hook : constantHooks)
@@ -913,7 +913,7 @@ bool ShaderFactory::compileShader(const Shader::ShaderType& shaderType, Shader::
   GLint lengths[] = {(GLint)shaderString.size()};
   glShaderSource(shaderInt, 1, &(source), lengths);
   glCompileShader(shaderInt);
-  return checkCompileErrors(shaderInt, true, shaderNames[shaderType].c_str());
+  return checkCompileErrors(shaderInt, true, shaderNames[shaderType].data());
 };
 
 bool ShaderFactory::compileProgram(const Shader::ShaderMap& shaderMap, GLuint& program)

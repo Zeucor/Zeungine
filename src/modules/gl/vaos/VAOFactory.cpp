@@ -72,7 +72,7 @@ size_t VAOFactory::getStride(const RuntimeConstants &constants)
   };
   return stride;
 };
-size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::string &offsetConstant)
+size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::string_view &offsetConstant)
 {
 	size_t stride = 0;
 	for (auto &constant: constants)
@@ -86,7 +86,7 @@ size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::strin
 	};
 	throw std::runtime_error("No such constant");
 };
-bool VAOFactory::isVAOConstant(const std::string &constant)
+bool VAOFactory::isVAOConstant(const std::string_view &constant)
 {
   return VAOConstants[constant];
 }

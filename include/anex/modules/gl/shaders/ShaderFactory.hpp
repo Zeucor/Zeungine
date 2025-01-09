@@ -5,13 +5,13 @@ namespace anex::modules::gl::shaders
 {
 	struct ShaderFactory
 	{
-    using RuntimeHooksMap = std::unordered_map<std::string, std::map<uint32_t, Shader::ShaderHook>>;
-  	using ShaderHookMap = std::map<std::string, RuntimeHooksMap>;
+    using RuntimeHooksMap = std::unordered_map<std::string_view, std::map<uint32_t, Shader::ShaderHook>>;
+  	using ShaderHookMap = std::map<std::string_view, RuntimeHooksMap>;
     using ShaderHooksMap = std::unordered_map<Shader::ShaderType, ShaderHookMap>;
-		using ShaderHookInfo = std::tuple<Shader::ShaderType, std::string, std::string>;
+		using ShaderHookInfo = std::tuple<Shader::ShaderType, std::string_view, std::string_view>;
 		using ShaderHookInfoMap = std::unordered_map<uint32_t, ShaderHookInfo>;
     using ShaderTypeMap = std::unordered_map<Shader::ShaderType, GLuint>;
-    using ShaderNameMap = std::unordered_map<Shader::ShaderType, std::string>;
+    using ShaderNameMap = std::unordered_map<Shader::ShaderType, std::string_view>;
     static ShaderHooksMap hooks;
 		static uint32_t hooksCount;
 		static ShaderHookInfoMap shaderHookInfos;

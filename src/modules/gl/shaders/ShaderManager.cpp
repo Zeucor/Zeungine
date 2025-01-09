@@ -14,7 +14,7 @@ Shader& ShaderManager::getShaderByID(const uint32_t &id)
 };
 std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants(const RuntimeConstants &constants, const std::vector<Shader::ShaderType> &shaderTypes)
 {
-  auto hash = crypto::hashVectorOfStrings(constants);
+  auto hash = crypto::hashVectorOfStringViews(constants);
   auto hashIter = shadersByHash.find(hash);
   if (hashIter != shadersByHash.end())
     return hashIter->second;
