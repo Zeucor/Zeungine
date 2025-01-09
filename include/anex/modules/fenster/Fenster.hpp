@@ -5,13 +5,17 @@ namespace anex::modules::fenster
 {
 	struct FensterWindow : IWindow
 	{
-	    std::shared_ptr<uint32_t> buf;
-	    struct fenster *f = 0;
+    std::shared_ptr<uint32_t> buf;
+    struct fenster *f = 0;
+		bool mouseMoved = false;
+		int oldMouse = 0;
+		glm::vec2 oldMousePos = glm::vec2(0);
 		int framerate = 60;
 		FensterWindow(const char *title, const int &windowWidth, const int &windowHeight, const int &framerate = 60);
 		~FensterWindow();
 		void startWindow() override;
 		void updateKeyboard() override;
+		void updateMouse() override;
 		void close() override;
 		void drawLine(int x0, int y0, int x1, int y1, uint32_t color) override;
 		void drawRectangle(int x, int y, int w, int h, uint32_t color) override;

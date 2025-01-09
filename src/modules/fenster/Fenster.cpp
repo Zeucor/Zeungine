@@ -44,6 +44,29 @@ void FensterWindow::updateKeyboard()
 		}
 	}
 };
+void FensterWindow::updateMouse()
+{
+  if (f->mouse != oldMouse)
+  {
+    oldMouse = f->mouse;
+    int pressed = oldMouse;
+    if (buttons[0] != pressed)
+    {
+      callMousePressHandler(0, pressed);
+    }
+  }
+  glm::vec2 mousePos = {f->x, f->y};
+  if (mousePos != oldMousePos)
+  {
+    mouseMoved = true;
+    oldMousePos = mousePos;
+  }
+  if (mouseMoved)
+  {
+    callMouseMoveHandler({f->x, f->y});
+    mouseMoved = false;
+  }
+};
 void FensterWindow::close()
 {
 	open = false;
