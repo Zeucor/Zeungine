@@ -970,8 +970,8 @@ void ShaderFactory::deleteProgram(Shader& shader)
   glDeleteProgram(shader.program);
 };
 
-uint32_t ShaderFactory::addHook(const Shader::ShaderType& shaderType, const std::string& hookName,
-                                const std::string& runtimeConstant, const Shader::ShaderHook& hook)
+uint32_t ShaderFactory::addHook(const Shader::ShaderType& shaderType, const std::string_view& hookName,
+                                const std::string_view& runtimeConstant, const Shader::ShaderHook& hook)
 {
   auto id = ++hooksCount;
   hooks[shaderType][hookName][runtimeConstant].emplace(id, hook);

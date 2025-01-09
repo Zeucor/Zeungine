@@ -27,7 +27,7 @@ namespace anex::modules::gl::shaders
     static bool compileProgram(const Shader::ShaderMap &shaderMap, GLuint &program);
 		static const bool checkCompileErrors(const GLuint& id, const bool& isShader, const char* shaderType);
     static void deleteProgram(Shader &shader);
-    static uint32_t addHook(const Shader::ShaderType &shaderType, const std::string &hookName, const std::string &runtimeConstant, const Shader::ShaderHook &hook);
+    static uint32_t addHook(const Shader::ShaderType &shaderType, const std::string_view &hookName, const std::string_view &runtimeConstant, const Shader::ShaderHook &hook);
 		static void deleteHook(const uint32_t &id);
 	};
 };
