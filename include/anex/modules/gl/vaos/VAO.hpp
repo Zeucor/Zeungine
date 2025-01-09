@@ -14,7 +14,7 @@ namespace anex::modules::gl::vaos
     VAO(const RuntimeConstants &constants, const uint32_t &indiceCount);
 		~VAO();
 		void updateIndices(const uint32_t *indices);
-		void updateElements(const std::string &constant, const void *elements);
+		void updateElements(const std::string_view &constant, const void *elements);
 		void vaoDraw();
   };
 };
