@@ -253,7 +253,7 @@ TestScene::TestScene(anex::IWindow& window):
   shader.setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(lights::DirectionalLight));
   shader.setSSBO("SpotLights", spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
   shader.setUniform("fogDensity", 0.035f);
-  shader.setUniform("fogColor", glm::vec4(1, 1, 1, 1));
+  shader.setUniform("fogColor", glm::vec4(0, 0, 0, 1));
   shader.unbind();
   window.addKeyUpdateHandler(20, [&]()
   {
