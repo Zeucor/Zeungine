@@ -5,19 +5,20 @@
 #include <anex/modules/gl/lights/DirectionalLight.hpp>
 #include <anex/Logger.hpp>
 #include <array>
+#include <anex/images/ImageLoader.hpp>
 using namespace anex::modules::gl;
 struct TestTriangle;
 struct TestScene : anex::modules::gl::GLScene
 {
   std::shared_ptr<TestTriangle> triangleEntity;
-  TestScene(anex::IWindow &window);
+  explicit TestScene(anex::IWindow &window);
 };
 struct TestTriangle : anex::modules::gl::GLEntity
 {
   uint32_t indices[3];
   std::array<glm::vec4, 3> colors;
   std::array<glm::vec3, 3> positions;
-  std::array<glm::vec3, 3> normals;
+  std::array<glm::vec3, 3> normals = {};
   float rotationAmount = 0;
   TestScene &testScene;
   TestTriangle(anex::IWindow &window, TestScene &testScene, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale):
@@ -86,7 +87,7 @@ struct TestCube : anex::modules::gl::GLEntity
   uint32_t indices[36]; // 6 faces * 2 triangles * 3 vertices
   std::array<glm::vec4, 24> colors;
   std::array<glm::vec3, 24> positions;
-  std::array<glm::vec3, 24> normals;
+  std::array<glm::vec3, 24> normals = {};
   TestScene &testScene;
   bool mouseMove;
   float oscillationParam = 0;
@@ -238,7 +239,17 @@ TestScene::TestScene(anex::IWindow& window):
     250.f
   });
   spotLightShadows.emplace_back(spotLights[0]);
-  triangleEntity = std::dynamic_pointer_cast<TestTriangle>(std::make_shared<TestTriangle>(window, *this, glm::vec3(1, 1, -1), glm::vec3(0, glm::radians(90.f), 0), glm::vec3(1, 1, 1)));
+  // auto imagePair = anex::images::ImageLoader::load("images/skybox/back.jpg");
+  textures::Texture skyboxTexture(
+    {0, 0, 0, 1},
+    {
+      {
+        "images/skybox/left.jpg", "images/skybox/right.jpg", "images/skybox/top.jpg",
+        "images/skybox/bottom.jpg", "images/skybox/front.jpg", "images/skybox/back.jpg"
+      }
+    }
+  );
+  triangleEntity = std::dynamic_pointer_cast<TestTriangle>(std::make_shared<TestTriangle>(window, *this, glm::vec3(1, 5, -1), glm::vec3(0, glm::radians(90.f), 0), glm::vec3(1, 1, 1)));
   // addEntity(triangleEntity);
   addEntity(std::make_shared<TestCube>(window, *this,
     glm::vec3(0, 3, 0), // position

@@ -31,8 +31,38 @@ TextureFactory::TypesMap TextureFactory::types = {
 };
 void TextureFactory::initTexture(Texture &texture, const void *data)
 {
-	glGenTextures(1, &texture.id);
-	GLcheck("glGenTextures");
+  preInitTexture(texture);
+  auto imageCount = texture.size.w > 0 ? 6 : texture.size.z;
+  std::vector<images::ImageLoader::ImagePair> imagePairs;
+  for (int i = 0; i < imageCount; i++)
+  {
+    imagePairs.push_back({{texture.size.x, texture.size.y}, {(uint8_t*)data, [](uint8_t*) {}}});
+  }
+  midInitTexture(texture, imagePairs);
+  postInitTexture(texture);
+};
+void TextureFactory::initTexture(Texture &texture, const std::string_view &path)
+{
+  preInitTexture(texture);
+  auto imagePair = images::ImageLoader::load(path);
+  midInitTexture(texture, {{imagePair}});
+  postInitTexture(texture);
+};
+void TextureFactory::initTexture(Texture &texture, const std::vector<std::string_view> &paths)
+{
+  preInitTexture(texture);
+  std::vector<images::ImageLoader::ImagePair> imagePairs;
+  for (const auto &path : paths)
+  {
+    imagePairs.push_back(images::ImageLoader::load(path));
+  }
+  midInitTexture(texture, imagePairs);
+  postInitTexture(texture);
+};
+void TextureFactory::preInitTexture(Texture& texture)
+{
+  glGenTextures(1, &texture.id);
+  GLcheck("glGenTextures");
   if (texture.size.w > 0)
     texture.target = GL_TEXTURE_CUBE_MAP;
   else if (texture.size.y == 0)
@@ -44,18 +74,24 @@ void TextureFactory::initTexture(Texture &texture, const void *data)
   texture.bind();
   glPixelStorei(GL_PACK_ALIGNMENT, 1);
   GLcheck("glPixelStorei");
+};
+void TextureFactory::midInitTexture(const Texture& texture, const std::vector<images::ImageLoader::ImagePair>& images)
+{
   if (texture.target == GL_TEXTURE_1D)
   {
+    void *data = images.size() ? std::get<1>(images[0]).get() : 0;
     glTexImage1D(texture.target, 0, internalFormats[texture.format], texture.size.x, 0, formats[texture.format], types[{texture.format, texture.type}], data);
     GLcheck("glTexImage1D");
   }
   else if (texture.target == GL_TEXTURE_2D)
   {
+    void *data = images.size() ? std::get<1>(images[0]).get() : 0;
     glTexImage2D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
     GLcheck("glTexImage2D");
   }
   else if (texture.target == GL_TEXTURE_3D)
   {
+    void *data = images.size() ? std::get<1>(images[0]).get() : 0;
     glTexImage3D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, texture.size.z, 0, formats[texture.format], types[{texture.format, texture.type}], data);
     GLcheck("glTexImage3D");
   }
@@ -63,19 +99,25 @@ void TextureFactory::initTexture(Texture &texture, const void *data)
   {
     for (uint8_t face = 0; face < 6; ++face)
     {
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormats[texture.format], texture.size.x, texture.size.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+      bool haveImage = images.size() > face;
+      auto imageSize = haveImage ? std::get<0>(images[face]) : glm::uvec2(0, 0);
+      void *data = haveImage ? std::get<1>(images[face]).get() : 0;
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormats[texture.format], imageSize.x, imageSize.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
       GLcheck("glTexImage2D");
     }
   }
+}
+void TextureFactory::postInitTexture(const Texture& texture)
+{
   GLenum filterType;
   switch (texture.filterType)
   {
-    case Texture::FilterType::Nearest:
-      filterType = GL_NEAREST;
-      break;
-    case Texture::FilterType::Linear:
-      filterType = GL_LINEAR;
-      break;
+  case Texture::FilterType::Nearest:
+    filterType = GL_NEAREST;
+    break;
+  case Texture::FilterType::Linear:
+    filterType = GL_LINEAR;
+    break;
   }
   glTexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, filterType);
   GLcheck("glTexParameteri");

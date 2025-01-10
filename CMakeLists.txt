@@ -17,7 +17,8 @@ set(ANEX_SOURCES
     src/IScene.cpp
     src/IWindow.cpp
     src/Logger.cpp
-    src/crypto/vector.cpp)
+    src/crypto/vector.cpp
+    src/images/ImageLoader.cpp)
 
 if(BUILD_FENSTER)
     list(APPEND ANEX_SOURCES src/modules/fenster/Fenster.cpp)
@@ -71,4 +72,12 @@ if(BUILD_FENSTER)
 endif()
 if(BUILD_OPENGL)
     create_test(GLWindow tests/GLWindow.cpp "")
+    set(SKYBOX_OUT_DIRECTORY ${CMAKE_BINARY_DIR}/images/skybox)
+    file(MAKE_DIRECTORY ${SKYBOX_OUT_DIRECTORY})
+    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/back.jpg ${SKYBOX_OUT_DIRECTORY}/back.jpg COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/front.jpg ${SKYBOX_OUT_DIRECTORY}/front.jpg COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/left.jpg ${SKYBOX_OUT_DIRECTORY}/left.jpg COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/right.jpg ${SKYBOX_OUT_DIRECTORY}/right.jpg COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/top.jpg ${SKYBOX_OUT_DIRECTORY}/top.jpg COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/bottom.jpg ${SKYBOX_OUT_DIRECTORY}/bottom.jpg COPYONLY)
 endif()
