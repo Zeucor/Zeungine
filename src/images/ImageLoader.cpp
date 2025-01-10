@@ -5,10 +5,15 @@
 #include "stb_image_resize2.h"
 #include <stdexcept>
 using namespace anex::images;
+static bool setFlipVertically = ([]()
+{
+  stbi_set_flip_vertically_on_load(true);
+  return true;
+})();
 std::pair<glm::uvec2, std::shared_ptr<uint8_t>> ImageLoader::load(const std::string_view &path)
 {
   int x, y, n;
-  unsigned char *data = stbi_load(path.data(), &x, &y, &n, 4);
+  uint8_t *data = stbi_load(path.data(), &x, &y, &n, 4);
   if (!data)
   {
     throw std::runtime_error("Failed to load image: " + std::string(path));
