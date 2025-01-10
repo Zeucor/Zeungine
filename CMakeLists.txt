@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_subdirectory(vendor/fenster)
 include_directories(vendor/fenster/include)
 include_directories(vendor/glm)
+include_directories(vendor/stb)
 include_directories(include)
 
 option(BUILD_FENSTER "Whether to build Fenster module" ON)
