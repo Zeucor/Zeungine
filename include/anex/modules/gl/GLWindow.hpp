@@ -6,7 +6,7 @@
 #include "./common.hpp"
 namespace anex::modules::gl
 {
-	struct GLWindow : IWindow
+	struct GLTest : IWindow
 	{
 		const char *title;
 #ifdef _WIN32
@@ -21,8 +21,8 @@ namespace anex::modules::gl
 		bool mouseMoved = false;
 		glm::vec2 mouseCoords;
 		int mod = 0;
-		GLWindow(const char *title, const int &windowWidth, const int &windowHeight, const int &framerate = 60);
-		~GLWindow();
+		GLTest(const char *title, const int &windowWidth, const int &windowHeight, const int &framerate = 60);
+		~GLTest();
 		void startWindow() override;
 		void renderInit();
 		void updateKeyboard() override;

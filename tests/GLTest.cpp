@@ -139,7 +139,7 @@ TestScene::TestScene(anex::IWindow& window):
     250.f
   });
   spotLightShadows.emplace_back(spotLights[0]);
-  cubeEntity = std::make_shared<entities::Cube>((GLWindow&)window, *this,
+  cubeEntity = std::make_shared<entities::Cube>((GLTest&)window, *this,
     glm::vec3(0, 3, 0), // position
     glm::vec3(0, 0, 0), // rotation
     glm::vec3(1, 1, 1), // scale
@@ -153,7 +153,7 @@ TestScene::TestScene(anex::IWindow& window):
       "Fog"
     }));
   addEntity(cubeEntity); // size
-  addEntity(std::make_shared<entities::Cube>((GLWindow &)window, *this,
+  addEntity(std::make_shared<entities::Cube>((GLTest &)window, *this,
     glm::vec3(0, 0, 0),
     glm::vec3(0, 0, 0),
     glm::vec3(1, 1, 1),
@@ -176,7 +176,7 @@ TestScene::TestScene(anex::IWindow& window):
   shader.setUniform("fogColor", glm::vec4(0, 0, 0, 1));
   shader.unbind();
   auto skybox = std::make_shared<entities::SkyBox>(
-    (GLWindow &)window,
+    (GLTest &)window,
     *this,
     std::vector<std::string_view>({
       "images/skybox/right.jpg", "images/skybox/left.jpg", "images/skybox/top.jpg",
@@ -213,7 +213,7 @@ TestScene::TestScene(anex::IWindow& window):
 
 int main()
 {
-  GLWindow window("GLWindow", 1280, 720);
+  GLTest window("GLWindow", 1280, 720);
   window.clearColor = {0, 0, 0, 1};
   window.runOnThread([](auto &window)
   {
