@@ -10,9 +10,11 @@ namespace anex::modules::gl
 	{
 		const char *title;
 #ifdef _WIN32
+		HINSTANCE hInstance;
 		HWND hwnd;
 		HDC hDeviceContext;
 		HGLRC hRenderingContext;
+		std::vector<HWND> childWindows;
 #endif
 		int windowKeys[256];
 		int windowButtons[7];
@@ -31,6 +33,7 @@ namespace anex::modules::gl
 		void drawCircle(int x, int y, int radius, uint32_t color) override;
 		void drawText(int x, int y, const char* text, int scale, uint32_t color) override;
 		void warpPointer(const glm::vec2 &coords) override;
+		void createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight) override;
 	};
 	template<size_t VerticesLength>
 	void computeNormals(const uint32_t &indicesCount, const uint32_t *indices, const std::array<glm::vec3, VerticesLength> &positions, std::array<glm::vec3, VerticesLength> &normals)

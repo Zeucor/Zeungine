@@ -110,7 +110,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 void GLWindow::startWindow()
 {
 #ifdef _WIN32
-	HINSTANCE hInstance = GetModuleHandle(NULL);
+	hInstance = GetModuleHandle(NULL);
 	WNDCLASSEX wc = {0};
 	// wc.cbSize = sizeof(WNDCLASS);
 	wc.cbSize = sizeof(WNDCLASSEX);
@@ -444,4 +444,29 @@ void GLWindow::warpPointer(const glm::vec2 &coords)
 	SetCursorPos(pt.x, pt.y);
 	justWarpedPointer = true;
 #endif
+};
+void GLWindow::createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight)
+{
+	WNDCLASS childWc = {};
+	childWc.lpfnWndProc = DefWindowProc; // Default procedure for the game window
+	childWc.hInstance = hInstance;
+	childWc.lpszClassName = title;
+	RegisterClass(&childWc);
+	HWND childWindow = CreateWindowEx(
+		0,
+		title,
+		nullptr,
+		WS_CHILD | WS_VISIBLE,
+		0, 0, windowWidth, windowHeight,
+		hwnd,
+		nullptr,
+		hInstance,
+		nullptr
+	);
+	if (!childWindow)
+	{
+		throw std::runtime_error("Failed to create game window");
+		return;
+	}
+	childWindows.push_back(childWindow);
 };
