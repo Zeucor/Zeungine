@@ -66,5 +66,6 @@ namespace anex
 		virtual void drawCircle(int x, int y, int radius, uint32_t color) = 0;
 		virtual void drawText(int x, int y, const char* text, int scale, uint32_t color) = 0;
 		virtual void warpPointer(const glm::vec2 &coords);
+		virtual void createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight);
 	};
 }

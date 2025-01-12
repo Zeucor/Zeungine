@@ -184,3 +184,5 @@ void IWindow::updateDeltaTime()
 };
 void IWindow::warpPointer(const glm::vec2 &coords)
 {};
+void IWindow::createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight)
+{};
