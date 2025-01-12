@@ -10,7 +10,7 @@ extern "C" {
 	_declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
-GLTest::GLTest(const char* title, const int& windowWidth, const int& windowHeight, const int& framerate):
+GLWindow::GLWindow(const char* title, const int& windowWidth, const int& windowHeight, const int& framerate):
 	IWindow(windowWidth, windowHeight, framerate),
 	title(title)
 {
@@ -19,7 +19,7 @@ GLTest::GLTest(const char* title, const int& windowWidth, const int& windowHeigh
 	run();
 };
 
-GLTest::~GLTest()
+GLWindow::~GLWindow()
 {
 };
 #ifdef _WIN32
@@ -30,13 +30,13 @@ static const uint8_t GL_KEYCODES[] = {0,27,49,50,51,52,53,54,55,56,57,48,45,61,8
 static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 																	LPARAM lParam)
 {
-	struct GLTest* glWindow = (struct GLTest*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	struct GLWindow* glWindow = (struct GLWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	switch (msg)
 	{
 	case WM_CREATE:
 		{
 			CREATESTRUCT* createStruct = (CREATESTRUCT*)lParam;
-			glWindow = (GLTest*)createStruct->lpCreateParams;
+			glWindow = (GLWindow*)createStruct->lpCreateParams;
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)glWindow);
 			glWindow->hDeviceContext = GetDC(hwnd);
 			glWindow->renderInit();
@@ -107,7 +107,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 	return 0;
 }
 #endif
-void GLTest::startWindow()
+void GLWindow::startWindow()
 {
 #ifdef _WIN32
 	hInstance = GetModuleHandle(NULL);
@@ -188,7 +188,7 @@ void SetupPixelFormat(HDC hDeviceContext)
 };
 #endif
 
-void GLTest::renderInit()
+void GLWindow::renderInit()
 {
 #ifdef _WIN32
 	SetupPixelFormat(hDeviceContext);
@@ -237,7 +237,7 @@ void GLTest::renderInit()
 #endif
 };
 
-void GLTest::updateKeyboard()
+void GLWindow::updateKeyboard()
 {
 	for (unsigned int i = 0; i < 256; ++i)
 	{
@@ -253,7 +253,7 @@ void GLTest::updateKeyboard()
 	}
 };
 
-void GLTest::updateMouse()
+void GLWindow::updateMouse()
 {
 	for (unsigned int i = 0; i < 7; ++i)
 	{
@@ -276,22 +276,22 @@ _checkPressed:
 	}
 };
 
-void GLTest::close()
+void GLWindow::close()
 {
 #ifdef _WIN32
   PostMessage(hwnd, WM_CLOSE, 0, 0);
 #endif
 };
-void GLTest::drawLine(int x0, int y0, int x1, int y1, uint32_t color)
+void GLWindow::drawLine(int x0, int y0, int x1, int y1, uint32_t color)
 {
 };
-void GLTest::drawRectangle(int x, int y, int w, int h, uint32_t color)
+void GLWindow::drawRectangle(int x, int y, int w, int h, uint32_t color)
 {
 };
-void GLTest::drawCircle(int x, int y, int radius, uint32_t color)
+void GLWindow::drawCircle(int x, int y, int radius, uint32_t color)
 {
 };
-void GLTest::drawText(int x, int y, const char* text, int scale, uint32_t color)
+void GLWindow::drawText(int x, int y, const char* text, int scale, uint32_t color)
 {
 };
 const bool anex::modules::gl::GLcheck(const char* fn, const bool& egl)
@@ -428,7 +428,7 @@ const bool anex::modules::gl::GLcheck(const char* fn, const bool& egl)
 	}
 	return true;
 };
-void GLTest::warpPointer(const glm::vec2 &coords)
+void GLWindow::warpPointer(const glm::vec2 &coords)
 {
 #if defined(_UNIX)
 	DEFINE_X11_WINDOW_DRIVER;
@@ -445,7 +445,7 @@ void GLTest::warpPointer(const glm::vec2 &coords)
 	justWarpedPointer = true;
 #endif
 };
-void GLTest::createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight)
+void GLWindow::createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight)
 {
 	WNDCLASS childWc = {};
 	childWc.lpfnWndProc = DefWindowProc; // Default procedure for the game window

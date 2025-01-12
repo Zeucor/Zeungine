@@ -1,7 +1,7 @@
 #include <anex/modules/gl/entities/SkyBox.hpp>
 #include <anex/utilities.hpp>
 using namespace anex::modules::gl::entities;
-SkyBox::SkyBox(GLTest &window, GLScene &scene, const std::vector<std::string_view> &texturePaths):
+SkyBox::SkyBox(GLWindow &window, GLScene &scene, const std::vector<std::string_view> &texturePaths):
 	GLEntity(window,
 		{
 			{

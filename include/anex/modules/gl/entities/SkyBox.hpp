@@ -13,7 +13,7 @@ namespace anex::modules::gl::entities
     std::array<glm::vec3, 24> uvs;
     textures::Texture texture;
 		GLScene &scene;
-    explicit SkyBox(GLTest &window, GLScene &scene, const std::vector<std::string_view> &texturePaths = {});
+    explicit SkyBox(GLWindow &window, GLScene &scene, const std::vector<std::string_view> &texturePaths = {});
 		void preRender() override;
 		void postRender() override;
   };
