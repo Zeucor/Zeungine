@@ -1,7 +1,7 @@
 #pragma once
 #include <anex/modules/gl/GLEntity.hpp>
 #include <anex/modules/gl/GLScene.hpp>
-#include <anex/modules/gl/GL.hpp>
+#include <anex/modules/gl/GLWindow.hpp>
 #include <anex/glm.hpp>
 #include <array>
 namespace anex::modules::gl::entities

@@ -1,4 +1,4 @@
-#include <anex/modules/gl/GL.hpp>
+#include <anex/modules/gl/GLWindow.hpp>
 #include <stdexcept>
 #include <iostream>
 #include <anex/modules/gl/shaders/ShaderManager.hpp>

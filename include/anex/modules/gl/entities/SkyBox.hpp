@@ -2,7 +2,7 @@
 #include <anex/modules/gl/textures/Texture.hpp>
 #include <anex/modules/gl/GLEntity.hpp>
 #include <anex/modules/gl/GLScene.hpp>
-#include <anex/modules/gl/GL.hpp>
+#include <anex/modules/gl/GLWindow.hpp>
 #include <array>
 namespace anex::modules::gl::entities
 {

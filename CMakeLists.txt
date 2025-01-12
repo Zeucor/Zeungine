@@ -25,7 +25,7 @@ if(BUILD_FENSTER)
 endif()
 if(BUILD_OPENGL)
     list(APPEND ANEX_SOURCES
-        src/modules/gl/GL.cpp
+        src/modules/gl/GLWindow.cpp
         src/modules/gl/GLEntity.cpp
         src/modules/gl/GLScene.cpp
         src/modules/gl/entities/Cube.cpp
