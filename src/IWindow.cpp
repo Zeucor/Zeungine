@@ -182,3 +182,5 @@ void IWindow::updateDeltaTime()
   deltaTime = duration.count();
   lastFrameTime = currentTime;
 };
+void IWindow::warpPointer(const glm::vec2 &coords)
+{};

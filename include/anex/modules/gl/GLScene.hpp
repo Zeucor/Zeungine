@@ -4,14 +4,13 @@
 #include "./lights/PointLight.hpp"
 #include "./lights/DirectionalLight.hpp"
 #include "./lights/SpotLight.hpp"
+#include "./vp/View.hpp"
 namespace anex::modules::gl
 {
 	struct GLScene : anex::IScene
 	{
-		glm::vec3 cameraPosition;
-		glm::vec3 cameraDirection;
+		vp::View view;
     float fov;
-		glm::mat4 view;
 		glm::mat4 projection;
 		std::vector<lights::PointLight> pointLights;
 		std::vector<lights::DirectionalLight> directionalLights;
@@ -20,7 +19,6 @@ namespace anex::modules::gl
 		std::vector<lights::DirectionalLightShadow> directionalLightShadows;
 		std::vector<lights::SpotLightShadow> spotLightShadows;
     GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const float &fov);
-    void updateView();
     void preRender() override;
 		void render() override;
 		void entityPreRender(IEntity &entity) override;

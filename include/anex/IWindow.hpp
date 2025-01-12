@@ -33,6 +33,7 @@ namespace anex
 		glm::vec4 clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		std::chrono::steady_clock::time_point lastFrameTime;
 		float deltaTime = 0;
+		bool justWarpedPointer = false;
 		IWindow(const int &windowWidth, const int &windowHeight, const int &framerate);
 		virtual ~IWindow() = default;
 		void run();
@@ -64,5 +65,6 @@ namespace anex
 		virtual void drawRectangle(int x, int y, int w, int h, uint32_t color) = 0;
 		virtual void drawCircle(int x, int y, int radius, uint32_t color) = 0;
 		virtual void drawText(int x, int y, const char* text, int scale, uint32_t color) = 0;
+		virtual void warpPointer(const glm::vec2 &coords);
 	};
 }

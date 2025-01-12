@@ -30,6 +30,7 @@ namespace anex::modules::gl
 		void drawRectangle(int x, int y, int w, int h, uint32_t color) override;
 		void drawCircle(int x, int y, int radius, uint32_t color) override;
 		void drawText(int x, int y, const char* text, int scale, uint32_t color) override;
+		void warpPointer(const glm::vec2 &coords) override;
 	};
 	template<size_t VerticesLength>
 	void computeNormals(const uint32_t &indicesCount, const uint32_t *indices, const std::array<glm::vec3, VerticesLength> &positions, std::array<glm::vec3, VerticesLength> &normals)

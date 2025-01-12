@@ -61,6 +61,42 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
             }
           },
           {
+            "UV2", {
+                {
+                  ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                  {
+                    return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
+                      ") in vec2 inUV;";
+                  }
+                },
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                {
+                  return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
+                    ") out vec2 outUV;";
+                }
+              }
+            }
+          },
+          {
+            "UV3", {
+                  {
+                    ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                    {
+                      return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
+                        ") in vec3 inUV;";
+                    }
+                  },
+                {
+                  ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                  {
+                    return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
+                      ") out vec3 outUV;";
+                  }
+                }
+            }
+          },
+          {
             "View",
             {
               {
@@ -69,7 +105,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addUBO("View", bindingIndex);
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform View {\n" +
-                    " mat4 matrix;\n" +
+                    "  mat4 matrix;\n" +
                     "} view;";
                 }
               }
@@ -84,7 +120,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addUBO("Projection", bindingIndex);
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Projection {\n" +
-                    " mat4 matrix;\n" +
+                    "  mat4 matrix;\n" +
                     "} projection;";
                 }
               }
@@ -99,7 +135,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addUBO("Model", bindingIndex);
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Model {\n" +
-                    " mat4 matrix;\n" +
+                    "  mat4 matrix;\n" +
                     "} model;";
                 }
               }
@@ -140,7 +176,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addUBO("LightSpaceMatrix", bindingIndex);
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform LightSpaceMatrix {\n" +
-                    " mat4 matrix;\n" +
+                    "  mat4 matrix;\n" +
                     "} lightSpaceMatrix;";
                 }
               }
@@ -165,7 +201,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   shader.addUBO("SpotLightSpaceMatrices", bindingIndex);
                   string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform SpotLightSpaceMatrices {\n"
                     +
-                    " mat4 matrix[4];\n" +
+                    "  mat4 matrix[4];\n" +
                     "} spotLightSpaceMatrices;\n";
                   string += "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex) +
                     ") out vec4 outSpotLightSpacePositions[4];";
@@ -201,7 +237,16 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const RuntimeConstants& constants)-> std::string
                 {
-                  std::string string = "  gl_Position = ";
+                  bool hasSkyBox = std::find(constants.begin(), constants.end(), "SkyBox") != constants.end();
+                  std::string string;
+                  if (hasSkyBox)
+                  {
+                    string += "  vec4 pos = ";
+                  }
+                  else
+                  {
+                    string += "  gl_Position = ";
+                  }
                   if (std::find(constants.begin(), constants.end(), "LightSpaceMatrix") != constants.end())
                   {
                     string += "lightSpaceMatrix.matrix * ";
@@ -219,6 +264,10 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     string += "model.matrix * ";
                   }
                   string += "vec4(inPosition, 1);\n";
+                  if (hasSkyBox)
+                  {
+                    string += "  gl_Position = pos.xyww;\n";
+                  }
                   if (!(std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end()))
                   {
                     string += "  outPosition = gl_Position;";
@@ -270,6 +319,26 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 }
               }
             }
+          },
+          {
+            "UV2", {
+                {
+                  ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                  {
+                    return "  outUV = inUV;";
+                  }
+                }
+            }
+          },
+          {
+            "UV3", {
+                  {
+                    ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                    {
+                      return "  outUV = inUV;";
+                    }
+                  }
+            }
           }
         }
       }
@@ -304,7 +373,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     auto bindingIndex = ShaderFactory::currentBindingIndex++;
                     shader.addUBO("PointLightSpaceMatrix", bindingIndex);
                     return "layout(binding = " + std::to_string(bindingIndex) + ") uniform PointLightSpaceMatrix {\n" +
-                      " mat4 matrix[6];\n" +
+                      "  mat4 matrix[6];\n" +
                       "} pointLightSpaceMatrix;";
                   }
                 }
@@ -401,6 +470,28 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   }
                 }
               }
+            }
+          },
+          {
+            "UV2", {
+                {
+                  ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                  {
+                    return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
+                      ") in vec2 inUV;";
+                  }
+                }
+            }
+          },
+          {
+            "UV3", {
+                  {
+                    ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                    {
+                      return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
+                        ") in vec3 inUV;";
+                    }
+                  }
             }
           },
           {
@@ -568,6 +659,45 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   }
                 }
             }
+          },
+          {
+            "Texture2D", {
+                    {
+                      ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                      {
+                        std::string string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
+                          ") out vec4 FragColor;\n");
+                        string += "layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex++) + ") uniform sampler2D Texture2D;";
+                        return string;
+                      }
+                    }
+            }
+          },
+          {
+            "Texture3D", {
+                    {
+                      ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                      {
+                        std::string string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
+                          ") out vec4 FragColor;\n");
+                        string += "layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex++) + ") uniform sampler3D Texture3D;";
+                        return string;
+                      }
+                    }
+            }
+          },
+          {
+            "TextureCube", {
+                  {
+                    ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                    {
+                      std::string string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
+                          ") out vec4 FragColor;\n");
+                      string += "layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex++) + ") uniform samplerCube TextureCube;";
+                      return string;
+                    }
+                  }
+            }
           }
         }
       },
@@ -654,6 +784,36 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   }
                 }
               }
+            }
+          },
+          {
+            "Texture2D", {
+                {
+                  ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                  {
+                    return "  FragColor = texture(Texture2D, inUV);";
+                  }
+                }
+            }
+          },
+          {
+            "Texture3D", {
+                  {
+                    ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                    {
+                      return "  FragColor = texture(Texture3D, inUV);";
+                    }
+                  }
+            }
+          },
+          {
+            "TextureCube", {
+                  {
+                    ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                    {
+                      return "  FragColor = texture(TextureCube, inUV);";
+                    }
+                  }
             }
           },
           {

@@ -5,13 +5,17 @@ VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {
 	{"Indice", {3, sizeof(uint32_t), GL_UNSIGNED_INT}},
   {"Color", {4, sizeof(float), GL_FLOAT}},
 	{"Position", {3, sizeof(float), GL_FLOAT}},
-	{"Normal", {3, sizeof(float), GL_FLOAT}}
+	{"Normal", {3, sizeof(float), GL_FLOAT}},
+	{"UV2", {2, sizeof(float), GL_FLOAT}},
+	{"UV3", {3, sizeof(float), GL_FLOAT}}
 };
 VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Indice", false},
   {"Color", true},
 	{"Position", true},
 	{"Normal", true},
+	{"UV2", true},
+	{"UV3", true},
 	{"View", false},
 	{"Projection", false},
 	{"Model", false},
@@ -20,7 +24,7 @@ VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Lighting", false},
 	{"LightSpaceMatrix", false}
 };
-void VAOFactory::generateVAO(const RuntimeConstants &constants, GLuint& vao, GLuint& vbo, GLuint& ebo, const uint32_t &indiceCount)
+void VAOFactory::generateVAO(const RuntimeConstants &constants, GLuint& vao, GLuint& vbo, GLuint& ebo, const uint32_t &indiceCount, const uint32_t &elementCount)
 {
 	glGenVertexArrays(1, &vao);
 	GLcheck("glGenVertexArrays");
@@ -34,7 +38,7 @@ void VAOFactory::generateVAO(const RuntimeConstants &constants, GLuint& vao, GLu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	GLcheck("glBindBuffer");
   auto stride = getStride(constants);
-	glBufferData(GL_ARRAY_BUFFER, stride * indiceCount, 0, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, stride * elementCount, 0, GL_STATIC_DRAW);
 	GLcheck("glBufferData");
   size_t attribIndex = 0;
   size_t offset = 0;

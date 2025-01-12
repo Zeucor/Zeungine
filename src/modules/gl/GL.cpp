@@ -428,3 +428,20 @@ const bool anex::modules::gl::GLcheck(const char* fn, const bool& egl)
 	}
 	return true;
 };
+void GLWindow::warpPointer(const glm::vec2 &coords)
+{
+#if defined(_UNIX)
+	DEFINE_X11_WINDOW_DRIVER;
+	XWarpPointer(x11WindowDriver.display, None, x11WindowDriver.window, 0, 0, 0, 0, position.x, position.y);
+#elif defined(_WIN32)
+	// Assuming 'hwnd' is the handle to the window
+	POINT pt;
+	pt.x = static_cast<LONG>(coords.x);
+	pt.y = static_cast<LONG>(coords.y);
+	// Convert the client (window-relative) coordinates to screen coordinates
+	ClientToScreen(hwnd, &pt);
+	// Set the cursor's position to the converted screen coordinates
+	SetCursorPos(pt.x, pt.y);
+	justWarpedPointer = true;
+#endif
+};

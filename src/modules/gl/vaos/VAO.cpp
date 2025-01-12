@@ -1,12 +1,13 @@
 #include <anex/modules/gl/vaos/VAO.hpp>
 #include <anex/modules/gl/vaos/VAOFactory.hpp>
 using namespace anex::modules::gl::vaos;
-VAO::VAO(const RuntimeConstants &constants, const uint32_t &indiceCount):
+VAO::VAO(const RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount):
   constants(constants),
   indiceCount(indiceCount),
+  elementCount(elementCount),
   stride(VAOFactory::getStride(constants))
 {
-  VAOFactory::generateVAO(constants, vao, vbo, ebo, indiceCount);
+  VAOFactory::generateVAO(constants, vao, vbo, ebo, indiceCount, elementCount);
 };
 VAO::~VAO()
 {
@@ -32,7 +33,7 @@ void VAO::updateElements(const std::string_view &constant, const void *elements)
   auto offset = VAOFactory::getOffset(constants, constant);
   auto elementStride = std::get<0>(constantSize) * std::get<1>(constantSize);
   auto elementsAsChar = (uint8_t *)elements;
-  for (size_t index = offset, c = 1, elementIndex = 0; c <= indiceCount; index += stride, c++, elementIndex += elementStride)
+  for (size_t index = offset, c = 1, elementIndex = 0; c <= elementCount; index += stride, c++, elementIndex += elementStride)
   {
     glBufferSubData(GL_ARRAY_BUFFER, index, elementStride, &elementsAsChar[elementIndex]);
     GLcheck("glBufferSubData");

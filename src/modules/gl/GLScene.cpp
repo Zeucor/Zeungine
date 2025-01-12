@@ -5,16 +5,10 @@
 using namespace anex::modules::gl;
 GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const float &fov):
 	IScene(window),
-	cameraPosition(cameraPosition),
-	cameraDirection(cameraDirection),
+	view(cameraPosition, cameraDirection),
 	fov(fov),
-	view(),
 	projection(glm::perspective(glm::radians(fov), (float)window.windowWidth / window.windowHeight, 0.1f, 10000.f))
 {};
-void GLScene::updateView()
-{
-	view = glm::lookAt(cameraPosition, cameraPosition + cameraDirection, glm::vec3{0, 1, 0});
-};
 void GLScene::preRender()
 {
 	for (auto &directionaLightShadow : directionalLightShadows)
@@ -27,6 +21,10 @@ void GLScene::preRender()
 			auto &entityPointer = entityPair.second;
 			auto &vbo = *std::dynamic_pointer_cast<vaos::VAO>(entityPointer);
 			auto &glEntity = *std::dynamic_pointer_cast<gl::GLEntity>(entityPointer);
+			if (!glEntity.affectedByShadows)
+			{
+				continue;
+			}
 			const auto &model = glEntity.getModelMatrix();
 			directionaLightShadow.shader.setBlock("Model", model);
 			vbo.vaoDraw();
@@ -44,6 +42,10 @@ void GLScene::preRender()
 			auto &entityPointer = entityPair.second;
 			auto &vbo = *std::dynamic_pointer_cast<vaos::VAO>(entityPointer);
 			auto &glEntity = *std::dynamic_pointer_cast<gl::GLEntity>(entityPointer);
+			if (!glEntity.affectedByShadows)
+			{
+				continue;
+			}
 			const auto &model = glEntity.getModelMatrix();
 			spotLightShadow.shader.setBlock("Model", model);
 			vbo.vaoDraw();
@@ -64,6 +66,10 @@ void GLScene::preRender()
 			auto &entityPointer = entityPair.second;
 			auto &vbo = *std::dynamic_pointer_cast<vaos::VAO>(entityPointer);
 			auto &glEntity = *std::dynamic_pointer_cast<gl::GLEntity>(entityPointer);
+			if (!glEntity.affectedByShadows)
+			{
+				continue;
+			}
 			const auto &model = glEntity.getModelMatrix();
 			pointLightShadow.shader.setBlock("Model", model);
 			vbo.vaoDraw();

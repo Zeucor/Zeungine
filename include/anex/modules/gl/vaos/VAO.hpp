@@ -10,8 +10,9 @@ namespace anex::modules::gl::vaos
     GLuint vbo;
     GLuint ebo;
 		uint32_t indiceCount;
+		uint32_t elementCount;
 		uint32_t stride;
-    VAO(const RuntimeConstants &constants, const uint32_t &indiceCount);
+    VAO(const RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount);
 		~VAO();
 		void updateIndices(const uint32_t *indices) const;
 		void updateElements(const std::string_view &constant, const void *elements) const;

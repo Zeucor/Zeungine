@@ -1,9 +1,9 @@
 #include <anex/modules/gl/GLEntity.hpp>
 #include <anex/modules/gl/shaders/ShaderManager.hpp>
 using namespace anex::modules::gl;
-GLEntity::GLEntity(anex::IWindow &window, const shaders::RuntimeConstants &constants, const uint32_t &indiceCount, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale):
+GLEntity::GLEntity(anex::IWindow &window, const shaders::RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale):
 	IEntity(window),
-	VAO(constants, indiceCount),
+	VAO(constants, indiceCount, elementCount),
 	position(position),
 	rotation(rotation),
 	scale(scale),

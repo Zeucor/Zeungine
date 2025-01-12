@@ -28,6 +28,8 @@ if(BUILD_OPENGL)
         src/modules/gl/GL.cpp
         src/modules/gl/GLEntity.cpp
         src/modules/gl/GLScene.cpp
+        src/modules/gl/entities/Cube.cpp
+        src/modules/gl/entities/SkyBox.cpp
         src/modules/gl/lights/DirectionalLight.cpp
         src/modules/gl/lights/PointLight.cpp
         src/modules/gl/lights/SpotLight.cpp
@@ -41,6 +43,8 @@ if(BUILD_OPENGL)
         src/modules/gl/textures/FramebufferFactory.cpp
         src/modules/gl/vaos/VAO.cpp
         src/modules/gl/vaos/VAOFactory.cpp
+        src/modules/gl/vp/View.cpp
+        src/modules/gl/vp/VML.cpp
         src/modules/gl/glad.c)
 endif()
 
