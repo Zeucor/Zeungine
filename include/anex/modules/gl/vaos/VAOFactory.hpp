@@ -1,5 +1,6 @@
 #pragma once
 #include "VAO.hpp"
+#include <unordered_map>
 namespace anex::modules::gl::vaos
 {
 	struct VAOFactory
@@ -8,7 +9,7 @@ namespace anex::modules::gl::vaos
     using VAOConstantMap = std::unordered_map<std::string_view, bool>;
     static ConstantSizeMap constantSizes;
     static VAOConstantMap VAOConstants;
-    static void generateVAO(const RuntimeConstants &constants, GLuint &vao, GLuint &vbo, GLuint &ebo, const uint32_t &indiceCount, const uint32_t &elementCount);
+    static void generateVAO(const RuntimeConstants &constants, VAO& vao, const uint32_t &elementCount);
 		static size_t getStride(const RuntimeConstants &constants);
 		static size_t getOffset(const RuntimeConstants &constants, const std::string_view &offsetConstant);
 		static bool isVAOConstant(const std::string_view &constant);

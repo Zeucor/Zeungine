@@ -2,30 +2,30 @@
 using namespace anex::modules::gl::textures;
 void FramebufferFactory::initFramebuffer(Framebuffer &framebuffer)
 {
-  glGenFramebuffers(1, &framebuffer.id);
-  GLcheck("glGenFramebuffers");
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
-  GLcheck("glBindFramebuffer");
+  framebuffer.window.glContext.GenFramebuffers(1, &framebuffer.id);
+  GLcheck(framebuffer.window, "glGenFramebuffers");
+  framebuffer.window.glContext.BindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+  GLcheck(framebuffer.window, "glBindFramebuffer");
   GLenum frameBufferTarget;
   switch (framebuffer.texture.format)
   {
     case Texture::Depth:
       frameBufferTarget = GL_DEPTH_ATTACHMENT;
 
-      glDrawBuffer(GL_NONE);
-      glReadBuffer(GL_NONE);
+      framebuffer.window.glContext.DrawBuffer(GL_NONE);
+      framebuffer.window.glContext.ReadBuffer(GL_NONE);
       break;
   }
   if (framebuffer.texture.target == GL_TEXTURE_CUBE_MAP)
   {
-    glFramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, framebuffer.texture.id, 0);
-    GLcheck("glFramebufferTexture");
+    framebuffer.window.glContext.FramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, framebuffer.texture.id, 0);
+    GLcheck(framebuffer.window, "glFramebufferTexture");
   }
   else
   {
-    glFramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, framebuffer.texture.id, 0);
-    GLcheck("glFramebufferTexture2D");
+    framebuffer.window.glContext.FramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, framebuffer.texture.id, 0);
+    GLcheck(framebuffer.window, "glFramebufferTexture2D");
   }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  GLcheck("glBindFramebuffer");
+  framebuffer.window.glContext.BindFramebuffer(GL_FRAMEBUFFER, 0);
+  GLcheck(framebuffer.window, "glBindFramebuffer");
 };

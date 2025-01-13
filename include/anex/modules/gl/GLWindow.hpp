@@ -1,11 +1,19 @@
 #pragma once
 #include <anex/IWindow.hpp>
-#include <anex/modules/gl/shaders/Shader.hpp>
-#include <anex/modules/gl/shaders/ShaderManager.hpp>
-#include <anex/modules/gl/vaos/VAO.hpp>
 #include "./common.hpp"
+#include <mutex>
 namespace anex::modules::gl
 {
+	namespace shaders
+	{
+		struct Shader;
+	}
+	struct ShaderContext
+	{
+		std::unordered_map<uint32_t, std::shared_ptr<shaders::Shader>> shaders;
+		std::unordered_map<std::size_t, std::pair<uint32_t, std::shared_ptr<shaders::Shader>>> shadersByHash;
+		uint32_t shaderCount = 0;
+	};
 	struct GLWindow : IWindow
 	{
 		const char *title;
@@ -14,14 +22,20 @@ namespace anex::modules::gl
 		HWND hwnd;
 		HDC hDeviceContext;
 		HGLRC hRenderingContext;
-		std::vector<HWND> childWindows;
 #endif
 		int windowKeys[256];
 		int windowButtons[7];
 		bool mouseMoved = false;
 		glm::vec2 mouseCoords;
 		int mod = 0;
-		GLWindow(const char *title, const int &windowWidth, const int &windowHeight, const int &framerate = 60);
+		bool isChildWindow = false;
+		GLWindow *parentWindow = 0;
+		std::vector<GLWindow> childWindows;
+		GladGLContext glContext;
+		ShaderContext *shaderContext = 0;
+		static std::mutex renderMutex;
+		GLWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const uint32_t &framerate = 60);
+		GLWindow(GLWindow &parentWindow, const char *childTitle, const uint32_t &childWindowWidth, const uint32_t &childWindowHeight, const int32_t &childWindowX, const int32_t &childWindowY, const uint32_t &framerate = 60);
 		~GLWindow();
 		void startWindow() override;
 		void renderInit();
@@ -33,7 +47,7 @@ namespace anex::modules::gl
 		void drawCircle(int x, int y, int radius, uint32_t color) override;
 		void drawText(int x, int y, const char* text, int scale, uint32_t color) override;
 		void warpPointer(const glm::vec2 &coords) override;
-		void createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight) override;
+		IWindow &createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY) override;
 	};
 	template<size_t VerticesLength>
 	void computeNormals(const uint32_t &indicesCount, const uint32_t *indices, const std::array<glm::vec3, VerticesLength> &positions, std::array<glm::vec3, VerticesLength> &normals)

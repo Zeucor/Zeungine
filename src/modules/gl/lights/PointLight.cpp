@@ -3,9 +3,10 @@
 #include <anex/modules/gl/shaders/ShaderManager.hpp>
 #include <iostream>
 using namespace anex::modules::gl::lights;
-PointLightShadow::PointLightShadow(PointLight &pointLight):
+PointLightShadow::PointLightShadow(GLWindow &window, PointLight &pointLight):
+	window(window),
 	shader(
-    *shaders::ShaderManager::getShaderByConstants({
+    *shaders::ShaderManager::getShaderByConstants(window, {
       "Color",
 			"Position",
 			"Normal",
@@ -19,8 +20,8 @@ PointLightShadow::PointLightShadow(PointLight &pointLight):
  		).second
 	),
 	pointLight(pointLight),
-  texture(glm::ivec4(2048, 2048, 1, 1), 0, textures::Texture::Depth, textures::Texture::Float),
-	framebuffer(texture)
+  texture(window, glm::ivec4(2048, 2048, 1, 1), 0, textures::Texture::Depth, textures::Texture::Float),
+	framebuffer(window, texture)
 {
 	updateShadowTransforms();
 };

@@ -77,10 +77,11 @@ void GLScene::preRender()
 		pointLightShadow.shader.unbind();
 		pointLightShadow.framebuffer.unbind();
 	}
-	glViewport(0, 0, window.windowWidth, window.windowHeight);
-	GLcheck("glViewport");
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	auto &glWindow = (GLWindow &)window;
+	glWindow.glContext.Viewport(0, 0, window.windowWidth, window.windowHeight);
+	GLcheck(glWindow, "glViewport");
+	glWindow.glContext.ClearColor(window.clearColor.r, window.clearColor.g, window.clearColor.b, window.clearColor.a);
+	glWindow.glContext.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 };
 void GLScene::render()
 {

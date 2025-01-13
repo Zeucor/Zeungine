@@ -17,6 +17,7 @@ set(ANEX_SOURCES
     src/IScene.cpp
     src/IWindow.cpp
     src/Logger.cpp
+    src/SharedLibrary.cpp
     src/crypto/vector.cpp
     src/images/ImageLoader.cpp)
 
@@ -45,7 +46,14 @@ if(BUILD_OPENGL)
         src/modules/gl/vaos/VAOFactory.cpp
         src/modules/gl/vp/View.cpp
         src/modules/gl/vp/VML.cpp
-        src/modules/gl/glad.c)
+        src/modules/gl/gl.c)
+    if(WIN32)
+        list(APPEND ANEX_SOURCES src/modules/gl/wgl.c)
+    elseif(UNIX AND NOT APPLE)
+        list(APPEND ANEX_SOURCES src/modules/gl/glx.c)
+    elseif(ANDROID OR IOS)
+        list(APPEND ANEX_SOURCES src/modules/gl/egl.c)
+    endif()
 endif()
 
 add_library(abstractnexus STATIC ${ANEX_SOURCES})
@@ -60,22 +68,30 @@ if(BUILD_OPENGL)
     endif()
 endif()
 
-function(create_test TEST_NAME TEST_SOURCE TEST_ARGS)
-    add_executable(${TEST_NAME} ${TEST_SOURCE})
+function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
+    if(LIBRARY)
+        add_library(${TEST_NAME} SHARED ${TEST_SOURCE})
+    else()
+        add_executable(${TEST_NAME} ${TEST_SOURCE})
+    endif()
     target_link_libraries(${TEST_NAME} abstractnexus)
     if(UNIX AND NOT APPLE)
         target_link_libraries(${TEST_NAME} ${X11_LIBRARIES})
     endif()
-    add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE_DIR:${TEST_NAME}>/${TEST_NAME}${TEST_EXT} ${TEST_ARGS})
+    if(LIBRARY)
+        add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE_DIR:${TEST_NAME}>/${TEST_NAME}${TEST_EXT} ${TEST_ARGS})
+    endif()
 endfunction()
 
 include(CTest)
 enable_testing()
 if(BUILD_FENSTER)
-    create_test(FensterWindow tests/FensterWindow.cpp "")
+    create_test(FensterWindow tests/FensterWindow.cpp "" FALSE)
 endif()
 if(BUILD_OPENGL)
-    create_test(GLTest tests/GLTest.cpp "")
+    create_test(GLTest tests/GLTest.cpp "" FALSE)
+    create_test(EditorGame tests/EditorGame.cpp "" TRUE)
+    create_test(Editor tests/Editor.cpp "" FALSE)
     set(SKYBOX_OUT_DIRECTORY ${CMAKE_BINARY_DIR}/images/skybox)
     file(MAKE_DIRECTORY ${SKYBOX_OUT_DIRECTORY})
     configure_file(${CMAKE_SOURCE_DIR}/images/skybox/back.jpg ${SKYBOX_OUT_DIRECTORY}/back.jpg COPYONLY)

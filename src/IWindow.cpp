@@ -1,11 +1,14 @@
+#include <stdexcept>
 #include <anex/IWindow.hpp>
 using namespace anex;
-IWindow::IWindow(const int& windowWidth, const int& windowHeight, const int &framerate):
+IWindow::IWindow(const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const uint32_t &framerate):
   windowWidth(windowWidth),
   windowHeight(windowHeight),
+  windowX(windowX),
+  windowY(windowY),
   framerate(framerate)
 {};
-void IWindow::awaitWindowThread()
+void IWindow::awaitWindowThread() const
 {
   windowThread->join();
 }
@@ -184,5 +187,7 @@ void IWindow::updateDeltaTime()
 };
 void IWindow::warpPointer(const glm::vec2 &coords)
 {};
-void IWindow::createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight)
-{};
+IWindow &IWindow::createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY)
+{
+  throw std::runtime_error("IWindow::createChildWindow() not implemented");
+};

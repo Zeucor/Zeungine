@@ -3,11 +3,11 @@
 using namespace anex::modules::gl;
 GLEntity::GLEntity(anex::IWindow &window, const shaders::RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale):
 	IEntity(window),
-	VAO(constants, indiceCount, elementCount),
+	VAO((GLWindow &)window, constants, indiceCount, elementCount),
 	position(position),
 	rotation(rotation),
 	scale(scale),
-	shader(*shaders::ShaderManager::getShaderByConstants(constants).second)
+	shader(*shaders::ShaderManager::getShaderByConstants((GLWindow &)window, constants).second)
 {};
 void GLEntity::preRender()
 {

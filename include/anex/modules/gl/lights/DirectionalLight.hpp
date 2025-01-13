@@ -3,15 +3,17 @@
 #include "../textures/Texture.hpp"
 #include "../textures/Framebuffer.hpp"
 #include "./Lights.hpp"
+#include "../GLWindow.hpp"
 namespace anex::modules::gl::lights
 {
 	struct DirectionalLightShadow
   {
+		GLWindow &window;
     shaders::Shader &shader;
     DirectionalLight &directionalLight;
     textures::Texture texture;
 		textures::Framebuffer framebuffer;
 		glm::mat4 lightSpaceMatrix;
-    DirectionalLightShadow(DirectionalLight &directionalLight);
+    DirectionalLightShadow(GLWindow &window, DirectionalLight &directionalLight);
   };
 }

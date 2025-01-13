@@ -61,8 +61,8 @@ void TextureFactory::initTexture(Texture &texture, const std::vector<std::string
 };
 void TextureFactory::preInitTexture(Texture& texture)
 {
-  glGenTextures(1, &texture.id);
-  GLcheck("glGenTextures");
+  texture.window.glContext.GenTextures(1, &texture.id);
+  GLcheck(texture.window, "glGenTextures");
   if (texture.size.w > 0)
     texture.target = GL_TEXTURE_CUBE_MAP;
   else if (texture.size.y == 0)
@@ -72,28 +72,28 @@ void TextureFactory::preInitTexture(Texture& texture)
   else
     texture.target = GL_TEXTURE_3D;
   texture.bind();
-  glPixelStorei(GL_PACK_ALIGNMENT, 1);
-  GLcheck("glPixelStorei");
+  texture.window.glContext.PixelStorei(GL_PACK_ALIGNMENT, 1);
+  GLcheck(texture.window, "glPixelStorei");
 };
 void TextureFactory::midInitTexture(const Texture& texture, const std::vector<images::ImageLoader::ImagePair>& images)
 {
   if (texture.target == GL_TEXTURE_1D)
   {
     void *data = images.size() ? std::get<1>(images[0]).get() : 0;
-    glTexImage1D(texture.target, 0, internalFormats[texture.format], texture.size.x, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-    GLcheck("glTexImage1D");
+    texture.window.glContext.TexImage1D(texture.target, 0, internalFormats[texture.format], texture.size.x, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+    GLcheck(texture.window, "glTexImage1D");
   }
   else if (texture.target == GL_TEXTURE_2D)
   {
     void *data = images.size() ? std::get<1>(images[0]).get() : 0;
-    glTexImage2D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-    GLcheck("glTexImage2D");
+    texture.window.glContext.TexImage2D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+    GLcheck(texture.window, "glTexImage2D");
   }
   else if (texture.target == GL_TEXTURE_3D)
   {
     void *data = images.size() ? std::get<1>(images[0]).get() : 0;
-    glTexImage3D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, texture.size.z, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-    GLcheck("glTexImage3D");
+    texture.window.glContext.TexImage3D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, texture.size.z, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+    GLcheck(texture.window, "glTexImage3D");
   }
   else if (texture.target == GL_TEXTURE_CUBE_MAP)
   {
@@ -102,8 +102,8 @@ void TextureFactory::midInitTexture(const Texture& texture, const std::vector<im
       bool haveImage = images.size() > face;
       auto imageSize = haveImage ? std::get<0>(images[face]) : glm::uvec2(0, 0);
       void *data = haveImage ? std::get<1>(images[face]).get() : 0;
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormats[texture.format], imageSize.x, imageSize.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-      GLcheck("glTexImage2D");
+      texture.window.glContext.TexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormats[texture.format], imageSize.x, imageSize.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+      GLcheck(texture.window, "glTexImage2D");
     }
   }
 }
@@ -119,13 +119,13 @@ void TextureFactory::postInitTexture(const Texture& texture)
     filterType = GL_LINEAR;
     break;
   }
-  glTexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, filterType);
-  GLcheck("glTexParameteri");
-  glTexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, filterType);
-  GLcheck("glTexParameteri");
-  glTexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  GLcheck("glTexParameteri");
-  glTexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  GLcheck("glTexParameteri");
+  texture.window.glContext.TexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, filterType);
+  GLcheck(texture.window, "glTexParameteri");
+  texture.window.glContext.TexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, filterType);
+  GLcheck(texture.window, "glTexParameteri");
+  texture.window.glContext.TexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  GLcheck(texture.window, "glTexParameteri");
+  texture.window.glContext.TexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  GLcheck(texture.window, "glTexParameteri");
   texture.unbind();
 };

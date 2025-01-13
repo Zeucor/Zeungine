@@ -3,6 +3,7 @@
 #include <iostream>
 #include <anex/modules/gl/shaders/ShaderManager.hpp>
 #include <anex/Logger.hpp>
+#include <anex/modules/gl/shaders/ShaderFactory.hpp>
 using namespace anex::modules::gl;
 #ifdef _WIN32
 extern "C" {
@@ -10,9 +11,22 @@ extern "C" {
 	_declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
-GLWindow::GLWindow(const char* title, const int& windowWidth, const int& windowHeight, const int& framerate):
-	IWindow(windowWidth, windowHeight, framerate),
-	title(title)
+std::mutex GLWindow::renderMutex;
+GLWindow::GLWindow(const char* title, const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const uint32_t& framerate):
+	IWindow(windowWidth, windowHeight, windowX, windowY, framerate),
+	title(title),
+	shaderContext(new ShaderContext)
+{
+	memset(windowKeys, 0, 256 * sizeof(int));
+	memset(windowButtons, 0, 7 * sizeof(int));
+	run();
+};
+GLWindow::GLWindow(GLWindow &parentWindow, const char *childTitle, const uint32_t &childWindowWidth, const uint32_t &childWindowHeight, const int32_t &childWindowX, const int32_t &childWindowY, const uint32_t &framerate):
+	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, framerate),
+	title(childTitle),
+	isChildWindow(true),
+	parentWindow(&parentWindow),
+	shaderContext(new ShaderContext)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -38,11 +52,14 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 			CREATESTRUCT* createStruct = (CREATESTRUCT*)lParam;
 			glWindow = (GLWindow*)createStruct->lpCreateParams;
 			SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)glWindow);
-			glWindow->hDeviceContext = GetDC(hwnd);
-			glWindow->renderInit();
 			break;
 		};
 	case WM_CLOSE:
+		for (auto &childWindow : glWindow->childWindows)
+		{
+			childWindow.close();
+		}
+		glWindow->scene.reset();
 		DestroyWindow(hwnd);
 		break;
 	case WM_LBUTTONDOWN:
@@ -110,7 +127,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 void GLWindow::startWindow()
 {
 #ifdef _WIN32
-	hInstance = GetModuleHandle(NULL);
+	hInstance = isChildWindow ? parentWindow->hInstance : GetModuleHandle(NULL);
 	WNDCLASSEX wc = {0};
 	// wc.cbSize = sizeof(WNDCLASS);
 	wc.cbSize = sizeof(WNDCLASSEX);
@@ -120,17 +137,26 @@ void GLWindow::startWindow()
 	wc.lpszClassName = title;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	RegisterClassEx(&wc);
-	RECT desiredRect = {0, 0, windowWidth, windowHeight};
-	AdjustWindowRectEx(&desiredRect, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_CLIENTEDGE);
-	int adjustedWidth = desiredRect.right - desiredRect.left;
-	int adjustedHeight = desiredRect.bottom - desiredRect.top;
-	hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, title, title,
-												WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-												adjustedWidth, adjustedHeight, NULL, NULL, hInstance, this);
+	int adjustedWidth = windowWidth, adjustedHeight = windowHeight;
+	auto wsStyle = isChildWindow ? (WS_CHILD | WS_VISIBLE) : WS_OVERLAPPEDWINDOW;
+	if (!isChildWindow)
+	{
+		RECT desiredRect = {0, 0, (LONG)windowWidth, (LONG)windowHeight};
+		AdjustWindowRectEx(&desiredRect, wsStyle, FALSE, WS_EX_CLIENTEDGE);
+		adjustedWidth = desiredRect.right - desiredRect.left;
+		adjustedHeight = desiredRect.bottom - desiredRect.top;
+	}
+	hwnd = CreateWindowEx(isChildWindow ? 0 : WS_EX_CLIENTEDGE, title, isChildWindow ? 0 : title,
+												wsStyle,
+												isChildWindow ? (windowX == -1 ? 0 : windowX) : (windowX == -1 ? CW_USEDEFAULT : windowX),
+												isChildWindow ? (windowY == -1 ? 0 : windowY) : (windowY == -1 ? CW_USEDEFAULT : windowY),
+												adjustedWidth, adjustedHeight, isChildWindow ? parentWindow->hwnd : 0, NULL, hInstance, this);
 
 	if (hwnd == NULL)
-		return;
+		throw std::runtime_error("Failed to create window");;
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)this);
+	hDeviceContext = GetDC(hwnd);
+	renderInit();
 	ShowWindow(hwnd, SW_NORMAL);
 	UpdateWindow(hwnd);
 	MSG msg;
@@ -147,17 +173,20 @@ void GLWindow::startWindow()
 		runRunnables();
 		updateKeyboard();
 		updateMouse();
-		glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-		GLcheck("glClearColor");
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		GLcheck("glClear");
+		renderMutex.lock();
+		wglMakeCurrent(hDeviceContext, hRenderingContext);
+		glContext.ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+		GLcheck(*this, "glClearColor");
+		glContext.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		GLcheck(*this, "glClear");
 		render();
 		SwapBuffers(hDeviceContext);
+		renderMutex.unlock();
 	}
 #endif
 _exit:
 	scene.reset();
-	shaders::ShaderManager::deleteShaders();
+	delete shaderContext;
 #ifdef _WIN32
 	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(hRenderingContext);
@@ -188,13 +217,27 @@ void SetupPixelFormat(HDC hDeviceContext)
 };
 #endif
 
+#ifdef _WIN32
+void *get_proc(const char* name) {
+	void* p = (void*)wglGetProcAddress(name);
+	if(p == 0 ||
+		 (p == (void*)0x1) || (p == (void*)0x2) || (p == (void*)0x3) ||
+		 (p == (void*)-1) )
+	{
+		HMODULE module = LoadLibraryA("opengl32.dll");
+		p = (void*)GetProcAddress(module, name);
+	}
+	return p;
+}
+#endif
+
 void GLWindow::renderInit()
 {
 #ifdef _WIN32
 	SetupPixelFormat(hDeviceContext);
 	HGLRC hTempRC = wglCreateContext(hDeviceContext);
 	wglMakeCurrent(hDeviceContext, hTempRC);
-	gladLoadGL();
+	// gladLoadGLContext(&glContext, (GLADloadfunc)get_proc);
 	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
 	wglMakeCurrent(nullptr, nullptr);
 	int attribList[] = {
@@ -206,27 +249,27 @@ void GLWindow::renderInit()
 	hRenderingContext = wglCreateContextAttribsARB(hDeviceContext, 0, attribList);
 	wglDeleteContext(hTempRC);
 	wglMakeCurrent(hDeviceContext, hRenderingContext);
-	gladLoadGL();
+	gladLoadGLContext(&glContext, (GLADloadfunc)get_proc);
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-	glEnable(GL_DEPTH_TEST);
-	GLcheck("glEnable");
-	glEnable(GL_CULL_FACE);
-	GLcheck("glEnable");
-	glCullFace(GL_BACK);
-	GLcheck("glCullFace");
-	glFrontFace(GL_CCW);
-	GLcheck("glFrontFace");
-	glViewport(0, 0, windowWidth, windowHeight);
-	GLcheck("glViewport");
-	glClearDepth(1.0);
-	GLcheck("glClearDepth");
-	glDepthRange(0.0, 1.0);
-	GLcheck("glDepthRange");
-	glEnable(GL_DEBUG_OUTPUT);
-	GLcheck("glEnable");
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-	GLcheck("glEnable");
-	glDebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
+	glContext.Enable(GL_DEPTH_TEST);
+	GLcheck(*this, "glEnable");
+	glContext.Enable(GL_CULL_FACE);
+	GLcheck(*this, "glEnable");
+	glContext.CullFace(GL_BACK);
+	GLcheck(*this, "glCullFace");
+	glContext.FrontFace(GL_CCW);
+	GLcheck(*this, "glFrontFace");
+	glContext.Viewport(0, 0, windowWidth, windowHeight);
+	GLcheck(*this, "glViewport");
+	glContext.ClearDepth(1.0);
+	GLcheck(*this, "glClearDepth");
+	glContext.DepthRange(0.0, 1.0);
+	GLcheck(*this, "glDepthRange");
+	glContext.Enable(GL_DEBUG_OUTPUT);
+	GLcheck(*this, "glEnable");
+	glContext.Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	GLcheck(*this, "glEnable");
+	glContext.DebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
 		if (type == GL_DEBUG_TYPE_OTHER)
 		{
 			return;
@@ -294,13 +337,13 @@ void GLWindow::drawCircle(int x, int y, int radius, uint32_t color)
 void GLWindow::drawText(int x, int y, const char* text, int scale, uint32_t color)
 {
 };
-const bool anex::modules::gl::GLcheck(const char* fn, const bool& egl)
+const bool anex::modules::gl::GLcheck(GLWindow &window, const char* fn, const bool& egl)
 {
 	while (true)
 	{
 		uint32_t err = 0;
 		if (!egl)
-			err = glGetError();
+			err = window.glContext.GetError();
 #if defined(_Android)
 		else if (egl)
 			err = eglGetError();
@@ -445,28 +488,9 @@ void GLWindow::warpPointer(const glm::vec2 &coords)
 	justWarpedPointer = true;
 #endif
 };
-void GLWindow::createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight)
+
+anex::IWindow &GLWindow::createChildWindow(const char* title, const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY)
 {
-	WNDCLASS childWc = {};
-	childWc.lpfnWndProc = DefWindowProc; // Default procedure for the game window
-	childWc.hInstance = hInstance;
-	childWc.lpszClassName = title;
-	RegisterClass(&childWc);
-	HWND childWindow = CreateWindowEx(
-		0,
-		title,
-		nullptr,
-		WS_CHILD | WS_VISIBLE,
-		0, 0, windowWidth, windowHeight,
-		hwnd,
-		nullptr,
-		hInstance,
-		nullptr
-	);
-	if (!childWindow)
-	{
-		throw std::runtime_error("Failed to create game window");
-		return;
-	}
-	childWindows.push_back(childWindow);
-};
+	childWindows.emplace_back(*this, title, windowWidth, windowHeight, windowX, windowY);
+	return childWindows.back();
+}

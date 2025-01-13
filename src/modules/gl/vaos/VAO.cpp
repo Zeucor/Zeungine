@@ -1,13 +1,14 @@
 #include <anex/modules/gl/vaos/VAO.hpp>
 #include <anex/modules/gl/vaos/VAOFactory.hpp>
 using namespace anex::modules::gl::vaos;
-VAO::VAO(const RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount):
+VAO::VAO(GLWindow &window, const RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount):
+  window(window),
   constants(constants),
   indiceCount(indiceCount),
   elementCount(elementCount),
   stride(VAOFactory::getStride(constants))
 {
-  VAOFactory::generateVAO(constants, vao, vbo, ebo, indiceCount, elementCount);
+  VAOFactory::generateVAO(constants, *this, elementCount);
 };
 VAO::~VAO()
 {
@@ -15,40 +16,40 @@ VAO::~VAO()
 };
 void VAO::updateIndices(const uint32_t *indices) const
 {
-  glBindVertexArray(vao);
-  GLcheck("glBindVertexArray");
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  GLcheck("glBindBuffer");
+  window.glContext.BindVertexArray(vao);
+  GLcheck(window, "glBindVertexArray");
+  window.glContext.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  GLcheck(window, "glBindBuffer");
   auto &constantSize = VAOFactory::constantSizes["Indice"];
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indiceCount * std::get<1>(constantSize), indices, GL_STATIC_DRAW);
-  GLcheck("glBufferData");
-  glBindVertexArray(0);
-  GLcheck("glBindVertexArray");
+  window.glContext.BufferData(GL_ELEMENT_ARRAY_BUFFER, indiceCount * std::get<1>(constantSize), indices, GL_STATIC_DRAW);
+  GLcheck(window, "glBufferData");
+  window.glContext.BindVertexArray(0);
+  GLcheck(window, "glBindVertexArray");
 };
 void VAO::updateElements(const std::string_view &constant, const void *elements) const
 {
-  glBindVertexArray(vao);
-  GLcheck("glBindVertexArray");
+  window.glContext.BindVertexArray(vao);
+  GLcheck(window, "glBindVertexArray");
   auto &constantSize = VAOFactory::constantSizes[constant];
   auto offset = VAOFactory::getOffset(constants, constant);
   auto elementStride = std::get<0>(constantSize) * std::get<1>(constantSize);
   auto elementsAsChar = (uint8_t *)elements;
   for (size_t index = offset, c = 1, elementIndex = 0; c <= elementCount; index += stride, c++, elementIndex += elementStride)
   {
-    glBufferSubData(GL_ARRAY_BUFFER, index, elementStride, &elementsAsChar[elementIndex]);
-    GLcheck("glBufferSubData");
+    window.glContext.BufferSubData(GL_ARRAY_BUFFER, index, elementStride, &elementsAsChar[elementIndex]);
+    GLcheck(window, "glBufferSubData");
   }
-  glBindVertexArray(0);
-  GLcheck("glBindVertexArray");
+  window.glContext.BindVertexArray(0);
+  GLcheck(window, "glBindVertexArray");
 };
 void VAO::vaoDraw() const
 {
-  glBindVertexArray(vao);
-  GLcheck("glBindVertexArray");
+  window.glContext.BindVertexArray(vao);
+  GLcheck(window, "glBindVertexArray");
   GLenum drawMode = GL_TRIANGLES;
   GLenum polygonMode = GL_FILL;
-  glPolygonMode(GL_FRONT_AND_BACK, polygonMode);
-  GLcheck("glPolygonMode");
-  glDrawElements(drawMode, indiceCount, GL_UNSIGNED_INT, 0);
-  GLcheck("glDrawElements");
+  window.glContext.PolygonMode(GL_FRONT_AND_BACK, polygonMode);
+  GLcheck(window, "glPolygonMode");
+  window.glContext.DrawElements(drawMode, indiceCount, GL_UNSIGNED_INT, 0);
+  GLcheck(window, "glDrawElements");
 };

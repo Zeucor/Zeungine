@@ -1,10 +1,10 @@
 #include <anex/modules/fenster/Fenster.hpp>
 #include <fenster.hpp>
 using namespace anex::modules::fenster;
-FensterWindow::FensterWindow(const char* title, const int &windowWidth, const int &windowHeight, const int &framerate):
-	IWindow(windowWidth, windowHeight, framerate),
+FensterWindow::FensterWindow(const char* title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const uint32_t &framerate):
+	IWindow(windowWidth, windowHeight, windowX, windowY, framerate),
 	buf((uint32_t*)malloc(windowWidth * windowHeight * sizeof(uint32_t)), free),
-	f(new struct fenster({title, windowWidth, windowHeight, buf.get()}))
+	f(new struct fenster({title, (int)windowWidth, (int)windowHeight, buf.get()}))
 {
   run();
 };

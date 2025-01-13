@@ -9,9 +9,11 @@ namespace anex
 {
 	struct IWindow
 	{
-		int windowWidth;
-		int windowHeight;
-		int framerate = 60;
+		uint32_t windowWidth;
+		uint32_t windowHeight;
+		int32_t windowX;
+		int32_t windowY;
+		uint32_t framerate = 60;
 		std::shared_ptr<std::thread> windowThread;
 		using Runnable = std::function<void(IWindow&)>;
 		std::queue<Runnable> runnables;
@@ -34,10 +36,10 @@ namespace anex
 		std::chrono::steady_clock::time_point lastFrameTime;
 		float deltaTime = 0;
 		bool justWarpedPointer = false;
-		IWindow(const int &windowWidth, const int &windowHeight, const int &framerate);
+		IWindow(const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const uint32_t &framerate);
 		virtual ~IWindow() = default;
 		void run();
-		void awaitWindowThread();
+		void awaitWindowThread() const;
 		virtual void startWindow() = 0;
 		void render();
 		// Keyboard
@@ -66,6 +68,6 @@ namespace anex
 		virtual void drawCircle(int x, int y, int radius, uint32_t color) = 0;
 		virtual void drawText(int x, int y, const char* text, int scale, uint32_t color) = 0;
 		virtual void warpPointer(const glm::vec2 &coords);
-		virtual void createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight);
+		virtual IWindow &createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY);
 	};
 }

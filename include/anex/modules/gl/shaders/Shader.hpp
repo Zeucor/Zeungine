@@ -6,7 +6,8 @@
 #include <functional>
 #include <stdexcept>
 #include "../../../glm.hpp"
-
+#include <anex/modules/gl/GLWindow.hpp>
+#include "RuntimeConstants.hpp"
 namespace anex::modules::gl::textures
 {
 	struct Texture;
@@ -14,8 +15,6 @@ namespace anex::modules::gl::textures
 
 namespace anex::modules::gl::shaders
 {
-	using RuntimeConstants = std::vector<std::string_view>;
-
 	struct Shader
 	{
 		enum class ShaderType
@@ -34,9 +33,10 @@ namespace anex::modules::gl::shaders
 		using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
 		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> uboBindings;
 		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> ssboBindings;
+		GLWindow &window;
 		ShaderMap shaders;
 		GLuint program = 0;
-		Shader(const RuntimeConstants& constants, const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
+		Shader(GLWindow &window, const RuntimeConstants& constants, const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
 		~Shader();
 		void bind() const;
 		void unbind() const;
@@ -47,8 +47,8 @@ namespace anex::modules::gl::shaders
 		void setUniform(const std::string_view& name, const T& value, const uint32_t& size = 0)
 		{
 			auto pointerSize = size ? size : sizeof(value);
-			GLint location = glGetUniformLocation(program, name.data());
-			GLcheck("glGetUniformLocation");
+			GLint location = window.glContext.GetUniformLocation(program, name.data());
+			GLcheck(window, "glGetUniformLocation");
 			auto pointer = &value;
 			if (location == -1)
 			{
@@ -56,68 +56,68 @@ namespace anex::modules::gl::shaders
 			}
 			if constexpr (std::is_same_v<T, bool>)
 			{
-				glUniform1i(location, (int32_t)(*(bool*)pointer));
-				GLcheck("glUniform1i");
+				window.glContext.Uniform1i(location, (int32_t)(*(bool*)pointer));
+				GLcheck(window, "glUniform1i");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, int32_t>)
 			{
-				glUniform1i(location, *(int32_t*)pointer);
-				GLcheck("glUniform1i");
+				window.glContext.Uniform1i(location, *(int32_t*)pointer);
+				GLcheck(window, "glUniform1i");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, uint32_t>)
 			{
-				glUniform1ui(location, *(uint32_t*)pointer);
-				GLcheck("glUniform1ui");
+				window.glContext.Uniform1ui(location, *(uint32_t*)pointer);
+				GLcheck(window, "glUniform1ui");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, float*>)
 			{
-				glUniform1fv(location, pointerSize, &((float**)pointer)[0][0]);
-				GLcheck("glUniform1fv");
+				window.glContext.Uniform1fv(location, pointerSize, &((float**)pointer)[0][0]);
+				GLcheck(window, "glUniform1fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, float>)
 			{
-				glUniform1f(location, *(float*)pointer);
-				GLcheck("glUniform1f");
+				window.glContext.Uniform1f(location, *(float*)pointer);
+				GLcheck(window, "glUniform1f");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec2>)
 			{
-				glUniform2fv(location, 1, &(*(glm::vec2*)pointer)[0]);
-				GLcheck("glUniform2fv");
+				window.glContext.Uniform2fv(location, 1, &(*(glm::vec2*)pointer)[0]);
+				GLcheck(window, "glUniform2fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec3>)
 			{
-				glUniform3fv(location, 1, &(*(glm::vec3*)pointer)[0]);
-				GLcheck("glUniform3fv");
+				window.glContext.Uniform3fv(location, 1, &(*(glm::vec3*)pointer)[0]);
+				GLcheck(window, "glUniform3fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec4>)
 			{
-				glUniform4fv(location, 1, &(*(glm::vec4*)pointer)[0]);
-				GLcheck("glUniform4fv");
+				window.glContext.Uniform4fv(location, 1, &(*(glm::vec4*)pointer)[0]);
+				GLcheck(window, "glUniform4fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::mat2>)
 			{
-				glUniformMatrix2fv(location, 1, GL_FALSE, &(*(glm::mat2*)pointer)[0][0]);
-				GLcheck("glUniformMatrix2fv");
+				window.glContext.UniformMatrix2fv(location, 1, GL_FALSE, &(*(glm::mat2*)pointer)[0][0]);
+				GLcheck(window, "glUniformMatrix2fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::mat3>)
 			{
-				glUniformMatrix3fv(location, 1, GL_FALSE, &(*(glm::mat3*)pointer)[0][0]);
-				GLcheck("glUniformMatrix3fv");
+				window.glContext.UniformMatrix3fv(location, 1, GL_FALSE, &(*(glm::mat3*)pointer)[0][0]);
+				GLcheck(window, "glUniformMatrix3fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::mat4>)
 			{
-				glUniformMatrix4fv(location, 1, GL_FALSE, &(*(glm::mat4*)pointer)[0][0]);
-				GLcheck("glUniformMatrix4fv");
+				window.glContext.UniformMatrix4fv(location, 1, GL_FALSE, &(*(glm::mat4*)pointer)[0][0]);
+				GLcheck(window, "glUniformMatrix4fv");
 				return;
 			}
 			throw std::runtime_error("setUniform: unsupported type");
@@ -126,23 +126,23 @@ namespace anex::modules::gl::shaders
 		template <typename T>
 		void setBlock(const std::string_view& name, const T& value, const uint32_t& size = 0)
 		{
-			auto blockIndex = glGetUniformBlockIndex(program, name.data());
+			auto blockIndex = window.glContext.GetUniformBlockIndex(program, name.data());
 			if (blockIndex == -1)
 			{
 				return;
 			}
 			auto& uboBinding = uboBindings[name];
 			auto& bindingIndex = std::get<0>(uboBinding);
-			glUniformBlockBinding(program, blockIndex, bindingIndex);
-			GLcheck("glUniformBlockBinding");
+			window.glContext.UniformBlockBinding(program, blockIndex, bindingIndex);
+			GLcheck(window, "glUniformBlockBinding");
 			auto& uboBufferIndex = std::get<1>(uboBinding);
-			glBindBuffer(GL_UNIFORM_BUFFER, uboBufferIndex);
-			GLcheck("glBindBuffer");
+			window.glContext.BindBuffer(GL_UNIFORM_BUFFER, uboBufferIndex);
+			GLcheck(window, "glBindBuffer");
 			auto pointerSize = size ? size : sizeof(value);
-			glBufferData(GL_UNIFORM_BUFFER, pointerSize, &value, GL_STATIC_DRAW);
-			GLcheck("glBufferData");
-			glBindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, pointerSize);
-			GLcheck("glBindBufferRange");
+			window.glContext.BufferData(GL_UNIFORM_BUFFER, pointerSize, &value, GL_STATIC_DRAW);
+			GLcheck(window, "glBufferData");
+			window.glContext.BindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, pointerSize);
+			GLcheck(window, "glBindBufferRange");
 		};
 		void setSSBO(const std::string_view& name, const void* pointer, const uint32_t& size);
 		void setTexture(const std::string_view& name, const textures::Texture& texture, const int32_t& unit);

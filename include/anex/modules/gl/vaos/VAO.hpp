@@ -1,10 +1,13 @@
 #pragma once
-#include "../shaders/Shader.hpp"
+#include "../shaders/RuntimeConstants.hpp"
+#include "../common.hpp"
+#include "../GLWindow.hpp"
 namespace anex::modules::gl::vaos
 {
 	using namespace shaders;
 	struct VAO
   {
+		GLWindow &window;
 		shaders::RuntimeConstants constants;
     GLuint vao;
     GLuint vbo;
@@ -12,7 +15,7 @@ namespace anex::modules::gl::vaos
 		uint32_t indiceCount;
 		uint32_t elementCount;
 		uint32_t stride;
-    VAO(const RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount);
+    VAO(GLWindow &window, const RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount);
 		~VAO();
 		void updateIndices(const uint32_t *indices) const;
 		void updateElements(const std::string_view &constant, const void *elements) const;

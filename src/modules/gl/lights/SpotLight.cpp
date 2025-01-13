@@ -2,11 +2,12 @@
 #include <anex/modules/gl/shaders/ShaderManager.hpp>
 #include <iostream>
 using namespace anex::modules::gl::lights;
-SpotLightShadow::SpotLightShadow(SpotLight &spotLight):
-	shader(*shaders::ShaderManager::getShaderByConstants({"Color", "Position", "Normal", "Model", "LightSpaceMatrix"}).second),
+SpotLightShadow::SpotLightShadow(GLWindow &window, SpotLight &spotLight):
+	window(window),
+	shader(*shaders::ShaderManager::getShaderByConstants(window, {"Color", "Position", "Normal", "Model", "LightSpaceMatrix"}).second),
 	spotLight(spotLight),
-  texture(glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
-	framebuffer(texture)
+  texture(window, glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
+	framebuffer(window, texture)
 {
 	float fov = glm::acos(glm::clamp(spotLight.outerCutoff, -1.0f, 1.0f)) * 2.0;
 	glm::mat4 lightProjection = glm::perspective(fov, 1.f, spotLight.nearPlane, spotLight.farPlane);

@@ -69,8 +69,9 @@ struct TestTriangle : anex::modules::gl::GLEntity
   };
   void preRender() override
   {
-    glDisable(GL_CULL_FACE);
-    GLcheck("glEnable");
+    auto &glWindow = (GLWindow &)window;
+    glWindow.glContext,Disable(GL_CULL_FACE);
+    GLcheck(glWindow, "glEnable");
     const auto &model = getModelMatrix();
     shader.bind();
     testScene.entityPreRender(*this);
@@ -82,8 +83,9 @@ struct TestTriangle : anex::modules::gl::GLEntity
   };
   void postRender() override
   {
-    glEnable(GL_CULL_FACE);
-    GLcheck("glEnable");
+    auto &glWindow = (GLWindow &)window;
+    glWindow.glContext.Enable(GL_CULL_FACE);
+    GLcheck(glWindow, "glEnable");
   };
 };
 void rotateLightPosition(anex::IWindow &window, GLScene &scene, lights::PointLight &light, lights::PointLightShadow &pointLightShadow, float angleSpeed, shaders::Shader &shader)

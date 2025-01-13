@@ -109,7 +109,7 @@ SkyBox::SkyBox(GLWindow &window, GLScene &scene, const std::vector<std::string_v
 		{  1.0f, -1.0f, 1.0f },  // 22
 		{  1.0f, -1.0f, -1.0f },  // 23
 	}),
-	texture({0, 0, 0, 1}, texturePaths),
+	texture(window, {0, 0, 0, 1}, texturePaths),
 	scene(scene)
 {
   affectedByShadows = false;
@@ -119,8 +119,8 @@ SkyBox::SkyBox(GLWindow &window, GLScene &scene, const std::vector<std::string_v
 };
 void SkyBox::preRender()
 {
-	glDepthFunc(GL_LEQUAL);
-//	glDisable(GL_CULL_FACE);
+	auto &vao = (VAO &)*this;
+	vao.window.glContext.DepthFunc(GL_LEQUAL);
 	shader.bind();
 	scene.entityPreRender(*this);
 	auto view = glm::mat4(glm::mat3(scene.view.matrix));
@@ -131,6 +131,6 @@ void SkyBox::preRender()
 };
 void SkyBox::postRender()
 {
-//	glEnable(GL_CULL_FACE);
-	glDepthFunc(GL_LESS);
+	auto &vao = (VAO &)*this;
+	vao.window.glContext.DepthFunc(GL_LESS);
 };

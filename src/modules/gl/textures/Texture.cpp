@@ -1,7 +1,8 @@
 #include <anex/modules/gl/textures/Texture.hpp>
 #include <anex/modules/gl/textures/TextureFactory.hpp>
 using namespace anex::modules::gl::textures;
-Texture::Texture(const glm::ivec4 &size, const void *data, const Format &format, const Type &type, const FilterType &filterType):
+Texture::Texture(GLWindow &window, const glm::ivec4 &size, const void *data, const Format &format, const Type &type, const FilterType &filterType):
+  window(window),
 	size(size),
   format(format),
   type(type),
@@ -9,7 +10,8 @@ Texture::Texture(const glm::ivec4 &size, const void *data, const Format &format,
 {
   TextureFactory::initTexture(*this, data);
 };
-Texture::Texture(const glm::ivec4 &size, const std::string_view &path, const Format &format, const Type &type, const FilterType &filterType):
+Texture::Texture(GLWindow &window, const glm::ivec4 &size, const std::string_view &path, const Format &format, const Type &type, const FilterType &filterType):
+  window(window),
   size(size),
   format(format),
   type(type),
@@ -17,7 +19,8 @@ Texture::Texture(const glm::ivec4 &size, const std::string_view &path, const For
 {
   TextureFactory::initTexture(*this, path);
 };
-Texture::Texture(const glm::ivec4 &size, const std::vector<std::string_view> &paths, const Format &format, const Type &type, const FilterType &filterType):
+Texture::Texture(GLWindow &window, const glm::ivec4 &size, const std::vector<std::string_view> &paths, const Format &format, const Type &type, const FilterType &filterType):
+  window(window),
   size(size),
   format(format),
   type(type),
@@ -27,11 +30,11 @@ Texture::Texture(const glm::ivec4 &size, const std::vector<std::string_view> &pa
 };
 void Texture::bind() const
 {
-  glBindTexture(target, id);
-  GLcheck("glBindTexture");
+  window.glContext.BindTexture(target, id);
+  GLcheck(window, "glBindTexture");
 };
 void Texture::unbind() const
 {
-  glBindTexture(target, 0);
-  GLcheck("glBindTexture");
+  window.glContext.BindTexture(target, 0);
+  GLcheck(window, "glBindTexture");
 };
