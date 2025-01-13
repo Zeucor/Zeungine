@@ -215,7 +215,7 @@ TestScene::TestScene(anex::IWindow& window):
 
 int main()
 {
-  GLWindow window("GLWindow", 1280, 720);
+  GLWindow window("GLWindow", 1280, 720, -1, -1);
   window.clearColor = {0, 0, 0, 1};
   window.runOnThread([](auto &window)
   {
