@@ -9,9 +9,8 @@ GLEntity::GLEntity(anex::IWindow &window, const shaders::RuntimeConstants &const
 	scale(scale),
 	shader(*shaders::ShaderManager::getShaderByConstants((GLWindow &)window, constants).second)
 {};
-void GLEntity::preRender()
-{
-};
+void GLEntity::update(){};
+void GLEntity::preRender(){};
 void GLEntity::render()
 {
   preRender();

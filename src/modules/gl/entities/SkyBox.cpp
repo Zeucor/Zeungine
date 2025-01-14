@@ -125,7 +125,7 @@ void SkyBox::preRender()
 	scene.entityPreRender(*this);
 	auto view = glm::mat4(glm::mat3(scene.view.matrix));
 	shader.setBlock("View", view);
-	shader.setBlock("Projection", scene.projection);
+	shader.setBlock("Projection", scene.projection.matrix);
   shader.setTexture("TextureCube", texture, 0);
 	shader.unbind();
 };

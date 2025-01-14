@@ -34,7 +34,7 @@ namespace anex::modules::gl
 		GladGLContext glContext;
 		ShaderContext *shaderContext = 0;
 		static std::mutex renderMutex;
-		GLWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const uint32_t &framerate = 60);
+		GLWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const bool &borderless = false, const uint32_t &framerate = 60);
 		GLWindow(GLWindow &parentWindow, const char *childTitle, const uint32_t &childWindowWidth, const uint32_t &childWindowHeight, const int32_t &childWindowX, const int32_t &childWindowY, const uint32_t &framerate = 60);
 		~GLWindow();
 		void startWindow() override;

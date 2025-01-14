@@ -1,12 +1,13 @@
 #include <stdexcept>
 #include <anex/IWindow.hpp>
 using namespace anex;
-IWindow::IWindow(const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const uint32_t &framerate):
+IWindow::IWindow(const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t &framerate):
   windowWidth(windowWidth),
   windowHeight(windowHeight),
   windowX(windowX),
   windowY(windowY),
-  framerate(framerate)
+  framerate(framerate),
+  borderless(borderless)
 {};
 void IWindow::awaitWindowThread() const
 {
@@ -20,7 +21,10 @@ void IWindow::render()
 {
   updateDeltaTime();
   if (scene)
+  {
+    scene->update();
     scene->render();
+  }
 };
 // Keyboard
 IWindow::EventIdentifier IWindow::addKeyPressHandler(const Key& key, const KeyPressHandler& callback)

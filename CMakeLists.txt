@@ -3,8 +3,20 @@ project(AbstractNexus VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_subdirectory(vendor/fenster)
+#Dependencies
+
+# Fenster
+add_subdirectory(vendor/fenster build/build_fenster)
+
+# Freetype
+add_subdirectory(vendor/freetype build/build_freetype)
+set_target_properties(freetype PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(freetype PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(freetype PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(freetype PROPERTIES MINSIZEREL_POSTFIX "")
+
 include_directories(vendor/fenster/include)
+include_directories(vendor/freetype/include)
 include_directories(vendor/glm)
 include_directories(vendor/stb)
 include_directories(include)
@@ -19,7 +31,8 @@ set(ANEX_SOURCES
     src/Logger.cpp
     src/SharedLibrary.cpp
     src/crypto/vector.cpp
-    src/images/ImageLoader.cpp)
+    src/images/ImageLoader.cpp
+    src/File.cpp)
 
 if(BUILD_FENSTER)
     list(APPEND ANEX_SOURCES src/modules/fenster/Fenster.cpp)
@@ -30,7 +43,9 @@ if(BUILD_OPENGL)
         src/modules/gl/GLEntity.cpp
         src/modules/gl/GLScene.cpp
         src/modules/gl/entities/Cube.cpp
+        src/modules/gl/entities/Plane.cpp
         src/modules/gl/entities/SkyBox.cpp
+        src/modules/gl/entities/TextView.cpp
         src/modules/gl/lights/DirectionalLight.cpp
         src/modules/gl/lights/PointLight.cpp
         src/modules/gl/lights/SpotLight.cpp
@@ -45,8 +60,10 @@ if(BUILD_OPENGL)
         src/modules/gl/vaos/VAO.cpp
         src/modules/gl/vaos/VAOFactory.cpp
         src/modules/gl/vp/View.cpp
+        src/modules/gl/vp/Projection.cpp
         src/modules/gl/vp/VML.cpp
-        src/modules/gl/gl.c)
+        src/modules/gl/gl.c
+        src/modules/gl/fonts/freetype/Freetype.cpp)
     if(WIN32)
         list(APPEND ANEX_SOURCES src/modules/gl/wgl.c)
     elseif(UNIX AND NOT APPLE)
@@ -67,6 +84,7 @@ if(BUILD_OPENGL)
         target_link_libraries(abstractnexus OpenGL::GL)
     endif()
 endif()
+target_link_libraries(abstractnexus freetype)
 
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     if(LIBRARY)
@@ -102,3 +120,5 @@ if(BUILD_OPENGL)
     configure_file(${CMAKE_SOURCE_DIR}/images/skybox/top.jpg ${SKYBOX_OUT_DIRECTORY}/top.jpg COPYONLY)
     configure_file(${CMAKE_SOURCE_DIR}/images/skybox/bottom.jpg ${SKYBOX_OUT_DIRECTORY}/bottom.jpg COPYONLY)
 endif()
+set(FONTS_DIRECTORY ${CMAKE_BINARY_DIR}/fonts)
+file(COPY ${CMAKE_SOURCE_DIR}/fonts/Roboto/Roboto-Regular.ttf DESTINATION ${FONTS_DIRECTORY}/Roboto)

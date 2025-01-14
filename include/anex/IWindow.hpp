@@ -36,7 +36,8 @@ namespace anex
 		std::chrono::steady_clock::time_point lastFrameTime;
 		float deltaTime = 0;
 		bool justWarpedPointer = false;
-		IWindow(const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const uint32_t &framerate);
+		bool borderless = false;
+		IWindow(const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const bool &borderless, const uint32_t &framerate);
 		virtual ~IWindow() = default;
 		void run();
 		void awaitWindowThread() const;

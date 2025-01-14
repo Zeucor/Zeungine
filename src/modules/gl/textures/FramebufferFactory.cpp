@@ -15,6 +15,9 @@ void FramebufferFactory::initFramebuffer(Framebuffer &framebuffer)
       framebuffer.window.glContext.DrawBuffer(GL_NONE);
       framebuffer.window.glContext.ReadBuffer(GL_NONE);
       break;
+    default:
+      frameBufferTarget = GL_COLOR_ATTACHMENT0;
+      break;
   }
   if (framebuffer.texture.target == GL_TEXTURE_CUBE_MAP)
   {

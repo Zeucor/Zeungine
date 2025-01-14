@@ -77,7 +77,7 @@ struct TestTriangle : anex::modules::gl::GLEntity
     testScene.entityPreRender(*this);
     shader.setBlock("Model", model);
     shader.setBlock("View", testScene.view.matrix);
-    shader.setBlock("Projection", testScene.projection);
+    shader.setBlock("Projection", testScene.projection.matrix);
     shader.setBlock("CameraPosition", testScene.view.position, 16);
     shader.unbind();
   };

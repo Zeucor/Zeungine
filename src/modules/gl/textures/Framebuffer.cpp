@@ -13,11 +13,6 @@ void Framebuffer::bind() const
   GLcheck(window, "glBindFramebuffer");
   window.glContext.Viewport(0, 0, texture.size.x, texture.size.y);
   GLcheck(window, "glViewport");
-  window.glContext.ClearColor(0, 0, 0, 0);
-  GLcheck(window, "glClearColor");
-  GLbitfield clearBitfield = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
-  window.glContext.Clear(clearBitfield);
-  GLcheck(window, "glClear");
 };
 void Framebuffer::unbind()
 {

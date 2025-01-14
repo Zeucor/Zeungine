@@ -12,8 +12,8 @@ extern "C" {
 }
 #endif
 std::mutex GLWindow::renderMutex;
-GLWindow::GLWindow(const char* title, const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const uint32_t& framerate):
-	IWindow(windowWidth, windowHeight, windowX, windowY, framerate),
+GLWindow::GLWindow(const char* title, const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t& framerate):
+	IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
 	title(title),
 	shaderContext(new ShaderContext)
 {
@@ -22,7 +22,7 @@ GLWindow::GLWindow(const char* title, const uint32_t& windowWidth, const uint32_
 	run();
 };
 GLWindow::GLWindow(GLWindow &parentWindow, const char *childTitle, const uint32_t &childWindowWidth, const uint32_t &childWindowHeight, const int32_t &childWindowX, const int32_t &childWindowY, const uint32_t &framerate):
-	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, framerate),
+	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
 	title(childTitle),
 	isChildWindow(true),
 	parentWindow(&parentWindow),
@@ -265,6 +265,16 @@ void GLWindow::renderInit()
 	GLcheck(*this, "glClearDepth");
 	glContext.DepthRange(0.0, 1.0);
 	GLcheck(*this, "glDepthRange");
+	glContext.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+	GLcheck(*this, "glEnable:GL_SAMPLE_ALPHA_TO_COVERAGE");
+	glContext.Enable(GL_BLEND);
+	GLcheck(*this, "glEnable:GL_BLEND");
+	glContext.Enable(GL_DITHER);
+	GLcheck(*this, "glEnable:GL_DITHER");
+	glContext.BlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+	GLcheck(*this, "glBlendEquationSeparate");
+	glContext.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GLcheck(*this, "glBlendFunc");
 	glContext.Enable(GL_DEBUG_OUTPUT);
 	GLcheck(*this, "glEnable");
 	glContext.Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);

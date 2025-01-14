@@ -54,7 +54,7 @@ void Cube::preRender()
 	scene.entityPreRender(*this);
 	shader.setBlock("Model", model);
 	shader.setBlock("View", scene.view.matrix);
-	shader.setBlock("Projection", scene.projection);
+	shader.setBlock("Projection", scene.projection.matrix);
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 };

@@ -3,11 +3,17 @@
 #include <anex/modules/gl/GLEntity.hpp>
 #include <anex/modules/gl/vaos/VAO.hpp>
 using namespace anex::modules::gl;
-GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const float &fov):
+GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const float &fov, textures::Framebuffer *framebufferPointer):
 	IScene(window),
 	view(cameraPosition, cameraDirection),
-	fov(fov),
-	projection(glm::perspective(glm::radians(fov), (float)window.windowWidth / window.windowHeight, 0.1f, 10000.f))
+	projection((GLWindow &)window, fov),
+	framebufferPointer(framebufferPointer)
+{};
+GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const glm::vec2 &orthoSize, textures::Framebuffer *framebufferPointer):
+	IScene(window),
+	view(cameraPosition, cameraDirection),
+	projection((GLWindow &)window, orthoSize),
+	framebufferPointer(framebufferPointer)
 {};
 void GLScene::preRender()
 {
@@ -78,9 +84,15 @@ void GLScene::preRender()
 		pointLightShadow.framebuffer.unbind();
 	}
 	auto &glWindow = (GLWindow &)window;
-	glWindow.glContext.Viewport(0, 0, window.windowWidth, window.windowHeight);
+	if (framebufferPointer)
+	{
+		auto &framebuffer = *framebufferPointer;
+		glWindow.glContext.Viewport(0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y);
+	}
+	else
+		glWindow.glContext.Viewport(0, 0, window.windowWidth, window.windowHeight);
 	GLcheck(glWindow, "glViewport");
-	glWindow.glContext.ClearColor(window.clearColor.r, window.clearColor.g, window.clearColor.b, window.clearColor.a);
+	glWindow.glContext.ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 	glWindow.glContext.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 };
 void GLScene::render()

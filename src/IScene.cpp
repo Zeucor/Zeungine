@@ -18,6 +18,15 @@ void IScene::removeEntity(const unsigned int& id)
 		entities.erase(entityIter);
 	}
 };
+void IScene::update()
+{
+	auto it = entities.begin();
+	auto end = entities.end();
+	for (; it != end; it++)
+	{
+		it->second->update();
+	}
+};
 void IScene::render()
 {
 	preRender();

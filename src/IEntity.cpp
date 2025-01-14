@@ -3,6 +3,5 @@ using namespace anex;
 IEntity::IEntity(IWindow &window):
 	window(window)
 {};
-void IEntity::render()
-{
-};
+void IEntity::update(){};
+void IEntity::render(){};
