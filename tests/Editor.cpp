@@ -23,7 +23,7 @@ using namespace anex::modules::gl;
 // };
 int main()
 {
-	GLWindow window("Editor", 1280, 720, -1, -1);
+	GLWindow window("Editor", 1280, 720, -1, -1, true);
 	// window.runOnThread([](auto &window)
 	// {
 	// 	window.setIScene(std::make_shared<EditorScene>((GLWindow &)window));

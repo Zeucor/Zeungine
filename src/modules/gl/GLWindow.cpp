@@ -155,6 +155,11 @@ void GLWindow::startWindow()
 	if (hwnd == NULL)
 		throw std::runtime_error("Failed to create window");;
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)this);
+	if (borderless)
+	{
+		SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) & ~WS_CAPTION & ~WS_THICKFRAME);
+		SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, windowX, windowY, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+	}
 	hDeviceContext = GetDC(hwnd);
 	renderInit();
 	ShowWindow(hwnd, SW_NORMAL);
