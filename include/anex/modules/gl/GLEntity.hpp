@@ -12,11 +12,14 @@ namespace anex::modules::gl
 		glm::mat4 model;
 		shaders::Shader &shader;
 		bool affectedByShadows = true;
+		std::vector<std::shared_ptr<GLEntity>> children;
+		GLEntity *parentEntity = 0;
     GLEntity(anex::IWindow &window, const shaders::RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale);
 		virtual void update();
 		virtual void preRender();
     void render() override;
 		virtual void postRender();
 		const glm::mat4 &getModelMatrix();
+		void addChild(const std::shared_ptr<GLEntity> &child);
   };
 }

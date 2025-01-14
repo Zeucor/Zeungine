@@ -9,7 +9,13 @@ GLEntity::GLEntity(anex::IWindow &window, const shaders::RuntimeConstants &const
 	scale(scale),
 	shader(*shaders::ShaderManager::getShaderByConstants((GLWindow &)window, constants).second)
 {};
-void GLEntity::update(){};
+void GLEntity::update()
+{
+	for (auto &childEntity : children)
+	{
+		childEntity->update();
+	}
+};
 void GLEntity::preRender(){};
 void GLEntity::render()
 {
@@ -17,6 +23,10 @@ void GLEntity::render()
 	shader.bind();
 	vaoDraw();
 	shader.unbind();
+	for (auto &childEntity : children)
+	{
+		childEntity->render();
+	}
 };;
 void GLEntity::postRender()
 {
@@ -28,5 +38,14 @@ const glm::mat4 &GLEntity::getModelMatrix()
   model = glm::rotate(model, rotation.y, {0, 1, 0});
   model = glm::rotate(model, rotation.z, {0, 0, 1});
   model = glm::scale(model, scale);
+	if (parentEntity)
+	{
+		model = parentEntity->getModelMatrix() * model;
+	}
   return model;
+};
+void GLEntity::addChild(const std::shared_ptr<GLEntity> &child)
+{
+	child->parentEntity = this;
+	children.push_back(child);
 };

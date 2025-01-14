@@ -49,14 +49,14 @@ TextView::TextView(GLWindow &window,
 };
 void TextView::update()
 {
-//	if (oldText != text)
-//	{
+	if (oldText != text)
+	{
 		float lineHeight = 0;
 		glm::vec3 cursorPosition(0);
 		auto textSize = font.stringSize(text, fontSize, lineHeight, {0, 0});
 		font.stringToTexture(text, {1, 1, 1, 1}, fontSize, lineHeight, textSize, texturePointer, 0, cursorPosition);
 		oldText = text;
-//	}
+	}
 };
 void TextView::preRender()
 {

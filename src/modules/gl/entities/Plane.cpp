@@ -29,7 +29,7 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
 	colors({color, color, color, color}),
 	uvs({{},{},{},{}}),
 	positions({
-		{ -size.x / 2, -size. y / 2, 0}, { 0, -size. y / 2, 0}, { 0,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
+		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
 	}),
 	scene(scene)
 {
@@ -86,9 +86,7 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
 };
 void Plane::preRender()
 {
-  auto &vao = (VAO &)*this;
 	const auto &model = getModelMatrix();
-//  vao.window.glContext.Disable(GL_CULL_FACE);
 	shader.bind();
 	scene.entityPreRender(*this);
 	shader.setBlock("Model", model);

@@ -142,23 +142,32 @@ void GLWindow::startWindow()
 	if (!isChildWindow)
 	{
 		RECT desiredRect = {0, 0, (LONG)windowWidth, (LONG)windowHeight};
-		AdjustWindowRectEx(&desiredRect, wsStyle, FALSE, WS_EX_CLIENTEDGE);
+		AdjustWindowRectEx(&desiredRect, wsStyle, FALSE, WS_EX_APPWINDOW);
 		adjustedWidth = desiredRect.right - desiredRect.left;
 		adjustedHeight = desiredRect.bottom - desiredRect.top;
 	}
-	hwnd = CreateWindowEx(isChildWindow ? 0 : WS_EX_CLIENTEDGE, title, isChildWindow ? 0 : title,
+	hwnd = CreateWindowEx(isChildWindow ? 0 : WS_EX_APPWINDOW, title, isChildWindow ? 0 : title,
 												wsStyle,
 												isChildWindow ? (windowX == -1 ? 0 : windowX) : (windowX == -1 ? CW_USEDEFAULT : windowX),
 												isChildWindow ? (windowY == -1 ? 0 : windowY) : (windowY == -1 ? CW_USEDEFAULT : windowY),
 												adjustedWidth, adjustedHeight, isChildWindow ? parentWindow->hwnd : 0, NULL, hInstance, this);
 
 	if (hwnd == NULL)
-		throw std::runtime_error("Failed to create window");;
+		throw std::runtime_error("Failed to create window");
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)this);
 	if (borderless)
 	{
-		SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) & ~WS_CAPTION & ~WS_THICKFRAME);
-		SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, windowX, windowY, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+		SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) & ~WS_CAPTION & ~WS_THICKFRAME & ~WS_SYSMENU);
+		SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) & ~WS_EX_STATICEDGE);
+		UINT flags = SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW;
+		if (windowX == -1 && windowY == -1)
+			flags |= SWP_NOMOVE;
+		SetWindowPos(hwnd,
+			HWND_TOPMOST,
+			(windowX == -1 ? 0 : windowX),          // Use explicit or default X position
+				(windowY == -1 ? 0 : windowY),
+		windowWidth,
+			windowHeight, flags);
 	}
 	hDeviceContext = GetDC(hwnd);
 	renderInit();

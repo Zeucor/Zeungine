@@ -8,7 +8,7 @@ namespace anex::modules::gl::entities
 {
 	struct Plane : GLEntity
 	{
-		uint32_t indices[6]; // 6 faces * 2 triangles * 3 vertices
+		uint32_t indices[6];
 		std::array<glm::vec4, 4> colors;
 		std::array<glm::vec2, 4> uvs;
 		std::array<glm::vec3, 4> positions;
