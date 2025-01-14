@@ -10,3 +10,6 @@
 [submodule "vendor/freetype"]
 	path = vendor/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "vendor/bvh"]
+	path = vendor/bvh
+	url = https://github.com/ZeunO8/bvh.git
