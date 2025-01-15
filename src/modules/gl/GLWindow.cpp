@@ -4,6 +4,8 @@
 #include <anex/modules/gl/shaders/ShaderManager.hpp>
 #include <anex/Logger.hpp>
 #include <anex/modules/gl/shaders/ShaderFactory.hpp>
+#include <ShellScalingApi.h>
+#pragma comment(lib, "Shcore.lib")
 using namespace anex::modules::gl;
 #ifdef _WIN32
 extern "C" {
@@ -11,8 +13,9 @@ extern "C" {
 	_declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
+static bool setDPIAware = false;
 std::mutex GLWindow::renderMutex;
-GLWindow::GLWindow(const char* title, const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t& framerate):
+GLWindow::GLWindow(const char* title, const int32_t& windowWidth, const int32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t& framerate):
 	IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
 	title(title),
 	shaderContext(new ShaderContext)
@@ -21,7 +24,7 @@ GLWindow::GLWindow(const char* title, const uint32_t& windowWidth, const uint32_
 	memset(windowButtons, 0, 7 * sizeof(int));
 	run();
 };
-GLWindow::GLWindow(GLWindow &parentWindow, const char *childTitle, const uint32_t &childWindowWidth, const uint32_t &childWindowHeight, const int32_t &childWindowX, const int32_t &childWindowY, const uint32_t &framerate):
+GLWindow::GLWindow(GLWindow &parentWindow, const char *childTitle, const int32_t &childWindowWidth, const int32_t &childWindowHeight, const int32_t &childWindowX, const int32_t &childWindowY, const uint32_t &framerate):
 	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
 	title(childTitle),
 	isChildWindow(true),
@@ -102,9 +105,16 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 		break;
 	};
 	case WM_MOUSEMOVE:
-		glWindow->mouseCoords.y = glWindow->windowHeight - HIWORD(lParam), glWindow->mouseCoords.x = LOWORD(lParam);
-		glWindow->mouseMoved = true;
-		break;
+		{
+			POINT pt;
+			GetCursorPos(&pt);
+			ScreenToClient(hwnd, &pt);
+			auto x = pt.x;
+			auto y = glWindow->windowHeight - pt.y;
+			glWindow->mouseCoords.y = y, glWindow->mouseCoords.x = x;
+			glWindow->mouseMoved = true;
+			break;
+		};
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 		{
@@ -118,6 +128,13 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+	case WM_SIZE:
+		{
+			int32_t width = LOWORD(lParam), height = HIWORD(lParam);
+			if (width != 0 && width != glWindow->windowWidth && height != 0 && height != glWindow->windowHeight)
+				glWindow->resize({width, height});
+			break;
+		};
 	default:
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
@@ -127,6 +144,15 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 void GLWindow::startWindow()
 {
 #ifdef _WIN32
+	if (!setDPIAware)
+	{
+		HRESULT hr = SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+		if (FAILED(hr))
+		{
+			throw std::runtime_error("SetProcessDpiAwareness failed");
+		}
+		setDPIAware = true;
+	}
 	hInstance = isChildWindow ? parentWindow->hInstance : GetModuleHandle(NULL);
 	WNDCLASSEX wc = {0};
 	// wc.cbSize = sizeof(WNDCLASS);
@@ -137,6 +163,11 @@ void GLWindow::startWindow()
 	wc.lpszClassName = title;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	RegisterClassEx(&wc);
+	dpiScale = 1.0f;
+	HDC screen = GetDC(NULL);
+	int32_t dpi = GetDeviceCaps(screen, LOGPIXELSX);
+	ReleaseDC(NULL, screen);
+	dpiScale = dpi / 96.0f;
 	int adjustedWidth = windowWidth, adjustedHeight = windowHeight;
 	auto wsStyle = isChildWindow ? (WS_CHILD | WS_VISIBLE) : WS_OVERLAPPEDWINDOW;
 	if (!isChildWindow)
@@ -157,7 +188,7 @@ void GLWindow::startWindow()
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)this);
 	if (borderless)
 	{
-		SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) & ~WS_CAPTION & ~WS_THICKFRAME & ~WS_SYSMENU);
+		SetWindowLong(hwnd, GWL_STYLE, (GetWindowLong(hwnd, GWL_STYLE) & ~WS_CAPTION & ~WS_THICKFRAME & ~WS_SYSMENU) | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
 		SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) & ~WS_EX_STATICEDGE);
 		UINT flags = SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW;
 		if (windowX == -1 && windowY == -1)
@@ -173,6 +204,12 @@ void GLWindow::startWindow()
 	renderInit();
 	ShowWindow(hwnd, SW_NORMAL);
 	UpdateWindow(hwnd);
+	RECT rect;
+	if (GetWindowRect(hwnd, &rect))
+	{
+		windowX = rect.left;
+		windowY = rect.top;
+	}
 	MSG msg;
 	while (true)
 	{
@@ -322,7 +359,7 @@ void GLWindow::updateKeyboard()
 
 void GLWindow::updateMouse()
 {
-	for (unsigned int i = 0; i < 7; ++i)
+	for (unsigned int i = GLWindow::MinMouseButton; i < GLWindow::MaxMouseButton; ++i)
 	{
 _checkPressed:
 		auto& pressed = windowButtons[i];
@@ -347,6 +384,32 @@ void GLWindow::close()
 {
 #ifdef _WIN32
   PostMessage(hwnd, WM_CLOSE, 0, 0);
+#endif
+};
+void GLWindow::minimize()
+{
+#ifdef _WIN32
+	ShowWindow(hwnd, SW_MINIMIZE);
+	buttons.clear();
+	for (unsigned i = 0; i <= GLWindow::MaxMouseButton; ++i)
+	{
+		windowButtons[i] = false;
+	}
+#endif
+};
+void GLWindow::maximize()
+{
+#ifdef _WIN32
+	if (maximized)
+	{
+		maximized = false;
+		ShowWindow(hwnd, SW_RESTORE);
+	}
+	else
+	{
+		maximized = true;
+		ShowWindow(hwnd, SW_MAXIMIZE);
+	}
 #endif
 };
 void GLWindow::drawLine(int x0, int y0, int x1, int y1, uint32_t color)
@@ -512,9 +575,81 @@ void GLWindow::warpPointer(const glm::vec2 &coords)
 	justWarpedPointer = true;
 #endif
 };
-
+void GLWindow::setXY(const int32_t &x, const int32_t &y)
+{
+	windowX = x;
+	windowY = y;
+	UINT flags = SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW;
+	if (windowX == -1 && windowY == -1)
+		flags |= SWP_NOMOVE;
+	SetWindowPos(hwnd,
+		HWND_TOPMOST,
+		(windowX == -1 ? 0 : windowX),          // Use explicit or default X position
+		(windowY == -1 ? 0 : windowY),
+		windowWidth,
+		windowHeight,
+		flags);
+	// std::cout << "Setting Window X/Y to {" << windowX << ", " << windowY << "}" << std::endl;
+};
+void GLWindow::setWidthHeight(const uint32_t &width, const uint32_t &height)
+{
+	windowWidth = width;
+	windowHeight = height;
+	int adjustedWidth = windowWidth, adjustedHeight = windowHeight;
+	auto wsStyle = isChildWindow ? (WS_CHILD | WS_VISIBLE) : WS_OVERLAPPEDWINDOW;
+	if (!isChildWindow)
+	{
+		RECT desiredRect = {0, 0, (LONG)windowWidth, (LONG)windowHeight};
+		AdjustWindowRectEx(&desiredRect, wsStyle, FALSE, WS_EX_APPWINDOW);
+		adjustedWidth = desiredRect.right - desiredRect.left;
+		adjustedHeight = desiredRect.bottom - desiredRect.top;
+	}
+	UINT flags = SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW;
+	if (windowX == -1 && windowY == -1)
+		flags |= SWP_NOMOVE;
+	SetWindowPos(hwnd,
+		HWND_TOPMOST,
+		(windowX == -1 ? 0 : windowX),          // Use explicit or default X position
+			(windowY == -1 ? 0 : windowY),
+	adjustedWidth,
+		adjustedHeight, flags);
+};
 anex::IWindow &GLWindow::createChildWindow(const char* title, const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY)
 {
 	childWindows.emplace_back(*this, title, windowWidth, windowHeight, windowX, windowY);
 	return childWindows.back();
-}
+};
+void anex::modules::gl::computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)
+{
+	const glm::vec3 *positionsData = positions.data();
+	const glm::ivec3 *indicesData = (const glm::ivec3 *)indices.data();
+	const int nbTriangles = indices.size() / 3;
+	const int nbVertices = positions.size();
+	const int nbNormals = nbVertices;
+	normals.resize(nbNormals);
+	auto *normalsData = normals.data();
+	memset(normalsData, 0, nbVertices * sizeof(glm::vec3));
+	for (uint32_t index = 0; index < nbTriangles; index++)
+	{
+		const auto& indice = indicesData[index];
+		const auto& vertex1 = positionsData[indice.x];
+		const auto& vertex2 = positionsData[indice.y];
+		const auto& vertex3 = positionsData[indice.z];
+		auto& normal1 = normalsData[indice.x];
+		auto& normal2 = normalsData[indice.y];
+		auto& normal3 = normalsData[indice.z];
+		auto triangleNormal = cross(vertex2 - vertex1, vertex3 - vertex1);
+		if (!triangleNormal.x && !triangleNormal.y && !triangleNormal.z)
+		{
+			continue;
+		}
+		normal1 += triangleNormal;
+		normal2 += triangleNormal;
+		normal3 += triangleNormal;
+	}
+	for (uint32_t index = 0; index < nbVertices; index++)
+	{
+		auto& normal = normalsData[index];
+		normal = glm::normalize(normal);
+	}
+};

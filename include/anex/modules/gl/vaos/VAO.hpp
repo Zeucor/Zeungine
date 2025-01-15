@@ -17,8 +17,9 @@ namespace anex::modules::gl::vaos
 		uint32_t stride;
     VAO(GLWindow &window, const RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount);
 		~VAO();
-		void updateIndices(const uint32_t *indices) const;
-		void updateElements(const std::string_view &constant, const void *elements) const;
+		void updateIndices(const std::vector<uint32_t> &indices) const;
+		template<typename T>
+		void updateElements(const std::string_view &constant, const std::vector<T> &elements) const;
 		void vaoDraw() const;
   };
 };

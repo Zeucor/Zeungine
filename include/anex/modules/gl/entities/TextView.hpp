@@ -9,10 +9,8 @@ namespace anex::modules::gl::entities
 {
 	struct TextView : GLEntity
 	{
-		uint32_t indices[6];
-		std::array<glm::vec3, 4> positions;
-		std::array<glm::vec2, 4> uvs;
-		std::array<glm::vec3, 4> normals = {};
+		std::vector<glm::vec2> uvs;
+		std::vector<glm::vec3> normals = {};
 		std::shared_ptr<textures::Texture> texturePointer;
 		GLScene &scene;
 	    std::string oldText;
@@ -30,5 +28,6 @@ namespace anex::modules::gl::entities
 						  const float &fontSize);
 		void update() override;
 		void preRender() override;
+		void setSize(const glm::vec2 &size);
   };
 }

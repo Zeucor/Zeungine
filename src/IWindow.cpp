@@ -1,7 +1,7 @@
 #include <stdexcept>
 #include <anex/IWindow.hpp>
 using namespace anex;
-IWindow::IWindow(const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t &framerate):
+IWindow::IWindow(const int32_t& windowWidth, const int32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t &framerate):
   windowWidth(windowWidth),
   windowHeight(windowHeight),
   windowX(windowX),
@@ -107,7 +107,7 @@ IWindow::EventIdentifier IWindow::addMousePressHandler(const Button& button, con
 };
 void IWindow::removeMousePressHandler(const Button& button, EventIdentifier& id)
 {
-  auto& handlersPair = keyPressHandlers[button];
+  auto& handlersPair = mousePressHandlers[button];
   auto handlerIter = handlersPair.second.find(id);
   if (handlerIter == handlersPair.second.end())
   {
@@ -189,8 +189,21 @@ void IWindow::updateDeltaTime()
   deltaTime = duration.count();
   lastFrameTime = currentTime;
 };
-void IWindow::warpPointer(const glm::vec2 &coords)
-{};
+void IWindow::resize(const glm::vec2 &newSize)
+{
+  if (windowWidth != newSize.x)
+    windowWidth = newSize.x;
+  if (windowHeight != newSize.y)
+    windowHeight = newSize.y;
+  if (scene)
+    scene->resize(newSize);
+};
+void IWindow::close(){};
+void IWindow::minimize(){};
+void IWindow::maximize(){};
+void IWindow::warpPointer(const glm::vec2 &coords){};
+void IWindow::setXY(const int32_t &x, const int32_t &y){};
+void IWindow::setWidthHeight(const uint32_t &width, const uint32_t &height){};
 IWindow &IWindow::createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY)
 {
   throw std::runtime_error("IWindow::createChildWindow() not implemented");

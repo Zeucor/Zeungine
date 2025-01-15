@@ -1,11 +1,15 @@
 #include <anex/modules/gl/textures/Framebuffer.hpp>
 #include <anex/modules/gl/textures/FramebufferFactory.hpp>
 using namespace anex::modules::gl::textures;
-Framebuffer::Framebuffer(GLWindow &window, const Texture &texture):
+Framebuffer::Framebuffer(GLWindow &window, Texture &texture):
   window(window),
   texture(texture)
 {
   FramebufferFactory::initFramebuffer(*this);
+};
+Framebuffer::~Framebuffer()
+{
+  FramebufferFactory::destroyFramebuffer(*this);
 };
 void Framebuffer::bind() const
 {

@@ -7,6 +7,7 @@
 #include "./vp/View.hpp"
 #include "./vp/Projection.hpp"
 #include "./textures/Framebuffer.hpp"
+#include "./raytracing/BVH.hpp"
 namespace anex::modules::gl
 {
 	struct GLScene : anex::IScene
@@ -20,11 +21,22 @@ namespace anex::modules::gl
 		std::vector<lights::DirectionalLightShadow> directionalLightShadows;
 		std::vector<lights::SpotLightShadow> spotLightShadows;
 		glm::vec4 clearColor = glm::vec4(0);
+		std::unordered_map<size_t, std::vector<size_t>> primIDsToEntityIDsMap;
 		textures::Framebuffer *framebufferPointer = 0;
+		raytracing::BVH bvh;
+		std::array<IWindow::EventIdentifier, 7 - 0 + 1> mousePressIDs;
+		IWindow::EventIdentifier mouseMoveID;
+		GLEntity *currentHoveredEntity = 0;
     GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const float &fov, textures::Framebuffer *framebufferPointer = 0);
     GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const glm::vec2 &orthoSize, textures::Framebuffer *framebufferPointer = 0);
+		~GLScene();
     void preRender() override;
 		void render() override;
 		void entityPreRender(IEntity &entity) override;
+		void resize(const glm::vec2 &newSize) override;
+		void postAddEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs) override;
+		GLEntity *findEntityByPrimID(const size_t &primID);
+		void hookMouseEvents();
+		void unhookMouseEvents();
   };
 }

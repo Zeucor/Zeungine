@@ -32,3 +32,8 @@ void FramebufferFactory::initFramebuffer(Framebuffer &framebuffer)
   framebuffer.window.glContext.BindFramebuffer(GL_FRAMEBUFFER, 0);
   GLcheck(framebuffer.window, "glBindFramebuffer");
 };
+void FramebufferFactory::destroyFramebuffer(Framebuffer &framebuffer)
+{
+  framebuffer.window.glContext.DeleteFramebuffers(1, &framebuffer.id);
+  GLcheck(framebuffer.window, "glDeleteFramebuffers");
+};

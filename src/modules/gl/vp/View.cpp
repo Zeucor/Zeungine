@@ -24,3 +24,31 @@ void View::addPhiTheta(const float &addPhi, const float &addTheta)
 	direction = newDirection + 1e-6;
   update();
 };
+anex::IWindow::EventIdentifier View::addResizeHandler(const ViewResizeHandler &callback)
+{
+	auto id = ++viewResizeHandlers.first;
+	viewResizeHandlers.second[id] = callback;
+	return id;
+};
+void View::removeResizeHandler(anex::IWindow::EventIdentifier &id)
+{
+	auto &handlers = viewResizeHandlers.second;
+	auto handlerIter = handlers.find(id);
+	if (handlerIter == handlers.end())
+	{
+		return;
+	}
+	handlers.erase(handlerIter);
+	id = 0;
+};
+void View::callResizeHandler(const glm::vec2 &newSize)
+{
+	auto& handlersMap = viewResizeHandlers.second;
+	std::vector<ViewResizeHandler> handlersCopy;
+	for (const auto& pair : handlersMap)
+		handlersCopy.push_back(pair.second);
+	for (auto& handler : handlersCopy)
+	{
+		handler(newSize);
+	}
+};

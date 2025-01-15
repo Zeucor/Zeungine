@@ -3,16 +3,48 @@
 #include <anex/modules/gl/GLScene.hpp>
 #include <anex/modules/gl/GLWindow.hpp>
 #include <anex/modules/gl/fonts/freetype/Freetype.hpp>
+#include <anex/modules/gl/entities/Plane.hpp>
+#include <anex/modules/gl/entities/TextView.hpp>
 #include <array>
 namespace anex::modules::gl::entities
 {
 	struct Toolbar : GLEntity
 	{
-		uint32_t indices[6];
-		std::array<glm::vec4, 4> colors;
-		std::array<glm::vec3, 4> positions;
+		std::vector<glm::vec4> colors;
     GLScene &scene;
 		fonts::freetype::FreetypeFont &font;
+		std::string xString;
+		std::shared_ptr<Plane> xButton;
+		std::shared_ptr<TextView> xTextView;
+		std::string maxString;
+		std::shared_ptr<Plane> maxButton;
+		std::shared_ptr<TextView> maxTextView;
+		std::string _String;
+		std::shared_ptr<Plane> _Button;
+		std::shared_ptr<TextView> _TextView;
+		std::shared_ptr<textures::Texture> iconTexture;
+		std::shared_ptr<Plane> icon;
+		std::string fileString;
+		std::shared_ptr<Plane> file;
+		std::shared_ptr<TextView> fileTextView;
+		std::string editString;
+		std::shared_ptr<Plane> edit;
+		std::shared_ptr<TextView> editTextView;
+		std::string helpString;
+		std::shared_ptr<Plane> help;
+		std::shared_ptr<TextView> helpTextView;
+		IWindow::EventIdentifier xButtonLeftMousePressID = 0;
+		IWindow::EventIdentifier xButtonMouseHoverID = 0;
+		IWindow::EventIdentifier maxButtonLeftMousePressID = 0;
+		IWindow::EventIdentifier maxButtonMouseHoverID = 0;
+		IWindow::EventIdentifier _ButtonLeftMousePressID = 0;
+		IWindow::EventIdentifier _ButtonMouseHoverID = 0;
+		IWindow::EventIdentifier dragMousePressID = 0;
+		IWindow::EventIdentifier globalDragMousePressID = 0;
+		IWindow::EventIdentifier dragMouseMoveID = 0;
+		bool dragEnabled = false;
+		glm::vec2 dragOldCoords = glm::vec2(0, 0);
+		float height = 0.0f;
   	Toolbar(GLWindow &window,
 						GLScene &scene,
 						const glm::vec3 &position,
@@ -21,6 +53,8 @@ namespace anex::modules::gl::entities
 						const glm::vec4 &color,
 						const float &height,
 						fonts::freetype::FreetypeFont &font);
+		~Toolbar();
     void preRender() override;
+		void setSize(const glm::vec2 &newSize);
   };
 }

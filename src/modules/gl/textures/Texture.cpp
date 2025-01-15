@@ -28,6 +28,10 @@ Texture::Texture(GLWindow &window, const glm::ivec4 &size, const std::vector<std
 {
   TextureFactory::initTexture(*this, paths);
 };
+Texture::~Texture()
+{
+  TextureFactory::destroyTexture(*this);
+};
 void Texture::bind() const
 {
   window.glContext.BindTexture(target, id);

@@ -17,18 +17,18 @@ TextView::TextView(GLWindow &window,
 				"View", "Projection", "Model", "CameraPosition"
 			}
 		},
-		6, // adjust this for 36 vertices
+		6,
+		{
+			0, 1, 2,  2, 3, 0   // Front face
+		},
 		4,
+		{
+			{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
+		},
 		position,
 		rotation,
 		scale
   ),
-  indices{
-		0, 1, 2,  2, 3, 0   // Front face
-  },
-	positions({
-		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
-	}),
 	uvs({
 		// Front face
 		{ 0, 0 },  // 0
@@ -41,11 +41,11 @@ TextView::TextView(GLWindow &window,
 	font(font),
 	fontSize(fontSize)
 {
-	computeNormals(indiceCount, indices, positions, normals);
+	computeNormals(indices, positions, normals);
 	updateIndices(indices);
-	updateElements("UV2", uvs.data());
-	updateElements("Position", positions.data());
-	updateElements("Normal", normals.data());
+	updateElements("UV2", uvs);
+	updateElements("Position", positions);
+	updateElements("Normal", normals);
 };
 void TextView::update()
 {
@@ -69,4 +69,11 @@ void TextView::preRender()
   shader.setTexture("Texture2D", *texturePointer, 0);
 	shader.unbind();
 	shader.unbind();
+};
+void TextView::setSize(const glm::vec2 &size)
+{
+	positions = {
+		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
+	};
+	updateElements("Position", positions);
 };

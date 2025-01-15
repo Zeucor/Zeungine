@@ -9,8 +9,8 @@ namespace anex
 {
 	struct IWindow
 	{
-		uint32_t windowWidth;
-		uint32_t windowHeight;
+		int32_t windowWidth;
+		int32_t windowHeight;
 		int32_t windowX;
 		int32_t windowY;
 		uint32_t framerate = 60;
@@ -37,7 +37,8 @@ namespace anex
 		float deltaTime = 0;
 		bool justWarpedPointer = false;
 		bool borderless = false;
-		IWindow(const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const bool &borderless, const uint32_t &framerate);
+		bool maximized = false;
+		IWindow(const int32_t &windowWidth, const int32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const bool &borderless, const uint32_t &framerate);
 		virtual ~IWindow() = default;
 		void run();
 		void awaitWindowThread() const;
@@ -63,12 +64,17 @@ namespace anex
 		void runOnThread(const Runnable &runnable);
 		void runRunnables();
 		void updateDeltaTime();
-		virtual void close() = 0;
+		void resize(const glm::vec2 &newSize);
+		virtual void close();
+		virtual void minimize();
+		virtual void maximize();
 		virtual void drawLine(int x0, int y0, int x1, int y1, uint32_t color) = 0;
 		virtual void drawRectangle(int x, int y, int w, int h, uint32_t color) = 0;
 		virtual void drawCircle(int x, int y, int radius, uint32_t color) = 0;
 		virtual void drawText(int x, int y, const char* text, int scale, uint32_t color) = 0;
 		virtual void warpPointer(const glm::vec2 &coords);
+		virtual void setXY(const int32_t &x, const int32_t &y);
+		virtual void setWidthHeight(const uint32_t &width, const uint32_t &height);
 		virtual IWindow &createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY);
 	};
 }

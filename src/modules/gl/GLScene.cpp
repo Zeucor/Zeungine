@@ -1,6 +1,9 @@
+#include <iostream>
 #include <anex/IWindow.hpp>
 #include <anex/modules/gl/GLScene.hpp>
 #include <anex/modules/gl/GLEntity.hpp>
+#include <anex/modules/gl/textures/TextureFactory.hpp>
+#include <anex/modules/gl/textures/FramebufferFactory.hpp>
 #include <anex/modules/gl/vaos/VAO.hpp>
 using namespace anex::modules::gl;
 GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const float &fov, textures::Framebuffer *framebufferPointer):
@@ -8,13 +11,21 @@ GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::ve
 	view(cameraPosition, cameraDirection),
 	projection((GLWindow &)window, fov),
 	framebufferPointer(framebufferPointer)
-{};
+{
+	hookMouseEvents();
+};
 GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const glm::vec2 &orthoSize, textures::Framebuffer *framebufferPointer):
 	IScene(window),
 	view(cameraPosition, cameraDirection),
 	projection((GLWindow &)window, orthoSize),
 	framebufferPointer(framebufferPointer)
-{};
+{
+	hookMouseEvents();
+};
+GLScene::~GLScene()
+{
+	unhookMouseEvents();
+};
 void GLScene::preRender()
 {
 	for (auto &directionaLightShadow : directionalLightShadows)
@@ -97,6 +108,10 @@ void GLScene::preRender()
 };
 void GLScene::render()
 {
+	if (bvh.changed)
+	{
+		bvh.buildBVH();
+	}
 	preRender();
 	auto it = entities.begin();
 	auto end = entities.end();
@@ -151,4 +166,102 @@ void GLScene::entityPreRender(IEntity &entity)
 		++unit;
 		--unitRemaining;
 	}
+};
+void GLScene::resize(const glm::vec2 &newSize)
+{
+	view.callResizeHandler(newSize);
+	projection.orthoSize = newSize;
+	projection.update();
+	if (framebufferPointer)
+	{
+		framebufferPointer->texture.size = {newSize.x, newSize.y, 1, 0};
+		textures::FramebufferFactory::destroyFramebuffer(*framebufferPointer);
+		textures::TextureFactory::destroyTexture(framebufferPointer->texture);
+		textures::TextureFactory::initTexture(framebufferPointer->texture, 0);
+		textures::FramebufferFactory::initFramebuffer(*framebufferPointer);
+	}
+};
+void GLScene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs)
+{
+	auto &glEntity = (GLEntity &)*entity;
+	if (glEntity.addToBVH)
+	{
+		auto primIDs = bvh.addEntity(glEntity);
+		for (auto &primID : primIDs)
+		{
+			primIDsToEntityIDsMap[primID] = entityIDs;
+		}
+	}
+	auto glEntityChildrenSize = glEntity.children.size();
+	for (size_t childEntityID = 0; childEntityID < glEntityChildrenSize; ++childEntityID)
+	{
+		auto entityIDsWithSubID = entityIDs;
+		entityIDsWithSubID.push_back(childEntityID);
+		postAddEntity(glEntity.children[childEntityID], entityIDsWithSubID);
+	}
+};
+GLEntity *GLScene::findEntityByPrimID(const size_t &primID)
+{
+	auto &entityIDs = primIDsToEntityIDsMap[bvh.bvh.prim_ids[primID]];
+	auto &topEntity = *entities[entityIDs.front()];
+	GLEntity *foundEntity = &(GLEntity &)topEntity;
+	for (size_t index = 1; index < entityIDs.size(); ++index)
+	{
+		auto &entityID = entityIDs[index];
+		foundEntity = &*foundEntity->children[entityID];
+	}
+	if (!foundEntity)
+	{
+		throw std::runtime_error("Could not find entity!");
+	}
+	return foundEntity;
 }
+void GLScene::hookMouseEvents()
+{
+	for (unsigned int button = GLWindow::MinMouseButton; button <= GLWindow::MaxMouseButton; ++button)
+	{
+		mousePressIDs[button] = window.addMousePressHandler(button, [&, button](auto &pressed)
+		{
+			auto &screenCoord = ((GLWindow &)window).mouseCoords;
+			auto ray = bvh.mouseCoordToRay(window.windowHeight, screenCoord, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
+			auto primID = bvh.trace(ray);
+			if (primID == raytracing::invalidID)
+			{
+				return;
+			}
+			auto foundEntity = findEntityByPrimID(primID);
+			foundEntity->callMousePressHandler(button, pressed);
+		});
+	}
+	mouseMoveID = window.addMouseMoveHandler([&](auto &coords)
+	{
+			auto ray = bvh.mouseCoordToRay(window.windowHeight, coords, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
+			auto primID = bvh.trace(ray);
+			if (primID == raytracing::invalidID)
+			{
+				if (currentHoveredEntity)
+				{
+					currentHoveredEntity->callMouseHoverHandler(false);
+					currentHoveredEntity = 0;
+				}
+				return;
+			}
+			auto foundEntity = findEntityByPrimID(primID);
+			if (currentHoveredEntity != foundEntity)
+			{
+				if (currentHoveredEntity)
+					currentHoveredEntity->callMouseHoverHandler(false);
+				currentHoveredEntity = foundEntity;
+				foundEntity->callMouseHoverHandler(true);
+			}
+			foundEntity->callMouseMoveHandler(coords);
+	});
+};
+void GLScene::unhookMouseEvents()
+{
+	for (unsigned int button = GLWindow::MinMouseButton; button <= GLWindow::MaxMouseButton; ++button)
+	{
+		window.removeMousePressHandler(button, mousePressIDs[button]);
+	}
+	window.removeMouseMoveHandler(mouseMoveID);
+};

@@ -8,8 +8,9 @@ namespace anex::modules::gl::textures
   {
 		GLWindow &window;
     GLuint id = 0;
-		const Texture &texture;
-    Framebuffer(GLWindow &window, const Texture &texture);
+		Texture &texture;
+    Framebuffer(GLWindow &window, Texture &texture);
+		~Framebuffer();
 		void bind() const;
 		void unbind();
   };

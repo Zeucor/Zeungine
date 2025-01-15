@@ -32,5 +32,6 @@ namespace anex::modules::gl::textures
 		static void preInitTexture(Texture& texture);
 		static void midInitTexture(const Texture& texture, const std::vector<images::ImageLoader::ImagePair> &images);
 		static void postInitTexture(const Texture& texture);
+		static void destroyTexture(Texture& texture);
 	};
 }

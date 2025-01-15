@@ -8,56 +8,73 @@
 using namespace anex;
 using namespace anex::modules::gl;
 
+static SharedLibrary gameLibrary("EditorGame.dll");
 struct EditorScene : GLScene
 {
 	float toolbarHeight;
   File robotoRegularFile;
   modules::gl::fonts::freetype::FreetypeFont robotoRegularFont;
 	std::shared_ptr<entities::Toolbar> toolbar;
-	EditorScene(GLWindow &window, const float &toolbarHeight):
+	IWindow::EventIdentifier resizeID = 0;
+	GLWindow *childWindowPointer = 0;
+	uint32_t childWindowWidth;
+	uint32_t childWindowHeight;
+	EditorScene(GLWindow &window):
 		GLScene(window, {window.windowWidth / 2, window.windowHeight / 2, 50}, {0, 0, -1}, {window.windowWidth, window.windowHeight}),
-		toolbarHeight(toolbarHeight),
+		toolbarHeight(window.windowHeight / 14),
     robotoRegularFile("fonts/Roboto/Roboto-Regular.ttf", enums::EFileLocation::Relative, "r"),
     robotoRegularFont(window, robotoRegularFile),
-		toolbar(std::make_shared<entities::Toolbar>(window, *this, glm::vec3(0, window.windowHeight, -10), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec4(0, 0, 0, 1), toolbarHeight, robotoRegularFont))
+		toolbar(std::make_shared<entities::Toolbar>(window, *this, glm::vec3(0, window.windowHeight, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec4(35 / 255.f, 33 / 255.f, 36 / 255.f, 1), toolbarHeight, robotoRegularFont)),
+		childWindowWidth(window.windowWidth / 2),
+		childWindowHeight(window.windowHeight / 2)
 	{
+		auto &childWindow = window.createChildWindow(
+			"EditorChild",
+			childWindowWidth,
+			childWindowHeight,
+			window.windowWidth / 2 - childWindowWidth / 2, toolbarHeight);
+		childWindowPointer = (GLWindow *)&childWindow;
+		childWindow.runOnThread([&](auto &window)
+		{
+			auto load = gameLibrary.getProc<LOAD_FUNCTION>("Load");
+			load((GLWindow &)window);
+		});
 		clearColor = {0.2, 0.2, 0.2, 1};
 		addEntity(toolbar);
+		resizeID = view.addResizeHandler([&](auto &newSize)mutable
+		{
+			view.position = {newSize.x / 2, newSize.y / 2, 50};
+			view.update();
+			auto &toolbarRef = *toolbar;
+			toolbarHeight = newSize.y / 14;
+			toolbarRef.position.y = newSize.y;
+			toolbarRef.setSize({ newSize.x, toolbarHeight });
+			auto &childWindow = *childWindowPointer;
+			childWindowWidth = newSize.x / 2;
+			childWindowHeight = newSize.y / 2;
+			childWindow.setXY(newSize.x / 2 - childWindowWidth / 2, toolbarHeight);
+			childWindow.setWidthHeight(childWindowWidth, childWindowHeight);
+		});
+	};
+	~EditorScene()
+	{
+		view.removeResizeHandler(resizeID);
 	};
 };
 int main()
 {
 	GLWindow window("Editor", 1280, 720, -1, -1, true);
-	SharedLibrary gameLibrary("EditorGame.dll");
-	auto load = gameLibrary.getProc<LOAD_FUNCTION>("Load");
-	GLWindow *childWindowPointer = 0;
-	window.runOnThread([&](auto &window)
+	std::shared_ptr<EditorScene> editorScene;
+	window.runOnThread([&](auto &window)mutable
 	{
-		float toolbarHeight = window.windowHeight / 18;
-		auto editorScene = std::make_shared<EditorScene>((GLWindow &)window, toolbarHeight);
+		editorScene = std::make_shared<EditorScene>((GLWindow &)window);
 		window.setIScene(editorScene);
-		raytracing::BVH bvh;
-		bvh.triangles.push_back({
-			{0, 0, 0},
-			{window.windowWidth, 0, 0},
-			{window.windowWidth / 2, window.windowHeight, 0}
-		});
-		bvh.buildBVH();
-		auto childWindowWidth = 640;
-		auto childWindowHeight = 480;
-	  auto &childWindow = window.createChildWindow(
-			"EditorChild",
-			childWindowWidth,
-			childWindowHeight,
-window.windowWidth / 2 - childWindowWidth / 2,
-			toolbarHeight);
-		childWindowPointer = (GLWindow *)&childWindow;
-		childWindow.runOnThread([&](auto &window)
-		{
-			load((GLWindow &)window);
-		});
 	});
-	while (!childWindowPointer) {}
+	while (!editorScene) {}
+	auto &editorSceneRef = *editorScene;
+	while (!editorSceneRef.childWindowPointer) {}
+	auto childWindowPointer = editorSceneRef.childWindowPointer;
+	editorScene.reset();
 	childWindowPointer->awaitWindowThread();
 	window.awaitWindowThread();
 };

@@ -129,3 +129,8 @@ void TextureFactory::postInitTexture(const Texture& texture)
   GLcheck(texture.window, "glTexParameteri");
   texture.unbind();
 };
+void TextureFactory::destroyTexture(Texture& texture)
+{
+  texture.window.glContext.DeleteTextures(1, &texture.id);
+  GLcheck(texture.window, "glDeleteTextures");
+};

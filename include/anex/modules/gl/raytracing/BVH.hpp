@@ -1,4 +1,6 @@
 #pragma once
+#undef max
+#undef min
 #include <bvh/v2/bvh.h>
 #include <bvh/v2/vec.h>
 #include <bvh/v2/ray.h>
@@ -9,8 +11,16 @@
 #include <bvh/v2/stack.h>
 #include <bvh/v2/tri.h>
 #include <anex/glm.hpp>
+#include <array>
+namespace anex::modules::gl
+{
+	struct GLEntity;
+}
 namespace anex::modules::gl::raytracing
 {
+	static constexpr size_t invalidID = std::numeric_limits<size_t>::max();
+	static constexpr size_t stackSize = 64;
+	static constexpr bool useRobustTraversal = false;
 	using Scalar = float;
 	using Vec3 = bvh::v2::Vec<Scalar, 3>;
 	using BBox = bvh::v2::BBox<Scalar, 3>;
@@ -33,8 +43,11 @@ namespace anex::modules::gl::raytracing
 		std::vector<Vec3> centers;
 		Config config;
     Bvh bvh;
+		bool changed = false;
+		bool built = false;
     BVH();
     Config getDefaultConfig();
+		void buildBBoxesAndCenters();
     void buildBVH();
     void precomputeTriangles();
 		glm::vec3 unProject(const glm::vec3 &win, const glm::mat4 &inverseProjectionView, const glm::vec4 &viewport);
@@ -45,5 +58,9 @@ namespace anex::modules::gl::raytracing
 												const glm::mat4 &view,
 												const float &nearPlane,
 												const float &farPlane);
+		size_t trace(Ray &ray);
+		size_t addTriangle(const Tri &tri);
+		std::vector<size_t> addEntity(GLEntity &entity);
+		void updateEntity(GLEntity &entity);
   };
 }

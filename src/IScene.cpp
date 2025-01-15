@@ -1,16 +1,18 @@
 #include <anex/IScene.hpp>
+#include <anex/IEntity.hpp>
 using namespace anex;
 IScene::IScene(IWindow& window):
 	window(window)
 {
 };
-unsigned int IScene::addEntity(const std::shared_ptr<IEntity>& entity)
+size_t IScene::addEntity(const std::shared_ptr<IEntity>& entity)
 {
 	auto id = ++entitiesCount;
 	entities[id] = entity;
+	postAddEntity(entity, {id});
 	return id;
 };
-void IScene::removeEntity(const unsigned int& id)
+void IScene::removeEntity(const size_t& id)
 {
 	auto entityIter = entities.find(id);
 	if (entityIter != entities.end())
@@ -37,6 +39,6 @@ void IScene::render()
 		it->second->render();
 	}
 };
-void IScene::entityPreRender(IEntity &entity)
-{
-};
+void IScene::entityPreRender(IEntity &entity){};
+void IScene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs){};
+void IScene::resize(const glm::vec2 &newSize){};

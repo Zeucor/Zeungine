@@ -18,26 +18,24 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
 			}
 		}, constants),
 		6,
+		{0, 1, 2,  2, 3, 0},
     4,
+		{
+			{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
+		},
 		position,
 		rotation,
 		scale
 	),
-	indices{
-		0, 1, 2,  2, 3, 0   // Front face
-	},
-	colors({color, color, color, color}),
 	uvs({{},{},{},{}}),
-	positions({
-		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
-	}),
-	scene(scene)
+	scene(scene),
+	size(size)
 {
-	computeNormals(indiceCount, indices, positions, normals);
+	computeNormals(indices, positions, normals);
 	updateIndices(indices);
-	updateElements("Color", colors.data());
-	updateElements("Position", positions.data());
-	updateElements("Normal", normals.data());
+	setColor(color);
+	updateElements("Position", positions);
+	updateElements("Normal", normals);
 };
 Plane::Plane(anex::modules::gl::GLWindow &window,
              anex::modules::gl::GLScene &scene,
@@ -56,14 +54,17 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
 			}
 		}, constants),
 		6,
+		{
+			0, 1, 2,  2, 3, 0   // Front face
+		},
 		4,
+		{
+			{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
+		},
 		position,
 		rotation,
 		scale
 	),
-	indices{
-		0, 1, 2,  2, 3, 0   // Front face
-	},
 	colors({{}, {}, {}, {}}),
 	uvs({
 		// Front face
@@ -72,17 +73,15 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
 		{ 1, 1 },  // 2
 		{ 0, 1 }  // 3
 	}),
-	positions({
-		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
-	}),
 	scene(scene),
-	texturePointer(&texture)
+	texturePointer(&texture),
+	size(size)
 {
-	computeNormals(indiceCount, indices, positions, normals);
+	computeNormals(indices, positions, normals);
 	updateIndices(indices);
-	updateElements("UV2", uvs.data());
-	updateElements("Position", positions.data());
-	updateElements("Normal", normals.data());
+	updateElements("UV2", uvs);
+	updateElements("Position", positions);
+	updateElements("Normal", normals);
 };
 void Plane::preRender()
 {
@@ -96,4 +95,17 @@ void Plane::preRender()
   if (texturePointer)
 	  shader.setTexture("Texture2D", *texturePointer, 0);
 	shader.unbind();
+};
+void Plane::setColor(const glm::vec4 &color)
+{
+	colors = {color, color, color, color};
+	updateElements("Color", colors);
+};
+void Plane::setSize(const glm::vec2 &size)
+{
+	positions = {
+		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
+	};
+	updateElements("Position", positions);
+	this->size = size;
 };
