@@ -52,6 +52,7 @@ if(BUILD_OPENGL)
         src/modules/gl/GLScene.cpp
         src/modules/gl/entities/Cube.cpp
         src/modules/gl/entities/DropdownMenu.cpp
+        src/modules/gl/entities/Panel.cpp
         src/modules/gl/entities/Plane.cpp
         src/modules/gl/entities/SkyBox.cpp
         src/modules/gl/entities/TextView.cpp

@@ -8,7 +8,8 @@ Toolbar::Toolbar(GLWindow &window,
                  const glm::vec3 &scale,
                  const glm::vec4 &color,
                  const float &height,
-								 fonts::freetype::FreetypeFont &font):
+								 fonts::freetype::FreetypeFont &font,
+								 const std::string &name):
 	GLEntity(window, {
 			"Color", "Position",
 			"View", "Projection", "Model", "CameraPosition"
@@ -19,7 +20,8 @@ Toolbar::Toolbar(GLWindow &window,
 	{
 		{ 0, -height, 0}, { window.windowWidth, -height, 0}, { window.windowWidth, 0, 0 }, { 0, 0, 0} // Front
 	},
-	position, rotation, scale),
+	position, rotation, scale,
+	name.empty() ? "Toolbar " + std::to_string(++toolbarsCount) : name),
 	colors({color, color, color, color}),
 	scene(scene),
 	font(font),

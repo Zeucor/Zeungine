@@ -38,12 +38,21 @@ namespace anex
 		bool justWarpedPointer = false;
 		bool borderless = false;
 		bool maximized = false;
-		IWindow(const int32_t &windowWidth, const int32_t &windowHeight, const int32_t &windowX, const int32_t &windowY, const bool &borderless, const uint32_t &framerate);
+		using OnEntityAddedFunction = std::function<void(const std::shared_ptr<IEntity> &)>;
+		OnEntityAddedFunction onEntityAdded;
+		IWindow(const int32_t &windowWidth,
+						const int32_t &windowHeight,
+						const int32_t &windowX,
+						const int32_t &windowY,
+						const bool &borderless,
+						const uint32_t &framerate);
 		virtual ~IWindow() = default;
 		void run();
 		void awaitWindowThread() const;
 		virtual void startWindow() = 0;
+		virtual void preRender();
 		void render();
+		virtual void postRender();
 		// Keyboard
 		virtual void updateKeyboard() = 0;
 		EventIdentifier addKeyPressHandler(const Key &key, const KeyPressHandler &callback);
@@ -65,6 +74,7 @@ namespace anex
 		void runRunnables();
 		void updateDeltaTime();
 		void resize(const glm::vec2 &newSize);
+		void registerOnEntityAddedFunction(const OnEntityAddedFunction &function);
 		virtual void close();
 		virtual void minimize();
 		virtual void maximize();
@@ -75,6 +85,6 @@ namespace anex
 		virtual void warpPointer(const glm::vec2 &coords);
 		virtual void setXY(const int32_t &x, const int32_t &y);
 		virtual void setWidthHeight(const uint32_t &width, const uint32_t &height);
-		virtual IWindow &createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY);
+		virtual IWindow &createChildWindow(const char *title, IScene &scene, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY);
 	};
 }

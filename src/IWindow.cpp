@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <anex/IWindow.hpp>
+#include <anex/modules/gl/GLWindow.hpp>
 using namespace anex;
 IWindow::IWindow(const int32_t& windowWidth, const int32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t &framerate):
   windowWidth(windowWidth),
@@ -17,15 +18,22 @@ void IWindow::run()
 {
   windowThread = std::make_shared<std::thread>(&IWindow::startWindow, this);
 }
+void IWindow::preRender(){};
 void IWindow::render()
 {
+  auto glWindowPointer = dynamic_cast<modules::gl::GLWindow*>(this);
+  if (glWindowPointer && glWindowPointer->isChildWindow)
+    runRunnables();
+  preRender();
   updateDeltaTime();
   if (scene)
   {
     scene->update();
     scene->render();
   }
+  postRender();
 };
+void IWindow::postRender(){};
 // Keyboard
 IWindow::EventIdentifier IWindow::addKeyPressHandler(const Key& key, const KeyPressHandler& callback)
 {
@@ -198,13 +206,17 @@ void IWindow::resize(const glm::vec2 &newSize)
   if (scene)
     scene->resize(newSize);
 };
+void IWindow::registerOnEntityAddedFunction(const OnEntityAddedFunction &function)
+{
+  onEntityAdded = function;
+};
 void IWindow::close(){};
 void IWindow::minimize(){};
 void IWindow::maximize(){};
 void IWindow::warpPointer(const glm::vec2 &coords){};
 void IWindow::setXY(const int32_t &x, const int32_t &y){};
 void IWindow::setWidthHeight(const uint32_t &width, const uint32_t &height){};
-IWindow &IWindow::createChildWindow(const char *title, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY)
+IWindow &IWindow::createChildWindow(const char *title, IScene &scene, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY)
 {
   throw std::runtime_error("IWindow::createChildWindow() not implemented");
 };

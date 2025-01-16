@@ -15,7 +15,7 @@ namespace anex
 		size_t entitiesCount = 0;
 		IScene(IWindow &window);
 		virtual ~IScene() = default;
-		size_t addEntity(const std::shared_ptr<IEntity> &entity);
+		size_t addEntity(const std::shared_ptr<IEntity> &entity, const bool &callOnEntityAdded = true);
 		void removeEntity(const size_t &id);
 		virtual void update();
 		virtual void preRender() = 0;

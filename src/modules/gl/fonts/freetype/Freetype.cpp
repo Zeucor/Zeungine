@@ -225,7 +225,7 @@ void FreetypeFont::stringToTexture(const std::string &string,
 				glm::vec3 characterPosition = currentPosition;
 				characterPosition.x = currentPosition.x + characterPointer->bearing.x + (characterPointer->size.x / 2.f);
 				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) + (characterPointer->size.y / 2.f);
-				scene.addEntity(std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), characterPointer->size, *characterPointer->texturePointer));
+				scene.addEntity(std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), characterPointer->size, *characterPointer->texturePointer), false);
 			}
 			if (FT_HAS_KERNING(face) && iterator.hasNextCodepoint())
 			{

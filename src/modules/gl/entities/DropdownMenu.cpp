@@ -8,7 +8,8 @@ DropdownMenu::DropdownMenu(anex::modules::gl::GLWindow &window,
 							             const glm::vec3 &scale,
 							             const glm::vec4 &color,
                            fonts::freetype::FreetypeFont &font,
-							             const anex::modules::gl::shaders::RuntimeConstants &constants):
+							             const anex::modules::gl::shaders::RuntimeConstants &constants,
+							             const std::string &name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -25,7 +26,8 @@ DropdownMenu::DropdownMenu(anex::modules::gl::GLWindow &window,
 		},
 		position,
 		rotation,
-		scale
+		scale,
+		name.empty() ? "DropdownMenu " + std::to_string(++dropdownMenusCount) : name
 	),
 	scene(scene),
 	size({ 0, 0 }),
@@ -94,7 +96,8 @@ DropdownItem::DropdownItem(GLWindow &window,
 													 const std::string &text,
 													 const DropdownMenu::OptionPressHandler &handler,
 													 fonts::freetype::FreetypeFont &font,
-													 const shaders::RuntimeConstants &constants):
+													 const shaders::RuntimeConstants &constants,
+													 const std::string &name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -111,7 +114,8 @@ DropdownItem::DropdownItem(GLWindow &window,
 		},
 		position,
 		rotation,
-		scale
+		scale,
+		name.empty() ? "DropdownItem " + std::to_string(++dropdownItemsCount) : name
 	),
 	scene(scene),
 	size({ 0, 0 }),
@@ -121,7 +125,7 @@ DropdownItem::DropdownItem(GLWindow &window,
 {
 	updateIndices(indices);
 	setColor(color);
-	float FontSize = window.windowHeight / 40.f;
+	float FontSize = window.windowHeight / 32.f;
 	float LineHeight = 0;
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
 	textView = std::make_shared<TextView>(window, scene, glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);

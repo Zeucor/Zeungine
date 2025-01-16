@@ -14,7 +14,16 @@ namespace anex::modules::gl::entities
 		glm::vec2 size;
     using OptionPressHandler = std::function<void()>;
 		fonts::freetype::FreetypeFont &font;
-		DropdownMenu(GLWindow &window, GLScene &scene, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale, const glm::vec4 &color, fonts::freetype::FreetypeFont &font, const shaders::RuntimeConstants &constants = {});
+		inline static size_t dropdownMenusCount = 0;
+		DropdownMenu(GLWindow &window,
+								 GLScene &scene,
+								 const glm::vec3 &position,
+								 const glm::vec3 &rotation,
+								 const glm::vec3 &scale,
+								 const glm::vec4 &color,
+								 fonts::freetype::FreetypeFont &font,
+								 const shaders::RuntimeConstants &constants = {},
+								 const std::string &name = "");
     void addOption(const std::string &name, const OptionPressHandler &handler);
 		void preRender() override;
 		void setColor(const glm::vec4 &color);
@@ -31,7 +40,18 @@ namespace anex::modules::gl::entities
 		fonts::freetype::FreetypeFont &font;
 		GLWindow::EventIdentifier mouseHoverID = 0;
 		GLWindow::EventIdentifier mousePressID = 0;
-		DropdownItem(GLWindow &window, GLScene &scene, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale, const glm::vec4 &color, const std::string &text, const DropdownMenu::OptionPressHandler &handler, fonts::freetype::FreetypeFont &font, const shaders::RuntimeConstants &constants = {});
+		inline static size_t dropdownItemsCount = 0;
+		DropdownItem(GLWindow &window,
+								 GLScene &scene,
+								 const glm::vec3 &position,
+								 const glm::vec3 &rotation,
+								 const glm::vec3 &scale,
+								 const glm::vec4 &color,
+								 const std::string &text,
+								 const DropdownMenu::OptionPressHandler &handler,
+								 fonts::freetype::FreetypeFont &font,
+								 const shaders::RuntimeConstants &constants = {},
+								 const std::string &name = "");
 		~DropdownItem();
 		void preRender() override;
 		void setColor(const glm::vec4 &color);

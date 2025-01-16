@@ -6,6 +6,8 @@
 #include <anex/modules/gl/shaders/ShaderFactory.hpp>
 #include <ShellScalingApi.h>
 #pragma comment(lib, "Shcore.lib")
+#include <anex/modules/gl/textures/Texture.hpp>
+#include <anex/modules/gl/entities/Plane.hpp>
 using namespace anex::modules::gl;
 #ifdef _WIN32
 extern "C" {
@@ -14,30 +16,36 @@ extern "C" {
 }
 #endif
 static bool setDPIAware = false;
-std::mutex GLWindow::renderMutex;
 GLWindow::GLWindow(const char* title, const int32_t& windowWidth, const int32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t& framerate):
 	IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
 	title(title),
+	glContext(new GladGLContext),
 	shaderContext(new ShaderContext)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
 	run();
 };
-GLWindow::GLWindow(GLWindow &parentWindow, const char *childTitle, const int32_t &childWindowWidth, const int32_t &childWindowHeight, const int32_t &childWindowX, const int32_t &childWindowY, const uint32_t &framerate):
+GLWindow::GLWindow(GLWindow &parentWindow, GLScene &parentScene, const char *childTitle, const int32_t &childWindowWidth, const int32_t &childWindowHeight, const int32_t &childWindowX, const int32_t &childWindowY, const uint32_t &framerate):
 	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
 	title(childTitle),
 	isChildWindow(true),
 	parentWindow(&parentWindow),
-	shaderContext(new ShaderContext)
+	glContext(parentWindow.glContext),
+	shaderContext(parentWindow.shaderContext),
+	framebufferTexture(std::make_shared<textures::Texture>(parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
+	framebufferDepthTexture(std::make_shared<textures::Texture>(parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
+	framebuffer(std::make_shared<textures::Framebuffer>(parentWindow, *framebufferTexture, *framebufferDepthTexture)),
+	framebufferPlane(std::make_shared<entities::Plane>(parentWindow, parentScene, glm::vec3(childWindowX + (childWindowWidth / 2), parentWindow.windowHeight - childWindowY - (childWindowHeight / 2), 0.5), glm::vec3(0), glm::vec3(1), glm::vec2(childWindowWidth, childWindowHeight), *framebufferTexture))
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
-	run();
 };
 
 GLWindow::~GLWindow()
 {
+	if (!isChildWindow)
+		delete glContext;
 };
 #ifdef _WIN32
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
@@ -58,11 +66,6 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 			break;
 		};
 	case WM_CLOSE:
-		for (auto &childWindow : glWindow->childWindows)
-		{
-			childWindow.close();
-		}
-		glWindow->scene.reset();
 		DestroyWindow(hwnd);
 		break;
 	case WM_LBUTTONDOWN:
@@ -170,17 +173,14 @@ void GLWindow::startWindow()
 	dpiScale = dpi / 96.0f;
 	int adjustedWidth = windowWidth, adjustedHeight = windowHeight;
 	auto wsStyle = isChildWindow ? (WS_CHILD | WS_VISIBLE) : WS_OVERLAPPEDWINDOW;
-	if (!isChildWindow)
-	{
-		RECT desiredRect = {0, 0, (LONG)windowWidth, (LONG)windowHeight};
-		AdjustWindowRectEx(&desiredRect, wsStyle, FALSE, WS_EX_APPWINDOW);
-		adjustedWidth = desiredRect.right - desiredRect.left;
-		adjustedHeight = desiredRect.bottom - desiredRect.top;
-	}
-	hwnd = CreateWindowEx(isChildWindow ? 0 : WS_EX_APPWINDOW, title, isChildWindow ? 0 : title,
+	RECT desiredRect = {0, 0, (LONG)windowWidth, (LONG)windowHeight};
+	AdjustWindowRectEx(&desiredRect, wsStyle, FALSE, WS_EX_APPWINDOW);
+	adjustedWidth = desiredRect.right - desiredRect.left;
+	adjustedHeight = desiredRect.bottom - desiredRect.top;
+	hwnd = CreateWindowEx(WS_EX_APPWINDOW, title, title,
 												wsStyle,
-												isChildWindow ? (windowX == -1 ? 0 : windowX) : (windowX == -1 ? CW_USEDEFAULT : windowX),
-												isChildWindow ? (windowY == -1 ? 0 : windowY) : (windowY == -1 ? CW_USEDEFAULT : windowY),
+												windowX == -1 ? CW_USEDEFAULT : windowX,
+												windowY == -1 ? CW_USEDEFAULT : windowY,
 												adjustedWidth, adjustedHeight, isChildWindow ? parentWindow->hwnd : 0, NULL, hInstance, this);
 
 	if (hwnd == NULL)
@@ -224,19 +224,25 @@ void GLWindow::startWindow()
 		runRunnables();
 		updateKeyboard();
 		updateMouse();
-		renderMutex.lock();
-		wglMakeCurrent(hDeviceContext, hRenderingContext);
-		glContext.ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+		for (auto &childWindow : childWindows)
+		{
+			childWindow.render();
+		}
+		glContext->ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 		GLcheck(*this, "glClearColor");
-		glContext.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		GLcheck(*this, "glClear");
 		render();
+		for (auto &childWindow : childWindows)
+		{
+			childWindow.framebufferPlane->render();
+		}
 		SwapBuffers(hDeviceContext);
-		renderMutex.unlock();
 	}
 #endif
 _exit:
 	scene.reset();
+	childWindows.clear();
 	delete shaderContext;
 #ifdef _WIN32
 	wglMakeCurrent(NULL, NULL);
@@ -288,7 +294,6 @@ void GLWindow::renderInit()
 	SetupPixelFormat(hDeviceContext);
 	HGLRC hTempRC = wglCreateContext(hDeviceContext);
 	wglMakeCurrent(hDeviceContext, hTempRC);
-	// gladLoadGLContext(&glContext, (GLADloadfunc)get_proc);
 	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
 	wglMakeCurrent(nullptr, nullptr);
 	int attribList[] = {
@@ -300,37 +305,37 @@ void GLWindow::renderInit()
 	hRenderingContext = wglCreateContextAttribsARB(hDeviceContext, 0, attribList);
 	wglDeleteContext(hTempRC);
 	wglMakeCurrent(hDeviceContext, hRenderingContext);
-	gladLoadGLContext(&glContext, (GLADloadfunc)get_proc);
+	gladLoadGLContext(glContext, (GLADloadfunc)get_proc);
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-	glContext.Enable(GL_DEPTH_TEST);
+	glContext->Enable(GL_DEPTH_TEST);
 	GLcheck(*this, "glEnable");
-	glContext.Enable(GL_CULL_FACE);
+	glContext->Enable(GL_CULL_FACE);
 	GLcheck(*this, "glEnable");
-	glContext.CullFace(GL_BACK);
+	glContext->CullFace(GL_BACK);
 	GLcheck(*this, "glCullFace");
-	glContext.FrontFace(GL_CCW);
+	glContext->FrontFace(GL_CCW);
 	GLcheck(*this, "glFrontFace");
-	glContext.Viewport(0, 0, windowWidth, windowHeight);
+	glContext->Viewport(0, 0, windowWidth, windowHeight);
 	GLcheck(*this, "glViewport");
-	glContext.ClearDepth(1.0);
+	glContext->ClearDepth(1.0);
 	GLcheck(*this, "glClearDepth");
-	glContext.DepthRange(0.0, 1.0);
+	glContext->DepthRange(0.0, 1.0);
 	GLcheck(*this, "glDepthRange");
-	glContext.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+	glContext->Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 	GLcheck(*this, "glEnable:GL_SAMPLE_ALPHA_TO_COVERAGE");
-	glContext.Enable(GL_BLEND);
+	glContext->Enable(GL_BLEND);
 	GLcheck(*this, "glEnable:GL_BLEND");
-	glContext.Enable(GL_DITHER);
+	glContext->Enable(GL_DITHER);
 	GLcheck(*this, "glEnable:GL_DITHER");
-	glContext.BlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+	glContext->BlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
 	GLcheck(*this, "glBlendEquationSeparate");
-	glContext.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glContext->BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	GLcheck(*this, "glBlendFunc");
-	glContext.Enable(GL_DEBUG_OUTPUT);
+	glContext->Enable(GL_DEBUG_OUTPUT);
 	GLcheck(*this, "glEnable");
-	glContext.Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glContext->Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	GLcheck(*this, "glEnable");
-	glContext.DebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
+	glContext->DebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
 		if (type == GL_DEBUG_TYPE_OTHER)
 		{
 			return;
@@ -412,6 +417,22 @@ void GLWindow::maximize()
 	}
 #endif
 };
+void GLWindow::preRender()
+{
+	if (!isChildWindow)
+	{
+		return;
+	}
+	framebuffer->bind();
+};
+void GLWindow::postRender()
+{
+	if (!isChildWindow)
+	{
+		return;
+	}
+	framebuffer->unbind();
+};
 void GLWindow::drawLine(int x0, int y0, int x1, int y1, uint32_t color)
 {
 };
@@ -430,7 +451,7 @@ const bool anex::modules::gl::GLcheck(GLWindow &window, const char* fn, const bo
 	{
 		uint32_t err = 0;
 		if (!egl)
-			err = window.glContext.GetError();
+			err = window.glContext->GetError();
 #if defined(_Android)
 		else if (egl)
 			err = eglGetError();
@@ -614,9 +635,9 @@ void GLWindow::setWidthHeight(const uint32_t &width, const uint32_t &height)
 	adjustedWidth,
 		adjustedHeight, flags);
 };
-anex::IWindow &GLWindow::createChildWindow(const char* title, const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY)
+anex::IWindow &GLWindow::createChildWindow(const char* title, IScene &scene, const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY)
 {
-	childWindows.emplace_back(*this, title, windowWidth, windowHeight, windowX, windowY);
+	childWindows.emplace_back(*this, (GLScene &)scene, title, windowWidth, windowHeight, windowX, windowY);
 	return childWindows.back();
 };
 void anex::modules::gl::computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)

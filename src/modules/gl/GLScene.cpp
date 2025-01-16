@@ -99,13 +99,13 @@ void GLScene::preRender()
 	if (framebufferPointer)
 	{
 		auto &framebuffer = *framebufferPointer;
-		glWindow.glContext.Viewport(0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y);
+		glWindow.glContext->Viewport(0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y);
 	}
 	else
-		glWindow.glContext.Viewport(0, 0, window.windowWidth, window.windowHeight);
+		glWindow.glContext->Viewport(0, 0, window.windowWidth, window.windowHeight);
 	GLcheck(glWindow, "glViewport");
-	glWindow.glContext.ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-	glWindow.glContext.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glWindow.glContext->ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+	glWindow.glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 };
 void GLScene::render()
 {
@@ -210,28 +210,6 @@ void GLScene::preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std:
 		bvh.removeEntity(*this, glEntity);
 	}
 };
-// void GLScene::adjustTriangleIDs(const size_t &minTriangleID, const size_t &triangleIDsSize)
-// {
-// 	for (auto &entity : entities)
-// 	{
-// 		auto &glEntity = (GLEntity &)*entity.second;
-// 		adjustTriangleIDsForEntity(glEntity, minTriangleID, triangleIDsSize);
-// 	}
-// };
-// void GLScene::adjustTriangleIDsForEntity(GLEntity &entity, const size_t &minTriangleID, const size_t &triangleIDsSize)
-// {
-// 	for (auto &triangleID : entity.triangleIDs)
-// 	{
-// 		if (triangleID > minTriangleID)
-// 		{
-// 			triangleID -= triangleIDsSize;
-// 		}
-// 	}
-// 	for (auto &child : entity.children)
-// 	{
-// 		adjustTriangleIDsForEntity(*child.second, minTriangleID, triangleIDsSize);
-// 	}
-// };
 GLEntity *GLScene::findEntityByPrimID(const size_t &primID)
 {
 	auto &tri = bvh.triangles[bvh.bvh.prim_ids[primID]];
@@ -259,26 +237,26 @@ void GLScene::hookMouseEvents()
 	}
 	mouseMoveID = window.addMouseMoveHandler([&](auto &coords)
 	{
-			auto ray = bvh.mouseCoordToRay(window.windowHeight, coords, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
-			auto primID = bvh.trace(ray);
-			if (primID == raytracing::invalidID)
+		auto ray = bvh.mouseCoordToRay(window.windowHeight, coords, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
+		auto primID = bvh.trace(ray);
+		if (primID == raytracing::invalidID)
+		{
+			if (currentHoveredEntity)
 			{
-				if (currentHoveredEntity)
-				{
-					currentHoveredEntity->callMouseHoverHandler(false);
-					currentHoveredEntity = 0;
-				}
-				return;
+				currentHoveredEntity->callMouseHoverHandler(false);
+				currentHoveredEntity = 0;
 			}
-			auto foundEntity = findEntityByPrimID(primID);
-			if (currentHoveredEntity != foundEntity)
-			{
-				if (currentHoveredEntity)
-					currentHoveredEntity->callMouseHoverHandler(false);
-				currentHoveredEntity = foundEntity;
-				foundEntity->callMouseHoverHandler(true);
-			}
-			foundEntity->callMouseMoveHandler(coords);
+			return;
+		}
+		auto foundEntity = findEntityByPrimID(primID);
+		if (currentHoveredEntity != foundEntity)
+		{
+			if (currentHoveredEntity)
+				currentHoveredEntity->callMouseHoverHandler(false);
+			currentHoveredEntity = foundEntity;
+			foundEntity->callMouseHoverHandler(true);
+		}
+		foundEntity->callMouseMoveHandler(coords);
 	});
 };
 void GLScene::unhookMouseEvents()

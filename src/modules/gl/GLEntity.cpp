@@ -9,7 +9,8 @@ GLEntity::GLEntity(anex::IWindow &window,
 						 			 const std::vector<glm::vec3> &positions,
 									 const glm::vec3 &position,
 									 const glm::vec3 &rotation,
-									 const glm::vec3 &scale):
+									 const glm::vec3 &scale,
+									 const std::string &name):
 	IEntity(window),
 	VAO((GLWindow &)window, constants, indiceCount, elementCount),
 	indices(indices),
@@ -17,7 +18,8 @@ GLEntity::GLEntity(anex::IWindow &window,
 	position(position),
 	rotation(rotation),
 	scale(scale),
-	shader(*shaders::ShaderManager::getShaderByConstants((GLWindow &)window, constants).second)
+	shader(*shaders::ShaderManager::getShaderByConstants((GLWindow &)window, constants).second),
+	name(name)
 {};
 void GLEntity::update()
 {
@@ -58,6 +60,7 @@ size_t GLEntity::addChild(const std::shared_ptr<GLEntity> &child)
 {
 	auto id = ++childrenCount;
 	child->parentEntity = this;
+	child->ID = id;
 	children[id] = child;
 	return id;
 };

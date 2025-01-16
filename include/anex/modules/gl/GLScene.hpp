@@ -36,8 +36,6 @@ namespace anex::modules::gl
 		void resize(const glm::vec2 &newSize) override;
 		void postAddEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs) override;
 		void preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs) override;
-		// void adjustTriangleIDs(const size_t &minTriangleID, const size_t &triangleIDsSize);
-		// void adjustTriangleIDsForEntity(GLEntity &entity, const size_t &minTriangleID, const size_t &triangleIDsSize);
 		GLEntity *findEntityByPrimID(const size_t &primID);
 		void hookMouseEvents();
 		void unhookMouseEvents();

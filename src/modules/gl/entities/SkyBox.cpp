@@ -1,7 +1,10 @@
 #include <anex/modules/gl/entities/SkyBox.hpp>
 #include <anex/utilities.hpp>
 using namespace anex::modules::gl::entities;
-SkyBox::SkyBox(GLWindow &window, GLScene &scene, const std::vector<std::string_view> &texturePaths):
+SkyBox::SkyBox(GLWindow &window,
+							 GLScene &scene,
+							 const std::vector<std::string_view> &texturePaths,
+							 const std::string &name):
 	GLEntity(window,
 		{
 			{
@@ -58,7 +61,8 @@ SkyBox::SkyBox(GLWindow &window, GLScene &scene, const std::vector<std::string_v
 		},
 		{0, 0, 0},
 		{0, 0, 0},
-		{1, 1, 1}
+		{1, 1, 1},
+		name.empty() ? "SkyBox " + std::to_string(++skyBoxesCount) : name
   ),
 	uvs({
 		// Front face
@@ -108,7 +112,7 @@ SkyBox::SkyBox(GLWindow &window, GLScene &scene, const std::vector<std::string_v
 void SkyBox::preRender()
 {
 	auto &vao = (VAO &)*this;
-	vao.window.glContext.DepthFunc(GL_LEQUAL);
+	vao.window.glContext->DepthFunc(GL_LEQUAL);
 	shader.bind();
 	scene.entityPreRender(*this);
 	auto view = glm::mat4(glm::mat3(scene.view.matrix));
@@ -120,5 +124,5 @@ void SkyBox::preRender()
 void SkyBox::postRender()
 {
 	auto &vao = (VAO &)*this;
-	vao.window.glContext.DepthFunc(GL_LESS);
+	vao.window.glContext->DepthFunc(GL_LESS);
 };

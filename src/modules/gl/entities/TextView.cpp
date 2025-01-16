@@ -9,7 +9,8 @@ TextView::TextView(GLWindow &window,
                    const std::string &text,
                    const glm::vec2 &size,
                    fonts::freetype::FreetypeFont &font,
-                   const float &fontSize):
+                   const float &fontSize,
+                   const std::string &name):
 	GLEntity(window,
 		{
 			{
@@ -27,7 +28,8 @@ TextView::TextView(GLWindow &window,
 		},
 		position,
 		rotation,
-		scale
+		scale,
+		name.empty() ? "TextView " + std::to_string(++textViewsCount) : name
   ),
 	uvs({
 		// Front face
@@ -38,6 +40,7 @@ TextView::TextView(GLWindow &window,
 	}),
 	scene(scene),
 	text(text),
+	size(size),
 	font(font),
 	fontSize(fontSize)
 {
@@ -72,6 +75,7 @@ void TextView::preRender()
 };
 void TextView::setSize(const glm::vec2 &size)
 {
+	this->size = size;
 	positions = {
 		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
 	};

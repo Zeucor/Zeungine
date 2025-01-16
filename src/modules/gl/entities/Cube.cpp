@@ -1,7 +1,14 @@
 #include <anex/modules/gl/entities/Cube.hpp>
 #include <anex/utilities.hpp>
 using namespace anex::modules::gl::entities;
-Cube::Cube(anex::modules::gl::GLWindow &window, anex::modules::gl::GLScene &scene, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale, const glm::vec3 &size, const anex::modules::gl::shaders::RuntimeConstants &constants):
+Cube::Cube(anex::modules::gl::GLWindow &window,
+					 anex::modules::gl::GLScene &scene,
+					 const glm::vec3 &position,
+					 const glm::vec3 &rotation,
+					 const glm::vec3 &scale,
+					 const glm::vec3 &size,
+					 const anex::modules::gl::shaders::RuntimeConstants &constants,
+					 const std::string &name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -30,7 +37,8 @@ Cube::Cube(anex::modules::gl::GLWindow &window, anex::modules::gl::GLScene &scen
 		},
 		position,
 		rotation,
-		scale
+		scale,
+		name.empty() ? "Cube " + std::to_string(++cubesCount) : name
 	),
 	colors({{1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 0, 1}, // Front face
 					{0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, // Back face

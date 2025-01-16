@@ -1,3 +1,4 @@
+#include <iostream>
 #include <anex/modules/gl/raytracing/BVH.hpp>
 #include <anex/modules/gl/GLEntity.hpp>
 #include <anex/modules/gl/GLScene.hpp>
@@ -160,7 +161,7 @@ void BVH::updateEntity(GLEntity &entity)
 			++indicesCount;
 		}
 	}
-	indices.resize(indicesCount);
+	indices.reserve(indicesCount);
 	for (size_t i = 0; i < trianglesSize; ++i)
 	{
 		if (triangles[i].userData == &entity)
@@ -196,6 +197,7 @@ void BVH::updateEntity(GLEntity &entity)
 };
 void BVH::removeEntity(GLScene &scene, GLEntity &entity)
 {
+	// auto start = std::chrono::high_resolution_clock::now();
 	if (entity.addToBVH)
 	{
 		size_t removalIndex = 0;
@@ -214,6 +216,9 @@ void BVH::removeEntity(GLScene &scene, GLEntity &entity)
 	{
 		removeEntity(scene, *pair.second);
 	}
+	// auto end = std::chrono::high_resolution_clock::now();
+	// auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	// std::cout << "Remove Entity: " << duration.count() << " microseconds" << std::endl;
 	changed = true;
 	built = false;
 };

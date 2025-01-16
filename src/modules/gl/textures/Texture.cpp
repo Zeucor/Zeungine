@@ -34,11 +34,11 @@ Texture::~Texture()
 };
 void Texture::bind() const
 {
-  window.glContext.BindTexture(target, id);
+  window.glContext->BindTexture(target, id);
   GLcheck(window, "glBindTexture");
 };
 void Texture::unbind() const
 {
-  window.glContext.BindTexture(target, 0);
+  window.glContext->BindTexture(target, 0);
   GLcheck(window, "glBindTexture");
 };

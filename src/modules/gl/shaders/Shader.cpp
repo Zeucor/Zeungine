@@ -12,30 +12,30 @@ Shader::~Shader()
 {
   for (auto& bindingPair : ssboBindings)
   {
-    window.glContext.DeleteBuffers(1, &std::get<1>(bindingPair.second));
+    window.glContext->DeleteBuffers(1, &std::get<1>(bindingPair.second));
     GLcheck(window, "glDeleteBuffers");
   }
   for (auto& bindingPair : uboBindings)
   {
-    window.glContext.DeleteBuffers(1, &std::get<1>(bindingPair.second));
+    window.glContext->DeleteBuffers(1, &std::get<1>(bindingPair.second));
     GLcheck(window, "glDeleteBuffers");
   }
   ShaderFactory::deleteProgram(*this);
 };
 void Shader::bind() const
 {
-  window.glContext.UseProgram(program);
+  window.glContext->UseProgram(program);
   GLcheck(window, "glUseProgram");
 };
 void Shader::unbind() const
 {
-  window.glContext.UseProgram(0);
+  window.glContext->UseProgram(0);
   GLcheck(window, "glUseProgram");
 };
 void Shader::addSSBO(const std::string_view& name, const uint32_t &bindingIndex)
 {
   GLuint ssboBufferID;
-  window.glContext.GenBuffers(1, &ssboBufferID);
+  window.glContext->GenBuffers(1, &ssboBufferID);
   GLcheck(window, "glGenBuffers");
   auto& ssboBinding = ssboBindings[name];
   std::get<0>(ssboBinding) = bindingIndex;
@@ -44,7 +44,7 @@ void Shader::addSSBO(const std::string_view& name, const uint32_t &bindingIndex)
 void Shader::addUBO(const std::string_view &name, const uint32_t &bindingIndex)
 {
   GLuint uboBufferID;
-  window.glContext.GenBuffers(1, &uboBufferID);
+  window.glContext->GenBuffers(1, &uboBufferID);
   GLcheck(window, "glGenBuffers");
   auto& uboBinding = uboBindings[name];
   std::get<0>(uboBinding) = bindingIndex;
@@ -59,18 +59,18 @@ void Shader::setSSBO(const std::string_view &name, const void *pointer, const ui
   }
   auto& bindingIndex = std::get<0>(ssboIter->second);
   auto& buffer = std::get<1>(ssboIter->second);
-  window.glContext.BindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingIndex, buffer);
+  window.glContext->BindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingIndex, buffer);
   GLcheck(window, "glBindBufferBase");
-  window.glContext.BindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+  window.glContext->BindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
   GLcheck(window, "glBindBuffer");
-  window.glContext.BufferData(GL_SHADER_STORAGE_BUFFER, size, pointer, GL_STATIC_DRAW);
+  window.glContext->BufferData(GL_SHADER_STORAGE_BUFFER, size, pointer, GL_STATIC_DRAW);
   GLcheck(window, "glBufferData");
 };
 void Shader::setTexture(const std::string_view &name, const textures::Texture &texture, const int32_t &unit)
 {
   bind();
   setUniform(name, unit);
-  window.glContext.ActiveTexture(GL_TEXTURE0 + unit);
+  window.glContext->ActiveTexture(GL_TEXTURE0 + unit);
   texture.bind();
   unbind();
 };

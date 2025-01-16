@@ -84,7 +84,7 @@ struct TestTriangle : anex::modules::gl::GLEntity
   void postRender() override
   {
     auto &glWindow = (GLWindow &)window;
-    glWindow.glContext.Enable(GL_CULL_FACE);
+    glWindow.glContext->Enable(GL_CULL_FACE);
     GLcheck(glWindow, "glEnable");
   };
 };

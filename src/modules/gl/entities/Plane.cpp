@@ -8,7 +8,8 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
              const glm::vec3 &scale,
              const glm::vec2 &size,
              const glm::vec4 &color,
-             const anex::modules::gl::shaders::RuntimeConstants &constants):
+             const anex::modules::gl::shaders::RuntimeConstants &constants,
+             const std::string &name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -25,7 +26,8 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
 		},
 		position,
 		rotation,
-		scale
+		scale,
+		name.empty() ? "Plane " + std::to_string(++planesCount) : name
 	),
 	uvs({{},{},{},{}}),
 	scene(scene),
@@ -44,7 +46,8 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
              const glm::vec3 &scale,
              const glm::vec2 &size,
              textures::Texture &texture,
-             const anex::modules::gl::shaders::RuntimeConstants &constants):
+             const anex::modules::gl::shaders::RuntimeConstants &constants,
+             const std::string &name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -63,7 +66,8 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
 		},
 		position,
 		rotation,
-		scale
+		scale,
+		name.empty() ? "Plane " + std::to_string(++planesCount) : name
 	),
 	colors({{}, {}, {}, {}}),
 	uvs({

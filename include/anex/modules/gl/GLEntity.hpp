@@ -24,7 +24,7 @@ namespace anex::modules::gl
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, IWindow::MouseMoveHandler>> mouseMoveHandlers;
 		using MouseHoverHandler = std::function<void(const bool &)>;
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
-		// std::vector<size_t> triangleIDs;
+		std::string name;
 		GLEntity(anex::IWindow &window,
 						 const shaders::RuntimeConstants &constants,
 						 const uint32_t &indiceCount,
@@ -33,7 +33,8 @@ namespace anex::modules::gl
 						 const std::vector<glm::vec3> &positions,
 						 const glm::vec3 &position,
 						 const glm::vec3 &rotation,
-						 const glm::vec3 &scale);
+						 const glm::vec3 &scale,
+						 const std::string &name);
 		virtual void update();
 		virtual void preRender();
     void render() override;

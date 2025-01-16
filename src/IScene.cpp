@@ -1,15 +1,19 @@
 #include <anex/IScene.hpp>
 #include <anex/IEntity.hpp>
+#include <anex/IWindow.hpp>
 using namespace anex;
 IScene::IScene(IWindow& window):
 	window(window)
 {
 };
-size_t IScene::addEntity(const std::shared_ptr<IEntity>& entity)
+size_t IScene::addEntity(const std::shared_ptr<IEntity>& entity, const bool &callOnEntityAdded)
 {
 	auto id = ++entitiesCount;
+	entity->ID = id;
 	entities[id] = entity;
 	postAddEntity(entity, {id});
+	if (callOnEntityAdded && window.onEntityAdded)
+		window.onEntityAdded(entity);
 	return id;
 };
 void IScene::removeEntity(const size_t& id)

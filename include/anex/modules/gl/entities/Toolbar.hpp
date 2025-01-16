@@ -13,7 +13,7 @@ namespace anex::modules::gl::entities
 	{
 		size_t ID = 0;
 		std::vector<glm::vec4> colors;
-    GLScene &scene;
+		GLScene &scene;
 		fonts::freetype::FreetypeFont &font;
 		std::string xString;
 		std::shared_ptr<Plane> xButton;
@@ -62,14 +62,16 @@ namespace anex::modules::gl::entities
 		size_t helpID = 0;
 		size_t helpDropdownID = 0;
 		IWindow::EventIdentifier helpHoverID = 0;
-  	Toolbar(GLWindow &window,
-						GLScene &scene,
-						const glm::vec3 &position,
-						const glm::vec3 &rotation,
-						const glm::vec3 &scale,
-						const glm::vec4 &color,
-						const float &height,
-						fonts::freetype::FreetypeFont &font);
+		inline static size_t toolbarsCount = 0;
+  		Toolbar(GLWindow &window,
+				GLScene &scene,
+				const glm::vec3 &position,
+				const glm::vec3 &rotation,
+				const glm::vec3 &scale,
+				const glm::vec4 &color,
+				const float &height,
+				fonts::freetype::FreetypeFont &font,
+				const std::string &name = "");
 		~Toolbar();
     void preRender() override;
 		void setSize(const glm::vec2 &newSize);
