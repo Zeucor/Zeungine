@@ -17,6 +17,7 @@ void IScene::removeEntity(const size_t& id)
 	auto entityIter = entities.find(id);
 	if (entityIter != entities.end())
 	{
+		preRemoveEntity(entityIter->second, {id});
 		entities.erase(entityIter);
 	}
 };
@@ -41,4 +42,5 @@ void IScene::render()
 };
 void IScene::entityPreRender(IEntity &entity){};
 void IScene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs){};
+void IScene::preRemoveEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs){};
 void IScene::resize(const glm::vec2 &newSize){};

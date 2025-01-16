@@ -11,7 +11,7 @@ Shader& ShaderManager::getShaderByID(GLWindow &window, const uint32_t &id)
 };
 std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants(GLWindow &window, const RuntimeConstants &constants, const std::vector<Shader::ShaderType> &shaderTypes)
 {
-  auto hash = crypto::hashVectorOfStringViews(constants);
+  auto hash = crypto::hashVector(constants);
   auto hashIter = window.shaderContext->shadersByHash.find(hash);
   if (hashIter != window.shaderContext->shadersByHash.end())
     return hashIter->second;

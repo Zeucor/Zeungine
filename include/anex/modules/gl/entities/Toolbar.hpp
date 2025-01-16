@@ -6,10 +6,12 @@
 #include <anex/modules/gl/entities/Plane.hpp>
 #include <anex/modules/gl/entities/TextView.hpp>
 #include <array>
+#include <anex/modules/gl/entities/DropdownMenu.hpp>
 namespace anex::modules::gl::entities
 {
 	struct Toolbar : GLEntity
 	{
+		size_t ID = 0;
 		std::vector<glm::vec4> colors;
     GLScene &scene;
 		fonts::freetype::FreetypeFont &font;
@@ -45,6 +47,10 @@ namespace anex::modules::gl::entities
 		bool dragEnabled = false;
 		glm::vec2 dragOldCoords = glm::vec2(0, 0);
 		float height = 0.0f;
+		std::shared_ptr<DropdownMenu> fileDropdown;
+		IWindow::EventIdentifier filePressID;
+		size_t fileID = 0;
+		size_t fileDropdownID = 0;
   	Toolbar(GLWindow &window,
 						GLScene &scene,
 						const glm::vec3 &position,

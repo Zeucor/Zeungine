@@ -22,6 +22,7 @@ namespace anex
 		virtual void render();
 		virtual void entityPreRender(IEntity &entity);
 		virtual void postAddEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs);
+		virtual void preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs);
 		virtual void resize(const glm::vec2 &newSize);
 	};
 }

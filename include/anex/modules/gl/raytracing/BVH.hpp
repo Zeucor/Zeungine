@@ -15,6 +15,7 @@
 namespace anex::modules::gl
 {
 	struct GLEntity;
+	struct GLScene;
 }
 namespace anex::modules::gl::raytracing
 {
@@ -62,5 +63,6 @@ namespace anex::modules::gl::raytracing
 		size_t addTriangle(const Tri &tri);
 		std::vector<size_t> addEntity(GLEntity &entity);
 		void updateEntity(GLEntity &entity);
+		void removeEntity(GLScene &scene, GLEntity &entity);
   };
 }

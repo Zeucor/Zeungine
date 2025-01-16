@@ -40,7 +40,8 @@ struct EditorScene : GLScene
 			load((GLWindow &)window);
 		});
 		clearColor = {0.2, 0.2, 0.2, 1};
-		addEntity(toolbar);
+		auto toolbarID = addEntity(toolbar);
+		toolbar->ID = toolbarID;
 		resizeID = view.addResizeHandler([&](auto &newSize)mutable
 		{
 			view.position = {newSize.x / 2, newSize.y / 2, 50};
@@ -67,8 +68,9 @@ int main()
 	std::shared_ptr<EditorScene> editorScene;
 	window.runOnThread([&](auto &window)mutable
 	{
-		editorScene = std::make_shared<EditorScene>((GLWindow &)window);
-		window.setIScene(editorScene);
+		auto tempEditorScene = std::make_shared<EditorScene>((GLWindow &)window);
+		window.setIScene(tempEditorScene);
+		editorScene = tempEditorScene;
 	});
 	while (!editorScene) {}
 	auto &editorSceneRef = *editorScene;

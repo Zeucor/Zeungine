@@ -118,10 +118,45 @@ Toolbar::Toolbar(GLWindow &window,
 	float fileLineHeight = 0;
 	auto fileTextSize = font.stringSize(fileString, fileFontSize, fileLineHeight, {0, 0});
 	file = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), fileTextSize, glm::vec4(0.3, 0.3, 0.3, 1));
-	addChild(file);
+	fileID = addChild(file);
 	fileTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), fileString, fileTextSize / 1.5f, font, fileFontSize);
 	fileTextView->addToBVH = false;
 	file->addChild(fileTextView);
+	fileDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-file->size.x / 2, -file->size.y / 2, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
+	fileDropdown->addOption("New Project", []()
+	{
+
+	});
+	fileDropdown->addOption("Open Project", []()
+	{
+
+	});
+	fileDropdown->addOption("Settings", []()
+	{
+
+	});
+	fileDropdown->addOption("Exit", [&]()
+	{
+		window.close();
+	});
+	filePressID = file->addMousePressHandler(0, [&](auto &pressed)
+	{
+		if (!pressed)
+		{
+			if (fileDropdownID)
+			{
+				scene.bvh.removeEntity(scene, *fileDropdown);
+				file->removeChild(fileDropdownID);
+			}
+			else
+			{
+				fileDropdownID = file->addChild(fileDropdown);
+				// scene.bvh.addEntity(*fileDropdown);
+				std::vector<size_t> entityIDs({ID, fileID, fileDropdownID});
+				scene.postAddEntity(fileDropdown, entityIDs);
+			}
+		}
+	});
 	// Edit
 	editString = "Edit";
 	float editFontSize = height / 2;
@@ -190,6 +225,10 @@ Toolbar::~Toolbar()
 	maxButton->removeMouseHoverHandler(maxButtonMouseHoverID);
 	_Button->removeMousePressHandler(0, _ButtonLeftMousePressID);
 	_Button->removeMouseHoverHandler(_ButtonMouseHoverID);
+	removeMousePressHandler(0, dragMousePressID);
+	auto &glWindow = ((VAO &)*this).window;
+	glWindow.removeMousePressHandler(0, globalDragMousePressID);
+	removeMouseMoveHandler(dragMouseMoveID);
 }
 void Toolbar::preRender()
 {

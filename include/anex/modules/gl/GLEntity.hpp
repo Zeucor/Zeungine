@@ -15,7 +15,8 @@ namespace anex::modules::gl
 		glm::mat4 model;
 		shaders::Shader &shader;
 		bool affectedByShadows = true;
-		std::vector<std::shared_ptr<GLEntity>> children;
+		size_t childrenCount = 0;
+		std::map<size_t, std::shared_ptr<GLEntity>> children;
 		GLEntity *parentEntity = 0;
 		bool addToBVH = true;
 		std::unordered_map<IWindow::Button, int> buttons;
@@ -38,7 +39,8 @@ namespace anex::modules::gl
     void render() override;
 		virtual void postRender();
 		const glm::mat4 &getModelMatrix();
-		void addChild(const std::shared_ptr<GLEntity> &child);
+		size_t addChild(const std::shared_ptr<GLEntity> &child);
+		void removeChild(size_t &ID);
 		IWindow::EventIdentifier addMousePressHandler(const IWindow::Button &button, const IWindow::MousePressHandler &callback);
 		void removeMousePressHandler(const IWindow::Button &button, IWindow::EventIdentifier &id);
 		IWindow::EventIdentifier addMouseMoveHandler(const IWindow::MouseMoveHandler &callback);

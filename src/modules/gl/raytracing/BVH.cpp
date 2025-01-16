@@ -1,5 +1,6 @@
 #include <anex/modules/gl/raytracing/BVH.hpp>
 #include <anex/modules/gl/GLEntity.hpp>
+#include <anex/modules/gl/GLScene.hpp>
 using namespace anex::modules::gl::raytracing;
 static constexpr bool shouldPermute = true;
 BVH::BVH():
@@ -29,6 +30,10 @@ void BVH::buildBBoxesAndCenters()
 };
 void BVH::buildBVH()
 {
+	if (!triangles.size())
+	{
+		return;
+	}
   buildBBoxesAndCenters();
 	bvh = Builder::build(threadPool, bboxes, centers, config);
   precomputeTriangles();
@@ -87,6 +92,10 @@ size_t BVH::trace(Ray &ray)
 	if (!built || changed)
 	{
 		buildBVH();
+	}
+	if (!built)
+	{
+		return invalidID;
 	}
 	auto primID = invalidID;
 	Scalar u, v;
@@ -168,4 +177,52 @@ void BVH::updateEntity(GLEntity &entity)
 	}
 	built = false;
 	changed = true;
+};
+void BVH::removeEntity(GLScene &scene, GLEntity &entity)
+{
+	auto triangleIDs = entity.triangleIDs;
+	size_t removalIndex = 0;
+	triangles.erase(std::remove_if(triangles.begin(), triangles.end(), [&](const Tri &tri) -> bool
+	{
+		if (removalIndex < triangleIDs.size() &&
+			 (&tri - &triangles[0]) == triangleIDs[removalIndex])
+		{
+			removalIndex++;
+			return true; // Mark for removal
+		}
+		return false;
+	}), triangles.end());
+	entity.triangleIDs.clear();
+	auto triangleIDsSize = triangleIDs.size();
+	if (triangleIDsSize)
+	{
+		auto maxTriangleID = triangleIDs.back();
+		std::vector<std::pair<size_t, std::vector<size_t>>> updatedPairs;
+		for (auto &pair : scene.triangleIDsToEntityIDsMap)
+		{
+			if (pair.first > maxTriangleID)
+			{
+				updatedPairs.emplace_back(pair.first - triangleIDsSize, pair.second);
+			}
+		}
+		for (auto &pair : updatedPairs)
+		{
+			scene.triangleIDsToEntityIDsMap.erase(pair.first + triangleIDsSize);
+		}
+		for (auto &pair : updatedPairs)
+		{
+			scene.triangleIDsToEntityIDsMap.emplace(pair.first, pair.second);
+		}
+		for (auto &triangleID : triangleIDs)
+		{
+			scene.triangleIDsToEntityIDsMap.erase(triangleID);
+		}
+		scene.adjustTriangleIDs(triangleIDs.front(), triangleIDsSize);
+	}
+	for (auto &pair : entity.children)
+	{
+		removeEntity(scene, *pair.second);
+	}
+	changed = true;
+	built = false;
 };

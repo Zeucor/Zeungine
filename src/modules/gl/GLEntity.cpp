@@ -23,7 +23,7 @@ void GLEntity::update()
 {
 	for (auto &childEntity : children)
 	{
-		childEntity->update();
+		childEntity.second->update();
 	}
 };
 void GLEntity::preRender(){};
@@ -35,7 +35,7 @@ void GLEntity::render()
 	shader.unbind();
 	for (auto &childEntity : children)
 	{
-		childEntity->render();
+		childEntity.second->render();
 	}
 };;
 void GLEntity::postRender()
@@ -54,10 +54,23 @@ const glm::mat4 &GLEntity::getModelMatrix()
 	}
   return model;
 };
-void GLEntity::addChild(const std::shared_ptr<GLEntity> &child)
+size_t GLEntity::addChild(const std::shared_ptr<GLEntity> &child)
 {
+	auto id = ++childrenCount;
 	child->parentEntity = this;
-	children.push_back(child);
+	children[id] = child;
+	return id;
+};
+void GLEntity::removeChild(size_t &ID)
+{
+	auto iter = children.find(ID);
+	if (iter == children.end())
+	{
+		ID = 0;
+		return;
+	}
+	children.erase(iter);
+	ID = 0;
 };
 // Mouse
 anex::IWindow::EventIdentifier GLEntity::addMousePressHandler(const anex::IWindow::Button& button, const anex::IWindow::MousePressHandler& callback)

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <anex/IWindow.hpp>
+#include <anex/crypto/vector.hpp>
 #include <anex/modules/gl/GLScene.hpp>
 #include <anex/modules/gl/GLEntity.hpp>
 #include <anex/modules/gl/textures/TextureFactory.hpp>
@@ -186,23 +187,54 @@ void GLScene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::v
 	auto &glEntity = (GLEntity &)*entity;
 	if (glEntity.addToBVH)
 	{
-		auto primIDs = bvh.addEntity(glEntity);
-		for (auto &primID : primIDs)
+		auto triangleIDs = bvh.addEntity(glEntity);
+		for (auto &triangleID : triangleIDs)
 		{
-			primIDsToEntityIDsMap[primID] = entityIDs;
+			triangleIDsToEntityIDsMap[triangleID] = entityIDs;
 		}
 	}
 	auto glEntityChildrenSize = glEntity.children.size();
-	for (size_t childEntityID = 0; childEntityID < glEntityChildrenSize; ++childEntityID)
+	for (auto &pair : glEntity.children)
 	{
+		auto childEntityID = pair.first;
 		auto entityIDsWithSubID = entityIDs;
 		entityIDsWithSubID.push_back(childEntityID);
-		postAddEntity(glEntity.children[childEntityID], entityIDsWithSubID);
+		postAddEntity(pair.second, entityIDsWithSubID);
+	}
+};
+void GLScene::preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs)
+{
+	auto &glEntity = (GLEntity &)*entity;
+	if (glEntity.addToBVH)
+	{
+		bvh.removeEntity(*this, glEntity);
+	}
+};
+void GLScene::adjustTriangleIDs(const size_t &minTriangleID, const size_t &triangleIDsSize)
+{
+	for (auto &entity : entities)
+	{
+		auto &glEntity = (GLEntity &)*entity.second;
+		adjustTriangleIDsForEntity(glEntity, minTriangleID, triangleIDsSize);
+	}
+};
+void GLScene::adjustTriangleIDsForEntity(GLEntity &entity, const size_t &minTriangleID, const size_t &triangleIDsSize)
+{
+	for (auto &triangleID : entity.triangleIDs)
+	{
+		if (triangleID > minTriangleID)
+		{
+			triangleID -= triangleIDsSize;
+		}
+	}
+	for (auto &child : entity.children)
+	{
+		adjustTriangleIDsForEntity(*child.second, minTriangleID, triangleIDsSize);
 	}
 };
 GLEntity *GLScene::findEntityByPrimID(const size_t &primID)
 {
-	auto &entityIDs = primIDsToEntityIDsMap[bvh.bvh.prim_ids[primID]];
+	auto &entityIDs = triangleIDsToEntityIDsMap[bvh.bvh.prim_ids[primID]];
 	auto &topEntity = *entities[entityIDs.front()];
 	GLEntity *foundEntity = &(GLEntity &)topEntity;
 	for (size_t index = 1; index < entityIDs.size(); ++index)
