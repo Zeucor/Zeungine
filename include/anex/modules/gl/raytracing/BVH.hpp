@@ -61,7 +61,7 @@ namespace anex::modules::gl::raytracing
 												const float &farPlane);
 		size_t trace(Ray &ray);
 		size_t addTriangle(const Tri &tri);
-		std::vector<size_t> addEntity(GLEntity &entity);
+		void addEntity(GLEntity &entity);
 		void updateEntity(GLEntity &entity);
 		void removeEntity(GLScene &scene, GLEntity &entity);
   };

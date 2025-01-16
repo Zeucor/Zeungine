@@ -24,7 +24,7 @@ namespace anex::modules::gl
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, IWindow::MouseMoveHandler>> mouseMoveHandlers;
 		using MouseHoverHandler = std::function<void(const bool &)>;
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
-		std::vector<size_t> triangleIDs;
+		// std::vector<size_t> triangleIDs;
 		GLEntity(anex::IWindow &window,
 						 const shaders::RuntimeConstants &constants,
 						 const uint32_t &indiceCount,

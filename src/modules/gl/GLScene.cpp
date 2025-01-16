@@ -187,11 +187,11 @@ void GLScene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::v
 	auto &glEntity = (GLEntity &)*entity;
 	if (glEntity.addToBVH)
 	{
-		auto triangleIDs = bvh.addEntity(glEntity);
-		for (auto &triangleID : triangleIDs)
-		{
-			triangleIDsToEntityIDsMap[triangleID] = entityIDs;
-		}
+		bvh.addEntity(glEntity);
+		// for (auto &triangleID : triangleIDs)
+		// {
+		// 	triangleIDsToEntityIDsMap[triangleID] = entityIDs;
+		// }
 	}
 	auto glEntityChildrenSize = glEntity.children.size();
 	for (auto &pair : glEntity.children)
@@ -210,43 +210,35 @@ void GLScene::preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std:
 		bvh.removeEntity(*this, glEntity);
 	}
 };
-void GLScene::adjustTriangleIDs(const size_t &minTriangleID, const size_t &triangleIDsSize)
-{
-	for (auto &entity : entities)
-	{
-		auto &glEntity = (GLEntity &)*entity.second;
-		adjustTriangleIDsForEntity(glEntity, minTriangleID, triangleIDsSize);
-	}
-};
-void GLScene::adjustTriangleIDsForEntity(GLEntity &entity, const size_t &minTriangleID, const size_t &triangleIDsSize)
-{
-	for (auto &triangleID : entity.triangleIDs)
-	{
-		if (triangleID > minTriangleID)
-		{
-			triangleID -= triangleIDsSize;
-		}
-	}
-	for (auto &child : entity.children)
-	{
-		adjustTriangleIDsForEntity(*child.second, minTriangleID, triangleIDsSize);
-	}
-};
+// void GLScene::adjustTriangleIDs(const size_t &minTriangleID, const size_t &triangleIDsSize)
+// {
+// 	for (auto &entity : entities)
+// 	{
+// 		auto &glEntity = (GLEntity &)*entity.second;
+// 		adjustTriangleIDsForEntity(glEntity, minTriangleID, triangleIDsSize);
+// 	}
+// };
+// void GLScene::adjustTriangleIDsForEntity(GLEntity &entity, const size_t &minTriangleID, const size_t &triangleIDsSize)
+// {
+// 	for (auto &triangleID : entity.triangleIDs)
+// 	{
+// 		if (triangleID > minTriangleID)
+// 		{
+// 			triangleID -= triangleIDsSize;
+// 		}
+// 	}
+// 	for (auto &child : entity.children)
+// 	{
+// 		adjustTriangleIDsForEntity(*child.second, minTriangleID, triangleIDsSize);
+// 	}
+// };
 GLEntity *GLScene::findEntityByPrimID(const size_t &primID)
 {
-	auto &entityIDs = triangleIDsToEntityIDsMap[bvh.bvh.prim_ids[primID]];
-	auto &topEntity = *entities[entityIDs.front()];
-	GLEntity *foundEntity = &(GLEntity &)topEntity;
-	for (size_t index = 1; index < entityIDs.size(); ++index)
-	{
-		auto &entityID = entityIDs[index];
-		foundEntity = &*foundEntity->children[entityID];
-	}
-	if (!foundEntity)
-	{
-		throw std::runtime_error("Could not find entity!");
-	}
-	return foundEntity;
+	auto &tri = bvh.triangles[bvh.bvh.prim_ids[primID]];
+	auto &userData = tri.userData;
+	if (!userData)
+		return 0;
+	return (GLEntity *&)userData;
 }
 void GLScene::hookMouseEvents()
 {

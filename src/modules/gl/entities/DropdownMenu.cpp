@@ -121,7 +121,7 @@ DropdownItem::DropdownItem(GLWindow &window,
 {
 	updateIndices(indices);
 	setColor(color);
-	float FontSize = window.windowHeight / 22.f;
+	float FontSize = window.windowHeight / 40.f;
 	float LineHeight = 0;
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
 	textView = std::make_shared<TextView>(window, scene, glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);

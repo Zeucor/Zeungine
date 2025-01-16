@@ -112,12 +112,13 @@ Toolbar::Toolbar(GLWindow &window,
 	//
 	float toolOptionsX = height;
 	float padding = height / 10;
+	glm::vec4 toolbarOptionColor(0.3, 0.3, 0.3, 1);
 	// File
 	fileString = "File";
 	float fileFontSize = height / 2;
 	float fileLineHeight = 0;
 	auto fileTextSize = font.stringSize(fileString, fileFontSize, fileLineHeight, {0, 0});
-	file = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), fileTextSize, glm::vec4(0.3, 0.3, 0.3, 1));
+	file = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), fileTextSize, toolbarOptionColor);
 	fileID = addChild(file);
 	fileTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), fileString, fileTextSize / 1.5f, font, fileFontSize);
 	fileTextView->addToBVH = false;
@@ -128,6 +129,26 @@ Toolbar::Toolbar(GLWindow &window,
 
 	});
 	fileDropdown->addOption("Open Project", []()
+	{
+
+	});
+	fileDropdown->addOption("Save", []()
+	{
+
+	});
+	fileDropdown->addOption("Save As", []()
+	{
+
+	});
+	fileDropdown->addOption("Import Assets", []()
+	{
+
+	});
+	fileDropdown->addOption("Export", []()
+	{
+
+	});
+	fileDropdown->addOption("Recent Files", []()
 	{
 
 	});
@@ -151,10 +172,28 @@ Toolbar::Toolbar(GLWindow &window,
 			else
 			{
 				fileDropdownID = file->addChild(fileDropdown);
-				// scene.bvh.addEntity(*fileDropdown);
 				std::vector<size_t> entityIDs({ID, fileID, fileDropdownID});
 				scene.postAddEntity(fileDropdown, entityIDs);
+				if (editDropdownID)
+					edit->callMousePressHandler(0, false);
+				if (helpDropdownID)
+					help->callMousePressHandler(0, false);
 			}
+		}
+	});
+	fileHoverID = file->addMouseHoverHandler([&, toolbarOptionColor](auto &hovered)
+	{
+		if (hovered)
+		{
+			file->setColor({0.6, 0.6, 0.6, 1});
+			if (editDropdownID || helpDropdownID)
+			{
+				file->callMousePressHandler(0, false);
+			}
+		}
+		else
+		{
+			file->setColor(toolbarOptionColor);
 		}
 	});
 	// Edit
@@ -162,21 +201,151 @@ Toolbar::Toolbar(GLWindow &window,
 	float editFontSize = height / 2;
 	float editLineHeight = 0;
 	auto editTextSize = font.stringSize(editString, editFontSize, editLineHeight, {0, 0});
-	edit = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + editTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), editTextSize, glm::vec4(0.3, 0.3, 0.3, 1));
-	addChild(edit);
+	edit = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + editTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), editTextSize, toolbarOptionColor);
+	editID = addChild(edit);
 	editTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), editString, editTextSize / 1.5f, font, editFontSize);
 	editTextView->addToBVH = false;
 	edit->addChild(editTextView);
+	editDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-edit->size.x / 2, -edit->size.y / 2, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
+	editDropdown->addOption("Undo", []()
+	{
+
+	});
+	editDropdown->addOption("Redo", []()
+	{
+
+	});
+	editDropdown->addOption("Cut", []()
+	{
+
+	});
+	editDropdown->addOption("Copy", []()
+	{
+
+	});
+	editDropdown->addOption("Paste", []()
+	{
+
+	});
+	editDropdown->addOption("Delete", []()
+	{
+
+	});
+	editDropdown->addOption("Duplicate", []()
+	{
+
+	});
+	editDropdown->addOption("Find/Replace", []()
+	{
+
+	});
+	editDropdown->addOption("Preferences", []()
+	{
+
+	});
+	editPressID = edit->addMousePressHandler(0, [&](auto &pressed)
+	{
+		if (!pressed)
+		{
+			if (editDropdownID)
+			{
+				scene.bvh.removeEntity(scene, *editDropdown);
+				edit->removeChild(editDropdownID);
+			}
+			else
+			{
+				editDropdownID = edit->addChild(editDropdown);
+				std::vector<size_t> entityIDs({ID, editID, editDropdownID});
+				scene.postAddEntity(editDropdown, entityIDs);
+				if (fileDropdownID)
+					file->callMousePressHandler(0, false);
+				if (helpDropdownID)
+					help->callMousePressHandler(0, false);
+			}
+		}
+	});
+	editHoverID = edit->addMouseHoverHandler([&, toolbarOptionColor](auto &hovered)
+	{
+		if (hovered)
+		{
+			edit->setColor({0.6, 0.6, 0.6, 1});
+			if (fileDropdownID || helpDropdownID)
+			{
+				edit->callMousePressHandler(0, false);
+			}
+		}
+		else
+		{
+			edit->setColor(toolbarOptionColor);
+		}
+	});
 	// Help
 	helpString = "Help";
 	float helpFontSize = height / 2;
 	float helpLineHeight = 0;
 	auto helpTextSize = font.stringSize(helpString, helpFontSize, helpLineHeight, {0, 0});
-	help = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + editTextSize.x / 2 + helpTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), helpTextSize, glm::vec4(0.3, 0.3, 0.3, 1));
-	addChild(help);
+	help = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + editTextSize.x / 2 + helpTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), helpTextSize, toolbarOptionColor);
+	helpID = addChild(help);
 	helpTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), helpString, helpTextSize / 1.5f, font, helpFontSize);
 	helpTextView->addToBVH = false;
 	help->addChild(helpTextView);
+	helpDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-help->size.x / 2, -help->size.y / 2, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
+	helpDropdown->addOption("Documentation", []()
+	{
+
+	});
+	helpDropdown->addOption("Tutorials", []()
+	{
+
+	});
+	helpDropdown->addOption("Keyboard Shortcuts", []()
+	{
+
+	});
+	helpDropdown->addOption("Report Bug", []()
+	{
+
+	});
+	helpDropdown->addOption("About", []()
+	{
+
+	});
+	helpPressID = help->addMousePressHandler(0, [&](auto &pressed)
+	{
+		if (!pressed)
+		{
+			if (helpDropdownID)
+			{
+				scene.bvh.removeEntity(scene, *helpDropdown);
+				help->removeChild(helpDropdownID);
+			}
+			else
+			{
+				helpDropdownID = help->addChild(helpDropdown);
+				std::vector<size_t> entityIDs({ID, helpID, helpDropdownID});
+				scene.postAddEntity(helpDropdown, entityIDs);
+				if (fileDropdownID)
+					file->callMousePressHandler(0, false);
+				if (editDropdownID)
+					edit->callMousePressHandler(0, false);
+			}
+		}
+	});
+	helpHoverID = help->addMouseHoverHandler([&, toolbarOptionColor](auto &hovered)
+	{
+		if (hovered)
+		{
+			help->setColor({0.6, 0.6, 0.6, 1});
+			if (editDropdownID || fileDropdownID)
+			{
+				help->callMousePressHandler(0, false);
+			}
+		}
+		else
+		{
+			help->setColor(toolbarOptionColor);
+		}
+	});
 	// Toolbar dragging
 	dragMousePressID = addMousePressHandler(0, [&](auto &pressed)
 	{
@@ -229,6 +398,12 @@ Toolbar::~Toolbar()
 	auto &glWindow = ((VAO &)*this).window;
 	glWindow.removeMousePressHandler(0, globalDragMousePressID);
 	removeMouseMoveHandler(dragMouseMoveID);
+	file->removeMousePressHandler(0, filePressID);
+	file->removeMouseHoverHandler(fileHoverID);
+	edit->removeMousePressHandler(0, editPressID);
+	edit->removeMouseHoverHandler(editHoverID);
+	help->removeMousePressHandler(0, helpPressID);
+	help->removeMouseHoverHandler(helpHoverID);
 }
 void Toolbar::preRender()
 {

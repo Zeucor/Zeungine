@@ -123,13 +123,12 @@ size_t BVH::addTriangle(const Tri &tri)
 	built = false;
   return triangleID;
 };
-std::vector<size_t> BVH::addEntity(GLEntity &entity)
+void BVH::addEntity(GLEntity &entity)
 {
   auto &indiceCount = entity.indiceCount;
   auto indicesData = entity.indices.data();
   auto verticesData = entity.positions.data();
   auto &model = entity.getModelMatrix();
-	std::vector<size_t> triangleIDs(indiceCount / 3);
 	for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
 	{
 		auto i0 = indicesData[i + 0];
@@ -141,25 +140,41 @@ std::vector<size_t> BVH::addEntity(GLEntity &entity)
 		v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
 		v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
 		v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
-		triangleIDs[c] = addTriangle({
+		addTriangle({
 			{v0.x, v0.y, v0.z},
 			{v1.x, v1.y, v1.z},
-			{v2.x, v2.y, v2.z}
+			{v2.x, v2.y, v2.z},
+			&entity
 		});
 	}
-	entity.triangleIDs = triangleIDs;
-	return triangleIDs;
 };
 void BVH::updateEntity(GLEntity &entity)
 {
-	auto &triangleIDs = entity.triangleIDs;
+	std::vector<size_t> indices;
+	size_t indicesCount = 0;
+	auto trianglesSize = triangles.size();
+	for (size_t i = 0; i < trianglesSize; ++i)
+	{
+		if (triangles[i].userData == &entity)
+		{
+			++indicesCount;
+		}
+	}
+	indices.resize(indicesCount);
+	for (size_t i = 0; i < trianglesSize; ++i)
+	{
+		if (triangles[i].userData == &entity)
+		{
+			indices.push_back(i);
+		}
+	}
 	auto &indiceCount = entity.indiceCount;
 	auto indicesData = entity.indices.data();
 	auto verticesData = entity.positions.data();
 	auto &model = entity.getModelMatrix();
 	for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
 	{
-		auto &triangleID = triangleIDs[c];
+		auto &triangleID = indices[c];
 		auto i0 = indicesData[i + 0];
 		auto i1 = indicesData[i + 1];
 		auto i2 = indicesData[i + 2];
@@ -172,7 +187,8 @@ void BVH::updateEntity(GLEntity &entity)
 		triangles[triangleID] = {
 			{v0.x, v0.y, v0.z},
 			{v1.x, v1.y, v1.z},
-			{v2.x, v2.y, v2.z}
+			{v2.x, v2.y, v2.z},
+			&entity
 		};
 	}
 	built = false;
@@ -180,44 +196,19 @@ void BVH::updateEntity(GLEntity &entity)
 };
 void BVH::removeEntity(GLScene &scene, GLEntity &entity)
 {
-	auto triangleIDs = entity.triangleIDs;
-	size_t removalIndex = 0;
-	triangles.erase(std::remove_if(triangles.begin(), triangles.end(), [&](const Tri &tri) -> bool
+	if (entity.addToBVH)
 	{
-		if (removalIndex < triangleIDs.size() &&
-			 (&tri - &triangles[0]) == triangleIDs[removalIndex])
+		size_t removalIndex = 0;
+		auto entityPointer = &entity;
+		triangles.erase(std::remove_if(triangles.begin(), triangles.end(), [&](const Tri &tri) -> bool
 		{
-			removalIndex++;
-			return true; // Mark for removal
-		}
-		return false;
-	}), triangles.end());
-	entity.triangleIDs.clear();
-	auto triangleIDsSize = triangleIDs.size();
-	if (triangleIDsSize)
-	{
-		auto maxTriangleID = triangleIDs.back();
-		std::vector<std::pair<size_t, std::vector<size_t>>> updatedPairs;
-		for (auto &pair : scene.triangleIDsToEntityIDsMap)
-		{
-			if (pair.first > maxTriangleID)
+			if (tri.userData == entityPointer)
 			{
-				updatedPairs.emplace_back(pair.first - triangleIDsSize, pair.second);
+				removalIndex++;
+				return true;
 			}
-		}
-		for (auto &pair : updatedPairs)
-		{
-			scene.triangleIDsToEntityIDsMap.erase(pair.first + triangleIDsSize);
-		}
-		for (auto &pair : updatedPairs)
-		{
-			scene.triangleIDsToEntityIDsMap.emplace(pair.first, pair.second);
-		}
-		for (auto &triangleID : triangleIDs)
-		{
-			scene.triangleIDsToEntityIDsMap.erase(triangleID);
-		}
-		scene.adjustTriangleIDs(triangleIDs.front(), triangleIDsSize);
+			return false;
+		}), triangles.end());
 	}
 	for (auto &pair : entity.children)
 	{

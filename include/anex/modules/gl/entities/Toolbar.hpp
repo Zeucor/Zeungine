@@ -51,6 +51,17 @@ namespace anex::modules::gl::entities
 		IWindow::EventIdentifier filePressID;
 		size_t fileID = 0;
 		size_t fileDropdownID = 0;
+		IWindow::EventIdentifier fileHoverID = 0;
+		std::shared_ptr<DropdownMenu> editDropdown;
+		IWindow::EventIdentifier editPressID;
+		size_t editID = 0;
+		size_t editDropdownID = 0;
+		IWindow::EventIdentifier editHoverID = 0;
+		std::shared_ptr<DropdownMenu> helpDropdown;
+		IWindow::EventIdentifier helpPressID;
+		size_t helpID = 0;
+		size_t helpDropdownID = 0;
+		IWindow::EventIdentifier helpHoverID = 0;
   	Toolbar(GLWindow &window,
 						GLScene &scene,
 						const glm::vec3 &position,

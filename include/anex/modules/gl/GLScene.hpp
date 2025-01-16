@@ -21,7 +21,7 @@ namespace anex::modules::gl
 		std::vector<lights::DirectionalLightShadow> directionalLightShadows;
 		std::vector<lights::SpotLightShadow> spotLightShadows;
 		glm::vec4 clearColor = glm::vec4(0);
-		std::unordered_map<size_t, std::vector<size_t>> triangleIDsToEntityIDsMap;
+		// std::unordered_map<size_t, std::vector<size_t>> triangleIDsToEntityIDsMap;
 		textures::Framebuffer *framebufferPointer = 0;
 		raytracing::BVH bvh;
 		std::array<IWindow::EventIdentifier, 7 - 0 + 1> mousePressIDs;
@@ -36,8 +36,8 @@ namespace anex::modules::gl
 		void resize(const glm::vec2 &newSize) override;
 		void postAddEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs) override;
 		void preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs) override;
-		void adjustTriangleIDs(const size_t &minTriangleID, const size_t &triangleIDsSize);
-		void adjustTriangleIDsForEntity(GLEntity &entity, const size_t &minTriangleID, const size_t &triangleIDsSize);
+		// void adjustTriangleIDs(const size_t &minTriangleID, const size_t &triangleIDsSize);
+		// void adjustTriangleIDsForEntity(GLEntity &entity, const size_t &minTriangleID, const size_t &triangleIDsSize);
 		GLEntity *findEntityByPrimID(const size_t &primID);
 		void hookMouseEvents();
 		void unhookMouseEvents();
