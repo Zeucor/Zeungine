@@ -22,6 +22,7 @@ void IScene::removeEntity(const size_t& id)
 	if (entityIter != entities.end())
 	{
 		preRemoveEntity(entityIter->second, {id});
+		entityIter->second->ID = 0;
 		entities.erase(entityIter);
 	}
 };
