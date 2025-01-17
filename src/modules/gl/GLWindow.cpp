@@ -705,6 +705,13 @@ void GLWindow::warpPointer(const glm::vec2 &coords)
 	// Convert the client (window-relative) coordinates to screen coordinates
 	ClientToScreen(hwnd, &pt);
 	// Set the cursor's position to the converted screen coordinates
+	auto currentWindow = this;
+	while (currentWindow)
+	{
+		pt.x += currentWindow->windowX;
+		pt.y += currentWindow->windowY;
+		currentWindow = currentWindow->parentWindow;
+	}
 	SetCursorPos(pt.x, pt.y);
 	justWarpedPointer = true;
 #endif
