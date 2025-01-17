@@ -532,6 +532,9 @@ void GLWindow::preRender()
 	{
 		return;
 	}
+  runRunnables();
+	updateKeyboard();
+	updateMouse();
 	framebuffer->bind();
 };
 void GLWindow::postRender()

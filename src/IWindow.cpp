@@ -21,9 +21,6 @@ void IWindow::run()
 void IWindow::preRender(){};
 void IWindow::render()
 {
-  auto glWindowPointer = dynamic_cast<modules::gl::GLWindow*>(this);
-  if (glWindowPointer && glWindowPointer->isChildWindow)
-    runRunnables();
   preRender();
   updateDeltaTime();
   if (scene)
