@@ -2,10 +2,10 @@
 using namespace anex::modules::gl::vp;
 View::View(const glm::vec3& position, const glm::vec3& direction):
 	position(position),
-	direction(direction),
-	phi(atan2(direction.z, direction.x)),
-	theta(acos(direction.y))
+	direction(glm::normalize(direction))
 {
+	phi = atan2(this->direction.z, this->direction.x);
+	theta = acos(glm::clamp(this->direction.y, -1.0f, 1.0f));
   update();
 };
 void View::update()
