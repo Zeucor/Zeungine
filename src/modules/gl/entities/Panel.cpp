@@ -124,13 +124,12 @@ void PanelMenu::setColor(const glm::vec4 &color)
 };
 void PanelMenu::setSize()
 {
-	glm::vec2 size(width, 0);
-  size.y = height;
+	glm::vec2 newSize(width, height);
 	positions = {
-		{ 0, -size.y, 0 }, { size.x, -size.y, 0 }, { size.x, 0, 0 }, { 0, 0, 0 }
+		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }
 	};
 	updateElements("Position", positions);
-	this->size = size;
+	this->size = newSize;
 };
 PanelItem::PanelItem(GLWindow &window,
 										 GLScene &scene,
