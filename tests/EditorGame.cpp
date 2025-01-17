@@ -31,6 +31,26 @@ struct EditorScene : GLScene
       })
     ));
     addEntity(std::make_shared<entities::TextView>(window, *this, glm::vec3(0, 5, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), "Test Text", glm::vec2( 47 / 3, 14 / 3), robotoRegularFont, 90.f));
+    window.addKeyUpdateHandler(20, [&]()
+    {
+      view.position.x -= 3 * window.deltaTime;
+      view.update();
+    });
+    window.addKeyUpdateHandler(19, [&]()
+    {
+      view.position.x += 3 * window.deltaTime;
+      view.update();
+    });
+    window.addKeyUpdateHandler(17, [&]()
+    {
+      view.position.z -= 3 * window.deltaTime;
+      view.update();
+    });
+    window.addKeyUpdateHandler(18, [&]()
+    {
+      view.position.z += 3 * window.deltaTime;
+      view.update();
+    });
   };
 };
 RUNTIME_EXPORT void Load(GLWindow &window)
