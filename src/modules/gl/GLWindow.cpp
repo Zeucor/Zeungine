@@ -70,43 +70,103 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 		break;
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
-		glWindow->windowButtons[0] = (msg == WM_LBUTTONDOWN);
-		break;
+		{
+			auto pressed = msg == WM_LBUTTONDOWN;
+			bool hadChildFocus = false;
+			for (auto &childWindow : glWindow->childWindows)
+			{
+				if (!childWindow.focused)
+				{
+					continue;
+				}
+				childWindow.windowButtons[0] = pressed;
+				hadChildFocus = true;
+				break;
+			}
+			if (!hadChildFocus)
+				glWindow->windowButtons[0] = pressed;
+			break;
+		};
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONUP:
-		glWindow->windowButtons[1] = (msg == WM_RBUTTONDOWN);
-		break;
+		{
+			auto pressed = msg == WM_RBUTTONDOWN;
+			bool hadChildFocus = false;
+			for (auto &childWindow : glWindow->childWindows)
+			{
+				if (!childWindow.focused)
+				{
+					continue;
+				}
+				childWindow.windowButtons[1] = pressed;
+				hadChildFocus = true;
+				break;
+			}
+			if (!hadChildFocus)
+				glWindow->windowButtons[1] = pressed;
+			break;
+		};
 	case WM_MBUTTONDOWN:
 	case WM_MBUTTONUP:
-		glWindow->windowButtons[2] = (msg == WM_MBUTTONDOWN);
-		break;
-		case WM_MOUSEWHEEL:
+		{
+			auto pressed = msg == WM_MBUTTONDOWN;
+			bool hadChildFocus = false;
+			for (auto &childWindow : glWindow->childWindows)
+			{
+				if (!childWindow.focused)
+				{
+					continue;
+				}
+				childWindow.windowButtons[2] = pressed;
+				hadChildFocus = true;
+				break;
+			}
+			if (!hadChildFocus)
+				glWindow->windowButtons[2] = pressed;
+			break;
+		};
+	case WM_MOUSEWHEEL:
 		{
 			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam); // This gives the scroll amount
-			if (zDelta > 0)
+			auto wheelButton = zDelta > 0 ? 3 : 4; // Wheel scrolled up or down
+			bool hadChildFocus = false;
+			for (auto &childWindow : glWindow->childWindows)
 			{
-				glWindow->windowButtons[3] = 1; // Wheel scrolled up
+				if (!childWindow.focused)
+				{
+					continue;
+				}
+				childWindow.windowButtons[wheelButton] = 1;
+				hadChildFocus = true;
+				break;
 			}
-			else
-			{
-				glWindow->windowButtons[4] = 1; // Wheel scrolled down
-			}
+			if (!hadChildFocus)
+				glWindow->windowButtons[wheelButton] = 1;
 			break;
 		};
 	case WM_XBUTTONDOWN:
 	case WM_XBUTTONUP:
-	{
-		WORD button = GET_XBUTTON_WPARAM(wParam);
-		if (button == XBUTTON2) // Back button
 		{
-			glWindow->windowButtons[5] = (msg == WM_XBUTTONDOWN);
-		}
-		else if (button == XBUTTON1) // Forward button
-		{
-			glWindow->windowButtons[6] = (msg == WM_XBUTTONDOWN);
-		}
-		break;
-	};
+			WORD button = GET_XBUTTON_WPARAM(wParam);
+			auto xButton = (button == XBUTTON2 ? 5 : (button == XBUTTON1 ? 6 : -1));
+			if (xButton == -1)
+				throw std::runtime_error("Invalid XButton");
+			auto pressed = msg == WM_XBUTTONDOWN;
+			bool hadChildFocus = false;
+			for (auto &childWindow : glWindow->childWindows)
+			{
+				if (!childWindow.focused)
+				{
+					continue;
+				}
+				childWindow.windowButtons[xButton] = pressed;
+				hadChildFocus = true;
+				break;
+			}
+			if (!hadChildFocus)
+				glWindow->windowButtons[xButton] = pressed;
+			break;
+		};
 	case WM_MOUSEMOVE:
 		{
 			POINT pt;
@@ -114,18 +174,53 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 			ScreenToClient(hwnd, &pt);
 			auto x = pt.x;
 			auto y = glWindow->windowHeight - pt.y;
-			glWindow->mouseCoords.y = y, glWindow->mouseCoords.x = x;
-			glWindow->mouseMoved = true;
+			bool hadChildFocus = false;
+			for (auto &childWindow : glWindow->childWindows)
+			{
+				if (!childWindow.focused)
+				{
+					continue;
+				}
+				auto childX = x - childWindow.windowX;
+				auto childY = glWindow->windowHeight - y - childWindow.windowY;
+				childWindow.mouseCoords.x = childX, childWindow.mouseCoords.y = childY;
+				childWindow.mouseMoved = true;
+				hadChildFocus = true;
+				break;
+			}
+			if (!hadChildFocus)
+			{
+				glWindow->mouseCoords.y = y, glWindow->mouseCoords.x = x;
+				glWindow->mouseMoved = true;
+			}
 			break;
 		};
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 		{
-			glWindow->mod = ((GetKeyState(VK_CONTROL) & 0x8000) >> 15) |
+			auto mod = ((GetKeyState(VK_CONTROL) & 0x8000) >> 15) |
 							 ((GetKeyState(VK_SHIFT) & 0x8000) >> 14) |
 							 ((GetKeyState(VK_MENU) & 0x8000) >> 13) |
 							 (((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) >> 12);
-			glWindow->windowKeys[GL_KEYCODES[HIWORD(lParam) & 0x1ff]] = !((lParam >> 31) & 1);
+			auto keycode = GL_KEYCODES[HIWORD(lParam) & 0x1ff];
+			auto keypress = !((lParam >> 31) & 1);
+			bool hadChildFocus = false;
+			for (auto &childWindow : glWindow->childWindows)
+			{
+				if (!childWindow.focused)
+				{
+					continue;
+				}
+				childWindow.mod = mod;
+				childWindow.windowKeys[keycode] = keypress;
+				hadChildFocus = true;
+				break;
+			}
+			if (!hadChildFocus)
+			{
+				glWindow->mod = mod;
+				glWindow->windowKeys[keycode] = keypress;
+			}
 		}
 		break;
 	case WM_DESTROY:
@@ -136,6 +231,20 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 			int32_t width = LOWORD(lParam), height = HIWORD(lParam);
 			if (width != 0 && width != glWindow->windowWidth && height != 0 && height != glWindow->windowHeight)
 				glWindow->resize({width, height});
+			break;
+		};
+	case WM_SETFOCUS:
+		{
+			if (glWindow->focused)
+				break;
+			glWindow->focused = true;
+			break;
+		};
+	case WM_KILLFOCUS:
+		{
+			if (!glWindow->focused)
+				break;
+			glWindow->focused = false;
 			break;
 		};
 	default:

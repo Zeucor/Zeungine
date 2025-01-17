@@ -38,6 +38,7 @@ namespace anex
 		bool justWarpedPointer = false;
 		bool borderless = false;
 		bool maximized = false;
+		bool focused = false;
 		using OnEntityAddedFunction = std::function<void(const std::shared_ptr<IEntity> &)>;
 		OnEntityAddedFunction onEntityAdded;
 		IWindow(const int32_t &windowWidth,
