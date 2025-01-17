@@ -18,8 +18,11 @@ void VML::mouseMoveHandler(const glm::vec2 &coords)
     scene.window.justWarpedPointer = false;
     return;
   }
+  if (!scene.window.focused)
+    return;
   glm::vec2 center = {scene.window.windowWidth/2, scene.window.windowHeight/2};
+  auto currentWindow = (GLWindow &)scene.window;
   auto diff = coords - center;
-  scene.view.addPhiTheta(diff.x * 0.001f, -diff.y * 0.001f);
+  scene.view.addPhiTheta(diff.x * 0.001f, diff.y * (currentWindow.isChildWindow ? 1.f : -1.f) * 0.001f);
   scene.window.warpPointer(center);
 };
