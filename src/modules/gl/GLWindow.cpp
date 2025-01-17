@@ -184,7 +184,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 					continue;
 				}
 				auto childX = x - childWindow.windowX;
-				auto childY = glWindow->windowHeight - y - childWindow.windowY;
+				auto childY = childWindow.windowHeight - (glWindow->windowHeight - y - childWindow.windowY);
 				childWindow.mouseCoords.x = childX, childWindow.mouseCoords.y = childY;
 				childWindow.mouseMoved = true;
 				hadChildFocus = true;
