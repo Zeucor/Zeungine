@@ -11,6 +11,7 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 				             fonts::freetype::FreetypeFont &font,
 										 const std::string &title,
 										 const float &width,
+										 const float &height,
 				             const anex::modules::gl::shaders::RuntimeConstants &constants,
                      const std::string &name):
 	anex::modules::gl::GLEntity(
@@ -34,9 +35,11 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 	),
 	scene(scene),
 	size({ 0, 0 }),
+  color(color),
 	font(font),
 	title(title),
-	width(width)
+	width(width),
+	height(height)
 {
 	updateIndices(indices);
 	setColor(color);
@@ -64,7 +67,19 @@ void PanelMenu::addItem(const std::string &name, GLEntity &entity)
 		auto &childItem = *std::dynamic_pointer_cast<PanelItem>(child.second);
 		sizeYTotal += childItem.size.y;
 	}
-  auto panelItem = std::make_shared<PanelItem>(vao.window, scene, glm::vec3(0, -sizeYTotal, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0.1, 0.1, 0.1, 1), name, font, entity);
+  static const auto indent = 16.f;
+  auto panelItem = std::make_shared<PanelItem>(
+  	vao.window,
+		scene,
+		glm::vec3(indent, -sizeYTotal, 0.5),
+		glm::vec3(0),
+		glm::vec3(1),
+    color,
+		name,
+		font,
+		entity,
+    width,
+    indent);
   addChild(panelItem);
   scene.postAddEntity(panelItem, {ID, panelItem->ID});
   sizeYTotal += panelItem->size.y;
@@ -110,15 +125,7 @@ void PanelMenu::setColor(const glm::vec4 &color)
 void PanelMenu::setSize()
 {
 	glm::vec2 size(width, 0);
-  size.y = 0;
-  size.y += titleTextView->size.y;
-  for (auto &child : children)
-  {
-    auto panelItemPointer = std::dynamic_pointer_cast<PanelItem>(child.second);
-    if (!panelItemPointer)
-      continue;
-    size.y += panelItemPointer->size.y;
-  }
+  size.y = height;
 	positions = {
 		{ 0, -size.y, 0 }, { size.x, -size.y, 0 }, { size.x, 0, 0 }, { 0, 0, 0 }
 	};
@@ -134,6 +141,8 @@ PanelItem::PanelItem(GLWindow &window,
 										 const std::string &text,
 										 fonts::freetype::FreetypeFont &font,
                      GLEntity &entity,
+                     const float &panelWidth,
+                     const float &indent,
 										 const shaders::RuntimeConstants &constants,
                      const std::string &name):
 	anex::modules::gl::GLEntity(
@@ -159,23 +168,25 @@ PanelItem::PanelItem(GLWindow &window,
 	size({ 0, 0 }),
 	text(text),
 	font(font),
-	entity(entity)
+	entity(entity),
+  panelWidth(panelWidth),
+  indent(indent)
 {
 	updateIndices(indices);
   colors.resize(4);
 	setColor(color);
 	float FontSize = window.windowHeight / 40.f;
 	float LineHeight = 0;
-	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
+	auto TextSize = font.stringSize(text, FontSize, LineHeight, {panelWidth - indent, 0});
 	textView = std::make_shared<TextView>(window, scene, glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);
 	textView->addToBVH = false;
   addChild(textView);
-  setSize({ TextSize.x, TextSize.y });
+  setSize({ panelWidth - indent, TextSize.y });
 	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
 	{
 		if (hovered)
 		{
-			setColor({ 0.5, 0.5, 0.5, 1 });
+			setColor({ 0.4, 0.4, 0.4, 1 });
 		}
 		else
 		{
