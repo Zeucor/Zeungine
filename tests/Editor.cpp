@@ -6,6 +6,7 @@
 #include <anex/RuntimeAPI.hpp>
 #include <anex/modules/gl/entities/Toolbar.hpp>
 #include <anex/modules/gl/entities/Panel.hpp>
+#include <anex/modules/gl/entities/Tabs.hpp>
 using namespace anex;
 using namespace anex::modules::gl;
 
@@ -15,6 +16,7 @@ struct EditorScene : GLScene
 {
 	glm::vec4 editorClearColor = {0.2, 0.2, 0.2, 1};
 	float toolbarHeight;
+	float bottomTabsHeight;
 	File robotoRegularFile;
 	modules::gl::fonts::freetype::FreetypeFont robotoRegularFont;
 	GLWindow* childWindowPointer = 0;
@@ -23,7 +25,9 @@ struct EditorScene : GLScene
 	int32_t childWindowX;
 	int32_t childWindowY;
 	float childWindowBorderWidth = 4.f;
+	glm::vec4 toolbarColor;
 	std::shared_ptr<entities::Toolbar> toolbar;
+	std::shared_ptr<entities::TabsBar> bottomTabsBar;
 	glm::vec4 childWindowBorderColor = {0.4, 0.4, 0.7, 1};
 	glm::vec4 childWindowHoveredBorderColor = {0.7, 0.4, 0.4, 1};
 	glm::vec4 childWindowActiveBorderColor = {1, 0, 0, 1};
@@ -34,42 +38,54 @@ struct EditorScene : GLScene
 	IWindow::EventIdentifier childWindowBorderPressID = 0;
 	IWindow::EventIdentifier childWindowESCPressID = 0;
 
-	EditorScene(GLWindow& window):
+	explicit EditorScene(GLWindow& window):
 		GLScene(window, {window.windowWidth / 2, window.windowHeight / 2, 50}, {0, 0, -1},
 						{window.windowWidth, window.windowHeight}),
-		toolbarHeight(window.windowHeight / 14),
+		toolbarHeight((float)window.windowHeight / 14),
+		bottomTabsHeight((float)window.windowHeight / 18),
 		robotoRegularFile("fonts/Roboto/Roboto-Regular.ttf", enums::EFileLocation::Relative, "r"),
 		robotoRegularFont(window, robotoRegularFile),
-		childWindowWidth(window.windowWidth / 1.5f),
-		childWindowHeight(window.windowHeight / 1.5f),
-		childWindowX(window.windowWidth / 2 - childWindowWidth / 2),
-		childWindowY(toolbarHeight + 4),
+		childWindowWidth((uint32_t)((float)window.windowWidth / 1.75f)),
+		childWindowHeight((uint32_t)((float)window.windowHeight - toolbarHeight - bottomTabsHeight)),
+		childWindowX((int32_t)((float)window.windowWidth / 2 - (float)childWindowWidth / 2)),
+		childWindowY((int32_t)(toolbarHeight + 4)),
+		toolbarColor(35 / 255.f, 33 / 255.f, 36 / 255.f, 1),
 		toolbar(std::make_shared<entities::Toolbar>(
 			window,
 			*this,
 			glm::vec3(0, window.windowHeight, 0),
 			glm::vec3(0, 0, 0),
 			glm::vec3(1, 1, 1),
-			glm::vec4(35 / 255.f, 33 / 255.f, 36 / 255.f, 1),
+			toolbarColor,
 			toolbarHeight,
 			robotoRegularFont
 		)),
+		bottomTabsBar(std::make_shared<entities::TabsBar>(
+			window,
+			*this,
+			glm::vec3(childWindowX - childWindowBorderWidth, 0 + bottomTabsHeight - childWindowBorderWidth * 2, 0),
+			glm::vec3(0),
+			glm::vec3(1),
+			toolbarColor,
+			robotoRegularFont,
+			(float)childWindowWidth + childWindowBorderWidth * 2,
+			bottomTabsHeight - childWindowBorderWidth * 2)),
 		childWindowBorder(std::make_shared<entities::Plane>(
 			window, *this,
 			glm::vec3(childWindowX + (childWindowWidth / 2),
 								window.windowHeight - childWindowY - (
 									childWindowHeight / 2), 0.5), glm::vec3(0),
 			glm::vec3(1),
-			glm::vec2(childWindowWidth + childWindowBorderWidth * 2,
-								childWindowHeight + childWindowBorderWidth * 2),
+			glm::vec2((float)childWindowWidth + childWindowBorderWidth * 2,
+								(float)childWindowHeight + childWindowBorderWidth * 2),
 			childWindowBorderColor)),
 		sceneGraphPanelMenu(std::make_shared<entities::PanelMenu>(
 			window, *this,
-			glm::vec3(0, window.windowHeight - toolbarHeight, 0),
+			glm::vec3(0, (float)window.windowHeight - toolbarHeight, 0),
 			glm::vec3(0), glm::vec3(1), glm::vec4(0.5, 0.5, 0.5, 1),
 			robotoRegularFont, "Scene Graph",
-			(float)((window.windowWidth - childWindowWidth) / 2) - childWindowBorderWidth,
-			childWindowHeight + childWindowBorderWidth * 2))
+			(((float)window.windowWidth - (float)childWindowWidth) / 2.f) - childWindowBorderWidth,
+			(float)childWindowHeight + childWindowBorderWidth * 2.f))
 	{
 		auto& childWindow = window.createChildWindow(
 			"EditorChild",
@@ -79,16 +95,18 @@ struct EditorScene : GLScene
 			childWindowX,
 			childWindowY);
 		childWindowPointer = (GLWindow*)&childWindow;
-		childWindow.runOnThread([&](auto& window)
+		childWindow.runOnThread([&](auto& runningChildWindow)
 		{
 			auto load = gameLibrary.getProc<LOAD_FUNCTION>("Load");
-			load((GLWindow&)window);
+			load((GLWindow&)runningChildWindow);
 		});
 		std::function<void(const std::shared_ptr<IEntity>&)> entityAddedFunction = std::bind(
 			&EditorScene::onEntityAdded, this, std::placeholders::_1);
 		childWindow.registerOnEntityAddedFunction(entityAddedFunction);
 		clearColor = editorClearColor;
 		addEntity(toolbar);
+		bottomTabsBar->addToBVH = false;
+		addEntity(bottomTabsBar);
 		addEntity(childWindowBorder);
 		sceneGraphPanelMenu->addToBVH = false;
 		addEntity(sceneGraphPanelMenu);
@@ -100,11 +118,10 @@ struct EditorScene : GLScene
 			toolbarHeight = newSize.y / 14;
 			toolbarRef.position.y = newSize.y;
 			toolbarRef.setSize({newSize.x, toolbarHeight});
-			auto& childWindow = *childWindowPointer;
 			childWindowWidth = newSize.x / 2;
 			childWindowHeight = newSize.y / 2;
-			childWindow.setXY(newSize.x / 2 - childWindowWidth / 2, toolbarHeight);
-			childWindow.setWidthHeight(childWindowWidth, childWindowHeight);
+			childWindowPointer->setXY(newSize.x / 2 - (float)childWindowWidth / 2, toolbarHeight);
+			childWindowPointer->setWidthHeight(childWindowWidth, childWindowHeight);
 		});
 		childWindowBorderHoverID = childWindowBorder->addMouseHoverHandler([&](const auto& hovered)
 		{
@@ -133,35 +150,38 @@ struct EditorScene : GLScene
 				window.callMouseMoveHandler(window.mouseCoords);
 			}
 		});
+		bottomTabsBar->addTab("Scene", [&]()
+		{
+			addEntity(childWindowBorder);
+			childWindowPointer->restore();
+		}, true);
+		bottomTabsBar->addTab("Code Editor", [&]()
+		{
+			childWindowPointer->minimize();
+			removeEntity(childWindowBorder->ID);
+		});
 	};
 
-	~EditorScene()
+	~EditorScene() override
 	{
 		view.removeResizeHandler(resizeID);
 		childWindowBorder->removeMouseHoverHandler(childWindowBorderHoverID);
 		childWindowBorder->removeMousePressHandler(0, childWindowBorderPressID);
 	};
 
-	void onEntityAdded(const std::shared_ptr<IEntity>& entity)
+	void onEntityAdded(const std::shared_ptr<IEntity>& entity) const
 	{
 		auto& glEntity = *std::dynamic_pointer_cast<GLEntity>(entity);
 		sceneGraphPanelMenu->addItem(glEntity.name, glEntity);
 	}
 };
-
-int main()
+int32_t main()
 {
 	GLWindow window("Editor", 1280, 720, -1, -1, true);
-	window.runOnThread([&](auto& window)mutable
+	window.runOnThread([&](auto& runningWindow)mutable
 	{
-		auto editorScene = std::make_shared<EditorScene>((GLWindow&)window);
-		window.setIScene(editorScene);
+		auto editorScene = std::make_shared<EditorScene>((GLWindow&)runningWindow);
+		runningWindow.setIScene(editorScene);
 	});
-	// while (!editorScene) {}
-	// auto &editorSceneRef = *editorScene;
-	// while (!editorSceneRef.childWindowPointer) {}
-	// auto childWindowPointer = editorSceneRef.childWindowPointer;
-	// editorScene.reset();
-	// childWindowPointer->awaitWindowThread();
 	window.awaitWindowThread();
 };

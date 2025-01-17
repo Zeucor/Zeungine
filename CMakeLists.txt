@@ -55,6 +55,7 @@ if(BUILD_OPENGL)
         src/modules/gl/entities/Panel.cpp
         src/modules/gl/entities/Plane.cpp
         src/modules/gl/entities/SkyBox.cpp
+        src/modules/gl/entities/Tabs.cpp
         src/modules/gl/entities/TextView.cpp
         src/modules/gl/entities/Toolbar.cpp
         src/modules/gl/lights/DirectionalLight.cpp
