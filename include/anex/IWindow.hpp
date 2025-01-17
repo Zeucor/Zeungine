@@ -37,6 +37,7 @@ namespace anex
 		float deltaTime = 0;
 		bool justWarpedPointer = false;
 		bool borderless = false;
+		bool minimized = false;
 		bool maximized = false;
 		bool focused = false;
 		using OnEntityAddedFunction = std::function<void(const std::shared_ptr<IEntity> &)>;
@@ -79,6 +80,7 @@ namespace anex
 		virtual void close();
 		virtual void minimize();
 		virtual void maximize();
+		virtual void restore();
 		virtual void drawLine(int x0, int y0, int x1, int y1, uint32_t color) = 0;
 		virtual void drawRectangle(int x, int y, int w, int h, uint32_t color) = 0;
 		virtual void drawCircle(int x, int y, int radius, uint32_t color) = 0;

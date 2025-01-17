@@ -210,6 +210,7 @@ void IWindow::registerOnEntityAddedFunction(const OnEntityAddedFunction &functio
 void IWindow::close(){};
 void IWindow::minimize(){};
 void IWindow::maximize(){};
+void IWindow::restore(){};
 void IWindow::warpPointer(const glm::vec2 &coords){};
 void IWindow::setXY(const int32_t &x, const int32_t &y){};
 void IWindow::setWidthHeight(const uint32_t &width, const uint32_t &height){};

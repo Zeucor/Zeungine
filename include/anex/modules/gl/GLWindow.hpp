@@ -36,6 +36,7 @@ namespace anex::modules::gl
 		int mod = 0;
 		bool isChildWindow = false;
 		GLWindow *parentWindow = 0;
+		GLScene *parentScene = 0;
 		std::vector<GLWindow> childWindows;
 		GladGLContext *glContext = 0;
 		ShaderContext *shaderContext = 0;
@@ -69,6 +70,7 @@ namespace anex::modules::gl
 		void close() override;
 		void minimize() override;
 		void maximize() override;
+		void restore() override;
 		void preRender() override;
 		void postRender() override;
 		void drawLine(int x0, int y0, int x1, int y1, uint32_t color) override;

@@ -31,6 +31,7 @@ GLWindow::GLWindow(GLWindow &parentWindow, GLScene &parentScene, const char *chi
 	title(childTitle),
 	isChildWindow(true),
 	parentWindow(&parentWindow),
+	parentScene(&parentScene),
 	glContext(parentWindow.glContext),
 	shaderContext(parentWindow.shaderContext),
 	framebufferTexture(std::make_shared<textures::Texture>(parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
@@ -336,6 +337,8 @@ void GLWindow::startWindow()
 		updateMouse();
 		for (auto &childWindow : childWindows)
 		{
+			if (childWindow.minimized)
+				continue;
 			childWindow.render();
 		}
 		glContext->ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
@@ -345,6 +348,8 @@ void GLWindow::startWindow()
 		render();
 		for (auto &childWindow : childWindows)
 		{
+			if (childWindow.minimized)
+				continue;
 			childWindow.framebufferPlane->render();
 		}
 		SwapBuffers(hDeviceContext);
@@ -504,6 +509,12 @@ void GLWindow::close()
 void GLWindow::minimize()
 {
 #ifdef _WIN32
+	minimized = true;
+	maximized = false;
+	if (isChildWindow)
+	{
+		return;
+	}
 	ShowWindow(hwnd, SW_MINIMIZE);
 	buttons.clear();
 	for (unsigned i = 0; i <= GLWindow::MaxMouseButton; ++i)
@@ -515,6 +526,7 @@ void GLWindow::minimize()
 void GLWindow::maximize()
 {
 #ifdef _WIN32
+	minimized = false;
 	if (maximized)
 	{
 		maximized = false;
@@ -527,6 +539,18 @@ void GLWindow::maximize()
 	}
 #endif
 };
+void GLWindow::restore()
+{
+#ifdef _WIN32
+	minimized = false;
+	maximized = false;
+	if (isChildWindow)
+	{
+		return;
+	}
+	ShowWindow(hwnd, SW_RESTORE);
+#endif
+}
 void GLWindow::preRender()
 {
 	if (!isChildWindow)
