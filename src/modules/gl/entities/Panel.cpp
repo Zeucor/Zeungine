@@ -174,7 +174,7 @@ PanelItem::PanelItem(GLWindow &window,
 	updateIndices(indices);
   colors.resize(4);
 	setColor(color);
-	float FontSize = window.windowHeight / 40.f;
+	float FontSize = (float)window.windowHeight / 40.f;
 	float LineHeight = 0;
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {panelWidth - indent, 0});
 	textView = std::make_shared<TextView>(window, scene, glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);
@@ -223,11 +223,11 @@ void PanelItem::setColor(const glm::vec4 &color)
   colorsData[3] = color;
 	updateElements("Color", colors);
 };
-void PanelItem::setSize(const glm::vec2 &size)
+void PanelItem::setSize(const glm::vec2 &newSize)
 {
 	positions = {
-		{ 0, -size.y, 0 }, { size.x, -size.y, 0 }, { size.x, 0, 0 }, { 0, 0, 0 }
+		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }
 	};
 	updateElements("Position", positions);
-	this->size = size;
+	this->size = newSize;
 };

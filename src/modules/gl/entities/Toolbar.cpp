@@ -35,7 +35,7 @@ Toolbar::Toolbar(GLWindow &window,
 	// X Button
   xButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (height / 2)), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(height, height), glm::vec4(1, 0, 0, 1));
   addChild(xButton);
-  xString = "X";
+  xString = "x";
   float xFontSize = height;
   float xLineHeight = 0;
 	auto xTextSize = font.stringSize(xString, xFontSize, xLineHeight, {0, 0});
@@ -85,11 +85,11 @@ Toolbar::Toolbar(GLWindow &window,
 	// _ Button
 	_Button = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (maxButton->size.x)), -height /2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(height, height), glm::vec4(0.4f, 0.4f, 0.4f, 1));
 	addChild(_Button);
-	_String = "_";
-	float _FontSize = height;
-	float _LineHeight = 0;
-	auto _TextSize = font.stringSize(_String, _FontSize, _LineHeight, {0, 0});
-	_TextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), _String, _TextSize / 2.f, font, _FontSize);
+	_String = "-";
+	float FontSize_ = height;
+	float LineHeight_ = 0;
+	auto TextSize_ = font.stringSize(_String, FontSize_, LineHeight_, {0, 0});
+	_TextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), _String, TextSize_ / 2.f, font, FontSize_);
 	_Button->addChild(_TextView);
 	_TextView->addToBVH = false;
 	_ButtonLeftMousePressID = _Button->addMousePressHandler(0, [&](auto &pressed)
@@ -440,10 +440,10 @@ void Toolbar::setSize(const glm::vec2& newSize)
 	float maxLineHeight = 0;
 	auto maxTextSize = font.stringSize(maxString, maxFontSize, maxLineHeight, {0, 0});
 	maxTextView->setSize(maxTextSize / 2.f);
-	float _FontSize = height;
-	float _LineHeight = 0;
-	auto _TextSize = font.stringSize(_String, _FontSize, _LineHeight, {0, 0});
-	_TextView->setSize(_TextSize / 2.f);
+	float FontSize_ = height;
+	float LineHeight_ = 0;
+	auto TextSize_ = font.stringSize(_String, FontSize_, LineHeight_, {0, 0});
+	_TextView->setSize(TextSize_ / 2.f);
 	icon->position = {height / 2, -height / 2, 0.5};
 	icon->setSize({height, height});
 	float toolOptionsX = height;
