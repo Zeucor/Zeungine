@@ -40,6 +40,7 @@ GLWindow::GLWindow(GLWindow &parentWindow, GLScene &parentScene, const char *chi
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
+	framebufferPlane->addToBVH = false;
 };
 
 GLWindow::~GLWindow()
