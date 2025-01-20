@@ -3,23 +3,24 @@
 #include <stdexcept>
 namespace anex::strings
 {
-	struct UTFIterator
+	struct Utf8Iterator
 	{
 		using iterator_category = std::forward_iterator_tag;
 		using difference_type = std::ptrdiff_t;
-		using value_type = uint64_t;
-		using pointer_type = uint64_t *;
-		using reference_type = uint64_t &;
-		const std::string &string;
-		int64_t index = -1;
-		uint64_t currentCodepoint = 0;
+		using value_type = uint32_t;
+		using pointer_type = uint32_t *;
+		using reference_type = uint32_t &;
+		const std::string_view string;
+		int64_t index = 0;
+		uint32_t currentCodepoint = 0;
 	public:
-		UTFIterator(const std::string &string, const int64_t &index) :
+		Utf8Iterator() = default;
+		explicit Utf8Iterator(const std::string_view string, const int64_t &index = 0) :
 			string(string),
 			index(index)
 		{};
 	private:
-		static uint8_t getUTF8ByteLength(const int8_t& byte)
+		static uint8_t getUTF8ByteLength(int8_t byte)
 		{
 			if ((byte & 0x80) == 0x00) return 1;
 			else if ((byte & 0xE0) == 0xC0) return 2;
@@ -27,15 +28,15 @@ namespace anex::strings
 			else if ((byte & 0xF8) == 0xF0) return 4;
 			throw std::runtime_error("Invalid UTF-8 leading byte.");
 		}
-		uint64_t getCodepoint(const char* startingBytePointer) const
+		static uint32_t getCodepoint(const char* startingBytePointer)
 		{
-			uint8_t firstByte = *startingBytePointer;
-			uint64_t codepoint = 0;
+			auto firstByte = *startingBytePointer;
+			uint32_t codepoint = 0;
 			uint8_t byteLength = getUTF8ByteLength(firstByte);
 			switch (byteLength)
 			{
 			case 1:
-				codepoint = firstByte;
+				codepoint = uint8_t(firstByte);
 				break;
 			case 2:
 				codepoint = ((firstByte & 0x1F) << 6) | (startingBytePointer[1] & 0x3F);
@@ -48,14 +49,14 @@ namespace anex::strings
 					    ((startingBytePointer[2] & 0x3F) << 6) | (startingBytePointer[3] & 0x3F);
 				break;
 			default:
-				throw std::runtime_error("Invalid UTF-8 codepoint.");
+				return 0xFFFD;
 			}
 			return codepoint;
 		};
-		UTFIterator &advanceNCodepoints(const uint64_t &n)
+		Utf8Iterator &advanceNCodepoints(uint32_t n)
 		{
-			uint64_t count = 0;
-			int64_t stringSize = string.size();
+			uint32_t count = 0;
+			auto stringSize = string.size();
 			auto stringData = string.data();
 			while (count < n && index < stringSize)
 			{
@@ -65,9 +66,9 @@ namespace anex::strings
 			}
 			return *this;
 		};
-		UTFIterator &devanceNCodepoints(const uint64_t &n)
+		Utf8Iterator &devanceNCodepoints(uint32_t n)
 		{
-			uint64_t count = 0;
+			uint32_t count = 0;
 			auto stringData = string.data();
 			while (count < n && index > 0)
 			{
@@ -81,26 +82,26 @@ namespace anex::strings
 			return *this;
 		};
 	public:
-		bool hasNextCodepoint()
+		[[nodiscard]] bool hasNextCodepoint() const
 		{
 			auto nextIterator = (*this) + 1;
 			return nextIterator.index < string.size();
 		};
-		uint64_t codepointIndexFromByteIndex(const uint64_t& byteIndex) const
+		[[nodiscard]] uint32_t codepointIndexFromByteIndex(const uint32_t& byteIndex) const
 		{
 			auto stringSize = string.size();
 			auto stringData = string.data();
-			if (byteIndex < 0 || byteIndex > uint64_t(stringSize))
+			if (byteIndex < 0 || byteIndex > uint32_t(stringSize))
 			{
 				throw std::out_of_range("Byte index out of range");
 			}
 
-			uint64_t codepointIndex = 0;
-			uint64_t currentByteIndex = 0;
+			uint32_t codepointIndex = 0;
+			uint32_t currentByteIndex = 0;
 
 			while (currentByteIndex < byteIndex)
 			{
-				auto currentByte = uint8_t(stringData[currentByteIndex]);
+				auto currentByte = static_cast<uint8_t>(stringData[currentByteIndex]);
 				int codepointSize = 0;
 				if ((currentByte & 0x80) == 0)
 				{
@@ -127,90 +128,90 @@ namespace anex::strings
 			}
 			return codepointIndex;
 		};
-		uint64_t getCurrentCodepointIndex()
+		[[nodiscard]] uint32_t getCurrentCodepointIndex() const
 		{
 			return codepointIndexFromByteIndex(index);
 		};
 		reference_type operator*() const
 		{
 			auto stringData = string.data();
-			((uint64_t&)currentCodepoint) = getCodepoint(&stringData[index]);
-			return (uint64_t&)currentCodepoint;
+			const_cast<uint32_t&>(currentCodepoint) = getCodepoint(&stringData[index]);
+			return const_cast<uint32_t&>(currentCodepoint);
 		};
 		pointer_type operator->() const
 		{
 			auto stringData = string.data();
-			((uint64_t&)currentCodepoint) = getCodepoint(&stringData[index]);
-			return &((uint64_t&)currentCodepoint);
+			const_cast<uint32_t&>(currentCodepoint) = getCodepoint(&stringData[index]);
+			return &const_cast<uint32_t&>(currentCodepoint);
 		};
-		UTFIterator &operator++()
+		Utf8Iterator &operator++()
 		{
 			return advanceNCodepoints(1);
 		};
-		UTFIterator &operator--()
+		Utf8Iterator &operator--()
 		{
 			return devanceNCodepoints(1);
 		};
-		UTFIterator operator++(int)
+		Utf8Iterator operator++(int)
 		{
-			UTFIterator tmp = *this;
+			const Utf8Iterator tmp = *this;
 			++(*this);
 			return tmp;
 		};
-		UTFIterator operator--(int)
+		Utf8Iterator operator--(int)
 		{
-			UTFIterator tmp = *this;
+			Utf8Iterator tmp = *this;
 			--(*this);
 			return tmp;
 		};
-		UTFIterator operator+(const int &amount) const
+		Utf8Iterator operator+(int32_t amount) const
 		{
-			UTFIterator tmp = *this;
+			Utf8Iterator tmp = *this;
 			tmp.advanceNCodepoints(amount);
 			return tmp;
 		};
-		UTFIterator operator-(const int &amount) const
+		Utf8Iterator operator-(int32_t amount) const
 		{
-			UTFIterator tmp = *this;
+			Utf8Iterator tmp = *this;
 			tmp.devanceNCodepoints(amount);
 			return tmp;
 		};
-		UTFIterator& operator+=(const int &amount)
+		Utf8Iterator& operator+=(int32_t amount)
 		{
 			advanceNCodepoints(amount);
 			return *this;
 		};
-		UTFIterator& operator-=(const int &amount)
+		Utf8Iterator& operator-=(int32_t amount)
 		{
 			devanceNCodepoints(amount);
 			return *this;
 		};
-		friend bool operator==(const UTFIterator &a, const UTFIterator &b)
+		friend bool operator==(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
 			       a.index == b.index;
 		};
-		friend bool operator!=(const UTFIterator &a, const UTFIterator &b)
+		friend bool operator!=(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string != &b.string ||
 			       a.index != b.index;
 		};
-		friend bool operator>(const UTFIterator &a, const UTFIterator &b)
+		friend bool operator>(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
 			       a.index > b.index;
 		};
-		friend bool operator>=(const UTFIterator &a, const UTFIterator &b)
+		friend bool operator>=(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
 			       a.index >= b.index;
 		};
-		friend bool operator<=(const UTFIterator &a, const UTFIterator &b)
+		friend bool operator<=(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
 			       a.index <= b.index;
 		};
-		friend bool operator<(const UTFIterator &a, const UTFIterator &b)
+		friend bool operator<(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
 			       a.index < b.index;

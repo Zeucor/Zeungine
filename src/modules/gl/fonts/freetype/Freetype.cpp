@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <anex/modules/gl/GLScene.hpp>
-#include <anex/strings/UTFIterator.hpp>
+#include <anex/strings/Utf8Iterator.hpp>
 #include <anex/modules/gl/GLWindow.hpp>
 #include <anex/modules/gl/entities/Plane.hpp>
 using namespace anex::modules::gl::fonts::freetype;
@@ -100,7 +100,7 @@ FreetypeFont::FreetypeFont(GLWindow &window, File &fontFile):
 float textureScale = 1.f;
 const glm::vec2 FreetypeFont::stringSize(const std::string &string, const float &fontSize, float &lineHeight, const glm::vec2 &bounds)
 {
-	strings::UTFIterator iterator(string, 0);
+	strings::Utf8Iterator iterator(string, 0);
 	const unsigned long &stringSize = string.size();
 	auto scaledBounds = bounds;
 	auto &face = *facePointer.get();
@@ -178,7 +178,7 @@ void FreetypeFont::stringToTexture(const std::string &string,
 	}
 	textures::Framebuffer framebuffer(window, *texturePointer);
 	GLScene scene(window, {scaledSize.x / 2.f, scaledSize.y / 2.f, 50}, {0, 0, -1}, glm::vec2(scaledSize), &framebuffer);
-	strings::UTFIterator iterator(string, 0);
+	strings::Utf8Iterator iterator(string, 0);
 	const uint64_t &stringSize = string.size();
 	auto &face = *facePointer.get();
 	FT_Set_Pixel_Sizes(face, 0, fontSize);
