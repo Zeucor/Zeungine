@@ -6,15 +6,15 @@ TextView::TextView(GLWindow &window,
                    const glm::vec3 &position,
                    const glm::vec3 &rotation,
                    const glm::vec3 &scale,
-                   const std::string &text,
+                   const std::string_view text,
                    const glm::vec2 &size,
                    fonts::freetype::FreetypeFont &font,
-                   const float &fontSize,
-                   const bool &textSizeIsNDC,
+                   float fontSize,
+                   bool textSizeIsNDC,
                    const RepositionHandler &repositionHandler,
                    const ResizeHandler &resizeHandler,
                    const ReFontSizeHandler &reFontSizeHandler,
-                   const std::string &name):
+                   std::string_view name):
 	GLEntity(window,
 		{
 			{
@@ -119,7 +119,7 @@ void TextView::setSize(const glm::vec2 &size)
 	};
 	updateElements("Position", positions);
 };
-void TextView::updateText(const std::string &text)
+void TextView::updateText(const std::string_view text)
 {
 	this->text = text;
 };

@@ -9,12 +9,12 @@ Dialog::Dialog(anex::modules::gl::GLWindow &window,
 			   const glm::vec3 &scale,
 			   const glm::vec4 &color,
 			   fonts::freetype::FreetypeFont &font,
-			   const std::string &title,
-			   const float &width,
-			   const float &height,
+			   const std::string_view title,
+			   float width,
+			   float height,
 			   const std::vector<std::shared_ptr<GLEntity>> &children,
 			   const anex::modules::gl::shaders::RuntimeConstants &constants,
-			   const std::string &name):
+			   std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({

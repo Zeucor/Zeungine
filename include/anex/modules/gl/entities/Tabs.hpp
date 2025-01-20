@@ -28,11 +28,11 @@ namespace anex::modules::gl::entities
 							const glm::vec3& scale,
 							const glm::vec4& color,
 							fonts::freetype::FreetypeFont& font,
-							const float& width,
-							const float& height,
+							float width,
+							float height,
 							const shaders::RuntimeConstants& constants = {},
-							const std::string& name = "");
-		void addTab(const std::string& name, const TabClickHandler &handler, const bool &active = false);
+							std::string_view name = "");
+		void addTab(std::string_view name, const TabClickHandler &handler, bool active = false);
 		void preRender() override;
 		void setColor(const glm::vec4& color);
 		void setSize();
@@ -64,15 +64,15 @@ namespace anex::modules::gl::entities
 							const glm::vec3& rotation,
 							const glm::vec3& scale,
 							const glm::vec4& color,
-							const std::string& text,
+							std::string_view text,
 							fonts::freetype::FreetypeFont& font,
-							const float& height,
+							float height,
 							const TabsBar::TabClickHandler &handler,
-							const bool &active,
+							bool active,
 							TabsBar &tabsBar,
 							const shaders::RuntimeConstants& constants = {},
-							const std::string& name = "");
-		~Tab();
+							std::string_view name = "");
+		~Tab() override;
 		void preRender() override;
 		void setColor(const glm::vec4& color);
 		void setSize(const glm::vec2& size);

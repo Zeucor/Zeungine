@@ -27,12 +27,12 @@ namespace anex::modules::gl::entities
 							const glm::vec3& scale,
 							const glm::vec4& color,
 							fonts::freetype::FreetypeFont& font,
-							const std::string& title,
-							const float& width,
-							const float& height,
+							std::string_view title,
+							float width,
+							float height,
 							const shaders::RuntimeConstants& constants = {},
-							const std::string& name = "");
-		void addItem(const std::string& name, GLEntity& entity);
+							std::string_view name = "");
+		void addItem(std::string_view name, GLEntity& entity);
 		void preRender() override;
 		void setColor(const glm::vec4& color);
 		void setSize();
@@ -58,14 +58,14 @@ namespace anex::modules::gl::entities
 							const glm::vec3& rotation,
 							const glm::vec3& scale,
 							const glm::vec4& color,
-							const std::string& text,
+							std::string_view text,
 							fonts::freetype::FreetypeFont& font,
 							GLEntity& entity,
-							const float& panelWidth,
-							const float& indent,
+							float panelWidth,
+							float indent,
 							const shaders::RuntimeConstants& constants = {},
-							const std::string& name = "");
-		~PanelItem();
+							std::string_view name = "");
+		~PanelItem() override;
 		void preRender() override;
 		void setColor(const glm::vec4& color);
 		void setSize(const glm::vec2& size);

@@ -28,12 +28,12 @@ namespace anex::modules::gl::entities
 							const glm::vec3& scale,
 							const glm::vec4& color,
 							fonts::freetype::FreetypeFont& font,
-							const std::string& title,
-							const float& width,
-							const float& height,
+							std::string_view title,
+							float width,
+							float height,
               const std::vector<std::shared_ptr<GLEntity>> &children = {},
 							const shaders::RuntimeConstants& constants = {},
-							const std::string& name = "");
+							std::string_view name = "");
 		void preRender() override;
 		void setColor(const glm::vec4& color);
 		void setSize(const glm::vec2 &newSize);

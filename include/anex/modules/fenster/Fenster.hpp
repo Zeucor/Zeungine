@@ -12,12 +12,12 @@ namespace anex::modules::fenster
 		glm::vec2 oldMousePos = glm::vec2(0);
 		int framerate = 60;
 		FensterWindow(const char *title,
-									const float &windowWidth,
-									const float &windowHeight,
-									const float &windowX,
-									const float &windowY,
-									const bool &borderless = false,
-									const uint32_t &framerate = 60);
+									float windowWidth,
+									float windowHeight,
+									float windowX,
+									float windowY,
+									bool borderless = false,
+									uint32_t framerate = 60);
 		~FensterWindow();
 		void startWindow() override;
 		void updateKeyboard() override;

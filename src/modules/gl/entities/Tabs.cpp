@@ -9,10 +9,10 @@ TabsBar::TabsBar(anex::modules::gl::GLWindow &window,
 				             const glm::vec3 &scale,
 				             const glm::vec4 &color,
 										 fonts::freetype::FreetypeFont& font,
-										 const float &width,
-										 const float &height,
+										 float width,
+										 float height,
 				             const anex::modules::gl::shaders::RuntimeConstants &constants,
-                     const std::string &name):
+                     std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -44,7 +44,7 @@ TabsBar::TabsBar(anex::modules::gl::GLWindow &window,
   setSize();
   addToBVH = false;
 };
-void TabsBar::addTab(const std::string &name, const TabClickHandler &handler, const bool &active)
+void TabsBar::addTab(std::string_view name, const TabClickHandler &handler, bool active)
 {
 	auto &vao = (VAO &)*this;
 	float sizeXTotal = 0;
@@ -114,14 +114,14 @@ Tab::Tab(GLWindow &window,
 										 const glm::vec3 &rotation,
 										 const glm::vec3 &scale,
 										 const glm::vec4 &color,
-										 const std::string &text,
+										 const std::string_view text,
 										 fonts::freetype::FreetypeFont &font,
-										 const float& height,
+										 float height,
 										 const TabsBar::TabClickHandler &handler,
-										 const bool &active,
+										 bool active,
 										 TabsBar &tabsBar,
 										 const shaders::RuntimeConstants &constants,
-                     const std::string &name):
+                     std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -177,7 +177,7 @@ Tab::Tab(GLWindow &window,
 			setColor(this->active ? this->activeColor : inactiveColor);
 		}
 	});
-	mousePressID = addMousePressHandler(0, [&](auto &pressed)mutable
+	mousePressID = addMousePressHandler(0, [&](auto pressed)mutable
 	{
 		if (!pressed && !this->active)
   	{

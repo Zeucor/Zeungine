@@ -65,13 +65,13 @@ glm::vec3 BVH::unProject(const glm::vec3 &win, const glm::mat4 &inverseProjectio
 	obj /= obj.w;  // Perform perspective divide
 	return glm::vec3(obj);
 };
-Ray BVH::mouseCoordToRay(const uint32_t &windowHeight,
+Ray BVH::mouseCoordToRay(uint32_t windowHeight,
                          glm::vec2 screenCoord,
                          const glm::vec4 &viewport,
                          const glm::mat4 &projection,
                          const glm::mat4 &view,
-                         const float &nearPlane,
-                         const float &farPlane)
+                         float nearPlane,
+                         float farPlane)
 {
 	glm::mat4 inverseProjectionView = glm::inverse(projection * view);
 	glm::vec3 nearPoint = unProject(glm::vec3(screenCoord, 0.0), inverseProjectionView, viewport);

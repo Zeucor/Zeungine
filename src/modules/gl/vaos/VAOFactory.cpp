@@ -24,7 +24,7 @@ VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Lighting", false},
 	{"LightSpaceMatrix", false}
 };
-void VAOFactory::generateVAO(const RuntimeConstants &constants, VAO& vao, const uint32_t &elementCount)
+void VAOFactory::generateVAO(const RuntimeConstants &constants, VAO& vao, uint32_t elementCount)
 {
 	vao.window.glContext->GenVertexArrays(1, &vao.vao);
 	GLcheck(vao.window, "glGenVertexArrays");
@@ -77,7 +77,7 @@ size_t VAOFactory::getStride(const RuntimeConstants &constants)
   };
   return stride;
 };
-size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::string_view &offsetConstant)
+size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::string_view offsetConstant)
 {
 	size_t stride = 0;
 	for (auto &constant: constants)
@@ -91,7 +91,7 @@ size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::strin
 	};
 	throw std::runtime_error("No such constant");
 };
-bool VAOFactory::isVAOConstant(const std::string_view &constant)
+bool VAOFactory::isVAOConstant(const std::string_view constant)
 {
   return VAOConstants[constant];
 }

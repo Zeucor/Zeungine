@@ -87,7 +87,7 @@ namespace anex::strings
 			auto nextIterator = (*this) + 1;
 			return nextIterator.index < string.size();
 		};
-		[[nodiscard]] uint32_t codepointIndexFromByteIndex(const uint32_t& byteIndex) const
+		[[nodiscard]] uint32_t codepointIndexFromByteIndex(uint32_t byteIndex) const
 		{
 			auto stringSize = string.size();
 			auto stringData = string.data();

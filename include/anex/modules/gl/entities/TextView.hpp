@@ -36,19 +36,19 @@ namespace anex::modules::gl::entities
 										  const glm::vec3 &position,
 										  const glm::vec3 &rotation,
 										  const glm::vec3 &scale,
-										  const std::string &text,
+										  const std::string_view text,
 										  const glm::vec2 &size,
 										  fonts::freetype::FreetypeFont &font,
-										  const float &fontSize,
-										  const bool &textSizeIsNDC = true,
+										  float fontSize,
+										  bool textSizeIsNDC = true,
 										  const RepositionHandler &repositionHandler = {},
 										  const ResizeHandler &resizeHandler = {},
 										  const ReFontSizeHandler &reFontSizeHandler = {},
-										  const std::string &name = "");
+										  std::string_view name = "");
 		void update() override;
 		void forceUpdate();
 		void preRender() override;
 		void setSize(const glm::vec2 &size);
-		void updateText(const std::string &text);
+		void updateText(const std::string_view text);
   };
 }

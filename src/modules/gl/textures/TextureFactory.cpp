@@ -41,7 +41,7 @@ void TextureFactory::initTexture(Texture &texture, const void *data)
   midInitTexture(texture, imagePairs);
   postInitTexture(texture);
 };
-void TextureFactory::initTexture(Texture &texture, const std::string_view &path)
+void TextureFactory::initTexture(Texture &texture, const std::string_view path)
 {
   preInitTexture(texture);
   auto imagePair = images::ImageLoader::load(path);

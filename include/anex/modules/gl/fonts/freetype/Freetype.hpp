@@ -18,7 +18,7 @@ namespace anex::modules::gl::fonts::freetype
 		glm::ivec2 size;
 		glm::ivec2 bearing;
 		unsigned int advance;
-		FreetypeCharacter(GLWindow &window, const FreetypeFont &freeTypeFont, const float &codepoint, const float &fontSize);
+		FreetypeCharacter(GLWindow &window, const FreetypeFont &freeTypeFont, float codepoint, float fontSize);
 	};
 	struct FreetypeFont
   {
@@ -29,16 +29,16 @@ namespace anex::modules::gl::fonts::freetype
 		std::unordered_map<float, std::unordered_map<float, FreetypeCharacter>> codepointFontSizeCharacters;
 		GLWindow &window;
     FreetypeFont(GLWindow &window, File &fontFile);
-		const glm::vec2 stringSize(const std::string &string, const float &fontSize, float &lineHeight, const glm::vec2 &bounds);
-		void stringToTexture(const std::string &string,
+		const glm::vec2 stringSize(const std::string_view string, float fontSize, float &lineHeight, const glm::vec2 &bounds);
+		void stringToTexture(const std::string_view string,
 												 const glm::vec4 &color,
-												 const float &fontSize,
+												 float fontSize,
 												 float &lineHeight,
 												 const glm::vec2 &textureSize,
 												 std::shared_ptr<textures::Texture> &texturePointer,
 												 const int64_t &cursorIndex,
 												 glm::vec3 &cursorPosition);
-		FreetypeCharacter &getCharacter(const float &codepoint, const float &fontSize);
+		FreetypeCharacter &getCharacter(float codepoint, float fontSize);
 		static void FT_PRINT_AND_THROW_ERROR(const FT_Error &error);
   };
 }

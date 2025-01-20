@@ -7,7 +7,7 @@
 #include <anex/modules/gl/textures/FramebufferFactory.hpp>
 #include <anex/modules/gl/vaos/VAO.hpp>
 using namespace anex::modules::gl;
-GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const float &fov, textures::Framebuffer *framebufferPointer):
+GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, float fov, textures::Framebuffer *framebufferPointer):
 	IScene(window),
 	view(cameraPosition, cameraDirection),
 	projection((GLWindow &)window, fov),
@@ -222,7 +222,7 @@ void GLScene::hookMouseEvents()
 {
 	for (unsigned int button = GLWindow::MinMouseButton; button <= GLWindow::MaxMouseButton; ++button)
 	{
-		mousePressIDs[button] = window.addMousePressHandler(button, [&, button](auto &pressed)
+		mousePressIDs[button] = window.addMousePressHandler(button, [&, button](auto pressed)
 		{
 			auto &screenCoord = ((GLWindow &)window).mouseCoords;
 			auto ray = bvh.mouseCoordToRay(window.windowHeight, screenCoord, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);

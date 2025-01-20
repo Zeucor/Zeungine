@@ -9,5 +9,5 @@
 namespace anex::modules::gl
 {
 	struct GLWindow;
-	const bool GLcheck(GLWindow &window, const char* fn, const bool& egl = false);
+	const bool GLcheck(GLWindow &window, const char* fn, const bool egl = false);
 }

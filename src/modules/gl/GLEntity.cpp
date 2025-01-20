@@ -3,14 +3,14 @@
 using namespace anex::modules::gl;
 GLEntity::GLEntity(anex::IWindow &window,
 									 const shaders::RuntimeConstants &constants,
-									 const uint32_t &indiceCount,
+									 uint32_t indiceCount,
 						 			 const std::vector<uint32_t> &indices,
-									 const uint32_t &elementCount,
+									 uint32_t elementCount,
 						 			 const std::vector<glm::vec3> &positions,
 									 const glm::vec3 &position,
 									 const glm::vec3 &rotation,
 									 const glm::vec3 &scale,
-									 const std::string &name):
+									 std::string_view name):
 	IEntity(window),
 	VAO((GLWindow &)window, constants, indiceCount, elementCount),
 	indices(indices),
@@ -156,7 +156,7 @@ void GLEntity::callMouseMoveHandler(const glm::vec2 &coords)
 		handler(coords);
 	}
 };
-void GLEntity::callMouseHoverHandler(const bool &hovered)
+void GLEntity::callMouseHoverHandler(bool hovered)
 {
 	auto& handlersMap = mouseHoverHandlers.second;
 	std::vector<MouseHoverHandler> handlersCopy;

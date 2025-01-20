@@ -2,7 +2,7 @@
 #include <anex/modules/gl/vaos/VAO.hpp>
 #include <anex/modules/gl/vaos/VAOFactory.hpp>
 using namespace anex::modules::gl::vaos;
-VAO::VAO(GLWindow &window, const RuntimeConstants &constants, const uint32_t &indiceCount, const uint32_t &elementCount):
+VAO::VAO(GLWindow &window, const RuntimeConstants &constants, uint32_t indiceCount, uint32_t elementCount):
   window(window),
   constants(constants),
   indiceCount(indiceCount),
@@ -28,7 +28,7 @@ void VAO::updateIndices(const std::vector<uint32_t> &indices) const
   GLcheck(window, "glBindVertexArray");
 };
 template<typename T>
-void VAO::updateElements(const std::string_view &constant, const std::vector<T> &elements) const
+void VAO::updateElements(const std::string_view constant, const std::vector<T> &elements) const
 {
   window.glContext->BindVertexArray(vao);
   GLcheck(window, "glBindVertexArray");
@@ -46,9 +46,9 @@ void VAO::updateElements(const std::string_view &constant, const std::vector<T> 
   window.glContext->BindVertexArray(0);
   GLcheck(window, "glBindVertexArray");
 };
-template void VAO::updateElements<glm::vec2>(const std::string_view &, const std::vector<glm::vec2> &) const;
-template void VAO::updateElements<glm::vec3>(const std::string_view &, const std::vector<glm::vec3> &) const;
-template void VAO::updateElements<glm::vec4>(const std::string_view &, const std::vector<glm::vec4> &) const;
+template void VAO::updateElements<glm::vec2>(const std::string_view , const std::vector<glm::vec2> &) const;
+template void VAO::updateElements<glm::vec3>(const std::string_view , const std::vector<glm::vec3> &) const;
+template void VAO::updateElements<glm::vec4>(const std::string_view , const std::vector<glm::vec4> &) const;
 void VAO::vaoDraw() const
 {
   window.glContext->BindVertexArray(vao);

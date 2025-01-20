@@ -9,7 +9,7 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
              const glm::vec2 &size,
              const glm::vec4 &color,
              const anex::modules::gl::shaders::RuntimeConstants &constants,
-             const std::string &name):
+             std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -47,7 +47,7 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
              const glm::vec2 &size,
              textures::Texture &texture,
              const anex::modules::gl::shaders::RuntimeConstants &constants,
-             const std::string &name):
+             std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({

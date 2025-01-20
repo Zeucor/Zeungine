@@ -23,8 +23,8 @@ namespace anex::modules::gl::entities
 								 const glm::vec4 &color,
 								 fonts::freetype::FreetypeFont &font,
 								 const shaders::RuntimeConstants &constants = {},
-								 const std::string &name = "");
-    void addOption(const std::string &name, const OptionPressHandler &handler);
+								 std::string_view name = "");
+    void addOption(std::string_view name, const OptionPressHandler &handler);
 		void preRender() override;
 		void setColor(const glm::vec4 &color);
 		void setSize(const glm::vec2 &size);
@@ -47,12 +47,12 @@ namespace anex::modules::gl::entities
 								 const glm::vec3 &rotation,
 								 const glm::vec3 &scale,
 								 const glm::vec4 &color,
-								 const std::string &text,
+								 std::string_view text,
 								 const DropdownMenu::OptionPressHandler &handler,
 								 fonts::freetype::FreetypeFont &font,
 								 const shaders::RuntimeConstants &constants = {},
-								 const std::string &name = "");
-		~DropdownItem();
+								 std::string_view name = "");
+		~DropdownItem() override;
 		void preRender() override;
 		void setColor(const glm::vec4 &color);
 		void setSize(const glm::vec2 &size);

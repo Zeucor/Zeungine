@@ -52,21 +52,21 @@ namespace anex::modules::gl
 		float dpiScale = 1.0f;
 		glm::vec2 oldXY;
 		GLWindow(const char *title,
-						 const float &windowWidth,
-						 const float &windowHeight,
-						 const float &windowX,
-						 const float &windowY,
-						 const bool &borderless = false,
-						 const uint32_t &framerate = 60);
+						 float windowWidth,
+						 float windowHeight,
+						 float windowX,
+						 float windowY,
+						 bool borderless = false,
+						 uint32_t framerate = 60);
 		GLWindow(GLWindow &parentWindow,
 						 GLScene &parentScene,
 						 const char *childTitle,
-						 const float &childWindowWidth,
-						 const float &childWindowHeight,
-						 const float &childWindowX,
-						 const float &childWindowY,
-						 const bool &NDCFramebufferPlane = false,
-						 const uint32_t &framerate = 60);
+						 float childWindowWidth,
+						 float childWindowHeight,
+						 float childWindowX,
+						 float childWindowY,
+						 bool NDCFramebufferPlane = false,
+						 uint32_t framerate = 60);
 		~GLWindow() override;
 		void startWindow() override;
 		void renderInit();
@@ -83,15 +83,15 @@ namespace anex::modules::gl
 		void drawCircle(int x, int y, int radius, uint32_t color) override;
 		void drawText(int x, int y, const char* text, int scale, uint32_t color) override;
 		void warpPointer(const glm::vec2 &coords) override;
-		void setXY(const float &x, const float &y) override;
-		void setWidthHeight(const float &width, const float &height) override;
+		void setXY(float x, float y) override;
+		void setWidthHeight(float width, float height) override;
 		IWindow &createChildWindow(const char *title,
 															 IScene &scene,
-															 const float &windowWidth,
-															 const float &windowHeight,
-															 const float &windowX,
-															 const float &windowY,
-															 const bool &NDCFramebufferPlane) override;
+															 float windowWidth,
+															 float windowHeight,
+															 float windowX,
+															 float windowY,
+															 bool NDCFramebufferPlane) override;
 	};
 	void computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals);
 }

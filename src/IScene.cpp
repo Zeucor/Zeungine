@@ -6,7 +6,7 @@ IScene::IScene(IWindow& window):
 	window(window)
 {
 };
-size_t IScene::addEntity(const std::shared_ptr<IEntity>& entity, const bool &callOnEntityAdded)
+size_t IScene::addEntity(const std::shared_ptr<IEntity>& entity, bool callOnEntityAdded)
 {
 	auto id = ++entitiesCount;
 	entity->ID = id;

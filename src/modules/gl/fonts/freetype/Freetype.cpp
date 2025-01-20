@@ -47,7 +47,7 @@ void FreetypeFont::FT_PRINT_AND_THROW_ERROR(const FT_Error &error)
 		throw std::runtime_error(errorString);
 	}
 };
-FreetypeCharacter::FreetypeCharacter(GLWindow &window, const FreetypeFont &freeTypeFont, const float &codepoint, const float &fontSize)
+FreetypeCharacter::FreetypeCharacter(GLWindow &window, const FreetypeFont &freeTypeFont, float codepoint, float fontSize)
 {
 	auto &face = *freeTypeFont.facePointer.get();
 	glyphIndex = FT_Get_Char_Index(face, codepoint);
@@ -98,7 +98,7 @@ FreetypeFont::FreetypeFont(GLWindow &window, File &fontFile):
 	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(*actualFacePointer, FT_ENCODING_UNICODE));
 };
 float textureScale = 1.f;
-const glm::vec2 FreetypeFont::stringSize(const std::string &string, const float &fontSize, float &lineHeight, const glm::vec2 &bounds)
+const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fontSize, float &lineHeight, const glm::vec2 &bounds)
 {
 	strings::Utf8Iterator iterator(string, 0);
 	const unsigned long &stringSize = string.size();
@@ -162,9 +162,9 @@ const glm::vec2 FreetypeFont::stringSize(const std::string &string, const float 
 	size.y = currentPosition.y;
 	return size;
 };
-void FreetypeFont::stringToTexture(const std::string &string,
+void FreetypeFont::stringToTexture(const std::string_view string,
 																   const glm::vec4 &color,
-																   const float &fontSize,
+																   float fontSize,
 																   float &lineHeight,
 																   const glm::vec2 &textureSize,
 																   std::shared_ptr<textures::Texture> &texturePointer,
@@ -269,7 +269,7 @@ void FreetypeFont::stringToTexture(const std::string &string,
 	framebuffer.unbind();
 	return;
 };
-FreetypeCharacter &FreetypeFont::getCharacter(const float &codepoint, const float &fontSize)
+FreetypeCharacter &FreetypeFont::getCharacter(float codepoint, float fontSize)
 {
 	auto iter = codepointFontSizeCharacters[codepoint].insert({fontSize, {window, *this, codepoint, fontSize}});
 	return iter.first->second;

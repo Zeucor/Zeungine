@@ -36,7 +36,7 @@ namespace anex::modules::gl::textures
     Type type;
     FilterType filterType;
     explicit Texture(GLWindow &window, const glm::ivec4 &size, const void *data = 0, const Format &format = RGBA8, const Type &type = UnsignedByte, const FilterType &filterType = Linear);
-		explicit Texture(GLWindow &window, const glm::ivec4 &size, const std::string_view &path = "", const Format &format = RGBA8, const Type &type = UnsignedByte, const FilterType &filterType = Linear);
+		explicit Texture(GLWindow &window, const glm::ivec4 &size, const std::string_view path = "", const Format &format = RGBA8, const Type &type = UnsignedByte, const FilterType &filterType = Linear);
 		explicit Texture(GLWindow &window, const glm::ivec4 &size, const std::vector<std::string_view> &paths = {}, const Format &format = RGBA8, const Type &type = UnsignedByte, const FilterType &filterType = Linear);
 		~Texture();
 		void bind() const;

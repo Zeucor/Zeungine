@@ -44,17 +44,17 @@ namespace anex::modules::gl::entities
 					const glm::vec3& scale,
 					const glm::vec4& backgroundColor,
 					fonts::freetype::FreetypeFont& font,
-          const float& width,
-					const float& height,
+          float width,
+					float height,
           const std::string& placeholderText,
-          const float &padding = 8,
+          float padding = 8,
 					const shaders::RuntimeConstants& constants = {},
-					const std::string& name = "");
+					const std::string_view name = "");
 		~Input();
 		void preRender() override;
 		void setColor(const glm::vec4& color);
 		void setSize(const glm::vec2& size);
 		void showTextView(const std::shared_ptr<TextView>& showTextView);
-		char getShiftedChar(const char &key, const bool &shiftPressed);
+		char getShiftedChar(const char &key, bool shiftPressed);
 	};
 }

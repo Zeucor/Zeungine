@@ -26,7 +26,7 @@ namespace anex::modules::gl::entities
 					const glm::vec2 &size,
 					const glm::vec4 &color,
 					const shaders::RuntimeConstants &constants = {},
-					const std::string &name = "");
+					std::string_view name = "");
 		Plane(GLWindow &window,
 					GLScene &scene,
 					const glm::vec3 &position,
@@ -35,7 +35,7 @@ namespace anex::modules::gl::entities
 					const glm::vec2 &size,
 					textures::Texture &texture,
 					const shaders::RuntimeConstants &constants = {},
-					const std::string &name = "");
+					std::string_view name = "");
 		void preRender() override;
 		void setColor(const glm::vec4 &color);
 		void setSize(const glm::vec2 &size);

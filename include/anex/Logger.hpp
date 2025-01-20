@@ -15,7 +15,7 @@ namespace anex
 			Error
 		};
 		template<typename... Args>
-		static void print(const LogType &logType, Args... args)
+		static void print(LogType logType, Args... args)
 		{
 			auto logTypeIter = logTypeMap.find(logType);
 			if (logTypeIter == logTypeMap.end())

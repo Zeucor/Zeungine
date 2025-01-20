@@ -2,12 +2,12 @@
 #include <fenster.hpp>
 using namespace anex::modules::fenster;
 FensterWindow::FensterWindow(const char* title,
-                             const float &windowWidth,
-                             const float &windowHeight,
-                             const float &windowX,
-                             const float &windowY,
-                             const bool &borderless,
-                             const uint32_t &framerate):
+                             float windowWidth,
+                             float windowHeight,
+                             float windowX,
+                             float windowY,
+                             bool borderless,
+                             uint32_t framerate):
 	IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
 	buf((uint32_t*)malloc(windowWidth * windowHeight * sizeof(uint32_t)), free),
 	f(new struct fenster({title, (int)windowWidth, (int)windowHeight, buf.get()}))

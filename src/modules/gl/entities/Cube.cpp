@@ -8,7 +8,7 @@ Cube::Cube(anex::modules::gl::GLWindow &window,
 					 const glm::vec3 &scale,
 					 const glm::vec3 &size,
 					 const anex::modules::gl::shaders::RuntimeConstants &constants,
-					 const std::string &name):
+					 std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({

@@ -2,12 +2,12 @@
 #include <anex/IWindow.hpp>
 #include <anex/modules/gl/GLWindow.hpp>
 using namespace anex;
-IWindow::IWindow(const float& windowWidth,
-                 const float& windowHeight,
-                 const float& windowX,
-                 const float& windowY,
-                 const bool &borderless,
-                 const uint32_t &framerate):
+IWindow::IWindow(float windowWidth,
+                 float windowHeight,
+                 float windowX,
+                 float windowY,
+                 bool borderless,
+                 uint32_t framerate):
   windowWidth(windowWidth),
   windowHeight(windowHeight),
   windowX(windowX),
@@ -124,7 +124,7 @@ void IWindow::removeAnyKeyPressHandler(EventIdentifier& id)
   handlers.erase(handlerIter);
   id = 0;
 };
-void IWindow::callAnyKeyPressHandler(const Key &key, const bool &pressed)
+void IWindow::callAnyKeyPressHandler(const Key &key, bool pressed)
 {
   auto& handlersMap = anyKeyPressHandlers.second;
   std::vector<AnyKeyPressHandler> handlersCopy;
@@ -245,15 +245,15 @@ void IWindow::minimize(){};
 void IWindow::maximize(){};
 void IWindow::restore(){};
 void IWindow::warpPointer(const glm::vec2 &coords){};
-void IWindow::setXY(const float &x, const float &y){};
-void IWindow::setWidthHeight(const float &width, const float &height){};
+void IWindow::setXY(float x, float y){};
+void IWindow::setWidthHeight(float width, float height){};
 IWindow &IWindow::createChildWindow(const char *title,
                                     IScene &scene,
-                                    const float &windowWidth,
-                                    const float &windowHeight,
-                                    const float &windowX,
-                                    const float &windowY,
-                                    const bool &NDCFramebufferPlane)
+                                    float windowWidth,
+                                    float windowHeight,
+                                    float windowX,
+                                    float windowY,
+                                    bool NDCFramebufferPlane)
 {
   throw std::runtime_error("IWindow::createChildWindow() not implemented");
 };

@@ -1095,7 +1095,7 @@ bool ShaderFactory::compileProgram(Shader &shader, const Shader::ShaderMap& shad
   return checkCompileErrors(shader, program, false, "Program");
 };
 
-const bool ShaderFactory::checkCompileErrors(Shader &shader, const GLuint& id, const bool& isShader, const char* shaderType)
+const bool ShaderFactory::checkCompileErrors(Shader &shader, const GLuint& id, bool isShader, const char* shaderType)
 {
   GLint success = 0;
   if (isShader)
@@ -1134,8 +1134,8 @@ void ShaderFactory::deleteProgram(Shader& shader)
   shader.window.glContext->DeleteProgram(shader.program);
 };
 
-uint32_t ShaderFactory::addHook(const Shader::ShaderType& shaderType, const std::string_view& hookName,
-                                const std::string_view& runtimeConstant, const Shader::ShaderHook& hook)
+uint32_t ShaderFactory::addHook(const Shader::ShaderType& shaderType, const std::string_view hookName,
+                                const std::string_view runtimeConstant, const Shader::ShaderHook& hook)
 {
   auto id = ++hooksCount;
   hooks[shaderType][hookName][runtimeConstant].emplace(id, hook);
@@ -1143,7 +1143,7 @@ uint32_t ShaderFactory::addHook(const Shader::ShaderType& shaderType, const std:
   return id;
 };
 
-void ShaderFactory::deleteHook(const uint32_t& id)
+void ShaderFactory::deleteHook(uint32_t id)
 {
   auto infoIter = shaderHookInfos.find(id);
   if (infoIter == shaderHookInfos.end())

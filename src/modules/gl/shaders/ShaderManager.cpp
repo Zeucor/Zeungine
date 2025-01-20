@@ -2,7 +2,7 @@
 #include <anex/modules/gl/shaders/ShaderFactory.hpp>
 #include <anex/crypto/vector.hpp>
 using namespace anex::modules::gl::shaders;
-Shader& ShaderManager::getShaderByID(GLWindow &window, const uint32_t &id)
+Shader& ShaderManager::getShaderByID(GLWindow &window, uint32_t id)
 {
   auto shaderIter = window.shaderContext->shaders.find(id);
   if (shaderIter == window.shaderContext->shaders.end())

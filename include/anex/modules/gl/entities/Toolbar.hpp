@@ -70,9 +70,9 @@ namespace anex::modules::gl::entities
 				const glm::vec3 &rotation,
 				const glm::vec3 &scale,
 				const glm::vec4 &color,
-				const float &height,
+				float height,
 				fonts::freetype::FreetypeFont &font,
-				const std::string &name = "");
+				std::string_view name = "");
 		~Toolbar();
     void preRender() override;
 		void setSize(const glm::vec2 &newSize);

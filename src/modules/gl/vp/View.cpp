@@ -12,7 +12,7 @@ void View::update()
 {
 	matrix = glm::lookAt(position, position + direction, glm::vec3{0, 1, 0});
 };
-void View::addPhiTheta(const float &addPhi, const float &addTheta)
+void View::addPhiTheta(float addPhi, float addTheta)
 {
 	phi += addPhi;
 	theta += addTheta;

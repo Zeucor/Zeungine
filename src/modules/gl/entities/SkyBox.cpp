@@ -4,7 +4,7 @@ using namespace anex::modules::gl::entities;
 SkyBox::SkyBox(GLWindow &window,
 							 GLScene &scene,
 							 const std::vector<std::string_view> &texturePaths,
-							 const std::string &name):
+							 std::string_view name):
 	GLEntity(window,
 		{
 			{

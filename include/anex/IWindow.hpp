@@ -20,10 +20,10 @@ namespace anex
 		using Key = uint32_t;
 		using Button = uint32_t;
 		using EventIdentifier = uint32_t;
-		using KeyPressHandler = std::function<void(const bool &)>;
+		using KeyPressHandler = std::function<void(bool )>;
 		using KeyUpdateHandler = std::function<void()>;
-		using AnyKeyPressHandler = std::function<void(const Key &, const bool &)>;
-		using MousePressHandler = std::function<void(const bool &)>;
+		using AnyKeyPressHandler = std::function<void(const Key &, bool )>;
+		using MousePressHandler = std::function<void(bool )>;
 		using MouseMoveHandler = std::function<void(const glm::vec2 &)>;
 		std::unordered_map<Key, int> keys;
 		std::unordered_map<Button, int> buttons;
@@ -44,12 +44,12 @@ namespace anex
 		bool focused = false;
 		using OnEntityAddedFunction = std::function<void(const std::shared_ptr<IEntity> &)>;
 		OnEntityAddedFunction onEntityAdded;
-		IWindow(const float &windowWidth,
-						const float &windowHeight,
-						const float &windowX,
-						const float &windowY,
-						const bool &borderless,
-						const uint32_t &framerate);
+		IWindow(float windowWidth,
+						float windowHeight,
+						float windowX,
+						float windowY,
+						bool borderless,
+						uint32_t framerate);
 		virtual ~IWindow() = default;
 		void run();
 		void awaitWindowThread() const;
@@ -67,7 +67,7 @@ namespace anex
 		void removeAnyKeyPressHandler(EventIdentifier &id);
 		void callKeyPressHandler(const Key &key, const int &pressed);
 		void callKeyUpdateHandler(const Key &key);
-		void callAnyKeyPressHandler(const Key &key, const bool &pressed);
+		void callAnyKeyPressHandler(const Key &key, bool pressed);
 		// Mouse
 		virtual void updateMouse() = 0;
 		EventIdentifier addMousePressHandler(const Button &button, const MousePressHandler &callback);
@@ -91,14 +91,14 @@ namespace anex
 		virtual void drawCircle(int x, int y, int radius, uint32_t color) = 0;
 		virtual void drawText(int x, int y, const char* text, int scale, uint32_t color) = 0;
 		virtual void warpPointer(const glm::vec2 &coords);
-		virtual void setXY(const float &x, const float &y);
-		virtual void setWidthHeight(const float &width, const float &height);
+		virtual void setXY(float x, float y);
+		virtual void setWidthHeight(float width, float height);
 		virtual IWindow &createChildWindow(const char *title,
 																			 IScene &scene,
-																			 const float &windowWidth,
-																			 const float &windowHeight,
-																			 const float &windowX,
-																			 const float &windowY,
-																			 const bool &NDCFramebufferPlane);
+																			 float windowWidth,
+																			 float windowHeight,
+																			 float windowX,
+																			 float windowY,
+																			 bool NDCFramebufferPlane);
 	};
 }

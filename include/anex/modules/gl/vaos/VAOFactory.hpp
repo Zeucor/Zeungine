@@ -9,10 +9,10 @@ namespace anex::modules::gl::vaos
     using VAOConstantMap = std::unordered_map<std::string_view, bool>;
     static ConstantSizeMap constantSizes;
     static VAOConstantMap VAOConstants;
-    static void generateVAO(const RuntimeConstants &constants, VAO& vao, const uint32_t &elementCount);
+    static void generateVAO(const RuntimeConstants &constants, VAO& vao, uint32_t elementCount);
 		static size_t getStride(const RuntimeConstants &constants);
-		static size_t getOffset(const RuntimeConstants &constants, const std::string_view &offsetConstant);
-		static bool isVAOConstant(const std::string_view &constant);
+		static size_t getOffset(const RuntimeConstants &constants, const std::string_view offsetConstant);
+		static bool isVAOConstant(const std::string_view constant);
     static void destroyVAO(VAO &vao);
 	};
 }

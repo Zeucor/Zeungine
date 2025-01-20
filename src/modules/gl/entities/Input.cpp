@@ -9,12 +9,12 @@ Input::Input(GLWindow &window,
 						 const glm::vec3 &scale,
 						 const glm::vec4 &backgroundColor,
 						 fonts::freetype::FreetypeFont &font,
-             const float& width,
-						 const float& height,
+             float width,
+						 float height,
 						 const std::string& placeholderText,
-						 const float &padding,
+						 float padding,
 						 const shaders::RuntimeConstants &constants,
-             const std::string &name):
+             std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -80,7 +80,7 @@ Input::Input(GLWindow &window,
 		[&]
 		{
 			auto &glWindow = ((VAO&)*this).window;
-			return (this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2) / 1.f));
+			return this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2) / 1.f);
 		});
 	placeholderTextView->addToBVH = false;
 	auto textSize = font.stringSize(text, fontSize, LineHeight, {0, 0});
@@ -111,7 +111,7 @@ Input::Input(GLWindow &window,
 	    [&]
 	    {
 			auto &glWindow = ((VAO&)*this).window;
-			return (uint32_t)(this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2) / 1.f));
+			return this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2) / 1.f);
 	    }
     );
     textView->cursorIndex = 0;
@@ -139,7 +139,7 @@ Input::Input(GLWindow &window,
 			setColor(this->active ? this->activeColor : inactiveColor);
 		}
 	});
-	mousePressID = addMousePressHandler(0, [&](auto &pressed)mutable
+	mousePressID = addMousePressHandler(0, [&](auto pressed)mutable
 	{
 		if (!pressed && !this->active)
   		{
@@ -153,7 +153,7 @@ Input::Input(GLWindow &window,
 			activeInput = this;
 		}
 	});
-	anyKeyPressID = window.addAnyKeyPressHandler([&](auto &key, auto &pressed)
+	anyKeyPressID = window.addAnyKeyPressHandler([&](auto key, auto pressed)
 	{
 		if (!this->active)
 			return;
@@ -348,7 +348,7 @@ void Input::showTextView(const std::shared_ptr<TextView>& showTextView)
   activeTextView = showTextView;
   addChild(activeTextView);
 };
-char Input::getShiftedChar(const char &key, const bool &shiftPressed)
+char Input::getShiftedChar(const char &key, bool shiftPressed)
 {
 	static const std::unordered_map<char, char> shiftMap = {
 		{'1', '!'}, {'2', '@'}, {'3', '#'}, {'4', '$'}, {'5', '%'},

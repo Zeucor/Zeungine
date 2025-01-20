@@ -52,13 +52,13 @@ namespace anex::modules::gl::raytracing
     void buildBVH();
     void precomputeTriangles();
 		glm::vec3 unProject(const glm::vec3 &win, const glm::mat4 &inverseProjectionView, const glm::vec4 &viewport);
-    Ray mouseCoordToRay(const uint32_t &windowHeight,
+    Ray mouseCoordToRay(uint32_t windowHeight,
                         glm::vec2 screenCoord,
 												const glm::vec4 &viewport,
 												const glm::mat4 &projection,
 												const glm::mat4 &view,
-												const float &nearPlane,
-												const float &farPlane);
+												float nearPlane,
+												float farPlane);
 		size_t trace(Ray &ray);
 		size_t addTriangle(const Tri &tri);
 		void addEntity(GLEntity &entity);

@@ -10,7 +10,7 @@ static bool setFlipVertically = ([]()
   stbi_set_flip_vertically_on_load(true);
   return true;
 })();
-std::pair<glm::uvec2, std::shared_ptr<uint8_t>> ImageLoader::load(const std::string_view &path)
+std::pair<glm::uvec2, std::shared_ptr<uint8_t>> ImageLoader::load(std::string_view path)
 {
   int x, y, n;
   uint8_t *data = stbi_load(path.data(), &x, &y, &n, 4);
@@ -20,7 +20,7 @@ std::pair<glm::uvec2, std::shared_ptr<uint8_t>> ImageLoader::load(const std::str
   }
   return {{x,y}, {data, stbi_image_free}};
 };
-std::pair<glm::uvec2, std::shared_ptr<uint8_t>> ImageLoader::loadAndResize(const std::string_view &path, const glm::uvec2 &resize)
+std::pair<glm::uvec2, std::shared_ptr<uint8_t>> ImageLoader::loadAndResize(std::string_view path, const glm::uvec2 &resize)
 {
   auto imagePair = ImageLoader::load(path);
   auto imageBytesPointer = std::get<1>(imagePair).get();

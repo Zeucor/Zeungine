@@ -7,9 +7,9 @@ Toolbar::Toolbar(GLWindow &window,
                  const glm::vec3 &rotation,
                  const glm::vec3 &scale,
                  const glm::vec4 &color,
-                 const float &height,
+                 float height,
 								 fonts::freetype::FreetypeFont &font,
-								 const std::string &name):
+								 std::string_view name):
 	GLEntity(window, {
 			"Color", "Position",
 			"View", "Projection", "Model", "CameraPosition"
@@ -45,11 +45,11 @@ Toolbar::Toolbar(GLWindow &window,
   xTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), xString, xTextSize / 2.f, font, xFontSize);
   xButton->addChild(xTextView);
 	xTextView->addToBVH = false;
-	xButtonLeftMousePressID = xButton->addMousePressHandler(0, [&](auto &pressed)
+	xButtonLeftMousePressID = xButton->addMousePressHandler(0, [&](auto pressed)
 	{
 		window.close();
 	});
-	xButtonMouseHoverID = xButton->addMouseHoverHandler([&](auto &hovered)
+	xButtonMouseHoverID = xButton->addMouseHoverHandler([&](auto hovered)
 	{
 		if (hovered)
 		{
@@ -72,11 +72,11 @@ Toolbar::Toolbar(GLWindow &window,
 	maxTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), maxString, maxTextSize / 2.f, font, maxFontSize);
 	maxButton->addChild(maxTextView);
 	maxTextView->addToBVH = false;
-	maxButtonLeftMousePressID = maxButton->addMousePressHandler(0, [&](auto &pressed)
+	maxButtonLeftMousePressID = maxButton->addMousePressHandler(0, [&](auto pressed)
 	{
 		window.maximize();
 	});
-	maxButtonMouseHoverID = maxButton->addMouseHoverHandler([&](auto &hovered)
+	maxButtonMouseHoverID = maxButton->addMouseHoverHandler([&](auto hovered)
 	{
 		if (hovered)
 		{
@@ -99,11 +99,11 @@ Toolbar::Toolbar(GLWindow &window,
 	_TextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), _String, TextSize_ / 2.f, font, FontSize_);
 	_Button->addChild(_TextView);
 	_TextView->addToBVH = false;
-	_ButtonLeftMousePressID = _Button->addMousePressHandler(0, [&](auto &pressed)
+	_ButtonLeftMousePressID = _Button->addMousePressHandler(0, [&](auto pressed)
 	{
 		window.minimize();
 	});
-	_ButtonMouseHoverID = _Button->addMouseHoverHandler([&](auto &hovered)
+	_ButtonMouseHoverID = _Button->addMouseHoverHandler([&](auto hovered)
 	{
 		if (hovered)
 		{
@@ -135,7 +135,7 @@ Toolbar::Toolbar(GLWindow &window,
 	fileTextView->addToBVH = false;
 	file->addChild(fileTextView);
 	fileDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-file->size.x / 2, -file->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
-	filePressID = file->addMousePressHandler(0, [&](auto &pressed)
+	filePressID = file->addMousePressHandler(0, [&](auto pressed)
 	{
 		if (!pressed)
 		{
@@ -156,7 +156,7 @@ Toolbar::Toolbar(GLWindow &window,
 			}
 		}
 	});
-	fileHoverID = file->addMouseHoverHandler([&, toolbarOptionColor](auto &hovered)
+	fileHoverID = file->addMouseHoverHandler([&, toolbarOptionColor](auto hovered)
 	{
 		if (hovered)
 		{
@@ -220,7 +220,7 @@ Toolbar::Toolbar(GLWindow &window,
 	{
 
 	});
-	editPressID = edit->addMousePressHandler(0, [&](auto &pressed)
+	editPressID = edit->addMousePressHandler(0, [&](auto pressed)
 	{
 		if (!pressed)
 		{
@@ -241,7 +241,7 @@ Toolbar::Toolbar(GLWindow &window,
 			}
 		}
 	});
-	editHoverID = edit->addMouseHoverHandler([&, toolbarOptionColor](auto &hovered)
+	editHoverID = edit->addMouseHoverHandler([&, toolbarOptionColor](auto hovered)
 	{
 		if (hovered)
 		{
@@ -289,7 +289,7 @@ Toolbar::Toolbar(GLWindow &window,
 	{
 
 	});
-	helpPressID = help->addMousePressHandler(0, [&](auto &pressed)
+	helpPressID = help->addMousePressHandler(0, [&](auto pressed)
 	{
 		if (!pressed)
 		{
@@ -310,7 +310,7 @@ Toolbar::Toolbar(GLWindow &window,
 			}
 		}
 	});
-	helpHoverID = help->addMouseHoverHandler([&, toolbarOptionColor](auto &hovered)
+	helpHoverID = help->addMouseHoverHandler([&, toolbarOptionColor](auto hovered)
 	{
 		if (hovered)
 		{
@@ -326,7 +326,7 @@ Toolbar::Toolbar(GLWindow &window,
 		}
 	});
 	// Toolbar dragging
-	dragMousePressID = addMousePressHandler(0, [&](auto &pressed)
+	dragMousePressID = addMousePressHandler(0, [&](auto pressed)
 	{
 		if (pressed && !dragEnabled)
 		{
@@ -339,7 +339,7 @@ Toolbar::Toolbar(GLWindow &window,
 		}
 		dragEnabled = pressed;
 	});
-	globalDragMousePressID = window.addMousePressHandler(0, [&](auto &pressed)
+	globalDragMousePressID = window.addMousePressHandler(0, [&](auto pressed)
 	{
 		if (!pressed && dragEnabled)
 		{

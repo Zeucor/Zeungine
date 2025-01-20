@@ -9,11 +9,11 @@ Button::Button(GLWindow &window,
 										 const glm::vec3 &scale,
 										 const glm::vec4 &color,
               			 const glm::vec2& size,
-										 const std::string &text,
+										 const std::string_view text,
 										 fonts::freetype::FreetypeFont &font,
                			 const OnClickHandler &handler,
 										 const shaders::RuntimeConstants &constants,
-                     const std::string &name):
+                     std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -62,7 +62,7 @@ Button::Button(GLWindow &window,
 			setColor(color);
 		}
 	});
-	mousePressID = addMousePressHandler(0, [&](auto &pressed)
+	mousePressID = addMousePressHandler(0, [&](auto pressed)
 	{
 		if (pressed)
 			if (handler)

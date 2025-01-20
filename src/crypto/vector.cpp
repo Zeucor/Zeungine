@@ -1,5 +1,5 @@
 #include <anex/crypto/vector.hpp>
-std::size_t anex::crypto::combineHashes(const std::size_t &hash1, const std::size_t &hash2)
+std::size_t anex::crypto::combineHashes(size_t hash1, size_t hash2)
 {
 	return hash1 ^ (hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2)); // Knuth's hash combining
 };

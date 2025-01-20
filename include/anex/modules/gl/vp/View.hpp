@@ -14,7 +14,7 @@ namespace anex::modules::gl::vp
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, ViewResizeHandler>> viewResizeHandlers;
     View(const glm::vec3& position, const glm::vec3& direction);
     void update();
-		void addPhiTheta(const float &addPhi, const float &addTheta);
+		void addPhiTheta(float addPhi, float addTheta);
 		IWindow::EventIdentifier addResizeHandler(const ViewResizeHandler &callback);
 		void removeResizeHandler(IWindow::EventIdentifier &id);
 		void callResizeHandler(const glm::vec2 &newSize);

@@ -10,7 +10,7 @@ Texture::Texture(GLWindow &window, const glm::ivec4 &size, const void *data, con
 {
   TextureFactory::initTexture(*this, data);
 };
-Texture::Texture(GLWindow &window, const glm::ivec4 &size, const std::string_view &path, const Format &format, const Type &type, const FilterType &filterType):
+Texture::Texture(GLWindow &window, const glm::ivec4 &size, const std::string_view path, const Format &format, const Type &type, const FilterType &filterType):
   window(window),
   size(size),
   format(format),

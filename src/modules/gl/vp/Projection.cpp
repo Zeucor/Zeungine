@@ -1,7 +1,7 @@
 #include <anex/modules/gl/vp/Projection.hpp>
 #include <anex/modules/gl/GLWindow.hpp>
 using namespace anex::modules::gl::vp;
-Projection::Projection(GLWindow &window, const float &fov):
+Projection::Projection(GLWindow &window, float fov):
   window(window),
 	fov(fov),
   nearPlane(0.1f),

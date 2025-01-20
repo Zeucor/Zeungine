@@ -28,12 +28,12 @@ namespace anex::modules::gl::entities
 							const glm::vec3& scale,
 							const glm::vec4& color,
               const glm::vec2& size,
-							const std::string& text,
+							std::string_view text,
 							fonts::freetype::FreetypeFont& font,
 							const OnClickHandler& handler,
 							const shaders::RuntimeConstants& constants = {},
-							const std::string& name = "");
-		~Button();
+							std::string_view name = "");
+		~Button() override;
 		void preRender() override;
 		void setColor(const glm::vec4& color);
 		void setSize(const glm::vec2& size);

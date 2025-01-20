@@ -9,11 +9,11 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 				             const glm::vec3 &scale,
 				             const glm::vec4 &color,
 				             fonts::freetype::FreetypeFont &font,
-										 const std::string &title,
-										 const float &width,
-										 const float &height,
+										 const std::string_view title,
+										 float width,
+										 float height,
 				             const anex::modules::gl::shaders::RuntimeConstants &constants,
-                     const std::string &name):
+                     std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -68,7 +68,7 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
   setSize();
   addToBVH = false;
 };
-void PanelMenu::addItem(const std::string &name, GLEntity &entity)
+void PanelMenu::addItem(std::string_view name, GLEntity &entity)
 {
 	auto &vao = (VAO &)*this;
 	float sizeYTotal = 0;
@@ -155,13 +155,13 @@ PanelItem::PanelItem(GLWindow &window,
 										 const glm::vec3 &rotation,
 										 const glm::vec3 &scale,
 										 const glm::vec4 &color,
-										 const std::string &text,
+										 const std::string_view text,
 										 fonts::freetype::FreetypeFont &font,
                      GLEntity &entity,
-                     const float &panelWidth,
-                     const float &indent,
+                     float panelWidth,
+                     float indent,
 										 const shaders::RuntimeConstants &constants,
-                     const std::string &name):
+                     std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -226,7 +226,7 @@ PanelItem::PanelItem(GLWindow &window,
 			setColor(color);
 		}
 	});
-	mousePressID = addMousePressHandler(0, [&](auto &pressed)
+	mousePressID = addMousePressHandler(0, [&](auto pressed)
 	{
 		if (!pressed)
 			return;

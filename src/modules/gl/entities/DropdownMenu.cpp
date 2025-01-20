@@ -9,7 +9,7 @@ DropdownMenu::DropdownMenu(anex::modules::gl::GLWindow &window,
 							             const glm::vec4 &color,
                            fonts::freetype::FreetypeFont &font,
 							             const anex::modules::gl::shaders::RuntimeConstants &constants,
-							             const std::string &name):
+							             std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -37,7 +37,7 @@ DropdownMenu::DropdownMenu(anex::modules::gl::GLWindow &window,
 	setColor(color);
 	updateElements("Position", positions);
 };
-void DropdownMenu::addOption(const std::string &name, const OptionPressHandler &handler)
+void DropdownMenu::addOption(std::string_view name, const OptionPressHandler &handler)
 {
 	auto &vao = (VAO &)*this;
 	float sizeYTotal = 0;
@@ -92,11 +92,11 @@ DropdownItem::DropdownItem(GLWindow &window,
 													 const glm::vec3 &rotation,
 													 const glm::vec3 &scale,
 													 const glm::vec4 &color,
-													 const std::string &text,
+													 const std::string_view text,
 													 const DropdownMenu::OptionPressHandler &handler,
 													 fonts::freetype::FreetypeFont &font,
 													 const shaders::RuntimeConstants &constants,
-													 const std::string &name):
+													 std::string_view name):
 	anex::modules::gl::GLEntity(
 		window,
 		anex::mergeVectors<std::string_view>({
@@ -164,7 +164,7 @@ DropdownItem::DropdownItem(GLWindow &window,
 			setColor(color);
 		}
 	});
-	mousePressID = addMousePressHandler(0, [&](auto &pressed)
+	mousePressID = addMousePressHandler(0, [&](auto pressed)
 	{
 		if (!pressed)
 			this->handler();

@@ -17,12 +17,12 @@ extern "C" {
 #endif
 static bool setDPIAware = false;
 GLWindow::GLWindow(const char* title,
-									 const float& windowWidth,
-									 const float& windowHeight,
-									 const float& windowX,
-									 const float& windowY,
-									 const bool &borderless,
-									 const uint32_t& framerate):
+									 float windowWidth,
+									 float windowHeight,
+									 float windowX,
+									 float windowY,
+									 bool borderless,
+									 uint32_t framerate):
 	IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
 	title(title),
 	glContext(new GladGLContext),
@@ -35,12 +35,12 @@ GLWindow::GLWindow(const char* title,
 GLWindow::GLWindow(GLWindow &parentWindow,
 									 GLScene &parentScene,
 									 const char *childTitle,
-									 const float &childWindowWidth,
-									 const float &childWindowHeight,
-									 const float &childWindowX,
-									 const float &childWindowY,
-									 const bool &NDCFramebufferPlane,
-									 const uint32_t &framerate):
+									 float childWindowWidth,
+									 float childWindowHeight,
+									 float childWindowX,
+									 float childWindowY,
+									 bool NDCFramebufferPlane,
+									 uint32_t framerate):
 	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
 	title(childTitle),
 	isChildWindow(true),
@@ -638,7 +638,7 @@ void GLWindow::drawCircle(int x, int y, int radius, uint32_t color)
 void GLWindow::drawText(int x, int y, const char* text, int scale, uint32_t color)
 {
 };
-const bool anex::modules::gl::GLcheck(GLWindow &window, const char* fn, const bool& egl)
+const bool anex::modules::gl::GLcheck(GLWindow &window, const char* fn, const bool egl)
 {
 	while (true)
 	{
@@ -796,7 +796,7 @@ void GLWindow::warpPointer(const glm::vec2 &coords)
 	justWarpedPointer = true;
 #endif
 };
-void GLWindow::setXY(const float &x, const float &y)
+void GLWindow::setXY(float x, float y)
 {
 	windowX = x;
 	windowY = y;
@@ -816,7 +816,7 @@ void GLWindow::setXY(const float &x, const float &y)
 		flags);
 	// std::cout << "Setting Window X/Y to {" << windowX << ", " << windowY << "}" << std::endl;
 };
-void GLWindow::setWidthHeight(const float &width, const float &height)
+void GLWindow::setWidthHeight(float width, float height)
 {
 	windowWidth = width;
 	windowHeight = height;
@@ -845,11 +845,11 @@ void GLWindow::setWidthHeight(const float &width, const float &height)
 };
 anex::IWindow &GLWindow::createChildWindow(const char* title,
 																					 IScene &scene,
-																					 const float& windowWidth,
-																					 const float& windowHeight,
-																					 const float& windowX,
-																					 const float& windowY,
-																					 const bool &NDCFramebufferPlane)
+																					 float windowWidth,
+																					 float windowHeight,
+																					 float windowX,
+																					 float windowY,
+																					 bool NDCFramebufferPlane)
 {
 	childWindows.push_back(new GLWindow(*this, (GLScene &)scene, title, windowWidth, windowHeight, windowX, windowY, NDCFramebufferPlane));
 	return *childWindows.back();

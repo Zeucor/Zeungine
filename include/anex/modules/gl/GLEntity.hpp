@@ -22,20 +22,20 @@ namespace anex::modules::gl
 		std::unordered_map<IWindow::Button, int> buttons;
 		std::unordered_map<IWindow::Button, std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, IWindow::MousePressHandler>>> mousePressHandlers;
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, IWindow::MouseMoveHandler>> mouseMoveHandlers;
-		using MouseHoverHandler = std::function<void(const bool &)>;
+		using MouseHoverHandler = std::function<void(bool )>;
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		std::string name;
 		GLEntity(anex::IWindow &window,
 						 const shaders::RuntimeConstants &constants,
-						 const uint32_t &indiceCount,
+						 uint32_t indiceCount,
 						 const std::vector<uint32_t> &indices,
-						 const uint32_t &elementCount,
+						 uint32_t elementCount,
 						 const std::vector<glm::vec3> &positions,
 						 const glm::vec3 &position,
 						 const glm::vec3 &rotation,
 						 const glm::vec3 &scale,
-						 const std::string &name);
-		virtual void update();
+						 std::string_view name);
+		void update() override;
 		virtual void preRender();
     void render() override;
 		virtual void postRender();
@@ -50,6 +50,6 @@ namespace anex::modules::gl
 		void removeMouseHoverHandler(IWindow::EventIdentifier &id);
 		void callMousePressHandler(const IWindow::Button &button, const int &pressed);
 		void callMouseMoveHandler(const glm::vec2 &coords);
-		void callMouseHoverHandler(const bool &hovered);
+		void callMouseHoverHandler(bool hovered);
   };
 }
