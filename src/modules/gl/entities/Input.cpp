@@ -100,7 +100,7 @@ Input::Input(GLWindow &window,
 	    [&](auto &textSize)
 	    {
 			auto &glWindow = ((VAO&)*this).window;
-			return glm::vec3(textSize.x / 2 + NDCPadding / 2, -textSize.y / 2, 0.1f);
+			return glm::vec3(textSize.x / 2 + NDCPadding / 2, -NDCHeight / 2, 0.1f);
 	    },
 	    [&](auto &textViewSize)
 	    {
