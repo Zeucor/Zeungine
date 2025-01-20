@@ -39,10 +39,10 @@ namespace anex::modules::gl::entities
 		inline static Input *activeInput = 0;
 		Input(GLWindow& window,
 					GLScene& scene,
-					const glm::vec3& position,
-					const glm::vec3& rotation,
-					const glm::vec3& scale,
-					const glm::vec4& backgroundColor,
+					glm::vec3 position,
+					glm::vec3 rotation,
+					glm::vec3 scale,
+					glm::vec4 backgroundColor,
 					fonts::freetype::FreetypeFont& font,
           float width,
 					float height,
@@ -52,8 +52,8 @@ namespace anex::modules::gl::entities
 					const std::string_view name = "");
 		~Input();
 		void preRender() override;
-		void setColor(const glm::vec4& color);
-		void setSize(const glm::vec2& size);
+		void setColor(glm::vec4 color);
+		void setSize(glm::vec2  size);
 		void showTextView(const std::shared_ptr<TextView>& showTextView);
 		char getShiftedChar(const char &key, bool shiftPressed);
 	};

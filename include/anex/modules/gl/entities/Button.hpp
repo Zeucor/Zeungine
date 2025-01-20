@@ -23,11 +23,11 @@ namespace anex::modules::gl::entities
 		inline static size_t buttonsCount = 0;
 		Button(GLWindow& window,
 							GLScene& scene,
-							const glm::vec3& position,
-							const glm::vec3& rotation,
-							const glm::vec3& scale,
-							const glm::vec4& color,
-              const glm::vec2& size,
+							glm::vec3 position,
+							glm::vec3 rotation,
+							glm::vec3 scale,
+							glm::vec4 color,
+              glm::vec2  size,
 							std::string_view text,
 							fonts::freetype::FreetypeFont& font,
 							const OnClickHandler& handler,
@@ -35,7 +35,7 @@ namespace anex::modules::gl::entities
 							std::string_view name = "");
 		~Button() override;
 		void preRender() override;
-		void setColor(const glm::vec4& color);
-		void setSize(const glm::vec2& size);
+		void setColor(glm::vec4 color);
+		void setSize(glm::vec2  size);
 	};
 }

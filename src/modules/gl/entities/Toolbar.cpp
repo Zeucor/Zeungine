@@ -3,10 +3,10 @@
 using namespace anex::modules::gl::entities;
 Toolbar::Toolbar(GLWindow &window,
                 GLScene &scene,
-                 const glm::vec3 &position,
-                 const glm::vec3 &rotation,
-                 const glm::vec3 &scale,
-                 const glm::vec4 &color,
+                 glm::vec3 position,
+                 glm::vec3 rotation,
+                 glm::vec3 scale,
+                 glm::vec4 color,
                  float height,
 								 fonts::freetype::FreetypeFont &font,
 								 std::string_view name):
@@ -395,7 +395,7 @@ void Toolbar::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 };
-void Toolbar::setSize(const glm::vec2& newSize)
+void Toolbar::setSize(glm::vec2  newSize)
 {
 	// NDCHeight = newSize.y;
 	// positions = {

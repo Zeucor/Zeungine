@@ -17,17 +17,17 @@ namespace anex::modules::gl::entities
 		inline static size_t dropdownMenusCount = 0;
 		DropdownMenu(GLWindow &window,
 								 GLScene &scene,
-								 const glm::vec3 &position,
-								 const glm::vec3 &rotation,
-								 const glm::vec3 &scale,
-								 const glm::vec4 &color,
+								 glm::vec3 position,
+								 glm::vec3 rotation,
+								 glm::vec3 scale,
+								 glm::vec4 color,
 								 fonts::freetype::FreetypeFont &font,
 								 const shaders::RuntimeConstants &constants = {},
 								 std::string_view name = "");
     void addOption(std::string_view name, const OptionPressHandler &handler);
 		void preRender() override;
-		void setColor(const glm::vec4 &color);
-		void setSize(const glm::vec2 &size);
+		void setColor(glm::vec4 color);
+		void setSize(glm::vec2 size);
 	};
 	struct DropdownItem : GLEntity
 	{
@@ -43,10 +43,10 @@ namespace anex::modules::gl::entities
 		inline static size_t dropdownItemsCount = 0;
 		DropdownItem(GLWindow &window,
 								 GLScene &scene,
-								 const glm::vec3 &position,
-								 const glm::vec3 &rotation,
-								 const glm::vec3 &scale,
-								 const glm::vec4 &color,
+								 glm::vec3 position,
+								 glm::vec3 rotation,
+								 glm::vec3 scale,
+								 glm::vec4 color,
 								 std::string_view text,
 								 const DropdownMenu::OptionPressHandler &handler,
 								 fonts::freetype::FreetypeFont &font,
@@ -54,7 +54,7 @@ namespace anex::modules::gl::entities
 								 std::string_view name = "");
 		~DropdownItem() override;
 		void preRender() override;
-		void setColor(const glm::vec4 &color);
-		void setSize(const glm::vec2 &size);
+		void setColor(glm::vec4 color);
+		void setSize(glm::vec2 size);
 	};
 }

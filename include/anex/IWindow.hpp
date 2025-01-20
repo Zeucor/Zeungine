@@ -24,7 +24,7 @@ namespace anex
 		using KeyUpdateHandler = std::function<void()>;
 		using AnyKeyPressHandler = std::function<void(const Key &, bool )>;
 		using MousePressHandler = std::function<void(bool )>;
-		using MouseMoveHandler = std::function<void(const glm::vec2 &)>;
+		using MouseMoveHandler = std::function<void(glm::vec2 )>;
 		std::unordered_map<Key, int> keys;
 		std::unordered_map<Button, int> buttons;
 		std::unordered_map<Key, std::pair<EventIdentifier, std::map<EventIdentifier, KeyPressHandler>>> keyPressHandlers;
@@ -59,28 +59,28 @@ namespace anex
 		virtual void postRender();
 		// Keyboard
 		virtual void updateKeyboard() = 0;
-		EventIdentifier addKeyPressHandler(const Key &key, const KeyPressHandler &callback);
-		void removeKeyPressHandler(const Key &key, EventIdentifier &id);
-		EventIdentifier addKeyUpdateHandler(const Key &key, const KeyUpdateHandler &callback);
-		void removeKeyUpdateHandler(const Key &key, EventIdentifier &id);
+		EventIdentifier addKeyPressHandler(Key key, const KeyPressHandler &callback);
+		void removeKeyPressHandler(Key key, EventIdentifier &id);
+		EventIdentifier addKeyUpdateHandler(Key key, const KeyUpdateHandler &callback);
+		void removeKeyUpdateHandler(Key key, EventIdentifier &id);
 		EventIdentifier addAnyKeyPressHandler(const AnyKeyPressHandler &callback);
 		void removeAnyKeyPressHandler(EventIdentifier &id);
-		void callKeyPressHandler(const Key &key, const int &pressed);
-		void callKeyUpdateHandler(const Key &key);
-		void callAnyKeyPressHandler(const Key &key, bool pressed);
+		void callKeyPressHandler(Key key, int pressed);
+		void callKeyUpdateHandler(Key key);
+		void callAnyKeyPressHandler(Key key, bool pressed);
 		// Mouse
 		virtual void updateMouse() = 0;
-		EventIdentifier addMousePressHandler(const Button &button, const MousePressHandler &callback);
-		void removeMousePressHandler(const Button &button, EventIdentifier &id);
+		EventIdentifier addMousePressHandler(Button button, const MousePressHandler &callback);
+		void removeMousePressHandler(Button button, EventIdentifier &id);
 		EventIdentifier addMouseMoveHandler(const MouseMoveHandler &callback);
 		void removeMouseMoveHandler(EventIdentifier &id);
-		void callMousePressHandler(const Button &button, const int &pressed);
-		void callMouseMoveHandler(const glm::vec2 &coords);
+		void callMousePressHandler(Button button, int pressed);
+		void callMouseMoveHandler(glm::vec2 coords);
 		std::shared_ptr<IScene> setIScene(const std::shared_ptr<IScene> &scene);
 		void runOnThread(const Runnable &runnable);
 		void runRunnables();
 		void updateDeltaTime();
-		void resize(const glm::vec2 &newSize);
+		void resize(glm::vec2 newSize);
 		void registerOnEntityAddedFunction(const OnEntityAddedFunction &function);
 		virtual void close();
 		virtual void minimize();
@@ -90,7 +90,7 @@ namespace anex
 		virtual void drawRectangle(int x, int y, int w, int h, uint32_t color) = 0;
 		virtual void drawCircle(int x, int y, int radius, uint32_t color) = 0;
 		virtual void drawText(int x, int y, const char* text, int scale, uint32_t color) = 0;
-		virtual void warpPointer(const glm::vec2 &coords);
+		virtual void warpPointer(glm::vec2 coords);
 		virtual void setXY(float x, float y);
 		virtual void setWidthHeight(float width, float height);
 		virtual IWindow &createChildWindow(const char *title,

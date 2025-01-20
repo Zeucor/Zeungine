@@ -51,10 +51,10 @@ namespace anex::modules::gl::raytracing
 		void buildBBoxesAndCenters();
     void buildBVH();
     void precomputeTriangles();
-		glm::vec3 unProject(const glm::vec3 &win, const glm::mat4 &inverseProjectionView, const glm::vec4 &viewport);
+		glm::vec3 unProject(glm::vec3 win, const glm::mat4 &inverseProjectionView, glm::vec4 viewport);
     Ray mouseCoordToRay(uint32_t windowHeight,
                         glm::vec2 screenCoord,
-												const glm::vec4 &viewport,
+												glm::vec4 viewport,
 												const glm::mat4 &projection,
 												const glm::mat4 &view,
 												float nearPlane,

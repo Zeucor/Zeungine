@@ -48,4 +48,4 @@ void IScene::render()
 void IScene::entityPreRender(IEntity &entity){};
 void IScene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs){};
 void IScene::preRemoveEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs){};
-void IScene::resize(const glm::vec2 &newSize){};
+void IScene::resize(glm::vec2 newSize){};

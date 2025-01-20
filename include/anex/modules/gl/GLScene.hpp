@@ -27,13 +27,13 @@ namespace anex::modules::gl
 		std::array<IWindow::EventIdentifier, 7 - 0 + 1> mousePressIDs;
 		IWindow::EventIdentifier mouseMoveID;
 		GLEntity *currentHoveredEntity = 0;
-    GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, float fov, textures::Framebuffer *framebufferPointer = 0);
-    GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const glm::vec2 &orthoSize, textures::Framebuffer *framebufferPointer = 0);
+    GLScene(IWindow &window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer = 0);
+    GLScene(IWindow &window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer = 0);
 		~GLScene();
     void preRender() override;
 		void render() override;
 		void entityPreRender(IEntity &entity) override;
-		void resize(const glm::vec2 &newSize) override;
+		void resize(glm::vec2 newSize) override;
 		void postAddEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs) override;
 		void preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs) override;
 		GLEntity *findEntityByPrimID(const size_t &primID);

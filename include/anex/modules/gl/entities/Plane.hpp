@@ -20,24 +20,24 @@ namespace anex::modules::gl::entities
 		inline static size_t planesCount = 0;
 		Plane(GLWindow &window,
 					GLScene &scene,
-					const glm::vec3 &position,
-					const glm::vec3 &rotation,
-					const glm::vec3 &scale,
-					const glm::vec2 &size,
-					const glm::vec4 &color,
+					glm::vec3 position,
+					glm::vec3 rotation,
+					glm::vec3 scale,
+					glm::vec2 size,
+					glm::vec4 color,
 					const shaders::RuntimeConstants &constants = {},
 					std::string_view name = "");
 		Plane(GLWindow &window,
 					GLScene &scene,
-					const glm::vec3 &position,
-					const glm::vec3 &rotation,
-					const glm::vec3 &scale,
-					const glm::vec2 &size,
+					glm::vec3 position,
+					glm::vec3 rotation,
+					glm::vec3 scale,
+					glm::vec2 size,
 					textures::Texture &texture,
 					const shaders::RuntimeConstants &constants = {},
 					std::string_view name = "");
 		void preRender() override;
-		void setColor(const glm::vec4 &color);
-		void setSize(const glm::vec2 &size);
+		void setColor(glm::vec4 color);
+		void setSize(glm::vec2 size);
 	};
 }

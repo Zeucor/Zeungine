@@ -126,7 +126,7 @@ EditorScene::EditorScene(GLWindow& window):
 	addEntity(gameWindowBorder);
   setupGameWindow();
 	setupCodeWindow();
-	resizeID = view.addResizeHandler([&](auto& newSize)mutable
+	resizeID = view.addResizeHandler([&](auto newSize)mutable
 	{
 		toolbarHeight = newSize.y / 14;
 		bottomTabsHeight = newSize.y / 18;

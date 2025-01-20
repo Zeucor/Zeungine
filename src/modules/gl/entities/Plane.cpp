@@ -3,11 +3,11 @@
 using namespace anex::modules::gl::entities;
 Plane::Plane(anex::modules::gl::GLWindow &window,
              anex::modules::gl::GLScene &scene,
-             const glm::vec3 &position,
-             const glm::vec3 &rotation,
-             const glm::vec3 &scale,
-             const glm::vec2 &size,
-             const glm::vec4 &color,
+             glm::vec3 position,
+             glm::vec3 rotation,
+             glm::vec3 scale,
+             glm::vec2 size,
+             glm::vec4 color,
              const anex::modules::gl::shaders::RuntimeConstants &constants,
              std::string_view name):
 	anex::modules::gl::GLEntity(
@@ -41,10 +41,10 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
 };
 Plane::Plane(anex::modules::gl::GLWindow &window,
              anex::modules::gl::GLScene &scene,
-             const glm::vec3 &position,
-             const glm::vec3 &rotation,
-             const glm::vec3 &scale,
-             const glm::vec2 &size,
+             glm::vec3 position,
+             glm::vec3 rotation,
+             glm::vec3 scale,
+             glm::vec2 size,
              textures::Texture &texture,
              const anex::modules::gl::shaders::RuntimeConstants &constants,
              std::string_view name):
@@ -100,12 +100,12 @@ void Plane::preRender()
 	  shader.setTexture("Texture2D", *texturePointer, 0);
 	shader.unbind();
 };
-void Plane::setColor(const glm::vec4 &color)
+void Plane::setColor(glm::vec4 color)
 {
 	colors = {color, color, color, color};
 	updateElements("Color", colors);
 };
-void Plane::setSize(const glm::vec2 &size)
+void Plane::setSize(glm::vec2 size)
 {
 	positions = {
 		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm

@@ -4,10 +4,10 @@
 using namespace anex::modules::gl::entities;
 Dialog::Dialog(anex::modules::gl::GLWindow &window,
 			   anex::modules::gl::GLScene &scene,
-			   const glm::vec3 &position,
-			   const glm::vec3 &rotation,
-			   const glm::vec3 &scale,
-			   const glm::vec4 &color,
+			   glm::vec3 position,
+			   glm::vec3 rotation,
+			   glm::vec3 scale,
+			   glm::vec4 color,
 			   fonts::freetype::FreetypeFont &font,
 			   const std::string_view title,
 			   float width,
@@ -65,7 +65,7 @@ Dialog::Dialog(anex::modules::gl::GLWindow &window,
 		font,
 		fontSize,
     true,
-    [dialogSize](auto &titleSize)
+    [dialogSize](auto titleSize)
     {
       return glm::vec3(titleSize.x / 2 - dialogSize.x / 2, -titleSize.y / 2 + dialogSize.y / 2, 0.1);
 		},
@@ -95,12 +95,12 @@ void Dialog::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 };
-void Dialog::setColor(const glm::vec4 &color)
+void Dialog::setColor(glm::vec4 color)
 {
 	colors = {color, color, color, color};
 	updateElements("Color", colors);
 };
-void Dialog::setSize(const glm::vec2 &newSize)
+void Dialog::setSize(glm::vec2 newSize)
 {
 	auto &glWindow = ((VAO &)*this).window;
 	positions = {

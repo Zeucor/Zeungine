@@ -4,11 +4,11 @@
 using namespace anex::modules::gl::entities;
 Button::Button(GLWindow &window,
 										 GLScene &scene,
-										 const glm::vec3 &position,
-										 const glm::vec3 &rotation,
-										 const glm::vec3 &scale,
-										 const glm::vec4 &color,
-              			 const glm::vec2& size,
+										 glm::vec3 position,
+										 glm::vec3 rotation,
+										 glm::vec3 scale,
+										 glm::vec4 color,
+              			 glm::vec2  size,
 										 const std::string_view text,
 										 fonts::freetype::FreetypeFont &font,
                			 const OnClickHandler &handler,
@@ -85,7 +85,7 @@ void Button::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 };
-void Button::setColor(const glm::vec4 &color)
+void Button::setColor(glm::vec4 color)
 {
   auto colorsData = colors.data();
 	colorsData[0] = color;
@@ -94,7 +94,7 @@ void Button::setColor(const glm::vec4 &color)
   colorsData[3] = color;
 	updateElements("Color", colors);
 };
-void Button::setSize(const glm::vec2 &newSize)
+void Button::setSize(glm::vec2 newSize)
 {
 	positions = {
 		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }

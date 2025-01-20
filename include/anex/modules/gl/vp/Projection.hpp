@@ -16,7 +16,7 @@ namespace anex::modules::gl::vp
 		float farPlane = 0;
     glm::mat4 matrix = glm::mat4(1.0f);
     Projection(GLWindow &window, float fov);
-		Projection(GLWindow &window, const glm::vec2 &orthoSize);
+		Projection(GLWindow &window, glm::vec2 orthoSize);
     void update();
   };
 }

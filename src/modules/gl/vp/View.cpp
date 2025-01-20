@@ -1,6 +1,6 @@
 #include <anex/modules/gl/vp/View.hpp>
 using namespace anex::modules::gl::vp;
-View::View(const glm::vec3& position, const glm::vec3& direction):
+View::View(glm::vec3 position, glm::vec3 direction):
 	position(position),
 	direction(glm::normalize(direction))
 {
@@ -41,7 +41,7 @@ void View::removeResizeHandler(anex::IWindow::EventIdentifier &id)
 	handlers.erase(handlerIter);
 	id = 0;
 };
-void View::callResizeHandler(const glm::vec2 &newSize)
+void View::callResizeHandler(glm::vec2 newSize)
 {
 	auto& handlersMap = viewResizeHandlers.second;
 	std::vector<ViewResizeHandler> handlersCopy;

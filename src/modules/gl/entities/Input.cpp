@@ -4,10 +4,10 @@
 using namespace anex::modules::gl::entities;
 Input::Input(GLWindow &window,
 						 GLScene &scene,
-						 const glm::vec3 &position,
-						 const glm::vec3 &rotation,
-						 const glm::vec3 &scale,
-						 const glm::vec4 &backgroundColor,
+						 glm::vec3 position,
+						 glm::vec3 rotation,
+						 glm::vec3 scale,
+						 glm::vec4 backgroundColor,
 						 fonts::freetype::FreetypeFont &font,
              float width,
 						 float height,
@@ -66,15 +66,15 @@ Input::Input(GLWindow &window,
 		font,
 		fontSize,
 		true,
-		[&](auto &textSize)
+		[&](auto textSize)
 		{
 			auto &glWindow = ((VAO&)*this).window;
 			return glm::vec3(textSize.x / 2 + NDCPadding / 2, -NDCHeight / 2, 0.1f);
 		},
-		[&](auto &textViewSize)
+		[&](auto textViewSize)
 		{
 			auto &glWindow = ((VAO&)*this).window;
-			glm::vec2 size(std::min(textViewSize.x, this->size.x - (NDCPadding)), std::min(textViewSize.y, this->size.y));
+			glm::vec2 size(std::min(textViewSize.x, this->size.x - (NDCPadding)), std::min(textViewSize.y, NDCHeight));
 			return size;
 		},
 		[&]
@@ -97,15 +97,15 @@ Input::Input(GLWindow &window,
 		font,
 		fontSize,
 	    true,
-	    [&](auto &textSize)
+	    [&](auto textSize)
 	    {
 			auto &glWindow = ((VAO&)*this).window;
 			return glm::vec3(textSize.x / 2 + NDCPadding / 2, -NDCHeight / 2, 0.1f);
 	    },
-	    [&](auto &textViewSize)
+	    [&](auto textViewSize)
 	    {
 			auto &glWindow = ((VAO&)*this).window;
-	    	glm::vec2 size(std::min(textViewSize.x, this->size.x - (NDCPadding)), std::min(textViewSize.y, this->size.y));
+	    	glm::vec2 size(std::min(textViewSize.x, this->size.x - (NDCPadding)), std::min(textViewSize.y, NDCHeight));
 			return size;
 	    },
 	    [&]
@@ -318,7 +318,7 @@ void Input::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 };
-void Input::setColor(const glm::vec4 &color)
+void Input::setColor(glm::vec4 color)
 {
   auto colorsData = colors.data();
 	colorsData[0] = color;
@@ -327,7 +327,7 @@ void Input::setColor(const glm::vec4 &color)
   colorsData[3] = color;
 	updateElements("Color", colors);
 };
-void Input::setSize(const glm::vec2 &newSize)
+void Input::setSize(glm::vec2 newSize)
 {
 	positions = {
 		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }

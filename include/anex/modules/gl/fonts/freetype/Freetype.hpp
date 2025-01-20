@@ -29,12 +29,12 @@ namespace anex::modules::gl::fonts::freetype
 		std::unordered_map<float, std::unordered_map<float, FreetypeCharacter>> codepointFontSizeCharacters;
 		GLWindow &window;
     FreetypeFont(GLWindow &window, File &fontFile);
-		const glm::vec2 stringSize(const std::string_view string, float fontSize, float &lineHeight, const glm::vec2 &bounds);
+		const glm::vec2 stringSize(const std::string_view string, float fontSize, float &lineHeight, glm::vec2 bounds);
 		void stringToTexture(const std::string_view string,
-												 const glm::vec4 &color,
+												 glm::vec4 color,
 												 float fontSize,
 												 float &lineHeight,
-												 const glm::vec2 &textureSize,
+												 glm::vec2 textureSize,
 												 std::shared_ptr<textures::Texture> &texturePointer,
 												 const int64_t &cursorIndex,
 												 glm::vec3 &cursorPosition);

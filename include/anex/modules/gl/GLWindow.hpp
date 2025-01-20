@@ -82,7 +82,7 @@ namespace anex::modules::gl
 		void drawRectangle(int x, int y, int w, int h, uint32_t color) override;
 		void drawCircle(int x, int y, int radius, uint32_t color) override;
 		void drawText(int x, int y, const char* text, int scale, uint32_t color) override;
-		void warpPointer(const glm::vec2 &coords) override;
+		void warpPointer(glm::vec2 coords) override;
 		void setXY(float x, float y) override;
 		void setWidthHeight(float width, float height) override;
 		IWindow &createChildWindow(const char *title,

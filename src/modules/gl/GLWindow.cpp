@@ -772,7 +772,7 @@ const bool anex::modules::gl::GLcheck(GLWindow &window, const char* fn, const bo
 	}
 	return true;
 };
-void GLWindow::warpPointer(const glm::vec2 &coords)
+void GLWindow::warpPointer(glm::vec2 coords)
 {
 #if defined(_UNIX)
 	DEFINE_X11_WINDOW_DRIVER;

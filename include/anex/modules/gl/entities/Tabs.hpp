@@ -23,10 +23,10 @@ namespace anex::modules::gl::entities
 		using TabClickHandler = std::function<void()>;
 		TabsBar(GLWindow& window,
 							GLScene& scene,
-							const glm::vec3& position,
-							const glm::vec3& rotation,
-							const glm::vec3& scale,
-							const glm::vec4& color,
+							glm::vec3 position,
+							glm::vec3 rotation,
+							glm::vec3 scale,
+							glm::vec4 color,
 							fonts::freetype::FreetypeFont& font,
 							float width,
 							float height,
@@ -34,7 +34,7 @@ namespace anex::modules::gl::entities
 							std::string_view name = "");
 		void addTab(std::string_view name, const TabClickHandler &handler, bool active = false);
 		void preRender() override;
-		void setColor(const glm::vec4& color);
+		void setColor(glm::vec4 color);
 		void setSize();
 		void markInactive(Tab *activeTab);
 	};
@@ -60,10 +60,10 @@ namespace anex::modules::gl::entities
 		inline static size_t tabsCount = 0;
 		Tab(GLWindow& window,
 							GLScene& scene,
-							const glm::vec3& position,
-							const glm::vec3& rotation,
-							const glm::vec3& scale,
-							const glm::vec4& color,
+							glm::vec3 position,
+							glm::vec3 rotation,
+							glm::vec3 scale,
+							glm::vec4 color,
 							std::string_view text,
 							fonts::freetype::FreetypeFont& font,
 							float height,
@@ -74,8 +74,8 @@ namespace anex::modules::gl::entities
 							std::string_view name = "");
 		~Tab() override;
 		void preRender() override;
-		void setColor(const glm::vec4& color);
-		void setSize(const glm::vec2& size);
+		void setColor(glm::vec4 color);
+		void setSize(glm::vec2  size);
 		void markInactive();
 	};
 }

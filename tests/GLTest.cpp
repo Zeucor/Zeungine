@@ -25,7 +25,7 @@ struct TestTriangle : anex::modules::gl::GLEntity
   std::array<glm::vec3, 3> normals = {};
   float rotationAmount = 0;
   TestScene &testScene;
-  TestTriangle(anex::IWindow &window, TestScene &testScene, const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale):
+  TestTriangle(anex::IWindow &window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
     GLEntity(window, {
       "Color",
       "Position",

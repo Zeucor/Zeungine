@@ -66,15 +66,15 @@ namespace anex::modules::gl::entities
 		inline static size_t toolbarsCount = 0;
   		Toolbar(GLWindow &window,
 				GLScene &scene,
-				const glm::vec3 &position,
-				const glm::vec3 &rotation,
-				const glm::vec3 &scale,
-				const glm::vec4 &color,
+				glm::vec3 position,
+				glm::vec3 rotation,
+				glm::vec3 scale,
+				glm::vec4 color,
 				float height,
 				fonts::freetype::FreetypeFont &font,
 				std::string_view name = "");
 		~Toolbar();
     void preRender() override;
-		void setSize(const glm::vec2 &newSize);
+		void setSize(glm::vec2 newSize);
   };
 }

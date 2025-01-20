@@ -11,7 +11,7 @@ VML::~VML()
 {
   scene.window.removeMouseMoveHandler(mouseMoveID);
 };
-void VML::mouseMoveHandler(const glm::vec2 &coords)
+void VML::mouseMoveHandler(glm::vec2 coords)
 {
   if (scene.window.justWarpedPointer)
   {

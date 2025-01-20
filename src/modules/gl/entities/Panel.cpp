@@ -4,10 +4,10 @@
 using namespace anex::modules::gl::entities;
 PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 				             anex::modules::gl::GLScene &scene,
-				             const glm::vec3 &position,
-				             const glm::vec3 &rotation,
-				             const glm::vec3 &scale,
-				             const glm::vec4 &color,
+				             glm::vec3 position,
+				             glm::vec3 rotation,
+				             glm::vec3 scale,
+				             glm::vec4 color,
 				             fonts::freetype::FreetypeFont &font,
 										 const std::string_view title,
 										 float width,
@@ -59,7 +59,7 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 		font,
 		window.windowHeight / 30.f,
 		true,
-		[](auto &titleSize)
+		[](auto titleSize)
 		{
 			return glm::vec3(titleSize.x / 2, -titleSize.y / 2, 0.1);
 		});
@@ -134,7 +134,7 @@ void PanelMenu::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 };
-void PanelMenu::setColor(const glm::vec4 &color)
+void PanelMenu::setColor(glm::vec4 color)
 {
 	colors = {color, color, color, color};
 	updateElements("Color", colors);
@@ -151,10 +151,10 @@ void PanelMenu::setSize()
 };
 PanelItem::PanelItem(GLWindow &window,
 										 GLScene &scene,
-										 const glm::vec3 &position,
-										 const glm::vec3 &rotation,
-										 const glm::vec3 &scale,
-										 const glm::vec4 &color,
+										 glm::vec3 position,
+										 glm::vec3 rotation,
+										 glm::vec3 scale,
+										 glm::vec4 color,
 										 const std::string_view text,
 										 fonts::freetype::FreetypeFont &font,
                      GLEntity &entity,
@@ -208,7 +208,7 @@ PanelItem::PanelItem(GLWindow &window,
 		font,
 		FontSize,
 		true,
-		[](auto &TextSize)
+		[](auto TextSize)
 		{
 			return glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.1f);
 		});
@@ -248,7 +248,7 @@ void PanelItem::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 };
-void PanelItem::setColor(const glm::vec4 &color)
+void PanelItem::setColor(glm::vec4 color)
 {
   auto colorsData = colors.data();
 	colorsData[0] = color;
@@ -257,7 +257,7 @@ void PanelItem::setColor(const glm::vec4 &color)
   colorsData[3] = color;
 	updateElements("Color", colors);
 };
-void PanelItem::setSize(const glm::vec2 &newSize)
+void PanelItem::setSize(glm::vec2 newSize)
 {
 	positions = {
 		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }

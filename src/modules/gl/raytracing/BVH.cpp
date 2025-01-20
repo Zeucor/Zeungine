@@ -53,7 +53,7 @@ void BVH::precomputeTriangles()
 		}
 	});
 };
-glm::vec3 BVH::unProject(const glm::vec3 &win, const glm::mat4 &inverseProjectionView, const glm::vec4 &viewport)
+glm::vec3 BVH::unProject(glm::vec3 win, const glm::mat4 &inverseProjectionView, glm::vec4 viewport)
 {
 	glm::vec4 tmp = glm::vec4(win, 1.0f);
 	// Convert screen coordinates to NDC
@@ -67,7 +67,7 @@ glm::vec3 BVH::unProject(const glm::vec3 &win, const glm::mat4 &inverseProjectio
 };
 Ray BVH::mouseCoordToRay(uint32_t windowHeight,
                          glm::vec2 screenCoord,
-                         const glm::vec4 &viewport,
+                         glm::vec4 viewport,
                          const glm::mat4 &projection,
                          const glm::mat4 &view,
                          float nearPlane,

@@ -3,10 +3,10 @@
 using namespace anex::modules::gl::entities;
 Cube::Cube(anex::modules::gl::GLWindow &window,
 					 anex::modules::gl::GLScene &scene,
-					 const glm::vec3 &position,
-					 const glm::vec3 &rotation,
-					 const glm::vec3 &scale,
-					 const glm::vec3 &size,
+					 glm::vec3 position,
+					 glm::vec3 rotation,
+					 glm::vec3 scale,
+					 glm::vec3 size,
 					 const anex::modules::gl::shaders::RuntimeConstants &constants,
 					 std::string_view name):
 	anex::modules::gl::GLEntity(

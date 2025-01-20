@@ -3,11 +3,11 @@
 using namespace anex::modules::gl::entities;
 TextView::TextView(GLWindow &window,
                    GLScene &scene,
-                   const glm::vec3 &position,
-                   const glm::vec3 &rotation,
-                   const glm::vec3 &scale,
+                   glm::vec3 position,
+                   glm::vec3 rotation,
+                   glm::vec3 scale,
                    const std::string_view text,
-                   const glm::vec2 &size,
+                   glm::vec2 size,
                    fonts::freetype::FreetypeFont &font,
                    float fontSize,
                    bool textSizeIsNDC,
@@ -111,7 +111,7 @@ void TextView::preRender()
 	shader.unbind();
 	shader.unbind();
 };
-void TextView::setSize(const glm::vec2 &size)
+void TextView::setSize(glm::vec2 size)
 {
 	this->size = size;
 	positions = {

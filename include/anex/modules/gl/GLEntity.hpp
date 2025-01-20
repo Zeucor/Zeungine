@@ -31,9 +31,9 @@ namespace anex::modules::gl
 						 const std::vector<uint32_t> &indices,
 						 uint32_t elementCount,
 						 const std::vector<glm::vec3> &positions,
-						 const glm::vec3 &position,
-						 const glm::vec3 &rotation,
-						 const glm::vec3 &scale,
+						 glm::vec3 position,
+						 glm::vec3 rotation,
+						 glm::vec3 scale,
 						 std::string_view name);
 		void update() override;
 		virtual void preRender();
@@ -48,8 +48,8 @@ namespace anex::modules::gl
 		void removeMouseMoveHandler(IWindow::EventIdentifier &id);
 		IWindow::EventIdentifier addMouseHoverHandler(const MouseHoverHandler &callback);
 		void removeMouseHoverHandler(IWindow::EventIdentifier &id);
-		void callMousePressHandler(const IWindow::Button &button, const int &pressed);
-		void callMouseMoveHandler(const glm::vec2 &coords);
+		void callMousePressHandler(const IWindow::Button &button, int pressed);
+		void callMouseMoveHandler(glm::vec2 coords);
 		void callMouseHoverHandler(bool hovered);
   };
 }

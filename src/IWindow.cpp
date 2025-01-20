@@ -37,14 +37,14 @@ void IWindow::render()
 };
 void IWindow::postRender(){};
 // Keyboard
-IWindow::EventIdentifier IWindow::addKeyPressHandler(const Key& key, const KeyPressHandler& callback)
+IWindow::EventIdentifier IWindow::addKeyPressHandler(Key key, const KeyPressHandler& callback)
 {
   auto& handlersPair = keyPressHandlers[key];
   auto id = ++handlersPair.first;
   handlersPair.second[id] = callback;
   return id;
 };
-void IWindow::removeKeyPressHandler(const Key& key, EventIdentifier& id)
+void IWindow::removeKeyPressHandler(Key key, EventIdentifier& id)
 {
   auto& handlersPair = keyPressHandlers[key];
   auto handlerIter = handlersPair.second.find(id);
@@ -55,14 +55,14 @@ void IWindow::removeKeyPressHandler(const Key& key, EventIdentifier& id)
   handlersPair.second.erase(handlerIter);
   id = 0;
 };
-IWindow::EventIdentifier IWindow::addKeyUpdateHandler(const Key& key, const KeyUpdateHandler& callback)
+IWindow::EventIdentifier IWindow::addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback)
 {
   auto& handlersPair = keyUpdateHandlers[key];
   auto id = ++handlersPair.first;
   handlersPair.second[id] = callback;
   return id;
 };
-void IWindow::removeKeyUpdateHandler(const Key& key, EventIdentifier& id)
+void IWindow::removeKeyUpdateHandler(Key key, EventIdentifier& id)
 {
   auto handlersIter = keyUpdateHandlers.find(key);
   if (handlersIter == keyUpdateHandlers.end())
@@ -76,7 +76,7 @@ void IWindow::removeKeyUpdateHandler(const Key& key, EventIdentifier& id)
   handlers.erase(handlerIter);
   id = 0;
 };
-void IWindow::callKeyPressHandler(const Key &key, const int &pressed)
+void IWindow::callKeyPressHandler(Key key, int pressed)
 {
   keys[key] = pressed;
   {
@@ -93,7 +93,7 @@ void IWindow::callKeyPressHandler(const Key &key, const int &pressed)
     }
   }
 };
-void IWindow::callKeyUpdateHandler(const Key &key)
+void IWindow::callKeyUpdateHandler(Key key)
 {
   auto handlersIter = keyUpdateHandlers.find(key);
   if (handlersIter == keyUpdateHandlers.end())
@@ -124,7 +124,7 @@ void IWindow::removeAnyKeyPressHandler(EventIdentifier& id)
   handlers.erase(handlerIter);
   id = 0;
 };
-void IWindow::callAnyKeyPressHandler(const Key &key, bool pressed)
+void IWindow::callAnyKeyPressHandler(Key key, bool pressed)
 {
   auto& handlersMap = anyKeyPressHandlers.second;
   std::vector<AnyKeyPressHandler> handlersCopy;
@@ -136,14 +136,14 @@ void IWindow::callAnyKeyPressHandler(const Key &key, bool pressed)
   }
 };
 // Mouse
-IWindow::EventIdentifier IWindow::addMousePressHandler(const Button& button, const MousePressHandler& callback)
+IWindow::EventIdentifier IWindow::addMousePressHandler(Button button, const MousePressHandler& callback)
 {
   auto& handlersPair = mousePressHandlers[button];
   auto id = ++handlersPair.first;
   handlersPair.second[id] = callback;
   return id;
 };
-void IWindow::removeMousePressHandler(const Button& button, EventIdentifier& id)
+void IWindow::removeMousePressHandler(Button button, EventIdentifier& id)
 {
   auto& handlersPair = mousePressHandlers[button];
   auto handlerIter = handlersPair.second.find(id);
@@ -171,7 +171,7 @@ void IWindow::removeMouseMoveHandler(EventIdentifier& id)
   handlers.erase(handlerIter);
   id = 0;
 };
-void IWindow::callMousePressHandler(const Button &button, const int &pressed)
+void IWindow::callMousePressHandler(Button button, int pressed)
 {
   buttons[button] = pressed;
   {
@@ -188,7 +188,7 @@ void IWindow::callMousePressHandler(const Button &button, const int &pressed)
     }
   }
 };
-void IWindow::callMouseMoveHandler(const glm::vec2 &coords)
+void IWindow::callMouseMoveHandler(glm::vec2 coords)
 {
   auto& handlersMap = mouseMoveHandlers.second;
   std::vector<MouseMoveHandler> handlersCopy;
@@ -227,7 +227,7 @@ void IWindow::updateDeltaTime()
   deltaTime = duration.count();
   lastFrameTime = currentTime;
 };
-void IWindow::resize(const glm::vec2 &newSize)
+void IWindow::resize(glm::vec2 newSize)
 {
   if (windowWidth != newSize.x)
     windowWidth = newSize.x;
@@ -244,7 +244,7 @@ void IWindow::close(){};
 void IWindow::minimize(){};
 void IWindow::maximize(){};
 void IWindow::restore(){};
-void IWindow::warpPointer(const glm::vec2 &coords){};
+void IWindow::warpPointer(glm::vec2 coords){};
 void IWindow::setXY(float x, float y){};
 void IWindow::setWidthHeight(float width, float height){};
 IWindow &IWindow::createChildWindow(const char *title,

@@ -7,7 +7,7 @@
 #include <anex/modules/gl/textures/FramebufferFactory.hpp>
 #include <anex/modules/gl/vaos/VAO.hpp>
 using namespace anex::modules::gl;
-GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, float fov, textures::Framebuffer *framebufferPointer):
+GLScene::GLScene(IWindow &window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer):
 	IScene(window),
 	view(cameraPosition, cameraDirection),
 	projection((GLWindow &)window, fov),
@@ -15,7 +15,7 @@ GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::ve
 {
 	hookMouseEvents();
 };
-GLScene::GLScene(IWindow &window, const glm::vec3 &cameraPosition, const glm::vec3 &cameraDirection, const glm::vec2 &orthoSize, textures::Framebuffer *framebufferPointer):
+GLScene::GLScene(IWindow &window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer):
 	IScene(window),
 	view(cameraPosition, cameraDirection),
 	projection((GLWindow &)window, orthoSize),
@@ -168,7 +168,7 @@ void GLScene::entityPreRender(IEntity &entity)
 		--unitRemaining;
 	}
 };
-void GLScene::resize(const glm::vec2 &newSize)
+void GLScene::resize(glm::vec2 newSize)
 {
 	view.callResizeHandler(newSize);
 	// projection.orthoSize = newSize;
@@ -235,7 +235,7 @@ void GLScene::hookMouseEvents()
 			foundEntity->callMousePressHandler(button, pressed);
 		});
 	}
-	mouseMoveID = window.addMouseMoveHandler([&](auto &coords)
+	mouseMoveID = window.addMouseMoveHandler([&](auto coords)
 	{
 		auto ray = bvh.mouseCoordToRay(window.windowHeight, coords, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
 		auto primID = bvh.trace(ray);

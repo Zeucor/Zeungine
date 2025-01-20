@@ -23,10 +23,10 @@ namespace anex::modules::gl::entities
 		inline static size_t dialogsCount = 0;
 		Dialog(GLWindow& window,
 							GLScene& scene,
-							const glm::vec3& position,
-							const glm::vec3& rotation,
-							const glm::vec3& scale,
-							const glm::vec4& color,
+							glm::vec3 position,
+							glm::vec3 rotation,
+							glm::vec3 scale,
+							glm::vec4 color,
 							fonts::freetype::FreetypeFont& font,
 							std::string_view title,
 							float width,
@@ -35,7 +35,7 @@ namespace anex::modules::gl::entities
 							const shaders::RuntimeConstants& constants = {},
 							std::string_view name = "");
 		void preRender() override;
-		void setColor(const glm::vec4& color);
-		void setSize(const glm::vec2 &newSize);
+		void setColor(glm::vec4 color);
+		void setSize(glm::vec2 newSize);
 	};
 }

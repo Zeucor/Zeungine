@@ -42,7 +42,7 @@ struct EditorScene : GLScene
       90.f,
       false,
       entities::TextView::RepositionHandler(),
-      [](auto &textSize)
+      [](auto textSize)
       {
         return glm::vec2( 47 / 3, 14 / 3);
       }

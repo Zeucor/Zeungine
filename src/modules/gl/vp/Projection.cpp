@@ -9,7 +9,7 @@ Projection::Projection(GLWindow &window, float fov):
 {
   update();
 };
-Projection::Projection(GLWindow &window, const glm::vec2 &orthoSize):
+Projection::Projection(GLWindow &window, glm::vec2 orthoSize):
   window(window),
   orthoSize(orthoSize),
   isOrthographic(true),

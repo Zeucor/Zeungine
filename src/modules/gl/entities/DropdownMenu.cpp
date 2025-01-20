@@ -3,10 +3,10 @@
 using namespace anex::modules::gl::entities;
 DropdownMenu::DropdownMenu(anex::modules::gl::GLWindow &window,
 							             anex::modules::gl::GLScene &scene,
-							             const glm::vec3 &position,
-							             const glm::vec3 &rotation,
-							             const glm::vec3 &scale,
-							             const glm::vec4 &color,
+							             glm::vec3 position,
+							             glm::vec3 rotation,
+							             glm::vec3 scale,
+							             glm::vec4 color,
                            fonts::freetype::FreetypeFont &font,
 							             const anex::modules::gl::shaders::RuntimeConstants &constants,
 							             std::string_view name):
@@ -73,12 +73,12 @@ void DropdownMenu::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 };
-void DropdownMenu::setColor(const glm::vec4 &color)
+void DropdownMenu::setColor(glm::vec4 color)
 {
 	colors = {color, color, color, color};
 	updateElements("Color", colors);
 };
-void DropdownMenu::setSize(const glm::vec2 &size)
+void DropdownMenu::setSize(glm::vec2 size)
 {
 	positions = {
 		{ 0, -size.y, 0 }, { size.x, -size.y, 0 }, { size.x, 0, 0 }, { 0, 0, 0 }
@@ -88,10 +88,10 @@ void DropdownMenu::setSize(const glm::vec2 &size)
 };
 DropdownItem::DropdownItem(GLWindow &window,
 													 GLScene &scene,
-													 const glm::vec3 &position,
-													 const glm::vec3 &rotation,
-													 const glm::vec3 &scale,
-													 const glm::vec4 &color,
+													 glm::vec3 position,
+													 glm::vec3 rotation,
+													 glm::vec3 scale,
+													 glm::vec4 color,
 													 const std::string_view text,
 													 const DropdownMenu::OptionPressHandler &handler,
 													 fonts::freetype::FreetypeFont &font,
@@ -140,7 +140,7 @@ DropdownItem::DropdownItem(GLWindow &window,
 		font,
 		FontSize,
 		true,
-		[](auto &TextSize)
+		[](auto TextSize)
 		{
 			return glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.1f);
 		},
@@ -186,12 +186,12 @@ void DropdownItem::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 };
-void DropdownItem::setColor(const glm::vec4 &color)
+void DropdownItem::setColor(glm::vec4 color)
 {
 	colors = {color, color, color, color};
 	updateElements("Color", colors);
 };
-void DropdownItem::setSize(const glm::vec2 &size)
+void DropdownItem::setSize(glm::vec2 size)
 {
 	positions = {
 		{ 0, -size.y, 0 }, { size.x, -size.y, 0 }, { size.x, 0, 0 }, { 0, 0, 0 }

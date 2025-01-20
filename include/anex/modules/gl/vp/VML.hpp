@@ -8,6 +8,6 @@ namespace anex::modules::gl::vp
     uint32_t mouseMoveID = 0;
     VML(GLScene &scene);
     ~VML();
-    void mouseMoveHandler(const glm::vec2 &coords);
+    void mouseMoveHandler(glm::vec2 coords);
   };
 }

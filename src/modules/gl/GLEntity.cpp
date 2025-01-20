@@ -7,9 +7,9 @@ GLEntity::GLEntity(anex::IWindow &window,
 						 			 const std::vector<uint32_t> &indices,
 									 uint32_t elementCount,
 						 			 const std::vector<glm::vec3> &positions,
-									 const glm::vec3 &position,
-									 const glm::vec3 &rotation,
-									 const glm::vec3 &scale,
+									 glm::vec3 position,
+									 glm::vec3 rotation,
+									 glm::vec3 scale,
 									 std::string_view name):
 	IEntity(window),
 	VAO((GLWindow &)window, constants, indiceCount, elementCount),
@@ -128,7 +128,7 @@ void GLEntity::removeMouseHoverHandler(IWindow::EventIdentifier &id)
 	handlers.erase(handlerIter);
 	id = 0;
 };
-void GLEntity::callMousePressHandler(const anex::IWindow::Button &button, const int &pressed)
+void GLEntity::callMousePressHandler(const anex::IWindow::Button &button, int pressed)
 {
 	buttons[button] = pressed;
 	{
@@ -145,7 +145,7 @@ void GLEntity::callMousePressHandler(const anex::IWindow::Button &button, const 
 		}
 	}
 };
-void GLEntity::callMouseMoveHandler(const glm::vec2 &coords)
+void GLEntity::callMouseMoveHandler(glm::vec2 coords)
 {
 	auto& handlersMap = mouseMoveHandlers.second;
 	std::vector<anex::IWindow::MouseMoveHandler> handlersCopy;

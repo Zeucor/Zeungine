@@ -22,9 +22,9 @@ namespace anex::modules::gl::entities
     fonts::freetype::FreetypeFont &font;
 		float fontSize;
 		bool textSizeIsNDC;
-		using RepositionHandler = std::function<glm::vec3(const glm::vec2 &)>;
+		using RepositionHandler = std::function<glm::vec3(glm::vec2 )>;
 		RepositionHandler repositionHandler;
-		using ResizeHandler = std::function<glm::vec2(const glm::vec2 &)>;
+		using ResizeHandler = std::function<glm::vec2(glm::vec2 )>;
 		ResizeHandler resizeHandler;
 		using ReFontSizeHandler = std::function<float()>;
 		ReFontSizeHandler reFontSizeHandler;
@@ -33,11 +33,11 @@ namespace anex::modules::gl::entities
 		inline static size_t textViewsCount = 0;
 		explicit TextView(GLWindow &window,
 										  GLScene &scene,
-										  const glm::vec3 &position,
-										  const glm::vec3 &rotation,
-										  const glm::vec3 &scale,
+										  glm::vec3 position,
+										  glm::vec3 rotation,
+										  glm::vec3 scale,
 										  const std::string_view text,
-										  const glm::vec2 &size,
+										  glm::vec2 size,
 										  fonts::freetype::FreetypeFont &font,
 										  float fontSize,
 										  bool textSizeIsNDC = true,
@@ -48,7 +48,7 @@ namespace anex::modules::gl::entities
 		void update() override;
 		void forceUpdate();
 		void preRender() override;
-		void setSize(const glm::vec2 &size);
+		void setSize(glm::vec2 size);
 		void updateText(const std::string_view text);
   };
 }
