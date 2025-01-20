@@ -78,7 +78,7 @@ FreetypeCharacter::FreetypeCharacter(GLWindow &window, const FreetypeFont &freeT
 				continue;
 			}
 		}
-		texturePointer.reset(new textures::Texture(window, {size.x, size.y, 1, 0}, rgbaImgPointer));
+		texturePointer.reset(new textures::Texture(window, {size.x, size.y, 1, 0}, rgbaImgPointer, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Nearest));
 	}
 	_setAdvance:
 		advance = face->glyph->advance.x;
@@ -174,7 +174,7 @@ void FreetypeFont::stringToTexture(const std::string &string,
 	glm::ivec2 scaledSize = textureSize * textureScale;
 	if (!texturePointer || texturePointer->size.x != scaledSize.x || texturePointer->size.y != scaledSize.y)
 	{
-		texturePointer.reset(new textures::Texture(window, glm::ivec4(scaledSize.x, scaledSize.y, 1, 0), 0));
+		texturePointer.reset(new textures::Texture(window, glm::ivec4(scaledSize.x, scaledSize.y, 1, 0), 0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Nearest));
 	}
 	textures::Framebuffer framebuffer(window, *texturePointer);
 	GLScene scene(window, {scaledSize.x / 2.f, scaledSize.y / 2.f, 50}, {0, 0, -1}, glm::vec2(scaledSize), &framebuffer);
