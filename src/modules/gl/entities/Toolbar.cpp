@@ -18,28 +18,31 @@ Toolbar::Toolbar(GLWindow &window,
 		0, 1, 2,  2, 3, 0   // Front face
 	}, 4,
 	{
-		{ 0, -height, 0}, { window.windowWidth, -height, 0}, { window.windowWidth, 0, 0 }, { 0, 0, 0} // Front
+		{ 0, (-height / window.windowHeight) * 2, 0}, { 2, (-height / window.windowHeight) * 2, 0}, { 2, 0, 0 }, { 0, 0, 0} // Front
 	},
 	position, rotation, scale,
 	name.empty() ? "Toolbar " + std::to_string(++toolbarsCount) : name),
 	colors({color, color, color, color}),
 	scene(scene),
 	font(font),
-	height(height)
+	height(height),
+	NDCHeight((height / window.windowHeight) * 2)
 {
 	updateIndices(indices);
 	updateElements("Color", colors);
 	updateElements("Position", positions);
 	//
-	float toolButtonsX = window.windowWidth;
+	float toolButtonsX = 2;
 	// X Button
-  xButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (height / 2)), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(height, height), glm::vec4(1, 0, 0, 1));
+  xButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (NDCHeight / 4)), -NDCHeight / 2, 0.1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(1, 0, 0, 1));
   addChild(xButton);
   xString = "x";
-  float xFontSize = height;
+  float xFontSize = height / 1.5;
   float xLineHeight = 0;
 	auto xTextSize = font.stringSize(xString, xFontSize, xLineHeight, {0, 0});
-  xTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), xString, xTextSize / 2.f, font, xFontSize);
+	xTextSize.y /= window.windowHeight * 0.5f;
+	xTextSize.x /= window.windowWidth * 0.5f;
+  xTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), xString, xTextSize / 2.f, font, xFontSize);
   xButton->addChild(xTextView);
 	xTextView->addToBVH = false;
 	xButtonLeftMousePressID = xButton->addMousePressHandler(0, [&](auto &pressed)
@@ -58,13 +61,15 @@ Toolbar::Toolbar(GLWindow &window,
 		}
 	});
 	// max Button
-	maxButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (xButton->size.x)), -height /2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(height, height), glm::vec4(0.4f, 0.4f, 0.4f, 1));
+	maxButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (xButton->size.x)), -NDCHeight /2, 0.1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
 	addChild(maxButton);
 	maxString = "+";
-	float maxFontSize = height;
+	float maxFontSize = height / 1.5;
 	float maxLineHeight = 0;
 	auto maxTextSize = font.stringSize(maxString, maxFontSize, maxLineHeight, {0, 0});
-	maxTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), maxString, maxTextSize / 2.f, font, maxFontSize);
+	maxTextSize.y /= window.windowHeight * 0.5f;
+	maxTextSize.x /= window.windowWidth * 0.5f;
+	maxTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), maxString, maxTextSize / 2.f, font, maxFontSize);
 	maxButton->addChild(maxTextView);
 	maxTextView->addToBVH = false;
 	maxButtonLeftMousePressID = maxButton->addMousePressHandler(0, [&](auto &pressed)
@@ -83,13 +88,15 @@ Toolbar::Toolbar(GLWindow &window,
 		}
 	});
 	// _ Button
-	_Button = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (maxButton->size.x)), -height /2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(height, height), glm::vec4(0.4f, 0.4f, 0.4f, 1));
+	_Button = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (maxButton->size.x)), -NDCHeight /2, 0.1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
 	addChild(_Button);
 	_String = "-";
-	float FontSize_ = height;
+	float FontSize_ = height / 1.5;
 	float LineHeight_ = 0;
 	auto TextSize_ = font.stringSize(_String, FontSize_, LineHeight_, {0, 0});
-	_TextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), _String, TextSize_ / 2.f, font, FontSize_);
+	TextSize_.y /= window.windowHeight * 0.5f;
+	TextSize_.x /= window.windowWidth * 0.5f;
+	_TextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), _String, TextSize_ / 2.f, font, FontSize_);
 	_Button->addChild(_TextView);
 	_TextView->addToBVH = false;
 	_ButtonLeftMousePressID = _Button->addMousePressHandler(0, [&](auto &pressed)
@@ -109,59 +116,25 @@ Toolbar::Toolbar(GLWindow &window,
 	});
 	// icon
 	iconTexture.reset(new textures::Texture(window, {128, 128, 1, 0}, std::string_view("images/abstractnexus-icon.png")));
-	icon = std::make_shared<Plane>(window, scene, glm::vec3(height / 2, -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(height, height), *iconTexture);
+	icon = std::make_shared<Plane>(window, scene, glm::vec3(NDCHeight / 4, -NDCHeight / 2, 0.1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec2(NDCHeight / 2, NDCHeight), *iconTexture);
 	addChild(icon);
 	//
-	float toolOptionsX = height;
-	float padding = height / 10;
+	float toolOptionsX = NDCHeight / 2;
+	float padding = NDCHeight / 10;
 	glm::vec4 toolbarOptionColor(0.3, 0.3, 0.3, 1);
 	// File
 	fileString = "File";
-	float fileFontSize = height / 2;
+	float fileFontSize = (height / 2.f);
 	float fileLineHeight = 0;
 	auto fileTextSize = font.stringSize(fileString, fileFontSize, fileLineHeight, {0, 0});
-	file = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), fileTextSize, toolbarOptionColor);
+	fileTextSize.x /= window.windowWidth * 0.5f;
+	fileTextSize.y /= window.windowHeight * 0.5f;
+	file = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + fileTextSize.x / 4 + padding), -NDCHeight / 2, 0.1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), fileTextSize, toolbarOptionColor);
 	fileID = addChild(file);
-	fileTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), fileString, fileTextSize / 1.5f, font, fileFontSize);
+	fileTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), fileString, fileTextSize / 1.5f, font, fileFontSize);
 	fileTextView->addToBVH = false;
 	file->addChild(fileTextView);
-	fileDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-file->size.x / 2, -file->size.y / 2, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
-	fileDropdown->addOption("New Project", []()
-	{
-
-	});
-	fileDropdown->addOption("Open Project", []()
-	{
-
-	});
-	fileDropdown->addOption("Save", []()
-	{
-
-	});
-	fileDropdown->addOption("Save As", []()
-	{
-
-	});
-	fileDropdown->addOption("Import Assets", []()
-	{
-
-	});
-	fileDropdown->addOption("Export", []()
-	{
-
-	});
-	fileDropdown->addOption("Recent Files", []()
-	{
-
-	});
-	fileDropdown->addOption("Settings", []()
-	{
-
-	});
-	fileDropdown->addOption("Exit", [&]()
-	{
-		window.close();
-	});
+	fileDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-file->size.x / 2, -file->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
 	filePressID = file->addMousePressHandler(0, [&](auto &pressed)
 	{
 		if (!pressed)
@@ -203,12 +176,14 @@ Toolbar::Toolbar(GLWindow &window,
 	float editFontSize = height / 2;
 	float editLineHeight = 0;
 	auto editTextSize = font.stringSize(editString, editFontSize, editLineHeight, {0, 0});
-	edit = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + editTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), editTextSize, toolbarOptionColor);
+	editTextSize.y /= window.windowHeight * 0.5f;
+	editTextSize.x /= window.windowWidth * 0.5f;
+	edit = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + editTextSize.x / 2 + padding), -NDCHeight / 2, 0.1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), editTextSize, toolbarOptionColor);
 	editID = addChild(edit);
-	editTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), editString, editTextSize / 1.5f, font, editFontSize);
+	editTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), editString, editTextSize / 1.5f, font, editFontSize);
 	editTextView->addToBVH = false;
 	edit->addChild(editTextView);
-	editDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-edit->size.x / 2, -edit->size.y / 2, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
+	editDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-edit->size.x / 2, -edit->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
 	editDropdown->addOption("Undo", []()
 	{
 
@@ -286,12 +261,14 @@ Toolbar::Toolbar(GLWindow &window,
 	float helpFontSize = height / 2;
 	float helpLineHeight = 0;
 	auto helpTextSize = font.stringSize(helpString, helpFontSize, helpLineHeight, {0, 0});
-	help = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + editTextSize.x / 2 + helpTextSize.x / 2 + padding), -height / 2, 0.5), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), helpTextSize, toolbarOptionColor);
+	helpTextSize.y /= window.windowHeight * 0.5f;
+	helpTextSize.x /= window.windowWidth * 0.5f;
+	help = std::make_shared<Plane>(window, scene, glm::vec3(toolOptionsX = (toolOptionsX + helpTextSize.x / 2 + helpTextSize.x / 2), -NDCHeight / 2, 0.1), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), helpTextSize, toolbarOptionColor);
 	helpID = addChild(help);
-	helpTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), helpString, helpTextSize / 1.5f, font, helpFontSize);
+	helpTextView = std::make_shared<TextView>(window, scene, glm::vec3(0, 0, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), helpString, helpTextSize / 1.5f, font, helpFontSize);
 	helpTextView->addToBVH = false;
 	help->addChild(helpTextView);
-	helpDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-help->size.x / 2, -help->size.y / 2, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
+	helpDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-help->size.x / 2, -help->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
 	helpDropdown->addOption("Documentation", []()
 	{
 
@@ -420,58 +397,58 @@ void Toolbar::preRender()
 };
 void Toolbar::setSize(const glm::vec2& newSize)
 {
-	height = newSize.y;
-	positions = {
-		{ 0, -height, 0}, { newSize.x, -height, 0}, { newSize.x, 0, 0 }, { 0, 0, 0} // Front
-	};
-	updateElements("Position", positions);
-	xButton->setSize({ height, height });
-	maxButton->setSize({ height, height });
-	_Button->setSize({ height, height });
-	float toolButtonsX = newSize.x, toolButtonsY = -height / 2;
-	xButton->position = { toolButtonsX = (toolButtonsX - (height / 2)), toolButtonsY, 0.5};
-	maxButton->position = { toolButtonsX = (toolButtonsX - xButton->size.x), toolButtonsY, 0.5};
-	_Button->position = { toolButtonsX = (toolButtonsX - maxButton->size.x), toolButtonsY, 0.5};
-	float xFontSize = height;
-	float xLineHeight = 0;
-	auto xTextSize = font.stringSize(xString, xFontSize, xLineHeight, {0, 0});
-	xTextView->setSize(xTextSize / 2.f);
-	float maxFontSize = height;
-	float maxLineHeight = 0;
-	auto maxTextSize = font.stringSize(maxString, maxFontSize, maxLineHeight, {0, 0});
-	maxTextView->setSize(maxTextSize / 2.f);
-	float FontSize_ = height;
-	float LineHeight_ = 0;
-	auto TextSize_ = font.stringSize(_String, FontSize_, LineHeight_, {0, 0});
-	_TextView->setSize(TextSize_ / 2.f);
-	icon->position = {height / 2, -height / 2, 0.5};
-	icon->setSize({height, height});
-	float toolOptionsX = height;
-	float padding = height / 10;
-	float fileFontSize = height / 2;
-	float fileLineHeight = 0;
-	auto fileTextSize = font.stringSize(fileString, fileFontSize, fileLineHeight, {0, 0});
-	file->position = {toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + padding), -height / 2, 0.5};
-	file->setSize(fileTextSize);
-	fileTextView->setSize(fileTextSize / 1.5f);
-	float editFontSize = height / 2;
-	float editLineHeight = 0;
-	auto editTextSize = font.stringSize(editString, editFontSize, editLineHeight, {0, 0});
-	edit->position = {toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + editTextSize.x / 2 + padding), -height / 2, 0.5};
-	edit->setSize(editTextSize);
-	editTextView->setSize(editTextSize / 1.5f);
-	float helpFontSize = height / 2;
-	float helpLineHeight = 0;
-	auto helpTextSize = font.stringSize(helpString, helpFontSize, helpLineHeight, {0, 0});
-	help->position = {toolOptionsX = (toolOptionsX + editTextSize.x / 2 + helpTextSize.x / 2 + padding), -height / 2, 0.5};
-	help->setSize(helpTextSize);
-	helpTextView->setSize(helpTextSize / 1.5f);
-	scene.bvh.updateEntity(*xButton);
-	scene.bvh.updateEntity(*maxButton);
-	scene.bvh.updateEntity(*_Button);
-	scene.bvh.updateEntity(*this);
-	scene.bvh.updateEntity(*file);
-	scene.bvh.updateEntity(*edit);
-	scene.bvh.updateEntity(*help);
-	scene.bvh.updateEntity(*icon);
+	// NDCHeight = newSize.y;
+	// positions = {
+	// 	{ 0, -NDCHeight, 0}, { newSize.x, -NDCHeight, 0}, { newSize.x, 0, 0 }, { 0, 0, 0} // Front
+	// };
+	// updateElements("Position", positions);
+	// xButton->setSize({ NDCHeight, NDCHeight });
+	// maxButton->setSize({ NDCHeight, NDCHeight });
+	// _Button->setSize({ NDCHeight, NDCHeight });
+	// float toolButtonsX = newSize.x, toolButtonsY = -NDCHeight / 2;
+	// xButton->position = { toolButtonsX = (toolButtonsX - (NDCHeight / 2)), toolButtonsY, 0.5};
+	// maxButton->position = { toolButtonsX = (toolButtonsX - xButton->size.x), toolButtonsY, 0.5};
+	// _Button->position = { toolButtonsX = (toolButtonsX - maxButton->size.x), toolButtonsY, 0.5};
+	// float xFontSize = height;
+	// float xLineHeight = 0;
+	// auto xTextSize = font.stringSize(xString, xFontSize, xLineHeight, {0, 0});
+	// xTextView->setSize(xTextSize / 2.f);
+	// float maxFontSize = height;
+	// float maxLineHeight = 0;
+	// auto maxTextSize = font.stringSize(maxString, maxFontSize, maxLineHeight, {0, 0});
+	// maxTextView->setSize(maxTextSize / 2.f);
+	// float FontSize_ = height;
+	// float LineHeight_ = 0;
+	// auto TextSize_ = font.stringSize(_String, FontSize_, LineHeight_, {0, 0});
+	// _TextView->setSize(TextSize_ / 2.f);
+	// icon->position = {height / 2, -height / 2, 0.5};
+	// icon->setSize({height, height});
+	// float toolOptionsX = height;
+	// float padding = height / 10;
+	// float fileFontSize = height / 2;
+	// float fileLineHeight = 0;
+	// auto fileTextSize = font.stringSize(fileString, fileFontSize, fileLineHeight, {0, 0});
+	// file->position = {toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + padding), -height / 2, 0.5};
+	// file->setSize(fileTextSize);
+	// fileTextView->setSize(fileTextSize / 1.5f);
+	// float editFontSize = height / 2;
+	// float editLineHeight = 0;
+	// auto editTextSize = font.stringSize(editString, editFontSize, editLineHeight, {0, 0});
+	// edit->position = {toolOptionsX = (toolOptionsX + fileTextSize.x / 2 + editTextSize.x / 2 + padding), -height / 2, 0.5};
+	// edit->setSize(editTextSize);
+	// editTextView->setSize(editTextSize / 1.5f);
+	// float helpFontSize = height / 2;
+	// float helpLineHeight = 0;
+	// auto helpTextSize = font.stringSize(helpString, helpFontSize, helpLineHeight, {0, 0});
+	// help->position = {toolOptionsX = (toolOptionsX + editTextSize.x / 2 + helpTextSize.x / 2 + padding), -height / 2, 0.5};
+	// help->setSize(helpTextSize);
+	// helpTextView->setSize(helpTextSize / 1.5f);
+	// scene.bvh.updateEntity(*xButton);
+	// scene.bvh.updateEntity(*maxButton);
+	// scene.bvh.updateEntity(*_Button);
+	// scene.bvh.updateEntity(*this);
+	// scene.bvh.updateEntity(*file);
+	// scene.bvh.updateEntity(*edit);
+	// scene.bvh.updateEntity(*help);
+	// scene.bvh.updateEntity(*icon);
 };

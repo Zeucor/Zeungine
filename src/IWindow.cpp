@@ -2,7 +2,12 @@
 #include <anex/IWindow.hpp>
 #include <anex/modules/gl/GLWindow.hpp>
 using namespace anex;
-IWindow::IWindow(const int32_t& windowWidth, const int32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t &framerate):
+IWindow::IWindow(const float& windowWidth,
+                 const float& windowHeight,
+                 const float& windowX,
+                 const float& windowY,
+                 const bool &borderless,
+                 const uint32_t &framerate):
   windowWidth(windowWidth),
   windowHeight(windowHeight),
   windowX(windowX),
@@ -100,6 +105,34 @@ void IWindow::callKeyUpdateHandler(const Key &key)
   for (auto& handler : handlersCopy)
   {
     handler();
+  }
+};
+IWindow::EventIdentifier IWindow::addAnyKeyPressHandler(const AnyKeyPressHandler& callback)
+{
+  auto id = ++anyKeyPressHandlers.first;
+  anyKeyPressHandlers.second[id] = callback;
+  return id;
+};
+void IWindow::removeAnyKeyPressHandler(EventIdentifier& id)
+{
+  auto &handlers = anyKeyPressHandlers.second;
+  auto handlerIter = handlers.find(id);
+  if (handlerIter == handlers.end())
+  {
+    return;
+  }
+  handlers.erase(handlerIter);
+  id = 0;
+};
+void IWindow::callAnyKeyPressHandler(const Key &key, const bool &pressed)
+{
+  auto& handlersMap = anyKeyPressHandlers.second;
+  std::vector<AnyKeyPressHandler> handlersCopy;
+  for (const auto& pair : handlersMap)
+    handlersCopy.push_back(pair.second);
+  for (auto& handler : handlersCopy)
+  {
+    handler(key, pressed);
   }
 };
 // Mouse
@@ -212,9 +245,15 @@ void IWindow::minimize(){};
 void IWindow::maximize(){};
 void IWindow::restore(){};
 void IWindow::warpPointer(const glm::vec2 &coords){};
-void IWindow::setXY(const int32_t &x, const int32_t &y){};
-void IWindow::setWidthHeight(const uint32_t &width, const uint32_t &height){};
-IWindow &IWindow::createChildWindow(const char *title, IScene &scene, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY)
+void IWindow::setXY(const float &x, const float &y){};
+void IWindow::setWidthHeight(const float &width, const float &height){};
+IWindow &IWindow::createChildWindow(const char *title,
+                                    IScene &scene,
+                                    const float &windowWidth,
+                                    const float &windowHeight,
+                                    const float &windowX,
+                                    const float &windowY,
+                                    const bool &NDCFramebufferPlane)
 {
   throw std::runtime_error("IWindow::createChildWindow() not implemented");
 };

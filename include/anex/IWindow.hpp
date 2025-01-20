@@ -9,10 +9,10 @@ namespace anex
 {
 	struct IWindow
 	{
-		int32_t windowWidth;
-		int32_t windowHeight;
-		int32_t windowX;
-		int32_t windowY;
+		float windowWidth;
+		float windowHeight;
+		float windowX;
+		float windowY;
 		uint32_t framerate = 60;
 		std::shared_ptr<std::thread> windowThread;
 		using Runnable = std::function<void(IWindow&)>;
@@ -22,12 +22,14 @@ namespace anex
 		using EventIdentifier = uint32_t;
 		using KeyPressHandler = std::function<void(const bool &)>;
 		using KeyUpdateHandler = std::function<void()>;
+		using AnyKeyPressHandler = std::function<void(const Key &, const bool &)>;
 		using MousePressHandler = std::function<void(const bool &)>;
 		using MouseMoveHandler = std::function<void(const glm::vec2 &)>;
 		std::unordered_map<Key, int> keys;
 		std::unordered_map<Button, int> buttons;
 		std::unordered_map<Key, std::pair<EventIdentifier, std::map<EventIdentifier, KeyPressHandler>>> keyPressHandlers;
 		std::unordered_map<Key, std::pair<EventIdentifier, std::map<EventIdentifier, KeyUpdateHandler>>> keyUpdateHandlers;
+		std::pair<EventIdentifier, std::map<EventIdentifier, AnyKeyPressHandler>> anyKeyPressHandlers;
 		std::unordered_map<Button, std::pair<EventIdentifier, std::map<EventIdentifier, MousePressHandler>>> mousePressHandlers;
 		std::pair<EventIdentifier, std::map<EventIdentifier, MouseMoveHandler>> mouseMoveHandlers;
 		std::shared_ptr<IScene> scene;
@@ -42,10 +44,10 @@ namespace anex
 		bool focused = false;
 		using OnEntityAddedFunction = std::function<void(const std::shared_ptr<IEntity> &)>;
 		OnEntityAddedFunction onEntityAdded;
-		IWindow(const int32_t &windowWidth,
-						const int32_t &windowHeight,
-						const int32_t &windowX,
-						const int32_t &windowY,
+		IWindow(const float &windowWidth,
+						const float &windowHeight,
+						const float &windowX,
+						const float &windowY,
 						const bool &borderless,
 						const uint32_t &framerate);
 		virtual ~IWindow() = default;
@@ -61,8 +63,11 @@ namespace anex
 		void removeKeyPressHandler(const Key &key, EventIdentifier &id);
 		EventIdentifier addKeyUpdateHandler(const Key &key, const KeyUpdateHandler &callback);
 		void removeKeyUpdateHandler(const Key &key, EventIdentifier &id);
+		EventIdentifier addAnyKeyPressHandler(const AnyKeyPressHandler &callback);
+		void removeAnyKeyPressHandler(EventIdentifier &id);
 		void callKeyPressHandler(const Key &key, const int &pressed);
 		void callKeyUpdateHandler(const Key &key);
+		void callAnyKeyPressHandler(const Key &key, const bool &pressed);
 		// Mouse
 		virtual void updateMouse() = 0;
 		EventIdentifier addMousePressHandler(const Button &button, const MousePressHandler &callback);
@@ -86,8 +91,14 @@ namespace anex
 		virtual void drawCircle(int x, int y, int radius, uint32_t color) = 0;
 		virtual void drawText(int x, int y, const char* text, int scale, uint32_t color) = 0;
 		virtual void warpPointer(const glm::vec2 &coords);
-		virtual void setXY(const int32_t &x, const int32_t &y);
-		virtual void setWidthHeight(const uint32_t &width, const uint32_t &height);
-		virtual IWindow &createChildWindow(const char *title, IScene &scene, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY);
+		virtual void setXY(const float &x, const float &y);
+		virtual void setWidthHeight(const float &width, const float &height);
+		virtual IWindow &createChildWindow(const char *title,
+																			 IScene &scene,
+																			 const float &windowWidth,
+																			 const float &windowHeight,
+																			 const float &windowX,
+																			 const float &windowY,
+																			 const bool &NDCFramebufferPlane);
 	};
 }

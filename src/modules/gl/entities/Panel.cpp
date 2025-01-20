@@ -45,8 +45,24 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 	setColor(color);
 	updateElements("Position", positions);
   float titleLineHeight = 0;
-  auto titleSize = font.stringSize(title, 20.f, titleLineHeight, glm::vec2(0));
-	titleTextView = std::make_shared<TextView>(window, scene, glm::vec3(titleSize.x / 2, -titleSize.y / 2, 0.5), glm::vec3(0), glm::vec3(1), title, titleSize, font, 20.f);
+	auto titleSize = font.stringSize(title, window.windowHeight / 30.f, titleLineHeight, glm::vec2(0));
+	titleSize.y /= window.windowHeight * 0.5f;
+	titleSize.x /= window.windowWidth * 0.5f;
+	titleTextView = std::make_shared<TextView>(
+		window,
+		scene,
+		glm::vec3(titleSize.x / 2, -titleSize.y / 2, 0.1),
+		glm::vec3(0),
+		glm::vec3(1),
+		title,
+		titleSize,
+		font,
+		window.windowHeight / 30.f,
+		true,
+		[](auto &titleSize)
+		{
+			return glm::vec3(titleSize.x / 2, -titleSize.y / 2, 0.1);
+		});
   titleTextView->addToBVH = false;
   addChild(titleTextView);
   setSize();
@@ -68,10 +84,11 @@ void PanelMenu::addItem(const std::string &name, GLEntity &entity)
 		sizeYTotal += childItem.size.y;
 	}
   static const auto indent = 16.f;
+	auto &glWindow = ((VAO &)*this).window;
   auto panelItem = std::make_shared<PanelItem>(
   	vao.window,
 		scene,
-		glm::vec3(indent, -sizeYTotal, 0.5),
+		glm::vec3(indent / glWindow.windowWidth / 0.5, -sizeYTotal, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
     color,
@@ -124,7 +141,8 @@ void PanelMenu::setColor(const glm::vec4 &color)
 };
 void PanelMenu::setSize()
 {
-	glm::vec2 newSize(width, height);
+	auto &glWindow = ((VAO &)*this).window;
+	glm::vec2 newSize(width / glWindow.windowWidth / 0.5, height / glWindow.windowHeight / 0.5);
 	positions = {
 		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }
 	};
@@ -174,13 +192,29 @@ PanelItem::PanelItem(GLWindow &window,
 	updateIndices(indices);
   colors.resize(4);
 	setColor(color);
-	float FontSize = (float)window.windowHeight / 40.f;
+	float FontSize = window.windowHeight / 30.f;
 	float LineHeight = 0;
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {panelWidth - indent, 0});
-	textView = std::make_shared<TextView>(window, scene, glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);
+	TextSize.y /= window.windowHeight * 0.5f;
+	TextSize.x /= window.windowWidth * 0.5f;
+	textView = std::make_shared<TextView>(
+		window,
+		scene,
+		glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.1f),
+		glm::vec3(0),
+		glm::vec3(1),
+		text,
+		TextSize,
+		font,
+		FontSize,
+		true,
+		[](auto &TextSize)
+		{
+			return glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.1f);
+		});
 	textView->addToBVH = false;
   addChild(textView);
-  setSize({ panelWidth - indent, TextSize.y });
+  setSize({ (panelWidth - indent) / (window.windowWidth / 2), TextSize.y });
 	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
 	{
 		if (hovered)

@@ -20,6 +20,8 @@ namespace anex::modules::gl
 		uint32_t shaderCount = 0;
 	};
 	struct GLScene;
+#define KEYCODE_HOME 0x80
+#define KEYCODE_END 0x81
 	struct GLWindow : IWindow
 	{
 		const char *title;
@@ -37,9 +39,10 @@ namespace anex::modules::gl
 		bool isChildWindow = false;
 		GLWindow *parentWindow = 0;
 		GLScene *parentScene = 0;
-		std::vector<GLWindow> childWindows;
+		std::vector<GLWindow*> childWindows;
 		GladGLContext *glContext = 0;
 		ShaderContext *shaderContext = 0;
+		bool NDCFramebufferPlane;
 		std::shared_ptr<textures::Texture> framebufferTexture;
 		std::shared_ptr<textures::Texture> framebufferDepthTexture;
 		std::shared_ptr<textures::Framebuffer> framebuffer;
@@ -47,22 +50,24 @@ namespace anex::modules::gl
 		static constexpr unsigned int MinMouseButton = 0;
 		static constexpr unsigned int MaxMouseButton = 6;
 		float dpiScale = 1.0f;
+		glm::vec2 oldXY;
 		GLWindow(const char *title,
-						 const int32_t &windowWidth,
-						 const int32_t &windowHeight,
-						 const int32_t &windowX,
-						 const int32_t &windowY,
+						 const float &windowWidth,
+						 const float &windowHeight,
+						 const float &windowX,
+						 const float &windowY,
 						 const bool &borderless = false,
 						 const uint32_t &framerate = 60);
 		GLWindow(GLWindow &parentWindow,
 						 GLScene &parentScene,
 						 const char *childTitle,
-						 const int32_t &childWindowWidth,
-						 const int32_t &childWindowHeight,
-						 const int32_t &childWindowX,
-						 const int32_t &childWindowY,
+						 const float &childWindowWidth,
+						 const float &childWindowHeight,
+						 const float &childWindowX,
+						 const float &childWindowY,
+						 const bool &NDCFramebufferPlane = false,
 						 const uint32_t &framerate = 60);
-		~GLWindow();
+		~GLWindow() override;
 		void startWindow() override;
 		void renderInit();
 		void updateKeyboard() override;
@@ -78,9 +83,15 @@ namespace anex::modules::gl
 		void drawCircle(int x, int y, int radius, uint32_t color) override;
 		void drawText(int x, int y, const char* text, int scale, uint32_t color) override;
 		void warpPointer(const glm::vec2 &coords) override;
-		void setXY(const int32_t &x, const int32_t &y) override;
-		void setWidthHeight(const uint32_t &width, const uint32_t &height) override;
-		IWindow &createChildWindow(const char *title, IScene &scene, const uint32_t &windowWidth, const uint32_t &windowHeight, const int32_t &windowX, const int32_t &windowY) override;
+		void setXY(const float &x, const float &y) override;
+		void setWidthHeight(const float &width, const float &height) override;
+		IWindow &createChildWindow(const char *title,
+															 IScene &scene,
+															 const float &windowWidth,
+															 const float &windowHeight,
+															 const float &windowX,
+															 const float &windowY,
+															 const bool &NDCFramebufferPlane) override;
 	};
 	void computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals);
 }

@@ -36,7 +36,6 @@ DropdownMenu::DropdownMenu(anex::modules::gl::GLWindow &window,
 	updateIndices(indices);
 	setColor(color);
 	updateElements("Position", positions);
-
 };
 void DropdownMenu::addOption(const std::string &name, const OptionPressHandler &handler)
 {
@@ -128,7 +127,29 @@ DropdownItem::DropdownItem(GLWindow &window,
 	float FontSize = window.windowHeight / 32.f;
 	float LineHeight = 0;
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
-	textView = std::make_shared<TextView>(window, scene, glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);
+	TextSize.x /= window.windowWidth * 0.5;
+	TextSize.y /= window.windowHeight * 0.5;
+	textView = std::make_shared<TextView>(
+		window,
+		scene,
+		glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.1f),
+		glm::vec3(0),
+		glm::vec3(1, 1, 1),
+		text,
+		TextSize,
+		font,
+		FontSize,
+		true,
+		[](auto &TextSize)
+		{
+			return glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.1f);
+		},
+		TextView::ResizeHandler(),
+		[&]
+		{
+			auto &glWindow = ((VAO &)*this).window;
+			return glWindow.windowHeight / 32.f;
+		});
 	textView->addToBVH = false;
   addChild(textView);
   setSize({ TextSize.x, TextSize.y });

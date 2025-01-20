@@ -30,7 +30,23 @@ struct EditorScene : GLScene
         "images/skybox/bottom.jpg", "images/skybox/front.jpg", "images/skybox/back.jpg"
       })
     ));
-    addEntity(std::make_shared<entities::TextView>(window, *this, glm::vec3(0, 5, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), "Test Text", glm::vec2( 47 / 3, 14 / 3), robotoRegularFont, 90.f));
+    addEntity(std::make_shared<entities::TextView>(
+      window,
+      *this,
+      glm::vec3(0, 5, 0),
+      glm::vec3(0),
+      glm::vec3(1),
+      "Test Text",
+      glm::vec2( 47 / 3, 14 / 3),
+      robotoRegularFont,
+      90.f,
+      false,
+      entities::TextView::RepositionHandler(),
+      [](auto &textSize)
+      {
+        return glm::vec2( 47 / 3, 14 / 3);
+      }
+    ));
     window.addKeyUpdateHandler(20, [&]()
     {
       view.position.x -= 3 * window.deltaTime;

@@ -16,7 +16,13 @@ extern "C" {
 }
 #endif
 static bool setDPIAware = false;
-GLWindow::GLWindow(const char* title, const int32_t& windowWidth, const int32_t& windowHeight, const int32_t& windowX, const int32_t& windowY, const bool &borderless, const uint32_t& framerate):
+GLWindow::GLWindow(const char* title,
+									 const float& windowWidth,
+									 const float& windowHeight,
+									 const float& windowX,
+									 const float& windowY,
+									 const bool &borderless,
+									 const uint32_t& framerate):
 	IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
 	title(title),
 	glContext(new GladGLContext),
@@ -26,7 +32,15 @@ GLWindow::GLWindow(const char* title, const int32_t& windowWidth, const int32_t&
 	memset(windowButtons, 0, 7 * sizeof(int));
 	run();
 };
-GLWindow::GLWindow(GLWindow &parentWindow, GLScene &parentScene, const char *childTitle, const int32_t &childWindowWidth, const int32_t &childWindowHeight, const int32_t &childWindowX, const int32_t &childWindowY, const uint32_t &framerate):
+GLWindow::GLWindow(GLWindow &parentWindow,
+									 GLScene &parentScene,
+									 const char *childTitle,
+									 const float &childWindowWidth,
+									 const float &childWindowHeight,
+									 const float &childWindowX,
+									 const float &childWindowY,
+									 const bool &NDCFramebufferPlane,
+									 const uint32_t &framerate):
 	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
 	title(childTitle),
 	isChildWindow(true),
@@ -34,10 +48,28 @@ GLWindow::GLWindow(GLWindow &parentWindow, GLScene &parentScene, const char *chi
 	parentScene(&parentScene),
 	glContext(parentWindow.glContext),
 	shaderContext(parentWindow.shaderContext),
+	NDCFramebufferPlane(NDCFramebufferPlane),
 	framebufferTexture(std::make_shared<textures::Texture>(parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
 	framebufferDepthTexture(std::make_shared<textures::Texture>(parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
 	framebuffer(std::make_shared<textures::Framebuffer>(parentWindow, *framebufferTexture, *framebufferDepthTexture)),
-	framebufferPlane(std::make_shared<entities::Plane>(parentWindow, parentScene, glm::vec3(childWindowX + (childWindowWidth / 2), parentWindow.windowHeight - childWindowY - (childWindowHeight / 2), 0.5), glm::vec3(0), glm::vec3(1), glm::vec2(childWindowWidth, childWindowHeight), *framebufferTexture))
+	framebufferPlane(std::make_shared<entities::Plane>(
+		parentWindow,
+		parentScene,
+		glm::vec3(
+			NDCFramebufferPlane ?
+				(-1 + ((childWindowX + (childWindowWidth / 2)) / parentWindow.windowWidth / 0.5)) :
+				childWindowX + (childWindowWidth / 2),
+			NDCFramebufferPlane ?
+				(1 - ((childWindowY + (childWindowHeight / 2)) / parentWindow.windowHeight / 0.5)) :
+				parentWindow.windowHeight - childWindowY - (childWindowHeight / 2), 0.1
+		),
+		glm::vec3(0),
+		glm::vec3(1),
+		glm::vec2(
+			childWindowWidth / (NDCFramebufferPlane ? (parentWindow.windowWidth / 2) : 1),
+			childWindowHeight / (NDCFramebufferPlane ? (parentWindow.windowHeight / 2) : 1)
+		),
+		*framebufferTexture))
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -53,7 +85,7 @@ GLWindow::~GLWindow()
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
 typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALEXTPROC) (int interval);
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
-static const uint8_t GL_KEYCODES[] = {0,27,49,50,51,52,53,54,55,56,57,48,45,61,8,9,81,87,69,82,84,89,85,73,79,80,91,93,10,0,65,83,68,70,71,72,74,75,76,59,39,96,0,92,90,88,67,86,66,78,77,44,46,47,0,0,0,32,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,17,3,0,20,0,19,0,5,18,4,26,127};
+static const uint32_t GL_KEYCODES[] = {0,27,49,50,51,52,53,54,55,56,57,48,45,61,8,9,81,87,69,82,84,89,85,73,79,80,91,93,10,0,65,83,68,70,71,72,74,75,76,59,39,96,0,92,90,88,67,86,66,78,77,44,46,47,0,0,0,32,0,0,0,0,0,0,0,0,0,0,0,0,0,KEYCODE_HOME,0,0,0,0,0,0,0,KEYCODE_END,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,17,3,0,20,0,19,0,5,18,4,26,127};
 static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 																	LPARAM lParam)
 {
@@ -75,12 +107,13 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 		{
 			auto pressed = msg == WM_LBUTTONDOWN;
 			bool hadChildFocus = false;
-			for (auto &childWindow : glWindow->childWindows)
+			for (auto &childWindowPointer : glWindow->childWindows)
 			{
-				if (!childWindow.focused)
-				{
+				auto &childWindow = *childWindowPointer;
+				if (childWindow.minimized)
 					continue;
-				}
+				if (!childWindow.focused)
+					continue;
 				childWindow.windowButtons[0] = pressed;
 				hadChildFocus = true;
 				break;
@@ -94,12 +127,13 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 		{
 			auto pressed = msg == WM_RBUTTONDOWN;
 			bool hadChildFocus = false;
-			for (auto &childWindow : glWindow->childWindows)
+			for (auto &childWindowPointer : glWindow->childWindows)
 			{
-				if (!childWindow.focused)
-				{
+				auto &childWindow = *childWindowPointer;
+				if (childWindow.minimized)
 					continue;
-				}
+				if (!childWindow.focused)
+					continue;
 				childWindow.windowButtons[1] = pressed;
 				hadChildFocus = true;
 				break;
@@ -113,12 +147,13 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 		{
 			auto pressed = msg == WM_MBUTTONDOWN;
 			bool hadChildFocus = false;
-			for (auto &childWindow : glWindow->childWindows)
+			for (auto &childWindowPointer : glWindow->childWindows)
 			{
-				if (!childWindow.focused)
-				{
+				auto &childWindow = *childWindowPointer;
+				if (childWindow.minimized)
 					continue;
-				}
+				if (!childWindow.focused)
+					continue;
 				childWindow.windowButtons[2] = pressed;
 				hadChildFocus = true;
 				break;
@@ -132,12 +167,13 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam); // This gives the scroll amount
 			auto wheelButton = zDelta > 0 ? 3 : 4; // Wheel scrolled up or down
 			bool hadChildFocus = false;
-			for (auto &childWindow : glWindow->childWindows)
+			for (auto &childWindowPointer : glWindow->childWindows)
 			{
-				if (!childWindow.focused)
-				{
+				auto &childWindow = *childWindowPointer;
+				if (childWindow.minimized)
 					continue;
-				}
+				if (!childWindow.focused)
+					continue;
 				childWindow.windowButtons[wheelButton] = 1;
 				hadChildFocus = true;
 				break;
@@ -155,12 +191,13 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 				throw std::runtime_error("Invalid XButton");
 			auto pressed = msg == WM_XBUTTONDOWN;
 			bool hadChildFocus = false;
-			for (auto &childWindow : glWindow->childWindows)
+			for (auto &childWindowPointer : glWindow->childWindows)
 			{
-				if (!childWindow.focused)
-				{
+				auto &childWindow = *childWindowPointer;
+				if (childWindow.minimized)
 					continue;
-				}
+				if (!childWindow.focused)
+					continue;
 				childWindow.windowButtons[xButton] = pressed;
 				hadChildFocus = true;
 				break;
@@ -177,12 +214,13 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 			auto x = pt.x;
 			auto y = glWindow->windowHeight - pt.y;
 			bool hadChildFocus = false;
-			for (auto &childWindow : glWindow->childWindows)
+			for (auto &childWindowPointer : glWindow->childWindows)
 			{
-				if (!childWindow.focused)
-				{
+				auto &childWindow = *childWindowPointer;
+				if (childWindow.minimized)
 					continue;
-				}
+				if (!childWindow.focused)
+					continue;
 				auto childX = x - childWindow.windowX;
 				auto childY = childWindow.windowHeight - (glWindow->windowHeight - y - childWindow.windowY);
 				childWindow.mouseCoords.x = childX, childWindow.mouseCoords.y = childY;
@@ -204,15 +242,21 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 							 ((GetKeyState(VK_SHIFT) & 0x8000) >> 14) |
 							 ((GetKeyState(VK_MENU) & 0x8000) >> 13) |
 							 (((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) >> 12);
-			auto keycode = GL_KEYCODES[HIWORD(lParam) & 0x1ff];
+			auto keycodeHiword = HIWORD(lParam) & 0x1ff;
+			if (keycodeHiword < 0 || keycodeHiword > sizeof(GL_KEYCODES) / sizeof(GL_KEYCODES[0]))
+			{
+				break;
+			}
+			auto keycode = GL_KEYCODES[keycodeHiword];
 			auto keypress = !((lParam >> 31) & 1);
 			bool hadChildFocus = false;
-			for (auto &childWindow : glWindow->childWindows)
+			for (auto &childWindowPointer : glWindow->childWindows)
 			{
-				if (!childWindow.focused)
-				{
+				auto &childWindow = *childWindowPointer;
+				if (childWindow.minimized)
 					continue;
-				}
+				if (!childWindow.focused)
+					continue;
 				childWindow.mod = mod;
 				childWindow.windowKeys[keycode] = keypress;
 				hadChildFocus = true;
@@ -335,8 +379,9 @@ void GLWindow::startWindow()
 		runRunnables();
 		updateKeyboard();
 		updateMouse();
-		for (auto &childWindow : childWindows)
+		for (auto &childWindowPointer : childWindows)
 		{
+			auto &childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
 			childWindow.render();
@@ -346,8 +391,9 @@ void GLWindow::startWindow()
 		glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		GLcheck(*this, "glClear");
 		render();
-		for (auto &childWindow : childWindows)
+		for (auto &childWindowPointer : childWindows)
 		{
+			auto &childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
 			childWindow.framebufferPlane->render();
@@ -357,8 +403,12 @@ void GLWindow::startWindow()
 #endif
 _exit:
 	scene.reset();
-	childWindows.clear();
 	delete shaderContext;
+	for (auto &childWindowPointer : childWindows)
+	{
+		delete childWindowPointer;
+	}
+	childWindows.clear();
 #ifdef _WIN32
 	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(hRenderingContext);
@@ -469,6 +519,7 @@ void GLWindow::updateKeyboard()
 		if (keys[i] != pressed)
 		{
 			callKeyPressHandler(i, pressed);
+			callAnyKeyPressHandler(i, pressed);
 		}
 		if (pressed)
 		{
@@ -531,11 +582,15 @@ void GLWindow::maximize()
 	{
 		maximized = false;
 		ShowWindow(hwnd, SW_RESTORE);
+		setXY(oldXY.x, oldXY.y);
 	}
 	else
 	{
 		maximized = true;
 		ShowWindow(hwnd, SW_MAXIMIZE);
+		oldXY.x = windowX;
+		oldXY.y = windowY;
+		setXY(0, 0);
 	}
 #endif
 };
@@ -549,6 +604,7 @@ void GLWindow::restore()
 		return;
 	}
 	ShowWindow(hwnd, SW_RESTORE);
+	setXY(oldXY.x, oldXY.y);
 #endif
 }
 void GLWindow::preRender()
@@ -740,27 +796,35 @@ void GLWindow::warpPointer(const glm::vec2 &coords)
 	justWarpedPointer = true;
 #endif
 };
-void GLWindow::setXY(const int32_t &x, const int32_t &y)
+void GLWindow::setXY(const float &x, const float &y)
 {
 	windowX = x;
 	windowY = y;
+	if (isChildWindow)
+	{
+		return;
+	}
 	UINT flags = SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW;
 	if (windowX == -1 && windowY == -1)
 		flags |= SWP_NOMOVE;
 	SetWindowPos(hwnd,
 		HWND_TOPMOST,
-		(windowX == -1 ? 0 : windowX),          // Use explicit or default X position
-		(windowY == -1 ? 0 : windowY),
-		windowWidth,
-		windowHeight,
+		(int)(windowX == -1 ? 0.f : windowX),          // Use explicit or default X position
+		(int)(windowY == -1 ? 0.f : windowY),
+		(int)windowWidth,
+		(int)windowHeight,
 		flags);
 	// std::cout << "Setting Window X/Y to {" << windowX << ", " << windowY << "}" << std::endl;
 };
-void GLWindow::setWidthHeight(const uint32_t &width, const uint32_t &height)
+void GLWindow::setWidthHeight(const float &width, const float &height)
 {
 	windowWidth = width;
 	windowHeight = height;
-	int adjustedWidth = windowWidth, adjustedHeight = windowHeight;
+	if (isChildWindow)
+	{
+		return;
+	}
+	float adjustedWidth = windowWidth, adjustedHeight = windowHeight;
 	auto wsStyle = isChildWindow ? (WS_CHILD | WS_VISIBLE) : WS_OVERLAPPEDWINDOW;
 	if (!isChildWindow)
 	{
@@ -774,23 +838,29 @@ void GLWindow::setWidthHeight(const uint32_t &width, const uint32_t &height)
 		flags |= SWP_NOMOVE;
 	SetWindowPos(hwnd,
 		HWND_TOPMOST,
-		(windowX == -1 ? 0 : windowX),          // Use explicit or default X position
-			(windowY == -1 ? 0 : windowY),
-	adjustedWidth,
-		adjustedHeight, flags);
+		(int)(windowX == -1 ? 0 : windowX),          // Use explicit or default X position
+		(int)(windowY == -1 ? 0 : windowY),
+		(int)adjustedWidth,
+		(int)adjustedHeight, flags);
 };
-anex::IWindow &GLWindow::createChildWindow(const char* title, IScene &scene, const uint32_t& windowWidth, const uint32_t& windowHeight, const int32_t& windowX, const int32_t& windowY)
+anex::IWindow &GLWindow::createChildWindow(const char* title,
+																					 IScene &scene,
+																					 const float& windowWidth,
+																					 const float& windowHeight,
+																					 const float& windowX,
+																					 const float& windowY,
+																					 const bool &NDCFramebufferPlane)
 {
-	childWindows.emplace_back(*this, (GLScene &)scene, title, windowWidth, windowHeight, windowX, windowY);
-	return childWindows.back();
+	childWindows.push_back(new GLWindow(*this, (GLScene &)scene, title, windowWidth, windowHeight, windowX, windowY, NDCFramebufferPlane));
+	return *childWindows.back();
 };
 void anex::modules::gl::computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)
 {
 	const glm::vec3 *positionsData = positions.data();
-	const glm::ivec3 *indicesData = (const glm::ivec3 *)indices.data();
-	const int nbTriangles = indices.size() / 3;
-	const int nbVertices = positions.size();
-	const int nbNormals = nbVertices;
+	const auto *indicesData = (const glm::ivec3 *)indices.data();
+	const auto nbTriangles = indices.size() / 3;
+	const auto nbVertices = positions.size();
+	const auto nbNormals = nbVertices;
 	normals.resize(nbNormals);
 	auto *normalsData = normals.data();
 	memset(normalsData, 0, nbVertices * sizeof(glm::vec3));

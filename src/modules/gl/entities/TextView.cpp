@@ -10,6 +10,10 @@ TextView::TextView(GLWindow &window,
                    const glm::vec2 &size,
                    fonts::freetype::FreetypeFont &font,
                    const float &fontSize,
+                   const bool &textSizeIsNDC,
+                   const RepositionHandler &repositionHandler,
+                   const ResizeHandler &resizeHandler,
+                   const ReFontSizeHandler &reFontSizeHandler,
                    const std::string &name):
 	GLEntity(window,
 		{
@@ -42,24 +46,57 @@ TextView::TextView(GLWindow &window,
 	text(text),
 	size(size),
 	font(font),
-	fontSize(fontSize)
+	fontSize(fontSize),
+	textSizeIsNDC(textSizeIsNDC),
+	repositionHandler(repositionHandler),
+	resizeHandler(resizeHandler),
+	reFontSizeHandler(reFontSizeHandler)
 {
 	computeNormals(indices, positions, normals);
 	updateIndices(indices);
 	updateElements("UV2", uvs);
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
+	TextView::update();
 };
 void TextView::update()
 {
 	if (oldText != text)
 	{
-		float lineHeight = 0;
-		glm::vec3 cursorPosition(0);
-		auto textSize = font.stringSize(text, fontSize, lineHeight, {0, 0});
-		font.stringToTexture(text, {1, 1, 1, 1}, fontSize, lineHeight, textSize, texturePointer, 0, cursorPosition);
-		oldText = text;
+		forceUpdate();
 	}
+};
+void TextView::forceUpdate()
+{
+	if (reFontSizeHandler)
+	{
+		fontSize = reFontSizeHandler();
+	}
+	float lineHeight = 0;
+	auto TextSize = textSize = font.stringSize(text, fontSize, lineHeight, {0, 0});
+	if (TextSize.x && TextSize.y)
+		font.stringToTexture(text, {1, 1, 1, 1}, fontSize, lineHeight, TextSize, texturePointer, cursorIndex, cursorPosition);
+	actualSizeBeforeNDC = TextSize;
+	if (textSizeIsNDC)
+	{
+		auto &glWindow = ((VAO &)*this).window;
+		TextSize.x /= glWindow.windowWidth * 0.5;
+		TextSize.y /= glWindow.windowHeight * 0.5;
+	}
+	actualSize = TextSize;
+	if (resizeHandler)
+	{
+		setSize(resizeHandler(TextSize));
+	}
+	else
+	{
+		setSize(TextSize);
+	}
+	if (repositionHandler)
+	{
+		position = repositionHandler(this->size);
+	}
+	oldText = text;
 };
 void TextView::preRender()
 {
@@ -69,7 +106,8 @@ void TextView::preRender()
 	shader.setBlock("View", scene.view.matrix);
 	shader.setBlock("Projection", scene.projection.matrix);
 	shader.setBlock("CameraPosition", scene.view.position, 16);
-  shader.setTexture("Texture2D", *texturePointer, 0);
+	if (size.x && size.y)
+	  shader.setTexture("Texture2D", *texturePointer, 0);
 	shader.unbind();
 	shader.unbind();
 };
@@ -80,4 +118,8 @@ void TextView::setSize(const glm::vec2 &size)
 		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
 	};
 	updateElements("Position", positions);
+};
+void TextView::updateText(const std::string &text)
+{
+	this->text = text;
 };

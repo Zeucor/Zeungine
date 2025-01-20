@@ -30,7 +30,7 @@ TabsBar::TabsBar(anex::modules::gl::GLWindow &window,
 		position,
 		rotation,
 		scale,
-		name.empty() ? "TabsBar " + std::to_string(++panelMenusCount) : name
+		name.empty() ? "TabsBar " + std::to_string(++tabBarsCount) : name
 	),
 	scene(scene),
 	size({ 0, 0 }),
@@ -41,7 +41,6 @@ TabsBar::TabsBar(anex::modules::gl::GLWindow &window,
 {
 	updateIndices(indices);
 	setColor(color);
-	updateElements("Position", positions);
   setSize();
   addToBVH = false;
 };
@@ -58,7 +57,7 @@ void TabsBar::addTab(const std::string &name, const TabClickHandler &handler, co
   auto panelItem = std::make_shared<Tab>(
   	vao.window,
 		scene,
-		glm::vec3(sizeXTotal, 0, 0.5),
+		glm::vec3(sizeXTotal, 0, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
     color,
@@ -90,7 +89,8 @@ void TabsBar::setColor(const glm::vec4 &color)
 };
 void TabsBar::setSize()
 {
-	glm::vec2 newSize(width, height);
+	auto &glWindow = ((VAO &)*this).window;
+	glm::vec2 newSize(width / glWindow.windowWidth / 0.5, height / glWindow.windowHeight / 0.5);
 	positions = {
 		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }
 	};
@@ -139,13 +139,14 @@ Tab::Tab(GLWindow &window,
 		position,
 		rotation,
 		scale,
-    name.empty() ? "Tab " + std::to_string(++panelItemsCount) : name
+    name.empty() ? "Tab " + std::to_string(++tabsCount) : name
 	),
 	scene(scene),
 	size({ 0, 0 }),
 	text(text),
 	font(font),
-  height(height),
+	height(height),
+	NDCHeight((height / window.windowHeight) * 2),
   handler(handler),
 	active(active),
 	activeColor(std::clamp(color[0] * 2.f, 0.f, 1.f), std::clamp(color[1] * 2.f, 0.f, 1.f), std::clamp(color[2] * 2.f, 0.f, 1.f), color[3]),
@@ -158,11 +159,12 @@ Tab::Tab(GLWindow &window,
 	float FontSize = height / 1.5f;
 	float LineHeight = 0;
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
-  auto yRatio = height / TextSize.y;
-	textView = std::make_shared<TextView>(window, scene, glm::vec3(TextSize.x / 2 + 8, -height / 2, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);
+	TextSize.y /= window.windowHeight * 0.5f;
+	TextSize.x /= window.windowWidth * 0.5f;
+	textView = std::make_shared<TextView>(window, scene, glm::vec3(TextSize.x / 2 + 8 / window.windowWidth, -NDCHeight / 2, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);
 	textView->addToBVH = false;
   addChild(textView);
-  setSize({TextSize.x + 16, height});
+  setSize({TextSize.x + 16 / window.windowWidth, height / window.windowHeight / 0.5});
 	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
 	{
 		this->hovered = hovered;

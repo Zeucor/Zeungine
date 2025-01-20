@@ -46,7 +46,8 @@ namespace anex::modules::gl::entities
 		IWindow::EventIdentifier dragMouseMoveID = 0;
 		bool dragEnabled = false;
 		glm::vec2 dragOldCoords = glm::vec2(0, 0);
-		float height = 0.0f;
+		float height;
+		float NDCHeight;
 		std::shared_ptr<DropdownMenu> fileDropdown;
 		IWindow::EventIdentifier filePressID;
 		size_t fileID = 0;

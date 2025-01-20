@@ -19,7 +19,7 @@ namespace anex::modules::gl::entities
 		float width;
 		float height;
 		std::shared_ptr<TextView> titleTextView;
-		inline static size_t panelMenusCount = 0;
+		inline static size_t tabBarsCount = 0;
 		using TabClickHandler = std::function<void()>;
 		TabsBar(GLWindow& window,
 							GLScene& scene,
@@ -48,6 +48,7 @@ namespace anex::modules::gl::entities
 		std::shared_ptr<TextView> textView;
 		fonts::freetype::FreetypeFont& font;
 		float height;
+		float NDCHeight;
 		TabsBar::TabClickHandler handler;
 		GLWindow::EventIdentifier mouseHoverID = 0;
 		GLWindow::EventIdentifier mousePressID = 0;
@@ -56,7 +57,7 @@ namespace anex::modules::gl::entities
 		glm::vec4 activeColor;
 		glm::vec4 inactiveColor;
 		TabsBar &tabsBar;
-		inline static size_t panelItemsCount = 0;
+		inline static size_t tabsCount = 0;
 		Tab(GLWindow& window,
 							GLScene& scene,
 							const glm::vec3& position,

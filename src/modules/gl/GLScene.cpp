@@ -171,8 +171,8 @@ void GLScene::entityPreRender(IEntity &entity)
 void GLScene::resize(const glm::vec2 &newSize)
 {
 	view.callResizeHandler(newSize);
-	projection.orthoSize = newSize;
-	projection.update();
+	// projection.orthoSize = newSize;
+	// projection.update();
 	if (framebufferPointer)
 	{
 		framebufferPointer->texture.size = {newSize.x, newSize.y, 1, 0};

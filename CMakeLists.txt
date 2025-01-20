@@ -50,8 +50,11 @@ if(BUILD_OPENGL)
         src/modules/gl/GLWindow.cpp
         src/modules/gl/GLEntity.cpp
         src/modules/gl/GLScene.cpp
+        src/modules/gl/entities/Button.cpp
         src/modules/gl/entities/Cube.cpp
+        src/modules/gl/entities/Dialog.cpp
         src/modules/gl/entities/DropdownMenu.cpp
+        src/modules/gl/entities/Input.cpp
         src/modules/gl/entities/Panel.cpp
         src/modules/gl/entities/Plane.cpp
         src/modules/gl/entities/SkyBox.cpp
@@ -110,7 +113,7 @@ function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     if(UNIX AND NOT APPLE)
         target_link_libraries(${TEST_NAME} ${X11_LIBRARIES})
     endif()
-    if(LIBRARY)
+    if(NOT LIBRARY)
         add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE_DIR:${TEST_NAME}>/${TEST_NAME}${TEST_EXT} ${TEST_ARGS})
     endif()
 endfunction()
@@ -123,7 +126,8 @@ endif()
 if(BUILD_OPENGL)
     create_test(GLTest tests/GLTest.cpp "" FALSE)
     create_test(EditorGame tests/EditorGame.cpp "" TRUE)
-    create_test(Editor tests/Editor.cpp "" FALSE)
+    add_executable(Editor src/editor/Editor.cpp src/editor/EditorScene.cpp src/editor/CodeScene.cpp)
+    target_link_libraries(Editor abstractnexus)
     add_dependencies(Editor EditorGame)
     set(SKYBOX_OUT_DIRECTORY ${CMAKE_BINARY_DIR}/images/skybox)
     file(MAKE_DIRECTORY ${SKYBOX_OUT_DIRECTORY})
