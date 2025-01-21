@@ -14,7 +14,7 @@ namespace anex::modules::gl::entities
 		std::vector<glm::vec4> colors;
 		GLScene& scene;
 		glm::vec2 size;
-		std::string text;
+		std::string *textPointer = 0;
 		std::shared_ptr<TextView> textView;
 		fonts::freetype::FreetypeFont& font;
     float width;
@@ -56,5 +56,9 @@ namespace anex::modules::gl::entities
 		void setSize(glm::vec2  size);
 		void showTextView(const std::shared_ptr<TextView>& showTextView);
 		char getShiftedChar(const char &key, bool shiftPressed);
+		void setActive();
+		void setInactive();
+		void clear();
+		void handleKey(IWindow::Key key, bool pressed);
 	};
 }

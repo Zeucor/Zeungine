@@ -114,6 +114,7 @@ Input::Input(GLWindow &window,
 			return this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2) / 1.f);
 	    }
     );
+	textPointer = &textView->text;
     textView->cursorIndex = 0;
 	textView->addToBVH = false;
 	showTextView(placeholderTextView);
@@ -143,164 +144,11 @@ Input::Input(GLWindow &window,
 	{
 		if (!pressed && !this->active)
   		{
-			this->active = true;
-			setColor(this->activeColor);
-			if (activeInput && activeInput != this)
-			{
-				activeInput->active = false;
-				activeInput->setColor(activeInput->inactiveColor);
-			}
-			activeInput = this;
+			setActive();
 		}
 	});
-	anyKeyPressID = window.addAnyKeyPressHandler([&](auto key, auto pressed)
-	{
-		if (!this->active)
-			return;
-		if (!pressed)
-    		return;
-        auto &textViewRef = *textView;
-		if (!std::isprint(key))
-		{
-			switch (key)
-			{
-			case 8:
-                if (textViewRef.cursorIndex > 0)
-                {
-					--textViewRef.cursorIndex;
-					text.erase(text.begin() + textViewRef.cursorIndex);
-					if (text.empty())
-                    {
-                        goto _showPlaceholder;
-                    }
-					goto _forceUpdateTextView;
-                }
-				return;
-			case 20:
-                if (textViewRef.cursorIndex > 0)
-                {
-					textViewRef.cursorIndex--;
-					goto _forceUpdateTextView;
-                }
-                return;
-            case 19:
-	            if (textViewRef.cursorIndex < text.size())
-	            {
-					textViewRef.cursorIndex++;
-					goto _forceUpdateTextView;
-	            }
-				return;
-			case 127:
-				if (textViewRef.cursorIndex < text.size())
-				{
-					text.erase(text.begin() + textViewRef.cursorIndex);
-					if (text.empty())
-                    {
-                        goto _showPlaceholder;
-                    }
-					goto _forceUpdateTextView;
-				}
-				return;
-			case KEYCODE_HOME:
-				{
-					textViewRef.cursorIndex = 0;
-					goto _forceUpdateTextView;
-				};
-			case KEYCODE_END:
-				{
-					textViewRef.cursorIndex = text.size();
-					goto _forceUpdateTextView;
-				};
-			default:
-    			return;
-			}
-		}
-        {
-		    auto shiftPressed = window.mod & 2;
-		    text.insert(text.begin() + textViewRef.cursorIndex, getShiftedChar(key, shiftPressed));
-			++textViewRef.cursorIndex;
-        }
-	    if (text.empty())
-	    {
-_showPlaceholder:
-			showTextView(placeholderTextView);
-			removeChild(cursorPlane->ID);
-	    }
-	    else
-	    {
-			textViewRef.updateText(text);
-            goto _updateTextView;
-_forceUpdateTextView:
-			textViewRef.updateText(text);
-			textViewRef.forceUpdate();
-            goto _updateCursor;
-_updateTextView:
-			textViewRef.forceUpdate();
-_updateCursor:
-			auto &cursorPosition = textViewRef.cursorPosition;
-			auto &glWindow = ((VAO&)*this).window;
-			auto &cursorPlanePosition = cursorPlane->position;
-			auto cursorPositionXBeforeNDC = cursorPosition.x;
-			auto textViewSizeBeforeNDC = glm::vec2(textViewRef.actualSizeBeforeNDC);
-			auto inputSizeBeforeNDC = glm::vec2(size.x * glWindow.windowWidth / 2, size.y * glWindow.windowHeight / 2);
-			float inputWidthNDCMinusPadding = size.x - (NDCPadding);
-			auto inputSizeBeforeNDCMinusPadding = glm::vec2(inputWidthNDCMinusPadding * (glWindow.windowWidth / 2), size.y * glWindow.windowHeight / 2);
-			float textWidthNDC = textViewRef.actualSize.x;
-			float cursorTextCoord = cursorPosition.x;
-	    	if (textWidthNDC > inputWidthNDCMinusPadding)
-	    	{
-			    float halfVisibleWidthNDC = inputWidthNDCMinusPadding / 2.0f;
-				float visibleStartNDC = glm::clamp(
-					(cursorTextCoord / textViewRef.textSize.x) - (halfVisibleWidthNDC / textWidthNDC),
-					0.0f,
-					1.0f - (inputWidthNDCMinusPadding / textWidthNDC)
-				);
-				float normalizedCursor = glm::clamp(
-					(cursorTextCoord / textViewRef.textSize.x - visibleStartNDC) / (inputWidthNDCMinusPadding / textWidthNDC),
-					0.0f,
-					1.0f
-				);
-				cursorPlanePosition.x = (normalizedCursor * inputWidthNDCMinusPadding) + (NDCPadding / 2);
-			}
-			else
-			{
-				cursorPlanePosition.x = (cursorTextCoord / textViewRef.textSize.x) * textWidthNDC + (NDCPadding / 2);
-			}
-			cursorPlanePosition.x = glm::clamp(cursorPlanePosition.x, 0.0f, inputWidthNDCMinusPadding + (NDCPadding / 2));
-			if (!cursorPlane->ID)
-			{
-			    addChild(cursorPlane);
-			}
-			auto &uvs = textViewRef.uvs;
-			if (textViewSizeBeforeNDC.x <= inputSizeBeforeNDCMinusPadding.x)
-			{
-			    uvs[0].x = 0.0f;
-			    uvs[1].x = 1.0f;
-			    uvs[2].x = 1.0f;
-			    uvs[3].x = 0.0f;
-			}
-			else
-			{
-				float halfVisibleWidth = (int32_t)(inputSizeBeforeNDCMinusPadding.x / 2.0f);
-				float visibleRegionStartNDC = glm::clamp(
-					cursorPositionXBeforeNDC - halfVisibleWidth,
-					0.0f,
-					(float)textViewSizeBeforeNDC.x - (float)inputSizeBeforeNDCMinusPadding.x
-				);
-				float visibleRegionEndNDC = visibleRegionStartNDC + inputSizeBeforeNDCMinusPadding.x;
-				float startNormalized = visibleRegionStartNDC / textViewSizeBeforeNDC.x;
-				float endNormalized = visibleRegionEndNDC / textViewSizeBeforeNDC.x;
-				startNormalized = glm::clamp(startNormalized, 0.0f, 1.0f);
-				endNormalized = glm::clamp(endNormalized, 0.0f, 1.0f);
-				uvs[0].x = startNormalized;
-				uvs[1].x = endNormalized;
-				uvs[2].x = endNormalized;
-				uvs[3].x = startNormalized;
-			}
- 			textViewRef.updateElements("UV2", uvs);
-			showTextView(textView);
-	    }
-	});
+	std::function<void(IWindow::Key, bool)> keypress = std::bind(&Input::handleKey, this, std::placeholders::_1, std::placeholders::_2);
+	anyKeyPressID = window.addAnyKeyPressHandler(keypress);
 };
 Input::~Input()
 {
@@ -378,3 +226,182 @@ char Input::getShiftedChar(const char &key, bool shiftPressed)
 	}
 	return key;
 };
+void Input::setActive()
+{
+	this->active = true;
+	setColor(this->activeColor);
+	if (activeInput && activeInput != this)
+	{
+		activeInput->setInactive();
+	}
+	activeInput = this;
+};
+void Input::setInactive()
+{
+	if (activeInput)
+	{
+		activeInput->active = false;
+		activeInput->setColor(activeInput->inactiveColor);
+		activeInput = 0;
+	}
+};
+void Input::clear()
+{
+	textPointer->clear();
+    textView->cursorIndex = 0;
+	if (activeInput == this)
+		setInactive();
+	handleKey(0, true);
+}
+void Input::handleKey(IWindow::Key key, bool pressed)
+{
+	if (!this->active && key != 0)
+		return;
+	if (!pressed)
+    	return;
+    auto &textViewRef = *textView;
+	auto &glWindow = ((VAO&)*this).window;
+	if (!std::isprint(key))
+	{
+		switch (key)
+		{
+		case 8:
+            if (textViewRef.cursorIndex > 0)
+            {
+				--textViewRef.cursorIndex;
+				textPointer->erase(textPointer->begin() + textViewRef.cursorIndex);
+				if (textPointer->empty())
+                {
+                    goto _showPlaceholder;
+                }
+				goto _forceUpdateTextView;
+            }
+			return;
+		case 20:
+            if (textViewRef.cursorIndex > 0)
+            {
+				textViewRef.cursorIndex--;
+				goto _forceUpdateTextView;
+            }
+            return;
+        case 19:
+	        if (textViewRef.cursorIndex < textPointer->size())
+	        {
+				textViewRef.cursorIndex++;
+				goto _forceUpdateTextView;
+	        }
+			return;
+		case 127:
+			if (textViewRef.cursorIndex < textPointer->size())
+			{
+				textPointer->erase(textPointer->begin() + textViewRef.cursorIndex);
+				if (textPointer->empty())
+                {
+                    goto _showPlaceholder;
+                }
+				goto _forceUpdateTextView;
+			}
+			return;
+		case KEYCODE_HOME:
+			{
+				textViewRef.cursorIndex = 0;
+				goto _forceUpdateTextView;
+			};
+		case KEYCODE_END:
+			{
+				textViewRef.cursorIndex = textPointer->size();
+				goto _forceUpdateTextView;
+			};
+		default:
+    		goto _forceUpdateTextView;
+		}
+	}
+    {
+		auto shiftPressed = glWindow.mod & 2;
+		textPointer->insert(textPointer->begin() + textViewRef.cursorIndex, getShiftedChar(key, shiftPressed));
+		++textViewRef.cursorIndex;
+    }
+	if (textPointer->empty())
+	{
+_showPlaceholder:
+		showTextView(placeholderTextView);
+		removeChild(cursorPlane->ID);
+	}
+	else
+	{
+		textViewRef.updateText(*textPointer);
+        goto _updateTextView;
+_forceUpdateTextView:
+		textViewRef.updateText(*textPointer);
+		textViewRef.forceUpdate();
+        goto _updateCursor;
+_updateTextView:
+		textViewRef.forceUpdate();
+_updateCursor:
+		auto &cursorPosition = textViewRef.cursorPosition;
+		auto &cursorPlanePosition = cursorPlane->position;
+		auto cursorPositionXBeforeNDC = cursorPosition.x;
+		auto textViewSizeBeforeNDC = glm::vec2(textViewRef.actualSizeBeforeNDC);
+		auto inputSizeBeforeNDC = glm::vec2(size.x * glWindow.windowWidth / 2, size.y * glWindow.windowHeight / 2);
+		float inputWidthNDCMinusPadding = size.x - (NDCPadding);
+		auto inputSizeBeforeNDCMinusPadding = glm::vec2(inputWidthNDCMinusPadding * (glWindow.windowWidth / 2), size.y * glWindow.windowHeight / 2);
+		float textWidthNDC = textViewRef.actualSize.x;
+		float cursorTextCoord = cursorPosition.x;
+	    if (textWidthNDC > inputWidthNDCMinusPadding)
+	    {
+			float halfVisibleWidthNDC = inputWidthNDCMinusPadding / 2.0f;
+			float visibleStartNDC = glm::clamp(
+				(cursorTextCoord / textViewRef.textSize.x) - (halfVisibleWidthNDC / textWidthNDC),
+				0.0f,
+				1.0f - (inputWidthNDCMinusPadding / textWidthNDC)
+			);
+			float normalizedCursor = glm::clamp(
+				(cursorTextCoord / textViewRef.textSize.x - visibleStartNDC) / (inputWidthNDCMinusPadding / textWidthNDC),
+				0.0f,
+				1.0f
+			);
+			cursorPlanePosition.x = (normalizedCursor * inputWidthNDCMinusPadding) + (NDCPadding / 2);
+		}
+		else
+		{
+			cursorPlanePosition.x = (cursorTextCoord / textViewRef.textSize.x) * textWidthNDC + (NDCPadding / 2);
+		}
+		cursorPlanePosition.x = glm::clamp(cursorPlanePosition.x, 0.0f, inputWidthNDCMinusPadding + (NDCPadding / 2));
+		if (!cursorPlane->ID)
+		{
+			addChild(cursorPlane);
+		}
+		auto &uvs = textViewRef.uvs;
+		if (textViewSizeBeforeNDC.x <= inputSizeBeforeNDCMinusPadding.x)
+		{
+			uvs[0].x = 0.0f;
+			uvs[1].x = 1.0f;
+			uvs[2].x = 1.0f;
+			uvs[3].x = 0.0f;
+		}
+		else
+		{
+			float halfVisibleWidth = (int32_t)(inputSizeBeforeNDCMinusPadding.x / 2.0f);
+			float visibleRegionStartNDC = glm::clamp(
+				cursorPositionXBeforeNDC - halfVisibleWidth,
+				0.0f,
+				(float)textViewSizeBeforeNDC.x - (float)inputSizeBeforeNDCMinusPadding.x
+			);
+			float visibleRegionEndNDC = visibleRegionStartNDC + inputSizeBeforeNDCMinusPadding.x;
+			float startNormalized = visibleRegionStartNDC / textViewSizeBeforeNDC.x;
+			float endNormalized = visibleRegionEndNDC / textViewSizeBeforeNDC.x;
+			startNormalized = glm::clamp(startNormalized, 0.0f, 1.0f);
+			endNormalized = glm::clamp(endNormalized, 0.0f, 1.0f);
+			uvs[0].x = startNormalized;
+			uvs[1].x = endNormalized;
+			uvs[2].x = endNormalized;
+			uvs[3].x = startNormalized;
+		}
+ 		textViewRef.updateElements("UV2", uvs);
+		if (textPointer->empty())
+        {
+            goto _showPlaceholder;
+        }
+		showTextView(textView);
+	}
+}
