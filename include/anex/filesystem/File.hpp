@@ -6,7 +6,7 @@
 #include <optional>
 #include <anex/enums/EFileLocation.hpp>
 
-namespace anex
+namespace anex::filesystem
 {
 	struct File {
 	public:

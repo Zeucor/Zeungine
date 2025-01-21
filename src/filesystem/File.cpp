@@ -2,7 +2,7 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
-using namespace anex;
+using namespace anex::filesystem;
 File::File(const std::string& filePath, enums::EFileLocation fileLocation, const std::string& mode)
     : originalFilePath(filePath), filePath(filePath), fileLocation(fileLocation), openMode(std::ios::in | std::ios::out | std::ios::binary)
 {
