@@ -64,6 +64,6 @@ namespace anex::editor
 		void setupCodeWindow();
 		void minimizeWindows();
 		void setupToolbarOptions();
-		void loadProject();
+		void newProject(std::string_view projectName, std::string_view projectDirectory);
 	};
 }

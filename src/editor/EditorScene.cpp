@@ -1,5 +1,6 @@
 #include <editor/EditorScene.hpp>
 #include <editor/CodeScene.hpp>
+#include <anex/filesystem/Directory.hpp>
 using namespace anex::editor;
 static anex::SharedLibrary gameLibrary("EditorGame.dll");
 EditorScene::EditorScene(GLWindow& window):
@@ -132,12 +133,13 @@ EditorScene::EditorScene(GLWindow& window):
 	closeDialogButton->handler = [&]()
 	{
 		removeEntity(activeDialog->ID);
+		projectNameInput->clear();
+		projectDirectoryInput->clear();
 	};
 	okayDialogButton->handler = [&]()
 	{
 		removeEntity(activeDialog->ID);
-		project = {projectNameInput->text, projectDirectoryInput->text};
-		loadProject();
+		newProject(*projectNameInput->textPointer, *projectDirectoryInput->textPointer);
 	};
 	clearColor = editorClearColor;
 	sceneGraphPanelMenu->addToBVH = false;
@@ -309,7 +311,9 @@ void EditorScene::setupToolbarOptions()
 		window.close();
 	});
 }
-void EditorScene::loadProject()
+void EditorScene::newProject(std::string_view projectName, std::string_view projectDirectory)
 {
+	project = {projectName, projectDirectory};
+	filesystem::Directory::ensureExists(project.directory);
 	std::cout << "Loading project: " << project.name << ", in directory: " << project.directory << std::endl;
 };
