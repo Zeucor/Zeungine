@@ -40,7 +40,7 @@ set(ANEX_SOURCES
     src/SharedLibrary.cpp
     src/crypto/vector.cpp
     src/images/ImageLoader.cpp
-    src/File.cpp)
+    src/filesystem/File.cpp)
 
 if(BUILD_FENSTER)
     list(APPEND ANEX_SOURCES src/modules/fenster/Fenster.cpp)
