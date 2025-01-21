@@ -83,17 +83,14 @@ Input::Input(GLWindow &window,
 			return this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2) / 1.f);
 		});
 	placeholderTextView->addToBVH = false;
-	auto textSize = font.stringSize(text, fontSize, LineHeight, {0, 0});
-	textSize.y /= window.windowHeight * 0.5f;
-	textSize.x /= window.windowWidth * 0.5f;
 	textView = std::make_shared<TextView>(
 		window,
 		scene,
-		glm::vec3(textSize.x / 2 + NDCPadding, -NDCHeight / 2, 0.1f),
+		glm::vec3(0),
 		glm::vec3(0),
 		glm::vec3(1),
-		text,
-		textSize,
+		"",
+		glm::vec2(0),
 		font,
 		fontSize,
 	    true,
