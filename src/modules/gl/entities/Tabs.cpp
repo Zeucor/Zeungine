@@ -161,7 +161,24 @@ Tab::Tab(GLWindow &window,
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
 	TextSize.y /= window.windowHeight * 0.5f;
 	TextSize.x /= window.windowWidth * 0.5f;
-	textView = std::make_shared<TextView>(window, scene, glm::vec3(TextSize.x / 2 + 8 / window.windowWidth, -NDCHeight / 2, 0.1f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);
+	textView = std::make_shared<TextView>(
+		window,
+		scene,
+		glm::vec3(TextSize.x / 2 + 8 / window.windowWidth, -NDCHeight / 2, 0.1f),
+		glm::vec3(0),
+		glm::vec3(1),
+		text,
+		TextSize,
+		font,
+		FontSize,
+		true,
+		TextView::RepositionHandler(),
+		TextView::RepositionHandler(),
+		[&]
+		{
+			auto &glWindow = ((VAO&)*this).window;
+			return NDCHeight * glWindow.windowHeight * 0.5f / 1.5f;
+		});
 	textView->addToBVH = false;
   addChild(textView);
   setSize({TextSize.x + 16 / window.windowWidth, height / window.windowHeight / 0.5});

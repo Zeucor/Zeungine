@@ -18,6 +18,7 @@ namespace anex::modules::gl::entities
 		std::string title;
 		float width;
 		float height;
+		float NDCHeight;
 		float fontSize;
 		std::shared_ptr<TextView> titleTextView;
 		inline static size_t dialogsCount = 0;

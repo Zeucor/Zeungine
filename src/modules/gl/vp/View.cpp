@@ -24,7 +24,7 @@ void View::addPhiTheta(float addPhi, float addTheta)
 	direction = newDirection + 1e-6;
   update();
 };
-anex::IWindow::EventIdentifier View::addResizeHandler(const ViewResizeHandler &callback)
+anex::IWindow::EventIdentifier View::addResizeHandler(const IWindow::ViewResizeHandler &callback)
 {
 	auto id = ++viewResizeHandlers.first;
 	viewResizeHandlers.second[id] = callback;
@@ -44,7 +44,7 @@ void View::removeResizeHandler(anex::IWindow::EventIdentifier &id)
 void View::callResizeHandler(glm::vec2 newSize)
 {
 	auto& handlersMap = viewResizeHandlers.second;
-	std::vector<ViewResizeHandler> handlersCopy;
+	std::vector<IWindow::ViewResizeHandler> handlersCopy;
 	for (const auto& pair : handlersMap)
 		handlersCopy.push_back(pair.second);
 	for (auto& handler : handlersCopy)

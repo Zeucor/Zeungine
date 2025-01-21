@@ -199,6 +199,34 @@ void IWindow::callMouseMoveHandler(glm::vec2 coords)
     handler(coords);
   }
 };
+IWindow::EventIdentifier IWindow::addResizeHandler(const ViewResizeHandler &callback)
+{
+	auto id = ++viewResizeHandlers.first;
+	viewResizeHandlers.second[id] = callback;
+	return id;
+};
+void IWindow::removeResizeHandler(EventIdentifier &id)
+{
+	auto &handlers = viewResizeHandlers.second;
+	auto handlerIter = handlers.find(id);
+	if (handlerIter == handlers.end())
+	{
+		return;
+	}
+	handlers.erase(handlerIter);
+	id = 0;
+};
+void IWindow::callResizeHandler(glm::vec2 newSize)
+{
+	auto& handlersMap = viewResizeHandlers.second;
+	std::vector<ViewResizeHandler> handlersCopy;
+	for (const auto& pair : handlersMap)
+		handlersCopy.push_back(pair.second);
+	for (auto& handler : handlersCopy)
+	{
+		handler(newSize);
+	}
+};
 std::shared_ptr<IScene> IWindow::setIScene(const std::shared_ptr<IScene>& scene)
 {
   this->scene = scene;
@@ -235,6 +263,7 @@ void IWindow::resize(glm::vec2 newSize)
     windowHeight = newSize.y;
   if (scene)
     scene->resize(newSize);
+	callResizeHandler(newSize);
 };
 void IWindow::registerOnEntityAddedFunction(const OnEntityAddedFunction &function)
 {

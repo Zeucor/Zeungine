@@ -10,12 +10,11 @@ namespace anex::modules::gl::vp
     glm::mat4 matrix;
     float phi;
     float theta;
-		using ViewResizeHandler = std::function<void(glm::vec2 )>;
-		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, ViewResizeHandler>> viewResizeHandlers;
+		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, IWindow::ViewResizeHandler>> viewResizeHandlers;
     View(glm::vec3 position, glm::vec3 direction);
     void update();
 		void addPhiTheta(float addPhi, float addTheta);
-		IWindow::EventIdentifier addResizeHandler(const ViewResizeHandler &callback);
+		IWindow::EventIdentifier addResizeHandler(const IWindow::ViewResizeHandler &callback);
 		void removeResizeHandler(IWindow::EventIdentifier &id);
 		void callResizeHandler(glm::vec2 newSize);
   };

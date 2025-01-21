@@ -37,7 +37,7 @@ Input::Input(GLWindow &window,
 	scene(scene),
 	size({ 0, 0 }),
 	font(font),
-  width(width),
+ 	width(width),
 	height(height),
 	NDCWidth((width / window.windowWidth) * 2),
 	NDCHeight((height / window.windowHeight) * 2),
@@ -74,8 +74,8 @@ Input::Input(GLWindow &window,
 		[&](auto textViewSize)
 		{
 			auto &glWindow = ((VAO&)*this).window;
-			glm::vec2 size(std::min(textViewSize.x, this->size.x - (NDCPadding)), std::min(textViewSize.y, NDCHeight));
-			return size;
+			glm::vec2 newSize(std::min(textViewSize.x, this->size.x - (NDCPadding)), textViewSize.y);
+			return newSize;
 		},
 		[&]
 		{
@@ -105,8 +105,8 @@ Input::Input(GLWindow &window,
 	    [&](auto textViewSize)
 	    {
 			auto &glWindow = ((VAO&)*this).window;
-	    	glm::vec2 size(std::min(textViewSize.x, this->size.x - (NDCPadding)), std::min(textViewSize.y, NDCHeight));
-			return size;
+	    	glm::vec2 newSize(std::min(textViewSize.x, this->size.x - (NDCPadding)), textViewSize.y);
+			return newSize;
 	    },
 	    [&]
 	    {

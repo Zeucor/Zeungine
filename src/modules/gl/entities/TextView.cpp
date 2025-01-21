@@ -58,7 +58,16 @@ TextView::TextView(GLWindow &window,
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 	TextView::update();
+	resizeID = window.addResizeHandler([&](auto newSize)
+	{
+		forceUpdate();
+	});
 };
+TextView::~TextView()
+{
+	auto &glWindow = ((VAO&)*this).window;
+	glWindow.removeResizeHandler(resizeID);
+}
 void TextView::update()
 {
 	if (oldText != text)

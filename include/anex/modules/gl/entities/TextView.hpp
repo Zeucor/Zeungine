@@ -30,6 +30,7 @@ namespace anex::modules::gl::entities
 		ReFontSizeHandler reFontSizeHandler;
 		int64_t cursorIndex = 0;
 		glm::vec3 cursorPosition = glm::vec3(0);
+		IWindow::EventIdentifier resizeID = 0;
 		inline static size_t textViewsCount = 0;
 		explicit TextView(GLWindow &window,
 										  GLScene &scene,
@@ -45,6 +46,7 @@ namespace anex::modules::gl::entities
 										  const ResizeHandler &resizeHandler = {},
 										  const ReFontSizeHandler &reFontSizeHandler = {},
 										  std::string_view name = "");
+		~TextView() override;
 		void update() override;
 		void forceUpdate();
 		void preRender() override;

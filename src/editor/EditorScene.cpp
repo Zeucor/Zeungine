@@ -57,6 +57,8 @@ EditorScene::EditorScene(GLWindow& window):
 	dialogHeight(window.windowHeight / 5),
 	closeDialogButtonWidth(window.windowWidth / 44.f),
 	closeDialogButtonHeight(window.windowWidth / 44.f),
+	okayDialogButtonWidth(dialogWidth / 6.f),
+	okayDialogButtonHeight(dialogHeight / 4.5f),
 	closeDialogButton(std::make_shared<entities::Button>(
 		window,
 		*this,
@@ -65,12 +67,27 @@ EditorScene::EditorScene(GLWindow& window):
 			0,
 			0.1),
 		glm::vec3(0),
-    glm::vec3(1),
+    	glm::vec3(1),
 		glm::vec4(1, 0, 0, 1),
 		glm::vec2(closeDialogButtonWidth, closeDialogButtonHeight),
 		"x",
 		robotoRegularFont,
-    [](){}
+    	[](){}
+	)),
+	okayDialogButton(std::make_shared<entities::Button>(
+		window,
+		*this,
+		glm::vec3(
+			(dialogWidth - okayDialogButtonWidth) / window.windowWidth / 0.5,
+			(-dialogHeight + okayDialogButtonHeight) / window.windowHeight / 0.5,
+			0.1),
+		glm::vec3(0),
+    	glm::vec3(1),
+		glm::vec4(0.2f, 0, 0.8f, 1),
+		glm::vec2(okayDialogButtonWidth, okayDialogButtonHeight),
+		"Okay",
+		robotoRegularFont,
+    	[](){}
 	)),
 	projectNameInput(std::make_shared<entities::Input>(
 		window,
@@ -81,20 +98,20 @@ EditorScene::EditorScene(GLWindow& window):
 		glm::vec4(0.5, 0.5, 0.5, 1),
 		robotoRegularFont,
 		dialogWidth - 32,
-	    dialogHeight / 5,
+	    dialogHeight / 4.5f,
 	    "Project Name",
 		128.f
 	)),
 	projectDirectoryInput(std::make_shared<entities::Input>(
 		window,
 		*this,
-		glm::vec3(16 / window.windowWidth / 0.5, -((dialogHeight / 5) * 2) / window.windowHeight / 0.5, 0),
+		glm::vec3(16 / window.windowWidth / 0.5, -((dialogHeight / 4.5f) * 2) / window.windowHeight / 0.5, 0),
 		glm::vec3(0),
 		glm::vec3(1),
 		glm::vec4(0.5, 0.5, 0.5, 1),
 		robotoRegularFont,
 		dialogWidth - 32,
-	    dialogHeight / 5,
+	    dialogHeight / 4.5f,
 	    "Project Directory",
 		128.f
 	)),
@@ -109,22 +126,28 @@ EditorScene::EditorScene(GLWindow& window):
 		"New Project",
 		dialogWidth,
     	dialogHeight,
-		std::vector<std::shared_ptr<GLEntity>>({closeDialogButton, projectNameInput, projectDirectoryInput})
+		std::vector<std::shared_ptr<GLEntity>>({closeDialogButton, okayDialogButton, projectNameInput, projectDirectoryInput})
   	))
 {
-  closeDialogButton->handler = [&]()
-  {
-    removeEntity(activeDialog->ID);
-  };
+	closeDialogButton->handler = [&]()
+	{
+		removeEntity(activeDialog->ID);
+	};
+	okayDialogButton->handler = [&]()
+	{
+		removeEntity(activeDialog->ID);
+		project = {projectNameInput->text, projectDirectoryInput->text};
+		loadProject();
+	};
 	clearColor = editorClearColor;
 	sceneGraphPanelMenu->addToBVH = false;
 	addEntity(sceneGraphPanelMenu);
-  setupToolbarOptions();
+	setupToolbarOptions();
 	addEntity(toolbar);
 	bottomTabsBar->addToBVH = false;
 	addEntity(bottomTabsBar);
 	addEntity(gameWindowBorder);
-  setupGameWindow();
+	setupGameWindow();
 	setupCodeWindow();
 	resizeID = view.addResizeHandler([&](auto newSize)mutable
 	{
@@ -286,3 +309,7 @@ void EditorScene::setupToolbarOptions()
 		window.close();
 	});
 }
+void EditorScene::loadProject()
+{
+	std::cout << "Loading project: " << project.name << ", in directory: " << project.directory << std::endl;
+};

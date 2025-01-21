@@ -62,6 +62,12 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 		[](auto titleSize)
 		{
 			return glm::vec3(titleSize.x / 2, -titleSize.y / 2, 0.1);
+		},
+		TextView::ResizeHandler(),
+		[&]
+		{
+			auto &glWindow = ((VAO &)*this).window;
+			return glWindow.windowHeight / 30.f;
 		});
   titleTextView->addToBVH = false;
   addChild(titleTextView);
@@ -211,6 +217,12 @@ PanelItem::PanelItem(GLWindow &window,
 		[](auto TextSize)
 		{
 			return glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.1f);
+		},
+		TextView::ResizeHandler(),
+		[&]
+		{
+			auto &glWindow = ((VAO &)*this).window;
+			return glWindow.windowHeight / 30.f;
 		});
 	textView->addToBVH = false;
   addChild(textView);

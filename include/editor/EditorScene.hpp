@@ -11,7 +11,7 @@
 #include <anex/modules/gl/entities/Toolbar.hpp>
 #include <anex/modules/gl/entities/Panel.hpp>
 #include <anex/modules/gl/entities/Tabs.hpp>
-#include <editor/CodeScene.hpp>
+#include "Project.hpp"
 namespace anex::editor
 {
 	struct EditorScene : GLScene
@@ -47,18 +47,23 @@ namespace anex::editor
 		float dialogWidth;
 		float dialogHeight;
 	    float closeDialogButtonWidth;
-	    float closeDialogButtonHeight;
+		float closeDialogButtonHeight;
+		float okayDialogButtonWidth;
+		float okayDialogButtonHeight;
 	    std::shared_ptr<entities::Button> closeDialogButton;
+		std::shared_ptr<entities::Button> okayDialogButton;
 	    std::shared_ptr<entities::Input> projectNameInput;
 	    std::shared_ptr<entities::Input> projectDirectoryInput;
 	    std::shared_ptr<entities::Dialog> newProjectDialog;
 		std::shared_ptr<entities::Dialog> activeDialog;
+		Project project;
 		explicit EditorScene(GLWindow& window);
 		~EditorScene() override;
 		void onEntityAdded(const std::shared_ptr<IEntity>& entity) const;
 		void setupGameWindow();
 		void setupCodeWindow();
-    void minimizeWindows();
+		void minimizeWindows();
 		void setupToolbarOptions();
+		void loadProject();
 	};
 }

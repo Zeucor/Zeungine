@@ -41,6 +41,7 @@ Dialog::Dialog(anex::modules::gl::GLWindow &window,
 	title(title),
 	width(width),
 	height(height),
+	NDCHeight((height / window.windowHeight) * 2.f),
 	fontSize(height / 5.5f)
 {
 	updateIndices(indices);
@@ -72,7 +73,8 @@ Dialog::Dialog(anex::modules::gl::GLWindow &window,
     TextView::ResizeHandler(),
     [&]
     {
-      return (this->fontSize = (this->height / 5.5f));
+			auto &glWindow = ((VAO&)*this).window;
+      return (this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2.f) / 5.5f));
     });
 	titleTextView->addToBVH = false;
 	addChild(titleTextView);

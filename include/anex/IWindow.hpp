@@ -32,6 +32,8 @@ namespace anex
 		std::pair<EventIdentifier, std::map<EventIdentifier, AnyKeyPressHandler>> anyKeyPressHandlers;
 		std::unordered_map<Button, std::pair<EventIdentifier, std::map<EventIdentifier, MousePressHandler>>> mousePressHandlers;
 		std::pair<EventIdentifier, std::map<EventIdentifier, MouseMoveHandler>> mouseMoveHandlers;
+		using ViewResizeHandler = std::function<void(glm::vec2 )>;
+		std::pair<EventIdentifier, std::map<EventIdentifier, ViewResizeHandler>> viewResizeHandlers;
 		std::shared_ptr<IScene> scene;
 		bool open = true;
 		glm::vec4 clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -76,6 +78,10 @@ namespace anex
 		void removeMouseMoveHandler(EventIdentifier &id);
 		void callMousePressHandler(Button button, int pressed);
 		void callMouseMoveHandler(glm::vec2 coords);
+		// resize
+		EventIdentifier addResizeHandler(const ViewResizeHandler &callback);
+		void removeResizeHandler(EventIdentifier &id);
+		void callResizeHandler(glm::vec2 newSize);
 		std::shared_ptr<IScene> setIScene(const std::shared_ptr<IScene> &scene);
 		void runOnThread(const Runnable &runnable);
 		void runRunnables();

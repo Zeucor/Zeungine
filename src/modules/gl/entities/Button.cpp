@@ -47,7 +47,24 @@ Button::Button(GLWindow &window,
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
 	TextSize.y /= window.windowHeight * 0.5f;
 	TextSize.x /= window.windowWidth * 0.5f;
-	textView = std::make_shared<TextView>(window, scene, glm::vec3(this->size.x / 2, -this->size.y / 2, 0.5f), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), text, TextSize, font, FontSize);
+	textView = std::make_shared<TextView>(
+		window,
+		scene,
+		glm::vec3(this->size.x / 2, -this->size.y / 2, 0.5f),
+		glm::vec3(0),
+		glm::vec3(1),
+		text,
+		TextSize,
+		font,
+		FontSize,
+		true,
+		TextView::RepositionHandler(),
+		TextView::ResizeHandler(),
+		[&]
+		{
+			auto &glWindow = ((VAO&)*this).window;
+			return this->size.y * window.windowHeight * 0.5f / 1.2f;
+		});
 	textView->addToBVH = false;
   addChild(textView);
   setSize(this->size);
