@@ -32,7 +32,7 @@ namespace anex::filesystem
 		static std::string getProgramDirectoryPath();
 		static std::string getProgramDataPath();
 		static std::string getExecutableName();
-		static std::string toPlatformPath(const std::string& path);
+		static std::string toPlatformPath(std::string path);
 		std::string originalFilePath;
 		std::string filePath;
 		enums::EFileLocation fileLocation;

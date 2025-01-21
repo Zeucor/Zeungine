@@ -82,7 +82,7 @@ Button::Button(GLWindow &window,
 	mousePressID = addMousePressHandler(0, [&](auto pressed)
 	{
 		if (pressed)
-			if (handler)
+			if (this->handler)
         this->handler();
 	});
 };

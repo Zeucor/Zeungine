@@ -2,6 +2,8 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <regex>
+#include <codecvt>
 using namespace anex::filesystem;
 File::File(const std::string& filePath, enums::EFileLocation fileLocation, const std::string& mode)
     : originalFilePath(filePath), filePath(filePath), fileLocation(fileLocation), openMode(std::ios::in | std::ios::out | std::ios::binary)
@@ -12,7 +14,7 @@ File::File(const std::string& filePath, enums::EFileLocation fileLocation, const
     }
     if (mode.find('w') != std::string::npos)
     {
-        openMode |= std::ios::out;
+        openMode |= std::ios::out | std::ios::trunc;
     }
     if (mode.find('a') != std::string::npos)
     {
@@ -41,7 +43,11 @@ File& File::operator=(const File& other)
 };
 File::~File()
 {
-    close();
+	sync();
+  if (!close())
+  {
+	  throw std::runtime_error("Could not close file");
+  }
 };
 bool File::open()
 {
@@ -51,9 +57,9 @@ bool File::open()
 bool File::close()
 {
     if (fileStream.is_open())
-  {
+		{
         fileStream.close();
-        return true;
+        return !fileStream.is_open();
     }
     return false;
 };
@@ -149,11 +155,21 @@ std::string File::getExecutableName()
         .filename()
         .string();
 };
-std::string File::toPlatformPath(const std::string& path)
+void replaceSubstring(std::string& str, const std::string& from, const std::string& to)
 {
-    std::string platformPath = path;
-    std::replace(platformPath.begin(), platformPath.end(), '\\', '/');
-    return platformPath;
+	size_t pos = 0;
+	while ((pos = str.find(from, pos)) != std::string::npos)
+	{
+		str.replace(pos, from.length(), to);
+		pos += to.length();
+	}
+}
+std::string File::toPlatformPath(std::string path)
+{
+	std::replace(path.begin(), path.end(), '\\', '/');
+	std::filesystem::path fsPath(path);
+	auto nativePath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fsPath.native().c_str());
+	return nativePath;
 };
 std::string File::toString()
 {

@@ -61,7 +61,7 @@ GLWindow::GLWindow(GLWindow &parentWindow,
 				childWindowX + (childWindowWidth / 2),
 			NDCFramebufferPlane ?
 				(1 - ((childWindowY + (childWindowHeight / 2)) / parentWindow.windowHeight / 0.5)) :
-				parentWindow.windowHeight - childWindowY - (childWindowHeight / 2), 0.1
+				parentWindow.windowHeight - childWindowY - (childWindowHeight / 2), 0.2
 		),
 		glm::vec3(0),
 		glm::vec3(1),
@@ -554,6 +554,10 @@ _checkPressed:
 void GLWindow::close()
 {
 #ifdef _WIN32
+	if (isChildWindow)
+	{
+		return;
+	}
   PostMessage(hwnd, WM_CLOSE, 0, 0);
 #endif
 };

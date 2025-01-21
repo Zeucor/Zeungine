@@ -130,6 +130,10 @@ EditorScene::EditorScene(GLWindow& window):
 		std::vector<std::shared_ptr<GLEntity>>({closeDialogButton, okayDialogButton, projectNameInput, projectDirectoryInput})
   	))
 {
+	(*projectNameInput->textPointer) = "EditorGame";
+	(*projectDirectoryInput->textPointer) = "C:/Users/Steven/Projects/EditorGame";
+	projectNameInput->handleKey(0, false);
+	projectDirectoryInput->handleKey(0, false);
 	closeDialogButton->handler = [&]()
 	{
 		removeEntity(activeDialog->ID);
@@ -315,7 +319,82 @@ void EditorScene::setupToolbarOptions()
 }
 void EditorScene::newProject(std::string_view projectName, std::string_view projectDirectory)
 {
-	project = {projectName, projectDirectory};
-	filesystem::Directory::ensureExists(project.directory);
-	std::cout << "Loading project: " << project.name << ", in directory: " << project.directory << std::endl;
+	{
+		project = {projectName, projectDirectory};
+		filesystem::Directory::ensureExists(project.directory);
+		std::string includePath = filesystem::File::toPlatformPath(std::string(project.directory) + "/include");
+		filesystem::Directory::ensureExists(includePath);
+		std::string srcPath = filesystem::File::toPlatformPath(std::string(project.directory) + "/src");
+		filesystem::Directory::ensureExists(srcPath);
+		filesystem::File mainIncludeFile(filesystem::File::toPlatformPath(std::string(includePath) + "/main.hpp"), enums::EFileLocation::Relative, "w+");
+		std::string mainIncludeFileString(R"(#pragma once
+#include <runtime/WindowLoader.hpp>
+#include <anex/modules/gl/GLScene.hpp>
+using namespace anex;
+using namespace anex::modules::gl;
+struct MainScene : GLScene
+{
+	explicit MainScene(GLWindow &window);
+};
+ANEX_API void OnLoad(GLWindow &window);
+ANEX_API void OnUnLoad(GLWindow &window);
+	)");
+		mainIncludeFile.writeBytes(0, mainIncludeFileString.size(), mainIncludeFileString.data());
+		filesystem::File mainSrcFile(filesystem::File::toPlatformPath(std::string(srcPath) + "/main.cpp"), enums::EFileLocation::Relative, "w+");
+		std::string mainSrcFileString(R"(#include <main.hpp>
+#include <iostream>
+#include <windows.h>
+MainScene::MainScene(GLWindow &window):
+	GLScene(window, {0, 50, 50}, {0, -1, -1}, 80.f)
+{
+	clearColor = {0.5, 0, 0.5, 1};
+};
+ANEX_API void OnLoad(GLWindow &window)
+{
+	window.setIScene(std::make_shared<MainScene>(window));
+};
+ANEX_API void OnUnLoad(GLWindow &window)
+{
+	window.scene.reset();
+	window.close();
+}
+BOOL WINAPI DllMain(
+    HINSTANCE hinstDLL,  // handle to DLL module
+    DWORD fdwReason,     // reason for calling function
+    LPVOID lpvReserved )  // reserved
+{
+    switch( fdwReason )
+    {
+        case DLL_PROCESS_ATTACH:
+            std::cout << "DLL loaded into process.\n";
+            break;
+
+        case DLL_THREAD_ATTACH:
+        {
+            DWORD threadId = GetCurrentThreadId();
+            std::cout << "Thread attached. Thread ID: " << threadId << "\n";
+            break;
+        }
+
+        case DLL_THREAD_DETACH:
+        {
+            DWORD threadId = GetCurrentThreadId();
+            std::cout << "Thread detached. Thread ID: " << threadId << "\n";
+            break;
+        }
+
+        case DLL_PROCESS_DETACH:
+            std::cout << "DLL unloaded from process.\n";
+            break;
+    }
+    return TRUE;  // Successful DLL_PROCESS_ATTACH.
+}
+	)");
+		mainSrcFile.writeBytes(0, mainSrcFileString.size(), mainSrcFileString.data());
+	}
+	loadProject(projectDirectory);
+};
+void EditorScene::loadProject(std::string_view projectDirectory)
+{
+	hotswapper = std::make_shared<hs::Hotswapper>(projectDirectory, *this);
 };

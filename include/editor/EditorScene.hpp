@@ -11,7 +11,9 @@
 #include <anex/modules/gl/entities/Toolbar.hpp>
 #include <anex/modules/gl/entities/Panel.hpp>
 #include <anex/modules/gl/entities/Tabs.hpp>
+#include "Hotswapper.hpp"
 #include "Project.hpp"
+#include "../runtime/WindowLoader.hpp"
 namespace anex::editor
 {
 	struct EditorScene : GLScene
@@ -56,7 +58,11 @@ namespace anex::editor
 	    std::shared_ptr<entities::Input> projectDirectoryInput;
 	    std::shared_ptr<entities::Dialog> newProjectDialog;
 		std::shared_ptr<entities::Dialog> activeDialog;
+		std::shared_ptr<hs::Hotswapper> hotswapper;
 		Project project;
+		std::function<void(GLWindow &)> OnLoad;
+		std::function<void(GLWindow &)> OnUnLoad;
+		bool loaded = false;
 		explicit EditorScene(GLWindow& window);
 		~EditorScene() override;
 		void onEntityAdded(const std::shared_ptr<IEntity>& entity) const;
@@ -65,5 +71,6 @@ namespace anex::editor
 		void minimizeWindows();
 		void setupToolbarOptions();
 		void newProject(std::string_view projectName, std::string_view projectDirectory);
+		void loadProject(std::string_view projectDirectory);
 	};
 }

@@ -239,6 +239,8 @@ void Input::setInactive()
 	{
 		activeInput->active = false;
 		activeInput->setColor(activeInput->inactiveColor);
+		if (activeInput->cursorPlane->ID)
+			activeInput->removeChild(activeInput->cursorPlane->ID);
 		activeInput = 0;
 	}
 };
@@ -263,39 +265,39 @@ void Input::handleKey(IWindow::Key key, bool pressed)
 		switch (key)
 		{
 		case 8:
-            if (textViewRef.cursorIndex > 0)
-            {
+      if (textViewRef.cursorIndex > 0)
+      {
 				--textViewRef.cursorIndex;
 				textPointer->erase(textPointer->begin() + textViewRef.cursorIndex);
 				if (textPointer->empty())
-                {
-                    goto _showPlaceholder;
-                }
+        {
+            goto _showPlaceholder;
+        }
 				goto _forceUpdateTextView;
-            }
+      }
 			return;
 		case 20:
-            if (textViewRef.cursorIndex > 0)
-            {
+      if (textViewRef.cursorIndex > 0)
+      {
 				textViewRef.cursorIndex--;
 				goto _forceUpdateTextView;
-            }
-            return;
-        case 19:
-	        if (textViewRef.cursorIndex < textPointer->size())
-	        {
+      }
+      return;
+    case 19:
+      if (textViewRef.cursorIndex < textPointer->size())
+      {
 				textViewRef.cursorIndex++;
 				goto _forceUpdateTextView;
-	        }
+      }
 			return;
 		case 127:
 			if (textViewRef.cursorIndex < textPointer->size())
 			{
 				textPointer->erase(textPointer->begin() + textViewRef.cursorIndex);
 				if (textPointer->empty())
-                {
-                    goto _showPlaceholder;
-                }
+        {
+            goto _showPlaceholder;
+        }
 				goto _forceUpdateTextView;
 			}
 			return;

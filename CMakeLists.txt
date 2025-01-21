@@ -28,6 +28,10 @@ include_directories(vendor/glm)
 # STB
 include_directories(vendor/stb)
 
+# hscpp
+add_subdirectory(vendor/hscpp)
+include_directories(vendor/hscpp/include)
+
 include_directories(include)
 
 option(BUILD_FENSTER "Whether to build Fenster module" ON)
@@ -42,7 +46,9 @@ set(ANEX_SOURCES
     src/crypto/vector.cpp
     src/images/ImageLoader.cpp
     src/filesystem/File.cpp
-    src/filesystem/Directory.cpp)
+    src/filesystem/Directory.cpp
+    src/editor/Hotswapper.cpp
+)
 
 if(BUILD_FENSTER)
     list(APPEND ANEX_SOURCES src/modules/fenster/Fenster.cpp)
@@ -104,6 +110,7 @@ if(BUILD_OPENGL)
 endif()
 target_link_libraries(abstractnexus freetype)
 target_link_libraries(abstractnexus bvh)
+target_link_libraries(abstractnexus hscpp)
 
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     if(LIBRARY)

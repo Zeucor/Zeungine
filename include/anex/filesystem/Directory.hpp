@@ -11,7 +11,7 @@ namespace anex::filesystem
 		std::map<uint64_t, std::string> entries;
 		Directory(std::string_view path);
 		bool operator()() const;
-		std::map<uint64_t, std::string> getRecursiveFileMap() const ;
+		std::map<uint64_t, std::string> getRecursiveFileMap() const;
 		static bool ensureExists(std::string_view path);
 		static std::string getCurrentDirectory();
 		static std::string getCurrentDirectoryName();

@@ -15,4 +15,4 @@
 	url = https://github.com/ZeunO8/bvh.git
 [submodule "vendor/hscpp"]
 	path = vendor/hscpp
-	url = https://github.com/jheruty/hscpp.git
+	url = https://github.com/ZeunO8/hscpp.git
