@@ -140,6 +140,8 @@ EditorScene::EditorScene(GLWindow& window):
 	{
 		removeEntity(activeDialog->ID);
 		newProject(*projectNameInput->textPointer, *projectDirectoryInput->textPointer);
+		projectNameInput->clear();
+		projectDirectoryInput->clear();
 	};
 	clearColor = editorClearColor;
 	sceneGraphPanelMenu->addToBVH = false;
