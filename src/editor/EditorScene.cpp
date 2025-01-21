@@ -93,7 +93,7 @@ EditorScene::EditorScene(GLWindow& window):
 	projectNameInput(std::make_shared<entities::Input>(
 		window,
 		*this,
-		glm::vec3(16 / window.windowWidth / 0.5, -30 / window.windowHeight / 0.5, 0),
+		glm::vec3(16 / window.windowWidth / 0.5, -30 / window.windowHeight / 0.5, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
 		glm::vec4(0.5, 0.5, 0.5, 1),
@@ -106,7 +106,7 @@ EditorScene::EditorScene(GLWindow& window):
 	projectDirectoryInput(std::make_shared<entities::Input>(
 		window,
 		*this,
-		glm::vec3(16 / window.windowWidth / 0.5, -((dialogHeight / 4.5f) * 2) / window.windowHeight / 0.5, 0),
+		glm::vec3(16 / window.windowWidth / 0.5, -((dialogHeight / 4.5f) * 2) / window.windowHeight / 0.5, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
 		glm::vec4(0.5, 0.5, 0.5, 1),
