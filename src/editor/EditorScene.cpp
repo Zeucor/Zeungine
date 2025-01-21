@@ -199,12 +199,12 @@ void EditorScene::setupGameWindow()
 		gameWindowX,
 		gameWindowY,
 		true);
-  gameWindowPointer = (GLWindow *)&gameWindow;
-	gameWindow.runOnThread([](auto &runningGameWindow)
-	{
-		auto load = gameLibrary.getProc<LOAD_FUNCTION>("Load");
-		load((GLWindow&)runningGameWindow);
-	});
+  	gameWindowPointer = (GLWindow *)&gameWindow;
+//	gameWindow.runOnThread([](auto &runningGameWindow)
+//	{
+//		auto load = gameLibrary.getProc<LOAD_FUNCTION>("Load");
+//		load((GLWindow&)runningGameWindow);
+//	});
 	std::function<void(const std::shared_ptr<IEntity>&)> entityAddedFunction = std::bind(
 		&EditorScene::onEntityAdded, this, std::placeholders::_1);
 	gameWindow.registerOnEntityAddedFunction(entityAddedFunction);
