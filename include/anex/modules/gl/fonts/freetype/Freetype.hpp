@@ -28,7 +28,7 @@ namespace anex::modules::gl::fonts::freetype
 		std::shared_ptr<int8_t[]> fontFileBytes;
 		std::unordered_map<float, std::unordered_map<float, FreetypeCharacter>> codepointFontSizeCharacters;
 		GLWindow &window;
-    FreetypeFont(GLWindow &window, File &fontFile);
+    FreetypeFont(GLWindow &window, filesystem::File &fontFile);
 		const glm::vec2 stringSize(const std::string_view string, float fontSize, float &lineHeight, glm::vec2 bounds);
 		void stringToTexture(const std::string_view string,
 												 glm::vec4 color,

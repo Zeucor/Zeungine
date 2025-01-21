@@ -19,7 +19,7 @@ namespace anex::editor
 		glm::vec4 editorClearColor = {0.2, 0.2, 0.2, 1};
 		float toolbarHeight;
 		float bottomTabsHeight;
-		File robotoRegularFile;
+		filesystem::File robotoRegularFile;
 		modules::gl::fonts::freetype::FreetypeFont robotoRegularFont;
 		GLWindow* gameWindowPointer = 0;
 		GLWindow* codeWindowPointer = 0;

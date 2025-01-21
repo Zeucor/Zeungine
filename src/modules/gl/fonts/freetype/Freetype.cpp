@@ -83,7 +83,7 @@ FreetypeCharacter::FreetypeCharacter(GLWindow &window, const FreetypeFont &freeT
 	_setAdvance:
 		advance = face->glyph->advance.x;
 };
-FreetypeFont::FreetypeFont(GLWindow &window, File &fontFile):
+FreetypeFont::FreetypeFont(GLWindow &window, filesystem::File &fontFile):
 	facePointer(new FT_Face, [](FT_Face *pointer)
 	{
 		FT_Done_Face(*pointer);

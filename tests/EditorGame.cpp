@@ -11,7 +11,7 @@ struct EditorScene : GLScene
 {
   vp::VML vml;
   std::shared_ptr<textures::Texture> texturePointer;
-  File robotoRegularFile;
+  filesystem::File robotoRegularFile;
   modules::gl::fonts::freetype::FreetypeFont robotoRegularFont;
   EditorScene(GLWindow &window):
     GLScene(window, {0, 10, 10}, {0, -1, -1}, 81.f),
