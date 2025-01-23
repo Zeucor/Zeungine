@@ -13,7 +13,7 @@ namespace anex
 		IWindow &window;
 		std::map<size_t, std::shared_ptr<IEntity>> entities;
 		size_t entitiesCount = 0;
-		IScene(IWindow &window);
+		IScene(IWindow &_window);
 		virtual ~IScene() = default;
 		size_t addEntity(const std::shared_ptr<IEntity> &entity, bool callOnEntityAdded = true);
 		void removeEntity(const size_t &id);

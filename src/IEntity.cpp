@@ -1,7 +1,7 @@
 #include <anex/IEntity.hpp>
 using namespace anex;
-IEntity::IEntity(IWindow &window):
-	window(window)
+IEntity::IEntity(IWindow &_window):
+	window(_window)
 {};
 void IEntity::update(){};
 void IEntity::render(){};

@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 namespace anex
 {
 	struct IWindow;
@@ -6,7 +7,7 @@ namespace anex
 	{
 		IWindow &window;
 		size_t ID = 0;
-		IEntity(IWindow &window);
+		IEntity(IWindow &_window);
 		virtual ~IEntity() = default;
 		virtual void update();
 		virtual void render();

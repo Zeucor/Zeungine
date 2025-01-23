@@ -68,9 +68,7 @@ void Shader::setSSBO(const std::string_view name, const void *pointer, uint32_t 
 };
 void Shader::setTexture(const std::string_view name, const textures::Texture &texture, const int32_t &unit)
 {
-  bind();
   setUniform(name, unit);
   window.glContext->ActiveTexture(GL_TEXTURE0 + unit);
   texture.bind();
-  unbind();
 };

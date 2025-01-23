@@ -2,7 +2,6 @@
 #include <editor/CodeScene.hpp>
 #include <anex/filesystem/Directory.hpp>
 using namespace anex::editor;
-static anex::SharedLibrary gameLibrary("EditorGame.dll");
 EditorScene::EditorScene(GLWindow& window):
 	GLScene(window, {0, 0, 50}, {0, 0, -1}, {2, 2}),
 	toolbarHeight(window.windowHeight / 14),
@@ -11,7 +10,7 @@ EditorScene::EditorScene(GLWindow& window):
 	robotoRegularFont(window, robotoRegularFile),
 	gameWindowBorderWidth(4.f),
 	gameWindowWidth(window.windowWidth / 1.75f),
-	gameWindowHeight(window.windowHeight - toolbarHeight - bottomTabsHeight),
+	gameWindowHeight(window.windowHeight / 1.75f),//- toolbarHeight - bottomTabsHeight),
 	gameWindowX(window.windowWidth / 2.f - gameWindowWidth / 2.f),
 	gameWindowY(toolbarHeight + gameWindowBorderWidth),
 	codeWindowWidth(gameWindowWidth + gameWindowBorderWidth * 2),
@@ -39,6 +38,18 @@ EditorScene::EditorScene(GLWindow& window):
 		robotoRegularFont,
 		gameWindowWidth + gameWindowBorderWidth * 2,
 		bottomTabsHeight - gameWindowBorderWidth * 2)),
+	status(std::make_shared<entities::Status>(
+		window,
+		*this,
+		glm::vec3(-1, ((bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5) - 1, 0.1),
+		glm::vec3(0),
+		glm::vec3(1),
+		toolbarColor,
+		robotoRegularFont,
+		(window.windowWidth - gameWindowWidth) / 2,
+		bottomTabsHeight - gameWindowBorderWidth * 2,
+		"Idle"
+	)),
 	gameWindowBorder(std::make_shared<entities::Plane>(
 		window, *this,
 		glm::vec3(-1 + ((gameWindowX + (gameWindowWidth / 2)) / window.windowWidth / 0.5),
@@ -154,6 +165,7 @@ EditorScene::EditorScene(GLWindow& window):
 	addEntity(toolbar);
 	bottomTabsBar->addToBVH = false;
 	addEntity(bottomTabsBar);
+	addEntity(status);
 	addEntity(gameWindowBorder);
 	setupGameWindow();
 	setupCodeWindow();
@@ -208,11 +220,6 @@ void EditorScene::setupGameWindow()
 		gameWindowY,
 		true);
   	gameWindowPointer = (GLWindow *)&gameWindow;
-//	gameWindow.runOnThread([](auto &runningGameWindow)
-//	{
-//		auto load = gameLibrary.getProc<LOAD_FUNCTION>("Load");
-//		load((GLWindow&)runningGameWindow);
-//	});
 	std::function<void(const std::shared_ptr<IEntity>&)> entityAddedFunction = std::bind(
 		&EditorScene::onEntityAdded, this, std::placeholders::_1);
 	gameWindow.registerOnEntityAddedFunction(entityAddedFunction);
@@ -328,8 +335,9 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 		filesystem::Directory::ensureExists(srcPath);
 		filesystem::File mainIncludeFile(filesystem::File::toPlatformPath(std::string(includePath) + "/main.hpp"), enums::EFileLocation::Relative, "w+");
 		std::string mainIncludeFileString(R"(#pragma once
-#include <runtime/WindowLoader.hpp>
+#include <Runtime.hpp>
 #include <anex/modules/gl/GLScene.hpp>
+#include <anex/modules/gl/GLWindow.hpp>
 using namespace anex;
 using namespace anex::modules::gl;
 struct MainScene : GLScene
@@ -337,13 +345,11 @@ struct MainScene : GLScene
 	explicit MainScene(GLWindow &window);
 };
 ANEX_API void OnLoad(GLWindow &window);
-ANEX_API void OnUnLoad(GLWindow &window);
-	)");
+ANEX_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver);
+ANEX_API void OnUnLoad(GLWindow &window);)");
 		mainIncludeFile.writeBytes(0, mainIncludeFileString.size(), mainIncludeFileString.data());
 		filesystem::File mainSrcFile(filesystem::File::toPlatformPath(std::string(srcPath) + "/main.cpp"), enums::EFileLocation::Relative, "w+");
 		std::string mainSrcFileString(R"(#include <main.hpp>
-#include <iostream>
-#include <windows.h>
 MainScene::MainScene(GLWindow &window):
 	GLScene(window, {0, 50, 50}, {0, -1, -1}, 80.f)
 {
@@ -353,43 +359,15 @@ ANEX_API void OnLoad(GLWindow &window)
 {
 	window.setIScene(std::make_shared<MainScene>(window));
 };
+ANEX_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver)
+{
+	window.setIScene(std::shared_ptr<MainScene>(allocationResolver.Allocate<MainScene>(window)));
+};
 ANEX_API void OnUnLoad(GLWindow &window)
 {
 	window.scene.reset();
 	window.close();
-}
-BOOL WINAPI DllMain(
-    HINSTANCE hinstDLL,  // handle to DLL module
-    DWORD fdwReason,     // reason for calling function
-    LPVOID lpvReserved )  // reserved
-{
-    switch( fdwReason )
-    {
-        case DLL_PROCESS_ATTACH:
-            std::cout << "DLL loaded into process.\n";
-            break;
-
-        case DLL_THREAD_ATTACH:
-        {
-            DWORD threadId = GetCurrentThreadId();
-            std::cout << "Thread attached. Thread ID: " << threadId << "\n";
-            break;
-        }
-
-        case DLL_THREAD_DETACH:
-        {
-            DWORD threadId = GetCurrentThreadId();
-            std::cout << "Thread detached. Thread ID: " << threadId << "\n";
-            break;
-        }
-
-        case DLL_PROCESS_DETACH:
-            std::cout << "DLL unloaded from process.\n";
-            break;
-    }
-    return TRUE;  // Successful DLL_PROCESS_ATTACH.
-}
-	)");
+})");
 		mainSrcFile.writeBytes(0, mainSrcFileString.size(), mainSrcFileString.data());
 	}
 	loadProject(projectDirectory);

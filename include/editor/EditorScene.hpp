@@ -1,19 +1,18 @@
 #pragma once
-#include <iostream>
-#include <anex/modules/gl/GLWindow.hpp>
-#include <anex/modules/gl/GLScene.hpp>
-#include <anex/modules/gl/fonts/freetype/Freetype.hpp>
-#include <anex/SharedLibrary.hpp>
 #include <anex/RuntimeAPI.hpp>
+#include <anex/SharedLibrary.hpp>
+#include <anex/modules/gl/GLScene.hpp>
+#include <anex/modules/gl/GLWindow.hpp>
 #include <anex/modules/gl/entities/Button.hpp>
 #include <anex/modules/gl/entities/Dialog.hpp>
 #include <anex/modules/gl/entities/Input.hpp>
-#include <anex/modules/gl/entities/Toolbar.hpp>
 #include <anex/modules/gl/entities/Panel.hpp>
+#include <anex/modules/gl/entities/Status.hpp>
 #include <anex/modules/gl/entities/Tabs.hpp>
+#include <anex/modules/gl/entities/Toolbar.hpp>
+#include <anex/modules/gl/fonts/freetype/Freetype.hpp>
 #include "Hotswapper.hpp"
 #include "Project.hpp"
-#include "../runtime/WindowLoader.hpp"
 namespace anex::editor
 {
 	struct EditorScene : GLScene
@@ -23,8 +22,8 @@ namespace anex::editor
 		float bottomTabsHeight;
 		filesystem::File robotoRegularFile;
 		modules::gl::fonts::freetype::FreetypeFont robotoRegularFont;
-		GLWindow* gameWindowPointer = 0;
-		GLWindow* codeWindowPointer = 0;
+		GLWindow* gameWindowPointer = nullptr;
+		GLWindow* codeWindowPointer = nullptr;
 		float gameWindowBorderWidth;
 		float gameWindowWidth;
 		float gameWindowHeight;
@@ -37,6 +36,7 @@ namespace anex::editor
 		glm::vec4 toolbarColor;
 		std::shared_ptr<entities::Toolbar> toolbar;
 		std::shared_ptr<entities::TabsBar> bottomTabsBar;
+		std::shared_ptr<entities::Status> status;
 		glm::vec4 gameWindowBorderColor = {0.4, 0.4, 0.7, 1};
 		glm::vec4 gameWindowHoveredBorderColor = {0.7, 0.4, 0.4, 1};
 		glm::vec4 gameWindowActiveBorderColor = {1, 0, 0, 1};
@@ -61,6 +61,7 @@ namespace anex::editor
 		std::shared_ptr<hs::Hotswapper> hotswapper;
 		Project project;
 		std::function<void(GLWindow &)> OnLoad;
+		std::function<void(GLWindow &, hscpp::AllocationResolver &)> OnHotswapLoad;
 		std::function<void(GLWindow &)> OnUnLoad;
 		bool loaded = false;
 		explicit EditorScene(GLWindow& window);

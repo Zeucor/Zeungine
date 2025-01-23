@@ -25,7 +25,7 @@ namespace anex::modules::gl
 		using MouseHoverHandler = std::function<void(bool )>;
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		std::string name;
-		GLEntity(anex::IWindow &window,
+		GLEntity(anex::IWindow &_window,
 						 const shaders::RuntimeConstants &constants,
 						 uint32_t indiceCount,
 						 const std::vector<uint32_t> &indices,

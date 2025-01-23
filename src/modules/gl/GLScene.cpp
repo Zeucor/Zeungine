@@ -7,16 +7,16 @@
 #include <anex/modules/gl/textures/FramebufferFactory.hpp>
 #include <anex/modules/gl/vaos/VAO.hpp>
 using namespace anex::modules::gl;
-GLScene::GLScene(IWindow &window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer):
-	IScene(window),
+GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer):
+	IScene(_window),
 	view(cameraPosition, cameraDirection),
 	projection((GLWindow &)window, fov),
 	framebufferPointer(framebufferPointer)
 {
 	hookMouseEvents();
 };
-GLScene::GLScene(IWindow &window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer):
-	IScene(window),
+GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer):
+	IScene(_window),
 	view(cameraPosition, cameraDirection),
 	projection((GLWindow &)window, orthoSize),
 	framebufferPointer(framebufferPointer)

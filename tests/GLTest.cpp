@@ -15,7 +15,7 @@ struct TestScene : anex::modules::gl::GLScene
 {
   std::shared_ptr<entities::Cube> cubeEntity;
   vp::VML vml;
-  explicit TestScene(anex::IWindow &window);
+  explicit TestScene(anex::IWindow &_window);
 };
 struct TestTriangle : anex::modules::gl::GLEntity
 {
@@ -25,8 +25,8 @@ struct TestTriangle : anex::modules::gl::GLEntity
   std::array<glm::vec3, 3> normals = {};
   float rotationAmount = 0;
   TestScene &testScene;
-  TestTriangle(anex::IWindow &window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
-    GLEntity(window, {
+  TestTriangle(anex::IWindow &_window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
+    GLEntity(_window, {
       "Color",
       "Position",
       "Normal",

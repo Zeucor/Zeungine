@@ -6,6 +6,7 @@ TextView::TextView(GLWindow &window,
                    glm::vec3 position,
                    glm::vec3 rotation,
                    glm::vec3 scale,
+                   glm::vec4 textColor,
                    const std::string_view text,
                    glm::vec2 size,
                    fonts::freetype::FreetypeFont &font,
@@ -19,7 +20,8 @@ TextView::TextView(GLWindow &window,
 		{
 			{
 				"UV2", "Position", "Normal", "Texture2D",
-				"View", "Projection", "Model", "CameraPosition"
+				"View", "Projection", "Model", "CameraPosition",
+				"TextColor"
 			}
 		},
 		6,
@@ -43,6 +45,7 @@ TextView::TextView(GLWindow &window,
 		{ 0, 1 }  // 3
 	}),
 	scene(scene),
+	textColor(textColor),
 	text(text),
 	size(size),
 	font(font),
@@ -62,7 +65,8 @@ TextView::TextView(GLWindow &window,
 	{
 		forceUpdate();
 	});
-};
+	setTextColor(textColor);
+}
 TextView::~TextView()
 {
 	auto &glWindow = ((VAO&)*this).window;
@@ -74,7 +78,7 @@ void TextView::update()
 	{
 		forceUpdate();
 	}
-};
+}
 void TextView::forceUpdate()
 {
 	if (reFontSizeHandler)
@@ -106,7 +110,7 @@ void TextView::forceUpdate()
 		position = repositionHandler(this->size);
 	}
 	oldText = text;
-};
+}
 void TextView::preRender()
 {
   auto &model = getModelMatrix();
@@ -117,9 +121,9 @@ void TextView::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	if (size.x && size.y)
 	  shader.setTexture("Texture2D", *texturePointer, 0);
+	shader.setUniform("TextColor", textColor);
 	shader.unbind();
-	shader.unbind();
-};
+}
 void TextView::setSize(glm::vec2 size)
 {
 	this->size = size;
@@ -127,8 +131,12 @@ void TextView::setSize(glm::vec2 size)
 		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
 	};
 	updateElements("Position", positions);
-};
+}
 void TextView::updateText(const std::string_view text)
 {
 	this->text = text;
-};
+}
+void TextView::setTextColor(glm::vec4 newTextColor)
+{
+	textColor = newTextColor;
+}

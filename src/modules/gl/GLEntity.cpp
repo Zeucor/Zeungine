@@ -1,7 +1,7 @@
 #include <anex/modules/gl/GLEntity.hpp>
 #include <anex/modules/gl/shaders/ShaderManager.hpp>
 using namespace anex::modules::gl;
-GLEntity::GLEntity(anex::IWindow &window,
+GLEntity::GLEntity(anex::IWindow &_window,
 									 const shaders::RuntimeConstants &constants,
 									 uint32_t indiceCount,
 						 			 const std::vector<uint32_t> &indices,
@@ -11,14 +11,14 @@ GLEntity::GLEntity(anex::IWindow &window,
 									 glm::vec3 rotation,
 									 glm::vec3 scale,
 									 std::string_view name):
-	IEntity(window),
-	VAO((GLWindow &)window, constants, indiceCount, elementCount),
+	IEntity(_window),
+	VAO((GLWindow &)_window, constants, indiceCount, elementCount),
 	indices(indices),
 	positions(positions),
 	position(position),
 	rotation(rotation),
 	scale(scale),
-	shader(*shaders::ShaderManager::getShaderByConstants((GLWindow &)window, constants).second),
+	shader(*shaders::ShaderManager::getShaderByConstants((GLWindow &)_window, constants).second),
 	name(name)
 {};
 void GLEntity::update()

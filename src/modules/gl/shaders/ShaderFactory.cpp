@@ -655,7 +655,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
-                    return std::string("uniform vec3 lightPos;\nuniform float nearPlane;\nuniform float farPlane;\n");
+                    return std::string("uniform vec3 lightPos;\nuniform float nearPlane;\nuniform float farPlane;");
                   }
                 }
             }
@@ -698,7 +698,17 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     }
                   }
             }
-          }
+          },
+					{
+						"TextColor", {
+	                {
+	                	++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+	                	{
+	                		return "uniform vec4 TextColor;";
+	                	}
+	                }
+						}
+					}
         }
       },
       {
@@ -791,7 +801,16 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
-                    return "  FragColor = texture(Texture2D, inUV);";
+                    std::string string("  vec4 sampled = texture(Texture2D, inUV);\n");
+                  	if (std::find(constants.begin(), constants.end(), "TextColor") != constants.end())
+                  	{
+											string += "  FragColor = vec4(TextColor.r, TextColor.g, TextColor.b, sampled.a * TextColor.a);";
+                  	}
+                  	else
+                  	{
+                  		string += "  FragColor = sampled;";
+                  	}
+                  	return string;
                   }
                 }
             }

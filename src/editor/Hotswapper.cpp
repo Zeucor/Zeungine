@@ -17,6 +17,9 @@ Hotswapper::~Hotswapper()
 }
 void Hotswapper::update()
 {
+	editorScene.status->setText("Initializing Compiler...");
+	editorScene.status->setTextColor({1, 1, 0, 1});
+	idle = false;
 	auto &swapperRef = *swapper;
 	auto srcDirectory = directory + "/src";
 	filesystem::Directory srcDirectoryActual(srcDirectory);
@@ -37,16 +40,24 @@ void Hotswapper::update()
 	swapperRef.LinkLibrary("opengl32.lib");
 	swapperRef.LinkLibrary("gdi32.lib");
 	swapperRef.LinkLibrary("user32.lib");
+	swapperRef.AddCompileOption("-DHSCPP_CXX_STANDARD=" + std::to_string(HSCPP_CXX_STANDARD));
+	swapperRef.AddCompileOption("-DHSCPP_PLATFORM_WIN32");
 	swapperRef.SetBuildDirectory(directory + "/build");
 	while (!swapperRef.IsCompilerInitialized())
 	{
 		swapperRef.Update();
 	}
+	editorScene.status->setText("Compiling...");
+	editorScene.status->setTextColor({1, 1, 0, 1});
+	compiling = true;
+	compiled = false;
 	swapperRef.TriggerManualBuild(false);
 	while (running)
 	{
 		auto updateResult = swapperRef.Update(false);
-		if (updateResult == hscpp::Hotswapper::UpdateResult::BeforeCompile)
+		switch (updateResult)
+		{
+		case hscpp::Hotswapper::UpdateResult::BeforeCompile:
 		{
 			if (editorScene.loaded)
 			{
@@ -55,30 +66,50 @@ void Hotswapper::update()
 					editorScene.OnUnLoad(*editorScene.gameWindowPointer);
 				}
 				editorScene.loaded = false;
-				editorScene.OnLoad = std::function<void(GLWindow&)>();
+				editorScene.OnHotswapLoad = std::function<void(GLWindow&, hscpp::AllocationResolver &)>();
 				editorScene.OnUnLoad = std::function<void(GLWindow&)>();
 				swapperRef.UnLoadModule();
 			}
+			compiled = false;
+			break;
 		}
-		else if (updateResult == hscpp::Hotswapper::UpdateResult::Compiled)
+		case hscpp::Hotswapper::UpdateResult::Compiling:
 		{
-			editorScene.OnLoad = swapperRef.GetFunction<void(GLWindow &)>("OnLoad");
+			editorScene.status->setText("Compiling...");
+			editorScene.status->setTextColor({1, 1, 0, 1});
+			compiling = true;
+			break;
+		}
+		case hscpp::Hotswapper::UpdateResult::Compiled:
+		{
+			editorScene.status->setText("Compiled.");
+			editorScene.status->setTextColor({0, 1, 0, 1});
+			editorScene.OnHotswapLoad = swapperRef.GetFunction<void(GLWindow &, hscpp::AllocationResolver &)>("OnHotswapLoad");
 			editorScene.OnUnLoad = swapperRef.GetFunction<void(GLWindow &)>("OnUnLoad");
-			if (editorScene.OnLoad)
+			if (editorScene.OnHotswapLoad)
 			{
-				editorScene.OnLoad(*editorScene.gameWindowPointer);
+				auto &allocationResolver = *swapper->GetAllocationResolver();
+				editorScene.OnHotswapLoad(*editorScene.gameWindowPointer, allocationResolver);
 				editorScene.loaded = true;
 			}
+			compiledTime = std::chrono::system_clock::now();
+			compiling = false;
+			compiled = true;
+			break;
+		}
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		if (compiled && !idle)
+		{
+			auto now = std::chrono::system_clock::now();
+			std::chrono::duration<float> duration = now - compiledTime;
+			auto durationSeconds = duration.count();
+			if (durationSeconds > 5)
+			{
+				editorScene.status->setText("Idle");
+				editorScene.status->setTextColor({1, 1, 1, 1});
+				idle = true;
+			}
+		}
 	}
 }
-Hotswapper &Hotswapper::operator=(const Hotswapper &hotswapper)
-{
-	running = hotswapper.running;
-	directory = hotswapper.directory;
-	swapper = hotswapper.swapper;
-	updateThread = hotswapper.updateThread;
-	compiling = hotswapper.compiling;
-	return *this;
-};

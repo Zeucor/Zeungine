@@ -13,6 +13,7 @@ namespace anex::modules::gl::entities
 		std::vector<glm::vec3> normals = {};
 		std::shared_ptr<textures::Texture> texturePointer;
 		GLScene &scene;
+		glm::vec4 textColor;
     std::string oldText;
     std::string text;
 		glm::vec2 size;
@@ -37,6 +38,7 @@ namespace anex::modules::gl::entities
 										  glm::vec3 position,
 										  glm::vec3 rotation,
 										  glm::vec3 scale,
+										  glm::vec4 textColor,
 										  const std::string_view text,
 										  glm::vec2 size,
 										  fonts::freetype::FreetypeFont &font,
@@ -52,5 +54,6 @@ namespace anex::modules::gl::entities
 		void preRender() override;
 		void setSize(glm::vec2 size);
 		void updateText(const std::string_view text);
+		void setTextColor(glm::vec4 newTextColor);
   };
 }

@@ -15,10 +15,12 @@ namespace anex::editor::hs
 		std::shared_ptr<hscpp::Hotswapper> swapper;
 		std::shared_ptr<std::thread> updateThread;
 		bool compiling = false;
-		Hotswapper() = default;
+		bool compiled = false;
+		bool idle = true;
+		std::chrono::time_point<std::chrono::system_clock> compiledTime = std::chrono::system_clock::now();
+		Hotswapper() = delete;
 		Hotswapper(std::string_view directory, EditorScene &editorScene);
 		~Hotswapper();
-		Hotswapper &operator=(const Hotswapper &);
 		void update();
 	};
 }

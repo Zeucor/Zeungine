@@ -27,8 +27,8 @@ namespace anex::modules::gl
 		std::array<IWindow::EventIdentifier, 7 - 0 + 1> mousePressIDs;
 		IWindow::EventIdentifier mouseMoveID;
 		GLEntity *currentHoveredEntity = 0;
-    GLScene(IWindow &window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer = 0);
-    GLScene(IWindow &window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer = 0);
+    GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer = 0);
+    GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer = 0);
 		~GLScene();
     void preRender() override;
 		void render() override;
