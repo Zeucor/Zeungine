@@ -1,9 +1,10 @@
 #include <../include/anex/filesystem/File.hpp>
 #include <chrono>
-#include <iomanip>
-#include <sstream>
-#include <regex>
 #include <codecvt>
+#include <iomanip>
+#include <iostream>
+#include <regex>
+#include <sstream>
 using namespace anex::filesystem;
 File::File(const std::string& filePath, enums::EFileLocation fileLocation, const std::string& mode)
     : originalFilePath(filePath), filePath(filePath), fileLocation(fileLocation), openMode(std::ios::in | std::ios::out | std::ios::binary)
@@ -46,7 +47,7 @@ File::~File()
 	sync();
   if (!close())
   {
-	  throw std::runtime_error("Could not close file");
+	  std::cout << "File '" << filePath << "' failed to close." << std::endl;
   }
 };
 bool File::open()
