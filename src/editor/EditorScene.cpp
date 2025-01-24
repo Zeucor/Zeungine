@@ -89,16 +89,6 @@ EditorScene::EditorScene(GLWindow& window):
 		window.windowWidth - gameWindowBorderWidth * 2,
 		resourcePanelMenuHeight - bottomTabsHeight
 	)),
-	resourceAssetBrowser(std::make_shared<entities::AssetBrowser>(
-		window,
-		*this,
-		glm::vec3(gameWindowBorderWidth / window.windowWidth / 0.5, (-gameWindowBorderWidth / window.windowHeight / 0.5), 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		glm::vec4(0.1, 0.1, 0.1, 1),
-		robotoRegularFont,
-		window.windowWidth - gameWindowBorderWidth * 2,
-		resourcePanelMenuHeight - bottomTabsHeight)),
 	resourcePanelTabs(std::make_shared<entities::TabsBar>(
 		window,
 		*this,
@@ -212,16 +202,6 @@ EditorScene::EditorScene(GLWindow& window):
 		resourcePanelMenu->addPanelEntity(resourceConsole, false);
 		activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceConsole);
 	}, true);
-	resourcePanelTabs->addTab("Asset Browser", [&]
-	{
-		removeActiveResourceEntity();
-		resourcePanelMenu->addPanelEntity(resourceAssetBrowser, false);
-		activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceAssetBrowser);
-	});
-	resourcePanelTabs->addTab("Performance", [&]
-	{
-		removeActiveResourceEntity();
-	});
 	resourcePanelMenu->addPanelEntity(resourceConsole, false);
 	activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceConsole);
 	resourcePanelMenu->addPanelEntity(resourcePanelTabs, false);
@@ -461,4 +441,28 @@ ANEX_API void OnUnLoad(GLWindow &window)
 void EditorScene::loadProject(std::string_view projectDirectory)
 {
 	hotswapper = std::make_shared<hs::Hotswapper>(projectDirectory, *this);
+	resourceAssetBrowser = std::make_shared<entities::AssetBrowser>(
+		dynamic_cast<GLWindow &>(window),
+		*this,
+		glm::vec3(gameWindowBorderWidth / window.windowWidth / 0.5, (-gameWindowBorderWidth / window.windowHeight / 0.5), 0.1),
+		glm::vec3(0),
+		glm::vec3(1),
+		glm::vec4(0.1, 0.1, 0.1, 1),
+		robotoRegularFont,
+		window.windowWidth - gameWindowBorderWidth * 2,
+		resourcePanelMenuHeight - bottomTabsHeight,
+		projectDirectory);
+	resourcePanelTabs->addTab("Asset Browser", [&]
+	{
+		removeActiveResourceEntity();
+		if (resourceAssetBrowser)
+		{
+			resourcePanelMenu->addPanelEntity(resourceAssetBrowser, false);
+			activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceAssetBrowser);
+		}
+	});
+	resourcePanelTabs->addTab("Performance", [&]
+	{
+		removeActiveResourceEntity();
+	});
 };

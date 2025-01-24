@@ -6,6 +6,7 @@
 #include <anex/glm.hpp>
 #include <anex/modules/gl/fonts/freetype/Freetype.hpp>
 #include <anex/modules/gl/ISizable.hpp>
+#include <FileWatch.hpp>
 namespace anex::modules::gl::entities
 {
 	struct AssetBrowser : GLEntity, ISizable
@@ -16,6 +17,8 @@ namespace anex::modules::gl::entities
 		fonts::freetype::FreetypeFont& font;
 		float width;
 		float height;
+		std::string_view projectDirectory;
+		filewatch::FileWatch<std::string> projectDirectoryWatch;
 		size_t currentIndex = 0;
 		inline static size_t assetBrowsersCount = 0;
 		AssetBrowser(GLWindow& window,
@@ -27,6 +30,7 @@ namespace anex::modules::gl::entities
 								 fonts::freetype::FreetypeFont& font,
 								 float width,
 								 float height,
+								 std::string_view projectDirectory,
 								 const shaders::RuntimeConstants& constants = {},
 								 std::string_view name = "");
 		void preRender() override;

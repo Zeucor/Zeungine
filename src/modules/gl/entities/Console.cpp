@@ -107,7 +107,7 @@ void Console::hookedCallback(const std::vector<std::string> &lines)
 				line,
 				glm::vec2(0),
 				font,
-				window.windowHeight / 38.f,
+				0.f,
 				true,
 				[&, index](auto titleSize)
 				{
@@ -118,7 +118,7 @@ void Console::hookedCallback(const std::vector<std::string> &lines)
 				TextView::ResizeHandler(),
 				[&]
 				{
-					return this->window.windowHeight / 38.f;
+					return this->window.windowHeight / 46.f;
 				});
 			consoleTextViews[index] = consoleTextView;
 			consoleTextView->addToBVH = false;

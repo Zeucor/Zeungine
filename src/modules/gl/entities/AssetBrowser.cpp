@@ -11,6 +11,7 @@ AssetBrowser::AssetBrowser(anex::modules::gl::GLWindow &window,
 							             fonts::freetype::FreetypeFont &font,
 													 float width,
 													 float height,
+													 std::string_view projectDirectory,
 							             const anex::modules::gl::shaders::RuntimeConstants &constants,
 			                     std::string_view name):
 	anex::modules::gl::GLEntity(
@@ -36,7 +37,35 @@ AssetBrowser::AssetBrowser(anex::modules::gl::GLWindow &window,
   backgroundColor(backgroundColor),
 	font(font),
 	width(width),
-	height(height)
+	height(height),
+	projectDirectory(projectDirectory),
+	projectDirectoryWatch(std::string(projectDirectory), [&](const auto &filePath, const auto eventType)
+	{
+		if (filePath.find("build") == 0)
+			return;
+		std::cout << filePath << " : ";
+		switch (eventType)
+		{
+		case filewatch::Event::added:
+			std::cout << "The file was added to the directory.";
+			break;
+		case filewatch::Event::removed:
+			std::cout << "The file was removed from the directory.";
+			break;
+		case filewatch::Event::modified:
+			std::cout << "The file was modified. This can be a change in the time stamp or attributes.";
+			break;
+		case filewatch::Event::renamed_old:
+			std::cout << "The file was renamed and this is the old name.";
+			break;
+		case filewatch::Event::renamed_new:
+			std::cout << "The file was renamed and this is the new name.";
+			break;
+		default:
+			std::cout << "Unknown event type.";
+		};
+		std::cout << std::endl;
+	})
 {
 	updateIndices(indices);
 	setBackgroundColor(backgroundColor);
