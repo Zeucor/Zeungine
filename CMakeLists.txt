@@ -64,6 +64,7 @@ if(BUILD_OPENGL)
         src/modules/gl/GLEntity.cpp
         src/modules/gl/GLScene.cpp
         src/modules/gl/ISizable.cpp
+        src/modules/gl/entities/AssetBrowser.cpp
         src/modules/gl/entities/Button.cpp
         src/modules/gl/entities/Console.cpp
         src/modules/gl/entities/Cube.cpp

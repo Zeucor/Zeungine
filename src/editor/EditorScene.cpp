@@ -89,6 +89,16 @@ EditorScene::EditorScene(GLWindow& window):
 		window.windowWidth - gameWindowBorderWidth * 2,
 		resourcePanelMenuHeight - bottomTabsHeight
 	)),
+	resourceAssetBrowser(std::make_shared<entities::AssetBrowser>(
+		window,
+		*this,
+		glm::vec3(gameWindowBorderWidth / window.windowWidth / 0.5, (-gameWindowBorderWidth / window.windowHeight / 0.5), 0.1),
+		glm::vec3(0),
+		glm::vec3(1),
+		glm::vec4(0.1, 0.1, 0.1, 1),
+		robotoRegularFont,
+		window.windowWidth - gameWindowBorderWidth * 2,
+		resourcePanelMenuHeight - bottomTabsHeight)),
 	resourcePanelTabs(std::make_shared<entities::TabsBar>(
 		window,
 		*this,

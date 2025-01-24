@@ -1,6 +1,7 @@
 #pragma once
 #include <anex/modules/gl/GLScene.hpp>
 #include <anex/modules/gl/GLWindow.hpp>
+#include <anex/modules/gl/entities/AssetBrowser.hpp>
 #include <anex/modules/gl/entities/Button.hpp>
 #include <anex/modules/gl/entities/Console.hpp>
 #include <anex/modules/gl/entities/Dialog.hpp>
@@ -45,6 +46,7 @@ namespace anex::editor
 		float resourcePanelMenuHeight;
 		std::shared_ptr<entities::PanelMenu> resourcePanelMenu;
 		std::shared_ptr<entities::Console> resourceConsole;
+		std::shared_ptr<entities::AssetBrowser> resourceAssetBrowser;
 		std::shared_ptr<entities::TabsBar> resourcePanelTabs;
 		IWindow::EventIdentifier resizeID = 0;
 		IWindow::EventIdentifier gameWindowBorderHoverID = 0;
