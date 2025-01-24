@@ -187,8 +187,8 @@ EditorScene::EditorScene(GLWindow& window):
 {
 	(*projectNameInput->textPointer) = "EditorGame";
 	(*projectDirectoryInput->textPointer) = "C:/Users/Steven/Projects/EditorGame";
-	projectNameInput->handleKey(0, false);
-	projectDirectoryInput->handleKey(0, false);
+	projectNameInput->handleKey(0, true);
+	projectDirectoryInput->handleKey(0, true);
 	closeDialogButton->handler = [&]()
 	{
 		removeEntity(activeDialog->ID);
