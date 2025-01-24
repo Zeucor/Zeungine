@@ -185,7 +185,6 @@ EditorScene::EditorScene(GLWindow& window):
 		std::vector<std::shared_ptr<GLEntity>>({closeDialogButton, okayDialogButton, projectNameInput, projectDirectoryInput})
   	))
 {
-	std::cout.flush();
 	(*projectNameInput->textPointer) = "EditorGame";
 	(*projectDirectoryInput->textPointer) = "C:/Users/Steven/Projects/EditorGame";
 	projectNameInput->handleKey(0, false);
