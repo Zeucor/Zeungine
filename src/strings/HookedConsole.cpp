@@ -66,5 +66,5 @@ void HookedConsole::processBuffer(const char *buffer, size_t length)
 				currentLine += c;
 			}
 		}
-		outputCallback(*this, currentLine, thisLines);
+		outputCallback(thisLines);
 }

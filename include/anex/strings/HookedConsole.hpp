@@ -22,7 +22,7 @@ namespace anex::strings
         ~HookedConsole();
         void stop();
         std::vector<std::string> getAllLines();
-        std::function<void(HookedConsole&, const std::string &, const std::vector<std::string> &)> outputCallback;
+        std::function<void(const std::vector<std::string> &)> outputCallback;
     private:
         void initializeRedirect();
         void readFromPipe();

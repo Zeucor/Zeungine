@@ -42,8 +42,8 @@ Console::Console(anex::modules::gl::GLWindow &window,
 	setBackgroundColor(backgroundColor);
 	updateElements("Position", positions);
 	Console::setSize(glm::vec3(0));
-	std::function<void(strings::HookedConsole &, const std::string &, const std::vector<std::string> &)> hookedCallbackFunction =
-		std::bind(&Console::hookedCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+	std::function<void(const std::vector<std::string> &)> hookedCallbackFunction =
+		std::bind(&Console::hookedCallback, this, std::placeholders::_1);
 	hookedConsole.outputCallback = hookedCallbackFunction;
 	this->addMousePressHandler(3, [&](auto pressed)
 	{
@@ -88,9 +88,9 @@ void Console::setSize(glm::vec3 newSize)
 	updateElements("Position", positions);
 	size = actualNewSize;
 }
-void Console::hookedCallback(strings::HookedConsole& _hookedConsole, const std::string &currentLine, const std::vector<std::string> &thisLines)
+void Console::hookedCallback(const std::vector<std::string> &lines)
 {
-	window.runOnThread([&, currentLine, thisLines](auto &iwindow)
+	window.runOnThread([&, lines](auto &iwindow)
 	{
 		auto addLine = [&](auto& line)
 		{
@@ -123,21 +123,9 @@ void Console::hookedCallback(strings::HookedConsole& _hookedConsole, const std::
 			consoleTextViews[index] = consoleTextView;
 			consoleTextView->addToBVH = false;
 		};
-		if (!currentLine.empty() && !consoleTextViews.empty() && thisLines.empty())
+		for (const auto &line : lines)
 		{
-			auto &lastTextView = consoleTextViews.back();
-			lastTextView->text += currentLine;
-		}
-		else
-		{
-			for (const auto &line : thisLines)
-			{
-				addLine(line);
-			}
-			if (!currentLine.empty())
-			{
-				addLine(currentLine);
-			}
+			addLine(line);
 		}
 		showConsoleLines();
 	});

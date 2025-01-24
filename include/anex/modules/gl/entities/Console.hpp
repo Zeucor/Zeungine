@@ -35,8 +35,7 @@ namespace anex::modules::gl::entities
 		void preRender() override;
 		void setBackgroundColor(glm::vec4 newBackgroundColor);
 		void setSize(glm::vec3 newSize) override;
-		void appendText(const std::string& stringToAppend);
-		void hookedCallback(strings::HookedConsole& _hookedConsole, const std::string &currentLine, const std::vector<std::string> &thisLines);
+		void hookedCallback(const std::vector<std::string> &lines);
 		void showConsoleLines();
 	};
 }
