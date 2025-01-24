@@ -185,7 +185,6 @@ EditorScene::EditorScene(GLWindow& window):
 		std::vector<std::shared_ptr<GLEntity>>({closeDialogButton, okayDialogButton, projectNameInput, projectDirectoryInput})
   	))
 {
-	std::cout << "Test Text" << std::endl;
 	std::cout.flush();
 	(*projectNameInput->textPointer) = "EditorGame";
 	(*projectDirectoryInput->textPointer) = "C:/Users/Steven/Projects/EditorGame";
@@ -257,14 +256,13 @@ EditorScene::EditorScene(GLWindow& window):
 		minimizeWindows();
 		addEntity(gameWindowBorder);
 		gameWindowPointer->restore();
-		std::cout << "Opening Scene" << std::endl;
 	}, true);
 	bottomTabsBar->addTab("Code Editor", [&]()
 	{
 		minimizeWindows();
 		codeWindowPointer->restore();
-		std::cout << "Opening Code Editor" << std::endl;
 	});
+	std::cout << "Opened Anex Editor" << std::endl;
 };
 EditorScene::~EditorScene()
 {
