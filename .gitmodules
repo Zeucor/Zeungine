@@ -16,3 +16,6 @@
 [submodule "vendor/hscpp"]
 	path = vendor/hscpp
 	url = https://github.com/ZeunO8/hscpp.git
+[submodule "vendor/filewatch"]
+	path = vendor/filewatch
+	url = https://github.com/ThomasMonkman/filewatch.git
