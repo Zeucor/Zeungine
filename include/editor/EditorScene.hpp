@@ -48,6 +48,7 @@ namespace anex::editor
 		std::shared_ptr<entities::Console> resourceConsole;
 		std::shared_ptr<entities::AssetBrowser> resourceAssetBrowser;
 		std::shared_ptr<entities::TabsBar> resourcePanelTabs;
+		std::shared_ptr<GLEntity> activeResourcePanelEntity;
 		IWindow::EventIdentifier resizeID = 0;
 		IWindow::EventIdentifier gameWindowBorderHoverID = 0;
 		IWindow::EventIdentifier gameWindowBorderPressID = 0;
@@ -76,6 +77,7 @@ namespace anex::editor
 		void setupGameWindow();
 		void setupCodeWindow();
 		void minimizeWindows();
+		void removeActiveResourceEntity() const;
 		void setupToolbarOptions();
 		void newProject(std::string_view projectName, std::string_view projectDirectory);
 		void loadProject(std::string_view projectDirectory);

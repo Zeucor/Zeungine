@@ -104,6 +104,11 @@ void PanelMenu::addPanelEntity(const std::shared_ptr<GLEntity> &entity, bool ali
 	}
 	setSize(glm::vec3(0));
 }
+void PanelMenu::removePanelEntity(const std::shared_ptr<GLEntity> &entity)
+{
+	scene.preRemoveEntity(entity, {ID, entity->ID});
+	removeChild(entity->ID);
+}
 float PanelMenu::getSizeYTotal()
 {
 	float sizeYTotal = 0;

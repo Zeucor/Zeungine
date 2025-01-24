@@ -208,19 +208,24 @@ EditorScene::EditorScene(GLWindow& window):
 	sceneGraphPanelMenu->addToBVH = false;
 	addEntity(sceneGraphPanelMenu);
 	addEntity(resourcePanelMenu);
-	resourcePanelTabs->addTab("Console", []
+	resourcePanelTabs->addTab("Console", [&]
 	{
-
+		removeActiveResourceEntity();
+		resourcePanelMenu->addPanelEntity(resourceConsole, false);
+		activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceConsole);
 	}, true);
-	resourcePanelTabs->addTab("Asset Browser", []
+	resourcePanelTabs->addTab("Asset Browser", [&]
 	{
-
+		removeActiveResourceEntity();
+		resourcePanelMenu->addPanelEntity(resourceAssetBrowser, false);
+		activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceAssetBrowser);
 	});
-	resourcePanelTabs->addTab("Performance", []
+	resourcePanelTabs->addTab("Performance", [&]
 	{
-
+		removeActiveResourceEntity();
 	});
 	resourcePanelMenu->addPanelEntity(resourceConsole, false);
+	activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceConsole);
 	resourcePanelMenu->addPanelEntity(resourcePanelTabs, false);
 	setupToolbarOptions();
 	addEntity(toolbar);
@@ -357,7 +362,14 @@ void EditorScene::minimizeWindows()
 			}
 		}
 	}
-};
+}
+void EditorScene::removeActiveResourceEntity() const
+{
+	if (activeResourcePanelEntity && activeResourcePanelEntity->ID)
+	{
+		resourcePanelMenu->removePanelEntity(activeResourcePanelEntity);
+	}
+}
 void EditorScene::setupToolbarOptions()
 {
 	auto &fileDropdown = *toolbar->fileDropdown;

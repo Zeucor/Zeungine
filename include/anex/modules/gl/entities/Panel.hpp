@@ -33,6 +33,7 @@ namespace anex::modules::gl::entities
 							const shaders::RuntimeConstants& constants = {},
 							std::string_view name = "");
 		void addPanelEntity(const std::shared_ptr<GLEntity> &entity, bool alignSizeX = true);
+		void removePanelEntity(const std::shared_ptr<GLEntity> &entity);
 		float getSizeYTotal();
 		void preRender() override;
 		void setColor(glm::vec4 color);
