@@ -34,7 +34,6 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 		name.empty() ? "PanelMenu " + std::to_string(++panelMenusCount) : name
 	),
 	scene(scene),
-	size({ 0, 0 }),
   color(color),
 	font(font),
 	title(title),
@@ -44,90 +43,83 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 	updateIndices(indices);
 	setColor(color);
 	updateElements("Position", positions);
+	PanelMenu::setSize(glm::vec3(0));
+	addToBVH = false;
+	if (title.empty())
+		return;
   float titleLineHeight = 0;
 	auto titleSize = font.stringSize(title, window.windowHeight / 30.f, titleLineHeight, glm::vec2(0));
 	titleSize.y /= window.windowHeight * 0.5f;
 	titleSize.x /= window.windowWidth * 0.5f;
+	static auto indent = 8 / window.windowWidth / 0.5;
 	titleTextView = std::make_shared<TextView>(
 		window,
 		scene,
-		glm::vec3(titleSize.x / 2, -titleSize.y / 2, 0.1),
+		glm::vec3(titleSize.x / 2 + indent, -titleSize.y / 2, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
 		glm::vec4(1, 1, 1, 1),
 		title,
 		titleSize,
 		font,
-		window.windowHeight / 35.f,
+		window.windowHeight / 36.f,
 		true,
 		[](auto titleSize)
 		{
-			return glm::vec3(titleSize.x / 2, -titleSize.y / 2, 0.1);
+			return glm::vec3(titleSize.x / 2 + indent, -titleSize.y / 2, 0.1);
 		},
 		TextView::ResizeHandler(),
 		[&]
 		{
-			return this->window.windowHeight / 35.f;
+			return this->window.windowHeight / 36.f;
 		});
   titleTextView->addToBVH = false;
   addChild(titleTextView);
-  setSize();
-  addToBVH = false;
 };
-void PanelMenu::addItem(std::string_view name, GLEntity &entity)
+void PanelMenu::addPanelEntity(const std::shared_ptr<GLEntity> &entity, bool alignSizeX)
 {
-	auto &vao = (VAO &)*this;
-	float sizeYTotal = 0;
-	for (auto &child : children)
+  addChild(entity);
+  scene.postAddEntity(entity, {ID, entity->ID});
+	if (alignSizeX)
 	{
-    auto textViewPointer = std::dynamic_pointer_cast<TextView>(child.second);
-    if (textViewPointer)
-    {
-      sizeYTotal += textViewPointer->size.y;
-    	continue;
-    }
-		auto &childItem = *std::dynamic_pointer_cast<PanelItem>(child.second);
-		sizeYTotal += childItem.size.y;
+		float sizeXMax = 0;
+		for (auto &child : children)
+		{
+			auto sizablePointer = std::dynamic_pointer_cast<ISizable>(child.second);
+			if (sizablePointer)
+			{
+				sizeXMax = std::max(sizablePointer->size.x, sizeXMax);
+			}
+		}
+		for (auto &child : children)
+		{
+			auto sizablePointer = std::dynamic_pointer_cast<ISizable>(child.second);
+	    if (!sizablePointer)
+	      continue;
+	    auto &childItem = *sizablePointer;
+			childItem.setSize({sizeXMax, childItem.size.y, childItem.size.z});
+			auto glEntityPointer = std::dynamic_pointer_cast<GLEntity>(sizablePointer);
+	    scene.bvh.updateEntity(*glEntityPointer);
+		}
 	}
-  static const auto indent = 16.f;
-  auto panelItem = std::make_shared<PanelItem>(
-  	dynamic_cast<GLWindow&>(window),
-		scene,
-		glm::vec3(indent / window.windowWidth / 0.5, -sizeYTotal, 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-    color,
-		name,
-		font,
-		entity,
-    width,
-    indent);
-  addChild(panelItem);
-  scene.postAddEntity(panelItem, {ID, panelItem->ID});
-  sizeYTotal += panelItem->size.y;
-	float sizeXMax = 0;
+	setSize(glm::vec3(0));
+}
+float PanelMenu::getSizeYTotal()
+{
+	float sizeYTotal = 0;
 	for (auto &child : children)
 	{
 		auto textViewPointer = std::dynamic_pointer_cast<TextView>(child.second);
 		if (textViewPointer)
 		{
-			sizeXMax = std::max(textViewPointer->size.x, sizeXMax);
+			sizeYTotal += textViewPointer->size.y;
 			continue;
 		}
 		auto &childItem = *std::dynamic_pointer_cast<PanelItem>(child.second);
-		sizeXMax = std::max(childItem.size.x, sizeXMax);
+		sizeYTotal += childItem.size.y;
 	}
-	for (auto &child : children)
-	{
-		auto childItemPointer = std::dynamic_pointer_cast<PanelItem>(child.second);
-    if (!childItemPointer)
-      continue;
-    auto &childItem = *childItemPointer;
-		childItem.setSize({sizeXMax, childItem.size.y});
-    scene.bvh.updateEntity(childItem);
-	}
-	setSize();
-};
+	return sizeYTotal;
+}
 void PanelMenu::preRender()
 {
 	const auto &model = getModelMatrix();
@@ -144,14 +136,14 @@ void PanelMenu::setColor(glm::vec4 color)
 	colors = {color, color, color, color};
 	updateElements("Color", colors);
 };
-void PanelMenu::setSize()
+void PanelMenu::setSize(glm::vec3 newSize)
 {
-	glm::vec2 newSize(width / window.windowWidth / 0.5, height / window.windowHeight / 0.5);
+	glm::vec3 actualNewSize(width / window.windowWidth / 0.5, height / window.windowHeight / 0.5, 0);
 	positions = {
-		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }
+		{ 0, -actualNewSize.y, 0 }, { actualNewSize.x, -actualNewSize.y, 0 }, { actualNewSize.x, 0, 0 }, { 0, 0, 0 }
 	};
 	updateElements("Position", positions);
-	this->size = newSize;
+	size = actualNewSize;
 };
 PanelItem::PanelItem(GLWindow &window,
 										 GLScene &scene,
@@ -186,7 +178,6 @@ PanelItem::PanelItem(GLWindow &window,
     name.empty() ? "PanelItem " + std::to_string(++panelItemsCount) : name
 	),
 	scene(scene),
-	size({ 0, 0 }),
 	text(text),
 	font(font),
 	entity(entity),
@@ -224,7 +215,7 @@ PanelItem::PanelItem(GLWindow &window,
 		});
 	textView->addToBVH = false;
   addChild(textView);
-  setSize({ (panelWidth - indent) / (window.windowWidth / 2), TextSize.y });
+	PanelItem::setSize({ (panelWidth - indent) / (window.windowWidth / 2), TextSize.y, 0 });
 	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
 	{
 		if (hovered)
@@ -267,7 +258,7 @@ void PanelItem::setColor(glm::vec4 color)
   colorsData[3] = color;
 	updateElements("Color", colors);
 };
-void PanelItem::setSize(glm::vec2 newSize)
+void PanelItem::setSize(glm::vec3 newSize)
 {
 	positions = {
 		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }

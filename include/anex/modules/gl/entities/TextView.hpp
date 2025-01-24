@@ -55,5 +55,6 @@ namespace anex::modules::gl::entities
 		void setSize(glm::vec2 size);
 		void updateText(const std::string_view text);
 		void setTextColor(glm::vec4 newTextColor);
+		void forceReposition();
   };
 }

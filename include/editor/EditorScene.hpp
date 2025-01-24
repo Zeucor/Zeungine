@@ -1,9 +1,8 @@
 #pragma once
-#include <anex/RuntimeAPI.hpp>
-#include <anex/SharedLibrary.hpp>
 #include <anex/modules/gl/GLScene.hpp>
 #include <anex/modules/gl/GLWindow.hpp>
 #include <anex/modules/gl/entities/Button.hpp>
+#include <anex/modules/gl/entities/Console.hpp>
 #include <anex/modules/gl/entities/Dialog.hpp>
 #include <anex/modules/gl/entities/Input.hpp>
 #include <anex/modules/gl/entities/Panel.hpp>
@@ -15,6 +14,7 @@
 #include "Project.hpp"
 namespace anex::editor
 {
+	using namespace anex::modules::gl;
 	struct EditorScene : GLScene
 	{
 		glm::vec4 editorClearColor = {0.2, 0.2, 0.2, 1};
@@ -42,22 +42,25 @@ namespace anex::editor
 		glm::vec4 gameWindowActiveBorderColor = {1, 0, 0, 1};
 		std::shared_ptr<entities::Plane> gameWindowBorder;
 		std::shared_ptr<entities::PanelMenu> sceneGraphPanelMenu;
+		float resourcePanelMenuHeight;
 		std::shared_ptr<entities::PanelMenu> resourcePanelMenu;
+		std::shared_ptr<entities::Console> resourceConsole;
+		std::shared_ptr<entities::TabsBar> resourcePanelTabs;
 		IWindow::EventIdentifier resizeID = 0;
 		IWindow::EventIdentifier gameWindowBorderHoverID = 0;
 		IWindow::EventIdentifier gameWindowBorderPressID = 0;
 		IWindow::EventIdentifier gameWindowESCPressID = 0;
 		float dialogWidth;
 		float dialogHeight;
-	    float closeDialogButtonWidth;
+		float closeDialogButtonWidth;
 		float closeDialogButtonHeight;
 		float okayDialogButtonWidth;
 		float okayDialogButtonHeight;
-	    std::shared_ptr<entities::Button> closeDialogButton;
+		std::shared_ptr<entities::Button> closeDialogButton;
 		std::shared_ptr<entities::Button> okayDialogButton;
-	    std::shared_ptr<entities::Input> projectNameInput;
-	    std::shared_ptr<entities::Input> projectDirectoryInput;
-	    std::shared_ptr<entities::Dialog> newProjectDialog;
+    std::shared_ptr<entities::Input> projectNameInput;
+    std::shared_ptr<entities::Input> projectDirectoryInput;
+    std::shared_ptr<entities::Dialog> newProjectDialog;
 		std::shared_ptr<entities::Dialog> activeDialog;
 		std::shared_ptr<hs::Hotswapper> hotswapper;
 		Project project;
@@ -67,7 +70,7 @@ namespace anex::editor
 		bool loaded = false;
 		explicit EditorScene(GLWindow& window);
 		~EditorScene() override;
-		void onEntityAdded(const std::shared_ptr<IEntity>& entity) const;
+		void onEntityAdded(const std::shared_ptr<IEntity>& entity);
 		void setupGameWindow();
 		void setupCodeWindow();
 		void minimizeWindows();

@@ -48,6 +48,7 @@ set(ANEX_SOURCES
     src/filesystem/File.cpp
     src/filesystem/Directory.cpp
     src/editor/Hotswapper.cpp
+    src/strings/HookedConsole.cpp
 )
 
 if(BUILD_FENSTER)
@@ -58,7 +59,9 @@ if(BUILD_OPENGL)
         src/modules/gl/GLWindow.cpp
         src/modules/gl/GLEntity.cpp
         src/modules/gl/GLScene.cpp
+        src/modules/gl/ISizable.cpp
         src/modules/gl/entities/Button.cpp
+        src/modules/gl/entities/Console.cpp
         src/modules/gl/entities/Cube.cpp
         src/modules/gl/entities/Dialog.cpp
         src/modules/gl/entities/DropdownMenu.cpp

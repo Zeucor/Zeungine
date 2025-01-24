@@ -5,14 +5,14 @@
 #include "./TextView.hpp"
 #include <anex/glm.hpp>
 #include <anex/modules/gl/fonts/freetype/Freetype.hpp>
+#include <anex/modules/gl/ISizable.hpp>
 
 namespace anex::modules::gl::entities
 {
-	struct PanelMenu : GLEntity
+	struct PanelMenu : GLEntity, ISizable
 	{
 		std::vector<glm::vec4> colors;
 		GLScene& scene;
-		glm::vec2 size;
 		glm::vec4 color;
 		fonts::freetype::FreetypeFont& font;
 		std::string title;
@@ -32,17 +32,17 @@ namespace anex::modules::gl::entities
 							float height,
 							const shaders::RuntimeConstants& constants = {},
 							std::string_view name = "");
-		void addItem(std::string_view name, GLEntity& entity);
+		void addPanelEntity(const std::shared_ptr<GLEntity> &entity, bool alignSizeX = true);
+		float getSizeYTotal();
 		void preRender() override;
 		void setColor(glm::vec4 color);
-		void setSize();
+		void setSize(glm::vec3 newSize) override;
 	};
 
-	struct PanelItem : GLEntity
+	struct PanelItem : GLEntity, ISizable
 	{
 		std::vector<glm::vec4> colors;
 		GLScene& scene;
-		glm::vec2 size;
 		std::string text;
 		std::shared_ptr<TextView> textView;
 		fonts::freetype::FreetypeFont& font;
@@ -68,6 +68,6 @@ namespace anex::modules::gl::entities
 		~PanelItem() override;
 		void preRender() override;
 		void setColor(glm::vec4 color);
-		void setSize(glm::vec2  size);
+		void setSize(glm::vec3 newSize) override;
 	};
 }

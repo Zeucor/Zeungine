@@ -138,3 +138,8 @@ void TextView::setTextColor(glm::vec4 newTextColor)
 {
 	textColor = newTextColor;
 }
+void TextView::forceReposition()
+{
+	if (repositionHandler)
+		position = repositionHandler(this->size);
+}

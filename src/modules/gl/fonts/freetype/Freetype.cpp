@@ -187,7 +187,7 @@ void FreetypeFont::stringToTexture(const std::string_view string,
 		lineHeight = face->size->metrics.height / 64.f;
 	}
 	float descender = face->size->metrics.descender / 64.f;
-	glm::vec3 currentPosition = {0, -descender, 25.f};
+	glm::vec3 currentPosition = {0, scaledSize.y - descender - lineHeight, 25.f};
 	auto advanceLine = [&]()
 	{
 		currentPosition.y -= lineHeight;
