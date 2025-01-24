@@ -42,6 +42,7 @@ namespace anex::editor
 		glm::vec4 gameWindowActiveBorderColor = {1, 0, 0, 1};
 		std::shared_ptr<entities::Plane> gameWindowBorder;
 		std::shared_ptr<entities::PanelMenu> sceneGraphPanelMenu;
+		std::shared_ptr<entities::PanelMenu> resourcePanelMenu;
 		IWindow::EventIdentifier resizeID = 0;
 		IWindow::EventIdentifier gameWindowBorderHoverID = 0;
 		IWindow::EventIdentifier gameWindowBorderPressID = 0;

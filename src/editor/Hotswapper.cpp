@@ -71,6 +71,7 @@ void Hotswapper::update()
 				swapperRef.UnLoadModule();
 			}
 			compiled = false;
+			idle = false;
 			break;
 		}
 		case hscpp::Hotswapper::UpdateResult::Compiling:
@@ -104,7 +105,7 @@ void Hotswapper::update()
 			auto now = std::chrono::system_clock::now();
 			std::chrono::duration<float> duration = now - compiledTime;
 			auto durationSeconds = duration.count();
-			if (durationSeconds > 5)
+			if (durationSeconds > 3)
 			{
 				editorScene.status->setText("Idle");
 				editorScene.status->setTextColor({1, 1, 1, 1});

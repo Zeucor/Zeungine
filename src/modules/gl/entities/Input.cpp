@@ -69,19 +69,16 @@ Input::Input(GLWindow &window,
 		true,
 		[&](auto textSize)
 		{
-			auto &glWindow = ((VAO&)*this).window;
 			return glm::vec3(textSize.x / 2 + NDCPadding / 2, -NDCHeight / 2, 0.1f);
 		},
 		[&](auto textViewSize)
 		{
-			auto &glWindow = ((VAO&)*this).window;
 			glm::vec2 newSize(std::min(textViewSize.x, this->size.x - (NDCPadding)), textViewSize.y);
 			return newSize;
 		},
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2) / 1.f);
+			return this->fontSize = ((this->NDCHeight * this->window.windowHeight / 2) / 1.f);
 		});
 	placeholderTextView->addToBVH = false;
 	textView = std::make_shared<TextView>(
@@ -98,19 +95,16 @@ Input::Input(GLWindow &window,
 	    true,
 	    [&](auto textSize)
 	    {
-			auto &glWindow = ((VAO&)*this).window;
 			return glm::vec3(textSize.x / 2 + NDCPadding / 2, -NDCHeight / 2, 0.1f);
 	    },
 	    [&](auto textViewSize)
 	    {
-			auto &glWindow = ((VAO&)*this).window;
 	    	glm::vec2 newSize(std::min(textViewSize.x, this->size.x - (NDCPadding)), textViewSize.y);
-			return newSize;
+				return newSize;
 	    },
 	    [&]
 	    {
-			auto &glWindow = ((VAO&)*this).window;
-			return this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2) / 1.f);
+			return this->fontSize = ((this->NDCHeight * this->window.windowHeight / 2) / 1.f);
 	    }
     );
 	textPointer = &textView->text;
@@ -260,9 +254,8 @@ void Input::handleKey(IWindow::Key key, bool pressed)
 		return;
 	if (!pressed)
     	return;
-    auto &textViewRef = *textView;
-	auto &glWindow = ((VAO&)*this).window;
-	if (!std::isprint(key))
+  auto &textViewRef = *textView;
+	if (!std::isprint(static_cast<int32_t>(key)))
 	{
 		switch (key)
 		{
@@ -317,11 +310,11 @@ void Input::handleKey(IWindow::Key key, bool pressed)
     		goto _forceUpdateTextView;
 		}
 	}
-    {
-		auto shiftPressed = glWindow.mod & 2;
+  {
+		auto shiftPressed = vaoWindow.mod & 2;
 		textPointer->insert(textPointer->begin() + textViewRef.cursorIndex, getShiftedChar(key, shiftPressed));
 		++textViewRef.cursorIndex;
-    }
+  }
 	if (textPointer->empty())
 	{
 _showPlaceholder:
@@ -343,13 +336,12 @@ _updateCursor:
 		auto &cursorPlanePosition = cursorPlane->position;
 		auto cursorPositionXBeforeNDC = cursorPosition.x;
 		auto textViewSizeBeforeNDC = glm::vec2(textViewRef.actualSizeBeforeNDC);
-		auto inputSizeBeforeNDC = glm::vec2(size.x * glWindow.windowWidth / 2, size.y * glWindow.windowHeight / 2);
 		float inputWidthNDCMinusPadding = size.x - (NDCPadding);
-		auto inputSizeBeforeNDCMinusPadding = glm::vec2(inputWidthNDCMinusPadding * (glWindow.windowWidth / 2), size.y * glWindow.windowHeight / 2);
+		auto inputSizeBeforeNDCMinusPadding = glm::vec2(inputWidthNDCMinusPadding * (vaoWindow.windowWidth / 2), size.y * vaoWindow.windowHeight / 2);
 		float textWidthNDC = textViewRef.actualSize.x;
 		float cursorTextCoord = cursorPosition.x;
-	    if (textWidthNDC > inputWidthNDCMinusPadding)
-	    {
+    if (textWidthNDC > inputWidthNDCMinusPadding)
+    {
 			float halfVisibleWidthNDC = inputWidthNDCMinusPadding / 2.0f;
 			float visibleStartNDC = glm::clamp(
 				(cursorTextCoord / textViewRef.textSize.x) - (halfVisibleWidthNDC / textWidthNDC),
@@ -382,15 +374,15 @@ _updateCursor:
 		}
 		else
 		{
-			float halfVisibleWidth = (int32_t)(inputSizeBeforeNDCMinusPadding.x / 2.0f);
-			float visibleRegionStartNDC = glm::clamp(
+			auto halfVisibleWidth = static_cast<float>(static_cast<int32_t>(inputSizeBeforeNDCMinusPadding.x / 2.0f));
+			auto visibleRegionStartNDC = glm::clamp(
 				cursorPositionXBeforeNDC - halfVisibleWidth,
 				0.0f,
-				(float)textViewSizeBeforeNDC.x - (float)inputSizeBeforeNDCMinusPadding.x
+				textViewSizeBeforeNDC.x - inputSizeBeforeNDCMinusPadding.x
 			);
-			float visibleRegionEndNDC = visibleRegionStartNDC + inputSizeBeforeNDCMinusPadding.x;
-			float startNormalized = visibleRegionStartNDC / textViewSizeBeforeNDC.x;
-			float endNormalized = visibleRegionEndNDC / textViewSizeBeforeNDC.x;
+			auto visibleRegionEndNDC = visibleRegionStartNDC + inputSizeBeforeNDCMinusPadding.x;
+			auto startNormalized = visibleRegionStartNDC / textViewSizeBeforeNDC.x;
+			auto endNormalized = visibleRegionEndNDC / textViewSizeBeforeNDC.x;
 			startNormalized = glm::clamp(startNormalized, 0.0f, 1.0f);
 			endNormalized = glm::clamp(endNormalized, 0.0f, 1.0f);
 			uvs[0].x = startNormalized;
@@ -400,9 +392,9 @@ _updateCursor:
 		}
  		textViewRef.updateElements("UV2", uvs);
 		if (textPointer->empty())
-        {
-            goto _showPlaceholder;
-        }
+	  {
+	    goto _showPlaceholder;
+	  }
 		showTextView(textView);
 	}
 }

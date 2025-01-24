@@ -43,7 +43,7 @@ Status::Status(anex::modules::gl::GLWindow &window,
 	updateIndices(indices);
 	setColor(color);
 	setSize();
-	float FontSize = height / 1.2f;
+	float FontSize = height / 1.5f;
 	float LineHeight = 0;
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
 	TextSize.y /= window.windowHeight * 0.5f;
@@ -62,13 +62,12 @@ Status::Status(anex::modules::gl::GLWindow &window,
 		true,
 		[&](auto textSize)
 		{
-			return glm::vec3(textSize.x / 2, -NDCHeight / 2, 0.1);
+			return glm::vec3(textSize.x / 2 + 8 / this->window.windowWidth / 0.5, -NDCHeight / 2, 0.1);
 		},
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return NDCHeight * glWindow.windowHeight * 0.5f / 1.2f;
+			return NDCHeight * this->window.windowHeight * 0.5f / 1.5f;
 		});
 	textView->addToBVH = false;
 	addChild(textView);
@@ -92,8 +91,7 @@ void Status::setColor(glm::vec4 newColor)
 };
 void Status::setSize()
 {
-	auto &glWindow = ((VAO &)*this).window;
-	glm::vec2 newSize(width / glWindow.windowWidth / 0.5, height / glWindow.windowHeight / 0.5);
+	glm::vec2 newSize(width / this->window.windowWidth / 0.5, height / this->window.windowHeight / 0.5);
 	positions = {
 		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }
 	};

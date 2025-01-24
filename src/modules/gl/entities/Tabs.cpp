@@ -55,7 +55,7 @@ void TabsBar::addTab(std::string_view name, const TabClickHandler &handler, bool
 	}
   static const auto indent = 16.f;
   auto panelItem = std::make_shared<Tab>(
-  	vao.window,
+  	dynamic_cast<GLWindow &>(window),
 		scene,
 		glm::vec3(sizeXTotal, 0, 0.1),
 		glm::vec3(0),
@@ -89,8 +89,7 @@ void TabsBar::setColor(glm::vec4 color)
 };
 void TabsBar::setSize()
 {
-	auto &glWindow = ((VAO &)*this).window;
-	glm::vec2 newSize(width / glWindow.windowWidth / 0.5, height / glWindow.windowHeight / 0.5);
+	glm::vec2 newSize(width / window.windowWidth / 0.5, height / window.windowHeight / 0.5);
 	positions = {
 		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }
 	};
@@ -177,8 +176,7 @@ Tab::Tab(GLWindow &window,
 		TextView::RepositionHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return NDCHeight * glWindow.windowHeight * 0.5f / 1.5f;
+			return NDCHeight * this->window.windowHeight * 0.5f / 1.5f;
 		});
 	textView->addToBVH = false;
   addChild(textView);

@@ -9,7 +9,7 @@ namespace anex::modules::gl
 	{
 		std::vector<uint32_t> indices;
 		std::vector<glm::vec3> positions;
-    glm::vec3 position;
+		glm::vec3 position;
 		glm::vec3 rotation;
 		glm::vec3 scale;
 		glm::mat4 model;

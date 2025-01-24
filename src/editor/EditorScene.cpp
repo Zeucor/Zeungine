@@ -65,6 +65,18 @@ EditorScene::EditorScene(GLWindow& window):
 		robotoRegularFont, "Scene Graph",
 		gameWindowX - gameWindowBorderWidth,
 		gameWindowHeight + gameWindowBorderWidth * 2.f)),
+	resourcePanelMenu(std::make_shared<entities::PanelMenu>(
+		window,
+		*this,
+		glm::vec3(-1, 1 - ((toolbarHeight + gameWindowHeight + gameWindowBorderWidth * 2) / window.windowHeight / 0.5), 0.1),
+		glm::vec3(0),
+		glm::vec3(1),
+		glm::vec4(0.5, 0.5, 0.5, 1),
+		robotoRegularFont,
+		"Resource Panel",
+		window.windowWidth,
+		window.windowHeight - ((toolbarHeight + gameWindowHeight + bottomTabsHeight))
+	)),
 	dialogWidth(window.windowWidth / 3),
 	dialogHeight(window.windowHeight / 5),
 	closeDialogButtonWidth(window.windowWidth / 44.f),
@@ -161,6 +173,7 @@ EditorScene::EditorScene(GLWindow& window):
 	clearColor = editorClearColor;
 	sceneGraphPanelMenu->addToBVH = false;
 	addEntity(sceneGraphPanelMenu);
+	addEntity(resourcePanelMenu);
 	setupToolbarOptions();
 	addEntity(toolbar);
 	bottomTabsBar->addToBVH = false;

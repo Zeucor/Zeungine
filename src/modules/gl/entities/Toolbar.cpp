@@ -58,8 +58,7 @@ Toolbar::Toolbar(GLWindow &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return NDCHeight * glWindow.windowHeight * 0.5f / 2.f;
+			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
 		});
   xButton->addChild(xTextView);
 	xTextView->addToBVH = false;
@@ -103,8 +102,7 @@ Toolbar::Toolbar(GLWindow &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return NDCHeight * glWindow.windowHeight * 0.5f / 2.f;
+			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
 		});
 	maxButton->addChild(maxTextView);
 	maxTextView->addToBVH = false;
@@ -148,8 +146,7 @@ Toolbar::Toolbar(GLWindow &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return NDCHeight * glWindow.windowHeight * 0.5f / 2.f;
+			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
 		});
 	_Button->addChild(_TextView);
 	_TextView->addToBVH = false;
@@ -207,8 +204,7 @@ Toolbar::Toolbar(GLWindow &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return NDCHeight * glWindow.windowHeight * 0.5f / 2.f;
+			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
 		});
 	fileTextView->addToBVH = false;
 	file->addChild(fileTextView);
@@ -280,8 +276,7 @@ Toolbar::Toolbar(GLWindow &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return NDCHeight * glWindow.windowHeight * 0.5f / 2.f;
+			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
 		});
 	editTextView->addToBVH = false;
 	edit->addChild(editTextView);
@@ -390,8 +385,7 @@ Toolbar::Toolbar(GLWindow &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return NDCHeight * glWindow.windowHeight * 0.5f / 2.f;
+			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
 		});
 	helpTextView->addToBVH = false;
 	help->addChild(helpTextView);
@@ -501,8 +495,7 @@ Toolbar::~Toolbar()
 	_Button->removeMousePressHandler(0, _ButtonLeftMousePressID);
 	_Button->removeMouseHoverHandler(_ButtonMouseHoverID);
 	removeMousePressHandler(0, dragMousePressID);
-	auto &glWindow = ((VAO &)*this).window;
-	glWindow.removeMousePressHandler(0, globalDragMousePressID);
+	this->window.removeMousePressHandler(0, globalDragMousePressID);
 	removeMouseMoveHandler(dragMouseMoveID);
 	file->removeMousePressHandler(0, filePressID);
 	file->removeMouseHoverHandler(fileHoverID);

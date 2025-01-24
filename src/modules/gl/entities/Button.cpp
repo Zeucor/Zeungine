@@ -63,8 +63,7 @@ Button::Button(GLWindow &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO&)*this).window;
-			return this->size.y * window.windowHeight * 0.5f / 1.2f;
+			return this->size.y * this->window.windowHeight * 0.5f / 1.2f;
 		});
 	textView->addToBVH = false;
   addChild(textView);

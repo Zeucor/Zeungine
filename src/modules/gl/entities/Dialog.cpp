@@ -74,8 +74,7 @@ Dialog::Dialog(anex::modules::gl::GLWindow &window,
     TextView::ResizeHandler(),
     [&]
     {
-			auto &glWindow = ((VAO&)*this).window;
-      return (this->fontSize = ((this->NDCHeight * glWindow.windowHeight / 2.f) / 5.5f));
+      return (this->fontSize = ((this->NDCHeight * this->window.windowHeight / 2.f) / 5.5f));
     });
 	titleTextView->addToBVH = false;
 	addChild(titleTextView);
@@ -105,9 +104,8 @@ void Dialog::setColor(glm::vec4 color)
 };
 void Dialog::setSize(glm::vec2 newSize)
 {
-	auto &glWindow = ((VAO &)*this).window;
 	positions = {
-		{ -newSize.x / 2, -newSize. y / 2, 0}, { newSize.x / 2, -newSize. y / 2, 0}, { newSize.x / 2,  newSize. y / 2, 0}, { -newSize.x / 2,  newSize. y / 2, 0} // Frontm
+		{ -newSize.x / 2, -newSize. y / 2, 0}, { newSize.x / 2, -newSize. y / 2, 0}, { newSize.x / 2,  newSize. y / 2, 0}, { -newSize.x / 2,  newSize. y / 2, 0}
 	};
 	updateElements("Position", positions);
 	this->size = newSize;

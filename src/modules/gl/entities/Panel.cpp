@@ -58,7 +58,7 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 		title,
 		titleSize,
 		font,
-		window.windowHeight / 30.f,
+		window.windowHeight / 35.f,
 		true,
 		[](auto titleSize)
 		{
@@ -67,8 +67,7 @@ PanelMenu::PanelMenu(anex::modules::gl::GLWindow &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO &)*this).window;
-			return glWindow.windowHeight / 30.f;
+			return this->window.windowHeight / 35.f;
 		});
   titleTextView->addToBVH = false;
   addChild(titleTextView);
@@ -91,11 +90,10 @@ void PanelMenu::addItem(std::string_view name, GLEntity &entity)
 		sizeYTotal += childItem.size.y;
 	}
   static const auto indent = 16.f;
-	auto &glWindow = ((VAO &)*this).window;
   auto panelItem = std::make_shared<PanelItem>(
-  	vao.window,
+  	dynamic_cast<GLWindow&>(window),
 		scene,
-		glm::vec3(indent / glWindow.windowWidth / 0.5, -sizeYTotal, 0.1),
+		glm::vec3(indent / window.windowWidth / 0.5, -sizeYTotal, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
     color,
@@ -148,8 +146,7 @@ void PanelMenu::setColor(glm::vec4 color)
 };
 void PanelMenu::setSize()
 {
-	auto &glWindow = ((VAO &)*this).window;
-	glm::vec2 newSize(width / glWindow.windowWidth / 0.5, height / glWindow.windowHeight / 0.5);
+	glm::vec2 newSize(width / window.windowWidth / 0.5, height / window.windowHeight / 0.5);
 	positions = {
 		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }
 	};
@@ -223,8 +220,7 @@ PanelItem::PanelItem(GLWindow &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			auto &glWindow = ((VAO &)*this).window;
-			return glWindow.windowHeight / 30.f;
+			return this->window.windowHeight / 30.f;
 		});
 	textView->addToBVH = false;
   addChild(textView);

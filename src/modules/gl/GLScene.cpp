@@ -95,14 +95,14 @@ void GLScene::preRender()
 		pointLightShadow.shader.unbind();
 		pointLightShadow.framebuffer.unbind();
 	}
-	auto &glWindow = (GLWindow &)window;
+	auto &glWindow = *dynamic_cast<GLWindow*>(&window);
 	if (framebufferPointer)
 	{
 		auto &framebuffer = *framebufferPointer;
 		glWindow.glContext->Viewport(0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y);
 	}
 	else
-		glWindow.glContext->Viewport(0, 0, window.windowWidth, window.windowHeight);
+		glWindow.glContext->Viewport(0, 0, static_cast<GLsizei>(window.windowWidth), static_cast<GLsizei>(window.windowHeight));
 	GLcheck(glWindow, "glViewport");
 	glWindow.glContext->ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 	glWindow.glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);

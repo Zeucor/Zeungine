@@ -12,13 +12,13 @@ GLEntity::GLEntity(anex::IWindow &_window,
 									 glm::vec3 scale,
 									 std::string_view name):
 	IEntity(_window),
-	VAO((GLWindow &)_window, constants, indiceCount, elementCount),
+	VAO(dynamic_cast<GLWindow &>(_window), constants, indiceCount, elementCount),
 	indices(indices),
 	positions(positions),
 	position(position),
 	rotation(rotation),
 	scale(scale),
-	shader(*shaders::ShaderManager::getShaderByConstants((GLWindow &)_window, constants).second),
+	shader(*shaders::ShaderManager::getShaderByConstants(dynamic_cast<GLWindow &>(_window), constants).second),
 	name(name)
 {};
 void GLEntity::update()

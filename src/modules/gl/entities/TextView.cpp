@@ -69,8 +69,7 @@ TextView::TextView(GLWindow &window,
 }
 TextView::~TextView()
 {
-	auto &glWindow = ((VAO&)*this).window;
-	glWindow.removeResizeHandler(resizeID);
+	window.removeResizeHandler(resizeID);
 }
 void TextView::update()
 {
@@ -92,9 +91,8 @@ void TextView::forceUpdate()
 	actualSizeBeforeNDC = TextSize;
 	if (textSizeIsNDC)
 	{
-		auto &glWindow = ((VAO &)*this).window;
-		TextSize.x /= glWindow.windowWidth * 0.5;
-		TextSize.y /= glWindow.windowHeight * 0.5;
+		TextSize.x /= this->window.windowWidth * 0.5;
+		TextSize.y /= this->window.windowHeight * 0.5;
 	}
 	actualSize = TextSize;
 	if (resizeHandler)
