@@ -32,6 +32,10 @@ include_directories(vendor/stb)
 add_subdirectory(vendor/hscpp)
 include_directories(vendor/hscpp/include)
 
+# filewatch
+add_subdirectory(vendor/filewatch)
+include_directories(vendor/filewatch)
+
 include_directories(include)
 
 option(BUILD_FENSTER "Whether to build Fenster module" ON)
