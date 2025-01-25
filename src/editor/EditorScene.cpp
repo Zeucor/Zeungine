@@ -1,7 +1,7 @@
 #include <editor/EditorScene.hpp>
 #include <editor/CodeScene.hpp>
-#include <anex/filesystem/Directory.hpp>
-using namespace anex::editor;
+#include <zg/filesystem/Directory.hpp>
+using namespace zg::editor;
 EditorScene::EditorScene(GLWindow& window):
 	GLScene(window, {0, 0, 50}, {0, 0, -1}, {2, 2}),
 	toolbarHeight(window.windowHeight / 14),
@@ -81,13 +81,13 @@ EditorScene::EditorScene(GLWindow& window):
 	resourceConsole(std::make_shared<entities::Console>(
 		window,
 		*this,
-		glm::vec3(gameWindowBorderWidth / window.windowWidth / 0.5, (-gameWindowBorderWidth / window.windowHeight / 0.5), 0.1),
+		glm::vec3(0 , 0, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
 		glm::vec4(0.2, 0.2, 0.2, 1),
 		robotoRegularFont,
-		window.windowWidth - gameWindowBorderWidth * 2,
-		resourcePanelMenuHeight - bottomTabsHeight
+		window.windowWidth,
+		resourcePanelMenuHeight - bottomTabsHeight + gameWindowBorderWidth * 2
 	)),
 	resourcePanelTabs(std::make_shared<entities::TabsBar>(
 		window,
@@ -241,7 +241,7 @@ EditorScene::EditorScene(GLWindow& window):
 		minimizeWindows();
 		codeWindowPointer->restore();
 	});
-	std::cout << "Opened Anex Editor" << std::endl;
+	std::cout << "Opened ZG Editor" << std::endl;
 };
 EditorScene::~EditorScene()
 {
@@ -402,17 +402,17 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 		filesystem::File mainIncludeFile(filesystem::File::toPlatformPath(std::string(includePath) + "/main.hpp"), enums::EFileLocation::Relative, "w+");
 		std::string mainIncludeFileString(R"(#pragma once
 #include <Runtime.hpp>
-#include <anex/modules/gl/GLScene.hpp>
-#include <anex/modules/gl/GLWindow.hpp>
-using namespace anex;
-using namespace anex::modules::gl;
+#include <zg/modules/gl/GLScene.hpp>
+#include <zg/modules/gl/GLWindow.hpp>
+using namespace zg;
+using namespace zg::modules::gl;
 struct MainScene : GLScene
 {
 	explicit MainScene(GLWindow &window);
 };
-ANEX_API void OnLoad(GLWindow &window);
-ANEX_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver);
-ANEX_API void OnUnLoad(GLWindow &window);)");
+ZG_API void OnLoad(GLWindow &window);
+ZG_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver);
+ZG_API void OnUnLoad(GLWindow &window);)");
 		mainIncludeFile.writeBytes(0, mainIncludeFileString.size(), mainIncludeFileString.data());
 		filesystem::File mainSrcFile(filesystem::File::toPlatformPath(std::string(srcPath) + "/main.cpp"), enums::EFileLocation::Relative, "w+");
 		std::string mainSrcFileString(R"(#include <main.hpp>
@@ -421,15 +421,15 @@ MainScene::MainScene(GLWindow &window):
 {
 	clearColor = {0.5, 0, 0.5, 1};
 };
-ANEX_API void OnLoad(GLWindow &window)
+ZG_API void OnLoad(GLWindow &window)
 {
 	window.setIScene(std::make_shared<MainScene>(window));
 };
-ANEX_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver)
+ZG_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver)
 {
 	window.setIScene(std::shared_ptr<MainScene>(allocationResolver.Allocate<MainScene>(window)));
 };
-ANEX_API void OnUnLoad(GLWindow &window)
+ZG_API void OnUnLoad(GLWindow &window)
 {
 	window.scene.reset();
 	window.close();
@@ -444,12 +444,12 @@ void EditorScene::loadProject(std::string_view projectDirectory)
 	resourceAssetBrowser = std::make_shared<entities::AssetBrowser>(
 		dynamic_cast<GLWindow &>(window),
 		*this,
-		glm::vec3(gameWindowBorderWidth / window.windowWidth / 0.5, (-gameWindowBorderWidth / window.windowHeight / 0.5), 0.1),
+		glm::vec3(0, 0, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
 		glm::vec4(0.1, 0.1, 0.1, 1),
 		robotoRegularFont,
-		window.windowWidth - gameWindowBorderWidth * 2,
+		window.windowWidth,
 		resourcePanelMenuHeight - bottomTabsHeight,
 		projectDirectory);
 	resourcePanelTabs->addTab("Asset Browser", [&]

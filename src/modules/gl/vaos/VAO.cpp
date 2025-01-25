@@ -1,8 +1,8 @@
 #include <iostream>
-#include <anex/modules/gl/vaos/VAO.hpp>
-#include <anex/modules/gl/vaos/VAOFactory.hpp>
-#include <anex/IEntity.hpp>
-using namespace anex::modules::gl::vaos;
+#include <zg/modules/gl/vaos/VAO.hpp>
+#include <zg/modules/gl/vaos/VAOFactory.hpp>
+#include <zg/IEntity.hpp>
+using namespace zg::modules::gl::vaos;
 VAO::VAO(GLWindow &_window, const RuntimeConstants &constants, uint32_t indiceCount, uint32_t elementCount):
   constants(constants),
   indiceCount(indiceCount),

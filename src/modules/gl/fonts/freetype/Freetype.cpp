@@ -1,11 +1,11 @@
-#include <anex/modules/gl/fonts/freetype/Freetype.hpp>
+#include <zg/modules/gl/fonts/freetype/Freetype.hpp>
 #include <stdexcept>
 #include <iostream>
-#include <anex/modules/gl/GLScene.hpp>
-#include <anex/strings/Utf8Iterator.hpp>
-#include <anex/modules/gl/GLWindow.hpp>
-#include <anex/modules/gl/entities/Plane.hpp>
-using namespace anex::modules::gl::fonts::freetype;
+#include <zg/modules/gl/GLScene.hpp>
+#include <zg/strings/Utf8Iterator.hpp>
+#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/entities/Plane.hpp>
+using namespace zg::modules::gl::fonts::freetype;
 FT_Library FreetypeFont::freetypeLibrary;
 bool FreetypeFont::freetypeLoaded = ([]()
 {

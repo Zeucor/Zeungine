@@ -1,7 +1,7 @@
-#include <anex/modules/gl/lights/SpotLight.hpp>
-#include <anex/modules/gl/shaders/ShaderManager.hpp>
+#include <zg/modules/gl/lights/SpotLight.hpp>
+#include <zg/modules/gl/shaders/ShaderManager.hpp>
 #include <iostream>
-using namespace anex::modules::gl::lights;
+using namespace zg::modules::gl::lights;
 SpotLightShadow::SpotLightShadow(GLWindow &window, SpotLight &spotLight):
 	window(window),
 	shader(*shaders::ShaderManager::getShaderByConstants(window, {"Color", "Position", "Normal", "Model", "LightSpaceMatrix"}).second),

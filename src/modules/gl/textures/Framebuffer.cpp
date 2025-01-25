@@ -1,8 +1,8 @@
-#include <anex/modules/gl/textures/Framebuffer.hpp>
-#include <anex/modules/gl/textures/FramebufferFactory.hpp>
-#include <anex/modules/gl/GLWindow.hpp>
-#include <anex/modules/gl/textures/Texture.hpp>
-using namespace anex::modules::gl::textures;
+#include <zg/modules/gl/textures/Framebuffer.hpp>
+#include <zg/modules/gl/textures/FramebufferFactory.hpp>
+#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/textures/Texture.hpp>
+using namespace zg::modules::gl::textures;
 Framebuffer::Framebuffer(GLWindow &window, Texture &texture):
   window(window),
   texture(texture)

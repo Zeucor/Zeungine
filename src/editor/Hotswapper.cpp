@@ -1,8 +1,8 @@
 #include <editor/Hotswapper.hpp>
 #include <editor/EditorScene.hpp>
-#include <anex/filesystem/Directory.hpp>
-#include <anex/filesystem/File.hpp>
-using namespace anex::editor::hs;
+#include <zg/filesystem/Directory.hpp>
+#include <zg/filesystem/File.hpp>
+using namespace zg::editor::hs;
 Hotswapper::Hotswapper(std::string_view directory, EditorScene &editorScene):
 		running(true),
 		directory(directory),

@@ -1,7 +1,7 @@
-#include <anex/modules/gl/shaders/Shader.hpp>
-#include <anex/modules/gl/shaders/ShaderFactory.hpp>
-#include <anex/modules/gl/textures/Texture.hpp>
-using namespace anex::modules::gl::shaders;
+#include <zg/modules/gl/shaders/Shader.hpp>
+#include <zg/modules/gl/shaders/ShaderFactory.hpp>
+#include <zg/modules/gl/textures/Texture.hpp>
+using namespace zg::modules::gl::shaders;
 Shader::Shader(GLWindow &window, const RuntimeConstants &constants, const std::vector<ShaderType> &shaderTypes):
   window(window),
 	shaders(ShaderFactory::generateShaderMap(constants, *this, shaderTypes))

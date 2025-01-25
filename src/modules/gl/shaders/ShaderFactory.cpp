@@ -1,9 +1,9 @@
-#include <anex/modules/gl/shaders/ShaderFactory.hpp>
-#include <anex/modules/gl/lights/Lights.hpp>
-#include <anex/IWindow.hpp>
+#include <zg/modules/gl/shaders/ShaderFactory.hpp>
+#include <zg/modules/gl/lights/Lights.hpp>
+#include <zg/IWindow.hpp>
 #include <stdexcept>
 #include <glm/fwd.hpp>
-using namespace anex::modules::gl::shaders;
+using namespace zg::modules::gl::shaders;
 ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
   {
     Shader::ShaderType::Vertex, {

@@ -1,23 +1,23 @@
-#include <anex/modules/gl/GLWindow.hpp>
-#include <anex/modules/gl/GLEntity.hpp>
-#include <anex/modules/gl/GLScene.hpp>
-#include <anex/modules/gl/lights/Lights.hpp>
-#include <anex/modules/gl/lights/DirectionalLight.hpp>
-#include <anex/Logger.hpp>
+#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/GLEntity.hpp>
+#include <zg/modules/gl/GLScene.hpp>
+#include <zg/modules/gl/lights/Lights.hpp>
+#include <zg/modules/gl/lights/DirectionalLight.hpp>
+#include <zg/Logger.hpp>
 #include <array>
-#include <anex/images/ImageLoader.hpp>
-#include <anex/modules/gl/entities/Cube.hpp>
-#include <anex/modules/gl/entities/SkyBox.hpp>
-#include <anex/modules/gl/vp/VML.hpp>
-using namespace anex::modules::gl;
+#include <zg/images/ImageLoader.hpp>
+#include <zg/modules/gl/entities/Cube.hpp>
+#include <zg/modules/gl/entities/SkyBox.hpp>
+#include <zg/modules/gl/vp/VML.hpp>
+using namespace zg::modules::gl;
 struct TestTriangle;
-struct TestScene : anex::modules::gl::GLScene
+struct TestScene : zg::modules::gl::GLScene
 {
   std::shared_ptr<entities::Cube> cubeEntity;
   vp::VML vml;
-  explicit TestScene(anex::IWindow &_window);
+  explicit TestScene(zg::IWindow &_window);
 };
-struct TestTriangle : anex::modules::gl::GLEntity
+struct TestTriangle : zg::modules::gl::GLEntity
 {
   uint32_t indices[3];
   std::array<glm::vec4, 3> colors;
@@ -25,7 +25,7 @@ struct TestTriangle : anex::modules::gl::GLEntity
   std::array<glm::vec3, 3> normals = {};
   float rotationAmount = 0;
   TestScene &testScene;
-  TestTriangle(anex::IWindow &_window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
+  TestTriangle(zg::IWindow &_window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
     GLEntity(_window, {
       "Color",
       "Position",
@@ -88,7 +88,7 @@ struct TestTriangle : anex::modules::gl::GLEntity
     GLcheck(glWindow, "glEnable");
   };
 };
-void rotateLightPosition(anex::IWindow &window, GLScene &scene, lights::PointLight &light, lights::PointLightShadow &pointLightShadow, float angleSpeed, shaders::Shader &shader)
+void rotateLightPosition(zg::IWindow &window, GLScene &scene, lights::PointLight &light, lights::PointLightShadow &pointLightShadow, float angleSpeed, shaders::Shader &shader)
 {
   window.runOnThread([&, angleSpeed](auto &window) mutable
   {
@@ -108,7 +108,7 @@ void rotateLightPosition(anex::IWindow &window, GLScene &scene, lights::PointLig
     });
   });
 };
-TestScene::TestScene(anex::IWindow& window):
+TestScene::TestScene(zg::IWindow& window):
   GLScene(window, { 0, 10, 10}, glm::normalize(glm::vec3(0, -1, -1)), 81.f),
   vml(*this)
 {

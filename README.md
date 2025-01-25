@@ -1,6 +1,6 @@
-# AbstractNexus
+# Zeungine
 
-<img src="/images/abstractnexus-logo.jpg" alt="AbstractNexus Logo" width="400" height="400">
+<img src="/images/zeungine-logo.jpg" alt="Zeungine Logo" width="400" height="400">
 
 A library that simplifies Game abstraction written in C++
 
@@ -11,7 +11,7 @@ Uses CMake for it's build system and comes with some included tests
 ## Cloning
 
 ```bash
-git clone git@github.com:ZeunO8/AbstractNexus.git --recurse-submodules
+git clone git@github.com:ZeunO8/Zeungine.git --recurse-submodules
 ```
 
 ### Building
@@ -32,8 +32,8 @@ ctest --test-dir build --rerun-failed -VV -C Debug
 ### Usage
 
 ```cpp
-#include <anex/modules/fenster/Fenster.hpp>
-using namespace anex::modules::fenster;
+#include <zg/modules/fenster/Fenster.hpp>
+using namespace zg::modules::fenster;
 int main()
 {
     FensterWindow game(640, 480);

@@ -1,7 +1,7 @@
-#include <anex/modules/gl/entities/Button.hpp>
-#include <anex/utilities.hpp>
+#include <zg/modules/gl/entities/Button.hpp>
+#include <zg/utilities.hpp>
 #include <iostream>
-using namespace anex::modules::gl::entities;
+using namespace zg::modules::gl::entities;
 Button::Button(GLWindow &window,
 										 GLScene &scene,
 										 glm::vec3 position,
@@ -14,9 +14,9 @@ Button::Button(GLWindow &window,
                			 const OnClickHandler &handler,
 										 const shaders::RuntimeConstants &constants,
                      std::string_view name):
-	anex::modules::gl::GLEntity(
+	zg::modules::gl::GLEntity(
 		window,
-		anex::mergeVectors<std::string_view>({
+		zg::mergeVectors<std::string_view>({
 			{
 				"Color", "Position",
 				"View", "Projection", "Model", "CameraPosition"

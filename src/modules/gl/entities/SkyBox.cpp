@@ -1,6 +1,6 @@
-#include <anex/modules/gl/entities/SkyBox.hpp>
-#include <anex/utilities.hpp>
-using namespace anex::modules::gl::entities;
+#include <zg/modules/gl/entities/SkyBox.hpp>
+#include <zg/utilities.hpp>
+using namespace zg::modules::gl::entities;
 SkyBox::SkyBox(GLWindow &window,
 							 GLScene &scene,
 							 const std::vector<std::string_view> &texturePaths,

@@ -1,6 +1,6 @@
-#include <anex/modules/gl/vp/VML.hpp>
-#include <anex/IWindow.hpp>
-using namespace anex::modules::gl::vp;
+#include <zg/modules/gl/vp/VML.hpp>
+#include <zg/IWindow.hpp>
+using namespace zg::modules::gl::vp;
 VML::VML(GLScene &scene):
 	scene(scene)
 {

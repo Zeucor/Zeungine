@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29.4)
-project(AbstractNexus VERSION 0.1.0)
+project(Zeungine VERSION 0.1.0)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -41,7 +41,7 @@ include_directories(include)
 option(BUILD_FENSTER "Whether to build Fenster module" ON)
 option(BUILD_OPENGL "Whether to build OpenGL module" ON)
 
-set(ANEX_SOURCES
+set(ZG_SOURCES
     src/IEntity.cpp
     src/IScene.cpp
     src/IWindow.cpp
@@ -56,10 +56,10 @@ set(ANEX_SOURCES
 )
 
 if(BUILD_FENSTER)
-    list(APPEND ANEX_SOURCES src/modules/fenster/Fenster.cpp)
+    list(APPEND ZG_SOURCES src/modules/fenster/Fenster.cpp)
 endif()
 if(BUILD_OPENGL)
-    list(APPEND ANEX_SOURCES
+    list(APPEND ZG_SOURCES
         src/modules/gl/GLWindow.cpp
         src/modules/gl/GLEntity.cpp
         src/modules/gl/GLScene.cpp
@@ -98,28 +98,28 @@ if(BUILD_OPENGL)
         src/modules/gl/fonts/freetype/Freetype.cpp
         src/modules/gl/raytracing/BVH.cpp)
     if(WIN32)
-        list(APPEND ANEX_SOURCES src/modules/gl/wgl.c)
+        list(APPEND ZG_SOURCES src/modules/gl/wgl.c)
     elseif(UNIX AND NOT APPLE)
-        list(APPEND ANEX_SOURCES src/modules/gl/glx.c)
+        list(APPEND ZG_SOURCES src/modules/gl/glx.c)
     elseif(ANDROID OR IOS)
-        list(APPEND ANEX_SOURCES src/modules/gl/egl.c)
+        list(APPEND ZG_SOURCES src/modules/gl/egl.c)
     endif()
 endif()
 
-add_library(abstractnexus STATIC ${ANEX_SOURCES})
+add_library(zeungine STATIC ${ZG_SOURCES})
 
 if(BUILD_FENSTER)
-    target_link_libraries(abstractnexus fenster)
+    target_link_libraries(zeungine fenster)
 endif()
 if(BUILD_OPENGL)
     if(WIN32)
         find_package(OpenGL REQUIRED)
-        target_link_libraries(abstractnexus OpenGL::GL)
+        target_link_libraries(zeungine OpenGL::GL)
     endif()
 endif()
-target_link_libraries(abstractnexus freetype)
-target_link_libraries(abstractnexus bvh)
-target_link_libraries(abstractnexus hscpp)
+target_link_libraries(zeungine freetype)
+target_link_libraries(zeungine bvh)
+target_link_libraries(zeungine hscpp)
 
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     if(LIBRARY)
@@ -127,7 +127,7 @@ function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     else()
         add_executable(${TEST_NAME} ${TEST_SOURCE})
     endif()
-    target_link_libraries(${TEST_NAME} abstractnexus)
+    target_link_libraries(${TEST_NAME} zeungine)
     if(UNIX AND NOT APPLE)
         target_link_libraries(${TEST_NAME} ${X11_LIBRARIES})
     endif()
@@ -144,7 +144,7 @@ endif()
 if(BUILD_OPENGL)
     create_test(GLTest tests/GLTest.cpp "" FALSE)
     add_executable(Editor src/editor/Editor.cpp src/editor/EditorScene.cpp src/editor/CodeScene.cpp)
-    target_link_libraries(Editor abstractnexus)
+    target_link_libraries(Editor zeungine)
     set(SKYBOX_OUT_DIRECTORY ${CMAKE_BINARY_DIR}/images/skybox)
     file(MAKE_DIRECTORY ${SKYBOX_OUT_DIRECTORY})
     configure_file(${CMAKE_SOURCE_DIR}/images/skybox/back.jpg ${SKYBOX_OUT_DIRECTORY}/back.jpg COPYONLY)
@@ -157,4 +157,4 @@ endif()
 set(FONTS_DIRECTORY ${CMAKE_BINARY_DIR}/fonts)
 set(IMAGES_DIRECTORY ${CMAKE_BINARY_DIR}/images)
 file(COPY ${CMAKE_SOURCE_DIR}/fonts/Roboto/Roboto-Regular.ttf DESTINATION ${FONTS_DIRECTORY}/Roboto)
-file(COPY ${CMAKE_SOURCE_DIR}/images/abstractnexus-icon.png DESTINATION ${IMAGES_DIRECTORY})
+file(COPY ${CMAKE_SOURCE_DIR}/images/zeungine-icon.png DESTINATION ${IMAGES_DIRECTORY})

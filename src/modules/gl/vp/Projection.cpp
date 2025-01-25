@@ -1,6 +1,6 @@
-#include <anex/modules/gl/vp/Projection.hpp>
-#include <anex/modules/gl/GLWindow.hpp>
-using namespace anex::modules::gl::vp;
+#include <zg/modules/gl/vp/Projection.hpp>
+#include <zg/modules/gl/GLWindow.hpp>
+using namespace zg::modules::gl::vp;
 Projection::Projection(GLWindow &window, float fov):
   window(window),
 	fov(fov),

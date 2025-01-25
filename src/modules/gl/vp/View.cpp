@@ -1,5 +1,5 @@
-#include <anex/modules/gl/vp/View.hpp>
-using namespace anex::modules::gl::vp;
+#include <zg/modules/gl/vp/View.hpp>
+using namespace zg::modules::gl::vp;
 View::View(glm::vec3 _position, glm::vec3 _direction):
 	position(_position),
 	direction(glm::normalize(_direction))
@@ -24,13 +24,13 @@ void View::addPhiTheta(float addPhi, float addTheta)
 	direction = newDirection + 1e-6;
   update();
 };
-anex::IWindow::EventIdentifier View::addResizeHandler(const IWindow::ViewResizeHandler &callback)
+zg::IWindow::EventIdentifier View::addResizeHandler(const IWindow::ViewResizeHandler &callback)
 {
 	auto id = ++viewResizeHandlers.first;
 	viewResizeHandlers.second[id] = callback;
 	return id;
 };
-void View::removeResizeHandler(anex::IWindow::EventIdentifier &id)
+void View::removeResizeHandler(zg::IWindow::EventIdentifier &id)
 {
 	auto &handlers = viewResizeHandlers.second;
 	auto handlerIter = handlers.find(id);

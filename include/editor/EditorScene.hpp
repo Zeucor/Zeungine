@@ -1,21 +1,21 @@
 #pragma once
-#include <anex/modules/gl/GLScene.hpp>
-#include <anex/modules/gl/GLWindow.hpp>
-#include <anex/modules/gl/entities/AssetBrowser.hpp>
-#include <anex/modules/gl/entities/Button.hpp>
-#include <anex/modules/gl/entities/Console.hpp>
-#include <anex/modules/gl/entities/Dialog.hpp>
-#include <anex/modules/gl/entities/Input.hpp>
-#include <anex/modules/gl/entities/Panel.hpp>
-#include <anex/modules/gl/entities/Status.hpp>
-#include <anex/modules/gl/entities/Tabs.hpp>
-#include <anex/modules/gl/entities/Toolbar.hpp>
-#include <anex/modules/gl/fonts/freetype/Freetype.hpp>
+#include <zg/modules/gl/GLScene.hpp>
+#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/entities/AssetBrowser.hpp>
+#include <zg/modules/gl/entities/Button.hpp>
+#include <zg/modules/gl/entities/Console.hpp>
+#include <zg/modules/gl/entities/Dialog.hpp>
+#include <zg/modules/gl/entities/Input.hpp>
+#include <zg/modules/gl/entities/Panel.hpp>
+#include <zg/modules/gl/entities/Status.hpp>
+#include <zg/modules/gl/entities/Tabs.hpp>
+#include <zg/modules/gl/entities/Toolbar.hpp>
+#include <zg/modules/gl/fonts/freetype/Freetype.hpp>
 #include "Hotswapper.hpp"
 #include "Project.hpp"
-namespace anex::editor
+namespace zg::editor
 {
-	using namespace anex::modules::gl;
+	using namespace zg::modules::gl;
 	struct EditorScene : GLScene
 	{
 		glm::vec4 editorClearColor = {0.2, 0.2, 0.2, 1};

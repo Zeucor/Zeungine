@@ -1,12 +1,12 @@
 #define RUNTIME_EXPORTS
-#include <anex/RuntimeAPI.hpp>
-#include <anex/modules/gl/GLScene.hpp>
-#include <anex/modules/gl/entities/Cube.hpp>
-#include <anex/modules/gl/entities/TextView.hpp>
-#include <anex/modules/gl/entities/SkyBox.hpp>
-#include <anex/modules/gl/vp/VML.hpp>
-#include <anex/modules/gl/fonts/freetype/Freetype.hpp>
-using namespace anex;
+#include <zg/RuntimeAPI.hpp>
+#include <zg/modules/gl/GLScene.hpp>
+#include <zg/modules/gl/entities/Cube.hpp>
+#include <zg/modules/gl/entities/TextView.hpp>
+#include <zg/modules/gl/entities/SkyBox.hpp>
+#include <zg/modules/gl/vp/VML.hpp>
+#include <zg/modules/gl/fonts/freetype/Freetype.hpp>
+using namespace zg;
 struct EditorScene : GLScene
 {
   vp::VML vml;

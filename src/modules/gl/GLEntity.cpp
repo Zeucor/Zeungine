@@ -1,7 +1,7 @@
-#include <anex/modules/gl/GLEntity.hpp>
-#include <anex/modules/gl/shaders/ShaderManager.hpp>
-using namespace anex::modules::gl;
-GLEntity::GLEntity(anex::IWindow &_window,
+#include <zg/modules/gl/GLEntity.hpp>
+#include <zg/modules/gl/shaders/ShaderManager.hpp>
+using namespace zg::modules::gl;
+GLEntity::GLEntity(zg::IWindow &_window,
 									 const shaders::RuntimeConstants &constants,
 									 uint32_t indiceCount,
 						 			 const std::vector<uint32_t> &indices,
@@ -76,14 +76,14 @@ void GLEntity::removeChild(size_t &ID)
 	ID = 0;
 };
 // Mouse
-anex::IWindow::EventIdentifier GLEntity::addMousePressHandler(const anex::IWindow::Button& button, const anex::IWindow::MousePressHandler& callback)
+zg::IWindow::EventIdentifier GLEntity::addMousePressHandler(const zg::IWindow::Button& button, const zg::IWindow::MousePressHandler& callback)
 {
 	auto& handlersPair = mousePressHandlers[button];
 	auto id = ++handlersPair.first;
 	handlersPair.second[id] = callback;
 	return id;
 };
-void GLEntity::removeMousePressHandler(const anex::IWindow::Button& button, anex::IWindow::EventIdentifier& id)
+void GLEntity::removeMousePressHandler(const zg::IWindow::Button& button, zg::IWindow::EventIdentifier& id)
 {
 	auto& handlersPair = mousePressHandlers[button];
 	auto handlerIter = handlersPair.second.find(id);
@@ -94,13 +94,13 @@ void GLEntity::removeMousePressHandler(const anex::IWindow::Button& button, anex
 	handlersPair.second.erase(handlerIter);
 	id = 0;
 };
-anex::IWindow::EventIdentifier GLEntity::addMouseMoveHandler(const anex::IWindow::MouseMoveHandler& callback)
+zg::IWindow::EventIdentifier GLEntity::addMouseMoveHandler(const zg::IWindow::MouseMoveHandler& callback)
 {
 	auto id = ++mouseMoveHandlers.first;
 	mouseMoveHandlers.second[id] = callback;
 	return id;
 };
-void GLEntity::removeMouseMoveHandler(anex::IWindow::EventIdentifier& id)
+void GLEntity::removeMouseMoveHandler(zg::IWindow::EventIdentifier& id)
 {
 	auto &handlers = mouseMoveHandlers.second;
 	auto handlerIter = handlers.find(id);
@@ -111,7 +111,7 @@ void GLEntity::removeMouseMoveHandler(anex::IWindow::EventIdentifier& id)
 	handlers.erase(handlerIter);
 	id = 0;
 };
-anex::IWindow::EventIdentifier GLEntity::addMouseHoverHandler(const MouseHoverHandler &callback)
+zg::IWindow::EventIdentifier GLEntity::addMouseHoverHandler(const MouseHoverHandler &callback)
 {
 	auto id = ++mouseHoverHandlers.first;
 	mouseHoverHandlers.second[id] = callback;
@@ -128,7 +128,7 @@ void GLEntity::removeMouseHoverHandler(IWindow::EventIdentifier &id)
 	handlers.erase(handlerIter);
 	id = 0;
 };
-void GLEntity::callMousePressHandler(const anex::IWindow::Button &button, int pressed)
+void GLEntity::callMousePressHandler(const zg::IWindow::Button &button, int pressed)
 {
 	buttons[button] = pressed;
 	{
@@ -136,7 +136,7 @@ void GLEntity::callMousePressHandler(const anex::IWindow::Button &button, int pr
 		if (handlersIter == mousePressHandlers.end())
 			return;
 		auto& handlersMap = handlersIter->second.second;
-		std::vector<anex::IWindow::MousePressHandler> handlersCopy;
+		std::vector<zg::IWindow::MousePressHandler> handlersCopy;
 		for (const auto& pair : handlersMap)
 			handlersCopy.push_back(pair.second);
 		for (auto& handler : handlersCopy)
@@ -148,7 +148,7 @@ void GLEntity::callMousePressHandler(const anex::IWindow::Button &button, int pr
 void GLEntity::callMouseMoveHandler(glm::vec2 coords)
 {
 	auto& handlersMap = mouseMoveHandlers.second;
-	std::vector<anex::IWindow::MouseMoveHandler> handlersCopy;
+	std::vector<zg::IWindow::MouseMoveHandler> handlersCopy;
 	for (const auto& pair : handlersMap)
 		handlersCopy.push_back(pair.second);
 	for (auto& handler : handlersCopy)

@@ -1,7 +1,7 @@
 #include <stdexcept>
-#include <anex/IWindow.hpp>
-#include <anex/modules/gl/GLWindow.hpp>
-using namespace anex;
+#include <zg/IWindow.hpp>
+#include <zg/modules/gl/GLWindow.hpp>
+using namespace zg;
 IWindow::IWindow(float windowWidth,
                  float windowHeight,
                  float windowX,

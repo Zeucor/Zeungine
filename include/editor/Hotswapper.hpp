@@ -1,11 +1,11 @@
 #pragma once
 #include <hscpp/Hotswapper.h>
 #include <thread>
-namespace anex::editor
+namespace zg::editor
 {
 	struct EditorScene;
 }
-namespace anex::editor::hs
+namespace zg::editor::hs
 {
 	struct Hotswapper
 	{

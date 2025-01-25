@@ -1,18 +1,18 @@
-#include <anex/modules/gl/entities/DropdownMenu.hpp>
-#include <anex/utilities.hpp>
-using namespace anex::modules::gl::entities;
-DropdownMenu::DropdownMenu(anex::modules::gl::GLWindow &window,
-							             anex::modules::gl::GLScene &scene,
+#include <zg/modules/gl/entities/DropdownMenu.hpp>
+#include <zg/utilities.hpp>
+using namespace zg::modules::gl::entities;
+DropdownMenu::DropdownMenu(zg::modules::gl::GLWindow &window,
+							             zg::modules::gl::GLScene &scene,
 							             glm::vec3 position,
 							             glm::vec3 rotation,
 							             glm::vec3 scale,
 							             glm::vec4 color,
                            fonts::freetype::FreetypeFont &font,
-							             const anex::modules::gl::shaders::RuntimeConstants &constants,
+							             const zg::modules::gl::shaders::RuntimeConstants &constants,
 							             std::string_view name):
-	anex::modules::gl::GLEntity(
+	zg::modules::gl::GLEntity(
 		window,
-		anex::mergeVectors<std::string_view>({
+		zg::mergeVectors<std::string_view>({
 			{
 				"Color", "Position",
 				"View", "Projection", "Model", "CameraPosition"
@@ -97,9 +97,9 @@ DropdownItem::DropdownItem(GLWindow &window,
 													 fonts::freetype::FreetypeFont &font,
 													 const shaders::RuntimeConstants &constants,
 													 std::string_view name):
-	anex::modules::gl::GLEntity(
+	zg::modules::gl::GLEntity(
 		window,
-		anex::mergeVectors<std::string_view>({
+		zg::mergeVectors<std::string_view>({
 			{
 				"Color", "Position",
 				"View", "Projection", "Model", "CameraPosition"

@@ -1,5 +1,5 @@
-#include <anex/modules/gl/textures/TextureFactory.hpp>
-using namespace anex::modules::gl::textures;
+#include <zg/modules/gl/textures/TextureFactory.hpp>
+using namespace zg::modules::gl::textures;
 TextureFactory::InternalFormatsMap TextureFactory::internalFormats = {
   {Texture::Format::RGB8, GL_RGB8},
   {Texture::Format::RGBA8, GL_RGBA8},

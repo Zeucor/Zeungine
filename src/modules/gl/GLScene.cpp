@@ -1,12 +1,12 @@
 #include <iostream>
-#include <anex/IWindow.hpp>
-#include <anex/crypto/vector.hpp>
-#include <anex/modules/gl/GLScene.hpp>
-#include <anex/modules/gl/GLEntity.hpp>
-#include <anex/modules/gl/textures/TextureFactory.hpp>
-#include <anex/modules/gl/textures/FramebufferFactory.hpp>
-#include <anex/modules/gl/vaos/VAO.hpp>
-using namespace anex::modules::gl;
+#include <zg/IWindow.hpp>
+#include <zg/crypto/vector.hpp>
+#include <zg/modules/gl/GLScene.hpp>
+#include <zg/modules/gl/GLEntity.hpp>
+#include <zg/modules/gl/textures/TextureFactory.hpp>
+#include <zg/modules/gl/textures/FramebufferFactory.hpp>
+#include <zg/modules/gl/vaos/VAO.hpp>
+using namespace zg::modules::gl;
 GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),

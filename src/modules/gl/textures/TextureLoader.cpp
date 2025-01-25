@@ -1,2 +1,2 @@
-#include <anex/modules/gl/textures/TextureLoader.hpp>
-using namespace anex::modules::gl::textures;
+#include <zg/modules/gl/textures/TextureLoader.hpp>
+using namespace zg::modules::gl::textures;

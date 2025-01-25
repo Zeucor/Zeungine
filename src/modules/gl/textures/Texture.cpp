@@ -1,6 +1,6 @@
-#include <anex/modules/gl/textures/Texture.hpp>
-#include <anex/modules/gl/textures/TextureFactory.hpp>
-using namespace anex::modules::gl::textures;
+#include <zg/modules/gl/textures/Texture.hpp>
+#include <zg/modules/gl/textures/TextureFactory.hpp>
+using namespace zg::modules::gl::textures;
 Texture::Texture(GLWindow &window, const glm::ivec4 &size, const void *data, const Format &format, const Type &type, const FilterType &filterType):
   window(window),
 	size(size),

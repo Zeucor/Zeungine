@@ -1,8 +1,8 @@
-#include <anex/modules/gl/lights/PointLight.hpp>
-#include <anex/modules/gl/shaders/Shader.hpp>
-#include <anex/modules/gl/shaders/ShaderManager.hpp>
+#include <zg/modules/gl/lights/PointLight.hpp>
+#include <zg/modules/gl/shaders/Shader.hpp>
+#include <zg/modules/gl/shaders/ShaderManager.hpp>
 #include <iostream>
-using namespace anex::modules::gl::lights;
+using namespace zg::modules::gl::lights;
 PointLightShadow::PointLightShadow(GLWindow &window, PointLight &pointLight):
 	window(window),
 	shader(

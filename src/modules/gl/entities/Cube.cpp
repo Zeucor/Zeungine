@@ -1,17 +1,17 @@
-#include <anex/modules/gl/entities/Cube.hpp>
-#include <anex/utilities.hpp>
-using namespace anex::modules::gl::entities;
-Cube::Cube(anex::modules::gl::GLWindow &window,
-					 anex::modules::gl::GLScene &scene,
+#include <zg/modules/gl/entities/Cube.hpp>
+#include <zg/utilities.hpp>
+using namespace zg::modules::gl::entities;
+Cube::Cube(zg::modules::gl::GLWindow &window,
+					 zg::modules::gl::GLScene &scene,
 					 glm::vec3 position,
 					 glm::vec3 rotation,
 					 glm::vec3 scale,
 					 glm::vec3 size,
-					 const anex::modules::gl::shaders::RuntimeConstants &constants,
+					 const zg::modules::gl::shaders::RuntimeConstants &constants,
 					 std::string_view name):
-	anex::modules::gl::GLEntity(
+	zg::modules::gl::GLEntity(
 		window,
-		anex::mergeVectors<std::string_view>({
+		zg::mergeVectors<std::string_view>({
 			{
 				"Color", "Position", "Normal",
 				"View", "Projection", "Model", "CameraPosition"

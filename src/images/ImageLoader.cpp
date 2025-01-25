@@ -1,10 +1,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include <anex/images/ImageLoader.hpp>
+#include <zg/images/ImageLoader.hpp>
 #include "stb_image.h"
 #include "stb_image_resize2.h"
 #include <stdexcept>
-using namespace anex::images;
+using namespace zg::images;
 static bool setFlipVertically = ([]()
 {
   stbi_set_flip_vertically_on_load(true);

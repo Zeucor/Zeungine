@@ -1,6 +1,6 @@
-#include <anex/modules/gl/entities/TextView.hpp>
-#include <anex/utilities.hpp>
-using namespace anex::modules::gl::entities;
+#include <zg/modules/gl/entities/TextView.hpp>
+#include <zg/utilities.hpp>
+using namespace zg::modules::gl::entities;
 TextView::TextView(GLWindow &window,
                    GLScene &scene,
                    glm::vec3 position,

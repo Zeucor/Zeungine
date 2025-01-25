@@ -1,7 +1,7 @@
-#include <anex/IScene.hpp>
-#include <anex/IEntity.hpp>
-#include <anex/IWindow.hpp>
-using namespace anex;
+#include <zg/IScene.hpp>
+#include <zg/IEntity.hpp>
+#include <zg/IWindow.hpp>
+using namespace zg;
 IScene::IScene(IWindow& window):
 	window(window)
 {

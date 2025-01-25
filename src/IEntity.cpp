@@ -1,5 +1,5 @@
-#include <anex/IEntity.hpp>
-using namespace anex;
+#include <zg/IEntity.hpp>
+using namespace zg;
 IEntity::IEntity(IWindow &_window):
 	window(_window)
 {};

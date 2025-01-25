@@ -1,7 +1,7 @@
-#include <anex/modules/gl/shaders/ShaderManager.hpp>
-#include <anex/modules/gl/shaders/ShaderFactory.hpp>
-#include <anex/crypto/vector.hpp>
-using namespace anex::modules::gl::shaders;
+#include <zg/modules/gl/shaders/ShaderManager.hpp>
+#include <zg/modules/gl/shaders/ShaderFactory.hpp>
+#include <zg/crypto/vector.hpp>
+using namespace zg::modules::gl::shaders;
 Shader& ShaderManager::getShaderByID(GLWindow &window, uint32_t id)
 {
   auto shaderIter = window.shaderContext->shaders.find(id);

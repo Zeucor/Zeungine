@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-namespace anex::editor
+namespace zg::editor
 {
 	struct Project
 	{

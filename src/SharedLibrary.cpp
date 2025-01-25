@@ -1,5 +1,5 @@
-#include <anex/SharedLibrary.hpp>
-using namespace anex;
+#include <zg/SharedLibrary.hpp>
+using namespace zg;
 SharedLibrary::SharedLibrary(std::string_view path)
 		: libraryHandle(nullptr)
 {

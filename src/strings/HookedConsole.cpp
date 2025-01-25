@@ -1,5 +1,5 @@
-#include <anex/strings/HookedConsole.hpp>
-using namespace anex::strings;
+#include <zg/strings/HookedConsole.hpp>
+using namespace zg::strings;
 HookedConsole::HookedConsole(StdHandleToRedirect handle):
 	m_handle(handle)
 {

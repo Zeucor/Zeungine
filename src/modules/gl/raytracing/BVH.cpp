@@ -1,8 +1,8 @@
 #include <iostream>
-#include <anex/modules/gl/raytracing/BVH.hpp>
-#include <anex/modules/gl/GLEntity.hpp>
-#include <anex/modules/gl/GLScene.hpp>
-using namespace anex::modules::gl::raytracing;
+#include <zg/modules/gl/raytracing/BVH.hpp>
+#include <zg/modules/gl/GLEntity.hpp>
+#include <zg/modules/gl/GLScene.hpp>
+using namespace zg::modules::gl::raytracing;
 static constexpr bool shouldPermute = true;
 BVH::BVH():
 	executor(threadPool),

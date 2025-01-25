@@ -1,6 +1,6 @@
-#include <anex/modules/gl/entities/Toolbar.hpp>
+#include <zg/modules/gl/entities/Toolbar.hpp>
 #include <iostream>
-using namespace anex::modules::gl::entities;
+using namespace zg::modules::gl::entities;
 Toolbar::Toolbar(GLWindow &window,
                 GLScene &scene,
                  glm::vec3 position,
@@ -166,7 +166,7 @@ Toolbar::Toolbar(GLWindow &window,
 		}
 	});
 	// icon
-	iconTexture.reset(new textures::Texture(window, {128, 128, 1, 0}, std::string_view("images/abstractnexus-icon.png")));
+	iconTexture.reset(new textures::Texture(window, {128, 128, 1, 0}, std::string_view("images/zeungine-icon.png")));
 	icon = std::make_shared<Plane>(window, scene, glm::vec3(NDCHeight / 4, -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2, NDCHeight), *iconTexture);
 	addChild(icon);
 	//

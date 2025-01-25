@@ -1,18 +1,18 @@
-#include <anex/modules/gl/entities/Plane.hpp>
-#include <anex/utilities.hpp>
-using namespace anex::modules::gl::entities;
-Plane::Plane(anex::modules::gl::GLWindow &window,
-             anex::modules::gl::GLScene &scene,
+#include <zg/modules/gl/entities/Plane.hpp>
+#include <zg/utilities.hpp>
+using namespace zg::modules::gl::entities;
+Plane::Plane(zg::modules::gl::GLWindow &window,
+             zg::modules::gl::GLScene &scene,
              glm::vec3 position,
              glm::vec3 rotation,
              glm::vec3 scale,
              glm::vec2 size,
              glm::vec4 color,
-             const anex::modules::gl::shaders::RuntimeConstants &constants,
+             const zg::modules::gl::shaders::RuntimeConstants &constants,
              std::string_view name):
-	anex::modules::gl::GLEntity(
+	zg::modules::gl::GLEntity(
 		window,
-		anex::mergeVectors<std::string_view>({
+		zg::mergeVectors<std::string_view>({
 			{
 				"Color", "Position", "Normal",
 				"View", "Projection", "Model", "CameraPosition"
@@ -39,18 +39,18 @@ Plane::Plane(anex::modules::gl::GLWindow &window,
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 };
-Plane::Plane(anex::modules::gl::GLWindow &window,
-             anex::modules::gl::GLScene &scene,
+Plane::Plane(zg::modules::gl::GLWindow &window,
+             zg::modules::gl::GLScene &scene,
              glm::vec3 position,
              glm::vec3 rotation,
              glm::vec3 scale,
              glm::vec2 size,
              textures::Texture &texture,
-             const anex::modules::gl::shaders::RuntimeConstants &constants,
+             const zg::modules::gl::shaders::RuntimeConstants &constants,
              std::string_view name):
-	anex::modules::gl::GLEntity(
+	zg::modules::gl::GLEntity(
 		window,
-		anex::mergeVectors<std::string_view>({
+		zg::mergeVectors<std::string_view>({
 			{
 				"UV2", "Position", "Normal", "Texture2D",
 				"View", "Projection", "Model", "CameraPosition"

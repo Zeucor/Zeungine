@@ -1,14 +1,14 @@
-#include <anex/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/GLWindow.hpp>
 #include <stdexcept>
 #include <iostream>
-#include <anex/modules/gl/shaders/ShaderManager.hpp>
-#include <anex/Logger.hpp>
-#include <anex/modules/gl/shaders/ShaderFactory.hpp>
+#include <zg/modules/gl/shaders/ShaderManager.hpp>
+#include <zg/Logger.hpp>
+#include <zg/modules/gl/shaders/ShaderFactory.hpp>
 #include <ShellScalingApi.h>
 #pragma comment(lib, "Shcore.lib")
-#include <anex/modules/gl/textures/Texture.hpp>
-#include <anex/modules/gl/entities/Plane.hpp>
-using namespace anex::modules::gl;
+#include <zg/modules/gl/textures/Texture.hpp>
+#include <zg/modules/gl/entities/Plane.hpp>
+using namespace zg::modules::gl;
 #ifdef _WIN32
 extern "C" {
 	_declspec(dllexport) DWORD NvOptimusEnablement = 1;
@@ -642,7 +642,7 @@ void GLWindow::drawCircle(int x, int y, int radius, uint32_t color)
 void GLWindow::drawText(int x, int y, const char* text, int scale, uint32_t color)
 {
 };
-const bool anex::modules::gl::GLcheck(GLWindow &window, const char* fn, const bool egl)
+const bool zg::modules::gl::GLcheck(GLWindow &window, const char* fn, const bool egl)
 {
 	while (true)
 	{
@@ -847,7 +847,7 @@ void GLWindow::setWidthHeight(float width, float height)
 		(int)adjustedWidth,
 		(int)adjustedHeight, flags);
 };
-anex::IWindow &GLWindow::createChildWindow(const char* title,
+zg::IWindow &GLWindow::createChildWindow(const char* title,
 																					 IScene &scene,
 																					 float windowWidth,
 																					 float windowHeight,
@@ -858,7 +858,7 @@ anex::IWindow &GLWindow::createChildWindow(const char* title,
 	childWindows.push_back(new GLWindow(*this, (GLScene &)scene, title, windowWidth, windowHeight, windowX, windowY, NDCFramebufferPlane));
 	return *childWindows.back();
 };
-void anex::modules::gl::computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)
+void zg::modules::gl::computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)
 {
 	const glm::vec3 *positionsData = positions.data();
 	const auto *indicesData = (const glm::ivec3 *)indices.data();

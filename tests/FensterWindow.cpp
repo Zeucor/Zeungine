@@ -1,8 +1,8 @@
-#include <anex/modules/fenster/Fenster.hpp>
-using namespace anex::modules::fenster;
-struct TestTextEntity : anex::IEntity
+#include <zg/modules/fenster/Fenster.hpp>
+using namespace zg::modules::fenster;
+struct TestTextEntity : zg::IEntity
 {
-  TestTextEntity(anex::IWindow& window):
+  TestTextEntity(zg::IWindow& window):
     IEntity(window)
   {};
   void render() override
@@ -10,9 +10,9 @@ struct TestTextEntity : anex::IEntity
     window.drawText(0, 0, "Test Text", 5, 0x00FFFFFF);
   };
 };
-struct TestRectangleEntity : anex::IEntity
+struct TestRectangleEntity : zg::IEntity
 {
-  TestRectangleEntity(anex::IWindow& window):
+  TestRectangleEntity(zg::IWindow& window):
     IEntity(window)
   {};
   void render() override
@@ -20,9 +20,9 @@ struct TestRectangleEntity : anex::IEntity
     window.drawRectangle(0, 0, window.windowWidth, window.windowHeight, 0x0000FF00);
   };
 };
-struct TestCircleEntity : anex::IEntity
+struct TestCircleEntity : zg::IEntity
 {
-  TestCircleEntity(anex::IWindow& window):
+  TestCircleEntity(zg::IWindow& window):
     IEntity(window)
   {};
   void render() override
@@ -30,10 +30,10 @@ struct TestCircleEntity : anex::IEntity
     window.drawCircle(window.windowWidth / 2, window.windowHeight / 2, 10, 0x00FF0000);
   };
 };
-struct TestScene : anex::IScene
+struct TestScene : zg::IScene
 {
-  TestScene(anex::IWindow& window):
-    anex::IScene(window)
+  TestScene(zg::IWindow& window):
+    zg::IScene(window)
   {
     addEntity(std::make_shared<TestRectangleEntity>(window));
     addEntity(std::make_shared<TestCircleEntity>(window));

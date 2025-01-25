@@ -1,9 +1,9 @@
 #pragma once
-#include <anex/modules/gl/GLScene.hpp>
-#include <anex/modules/gl/GLWindow.hpp>
-namespace anex::editor
+#include <zg/modules/gl/GLScene.hpp>
+#include <zg/modules/gl/GLWindow.hpp>
+namespace zg::editor
 {
-	using namespace anex::modules::gl;
+	using namespace zg::modules::gl;
 	struct CodeScene : GLScene
 	{
 		explicit CodeScene(GLWindow &window);

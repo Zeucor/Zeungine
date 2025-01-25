@@ -1,18 +1,18 @@
 #pragma once
 #ifdef _WIN32
-#define ANEX_API __declspec(dllexport)
+#define ZG_API __declspec(dllexport)
 #else
-#define ANEX_API __attribute__ ((visibility ("default")))
+#define ZG_API __attribute__ ((visibility ("default")))
 #endif
 #include <hscpp/Hotswapper.h>
-namespace anex::modules::gl
+namespace zg::modules::gl
 {
   struct GLWindow;
 };
-using namespace anex::modules::gl;
+using namespace zg::modules::gl;
 extern "C"
 {
-  ANEX_API void OnLoad(GLWindow &window);
-  ANEX_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver);
-  ANEX_API void OnUnLoad(GLWindow &window);
+  ZG_API void OnLoad(GLWindow &window);
+  ZG_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver);
+  ZG_API void OnUnLoad(GLWindow &window);
 }

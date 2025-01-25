@@ -1,9 +1,9 @@
-#include <anex/modules/gl/entities/Console.hpp>
-#include <anex/utilities.hpp>
+#include <zg/modules/gl/entities/Console.hpp>
+#include <zg/utilities.hpp>
 #include <iostream>
-using namespace anex::modules::gl::entities;
-Console::Console(anex::modules::gl::GLWindow &window,
-				             anex::modules::gl::GLScene &scene,
+using namespace zg::modules::gl::entities;
+Console::Console(zg::modules::gl::GLWindow &window,
+				             zg::modules::gl::GLScene &scene,
 				             glm::vec3 position,
 				             glm::vec3 rotation,
 				             glm::vec3 scale,
@@ -11,11 +11,11 @@ Console::Console(anex::modules::gl::GLWindow &window,
 				             fonts::freetype::FreetypeFont &font,
 										 float width,
 										 float height,
-				             const anex::modules::gl::shaders::RuntimeConstants &constants,
+				             const zg::modules::gl::shaders::RuntimeConstants &constants,
                      std::string_view name):
-	anex::modules::gl::GLEntity(
+	zg::modules::gl::GLEntity(
 		window,
-		anex::mergeVectors<std::string_view>({
+		zg::mergeVectors<std::string_view>({
 			{
 				"Color", "Position",
 				"View", "Projection", "Model", "CameraPosition"

@@ -1,7 +1,7 @@
 #include <stdexcept>
-#include <anex/modules/gl/vaos/VAOFactory.hpp>
-#include <anex/IEntity.hpp>
-using namespace anex::modules::gl::vaos;
+#include <zg/modules/gl/vaos/VAOFactory.hpp>
+#include <zg/IEntity.hpp>
+using namespace zg::modules::gl::vaos;
 VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {
 	{"Indice", {3, sizeof(uint32_t), GL_UNSIGNED_INT}},
   {"Color", {4, sizeof(float), GL_FLOAT}},
