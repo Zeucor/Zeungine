@@ -1,6 +1,7 @@
 #include <zg/strings/HookedConsole.hpp>
 using namespace zg::strings;
-HookedConsole::HookedConsole(StdHandleToRedirect handle):
+HookedConsole::HookedConsole(const std::function<void(const std::vector<std::string> &)> &_outputCallback, StdHandleToRedirect handle):
+    outputCallback(_outputCallback),
 	m_handle(handle)
 {
     initializeRedirect();
@@ -48,29 +49,31 @@ void HookedConsole::readFromPipe()
     				continue;
     		}
         if (ReadFile(readablePipeEnd, buffer, bufferSize, &bytesRead, nullptr) && bytesRead > 0)
-#endif
         {
             processBuffer(buffer, bytesRead);
         }
+#else
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+#endif
     }
 }
 void HookedConsole::processBuffer(const char *buffer, size_t length)
 {
     std::lock_guard<std::mutex> lock(outputMutex);
-		std::vector<std::string> thisLines;
-		for (size_t i = 0; i < length; ++i)
-		{
-			char c = buffer[i];
-			if (c == '\n')
-			{
-				thisLines.push_back(currentLine);
-				allLines.push_back(currentLine);
-				currentLine.clear();
-			}
-			else if (c != '\r')
-			{
-				currentLine += c;
-			}
-		}
-		outputCallback(thisLines);
+    std::vector<std::string> thisLines;
+    for (size_t i = 0; i < length; ++i)
+    {
+        char c = buffer[i];
+        if (c == '\n')
+        {
+            thisLines.push_back(currentLine);
+            allLines.push_back(currentLine);
+            currentLine.clear();
+        }
+        else if (c != '\r')
+        {
+            currentLine += c;
+        }
+    }
+    outputCallback(thisLines);
 }

@@ -6,6 +6,9 @@
 #if defined(LINUX) || defined(MACOS)
 #include <dlfcn.h>
 #endif
+#ifdef LINUX
+#include <zg/modules/gl/windows/X11Window.hpp>
+#endif
 using namespace zg::modules::gl;
 #ifdef _WIN32
 typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALEXTPROC) (int interval);
@@ -66,15 +69,25 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 	glContext->Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	GLcheck(*this, "glEnable");
 	glContext->DebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
-		if (type == GL_DEBUG_TYPE_OTHER)
+		if (type == GL_DEBUG_TYPE_ERROR )
 		{
-			return;
+			std::cerr << "OpenGL Debug Message: " << message << std::endl;
 		}
-		std::cerr << "OpenGL Debug Message: " << message << std::endl;
 	}, nullptr);
 #ifdef _WIN32
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 	wglSwapIntervalEXT(1);
+#elif defined(LINUX)
+	PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalEXT");
+	auto &x11Window = *(X11Window *)platformWindowPointer;
+	// if (!instance.vsync)
+	// {
+	// 	glXSwapIntervalEXT(display, window, 0);
+	// }
+	// else
+	// {
+		glXSwapIntervalEXT(x11Window.display, x11Window.window, 1);
+	// }
 #endif
 }
 void GLRenderer::render()

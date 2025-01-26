@@ -7,7 +7,7 @@
 #include <zg/modules/gl/entities/Dialog.hpp>
 #include <zg/modules/gl/entities/Input.hpp>
 #include <zg/modules/gl/entities/Panel.hpp>
-#include <zg/modules/gl/entities/Status.hpp>
+#include <zg/modules/gl/entities/StatusText.hpp>
 #include <zg/modules/gl/entities/Tabs.hpp>
 #include <zg/modules/gl/entities/Toolbar.hpp>
 #include <zg/modules/gl/fonts/freetype/Freetype.hpp>
@@ -37,7 +37,7 @@ namespace zg::editor
 		glm::vec4 toolbarColor;
 		std::shared_ptr<entities::Toolbar> toolbar;
 		std::shared_ptr<entities::TabsBar> bottomTabsBar;
-		std::shared_ptr<entities::Status> status;
+		std::shared_ptr<entities::StatusText> status;
 		glm::vec4 gameWindowBorderColor = {0.4, 0.4, 0.7, 1};
 		glm::vec4 gameWindowHoveredBorderColor = {0.7, 0.4, 0.4, 1};
 		glm::vec4 gameWindowActiveBorderColor = {1, 0, 0, 1};

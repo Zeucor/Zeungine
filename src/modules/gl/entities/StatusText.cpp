@@ -1,7 +1,7 @@
-#include <zg/modules/gl/entities/Status.hpp>
+#include <zg/modules/gl/entities/StatusText.hpp>
 #include <zg/utilities.hpp>
 using namespace zg::modules::gl::entities;
-Status::Status(zg::modules::gl::RenderWindow &window,
+StatusText::StatusText(zg::modules::gl::RenderWindow &window,
 	             zg::modules::gl::GLScene &scene,
 	             glm::vec3 position,
 	             glm::vec3 rotation,
@@ -30,7 +30,7 @@ Status::Status(zg::modules::gl::RenderWindow &window,
 		position,
 		rotation,
 		scale,
-		name.empty() ? "Status " + std::to_string(++statusesCount) : name
+		name.empty() ? "StatusText " + std::to_string(++statusTextsCount) : name
 	),
 	scene(scene),
 	size({ 0, 0 }),
@@ -73,7 +73,7 @@ Status::Status(zg::modules::gl::RenderWindow &window,
 	addChild(textView);
   addToBVH = false;
 }
-void Status::preRender()
+void StatusText::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader.bind();
@@ -84,12 +84,12 @@ void Status::preRender()
 	shader.setBlock("CameraPosition", scene.view.position, 16);
 	shader.unbind();
 }
-void Status::setColor(glm::vec4 newColor)
+void StatusText::setColor(glm::vec4 newColor)
 {
 	colors = {newColor, newColor, newColor, newColor};
 	updateElements("Color", colors);
 };
-void Status::setSize()
+void StatusText::setSize()
 {
 	glm::vec2 newSize(width / this->window.windowWidth / 0.5, height / this->window.windowHeight / 0.5);
 	positions = {
@@ -98,11 +98,11 @@ void Status::setSize()
 	updateElements("Position", positions);
 	this->size = newSize;
 }
-void Status::setText(std::string_view text)
+void StatusText::setText(std::string_view text)
 {
 	textView->text = text;
 }
-void Status::setTextColor(glm::vec4 newTextColor)
+void StatusText::setTextColor(glm::vec4 newTextColor)
 {
 	textView->setTextColor(newTextColor);
 }

@@ -33,18 +33,18 @@ Console::Console(zg::modules::gl::RenderWindow &window,
 		name.empty() ? "Console " + std::to_string(++consolesCount) : name
 	),
 	scene(scene),
-  backgroundColor(backgroundColor),
+	backgroundColor(backgroundColor),
 	font(font),
 	width(width),
-	height(height)
+	height(height),
+	hookedConsole([&](auto &lines) {
+		hookedCallback(lines);
+	})
 {
 	updateIndices(indices);
 	setBackgroundColor(backgroundColor);
 	updateElements("Position", positions);
 	Console::setSize(glm::vec3(0));
-	std::function<void(const std::vector<std::string> &)> hookedCallbackFunction =
-		std::bind(&Console::hookedCallback, this, std::placeholders::_1);
-	hookedConsole.outputCallback = hookedCallbackFunction;
 	this->addMousePressHandler(3, [&](auto pressed)
 	{
 		if (pressed && currentIndex < consoleTextViews.size() - 1)

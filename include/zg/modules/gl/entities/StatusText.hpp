@@ -9,7 +9,7 @@
 namespace zg::modules::gl::entities
 {
 	struct Tab;
-	struct Status : GLEntity
+	struct StatusText : GLEntity
 	{
 		std::vector<glm::vec4> colors;
 		GLScene& scene;
@@ -21,9 +21,9 @@ namespace zg::modules::gl::entities
 		float width;
 		float height;
 		float NDCHeight;
-		inline static size_t statusesCount = 0;
+		inline static size_t statusTextsCount = 0;
 		using TabClickHandler = std::function<void()>;
-		Status(RenderWindow& window,
+		StatusText(RenderWindow& window,
 					 GLScene& scene,
 					 glm::vec3 position,
 					 glm::vec3 rotation,

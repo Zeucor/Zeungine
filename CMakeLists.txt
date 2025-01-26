@@ -94,7 +94,7 @@ if(BUILD_OPENGL)
         src/modules/gl/entities/Panel.cpp
         src/modules/gl/entities/Plane.cpp
         src/modules/gl/entities/SkyBox.cpp
-        src/modules/gl/entities/Status.cpp
+        src/modules/gl/entities/StatusText.cpp
         src/modules/gl/entities/Tabs.cpp
         src/modules/gl/entities/TextView.cpp
         src/modules/gl/entities/Toolbar.cpp
@@ -137,11 +137,16 @@ if(BUILD_OPENGL)
     if(WIN32)
         find_package(OpenGL REQUIRED)
         target_link_libraries(zeungine OpenGL::GL)
+    elseif(LINUX)
+        target_link_libraries(zeungine GL)
     endif()
 endif()
 target_link_libraries(zeungine freetype)
 target_link_libraries(zeungine bvh)
 target_link_libraries(zeungine hscpp)
+if(LINUX)
+    target_link_libraries(zeungine X11 Xrandr Xext Xfixes xkbcommon Xrender)
+endif()
 
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     if(LIBRARY)

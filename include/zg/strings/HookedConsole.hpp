@@ -20,12 +20,12 @@ namespace zg::strings
     class HookedConsole
     {
     public:
-        HookedConsole(StdHandleToRedirect handle = STDOUT);
+        HookedConsole(const std::function<void(const std::vector<std::string> &)> &outputCallback, StdHandleToRedirect handle = STDOUT);
         ~HookedConsole();
         void stop();
         std::vector<std::string> getAllLines();
-        std::function<void(const std::vector<std::string> &)> outputCallback;
     private:
+        std::function<void(const std::vector<std::string> &)> outputCallback;
         void initializeRedirect();
         void readFromPipe();
         void processBuffer(const char *buffer, size_t length);

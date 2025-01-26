@@ -38,7 +38,7 @@ EditorScene::EditorScene(RenderWindow& window):
 		robotoRegularFont,
 		gameWindowWidth + gameWindowBorderWidth * 2,
 		bottomTabsHeight - gameWindowBorderWidth * 2)),
-	status(std::make_shared<entities::Status>(
+	status(std::make_shared<entities::StatusText>(
 		window,
 		*this,
 		glm::vec3(-1, ((bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5) - 1, 0.1),

@@ -1,11 +1,22 @@
 #pragma once
 #ifdef LINUX
 #include "../RenderWindow.hpp"
+#include <X11/Xutil.h>
+#include <GL/glx.h>
+typedef struct _XDisplay Display;
 namespace zg::modules::gl
 {
 	struct X11Window : IPlatformWindow
 	{
-		float dpiScale = 1.0f;
+		Display *display = 0;
+		int32_t defaultRootWindow = 0;
+		int32_t screen = 0;
+		unsigned long window = 0;
+		unsigned long rootWindow = 0;
+		unsigned long wmDeleteWindow;
+		XVisualInfo visualinfo;
+		GLXFBConfig bestFbc;
+		GLXContext glcontext;
 		void init(RenderWindow& window) override;
 		void createContext() override;
 		void renderInit();
