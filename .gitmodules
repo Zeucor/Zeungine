@@ -18,4 +18,4 @@
 	url = https://github.com/ZeunO8/hscpp.git
 [submodule "vendor/filewatch"]
 	path = vendor/filewatch
-	url = https://github.com/ThomasMonkman/filewatch.git
+	url = https://github.com/ZeunO8/filewatch.git
