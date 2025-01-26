@@ -40,10 +40,14 @@ include_directories(vendor/glm)
 include_directories(vendor/stb)
 
 # hscpp
+set(HSCPP_BUILD_EXAMPLES OFF)
+set(HSCPP_BUILD_TESTS OFF)
+set(HSCPP_BUILD_EXTENSION_MEM OFF)
 add_subdirectory(vendor/hscpp)
 include_directories(vendor/hscpp/include)
 
 # filewatch
+set(BuildTests OFF)
 add_subdirectory(vendor/filewatch)
 include_directories(vendor/filewatch)
 
