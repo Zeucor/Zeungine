@@ -5,6 +5,8 @@ SharedLibrary::SharedLibrary(std::string_view path)
 {
 #ifdef _WIN32
 	libraryPointer = LoadLibraryA(path.data());
+#elif defined(LINUX) || defined(MACOS)
+	libraryPointer = dlopen(path.data(), RTLD_LAZY);
 #endif
 	if (!libraryPointer)
 	{
@@ -17,6 +19,8 @@ SharedLibrary::~SharedLibrary()
 	{
 #ifdef _WIN32
 		FreeLibrary(libraryPointer);
+#elif defined(LINUX) || defined(MACOS)
+		dlclose(libraryPointer);
 #endif
 	}
 };
@@ -33,6 +37,8 @@ SharedLibrary& SharedLibrary::operator=(SharedLibrary&& other) noexcept
 		{
 #ifdef _WIN32
 			FreeLibrary(libraryPointer);
+#elif defined(LINUX) || defined(MACOS)
+			dlclose(libraryPointer);
 #endif
 		}
 

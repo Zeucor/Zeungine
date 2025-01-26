@@ -1,6 +1,8 @@
 #pragma once
 #ifdef _WIN32
 #include <windows.h>
+#elif defined(LINUX) || defined(MACOS)
+#include <dlfcn.h>
 #endif
 #include <string_view>
 #include <stdexcept>
@@ -24,7 +26,8 @@ namespace zg
 			}
 	#ifdef _WIN32
 			void* procAddress = GetProcAddress(libraryPointer, procName.data());
-
+	#elif defined(LINUX) || defined(MACOS)
+			void* procAddress = dlsym(libraryPointer, procName.data());
 	#endif
 			if (!procAddress)
 			{
