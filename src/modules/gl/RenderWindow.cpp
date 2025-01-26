@@ -38,32 +38,32 @@ RenderWindow::RenderWindow(RenderWindow &_parentWindow,
 									 bool _NDCFramebufferPlane,
 									 uint32_t framerate):
 	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
-	iVendorRenderer(parentWindow.iVendorRenderer),
+	iVendorRenderer(_parentWindow.iVendorRenderer),
 	title(_childTitle),
 	isChildWindow(true),
 	parentWindow(&_parentWindow),
 	parentScene(&_parentScene),
-	shaderContext(parentWindow.shaderContext),
+	shaderContext(_parentWindow.shaderContext),
 	NDCFramebufferPlane(_NDCFramebufferPlane),
-	framebufferTexture(std::make_shared<textures::Texture>(parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
-	framebufferDepthTexture(std::make_shared<textures::Texture>(parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
-	framebuffer(std::make_shared<textures::Framebuffer>(parentWindow, *framebufferTexture, *framebufferDepthTexture)),
+	framebufferTexture(std::make_shared<textures::Texture>(_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
+	framebufferDepthTexture(std::make_shared<textures::Texture>(_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
+	framebuffer(std::make_shared<textures::Framebuffer>(_parentWindow, *framebufferTexture, *framebufferDepthTexture)),
 	framebufferPlane(std::make_shared<entities::Plane>(
-		parentWindow,
+		_parentWindow,
 		parentScene,
 		glm::vec3(
 			NDCFramebufferPlane ?
-				(-1 + ((childWindowX + (childWindowWidth / 2)) / parentWindow.windowWidth / 0.5)) :
+				(-1 + ((childWindowX + (childWindowWidth / 2)) / _parentWindow.windowWidth / 0.5)) :
 				childWindowX + (childWindowWidth / 2),
 			NDCFramebufferPlane ?
-				(1 - ((childWindowY + (childWindowHeight / 2)) / parentWindow.windowHeight / 0.5)) :
-				parentWindow.windowHeight - childWindowY - (childWindowHeight / 2), 0.2
+				(1 - ((childWindowY + (childWindowHeight / 2)) / _parentWindow.windowHeight / 0.5)) :
+				_parentWindow.windowHeight - childWindowY - (childWindowHeight / 2), 0.2
 		),
 		glm::vec3(0),
 		glm::vec3(1),
 		glm::vec2(
-			childWindowWidth / (NDCFramebufferPlane ? (parentWindow.windowWidth / 2) : 1),
-			childWindowHeight / (NDCFramebufferPlane ? (parentWindow.windowHeight / 2) : 1)
+			childWindowWidth / (NDCFramebufferPlane ? (_parentWindow.windowWidth / 2) : 1),
+			childWindowHeight / (NDCFramebufferPlane ? (_parentWindow.windowHeight / 2) : 1)
 		),
 		*framebufferTexture))
 {
