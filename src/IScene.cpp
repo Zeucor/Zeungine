@@ -2,8 +2,8 @@
 #include <zg/IEntity.hpp>
 #include <zg/IWindow.hpp>
 using namespace zg;
-IScene::IScene(IWindow& window):
-	window(window)
+IScene::IScene(IWindow& _window):
+	window(_window)
 {
 };
 size_t IScene::addEntity(const std::shared_ptr<IEntity>& entity, bool callOnEntityAdded)

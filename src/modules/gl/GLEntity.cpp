@@ -4,22 +4,22 @@ using namespace zg::modules::gl;
 GLEntity::GLEntity(zg::IWindow &_window,
 									 const shaders::RuntimeConstants &constants,
 									 uint32_t indiceCount,
-						 			 const std::vector<uint32_t> &indices,
+						 			 const std::vector<uint32_t> &_indices,
 									 uint32_t elementCount,
-						 			 const std::vector<glm::vec3> &positions,
-									 glm::vec3 position,
-									 glm::vec3 rotation,
-									 glm::vec3 scale,
-									 std::string_view name):
+						 			 const std::vector<glm::vec3> &_positions,
+									 glm::vec3 _position,
+									 glm::vec3 _rotation,
+									 glm::vec3 _scale,
+									 std::string_view _name):
 	IEntity(_window),
 	VAO(dynamic_cast<RenderWindow &>(_window), constants, indiceCount, elementCount),
-	indices(indices),
-	positions(positions),
-	position(position),
-	rotation(rotation),
-	scale(scale),
+	indices(_indices),
+	positions(_positions),
+	position(_position),
+	rotation(_rotation),
+	scale(_scale),
 	shader(*shaders::ShaderManager::getShaderByConstants(dynamic_cast<RenderWindow &>(_window), constants).second),
-	name(name)
+	name(_name)
 {};
 void GLEntity::update()
 {

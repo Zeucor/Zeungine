@@ -2,18 +2,18 @@
 #include <zg/IWindow.hpp>
 #include <zg/modules/gl/RenderWindow.hpp>
 using namespace zg;
-IWindow::IWindow(float windowWidth,
-                 float windowHeight,
-                 float windowX,
-                 float windowY,
-                 bool borderless,
-                 uint32_t framerate):
-  windowWidth(windowWidth),
-  windowHeight(windowHeight),
-  windowX(windowX),
-  windowY(windowY),
-  framerate(framerate),
-  borderless(borderless)
+IWindow::IWindow(float _windowWidth,
+                 float _windowHeight,
+                 float _windowX,
+                 float _windowY,
+                 bool _borderless,
+                 uint32_t _framerate):
+  windowWidth(_windowWidth),
+  windowHeight(_windowHeight),
+  windowX(_windowX),
+  windowY(_windowY),
+  framerate(_framerate),
+  borderless(_borderless)
 {};
 void IWindow::awaitWindowThread() const
 {

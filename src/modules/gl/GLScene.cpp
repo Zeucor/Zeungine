@@ -8,19 +8,19 @@
 #include <zg/modules/gl/vaos/VAO.hpp>
 #include <zg/modules/gl/renderers/GLRenderer.hpp>
 using namespace zg::modules::gl;
-GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer):
+GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *_framebufferPointer):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),
 	projection((RenderWindow &)window, fov),
-	framebufferPointer(framebufferPointer)
+	framebufferPointer(_framebufferPointer)
 {
 	hookMouseEvents();
 };
-GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer):
+GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *_framebufferPointer):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),
 	projection((RenderWindow &)window, orthoSize),
-	framebufferPointer(framebufferPointer)
+	framebufferPointer(_framebufferPointer)
 {
 	hookMouseEvents();
 };
