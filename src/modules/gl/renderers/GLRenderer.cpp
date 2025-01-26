@@ -19,8 +19,8 @@ void *getProc(const char* name) {
 		p = (void*)GetProcAddress(module, name);
 	}
 	return p;
-#else
-	return 0;
+#elif defined(LINUX) || defined(MACOS)
+	return dlsym(RTLD_DEFAULT, name);
 #endif
 }
 GLRenderer::GLRenderer():
