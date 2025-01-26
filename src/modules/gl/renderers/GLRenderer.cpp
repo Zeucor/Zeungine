@@ -3,6 +3,9 @@
 #include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/entities/Plane.hpp>
 #include <zg/Logger.hpp>
+#if defined(LINUX) || defined(MACOS)
+#include <dlfcn.h>
+#endif
 using namespace zg::modules::gl;
 #ifdef _WIN32
 typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALEXTPROC) (int interval);
