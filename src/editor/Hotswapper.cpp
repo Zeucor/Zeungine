@@ -37,12 +37,18 @@ void Hotswapper::update()
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/bvh/src");
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/freetype/include");
 	swapperRef.LocateAndAddLibrary(programDirectoryPath, "zeungine.lib");
+#ifdef _WIN32
 	swapperRef.LinkLibrary("opengl32.lib");
 	swapperRef.LinkLibrary("gdi32.lib");
 	swapperRef.LinkLibrary("user32.lib");
+#endif
 	swapperRef.AddCompileOption("-DHSCPP_CXX_STANDARD=" + std::to_string(HSCPP_CXX_STANDARD));
+#ifdef USE_GL
 	swapperRef.AddCompileOption("-DUSE_GL");
+#endif
+#ifdef _WIN32
 	swapperRef.AddCompileOption("-DHSCPP_PLATFORM_WIN32");
+#endif
 	swapperRef.SetBuildDirectory(directory + "/build");
 	while (!swapperRef.IsCompilerInitialized())
 	{
