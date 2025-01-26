@@ -1,7 +1,7 @@
 #pragma once
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include "./TextView.hpp"
 #include <zg/glm.hpp>
 #include <zg/modules/gl/fonts/freetype/Freetype.hpp>
@@ -21,7 +21,7 @@ namespace zg::modules::gl::entities
 		std::shared_ptr<TextView> titleTextView;
 		inline static size_t tabBarsCount = 0;
 		using TabClickHandler = std::function<void()>;
-		TabsBar(GLWindow& window,
+		TabsBar(RenderWindow& window,
 							GLScene& scene,
 							glm::vec3 position,
 							glm::vec3 rotation,
@@ -50,15 +50,15 @@ namespace zg::modules::gl::entities
 		float height;
 		float NDCHeight;
 		TabsBar::TabClickHandler handler;
-		GLWindow::EventIdentifier mouseHoverID = 0;
-		GLWindow::EventIdentifier mousePressID = 0;
+		RenderWindow::EventIdentifier mouseHoverID = 0;
+		RenderWindow::EventIdentifier mousePressID = 0;
 		bool active;
 		bool hovered = false;
 		glm::vec4 activeColor;
 		glm::vec4 inactiveColor;
 		TabsBar &tabsBar;
 		inline static size_t tabsCount = 0;
-		Tab(GLWindow& window,
+		Tab(RenderWindow& window,
 							GLScene& scene,
 							glm::vec3 position,
 							glm::vec3 rotation,

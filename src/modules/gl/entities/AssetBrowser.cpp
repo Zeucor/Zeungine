@@ -2,7 +2,7 @@
 #include <zg/utilities.hpp>
 #include <iostream>
 using namespace zg::modules::gl::entities;
-AssetBrowser::AssetBrowser(zg::modules::gl::GLWindow &window,
+AssetBrowser::AssetBrowser(zg::modules::gl::RenderWindow &window,
 							             zg::modules::gl::GLScene &scene,
 							             glm::vec3 position,
 							             glm::vec3 rotation,

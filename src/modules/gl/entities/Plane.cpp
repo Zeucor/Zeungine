@@ -1,7 +1,7 @@
 #include <zg/modules/gl/entities/Plane.hpp>
 #include <zg/utilities.hpp>
 using namespace zg::modules::gl::entities;
-Plane::Plane(zg::modules::gl::GLWindow &window,
+Plane::Plane(zg::modules::gl::RenderWindow &window,
              zg::modules::gl::GLScene &scene,
              glm::vec3 position,
              glm::vec3 rotation,
@@ -39,7 +39,7 @@ Plane::Plane(zg::modules::gl::GLWindow &window,
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 };
-Plane::Plane(zg::modules::gl::GLWindow &window,
+Plane::Plane(zg::modules::gl::RenderWindow &window,
              zg::modules::gl::GLScene &scene,
              glm::vec3 position,
              glm::vec3 rotation,

@@ -2,7 +2,7 @@
 #include <zg/modules/gl/shaders/ShaderManager.hpp>
 #include <iostream>
 using namespace zg::modules::gl::lights;
-DirectionalLightShadow::DirectionalLightShadow(GLWindow &window, DirectionalLight &directionalLight):
+DirectionalLightShadow::DirectionalLightShadow(RenderWindow &window, DirectionalLight &directionalLight):
 	window(window),
 	shader(*shaders::ShaderManager::getShaderByConstants(window, {"Color", "Position", "Normal", "Model", "LightSpaceMatrix"}).second),
 	directionalLight(directionalLight),

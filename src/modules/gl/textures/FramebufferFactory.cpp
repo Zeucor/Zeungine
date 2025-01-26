@@ -1,5 +1,5 @@
 #include <zg/modules/gl/textures/FramebufferFactory.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/textures/Texture.hpp>
 using namespace zg::modules::gl::textures;
 void FramebufferFactory::initFramebuffer(Framebuffer &framebuffer)

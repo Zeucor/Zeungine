@@ -1,6 +1,6 @@
 #pragma once
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/entities/AssetBrowser.hpp>
 #include <zg/modules/gl/entities/Button.hpp>
 #include <zg/modules/gl/entities/Console.hpp>
@@ -23,8 +23,8 @@ namespace zg::editor
 		float bottomTabsHeight;
 		filesystem::File robotoRegularFile;
 		modules::gl::fonts::freetype::FreetypeFont robotoRegularFont;
-		GLWindow* gameWindowPointer = nullptr;
-		GLWindow* codeWindowPointer = nullptr;
+		RenderWindow* gameWindowPointer = nullptr;
+		RenderWindow* codeWindowPointer = nullptr;
 		float gameWindowBorderWidth;
 		float gameWindowWidth;
 		float gameWindowHeight;
@@ -67,11 +67,11 @@ namespace zg::editor
 		std::shared_ptr<entities::Dialog> activeDialog;
 		std::shared_ptr<hs::Hotswapper> hotswapper;
 		Project project;
-		std::function<void(GLWindow &)> OnLoad;
-		std::function<void(GLWindow &, hscpp::AllocationResolver &)> OnHotswapLoad;
-		std::function<void(GLWindow &)> OnUnLoad;
+		std::function<void(RenderWindow &)> OnLoad;
+		std::function<void(RenderWindow &, hscpp::AllocationResolver &)> OnHotswapLoad;
+		std::function<void(RenderWindow &)> OnUnLoad;
 		bool loaded = false;
-		explicit EditorScene(GLWindow& window);
+		explicit EditorScene(RenderWindow& window);
 		~EditorScene() override;
 		void onEntityAdded(const std::shared_ptr<IEntity>& entity);
 		void setupGameWindow();

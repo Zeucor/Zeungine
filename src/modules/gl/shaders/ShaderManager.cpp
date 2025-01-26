@@ -2,14 +2,14 @@
 #include <zg/modules/gl/shaders/ShaderFactory.hpp>
 #include <zg/crypto/vector.hpp>
 using namespace zg::modules::gl::shaders;
-Shader& ShaderManager::getShaderByID(GLWindow &window, uint32_t id)
+Shader& ShaderManager::getShaderByID(RenderWindow &window, uint32_t id)
 {
   auto shaderIter = window.shaderContext->shaders.find(id);
   if (shaderIter == window.shaderContext->shaders.end())
     throw std::runtime_error("Shader not found");
   return *shaderIter->second;
 };
-std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants(GLWindow &window, const RuntimeConstants &constants, const std::vector<Shader::ShaderType> &shaderTypes)
+std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants(RenderWindow &window, const RuntimeConstants &constants, const std::vector<Shader::ShaderType> &shaderTypes)
 {
   auto hash = crypto::hashVector(constants);
   auto hashIter = window.shaderContext->shadersByHash.find(hash);

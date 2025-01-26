@@ -1,7 +1,7 @@
 #pragma once
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include "./TextView.hpp"
 #include <zg/glm.hpp>
 #include <zg/modules/gl/fonts/freetype/Freetype.hpp>
@@ -18,10 +18,10 @@ namespace zg::modules::gl::entities
 		fonts::freetype::FreetypeFont& font;
     using OnClickHandler = std::function<void()>;
     OnClickHandler handler;
-		GLWindow::EventIdentifier mouseHoverID = 0;
-		GLWindow::EventIdentifier mousePressID = 0;
+		RenderWindow::EventIdentifier mouseHoverID = 0;
+		RenderWindow::EventIdentifier mousePressID = 0;
 		inline static size_t buttonsCount = 0;
-		Button(GLWindow& window,
+		Button(RenderWindow& window,
 							GLScene& scene,
 							glm::vec3 position,
 							glm::vec3 rotation,

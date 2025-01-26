@@ -1,7 +1,7 @@
 #include <zg/modules/gl/entities/Cube.hpp>
 #include <zg/utilities.hpp>
 using namespace zg::modules::gl::entities;
-Cube::Cube(zg::modules::gl::GLWindow &window,
+Cube::Cube(zg::modules::gl::RenderWindow &window,
 					 zg::modules::gl::GLScene &scene,
 					 glm::vec3 position,
 					 glm::vec3 rotation,

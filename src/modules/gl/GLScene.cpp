@@ -10,7 +10,7 @@ using namespace zg::modules::gl;
 GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),
-	projection((GLWindow &)window, fov),
+	projection((RenderWindow &)window, fov),
 	framebufferPointer(framebufferPointer)
 {
 	hookMouseEvents();
@@ -18,7 +18,7 @@ GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDir
 GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),
-	projection((GLWindow &)window, orthoSize),
+	projection((RenderWindow &)window, orthoSize),
 	framebufferPointer(framebufferPointer)
 {
 	hookMouseEvents();
@@ -95,7 +95,7 @@ void GLScene::preRender()
 		pointLightShadow.shader.unbind();
 		pointLightShadow.framebuffer.unbind();
 	}
-	auto &glWindow = *dynamic_cast<GLWindow*>(&window);
+	auto &glWindow = *dynamic_cast<RenderWindow*>(&window);
 	if (framebufferPointer)
 	{
 		auto &framebuffer = *framebufferPointer;
@@ -220,11 +220,11 @@ GLEntity *GLScene::findEntityByPrimID(const size_t &primID)
 }
 void GLScene::hookMouseEvents()
 {
-	for (unsigned int button = GLWindow::MinMouseButton; button <= GLWindow::MaxMouseButton; ++button)
+	for (unsigned int button = RenderWindow::MinMouseButton; button <= RenderWindow::MaxMouseButton; ++button)
 	{
 		mousePressIDs[button] = window.addMousePressHandler(button, [&, button](auto pressed)
 		{
-			auto &screenCoord = ((GLWindow &)window).mouseCoords;
+			auto &screenCoord = ((RenderWindow &)window).mouseCoords;
 			auto ray = bvh.mouseCoordToRay(window.windowHeight, screenCoord, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
 			auto primID = bvh.trace(ray);
 			if (primID == raytracing::invalidID)
@@ -261,7 +261,7 @@ void GLScene::hookMouseEvents()
 };
 void GLScene::unhookMouseEvents()
 {
-	for (unsigned int button = GLWindow::MinMouseButton; button <= GLWindow::MaxMouseButton; ++button)
+	for (unsigned int button = RenderWindow::MinMouseButton; button <= RenderWindow::MaxMouseButton; ++button)
 	{
 		window.removeMousePressHandler(button, mousePressIDs[button]);
 	}

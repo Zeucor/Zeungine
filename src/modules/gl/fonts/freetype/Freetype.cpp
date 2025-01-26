@@ -3,7 +3,7 @@
 #include <iostream>
 #include <zg/modules/gl/GLScene.hpp>
 #include <zg/strings/Utf8Iterator.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/entities/Plane.hpp>
 using namespace zg::modules::gl::fonts::freetype;
 FT_Library FreetypeFont::freetypeLibrary;
@@ -47,7 +47,7 @@ void FreetypeFont::FT_PRINT_AND_THROW_ERROR(const FT_Error &error)
 		throw std::runtime_error(errorString);
 	}
 };
-FreetypeCharacter::FreetypeCharacter(GLWindow &window, const FreetypeFont &freeTypeFont, float codepoint, float fontSize)
+FreetypeCharacter::FreetypeCharacter(RenderWindow &window, const FreetypeFont &freeTypeFont, float codepoint, float fontSize)
 {
 	auto &face = *freeTypeFont.facePointer.get();
 	glyphIndex = FT_Get_Char_Index(face, codepoint);
@@ -83,7 +83,7 @@ FreetypeCharacter::FreetypeCharacter(GLWindow &window, const FreetypeFont &freeT
 	_setAdvance:
 		advance = face->glyph->advance.x;
 };
-FreetypeFont::FreetypeFont(GLWindow &window, filesystem::File &fontFile):
+FreetypeFont::FreetypeFont(RenderWindow &window, filesystem::File &fontFile):
 	facePointer(new FT_Face, [](FT_Face *pointer)
 	{
 		FT_Done_Face(*pointer);

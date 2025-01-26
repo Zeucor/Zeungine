@@ -2,7 +2,7 @@
 #include <zg/utilities.hpp>
 #include <iostream>
 using namespace zg::modules::gl::entities;
-Button::Button(GLWindow &window,
+Button::Button(RenderWindow &window,
 										 GLScene &scene,
 										 glm::vec3 position,
 										 glm::vec3 rotation,

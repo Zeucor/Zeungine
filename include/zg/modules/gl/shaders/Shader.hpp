@@ -6,7 +6,7 @@
 #include <functional>
 #include <stdexcept>
 #include "../../../glm.hpp"
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include "RuntimeConstants.hpp"
 namespace zg::modules::gl::textures
 {
@@ -33,10 +33,10 @@ namespace zg::modules::gl::shaders
 		using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
 		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> uboBindings;
 		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> ssboBindings;
-		GLWindow &window;
+		RenderWindow &window;
 		ShaderMap shaders;
 		GLuint program = 0;
-		Shader(GLWindow &window, const RuntimeConstants& constants, const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
+		Shader(RenderWindow &window, const RuntimeConstants& constants, const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
 		~Shader();
 		void bind() const;
 		void unbind() const;

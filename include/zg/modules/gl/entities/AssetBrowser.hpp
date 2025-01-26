@@ -1,7 +1,7 @@
 #pragma once
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include "./TextView.hpp"
 #include <zg/glm.hpp>
 #include <zg/modules/gl/fonts/freetype/Freetype.hpp>
@@ -21,7 +21,7 @@ namespace zg::modules::gl::entities
 		filewatch::FileWatch<std::string> projectDirectoryWatch;
 		size_t currentIndex = 0;
 		inline static size_t assetBrowsersCount = 0;
-		AssetBrowser(GLWindow& window,
+		AssetBrowser(RenderWindow& window,
 								 GLScene& scene,
 								 glm::vec3 position,
 								 glm::vec3 rotation,

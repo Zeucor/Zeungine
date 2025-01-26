@@ -2,7 +2,7 @@
 #include <zg/modules/gl/shaders/ShaderFactory.hpp>
 #include <zg/modules/gl/textures/Texture.hpp>
 using namespace zg::modules::gl::shaders;
-Shader::Shader(GLWindow &window, const RuntimeConstants &constants, const std::vector<ShaderType> &shaderTypes):
+Shader::Shader(RenderWindow &window, const RuntimeConstants &constants, const std::vector<ShaderType> &shaderTypes):
   window(window),
 	shaders(ShaderFactory::generateShaderMap(constants, *this, shaderTypes))
 {

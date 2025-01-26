@@ -7,12 +7,12 @@
 #include <hscpp/Hotswapper.h>
 namespace zg::modules::gl
 {
-  struct GLWindow;
+  struct RenderWindow;
 };
 using namespace zg::modules::gl;
 extern "C"
 {
-  ZG_API void OnLoad(GLWindow &window);
-  ZG_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver);
-  ZG_API void OnUnLoad(GLWindow &window);
+  ZG_API void OnLoad(RenderWindow &window);
+  ZG_API void OnHotswapLoad(RenderWindow &window, hscpp::AllocationResolver &allocationResolver);
+  ZG_API void OnUnLoad(RenderWindow &window);
 }

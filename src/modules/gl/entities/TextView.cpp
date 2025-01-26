@@ -1,7 +1,7 @@
 #include <zg/modules/gl/entities/TextView.hpp>
 #include <zg/utilities.hpp>
 using namespace zg::modules::gl::entities;
-TextView::TextView(GLWindow &window,
+TextView::TextView(RenderWindow &window,
                    GLScene &scene,
                    glm::vec3 position,
                    glm::vec3 rotation,

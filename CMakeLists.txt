@@ -60,7 +60,7 @@ if(BUILD_FENSTER)
 endif()
 if(BUILD_OPENGL)
     list(APPEND ZG_SOURCES
-        src/modules/gl/GLWindow.cpp
+        src/modules/gl/RenderWindow.cpp
         src/modules/gl/GLEntity.cpp
         src/modules/gl/GLScene.cpp
         src/modules/gl/ISizable.cpp
@@ -98,7 +98,7 @@ if(BUILD_OPENGL)
         src/modules/gl/fonts/freetype/Freetype.cpp
         src/modules/gl/raytracing/BVH.cpp)
     if(WIN32)
-        list(APPEND ZG_SOURCES src/modules/gl/wgl.c)
+        list(APPEND ZG_SOURCES src/modules/gl/wgl.c src/modules/gl/windows/WIN32Window.cpp)
     elseif(UNIX AND NOT APPLE)
         list(APPEND ZG_SOURCES src/modules/gl/glx.c)
     elseif(ANDROID OR IOS)

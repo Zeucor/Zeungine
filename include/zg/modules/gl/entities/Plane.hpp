@@ -5,7 +5,7 @@
 #include <array>
 namespace zg::modules::gl
 {
-	struct GLWindow;
+	struct RenderWindow;
 }
 namespace zg::modules::gl::entities
 {
@@ -18,7 +18,7 @@ namespace zg::modules::gl::entities
 		textures::Texture *texturePointer = 0;
 		glm::vec2 size;
 		inline static size_t planesCount = 0;
-		Plane(GLWindow &window,
+		Plane(RenderWindow &window,
 					GLScene &scene,
 					glm::vec3 position,
 					glm::vec3 rotation,
@@ -27,7 +27,7 @@ namespace zg::modules::gl::entities
 					glm::vec4 color,
 					const shaders::RuntimeConstants &constants = {},
 					std::string_view name = "");
-		Plane(GLWindow &window,
+		Plane(RenderWindow &window,
 					GLScene &scene,
 					glm::vec3 position,
 					glm::vec3 rotation,

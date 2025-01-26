@@ -13,7 +13,7 @@ struct EditorScene : GLScene
   std::shared_ptr<textures::Texture> texturePointer;
   filesystem::File robotoRegularFile;
   modules::gl::fonts::freetype::FreetypeFont robotoRegularFont;
-  EditorScene(GLWindow &window):
+  EditorScene(RenderWindow &window):
     GLScene(window, {0, 10, 10}, {0, -1, -1}, 81.f),
     vml(*this),
     robotoRegularFile("fonts/Roboto/Roboto-Regular.ttf", enums::EFileLocation::Relative, "r"),
@@ -23,7 +23,7 @@ struct EditorScene : GLScene
     addEntity(std::make_shared<entities::Cube>(window, *this, glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), glm::vec3(25, 1, 25)));
     // addEntity()
     addEntity(std::make_shared<entities::SkyBox>(
-      (GLWindow &)window,
+      (RenderWindow &)window,
       *this,
       std::vector<std::string_view>({
         "images/skybox/right.jpg", "images/skybox/left.jpg", "images/skybox/top.jpg",
@@ -69,7 +69,7 @@ struct EditorScene : GLScene
     });
   };
 };
-RUNTIME_EXPORT void Load(GLWindow &window)
+RUNTIME_EXPORT void Load(RenderWindow &window)
 {
   auto scene = std::make_shared<EditorScene>(window);
   scene->clearColor = {0, 0, 1, 1};

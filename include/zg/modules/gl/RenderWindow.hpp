@@ -2,6 +2,7 @@
 #include <zg/IWindow.hpp>
 #include "./common.hpp"
 #include "./textures/Framebuffer.hpp"
+#include "./IPlatformWindow.hpp"
 #include <mutex>
 namespace zg::modules::gl
 {
@@ -22,24 +23,19 @@ namespace zg::modules::gl
 	struct GLScene;
 #define KEYCODE_HOME 0x80
 #define KEYCODE_END 0x81
-	struct GLWindow : IWindow
+	struct RenderWindow : IWindow
 	{
+		std::shared_ptr<IPlatformWindow> iPlatformWindow;
 		const char *title;
-#ifdef _WIN32
-		HINSTANCE hInstance;
-		HWND hwnd;
-		HDC hDeviceContext;
-		HGLRC hRenderingContext;
-#endif
 		int windowKeys[256];
 		int windowButtons[7];
 		bool mouseMoved = false;
 		glm::vec2 mouseCoords;
 		int mod = 0;
 		bool isChildWindow = false;
-		GLWindow *parentWindow = 0;
+		RenderWindow *parentWindow = 0;
 		GLScene *parentScene = 0;
-		std::vector<GLWindow*> childWindows;
+		std::vector<RenderWindow*> childWindows;
 		GladGLContext *glContext = 0;
 		ShaderContext *shaderContext = 0;
 		bool NDCFramebufferPlane;
@@ -49,16 +45,15 @@ namespace zg::modules::gl
 		std::shared_ptr<entities::Plane> framebufferPlane;
 		static constexpr unsigned int MinMouseButton = 0;
 		static constexpr unsigned int MaxMouseButton = 6;
-		float dpiScale = 1.0f;
 		glm::vec2 oldXY;
-		GLWindow(const char *title,
+		RenderWindow(const char *title,
 						 float windowWidth,
 						 float windowHeight,
 						 float windowX,
 						 float windowY,
 						 bool borderless = false,
 						 uint32_t framerate = 60);
-		GLWindow(GLWindow &parentWindow,
+		RenderWindow(RenderWindow &parentWindow,
 						 GLScene &parentScene,
 						 const char *childTitle,
 						 float childWindowWidth,
@@ -67,7 +62,7 @@ namespace zg::modules::gl
 						 float childWindowY,
 						 bool NDCFramebufferPlane = false,
 						 uint32_t framerate = 60);
-		~GLWindow() override;
+		~RenderWindow() override;
 		void startWindow() override;
 		void renderInit();
 		void updateKeyboard() override;
@@ -85,6 +80,7 @@ namespace zg::modules::gl
 		void warpPointer(glm::vec2 coords) override;
 		void setXY(float x, float y) override;
 		void setWidthHeight(float width, float height) override;
+		void mouseCapture(bool capture);
 		IWindow &createChildWindow(const char *title,
 															 IScene &scene,
 															 float windowWidth,

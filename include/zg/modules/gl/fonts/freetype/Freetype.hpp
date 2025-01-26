@@ -6,7 +6,7 @@
 #include <zg/modules/gl/textures/Texture.hpp>
 namespace zg::modules::gl
 {
-	struct GLWindow;
+	struct RenderWindow;
 }
 namespace zg::modules::gl::fonts::freetype
 {
@@ -18,7 +18,7 @@ namespace zg::modules::gl::fonts::freetype
 		glm::ivec2 size;
 		glm::ivec2 bearing;
 		unsigned int advance;
-		FreetypeCharacter(GLWindow &window, const FreetypeFont &freeTypeFont, float codepoint, float fontSize);
+		FreetypeCharacter(RenderWindow &window, const FreetypeFont &freeTypeFont, float codepoint, float fontSize);
 	};
 	struct FreetypeFont
   {
@@ -27,8 +27,8 @@ namespace zg::modules::gl::fonts::freetype
     std::shared_ptr<FT_Face> facePointer;
 		std::shared_ptr<int8_t[]> fontFileBytes;
 		std::unordered_map<float, std::unordered_map<float, FreetypeCharacter>> codepointFontSizeCharacters;
-		GLWindow &window;
-    FreetypeFont(GLWindow &window, filesystem::File &fontFile);
+		RenderWindow &window;
+    FreetypeFont(RenderWindow &window, filesystem::File &fontFile);
 		const glm::vec2 stringSize(const std::string_view string, float fontSize, float &lineHeight, glm::vec2 bounds);
 		void stringToTexture(const std::string_view string,
 												 glm::vec4 color,

@@ -8,6 +8,6 @@
 #endif
 namespace zg::modules::gl
 {
-	struct GLWindow;
-	const bool GLcheck(GLWindow &window, const char* fn, const bool egl = false);
+	struct RenderWindow;
+	const bool GLcheck(RenderWindow &window, const char* fn, const bool egl = false);
 }

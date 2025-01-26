@@ -2,7 +2,7 @@
 #include <zg/utilities.hpp>
 #include <iostream>
 using namespace zg::modules::gl::entities;
-Console::Console(zg::modules::gl::GLWindow &window,
+Console::Console(zg::modules::gl::RenderWindow &window,
 				             zg::modules::gl::GLScene &scene,
 				             glm::vec3 position,
 				             glm::vec3 rotation,
@@ -98,7 +98,7 @@ void Console::hookedCallback(const std::vector<std::string> &lines)
 			consoleTextViews.resize(index + 1);
 			static auto indent = 8 / window.windowWidth / 0.5;
 			auto consoleTextView = std::make_shared<TextView>(
-				dynamic_cast<GLWindow &>(window),
+				dynamic_cast<RenderWindow &>(window),
 				scene,
 				glm::vec3(0),
 				glm::vec3(0),

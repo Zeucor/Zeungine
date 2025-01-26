@@ -2,7 +2,7 @@
 #include <zg/utilities.hpp>
 #include <iostream>
 using namespace zg::modules::gl::entities;
-PanelMenu::PanelMenu(zg::modules::gl::GLWindow &window,
+PanelMenu::PanelMenu(zg::modules::gl::RenderWindow &window,
 				             zg::modules::gl::GLScene &scene,
 				             glm::vec3 position,
 				             glm::vec3 rotation,
@@ -150,7 +150,7 @@ void PanelMenu::setSize(glm::vec3 newSize)
 	updateElements("Position", positions);
 	size = actualNewSize;
 };
-PanelItem::PanelItem(GLWindow &window,
+PanelItem::PanelItem(RenderWindow &window,
 										 GLScene &scene,
 										 glm::vec3 position,
 										 glm::vec3 rotation,

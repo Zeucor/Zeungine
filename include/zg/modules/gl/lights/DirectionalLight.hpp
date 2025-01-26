@@ -3,17 +3,17 @@
 #include "../textures/Texture.hpp"
 #include "../textures/Framebuffer.hpp"
 #include "./Lights.hpp"
-#include "../GLWindow.hpp"
+#include "../RenderWindow.hpp"
 namespace zg::modules::gl::lights
 {
 	struct DirectionalLightShadow
   {
-		GLWindow &window;
+		RenderWindow &window;
     shaders::Shader &shader;
     DirectionalLight &directionalLight;
     textures::Texture texture;
 		textures::Framebuffer framebuffer;
 		glm::mat4 lightSpaceMatrix;
-    DirectionalLightShadow(GLWindow &window, DirectionalLight &directionalLight);
+    DirectionalLightShadow(RenderWindow &window, DirectionalLight &directionalLight);
   };
 }

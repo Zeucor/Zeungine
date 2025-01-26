@@ -1,7 +1,7 @@
 #pragma once
 #include "../shaders/RuntimeConstants.hpp"
 #include "../common.hpp"
-#include "../GLWindow.hpp"
+#include "../RenderWindow.hpp"
 namespace zg::modules::gl::vaos
 {
 	using namespace shaders;
@@ -14,8 +14,8 @@ namespace zg::modules::gl::vaos
 	uint32_t indiceCount;
 	uint32_t elementCount;
 	uint32_t stride;
-	GLWindow &vaoWindow;
-    VAO(GLWindow &_window, const RuntimeConstants &constants, uint32_t indiceCount, uint32_t elementCount);
+	RenderWindow &vaoWindow;
+    VAO(RenderWindow &_window, const RuntimeConstants &constants, uint32_t indiceCount, uint32_t elementCount);
 	virtual ~VAO();
 	void updateIndices(const std::vector<uint32_t> &indices);
 	template<typename T>

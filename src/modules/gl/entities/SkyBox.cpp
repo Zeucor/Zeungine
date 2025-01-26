@@ -1,7 +1,7 @@
 #include <zg/modules/gl/entities/SkyBox.hpp>
 #include <zg/utilities.hpp>
 using namespace zg::modules::gl::entities;
-SkyBox::SkyBox(GLWindow &window,
+SkyBox::SkyBox(RenderWindow &window,
 							 GLScene &scene,
 							 const std::vector<std::string_view> &texturePaths,
 							 std::string_view name):
@@ -111,7 +111,7 @@ SkyBox::SkyBox(GLWindow &window,
 };
 void SkyBox::preRender()
 {
-	auto &glWindow = dynamic_cast<GLWindow &>(window);
+	auto &glWindow = dynamic_cast<RenderWindow &>(window);
 	glWindow.glContext->DepthFunc(GL_LEQUAL);
 	shader.bind();
 	scene.entityPreRender(*this);
@@ -123,6 +123,6 @@ void SkyBox::preRender()
 };
 void SkyBox::postRender()
 {
-	auto &glWindow = dynamic_cast<GLWindow &>(window);
+	auto &glWindow = dynamic_cast<RenderWindow &>(window);
 	glWindow.glContext->DepthFunc(GL_LESS);
 };

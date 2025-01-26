@@ -3,7 +3,7 @@
 #include <zg/modules/gl/shaders/ShaderManager.hpp>
 #include <iostream>
 using namespace zg::modules::gl::lights;
-PointLightShadow::PointLightShadow(GLWindow &window, PointLight &pointLight):
+PointLightShadow::PointLightShadow(RenderWindow &window, PointLight &pointLight):
 	window(window),
 	shader(
     *shaders::ShaderManager::getShaderByConstants(window, {

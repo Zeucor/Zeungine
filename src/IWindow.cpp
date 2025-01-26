@@ -1,6 +1,6 @@
 #include <stdexcept>
 #include <zg/IWindow.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 using namespace zg;
 IWindow::IWindow(float windowWidth,
                  float windowHeight,

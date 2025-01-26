@@ -1,4 +1,4 @@
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
 #include <zg/modules/gl/lights/Lights.hpp>
@@ -69,7 +69,7 @@ struct TestTriangle : zg::modules::gl::GLEntity
   };
   void preRender() override
   {
-    auto &glWindow = (GLWindow &)window;
+    auto &glWindow = (RenderWindow &)window;
     glWindow.glContext,Disable(GL_CULL_FACE);
     GLcheck(glWindow, "glEnable");
     const auto &model = getModelMatrix();
@@ -83,7 +83,7 @@ struct TestTriangle : zg::modules::gl::GLEntity
   };
   void postRender() override
   {
-    auto &glWindow = (GLWindow &)window;
+    auto &glWindow = (RenderWindow &)window;
     glWindow.glContext->Enable(GL_CULL_FACE);
     GLcheck(glWindow, "glEnable");
   };
@@ -141,7 +141,7 @@ TestScene::TestScene(zg::IWindow& window):
     250.f
   });
   spotLightShadows.emplace_back(spotLights[0]);
-  cubeEntity = std::make_shared<entities::Cube>((GLWindow&)window, *this,
+  cubeEntity = std::make_shared<entities::Cube>((RenderWindow&)window, *this,
     glm::vec3(0, 3, 0), // position
     glm::vec3(0, 0, 0), // rotation
     glm::vec3(1, 1, 1), // scale
@@ -155,7 +155,7 @@ TestScene::TestScene(zg::IWindow& window):
       "Fog"
     }));
   addEntity(cubeEntity); // size
-  addEntity(std::make_shared<entities::Cube>((GLWindow &)window, *this,
+  addEntity(std::make_shared<entities::Cube>((RenderWindow &)window, *this,
     glm::vec3(0, 0, 0),
     glm::vec3(0, 0, 0),
     glm::vec3(1, 1, 1),
@@ -178,7 +178,7 @@ TestScene::TestScene(zg::IWindow& window):
   shader.setUniform("fogColor", glm::vec4(0, 0, 0, 1));
   shader.unbind();
   auto skybox = std::make_shared<entities::SkyBox>(
-    (GLWindow &)window,
+    (RenderWindow &)window,
     *this,
     std::vector<std::string_view>({
       "images/skybox/right.jpg", "images/skybox/left.jpg", "images/skybox/top.jpg",
@@ -215,7 +215,7 @@ TestScene::TestScene(zg::IWindow& window):
 
 int main()
 {
-  GLWindow window("GLWindow", 1280, 720, -1, -1);
+  RenderWindow window("RenderWindow", 1280, 720, -1, -1);
   window.clearColor = {0, 0, 0, 1};
   window.runOnThread([](auto &window)
   {

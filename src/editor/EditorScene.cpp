@@ -2,7 +2,7 @@
 #include <editor/CodeScene.hpp>
 #include <zg/filesystem/Directory.hpp>
 using namespace zg::editor;
-EditorScene::EditorScene(GLWindow& window):
+EditorScene::EditorScene(RenderWindow& window):
 	GLScene(window, {0, 0, 50}, {0, 0, -1}, {2, 2}),
 	toolbarHeight(window.windowHeight / 14),
 	bottomTabsHeight(window.windowHeight / 18),
@@ -255,7 +255,7 @@ void EditorScene::onEntityAdded(const std::shared_ptr<IEntity>& entity)
 	auto sizeYTotal = sceneGraphPanelMenu->getSizeYTotal();
 	static const auto indent = 16.f;
 	auto panelItem = std::make_shared<entities::PanelItem>(
-		dynamic_cast<GLWindow&>(window),
+		dynamic_cast<RenderWindow&>(window),
 		*this,
 		glm::vec3(indent / window.windowWidth / 0.5, -sizeYTotal, 0.1),
 		glm::vec3(0),
@@ -278,7 +278,7 @@ void EditorScene::setupGameWindow()
 		gameWindowX,
 		gameWindowY,
 		true);
-  	gameWindowPointer = (GLWindow *)&gameWindow;
+  	gameWindowPointer = (RenderWindow *)&gameWindow;
 	std::function<void(const std::shared_ptr<IEntity>&)> entityAddedFunction = std::bind(
 		&EditorScene::onEntityAdded, this, std::placeholders::_1);
 	gameWindow.registerOnEntityAddedFunction(entityAddedFunction);
@@ -306,7 +306,7 @@ void EditorScene::setupGameWindow()
 		if (!pressed)
 		{
 			gameWindowPointer->focused = false;
-			auto &glWindow = (GLWindow&)window;
+			auto &glWindow = (RenderWindow&)window;
 			window.callMouseMoveHandler(glWindow.mouseCoords);
 		}
 	});
@@ -321,13 +321,13 @@ void EditorScene::setupCodeWindow()
 		codeWindowX,
 		codeWindowY,
 		true);
-  codeWindowPointer = (GLWindow *)&codeWindow;
+  codeWindowPointer = (RenderWindow *)&codeWindow;
 	codeWindow.minimize();
-	codeWindow.setIScene(std::make_shared<CodeScene>((GLWindow &)codeWindow));
+	codeWindow.setIScene(std::make_shared<CodeScene>((RenderWindow &)codeWindow));
 };
 void EditorScene::minimizeWindows()
 {
-  auto& glWindow = (GLWindow&)window;
+  auto& glWindow = (RenderWindow&)window;
 	for (auto &windowPointer : glWindow.childWindows)
 	{
 		if (!windowPointer->minimized)
@@ -403,33 +403,33 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 		std::string mainIncludeFileString(R"(#pragma once
 #include <Runtime.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 using namespace zg;
 using namespace zg::modules::gl;
 struct MainScene : GLScene
 {
-	explicit MainScene(GLWindow &window);
+	explicit MainScene(RenderWindow &window);
 };
-ZG_API void OnLoad(GLWindow &window);
-ZG_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver);
-ZG_API void OnUnLoad(GLWindow &window);)");
+ZG_API void OnLoad(RenderWindow &window);
+ZG_API void OnHotswapLoad(RenderWindow &window, hscpp::AllocationResolver &allocationResolver);
+ZG_API void OnUnLoad(RenderWindow &window);)");
 		mainIncludeFile.writeBytes(0, mainIncludeFileString.size(), mainIncludeFileString.data());
 		filesystem::File mainSrcFile(filesystem::File::toPlatformPath(std::string(srcPath) + "/main.cpp"), enums::EFileLocation::Relative, "w+");
 		std::string mainSrcFileString(R"(#include <main.hpp>
-MainScene::MainScene(GLWindow &window):
+MainScene::MainScene(RenderWindow &window):
 	GLScene(window, {0, 50, 50}, {0, -1, -1}, 80.f)
 {
 	clearColor = {0.5, 0, 0.5, 1};
 };
-ZG_API void OnLoad(GLWindow &window)
+ZG_API void OnLoad(RenderWindow &window)
 {
 	window.setIScene(std::make_shared<MainScene>(window));
 };
-ZG_API void OnHotswapLoad(GLWindow &window, hscpp::AllocationResolver &allocationResolver)
+ZG_API void OnHotswapLoad(RenderWindow &window, hscpp::AllocationResolver &allocationResolver)
 {
 	window.setIScene(std::shared_ptr<MainScene>(allocationResolver.Allocate<MainScene>(window)));
 };
-ZG_API void OnUnLoad(GLWindow &window)
+ZG_API void OnUnLoad(RenderWindow &window)
 {
 	window.scene.reset();
 	window.close();
@@ -442,7 +442,7 @@ void EditorScene::loadProject(std::string_view projectDirectory)
 {
 	hotswapper = std::make_shared<hs::Hotswapper>(projectDirectory, *this);
 	resourceAssetBrowser = std::make_shared<entities::AssetBrowser>(
-		dynamic_cast<GLWindow &>(window),
+		dynamic_cast<RenderWindow &>(window),
 		*this,
 		glm::vec3(0, 0, 0.1),
 		glm::vec3(0),

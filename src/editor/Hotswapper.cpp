@@ -36,7 +36,7 @@ void Hotswapper::update()
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/stb");
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/bvh/src");
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/freetype/include");
-	swapperRef.LocateAndAddLibrary(programDirectoryPath, "abstractnexus.lib");
+	swapperRef.LocateAndAddLibrary(programDirectoryPath, "zeungine.lib");
 	swapperRef.LinkLibrary("opengl32.lib");
 	swapperRef.LinkLibrary("gdi32.lib");
 	swapperRef.LinkLibrary("user32.lib");
@@ -66,8 +66,8 @@ void Hotswapper::update()
 					editorScene.OnUnLoad(*editorScene.gameWindowPointer);
 				}
 				editorScene.loaded = false;
-				editorScene.OnHotswapLoad = std::function<void(GLWindow&, hscpp::AllocationResolver &)>();
-				editorScene.OnUnLoad = std::function<void(GLWindow&)>();
+				editorScene.OnHotswapLoad = std::function<void(RenderWindow&, hscpp::AllocationResolver &)>();
+				editorScene.OnUnLoad = std::function<void(RenderWindow&)>();
 				swapperRef.UnLoadModule();
 			}
 			compiled = false;
@@ -85,8 +85,8 @@ void Hotswapper::update()
 		{
 			editorScene.status->setText("Compiled.");
 			editorScene.status->setTextColor({0, 1, 0, 1});
-			editorScene.OnHotswapLoad = swapperRef.GetFunction<void(GLWindow &, hscpp::AllocationResolver &)>("OnHotswapLoad");
-			editorScene.OnUnLoad = swapperRef.GetFunction<void(GLWindow &)>("OnUnLoad");
+			editorScene.OnHotswapLoad = swapperRef.GetFunction<void(RenderWindow &, hscpp::AllocationResolver &)>("OnHotswapLoad");
+			editorScene.OnUnLoad = swapperRef.GetFunction<void(RenderWindow &)>("OnUnLoad");
 			if (editorScene.OnHotswapLoad)
 			{
 				auto &allocationResolver = *swapper->GetAllocationResolver();

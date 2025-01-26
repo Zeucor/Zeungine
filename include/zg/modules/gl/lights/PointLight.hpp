@@ -3,18 +3,18 @@
 #include "../textures/Texture.hpp"
 #include "../textures/Framebuffer.hpp"
 #include "./Lights.hpp"
-#include "../GLWindow.hpp"
+#include "../RenderWindow.hpp"
 namespace zg::modules::gl::lights
 {
 	struct PointLightShadow
   {
-		GLWindow &window;
+		RenderWindow &window;
     shaders::Shader &shader;
     PointLight &pointLight;
     textures::Texture texture;
 	textures::Framebuffer framebuffer;
 	glm::mat4 shadowTransforms[6];
-    PointLightShadow(GLWindow &window, PointLight &pointLight);
+    PointLightShadow(RenderWindow &window, PointLight &pointLight);
 	void updateShadowTransforms();
   };
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include "./TextView.hpp"
 #include <zg/glm.hpp>
 #include <zg/modules/gl/fonts/freetype/Freetype.hpp>
@@ -15,7 +15,7 @@ namespace zg::modules::gl::entities
     using OptionPressHandler = std::function<void()>;
 		fonts::freetype::FreetypeFont &font;
 		inline static size_t dropdownMenusCount = 0;
-		DropdownMenu(GLWindow &window,
+		DropdownMenu(RenderWindow &window,
 								 GLScene &scene,
 								 glm::vec3 position,
 								 glm::vec3 rotation,
@@ -38,10 +38,10 @@ namespace zg::modules::gl::entities
     DropdownMenu::OptionPressHandler handler;
     std::shared_ptr<TextView> textView;
 		fonts::freetype::FreetypeFont &font;
-		GLWindow::EventIdentifier mouseHoverID = 0;
-		GLWindow::EventIdentifier mousePressID = 0;
+		RenderWindow::EventIdentifier mouseHoverID = 0;
+		RenderWindow::EventIdentifier mousePressID = 0;
 		inline static size_t dropdownItemsCount = 0;
-		DropdownItem(GLWindow &window,
+		DropdownItem(RenderWindow &window,
 								 GLScene &scene,
 								 glm::vec3 position,
 								 glm::vec3 rotation,

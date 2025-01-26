@@ -4,10 +4,10 @@
 #else
 #define RUNTIME_EXPORT __declspec(dllimport)
 #endif
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 using namespace zg::modules::gl;
 extern "C"
 {
-	RUNTIME_EXPORT void Load(GLWindow &window);
+	RUNTIME_EXPORT void Load(RenderWindow &window);
 }
-#define LOAD_FUNCTION void(*)(GLWindow &)
+#define LOAD_FUNCTION void(*)(RenderWindow &)

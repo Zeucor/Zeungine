@@ -2,7 +2,7 @@
 #include <zg/utilities.hpp>
 #include <iostream>
 using namespace zg::modules::gl::entities;
-TabsBar::TabsBar(zg::modules::gl::GLWindow &window,
+TabsBar::TabsBar(zg::modules::gl::RenderWindow &window,
 				             zg::modules::gl::GLScene &scene,
 				             glm::vec3 position,
 				             glm::vec3 rotation,
@@ -55,7 +55,7 @@ void TabsBar::addTab(std::string_view name, const TabClickHandler &handler, bool
 	}
   static const auto indent = 16.f;
   auto panelItem = std::make_shared<Tab>(
-  	dynamic_cast<GLWindow &>(window),
+  	dynamic_cast<RenderWindow &>(window),
 		scene,
 		glm::vec3(sizeXTotal, 0, 0.1),
 		glm::vec3(0),
@@ -107,7 +107,7 @@ void TabsBar::markInactive(Tab *activeTab)
     }
   }
 };
-Tab::Tab(GLWindow &window,
+Tab::Tab(RenderWindow &window,
 										 GLScene &scene,
 										 glm::vec3 position,
 										 glm::vec3 rotation,

@@ -2,7 +2,7 @@
 #include <zg/modules/gl/textures/Texture.hpp>
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/fonts/freetype/Freetype.hpp>
 #include <array>
 namespace zg::modules::gl::entities
@@ -33,7 +33,7 @@ namespace zg::modules::gl::entities
 		glm::vec3 cursorPosition = glm::vec3(0);
 		IWindow::EventIdentifier resizeID = 0;
 		inline static size_t textViewsCount = 0;
-		explicit TextView(GLWindow &window,
+		explicit TextView(RenderWindow &window,
 										  GLScene &scene,
 										  glm::vec3 position,
 										  glm::vec3 rotation,

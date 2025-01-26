@@ -1,7 +1,7 @@
 #pragma once
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/fonts/freetype/Freetype.hpp>
 #include <zg/modules/gl/entities/Plane.hpp>
 #include <zg/modules/gl/entities/TextView.hpp>
@@ -64,7 +64,7 @@ namespace zg::modules::gl::entities
 		size_t helpDropdownID = 0;
 		IWindow::EventIdentifier helpHoverID = 0;
 		inline static size_t toolbarsCount = 0;
-  		Toolbar(GLWindow &window,
+  		Toolbar(RenderWindow &window,
 				GLScene &scene,
 				glm::vec3 position,
 				glm::vec3 rotation,

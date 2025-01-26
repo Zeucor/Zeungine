@@ -1,15 +1,15 @@
 #include <zg/modules/gl/textures/Framebuffer.hpp>
 #include <zg/modules/gl/textures/FramebufferFactory.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/textures/Texture.hpp>
 using namespace zg::modules::gl::textures;
-Framebuffer::Framebuffer(GLWindow &window, Texture &texture):
+Framebuffer::Framebuffer(RenderWindow &window, Texture &texture):
   window(window),
   texture(texture)
 {
   FramebufferFactory::initFramebuffer(*this);
 };
-Framebuffer::Framebuffer(GLWindow &window, Texture &texture, Texture &depthTexture):
+Framebuffer::Framebuffer(RenderWindow &window, Texture &texture, Texture &depthTexture):
   window(window),
   texture(texture),
   depthTexturePointer(&depthTexture)

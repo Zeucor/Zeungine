@@ -1,7 +1,7 @@
 #include <zg/modules/gl/entities/Toolbar.hpp>
 #include <iostream>
 using namespace zg::modules::gl::entities;
-Toolbar::Toolbar(GLWindow &window,
+Toolbar::Toolbar(RenderWindow &window,
                 GLScene &scene,
                  glm::vec3 position,
                  glm::vec3 rotation,
@@ -451,12 +451,12 @@ Toolbar::Toolbar(GLWindow &window,
 	{
 		if (pressed && !dragEnabled)
 		{
-			SetCapture(window.hwnd);
+			window.mouseCapture(true);
 		}
 		else if (!pressed && dragEnabled)
 		{
 			dragOldCoords = {0, 0};
-			ReleaseCapture();
+			window.mouseCapture(false);
 		}
 		dragEnabled = pressed;
 	});

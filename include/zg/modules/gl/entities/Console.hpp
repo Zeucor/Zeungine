@@ -1,7 +1,7 @@
 #pragma once
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include "./TextView.hpp"
 #include <zg/glm.hpp>
 #include <zg/modules/gl/fonts/freetype/Freetype.hpp>
@@ -21,7 +21,7 @@ namespace zg::modules::gl::entities
 		strings::HookedConsole hookedConsole;
 		size_t currentIndex = 0;
 		inline static size_t consolesCount = 0;
-		Console(GLWindow& window,
+		Console(RenderWindow& window,
 						GLScene& scene,
 						glm::vec3 position,
 						glm::vec3 rotation,

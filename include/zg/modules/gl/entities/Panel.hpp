@@ -1,7 +1,7 @@
 #pragma once
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include "./TextView.hpp"
 #include <zg/glm.hpp>
 #include <zg/modules/gl/fonts/freetype/Freetype.hpp>
@@ -20,7 +20,7 @@ namespace zg::modules::gl::entities
 		float height;
 		std::shared_ptr<TextView> titleTextView;
 		inline static size_t panelMenusCount = 0;
-		PanelMenu(GLWindow& window,
+		PanelMenu(RenderWindow& window,
 							GLScene& scene,
 							glm::vec3 position,
 							glm::vec3 rotation,
@@ -50,10 +50,10 @@ namespace zg::modules::gl::entities
 		GLEntity& entity;
 		float panelWidth;
 		float indent;
-		GLWindow::EventIdentifier mouseHoverID = 0;
-		GLWindow::EventIdentifier mousePressID = 0;
+		RenderWindow::EventIdentifier mouseHoverID = 0;
+		RenderWindow::EventIdentifier mousePressID = 0;
 		inline static size_t panelItemsCount = 0;
-		PanelItem(GLWindow& window,
+		PanelItem(RenderWindow& window,
 							GLScene& scene,
 							glm::vec3 position,
 							glm::vec3 rotation,

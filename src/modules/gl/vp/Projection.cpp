@@ -1,7 +1,7 @@
 #include <zg/modules/gl/vp/Projection.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 using namespace zg::modules::gl::vp;
-Projection::Projection(GLWindow &window, float fov):
+Projection::Projection(RenderWindow &window, float fov):
   window(window),
 	fov(fov),
   nearPlane(0.1f),
@@ -9,7 +9,7 @@ Projection::Projection(GLWindow &window, float fov):
 {
   update();
 };
-Projection::Projection(GLWindow &window, glm::vec2 orthoSize):
+Projection::Projection(RenderWindow &window, glm::vec2 orthoSize):
   window(window),
   orthoSize(orthoSize),
   isOrthographic(true),

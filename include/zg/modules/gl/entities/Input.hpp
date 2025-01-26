@@ -1,7 +1,7 @@
 #pragma once
 #include <zg/modules/gl/GLEntity.hpp>
 #include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/GLWindow.hpp>
+#include <zg/modules/gl/RenderWindow.hpp>
 #include "./Plane.hpp"
 #include "./TextView.hpp"
 #include <zg/glm.hpp>
@@ -25,9 +25,9 @@ namespace zg::modules::gl::entities
 		std::shared_ptr<TextView> placeholderTextView;
 		std::shared_ptr<TextView> activeTextView;
 		float fontSize;
-		GLWindow::EventIdentifier mouseHoverID = 0;
-		GLWindow::EventIdentifier mousePressID = 0;
-		GLWindow::EventIdentifier anyKeyPressID = 0;
+		RenderWindow::EventIdentifier mouseHoverID = 0;
+		RenderWindow::EventIdentifier mousePressID = 0;
+		RenderWindow::EventIdentifier anyKeyPressID = 0;
 		bool active = false;
 		bool hovered = false;
 		glm::vec4 activeColor;
@@ -37,7 +37,7 @@ namespace zg::modules::gl::entities
 		float NDCPadding;
 		inline static size_t inputsCount = 0;
 		inline static Input *activeInput = 0;
-		Input(GLWindow& window,
+		Input(RenderWindow& window,
 					GLScene& scene,
 					glm::vec3 position,
 					glm::vec3 rotation,

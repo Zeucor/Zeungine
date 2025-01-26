@@ -1,6 +1,6 @@
 #include <editor/CodeScene.hpp>
 using namespace zg::editor;
-CodeScene::CodeScene(GLWindow &window):
+CodeScene::CodeScene(RenderWindow &window):
 	GLScene(window, {window.windowWidth / 2, window.windowHeight / 2, 50}, {0, 0, -1},
 					{window.windowWidth, window.windowHeight})
 {

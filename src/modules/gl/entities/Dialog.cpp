@@ -2,7 +2,7 @@
 #include <zg/utilities.hpp>
 #include <iostream>
 using namespace zg::modules::gl::entities;
-Dialog::Dialog(zg::modules::gl::GLWindow &window,
+Dialog::Dialog(zg::modules::gl::RenderWindow &window,
 			   zg::modules::gl::GLScene &scene,
 			   glm::vec3 position,
 			   glm::vec3 rotation,
