@@ -466,7 +466,7 @@ Toolbar::Toolbar(RenderWindow &window,
 		{
 			dragEnabled = pressed;
 			dragOldCoords = {0, 0};
-			ReleaseCapture();
+			window.mouseCapture(false);
 		}
 	});
 	dragMouseMoveID = window.addMouseMoveHandler([&](auto coords)
