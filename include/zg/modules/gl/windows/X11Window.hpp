@@ -1,15 +1,10 @@
 #pragma once
-#ifdef _WIN32
+#ifdef LINUX
 #include "../RenderWindow.hpp"
-#include <windows.h>
 namespace zg::modules::gl
 {
-	struct WIN32Window : IPlatformWindow
+	struct X11Window : IPlatformWindow
 	{
-		HINSTANCE hInstance;
-		HWND hwnd;
-		HDC hDeviceContext;
-		HGLRC hRenderingContext;
 		float dpiScale = 1.0f;
 		void init(RenderWindow& window) override;
 		void createContext() override;
