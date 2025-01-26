@@ -22,7 +22,6 @@ RenderWindow::RenderWindow(const char* title,
 									 uint32_t framerate):
 	IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
 	title(title),
-	glContext(new GladGLContext),
 	shaderContext(new ShaderContext)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
@@ -39,11 +38,11 @@ RenderWindow::RenderWindow(RenderWindow &parentWindow,
 									 bool NDCFramebufferPlane,
 									 uint32_t framerate):
 	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
+	iVendorRenderer(parentWindow.iVendorRenderer),
 	title(childTitle),
 	isChildWindow(true),
 	parentWindow(&parentWindow),
 	parentScene(&parentScene),
-	glContext(parentWindow.glContext),
 	shaderContext(parentWindow.shaderContext),
 	NDCFramebufferPlane(NDCFramebufferPlane),
 	framebufferTexture(std::make_shared<textures::Texture>(parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
@@ -72,18 +71,30 @@ RenderWindow::RenderWindow(RenderWindow &parentWindow,
 	memset(windowButtons, 0, 7 * sizeof(int));
 	framebufferPlane->addToBVH = false;
 }
-RenderWindow::~RenderWindow()
-{
-	if (!isChildWindow)
-		delete glContext;
-}
 void RenderWindow::startWindow()
 {
 	iPlatformWindow = createPlatformWindow();
 	auto &iPlatformWindowRef = *iPlatformWindow;
 	iPlatformWindowRef.init(*this);
+	iVendorRenderer = createVendorRenderer();
+	iPlatformWindowRef.createContext();
+	iVendorRenderer->init(&iPlatformWindowRef);
+	auto &iVendorRendererRef = *iVendorRenderer;
 	iPlatformWindowRef.postInit();
-	iPlatformWindowRef.loop();
+	while (iPlatformWindowRef.pollMessages())
+	{
+		runRunnables();
+		updateKeyboard();
+		updateMouse();
+		for (auto &childWindowPointer : childWindows)
+		{
+			auto &childWindow = *childWindowPointer;
+			if (childWindow.minimized)
+				continue;
+			childWindow.render();
+		}
+		iVendorRendererRef.render();
+	}
 _exit:
 	scene.reset();
 	delete shaderContext;
@@ -224,141 +235,7 @@ void RenderWindow::drawCircle(int x, int y, int radius, uint32_t color)
 };
 void RenderWindow::drawText(int x, int y, const char* text, int scale, uint32_t color)
 {
-};
-const bool zg::modules::gl::GLcheck(RenderWindow &window, const char* fn, const bool egl)
-{
-	while (true)
-	{
-		uint32_t err = 0;
-		if (!egl)
-			err = window.glContext->GetError();
-#if defined(_Android)
-		else if (egl)
-			err = eglGetError();
-#endif
-		if (err == GL_NO_ERROR
-#if defined(_Android)
-			|| err == EGL_SUCCESS
-#endif
-			)
-		{
-			/*|
-			  |*/
-			break;
-		}
-		switch (err)
-		{
-		case GL_INVALID_ENUM:
-		{
-			Logger::print(Logger::Error, "GL_INVALID_ENUM", "(", fn, "): ", "An unacceptable value is specified for an enumerated argument. The offending command is ignored and has no other side effect than to set the error flag.");
-			break;
-		};
-		case GL_INVALID_VALUE:
-		{
-			Logger::print(Logger::Error, "GL_INVALID_VALUE", "(", fn, "): ", "A numeric argument is out of range. The offending command is ignored and has no other side effect than to set the error flag.");
-			break;
-		};
-		case GL_INVALID_OPERATION:
-		{
-			Logger::print(Logger::Error, "GL_INVALID_OPERATION", "(", fn, "): ", "The specified operation is not allowed in the current state. The offending command is ignored and has no other side effect than to set the error flag.");
-			break;
-		};
-		case GL_INVALID_FRAMEBUFFER_OPERATION:
-		{
-			Logger::print(Logger::Error, "GL_INVALID_FRAMEBUFFER_OPERATION", "(", fn, "): ", "The framebuffer object is not complete. The offending command is ignored and has no other side effect than to set the error flag.");
-			break;
-		};
-		case GL_OUT_OF_MEMORY:
-		{
-			Logger::print(Logger::Error, "GL_OUT_OF_MEMORY", "(", fn, "): ", "There is not enough memory left to execute the command. The state of the GL is undefined, except for the state of the error flags, after this error is recorded.");
-			break;
-		};
-		case GL_STACK_UNDERFLOW:
-		{
-			Logger::print(Logger::Error, "GL_STACK_UNDERFLOW", "(", fn, "): ", "An attempt has been made to perform an operation that would cause an internal stack to underflow.");
-			break;
-		};
-		case GL_STACK_OVERFLOW:
-		{
-			Logger::print(Logger::Error, "GL_STACK_OVERFLOW", "(", fn, "): ", "An attempt has been made to perform an operation that would cause an internal stack to overflow.");
-			break;
-		};
-#if defined(_Android)
-		case EGL_NOT_INITIALIZED:
-		{
-			Logger::print(Logger::Error, "EGL_NOT_INITIALIZED", "(", fn, "): ", "EGL is not initialized, or could not be initialized, for the specified EGL display connection.");
-			break;
-		};
-		case EGL_BAD_ACCESS:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_ACCESS", "(", fn, "): ", "EGL cannot access a requested resource (for example a context is bound in another thread).");
-			break;
-		};
-		case EGL_BAD_ALLOC:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_ALLOC", "(", fn, "): ", "EGL failed to allocate resources for the requested operation.");
-			break;
-		};
-		case EGL_BAD_ATTRIBUTE:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_ATTRIBUTE", "(", fn, "): ", "An unrecognized attribute or attribute value was passed in the attribute list.");
-			break;
-		};
-		case EGL_BAD_CONTEXT:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_CONTEXT", "(", fn, "): ", "An EGLContext argument does not name a valid EGL rendering context.");
-			break;
-		};
-		case EGL_BAD_CONFIG:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_CONFIG", "(", fn, "): ", "An EGLConfig argument does not name a valid EGL frame buffer configuration.");
-			break;
-		};
-		case EGL_BAD_CURRENT_SURFACE:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_CURRENT_SURFACE", "(", fn, "): ", "The current surface of the calling thread is a window, pixel buffer or pixmap that is no longer valid.");
-			break;
-		};
-		case EGL_BAD_DISPLAY:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_DISPLAY", "(", fn, "): ", "An EGLDisplay argument does not name a valid EGL display connection.");
-			break;
-		};
-		case EGL_BAD_SURFACE:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_SURFACE", "(", fn, "): ", "An EGLSurface argument does not name a valid surface (window, pixel buffer or pixmap) configured for GL rendering.");
-			break;
-		};
-		case EGL_BAD_MATCH:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_MATCH", "(", fn, "): ", "Arguments are inconsistent (for example, a valid context requires buffers not supplied by a valid surface).");
-			break;
-		};
-		case EGL_BAD_PARAMETER:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_PARAMETER", "(", fn, "): ", "One or more argument values are invalid.");
-			break;
-		};
-		case EGL_BAD_NATIVE_PIXMAP:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_NATIVE_PIXMAP", "(", fn, "): ", "A NativePixmapType argument does not refer to a valid native pixmap.");
-			break;
-		};
-		case EGL_BAD_NATIVE_WINDOW:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_NATIVE_WINDOW", "(", fn, "): ", "A NativeWindowType argument does not refer to a valid native window.");
-			break;
-		};
-		case EGL_CONTEXT_LOST:
-		{
-			Logger::print(Logger::Error, "EGL_CONTEXT_LOST", "(", fn, "): ", "A power management event has occurred. The application must destroy all contexts and reinitialise OpenGL ES state and objects to continue rendering.");
-			break;
-		};
-#endif
-		}
-	}
-	return true;
-};
+}
 void RenderWindow::warpPointer(glm::vec2 coords)
 {
 	iPlatformWindow->warpPointer(coords);

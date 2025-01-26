@@ -19,10 +19,8 @@ struct TestScene : zg::modules::gl::GLScene
 };
 struct TestTriangle : zg::modules::gl::GLEntity
 {
-  uint32_t indices[3];
-  std::array<glm::vec4, 3> colors;
-  std::array<glm::vec3, 3> positions;
-  std::array<glm::vec3, 3> normals = {};
+  std::vector<glm::vec4> colors;
+  std::vector<glm::vec3> normals = {};
   float rotationAmount = 0;
   TestScene &testScene;
   TestTriangle(zg::IWindow &_window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
@@ -40,38 +38,37 @@ struct TestTriangle : zg::modules::gl::GLEntity
       "PointLightShadowMaps",
       "LightSpacePosition",
       "Fog"
-    }, 3, 3, position, rotation, scale),
-    indices(2, 1, 0),
+    }, 3, {2, 1, 0}, 3, {{0, 100, 0}, {100, -100, 0}, {-100, -100, 0}}, position, rotation, scale, "TestTriangle"),
     colors({{1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1}}),
-    positions({{0, 100, 0}, {100, -100, 0}, {-100, -100, 0}}),
     testScene(testScene)
   {
-    computeNormals(3, indices, positions, normals);
+    computeNormals(indices, positions, normals);
     updateIndices(indices);
-    updateElements("Color", colors.data());
-    updateElements("Position", positions.data());
-    updateElements("Normal", normals.data());
+    updateElements("Color", colors);
+    updateElements("Position", positions);
+    updateElements("Normal", normals);
     window.addMousePressHandler(5, [&](const auto &pressed)
     {
       colors[0] = pressed ? glm::vec4(1, 1, 1, 1) : glm::vec4(1, 0, 0, 1);
-      updateElements("Color", colors.data());
+      updateElements("Color", colors);
     });
     window.addMousePressHandler(6, [&](const auto &pressed)
     {
       colors[1] = pressed ? glm::vec4(1, 1, 1, 1) : glm::vec4(0, 1, 0, 1);
-      updateElements("Color", colors.data());
+      updateElements("Color", colors);
     });
     window.addMousePressHandler(0, [&](const auto &pressed)
     {
       colors[2] = pressed ? glm::vec4(1, 1, 1, 1) : glm::vec4(0, 0, 1, 1);
-      updateElements("Color", colors.data());
+      updateElements("Color", colors);
     });
   };
   void preRender() override
   {
     auto &glWindow = (RenderWindow &)window;
-    glWindow.glContext,Disable(GL_CULL_FACE);
-    GLcheck(glWindow, "glEnable");
+    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(glWindow.iVendorRenderer);
+  	glRenderer.glContext->Disable(GL_CULL_FACE);
+    GLcheck(glRenderer, "glEnable");
     const auto &model = getModelMatrix();
     shader.bind();
     testScene.entityPreRender(*this);
@@ -84,8 +81,9 @@ struct TestTriangle : zg::modules::gl::GLEntity
   void postRender() override
   {
     auto &glWindow = (RenderWindow &)window;
-    glWindow.glContext->Enable(GL_CULL_FACE);
-    GLcheck(glWindow, "glEnable");
+    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(glWindow.iVendorRenderer);
+    glRenderer.glContext->Enable(GL_CULL_FACE);
+    GLcheck(glRenderer, "glEnable");
   };
 };
 void rotateLightPosition(zg::IWindow &window, GLScene &scene, lights::PointLight &light, lights::PointLightShadow &pointLightShadow, float angleSpeed, shaders::Shader &shader)

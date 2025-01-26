@@ -59,8 +59,10 @@ if(BUILD_FENSTER)
     list(APPEND ZG_SOURCES src/modules/fenster/Fenster.cpp)
 endif()
 if(BUILD_OPENGL)
+    add_definitions(-DUSE_GL)
     list(APPEND ZG_SOURCES
         src/modules/gl/RenderWindow.cpp
+        src/modules/gl/renderers/GLRenderer.cpp
         src/modules/gl/GLEntity.cpp
         src/modules/gl/GLScene.cpp
         src/modules/gl/ISizable.cpp

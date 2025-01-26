@@ -10,9 +10,11 @@ namespace zg::modules::gl
 		HGLRC hRenderingContext;
 		float dpiScale = 1.0f;
 		void init(RenderWindow& window) override;
+		void createContext() override;
 		void renderInit();
 		void postInit() override;
-		void loop() override;
+		bool pollMessages() override;
+		void swapBuffers() override;
 		void destroy() override;
 		void close() override;
 		void minimize() override;

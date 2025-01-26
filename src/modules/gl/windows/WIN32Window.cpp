@@ -7,8 +7,6 @@
 using namespace zg::modules::gl;
 static bool setDPIAware = false;
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
-typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALEXTPROC) (int interval);
-PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
 static const uint32_t GL_KEYCODES[] = {0,27,49,50,51,52,53,54,55,56,57,48,45,61,8,9,81,87,69,82,84,89,85,73,79,80,91,93,10,0,65,83,68,70,71,72,74,75,76,59,39,96,0,92,90,88,67,86,66,78,77,44,46,47,0,0,0,32,0,0,0,0,0,0,0,0,0,0,0,0,0,KEYCODE_HOME,0,0,0,0,0,0,0,KEYCODE_END,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,17,3,0,20,0,19,0,5,18,4,26,127};
 static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 																	LPARAM lParam)
@@ -222,6 +220,27 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 	}
 	return 0;
 }
+void SetupPixelFormat(HDC hDeviceContext)
+{
+	int pixelFormat;
+	PIXELFORMATDESCRIPTOR pfd = { sizeof(PIXELFORMATDESCRIPTOR), 1 };
+	pfd.nVersion = 1;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+	pfd.iPixelType = PFD_TYPE_RGBA;
+	pfd.cColorBits = 24;
+	pfd.cDepthBits = 24;
+	pfd.iLayerType = PFD_MAIN_PLANE;
+	pixelFormat = ChoosePixelFormat(hDeviceContext, &pfd);
+	if (pixelFormat == 0)
+	{
+		throw std::runtime_error("pixelFormat is null!");
+	}
+	BOOL result = SetPixelFormat(hDeviceContext, pixelFormat, &pfd);
+	if (!result)
+	{
+		throw std::runtime_error("failed to setPixelFormat!");
+	}
+}
 void WIN32Window::init(RenderWindow &renderWindow)
 {
 	renderWindowPointer = &renderWindow;
@@ -279,66 +298,56 @@ void WIN32Window::init(RenderWindow &renderWindow)
 			renderWindow.windowHeight, flags);
 	}
 	hDeviceContext = GetDC(hwnd);
-	renderInit();
+	SetupPixelFormat(hDeviceContext);
+}
+void WIN32Window::createContext()
+{
+#ifdef USE_GL
+	HGLRC hTempRC = wglCreateContext(hDeviceContext);
+	wglMakeCurrent(hDeviceContext, hTempRC);
+	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+	wglMakeCurrent(nullptr, nullptr);
+	int attribList[] = {
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+		0
+	};
+	hRenderingContext = wglCreateContextAttribsARB(hDeviceContext, 0, attribList);
+	wglDeleteContext(hTempRC);
+	wglMakeCurrent(hDeviceContext, hRenderingContext);
+#endif
+}
+void WIN32Window::postInit()
+{
 	ShowWindow(hwnd, SW_NORMAL);
 	UpdateWindow(hwnd);
 	RECT rect;
 	if (GetWindowRect(hwnd, &rect))
 	{
-		renderWindow.windowX = rect.left;
-		renderWindow.windowY = rect.top;
+		renderWindowPointer->windowX = rect.left;
+		renderWindowPointer->windowY = rect.top;
 	}
 }
-void WIN32Window::postInit()
+bool WIN32Window::pollMessages()
 {
-}
-void WIN32Window::loop()
-{
-	auto &glContext = renderWindowPointer->glContext;
 	MSG msg;
-	while (true)
+	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 	{
-		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-		{
-			if (msg.message == WM_QUIT)
-				goto _quit;
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		renderWindowPointer->runRunnables();
-		renderWindowPointer->updateKeyboard();
-		renderWindowPointer->updateMouse();
-		for (auto &childWindowPointer : renderWindowPointer->childWindows)
-		{
-			auto &childWindow = *childWindowPointer;
-			if (childWindow.minimized)
-				continue;
-			childWindow.render();
-		}
-		glContext->ClearColor(
-			renderWindowPointer->clearColor.r,
-			renderWindowPointer->clearColor.g,
-			renderWindowPointer->clearColor.b,
-			renderWindowPointer->clearColor.a
-		);
-		GLcheck(*renderWindowPointer, "glClearColor");
-		glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		GLcheck(*renderWindowPointer, "glClear");
-		renderWindowPointer->render();
-		for (auto &childWindowPointer : renderWindowPointer->childWindows)
-		{
-			auto &childWindow = *childWindowPointer;
-			if (childWindow.minimized)
-				continue;
-			childWindow.framebufferPlane->render();
-		}
-		SwapBuffers(hDeviceContext);
+		if (msg.message == WM_QUIT)
+			return false;
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
-_quit:
-	return;
+	return true;
+}
+void WIN32Window::swapBuffers()
+{
+	SwapBuffers(hDeviceContext);
 }
 void WIN32Window::destroy()
 {
+	renderWindowPointer->iVendorRenderer->destroy();
 	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(hRenderingContext);
 }
@@ -418,94 +427,6 @@ void WIN32Window::mouseCapture(bool capture)
 		SetCapture(hwnd);
 	else
 		ReleaseCapture();
-}
-void *get_proc(const char* name) {
-	void* p = (void*)wglGetProcAddress(name);
-	if(p == 0 ||
-		 (p == (void*)0x1) || (p == (void*)0x2) || (p == (void*)0x3) ||
-		 (p == (void*)-1) )
-	{
-		HMODULE module = LoadLibraryA("opengl32.dll");
-		p = (void*)GetProcAddress(module, name);
-	}
-	return p;
-}
-void SetupPixelFormat(HDC hDeviceContext)
-{
-	int pixelFormat;
-	PIXELFORMATDESCRIPTOR pfd = { sizeof(PIXELFORMATDESCRIPTOR), 1 };
-	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cColorBits = 24;
-	pfd.cDepthBits = 24;
-	pfd.iLayerType = PFD_MAIN_PLANE;
-	pixelFormat = ChoosePixelFormat(hDeviceContext, &pfd);
-	if (pixelFormat == 0)
-	{
-		throw std::runtime_error("pixelFormat is null!");
-	}
-	BOOL result = SetPixelFormat(hDeviceContext, pixelFormat, &pfd);
-	if (!result)
-	{
-		throw std::runtime_error("failed to setPixelFormat!");
-	}
-}
-void WIN32Window::renderInit()
-{
-	SetupPixelFormat(hDeviceContext);
-	HGLRC hTempRC = wglCreateContext(hDeviceContext);
-	wglMakeCurrent(hDeviceContext, hTempRC);
-	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
-	wglMakeCurrent(nullptr, nullptr);
-	int attribList[] = {
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-		0
-	};
-	hRenderingContext = wglCreateContextAttribsARB(hDeviceContext, 0, attribList);
-	wglDeleteContext(hTempRC);
-	wglMakeCurrent(hDeviceContext, hRenderingContext);
-	auto &glContext = renderWindowPointer->glContext;
-	gladLoadGLContext(glContext, (GLADloadfunc)get_proc);
-	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-	glContext->Enable(GL_DEPTH_TEST);
-	GLcheck(*renderWindowPointer, "glEnable");
-	glContext->Enable(GL_CULL_FACE);
-	GLcheck(*renderWindowPointer, "glEnable");
-	glContext->CullFace(GL_BACK);
-	GLcheck(*renderWindowPointer, "glCullFace");
-	glContext->FrontFace(GL_CCW);
-	GLcheck(*renderWindowPointer, "glFrontFace");
-	glContext->Viewport(0, 0, renderWindowPointer->windowWidth, renderWindowPointer->windowHeight);
-	GLcheck(*renderWindowPointer, "glViewport");
-	glContext->ClearDepth(1.0);
-	GLcheck(*renderWindowPointer, "glClearDepth");
-	glContext->DepthRange(0.0, 1.0);
-	GLcheck(*renderWindowPointer, "glDepthRange");
-	glContext->Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-	GLcheck(*renderWindowPointer, "glEnable:GL_SAMPLE_ALPHA_TO_COVERAGE");
-	glContext->Enable(GL_BLEND);
-	GLcheck(*renderWindowPointer, "glEnable:GL_BLEND");
-	glContext->Enable(GL_DITHER);
-	GLcheck(*renderWindowPointer, "glEnable:GL_DITHER");
-	glContext->BlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
-	GLcheck(*renderWindowPointer, "glBlendEquationSeparate");
-	glContext->BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GLcheck(*renderWindowPointer, "glBlendFunc");
-	glContext->Enable(GL_DEBUG_OUTPUT);
-	GLcheck(*renderWindowPointer, "glEnable");
-	glContext->Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-	GLcheck(*renderWindowPointer, "glEnable");
-	glContext->DebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
-		if (type == GL_DEBUG_TYPE_OTHER)
-		{
-			return;
-		}
-		std::cerr << "OpenGL Debug Message: " << message << std::endl;
-	}, nullptr);
-	wglSwapIntervalEXT(1);
 }
 std::shared_ptr<IPlatformWindow> zg::modules::gl::createPlatformWindow()
 {

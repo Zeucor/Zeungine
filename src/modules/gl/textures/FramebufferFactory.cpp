@@ -1,26 +1,28 @@
-#include <zg/modules/gl/textures/FramebufferFactory.hpp>
 #include <zg/modules/gl/RenderWindow.hpp>
+#include <zg/modules/gl/renderers/GLRenderer.hpp>
+#include <zg/modules/gl/textures/FramebufferFactory.hpp>
 #include <zg/modules/gl/textures/Texture.hpp>
 using namespace zg::modules::gl::textures;
 void FramebufferFactory::initFramebuffer(Framebuffer &framebuffer)
 {
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(framebuffer.window.iVendorRenderer);
   if (framebuffer.depthTexturePointer)
   {
-    framebuffer.window.glContext->GenRenderbuffers(1, &framebuffer.renderbufferID);
-    GLcheck(framebuffer.window, "glGenRenderbuffers");
+    glRenderer.glContext->GenRenderbuffers(1, &framebuffer.renderbufferID);
+    GLcheck(glRenderer, "glGenRenderbuffers");
   }
-  framebuffer.window.glContext->GenFramebuffers(1, &framebuffer.id);
-  GLcheck(framebuffer.window, "glGenFramebuffers");
-  framebuffer.window.glContext->BindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
-  GLcheck(framebuffer.window, "glBindFramebuffer");
+  glRenderer.glContext->GenFramebuffers(1, &framebuffer.id);
+  GLcheck(glRenderer, "glGenFramebuffers");
+  glRenderer.glContext->BindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+  GLcheck(glRenderer, "glBindFramebuffer");
   GLenum frameBufferTarget;
   switch (framebuffer.texture.format)
   {
     case Texture::Depth:
       frameBufferTarget = GL_DEPTH_ATTACHMENT;
 
-      framebuffer.window.glContext->DrawBuffer(GL_NONE);
-      framebuffer.window.glContext->ReadBuffer(GL_NONE);
+      glRenderer.glContext->DrawBuffer(GL_NONE);
+      glRenderer.glContext->ReadBuffer(GL_NONE);
       break;
     default:
       frameBufferTarget = GL_COLOR_ATTACHMENT0;
@@ -28,28 +30,29 @@ void FramebufferFactory::initFramebuffer(Framebuffer &framebuffer)
   }
   if (framebuffer.depthTexturePointer)
   {
-    framebuffer.window.glContext->BindRenderbuffer(GL_RENDERBUFFER, framebuffer.renderbufferID);
-    GLcheck(framebuffer.window, "glBindRenderbuffer");
-    framebuffer.window.glContext->RenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, framebuffer.depthTexturePointer->size.x, framebuffer.depthTexturePointer->size.y);
-    GLcheck(framebuffer.window, "glRenderbufferStorage");
-    framebuffer.window.glContext->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebuffer.renderbufferID);
-    GLcheck(framebuffer.window, "glFramebufferRenderbuffer");
+    glRenderer.glContext->BindRenderbuffer(GL_RENDERBUFFER, framebuffer.renderbufferID);
+    GLcheck(glRenderer, "glBindRenderbuffer");
+    glRenderer.glContext->RenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, framebuffer.depthTexturePointer->size.x, framebuffer.depthTexturePointer->size.y);
+    GLcheck(glRenderer, "glRenderbufferStorage");
+    glRenderer.glContext->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebuffer.renderbufferID);
+    GLcheck(glRenderer, "glFramebufferRenderbuffer");
   }
   if (framebuffer.texture.target == GL_TEXTURE_CUBE_MAP)
   {
-    framebuffer.window.glContext->FramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, framebuffer.texture.id, 0);
-    GLcheck(framebuffer.window, "glFramebufferTexture");
+    glRenderer.glContext->FramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, framebuffer.texture.id, 0);
+    GLcheck(glRenderer, "glFramebufferTexture");
   }
   else
   {
-    framebuffer.window.glContext->FramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, framebuffer.texture.id, 0);
-    GLcheck(framebuffer.window, "glFramebufferTexture2D");
+    glRenderer.glContext->FramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, framebuffer.texture.id, 0);
+    GLcheck(glRenderer, "glFramebufferTexture2D");
   }
-  framebuffer.window.glContext->BindFramebuffer(GL_FRAMEBUFFER, 0);
-  GLcheck(framebuffer.window, "glBindFramebuffer");
+  glRenderer.glContext->BindFramebuffer(GL_FRAMEBUFFER, 0);
+  GLcheck(glRenderer, "glBindFramebuffer");
 };
 void FramebufferFactory::destroyFramebuffer(Framebuffer &framebuffer)
 {
-  framebuffer.window.glContext->DeleteFramebuffers(1, &framebuffer.id);
-  GLcheck(framebuffer.window, "glDeleteFramebuffers");
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(framebuffer.window.iVendorRenderer);
+  glRenderer.glContext->DeleteFramebuffers(1, &framebuffer.id);
+  GLcheck(glRenderer, "glDeleteFramebuffers");
 };

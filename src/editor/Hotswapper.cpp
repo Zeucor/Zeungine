@@ -41,6 +41,7 @@ void Hotswapper::update()
 	swapperRef.LinkLibrary("gdi32.lib");
 	swapperRef.LinkLibrary("user32.lib");
 	swapperRef.AddCompileOption("-DHSCPP_CXX_STANDARD=" + std::to_string(HSCPP_CXX_STANDARD));
+	swapperRef.AddCompileOption("-DUSE_GL");
 	swapperRef.AddCompileOption("-DHSCPP_PLATFORM_WIN32");
 	swapperRef.SetBuildDirectory(directory + "/build");
 	while (!swapperRef.IsCompilerInitialized())
@@ -92,6 +93,10 @@ void Hotswapper::update()
 				auto &allocationResolver = *swapper->GetAllocationResolver();
 				editorScene.OnHotswapLoad(*editorScene.gameWindowPointer, allocationResolver);
 				editorScene.loaded = true;
+				if (editorScene.gameWindowPointer->minimized)
+				{
+					editorScene.gameWindowPointer->restore();
+				}
 			}
 			compiledTime = std::chrono::system_clock::now();
 			compiling = false;

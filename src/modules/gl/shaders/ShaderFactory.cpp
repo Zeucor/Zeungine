@@ -3,6 +3,7 @@
 #include <zg/IWindow.hpp>
 #include <stdexcept>
 #include <glm/fwd.hpp>
+#include <zg/modules/gl/renderers/GLRenderer.hpp>
 using namespace zg::modules::gl::shaders;
 ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
   {
@@ -1090,42 +1091,45 @@ void ShaderFactory::appendHooks(std::string& shaderString, RuntimeHooksMap& runt
 bool ShaderFactory::compileShader(Shader &shader, const Shader::ShaderType& shaderType, Shader::ShaderPair& shaderPair)
 {
   auto& shaderString = shaderPair.first;
-  auto& shaderInt = shaderPair.second;
-  shaderInt = shader.window.glContext->CreateShader(shaderTypes[shaderType]);
+	auto& shaderInt = shaderPair.second;
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(shader.window.iVendorRenderer);
+  shaderInt = glRenderer.glContext->CreateShader(shaderTypes[shaderType]);
   const GLchar* source = shaderString.c_str();
   GLint lengths[] = {(GLint)shaderString.size()};
-  shader.window.glContext->ShaderSource(shaderInt, 1, &(source), lengths);
-  shader.window.glContext->CompileShader(shaderInt);
+  glRenderer.glContext->ShaderSource(shaderInt, 1, &(source), lengths);
+  glRenderer.glContext->CompileShader(shaderInt);
   return checkCompileErrors(shader, shaderInt, true, shaderNames[shaderType].data());
 };
 
 bool ShaderFactory::compileProgram(Shader &shader, const Shader::ShaderMap& shaderMap, GLuint& program)
 {
-  program = shader.window.glContext->CreateProgram();
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(shader.window.iVendorRenderer);
+  program = glRenderer.glContext->CreateProgram();
   for (const auto& shaderMapPair : shaderMap)
   {
-    shader.window.glContext->AttachShader(program, shaderMapPair.second.second);
+    glRenderer.glContext->AttachShader(program, shaderMapPair.second.second);
   }
-  shader.window.glContext->LinkProgram(program);
+  glRenderer.glContext->LinkProgram(program);
   for (const auto& shaderMapPair : shaderMap)
   {
-    shader.window.glContext->DeleteShader(shaderMapPair.second.second);
+    glRenderer.glContext->DeleteShader(shaderMapPair.second.second);
   }
   return checkCompileErrors(shader, program, false, "Program");
 };
 
 const bool ShaderFactory::checkCompileErrors(Shader &shader, const GLuint& id, bool isShader, const char* shaderType)
 {
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(shader.window.iVendorRenderer);
   GLint success = 0;
   if (isShader)
   {
-    shader.window.glContext->GetShaderiv(id, GL_COMPILE_STATUS, &success);
+    glRenderer.glContext->GetShaderiv(id, GL_COMPILE_STATUS, &success);
     if (!success)
     {
       GLint infoLogLength;
-      shader.window.glContext->GetShaderiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
+      glRenderer.glContext->GetShaderiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
       GLchar* infoLog = new GLchar[infoLogLength + 1];
-      shader.window.glContext->GetShaderInfoLog(id, infoLogLength, 0, infoLog);
+      glRenderer.glContext->GetShaderInfoLog(id, infoLogLength, 0, infoLog);
       printf("SHADER_COMPILATION_ERROR(%s):\n%s\n", shaderType, infoLog);
       delete[] infoLog;
       return false;
@@ -1133,13 +1137,13 @@ const bool ShaderFactory::checkCompileErrors(Shader &shader, const GLuint& id, b
   }
   else
   {
-    shader.window.glContext->GetProgramiv(id, GL_LINK_STATUS, &success);
+    glRenderer.glContext->GetProgramiv(id, GL_LINK_STATUS, &success);
     if (!success)
     {
       GLint infoLogLength;
-      shader.window.glContext->GetProgramiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
+      glRenderer.glContext->GetProgramiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
       GLchar* infoLog = new GLchar[infoLogLength + 1];
-      shader.window.glContext->GetProgramInfoLog(id, infoLogLength, 0, infoLog);
+      glRenderer.glContext->GetProgramInfoLog(id, infoLogLength, 0, infoLog);
       printf("PROGRAM_LINKING_ERROR(%s):\n%s\n", shaderType, infoLog);
       delete[] infoLog;
       return false;
@@ -1150,7 +1154,8 @@ const bool ShaderFactory::checkCompileErrors(Shader &shader, const GLuint& id, b
 
 void ShaderFactory::deleteProgram(Shader& shader)
 {
-  shader.window.glContext->DeleteProgram(shader.program);
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(shader.window.iVendorRenderer);
+  glRenderer.glContext->DeleteProgram(shader.program);
 };
 
 uint32_t ShaderFactory::addHook(const Shader::ShaderType& shaderType, const std::string_view hookName,

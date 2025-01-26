@@ -3,6 +3,7 @@
 #include <zg/IWindow.hpp>
 #include <zg/modules/gl/vaos/VAO.hpp>
 #include <zg/modules/gl/shaders/Shader.hpp>
+#include <zg/modules/gl/renderers/GLRenderer.hpp>
 namespace zg::modules::gl
 {
 	struct GLEntity : zg::IEntity, vaos::VAO

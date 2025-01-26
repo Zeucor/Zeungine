@@ -1,13 +1,14 @@
 #pragma once
-#include "../common.hpp"
+#include <functional>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <functional>
-#include <stdexcept>
-#include "../../../glm.hpp"
 #include <zg/modules/gl/RenderWindow.hpp>
+#include "../../../glm.hpp"
+#include "../common.hpp"
 #include "RuntimeConstants.hpp"
+#include <zg/modules/gl/renderers/GLRenderer.hpp>
 namespace zg::modules::gl::textures
 {
 	struct Texture;
@@ -46,9 +47,10 @@ namespace zg::modules::gl::shaders
 		template <typename T>
 		void setUniform(const std::string_view name, const T& value, uint32_t size = 0)
 		{
+			auto &glRenderer = *std::dynamic_pointer_cast<modules::gl::GLRenderer>(window.iVendorRenderer);
 			auto pointerSize = size ? size : sizeof(value);
-			GLint location = window.glContext->GetUniformLocation(program, name.data());
-			GLcheck(window, "glGetUniformLocation");
+			GLint location = glRenderer.glContext->GetUniformLocation(program, name.data());
+			GLcheck(glRenderer, "glGetUniformLocation");
 			auto pointer = &value;
 			if (location == -1)
 			{
@@ -56,68 +58,68 @@ namespace zg::modules::gl::shaders
 			}
 			if constexpr (std::is_same_v<T, bool>)
 			{
-				window.glContext->Uniform1i(location, (int32_t)(*(bool*)pointer));
-				GLcheck(window, "glUniform1i");
+				glRenderer.glContext->Uniform1i(location, (int32_t)(*(bool*)pointer));
+				GLcheck(glRenderer, "glUniform1i");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, int32_t>)
 			{
-				window.glContext->Uniform1i(location, *(int32_t*)pointer);
-				GLcheck(window, "glUniform1i");
+				glRenderer.glContext->Uniform1i(location, *(int32_t*)pointer);
+				GLcheck(glRenderer, "glUniform1i");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, uint32_t>)
 			{
-				window.glContext->Uniform1ui(location, *(uint32_t*)pointer);
-				GLcheck(window, "glUniform1ui");
+				glRenderer.glContext->Uniform1ui(location, *(uint32_t*)pointer);
+				GLcheck(glRenderer, "glUniform1ui");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, float*>)
 			{
-				window.glContext->Uniform1fv(location, pointerSize, &((float**)pointer)[0][0]);
-				GLcheck(window, "glUniform1fv");
+				glRenderer.glContext->Uniform1fv(location, pointerSize, &((float**)pointer)[0][0]);
+				GLcheck(glRenderer, "glUniform1fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, float>)
 			{
-				window.glContext->Uniform1f(location, *(float*)pointer);
-				GLcheck(window, "glUniform1f");
+				glRenderer.glContext->Uniform1f(location, *(float*)pointer);
+				GLcheck(glRenderer, "glUniform1f");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec2>)
 			{
-				window.glContext->Uniform2fv(location, 1, &(*(glm::vec2*)pointer)[0]);
-				GLcheck(window, "glUniform2fv");
+				glRenderer.glContext->Uniform2fv(location, 1, &(*(glm::vec2*)pointer)[0]);
+				GLcheck(glRenderer, "glUniform2fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec3>)
 			{
-				window.glContext->Uniform3fv(location, 1, &(*(glm::vec3*)pointer)[0]);
-				GLcheck(window, "glUniform3fv");
+				glRenderer.glContext->Uniform3fv(location, 1, &(*(glm::vec3*)pointer)[0]);
+				GLcheck(glRenderer, "glUniform3fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec4>)
 			{
-				window.glContext->Uniform4fv(location, 1, &(*(glm::vec4*)pointer)[0]);
-				GLcheck(window, "glUniform4fv");
+				glRenderer.glContext->Uniform4fv(location, 1, &(*(glm::vec4*)pointer)[0]);
+				GLcheck(glRenderer, "glUniform4fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::mat2>)
 			{
-				window.glContext->UniformMatrix2fv(location, 1, GL_FALSE, &(*(glm::mat2*)pointer)[0][0]);
-				GLcheck(window, "glUniformMatrix2fv");
+				glRenderer.glContext->UniformMatrix2fv(location, 1, GL_FALSE, &(*(glm::mat2*)pointer)[0][0]);
+				GLcheck(glRenderer, "glUniformMatrix2fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::mat3>)
 			{
-				window.glContext->UniformMatrix3fv(location, 1, GL_FALSE, &(*(glm::mat3*)pointer)[0][0]);
-				GLcheck(window, "glUniformMatrix3fv");
+				glRenderer.glContext->UniformMatrix3fv(location, 1, GL_FALSE, &(*(glm::mat3*)pointer)[0][0]);
+				GLcheck(glRenderer, "glUniformMatrix3fv");
 				return;
 			}
 			else if constexpr (std::is_same_v<T, glm::mat4>)
 			{
-				window.glContext->UniformMatrix4fv(location, 1, GL_FALSE, &(*(glm::mat4*)pointer)[0][0]);
-				GLcheck(window, "glUniformMatrix4fv");
+				glRenderer.glContext->UniformMatrix4fv(location, 1, GL_FALSE, &(*(glm::mat4*)pointer)[0][0]);
+				GLcheck(glRenderer, "glUniformMatrix4fv");
 				return;
 			}
 			throw std::runtime_error("setUniform: unsupported type");
@@ -126,23 +128,24 @@ namespace zg::modules::gl::shaders
 		template <typename T>
 		void setBlock(const std::string_view name, const T& value, uint32_t size = 0)
 		{
-			auto blockIndex = window.glContext->GetUniformBlockIndex(program, name.data());
+			auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
+			auto blockIndex = glRenderer.glContext->GetUniformBlockIndex(program, name.data());
 			if (blockIndex == -1)
 			{
 				return;
 			}
 			auto& uboBinding = uboBindings[name];
 			auto& bindingIndex = std::get<0>(uboBinding);
-			window.glContext->UniformBlockBinding(program, blockIndex, bindingIndex);
-			GLcheck(window, "glUniformBlockBinding");
+			glRenderer.glContext->UniformBlockBinding(program, blockIndex, bindingIndex);
+			GLcheck(glRenderer, "glUniformBlockBinding");
 			auto& uboBufferIndex = std::get<1>(uboBinding);
-			window.glContext->BindBuffer(GL_UNIFORM_BUFFER, uboBufferIndex);
-			GLcheck(window, "glBindBuffer");
+			glRenderer.glContext->BindBuffer(GL_UNIFORM_BUFFER, uboBufferIndex);
+			GLcheck(glRenderer, "glBindBuffer");
 			auto pointerSize = size ? size : sizeof(value);
-			window.glContext->BufferData(GL_UNIFORM_BUFFER, pointerSize, &value, GL_STATIC_DRAW);
-			GLcheck(window, "glBufferData");
-			window.glContext->BindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, pointerSize);
-			GLcheck(window, "glBindBufferRange");
+			glRenderer.glContext->BufferData(GL_UNIFORM_BUFFER, pointerSize, &value, GL_STATIC_DRAW);
+			GLcheck(glRenderer, "glBufferData");
+			glRenderer.glContext->BindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, pointerSize);
+			GLcheck(glRenderer, "glBindBufferRange");
 		};
 		void setSSBO(const std::string_view name, const void* pointer, uint32_t size);
 		void setTexture(const std::string_view name, const textures::Texture& texture, const int32_t& unit);

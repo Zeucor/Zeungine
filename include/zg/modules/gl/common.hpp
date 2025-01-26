@@ -6,8 +6,3 @@
 #ifdef _WIN32
 #include <GL/wglext.h>
 #endif
-namespace zg::modules::gl
-{
-	struct RenderWindow;
-	const bool GLcheck(RenderWindow &window, const char* fn, const bool egl = false);
-}

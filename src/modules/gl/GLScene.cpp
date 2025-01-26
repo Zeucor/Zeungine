@@ -6,6 +6,7 @@
 #include <zg/modules/gl/textures/TextureFactory.hpp>
 #include <zg/modules/gl/textures/FramebufferFactory.hpp>
 #include <zg/modules/gl/vaos/VAO.hpp>
+#include <zg/modules/gl/renderers/GLRenderer.hpp>
 using namespace zg::modules::gl;
 GLScene::GLScene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer):
 	IScene(_window),
@@ -96,16 +97,20 @@ void GLScene::preRender()
 		pointLightShadow.framebuffer.unbind();
 	}
 	auto &glWindow = *dynamic_cast<RenderWindow*>(&window);
-	if (framebufferPointer)
+  auto glRendererPointer = dynamic_cast<modules::gl::GLRenderer *>(glWindow.iVendorRenderer.get());
+	if (!glRendererPointer)
+		throw std::runtime_error("Could not get GLRenderer!");
+	auto &glRenderer = *glRendererPointer;
+	if (framebufferPointer != 0)
 	{
 		auto &framebuffer = *framebufferPointer;
-		glWindow.glContext->Viewport(0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y);
+		glRenderer.glContext->Viewport(0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y);
 	}
 	else
-		glWindow.glContext->Viewport(0, 0, static_cast<GLsizei>(window.windowWidth), static_cast<GLsizei>(window.windowHeight));
-	GLcheck(glWindow, "glViewport");
-	glWindow.glContext->ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-	glWindow.glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glRenderer.glContext->Viewport(0, 0, static_cast<GLsizei>(window.windowWidth), static_cast<GLsizei>(window.windowHeight));
+	GLcheck(glRenderer, "glViewport");
+	glRenderer.glContext->ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+	glRenderer.glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 };
 void GLScene::render()
 {

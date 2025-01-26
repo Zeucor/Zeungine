@@ -2,6 +2,7 @@
 #include <zg/modules/gl/textures/FramebufferFactory.hpp>
 #include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/textures/Texture.hpp>
+#include <zg/modules/gl/renderers/GLRenderer.hpp>
 using namespace zg::modules::gl::textures;
 Framebuffer::Framebuffer(RenderWindow &window, Texture &texture):
   window(window),
@@ -22,13 +23,15 @@ Framebuffer::~Framebuffer()
 };
 void Framebuffer::bind() const
 {
-  window.glContext->BindFramebuffer(GL_FRAMEBUFFER, id);
-  GLcheck(window, "glBindFramebuffer");
-  window.glContext->Viewport(0, 0, texture.size.x, texture.size.y);
-  GLcheck(window, "glViewport");
+  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
+  glRenderer.glContext->BindFramebuffer(GL_FRAMEBUFFER, id);
+  GLcheck(glRenderer, "glBindFramebuffer");
+  glRenderer.glContext->Viewport(0, 0, texture.size.x, texture.size.y);
+  GLcheck(glRenderer, "glViewport");
 };
 void Framebuffer::unbind()
 {
-  window.glContext->BindFramebuffer(GL_FRAMEBUFFER, 0);
-  GLcheck(window, "glBindFramebuffer");
+  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
+  glRenderer.glContext->BindFramebuffer(GL_FRAMEBUFFER, 0);
+  GLcheck(glRenderer, "glBindFramebuffer");
 };

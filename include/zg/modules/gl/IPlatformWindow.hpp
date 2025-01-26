@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <zg/glm.hpp>
+#include "./IVendorRenderer.hpp"
 namespace zg::modules::gl
 {
 	struct RenderWindow;
@@ -9,8 +10,10 @@ namespace zg::modules::gl
 		RenderWindow *renderWindowPointer = nullptr;
 		virtual ~IPlatformWindow() = default;
 		virtual void init(RenderWindow &renderWindow) = 0;
+		virtual void createContext() = 0;
 		virtual void postInit() = 0;
-		virtual void loop() = 0;
+		virtual bool pollMessages() = 0;
+		virtual void swapBuffers() = 0;
 		virtual void destroy() = 0;
 		virtual void close() = 0;
 		virtual void minimize() = 0;

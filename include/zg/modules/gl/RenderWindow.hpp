@@ -1,6 +1,5 @@
 #pragma once
 #include <zg/IWindow.hpp>
-#include "./common.hpp"
 #include "./textures/Framebuffer.hpp"
 #include "./IPlatformWindow.hpp"
 #include <mutex>
@@ -26,6 +25,7 @@ namespace zg::modules::gl
 	struct RenderWindow : IWindow
 	{
 		std::shared_ptr<IPlatformWindow> iPlatformWindow;
+		std::shared_ptr<IVendorRenderer> iVendorRenderer;
 		const char *title;
 		int windowKeys[256];
 		int windowButtons[7];
@@ -36,7 +36,6 @@ namespace zg::modules::gl
 		RenderWindow *parentWindow = 0;
 		GLScene *parentScene = 0;
 		std::vector<RenderWindow*> childWindows;
-		GladGLContext *glContext = 0;
 		ShaderContext *shaderContext = 0;
 		bool NDCFramebufferPlane;
 		std::shared_ptr<textures::Texture> framebufferTexture;
@@ -62,7 +61,6 @@ namespace zg::modules::gl
 						 float childWindowY,
 						 bool NDCFramebufferPlane = false,
 						 uint32_t framerate = 60);
-		~RenderWindow() override;
 		void startWindow() override;
 		void renderInit();
 		void updateKeyboard() override;

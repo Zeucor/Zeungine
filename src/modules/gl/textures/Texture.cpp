@@ -1,3 +1,4 @@
+#include <zg/modules/gl/renderers/GLRenderer.hpp>
 #include <zg/modules/gl/textures/Texture.hpp>
 #include <zg/modules/gl/textures/TextureFactory.hpp>
 using namespace zg::modules::gl::textures;
@@ -34,11 +35,13 @@ Texture::~Texture()
 };
 void Texture::bind() const
 {
-  window.glContext->BindTexture(target, id);
-  GLcheck(window, "glBindTexture");
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
+  glRenderer.glContext->BindTexture(target, id);
+  GLcheck(glRenderer, "glBindTexture");
 };
 void Texture::unbind() const
 {
-  window.glContext->BindTexture(target, 0);
-  GLcheck(window, "glBindTexture");
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
+  glRenderer.glContext->BindTexture(target, 0);
+  GLcheck(glRenderer, "glBindTexture");
 };

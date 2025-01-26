@@ -1,6 +1,7 @@
 #include <stdexcept>
-#include <zg/modules/gl/vaos/VAOFactory.hpp>
 #include <zg/IEntity.hpp>
+#include <zg/modules/gl/renderers/GLRenderer.hpp>
+#include <zg/modules/gl/vaos/VAOFactory.hpp>
 using namespace zg::modules::gl::vaos;
 VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {
 	{"Indice", {3, sizeof(uint32_t), GL_UNSIGNED_INT}},
@@ -27,39 +28,40 @@ VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 };
 void VAOFactory::generateVAO(const RuntimeConstants &constants, VAO& vao, uint32_t elementCount)
 {
-	vao.vaoWindow.glContext->GenVertexArrays(1, &vao.vao);
-	GLcheck(vao.vaoWindow, "glGenVertexArrays");
-	vao.vaoWindow.glContext->GenBuffers(1, &vao.ebo);
-	GLcheck(vao.vaoWindow, "glGenBuffers");
-	vao.vaoWindow.glContext->GenBuffers(1, &vao.vbo);
-	GLcheck(vao.vaoWindow, "glGenBuffers");
-  vao.vaoWindow.glContext->BindVertexArray(vao.vao);
-	GLcheck(vao.vaoWindow, "glBindVertexArray");
-	vao.vaoWindow.glContext->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao.ebo);
-	GLcheck(vao.vaoWindow, "glBindBuffer");
-	vao.vaoWindow.glContext->BindBuffer(GL_ARRAY_BUFFER, vao.vbo);
-	GLcheck(vao.vaoWindow, "glBindBuffer");
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(vao.vaoWindow.iVendorRenderer);
+	glRenderer.glContext->GenVertexArrays(1, &vao.vao);
+	GLcheck(glRenderer, "glGenVertexArrays");
+	glRenderer.glContext->GenBuffers(1, &vao.ebo);
+	GLcheck(glRenderer, "glGenBuffers");
+	glRenderer.glContext->GenBuffers(1, &vao.vbo);
+	GLcheck(glRenderer, "glGenBuffers");
+  glRenderer.glContext->BindVertexArray(vao.vao);
+	GLcheck(glRenderer, "glBindVertexArray");
+	glRenderer.glContext->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao.ebo);
+	GLcheck(glRenderer, "glBindBuffer");
+	glRenderer.glContext->BindBuffer(GL_ARRAY_BUFFER, vao.vbo);
+	GLcheck(glRenderer, "glBindBuffer");
   auto stride = getStride(constants);
-	vao.vaoWindow.glContext->BufferData(GL_ARRAY_BUFFER, stride * elementCount, 0, GL_STATIC_DRAW);
-	GLcheck(vao.vaoWindow, "glBufferData");
+	glRenderer.glContext->BufferData(GL_ARRAY_BUFFER, stride * elementCount, 0, GL_STATIC_DRAW);
+	GLcheck(glRenderer, "glBufferData");
   size_t attribIndex = 0;
   size_t offset = 0;
 	for (auto &constant: constants)
   {
     if (!isVAOConstant(constant))
       continue;
-	  vao.vaoWindow.glContext->EnableVertexAttribArray(attribIndex);
-	  GLcheck(vao.vaoWindow, "glEnableVertexAttribArray");
+	  glRenderer.glContext->EnableVertexAttribArray(attribIndex);
+	  GLcheck(glRenderer, "glEnableVertexAttribArray");
 	  auto &constantSize = constantSizes[constant];
 		if (std::get<2>(constantSize) == GL_FLOAT)
 	  {
-			vao.vaoWindow.glContext->VertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), GL_FALSE, stride, (const void*)offset);
-			GLcheck(vao.vaoWindow, "glVertexAttribPointer");
+			glRenderer.glContext->VertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), GL_FALSE, stride, (const void*)offset);
+			GLcheck(glRenderer, "glVertexAttribPointer");
 	  }
 	  else
 	  {
-			vao.vaoWindow.glContext->VertexAttribIPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), stride, (const void*)offset);
-			GLcheck(vao.vaoWindow, "glVertexAttribIPointer");
+			glRenderer.glContext->VertexAttribIPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), stride, (const void*)offset);
+			GLcheck(glRenderer, "glVertexAttribIPointer");
 	  }
     offset += std::get<0>(constantSize) * std::get<1>(constantSize);
 		attribIndex++;
@@ -97,13 +99,14 @@ bool VAOFactory::isVAOConstant(const std::string_view constant)
 }
 void VAOFactory::destroyVAO(VAO &vao)
 {
-  vao.vaoWindow.glContext->DeleteVertexArrays(1, &vao.vao);
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(vao.vaoWindow.iVendorRenderer);
+  glRenderer.glContext->DeleteVertexArrays(1, &vao.vao);
   vao.vao = 0;
-  GLcheck(vao.vaoWindow, "glDeleteVertexArrays");
-  vao.vaoWindow.glContext->DeleteBuffers(1, &vao.vbo);
+  GLcheck(glRenderer, "glDeleteVertexArrays");
+  glRenderer.glContext->DeleteBuffers(1, &vao.vbo);
   vao.vbo = 0;
-  GLcheck(vao.vaoWindow, "glDeleteBuffers");
-  vao.vaoWindow.glContext->DeleteBuffers(1, &vao.ebo);
+  GLcheck(glRenderer, "glDeleteBuffers");
+  glRenderer.glContext->DeleteBuffers(1, &vao.ebo);
   vao.ebo = 0;
-  GLcheck(vao.vaoWindow, "glDeleteBuffers");
+  GLcheck(glRenderer, "glDeleteBuffers");
 };

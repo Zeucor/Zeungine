@@ -1,3 +1,4 @@
+#include <zg/modules/gl/renderers/GLRenderer.hpp>
 #include <zg/modules/gl/textures/TextureFactory.hpp>
 using namespace zg::modules::gl::textures;
 TextureFactory::InternalFormatsMap TextureFactory::internalFormats = {
@@ -61,8 +62,9 @@ void TextureFactory::initTexture(Texture &texture, const std::vector<std::string
 };
 void TextureFactory::preInitTexture(Texture& texture)
 {
-  texture.window.glContext->GenTextures(1, &texture.id);
-  GLcheck(texture.window, "glGenTextures");
+  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(texture.window.iVendorRenderer);
+  glRenderer.glContext->GenTextures(1, &texture.id);
+  GLcheck(glRenderer, "glGenTextures");
   if (texture.size.w > 0)
     texture.target = GL_TEXTURE_CUBE_MAP;
   else if (texture.size.y == 0)
@@ -72,28 +74,29 @@ void TextureFactory::preInitTexture(Texture& texture)
   else
     texture.target = GL_TEXTURE_3D;
   texture.bind();
-  texture.window.glContext->PixelStorei(GL_PACK_ALIGNMENT, 1);
-  GLcheck(texture.window, "glPixelStorei");
+  glRenderer.glContext->PixelStorei(GL_PACK_ALIGNMENT, 1);
+  GLcheck(glRenderer, "glPixelStorei");
 };
 void TextureFactory::midInitTexture(const Texture& texture, const std::vector<images::ImageLoader::ImagePair>& images)
 {
+  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(texture.window.iVendorRenderer);
   if (texture.target == GL_TEXTURE_1D)
   {
     void *data = images.size() ? std::get<1>(images[0]).get() : 0;
-    texture.window.glContext->TexImage1D(texture.target, 0, internalFormats[texture.format], texture.size.x, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-    GLcheck(texture.window, "glTexImage1D");
+    glRenderer.glContext->TexImage1D(texture.target, 0, internalFormats[texture.format], texture.size.x, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+    GLcheck(glRenderer, "glTexImage1D");
   }
   else if (texture.target == GL_TEXTURE_2D)
   {
     void *data = images.size() ? std::get<1>(images[0]).get() : 0;
-    texture.window.glContext->TexImage2D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-    GLcheck(texture.window, "glTexImage2D");
+    glRenderer.glContext->TexImage2D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+    GLcheck(glRenderer, "glTexImage2D");
   }
   else if (texture.target == GL_TEXTURE_3D)
   {
     void *data = images.size() ? std::get<1>(images[0]).get() : 0;
-    texture.window.glContext->TexImage3D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, texture.size.z, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-    GLcheck(texture.window, "glTexImage3D");
+    glRenderer.glContext->TexImage3D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, texture.size.z, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+    GLcheck(glRenderer, "glTexImage3D");
   }
   else if (texture.target == GL_TEXTURE_CUBE_MAP)
   {
@@ -102,13 +105,14 @@ void TextureFactory::midInitTexture(const Texture& texture, const std::vector<im
       bool haveImage = images.size() > face;
       auto imageSize = haveImage ? std::get<0>(images[face]) : glm::uvec2(0, 0);
       void *data = haveImage ? std::get<1>(images[face]).get() : 0;
-      texture.window.glContext->TexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormats[texture.format], imageSize.x, imageSize.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-      GLcheck(texture.window, "glTexImage2D");
+      glRenderer.glContext->TexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormats[texture.format], imageSize.x, imageSize.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
+      GLcheck(glRenderer, "glTexImage2D");
     }
   }
 }
 void TextureFactory::postInitTexture(const Texture& texture)
 {
+  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(texture.window.iVendorRenderer);
   GLenum filterType;
   switch (texture.filterType)
   {
@@ -119,18 +123,19 @@ void TextureFactory::postInitTexture(const Texture& texture)
     filterType = GL_LINEAR;
     break;
   }
-  texture.window.glContext->TexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, filterType);
-  GLcheck(texture.window, "glTexParameteri");
-  texture.window.glContext->TexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, filterType);
-  GLcheck(texture.window, "glTexParameteri");
-  texture.window.glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  GLcheck(texture.window, "glTexParameteri");
-  texture.window.glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  GLcheck(texture.window, "glTexParameteri");
+  glRenderer.glContext->TexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, filterType);
+  GLcheck(glRenderer, "glTexParameteri");
+  glRenderer.glContext->TexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, filterType);
+  GLcheck(glRenderer, "glTexParameteri");
+  glRenderer.glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  GLcheck(glRenderer, "glTexParameteri");
+  glRenderer.glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  GLcheck(glRenderer, "glTexParameteri");
   texture.unbind();
 };
 void TextureFactory::destroyTexture(Texture& texture)
 {
-  texture.window.glContext->DeleteTextures(1, &texture.id);
-  GLcheck(texture.window, "glDeleteTextures");
+  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(texture.window.iVendorRenderer);
+  glRenderer.glContext->DeleteTextures(1, &texture.id);
+  GLcheck(glRenderer, "glDeleteTextures");
 };
