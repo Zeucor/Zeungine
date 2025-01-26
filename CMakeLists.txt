@@ -12,7 +12,7 @@ elseif(APPLE AND NOT IOS)
 endif()
 
 if(LINUX OR MACOS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-unknown-pragmas")
 endif()
 
 #Dependencies
