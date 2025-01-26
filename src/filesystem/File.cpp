@@ -169,7 +169,11 @@ std::string File::toPlatformPath(std::string path)
 {
 	std::replace(path.begin(), path.end(), '\\', '/');
 	std::filesystem::path fsPath(path);
+#ifdef _WIN32
 	auto nativePath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fsPath.native().c_str());
+#else
+    auto nativePath = fsPath.native().c_str();
+#endif
 	return nativePath;
 };
 std::string File::toString()
