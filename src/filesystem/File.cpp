@@ -6,8 +6,8 @@
 #include <regex>
 #include <sstream>
 using namespace zg::filesystem;
-File::File(const std::string& filePath, enums::EFileLocation fileLocation, const std::string& mode)
-    : originalFilePath(filePath), filePath(filePath), fileLocation(fileLocation), openMode(std::ios::in | std::ios::out | std::ios::binary)
+File::File(const std::string& _filePath, enums::EFileLocation _fileLocation, const std::string& mode)
+    : originalFilePath(_filePath), filePath(_filePath), fileLocation(_fileLocation), openMode(std::ios::in | std::ios::out | std::ios::binary)
 {
     if (mode.find('r') != std::string::npos)
     {
