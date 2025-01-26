@@ -1,43 +1,43 @@
 #include <zg/SharedLibrary.hpp>
 using namespace zg;
 SharedLibrary::SharedLibrary(std::string_view path)
-		: libraryHandle(nullptr)
+		: libraryPointer(nullptr)
 {
 #ifdef _WIN32
-	libraryHandle = LoadLibraryA(path.data());
+	libraryPointer = LoadLibraryA(path.data());
 #endif
-	if (!libraryHandle)
+	if (!libraryPointer)
 	{
 		throw std::runtime_error("Failed to load library: " + std::string(path));
 	}
 };
 SharedLibrary::~SharedLibrary()
 {
-	if (libraryHandle)
+	if (libraryPointer)
 	{
 #ifdef _WIN32
-		FreeLibrary(libraryHandle);
+		FreeLibrary(libraryPointer);
 #endif
 	}
 };
 SharedLibrary::SharedLibrary(SharedLibrary&& other) noexcept
-		: libraryHandle(other.libraryHandle)
+		: libraryPointer(other.libraryPointer)
 {
-	other.libraryHandle = nullptr;
+	other.libraryPointer = nullptr;
 };
 SharedLibrary& SharedLibrary::operator=(SharedLibrary&& other) noexcept
 {
 	if (this != &other)
 	{
-		if (libraryHandle)
+		if (libraryPointer)
 		{
 #ifdef _WIN32
-			FreeLibrary(libraryHandle);
+			FreeLibrary(libraryPointer);
 #endif
 		}
 
-		libraryHandle = other.libraryHandle;
-		other.libraryHandle = nullptr;
+		libraryPointer = other.libraryPointer;
+		other.libraryPointer = nullptr;
 	}
 	return *this;
 };

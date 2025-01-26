@@ -9,19 +9,22 @@ namespace zg
 	struct SharedLibrary
 	{
 	#ifdef _WIN32
-		HMODULE libraryHandle;
+		HMODULE libraryPointer;
+	#elif defined(LINUX) || defined(MACOS)
+		void *libraryPointer;
 	#endif
 		explicit SharedLibrary(std::string_view path);
 		~SharedLibrary();
 		template<typename T>
 		T getProc(std::string_view procName)
 		{
-			if (!libraryHandle)
+			if (!libraryPointer)
 			{
 				throw std::runtime_error("Library not loaded");
 			}
 	#ifdef _WIN32
-			void* procAddress = GetProcAddress(libraryHandle, procName.data());
+			void* procAddress = GetProcAddress(libraryPointer, procName.data());
+
 	#endif
 			if (!procAddress)
 			{
