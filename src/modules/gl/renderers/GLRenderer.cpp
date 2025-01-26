@@ -9,6 +9,7 @@ typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALEXTPROC) (int interval);
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
 #endif
 void *getProc(const char* name) {
+#ifdef _WIN32
 	void* p = (void*)wglGetProcAddress(name);
 	if(p == 0 ||
 		 (p == (void*)0x1) || (p == (void*)0x2) || (p == (void*)0x3) ||
@@ -18,6 +19,9 @@ void *getProc(const char* name) {
 		p = (void*)GetProcAddress(module, name);
 	}
 	return p;
+#else
+	return 0;
+#endif
 }
 GLRenderer::GLRenderer():
 	glContext(new GladGLContext)
@@ -65,8 +69,10 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 		}
 		std::cerr << "OpenGL Debug Message: " << message << std::endl;
 	}, nullptr);
+#ifdef _WIN32
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 	wglSwapIntervalEXT(1);
+#endif
 }
 void GLRenderer::render()
 {
