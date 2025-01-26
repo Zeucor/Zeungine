@@ -5,8 +5,14 @@ set(CMAKE_CXX_STANDARD 20)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_definitions(-DLINUX)
+    set(LINUX ON)
 elseif(APPLE AND NOT IOS)
     add_definitions(-DMACOS)
+    set(MACOS ON)
+endif()
+
+if(LINUX OR MACOS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 endif()
 
 #Dependencies
