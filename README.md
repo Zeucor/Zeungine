@@ -1,6 +1,6 @@
 # Zeungine
 
-<img src="/images/zeungine-logo.jpg" alt="Zeungine Logo" width="400" height="400">
+<img src="/images/zeungine-logo.png" alt="Zeungine Logo" width="400" height="400">
 
 A library that simplifies Game abstraction written in C++
 
