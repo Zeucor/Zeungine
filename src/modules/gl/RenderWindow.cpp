@@ -50,7 +50,7 @@ RenderWindow::RenderWindow(RenderWindow &_parentWindow,
 	framebuffer(std::make_shared<textures::Framebuffer>(_parentWindow, *framebufferTexture, *framebufferDepthTexture)),
 	framebufferPlane(std::make_shared<entities::Plane>(
 		_parentWindow,
-		parentScene,
+		*parentScene,
 		glm::vec3(
 			NDCFramebufferPlane ?
 				(-1 + ((childWindowX + (childWindowWidth / 2)) / _parentWindow.windowWidth / 0.5)) :
