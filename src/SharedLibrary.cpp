@@ -6,7 +6,7 @@ SharedLibrary::SharedLibrary(std::string_view path)
 #ifdef _WIN32
 	libraryPointer = LoadLibraryA(path.data());
 #elif defined(LINUX) || defined(MACOS)
-	libraryPointer = dlopen(path.data(), RTLD_LAZY);
+	libraryPointer = dlopen(path.data(), RTLD_NOW | RTLD_GLOBAL);
 #endif
 	if (!libraryPointer)
 	{
