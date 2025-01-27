@@ -76,18 +76,11 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 	}, nullptr);
 #ifdef _WIN32
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-	wglSwapIntervalEXT(1);
+	wglSwapIntervalEXT(platformWindowPointer->renderWindowPointer->vsync);
 #elif defined(LINUX)
 	PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalEXT");
 	auto &x11Window = *(X11Window *)platformWindowPointer;
-	// if (!instance.vsync)
-	// {
-	// 	glXSwapIntervalEXT(display, window, 0);
-	// }
-	// else
-	// {
-		glXSwapIntervalEXT(x11Window.display, x11Window.window, 1);
-	// }
+	glXSwapIntervalEXT(x11Window.display, x11Window.window, platformWindowPointer->renderWindowPointer->vsync);
 #endif
 }
 void GLRenderer::render()

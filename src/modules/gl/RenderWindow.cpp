@@ -19,10 +19,12 @@ RenderWindow::RenderWindow(const char* title,
 									 float windowX,
 									 float windowY,
 									 bool borderless,
+						 			 bool _vsync,
 									 uint32_t framerate):
 	IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
 	title(title),
-	shaderContext(new ShaderContext)
+	shaderContext(new ShaderContext),
+	vsync(_vsync)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -36,6 +38,7 @@ RenderWindow::RenderWindow(RenderWindow &_parentWindow,
 									 float childWindowX,
 									 float childWindowY,
 									 bool _NDCFramebufferPlane,
+						 			 bool _vsync,
 									 uint32_t framerate):
 	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
 	iVendorRenderer(_parentWindow.iVendorRenderer),
@@ -65,7 +68,8 @@ RenderWindow::RenderWindow(RenderWindow &_parentWindow,
 			childWindowWidth / (NDCFramebufferPlane ? (_parentWindow.windowWidth / 2) : 1),
 			childWindowHeight / (NDCFramebufferPlane ? (_parentWindow.windowHeight / 2) : 1)
 		),
-		*framebufferTexture))
+		*framebufferTexture)),
+	vsync(_vsync)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -232,10 +236,6 @@ void RenderWindow::warpPointer(glm::vec2 coords)
 {
 	iPlatformWindow->warpPointer(coords);
 	justWarpedPointer = true;
-// #if defined(_UNIX)
-// 	DEFINE_X11_WINDOW_DRIVER;
-// 	XWarpPointer(x11WindowDriver.display, None, x11WindowDriver.window, 0, 0, 0, 0, position.x, position.y);
-// #endif
 };
 void RenderWindow::setXY(float x, float y)
 {

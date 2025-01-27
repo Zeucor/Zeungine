@@ -56,12 +56,14 @@ namespace zg::modules::gl
 		static constexpr unsigned int MinMouseButton = 0;
 		static constexpr unsigned int MaxMouseButton = 6;
 		glm::vec2 oldXY;
+		bool vsync = true;
 		RenderWindow(const char *title,
 						 float windowWidth,
 						 float windowHeight,
 						 float windowX,
 						 float windowY,
 						 bool borderless = false,
+						 bool vsync = true,
 						 uint32_t framerate = 60);
 		RenderWindow(RenderWindow &parentWindow,
 						 GLScene &parentScene,
@@ -71,6 +73,7 @@ namespace zg::modules::gl
 						 float childWindowX,
 						 float childWindowY,
 						 bool NDCFramebufferPlane = false,
+						 bool vsync = true,
 						 uint32_t framerate = 60);
 		void startWindow() override;
 		void renderInit();
