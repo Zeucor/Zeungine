@@ -248,7 +248,20 @@ bool X11Window::pollMessages()
 							 (((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) >> 12)*/;
 			auto keysym = XkbKeycodeToKeysym(display, event.xkey.keycode, 0, event.xkey.state & ShiftMask ? 1 : 0);
 			auto keycode = xkb_keysym_to_utf32(keysym);
-			std::cout << "Mod: " << mod << ", Keycode: " << keycode << std::endl;
+			if (!keycode)
+			{
+				switch (keysym)
+				{
+					case XK_Home:
+					case XK_KP_Home:
+						keycode = KEYCODE_HOME;
+						break;
+					case XK_End:
+					case XK_KP_End:
+						keycode = KEYCODE_END;
+						break;
+				}
+			}
 			auto keypress = event.type == KeyPress;
 			bool hadChildFocus = false;
 			for (auto &childWindowPointer : renderWindowPointer->childWindows)
