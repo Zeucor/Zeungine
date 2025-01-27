@@ -16,7 +16,7 @@ using namespace zg::modules::gl;
 #ifdef _WIN32
 typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALEXTPROC) (int interval);
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
-SharedLibrary opengl32Library("opengl32.dll");
+zg::SharedLibrary opengl32Library("opengl32.dll");
 #endif
 void *getProc(const char* name) {
 #ifdef _WIN32

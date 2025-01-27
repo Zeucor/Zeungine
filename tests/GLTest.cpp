@@ -219,7 +219,5 @@ int main()
   {
     window.setIScene(std::make_shared<TestScene>(window));
   });
-  // std::this_thread::sleep_for(std::chrono::seconds(20));
-  // window.close();
   window.awaitWindowThread();
 };
