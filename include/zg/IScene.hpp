@@ -3,13 +3,12 @@
 #include <memory>
 #include <vector>
 #include <glm/vec2.hpp>
-#include <zg/Visibility.hpp>
 
 namespace zg
 {
 	struct IWindow;
 	struct IEntity;
-	struct ZG_VISIBILITY IScene
+	struct IScene
 	{
 		IWindow &window;
 		std::map<size_t, std::shared_ptr<IEntity>> entities;
