@@ -81,10 +81,10 @@ EditorScene::EditorScene(RenderWindow& window):
 	resourceConsole(std::make_shared<entities::Console>(
 		window,
 		*this,
-		glm::vec3(0 , 0, 0.1),
+		glm::vec3(0, 0, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
-		glm::vec4(0.2, 0.2, 0.2, 1),
+		toolbarColor,
 		robotoRegularFont,
 		window.windowWidth,
 		resourcePanelMenuHeight - bottomTabsHeight + gameWindowBorderWidth * 2
