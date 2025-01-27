@@ -12,10 +12,11 @@ elseif(APPLE AND NOT IOS)
 endif()
 
 if(LINUX OR MACOS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -fPIC")
     if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
     endif()
+    set(BUILD_SHARED_LIBS ON)
 endif()
 
 #Dependencies
@@ -128,7 +129,13 @@ if(BUILD_OPENGL)
     endif()
 endif()
 
-add_library(zeungine STATIC ${ZG_SOURCES})
+if(WIN32)
+    set(ZG_LIBRARY_TYPE STATIC)
+else()
+    set(ZG_LIBRARY_TYPE SHARED)
+endif()
+
+add_library(zeungine ${ZG_LIBRARY_TYPE} ${ZG_SOURCES})
 
 if(BUILD_FENSTER)
     target_link_libraries(zeungine fenster)

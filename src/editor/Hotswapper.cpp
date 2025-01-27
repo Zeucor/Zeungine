@@ -36,7 +36,11 @@ void Hotswapper::update()
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/stb");
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/bvh/src");
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/freetype/include");
-	swapperRef.LocateAndAddLibrary(programDirectoryPath, "zeungine.lib");
+#ifdef _WIN32
+	swapperRef.LocateAndAddLibrary(programDirectoryPath, "zeungine.dll");
+#else
+	swapperRef.LocateAndAddLibrary(programDirectoryPath, "libzeungine.so");
+#endif
 #ifdef _WIN32
 	swapperRef.LinkLibrary("opengl32.lib");
 	swapperRef.LinkLibrary("gdi32.lib");
@@ -48,6 +52,10 @@ void Hotswapper::update()
 #endif
 #ifdef _WIN32
 	swapperRef.AddCompileOption("-DHSCPP_PLATFORM_WIN32");
+#else
+	swapperRef.AddCompileOption("-DHSCPP_PLATFORM_UNIX");
+	swapperRef.AddCompileOption("-fPIC");
+	swapperRef.AddCompileOption("-export-dynamic");
 #endif
 	swapperRef.SetBuildDirectory(directory + "/build");
 	while (!swapperRef.IsCompilerInitialized())
