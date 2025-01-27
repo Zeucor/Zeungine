@@ -55,7 +55,6 @@ void Hotswapper::update()
 #else
 	swapperRef.AddCompileOption("-DHSCPP_PLATFORM_UNIX");
 	swapperRef.AddCompileOption("-fPIC");
-	swapperRef.AddCompileOption("-export-dynamic");
 #endif
 	swapperRef.SetBuildDirectory(directory + "/build");
 	while (!swapperRef.IsCompilerInitialized())
