@@ -147,17 +147,14 @@ _checkPressed:
 
 void RenderWindow::close()
 {
-#ifdef _WIN32
 	if (isChildWindow)
 	{
 		return;
 	}
 	iPlatformWindow->close();
-#endif
 };
 void RenderWindow::minimize()
 {
-#ifdef _WIN32
 	minimized = true;
 	maximized = false;
 	if (isChildWindow)
@@ -170,11 +167,9 @@ void RenderWindow::minimize()
 	{
 		windowButtons[i] = false;
 	}
-#endif
 };
 void RenderWindow::maximize()
 {
-#ifdef _WIN32
 	minimized = false;
 	if (maximized)
 	{
@@ -190,11 +185,9 @@ void RenderWindow::maximize()
 		oldXY.y = windowY;
 		setXY(0, 0);
 	}
-#endif
 };
 void RenderWindow::restore()
 {
-#ifdef _WIN32
 	minimized = false;
 	maximized = false;
 	if (isChildWindow)
@@ -203,7 +196,6 @@ void RenderWindow::restore()
 	}
 	iPlatformWindow->restore();
 	setXY(oldXY.x, oldXY.y);
-#endif
 }
 void RenderWindow::preRender()
 {
@@ -211,7 +203,7 @@ void RenderWindow::preRender()
 	{
 		return;
 	}
-  runRunnables();
+	runRunnables();
 	updateKeyboard();
 	updateMouse();
 	framebuffer->bind();
