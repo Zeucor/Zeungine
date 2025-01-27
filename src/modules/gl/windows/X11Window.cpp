@@ -98,6 +98,8 @@ void X11Window::init(RenderWindow& renderWindow)
 	int32_t windowWidth = renderWindow.windowWidth, windowHeight = renderWindow.windowHeight;
 	int32_t windowX = renderWindow.windowX == -1 ? ((screenWidth - windowWidth) / 2) : renderWindow.windowX,
 					windowY = renderWindow.windowY == -1 ? (screenHeight - windowHeight) / 2 : renderWindow.windowY;
+	renderWindow.windowX = windowX;
+	renderWindow.windowY = windowY;
 	window =
 		XCreateWindow(display, RootWindow(display, vi->screen), windowX, windowY, windowWidth, windowHeight, 0, vi->depth,
 									InputOutput, vi->visual, CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
