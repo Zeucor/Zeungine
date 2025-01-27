@@ -129,6 +129,24 @@ void X11Window::init(RenderWindow& renderWindow)
 	int supported_rtrn = 0;
 	XkbSetDetectableAutoRepeat(display, true, &supported_rtrn);
 	XAutoRepeatOff(display);
+	if (renderWindow.borderless)
+	{
+		struct
+		{
+			unsigned long flags;
+			unsigned long functions;
+			unsigned long decorations;
+			long input_mode;
+			unsigned long status;
+		} motifHints = {2, 0, 0, 0, 0};
+		Atom motifHintsAtom = XInternAtom(display, "_MOTIF_WM_HINTS", False);
+		XChangeProperty(display, window, motifHintsAtom, motifHintsAtom, 32, PropModeReplace,
+										(unsigned char*)&motifHints, sizeof(motifHints) / sizeof(long));
+		Atom netWmWindowType = XInternAtom(display, "_NET_WM_WINDOW_TYPE", False);
+		Atom netWmWindowTypeDock = XInternAtom(display, "_NET_WM_WINDOW_TYPE_DOCK", False);
+		XChangeProperty(display, window, netWmWindowType, XA_ATOM, 32, PropModeReplace,
+										(unsigned char*)&netWmWindowTypeDock, 1);
+	}
 }
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
