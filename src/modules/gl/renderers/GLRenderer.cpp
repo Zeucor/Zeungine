@@ -3,6 +3,9 @@
 #include <zg/modules/gl/RenderWindow.hpp>
 #include <zg/modules/gl/entities/Plane.hpp>
 #include <zg/Logger.hpp>
+#ifdef _WIN32
+#include <zg/SharedLibrary.hpp>
+#endif
 #if defined(LINUX) || defined(MACOS)
 #include <dlfcn.h>
 #endif
@@ -13,6 +16,7 @@ using namespace zg::modules::gl;
 #ifdef _WIN32
 typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALEXTPROC) (int interval);
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
+SharedLibrary opengl32Library("opengl32.dll");
 #endif
 void *getProc(const char* name) {
 #ifdef _WIN32
@@ -21,8 +25,7 @@ void *getProc(const char* name) {
 		 (p == (void*)0x1) || (p == (void*)0x2) || (p == (void*)0x3) ||
 		 (p == (void*)-1) )
 	{
-		HMODULE module = LoadLibraryA("opengl32.dll");
-		p = (void*)GetProcAddress(module, name);
+		return opengl32Library.getProc<void*>(name);
 	}
 	return p;
 #elif defined(LINUX) || defined(MACOS)
