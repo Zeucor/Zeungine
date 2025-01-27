@@ -2,7 +2,7 @@
 
 <img src="/images/zeungine-logo.png" alt="Zeungine Logo" width="400" height="400">
 
-A library that simplifies Game abstraction written in C++
+A library that simplifies Game abstraction written in C++, runs on Windows 10/11 and Linux (X11)
 
 Comes with some modules, A `Fenster` module for 2D graphics drawing, and a `GL` module for 3D rendering
 
