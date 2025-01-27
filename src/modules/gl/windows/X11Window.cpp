@@ -160,10 +160,6 @@ void X11Window::init(RenderWindow& renderWindow)
 		Atom motifHintsAtom = XInternAtom(display, "_MOTIF_WM_HINTS", False);
 		XChangeProperty(display, window, motifHintsAtom, motifHintsAtom, 32, PropModeReplace,
 										(unsigned char*)&motifHints, sizeof(motifHints) / sizeof(long));
-		Atom netWmWindowType = XInternAtom(display, "_NET_WM_WINDOW_TYPE", False);
-		Atom netWmWindowTypeDock = XInternAtom(display, "_NET_WM_WINDOW_TYPE_DOCK", False);
-		XChangeProperty(display, window, netWmWindowType, XA_ATOM, 32, PropModeReplace,
-										(unsigned char*)&netWmWindowTypeDock, 1);
 	}
 }
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
