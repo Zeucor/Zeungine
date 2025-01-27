@@ -37,7 +37,7 @@ void Hotswapper::update()
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/bvh/src");
 	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/freetype/include");
 #ifdef _WIN32
-	swapperRef.LocateAndAddLibrary(programDirectoryPath, "zeungine.dll");
+	swapperRef.LocateAndAddLibrary(programDirectoryPath, "zeungine.lib");
 #else
 	swapperRef.LocateAndAddLibrary(programDirectoryPath, "libzeungine.so");
 #endif
