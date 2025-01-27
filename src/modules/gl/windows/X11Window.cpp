@@ -275,11 +275,12 @@ bool X11Window::pollMessages()
 		case KeyPress:
 		case KeyRelease:
 		{
+			auto keysym = XkbKeycodeToKeysym(display, event.xkey.keycode, 0, event.xkey.state & ShiftMask ? 1 : 0);
 			auto mod = ((event.xkey.state & ControlMask) ? 1 : 0) |
-							 ((event.xkey.state & ShiftMask) ? 2 : 0);/* |
+					   ((event.xkey.state & ShiftMask) ? 2 : 0) |
+					   ((keysym == XK_Super_L || keysym == XK_Super_R) ? 8 : 0);/* |
 							 ((GetKeyState(VK_MENU) & 0x8000) >> 13) |
 							 (((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) >> 12)*/;
-			auto keysym = XkbKeycodeToKeysym(display, event.xkey.keycode, 0, event.xkey.state & ShiftMask ? 1 : 0);
 			auto keycode = xkb_keysym_to_utf32(keysym);
 			if (!keycode)
 			{
