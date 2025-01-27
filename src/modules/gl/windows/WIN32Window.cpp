@@ -361,7 +361,7 @@ void WIN32Window::minimize()
 }
 void WIN32Window::maximize()
 {
-		ShowWindow(hwnd, SW_MAXIMIZE);
+	ShowWindow(hwnd, SW_MAXIMIZE);
 }
 void WIN32Window::restore()
 {
