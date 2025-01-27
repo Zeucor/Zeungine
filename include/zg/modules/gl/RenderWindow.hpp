@@ -20,10 +20,15 @@ namespace zg::modules::gl
 		uint32_t shaderCount = 0;
 	};
 	struct GLScene;
+#define KEYCODE_UP 17
+#define KEYCODE_DOWN 18
+#define KEYCODE_RIGHT 19
+#define KEYCODE_LEFT 20
 #define KEYCODE_HOME 0x80
 #define KEYCODE_END 0x81
 #define KEYCODE_PGUP 0x82
 #define KEYCODE_PGDOWN 0x83
+#define KEYCODE_INSERT 0x84
 	struct RenderWindow : IWindow
 	{
 		std::shared_ptr<IPlatformWindow> iPlatformWindow;

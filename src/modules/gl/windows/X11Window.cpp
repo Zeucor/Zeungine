@@ -250,25 +250,32 @@ bool X11Window::pollMessages()
 			auto keycode = xkb_keysym_to_utf32(keysym);
 			if (!keycode)
 			{
-				switch (keysym)
-				{
-					case XK_Home:
-					case XK_KP_Home:
-						keycode = KEYCODE_HOME;
-						break;
-					case XK_End:
-					case XK_KP_End:
-						keycode = KEYCODE_END;
-						break;
-					case XK_Page_Up:
-					case XK_KP_Page_Up:
-						keycode = KEYCODE_PGUP;
-						break;
-					case XK_Page_Down:
-					case XK_KP_Page_Down:
-						keycode = KEYCODE_PGDOWN;
-						break;
-				}
+				static std::unordered_map<uint32_t, uint32_t> specialKeyMap = {
+					{XK_Home, KEYCODE_HOME},
+					{XK_KP_Home, KEYCODE_HOME},
+					{XK_End, KEYCODE_END},
+					{XK_KP_End, KEYCODE_END},
+					{XK_Page_Up, KEYCODE_PGUP},
+					{XK_KP_Page_Up, KEYCODE_PGUP},
+					{XK_Page_Down, KEYCODE_PGDOWN},
+					{XK_KP_Page_Down, KEYCODE_PGDOWN},
+					{XK_Insert, KEYCODE_INSERT},
+					{XK_KP_Insert, KEYCODE_INSERT},
+					{XK_Left, KEYCODE_LEFT},
+					{XK_KP_Left, KEYCODE_LEFT},
+					{XK_Right, KEYCODE_RIGHT},
+					{XK_KP_Right, KEYCODE_RIGHT},
+					{XK_Up, KEYCODE_UP},
+					{XK_KP_Up, KEYCODE_UP},
+					{XK_Down, KEYCODE_DOWN},
+					{XK_KP_Down, KEYCODE_DOWN}
+				};
+				static auto specialKeyMapEnd = specialKeyMap.end();
+				auto keycodeIter = specialKeyMap.find(keysym);
+				if (keycodeIter == specialKeyMapEnd)
+					std::cout << "[UnknownKP]:" << "Mod: " << mod << ", Keycode: " << keycode << ", Keysym: " << keysym << std::endl;
+				else
+					keycode = keycodeIter->second;
 			}
 			auto keypress = event.type == KeyPress;
 			bool hadChildFocus = false;
