@@ -485,8 +485,16 @@ void X11Window::warpPointer(glm::vec2 coords)
 {
 	XWarpPointer(display, None, window, 0, 0, 0, 0, coords.x, coords.y);
 }
-void X11Window::setXY() {}
-void X11Window::setWidthHeight() {}
+void X11Window::setXY()
+{
+	XMoveWindow(display, window, renderWindowPointer->windowX, renderWindowPointer->windowY);
+	XFlush(display);
+}
+void X11Window::setWidthHeight()
+{
+	XResizeWindow(display, window, renderWindowPointer->windowWidth, renderWindowPointer->windowHeight);
+	XFlush(display);
+}
 void X11Window::mouseCapture(bool capture)
 {
 	if (capture)
