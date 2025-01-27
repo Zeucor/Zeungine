@@ -32,6 +32,7 @@ namespace zg::modules::gl
 #define KEYCODE_NUMLOCK 0x85
 #define KEYCODE_CAPSLOCK 0x86
 #define KEYCODE_PAUSE 0x87
+#define LAST_UNDEFINED_ASCII_IN_RANGE 0x9F
 	struct RenderWindow : IWindow
 	{
 		std::shared_ptr<IPlatformWindow> iPlatformWindow;
