@@ -22,6 +22,8 @@ namespace zg::modules::gl
 	struct GLScene;
 #define KEYCODE_HOME 0x80
 #define KEYCODE_END 0x81
+#define KEYCODE_PGUP 0x82
+#define KEYCODE_PGDOWN 0x83
 	struct RenderWindow : IWindow
 	{
 		std::shared_ptr<IPlatformWindow> iPlatformWindow;

@@ -260,6 +260,14 @@ bool X11Window::pollMessages()
 					case XK_KP_End:
 						keycode = KEYCODE_END;
 						break;
+					case XK_Page_Up:
+					case XK_KP_Page_Up:
+						keycode = KEYCODE_PGUP;
+						break;
+					case XK_Page_Down:
+					case XK_KP_Page_Down:
+						keycode = KEYCODE_PGDOWN;
+						break;
 				}
 			}
 			auto keypress = event.type == KeyPress;
