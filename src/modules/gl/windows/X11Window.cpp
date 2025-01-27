@@ -499,9 +499,18 @@ void X11Window::mouseCapture(bool capture)
 {
 	if (capture)
 	{
+		int result = XGrabPointer(display, window, True,
+			ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+			GrabModeAsync, GrabModeAsync,
+			None, None, CurrentTime);
+		if (result != GrabSuccess)
+		{
+			std::cerr << "Failed to GrabPointer" << std::endl;
+		}
 	}
 	else
 	{
+		XUngrabPointer(display, CurrentTime);
 	}
 }
 std::shared_ptr<IPlatformWindow> zg::modules::gl::createPlatformWindow()
