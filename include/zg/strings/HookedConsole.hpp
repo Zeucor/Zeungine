@@ -33,6 +33,9 @@ namespace zg::strings
 #ifdef _WIN32
         HANDLE readablePipeEnd = nullptr;
         HANDLE writablePipeEnd = nullptr;
+#elif defined(LINUX) || defined(MACOS)
+        int32_t readablePipeEnd = 0;
+        int32_t writablePipeEnd = 0;
 #endif
         std::string currentLine;
         std::vector<std::string> allLines;

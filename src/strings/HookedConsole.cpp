@@ -31,6 +31,30 @@ void HookedConsole::initializeRedirect()
     int writablePipeEndFileStream = _open_osfhandle(reinterpret_cast<intptr_t>(writablePipeEnd), 0);
     FILE *writablePipeEndFile = _fdopen(writablePipeEndFileStream, "wt");
     _dup2(_fileno(writablePipeEndFile), m_handle == STDOUT ? STDOUT_FILENO : STDERR_FILENO);
+#elif defined(LINUX) || defined(MACOS)
+    int32_t pipeEnds[2];
+    if (pipe(pipeEnds) == -1)
+    {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+    readablePipeEnd = pipeEnds[0];
+    writablePipeEnd = pipeEnds[1];
+    if (m_handle == STDOUT)
+    {
+        if (dup2(writablePipeEnd, STDOUT_FILENO) == -1)
+        {
+            throw std::runtime_error("dup2 error");
+        }
+    }
+    else
+    {
+        if (dup2(writablePipeEnd, STDERR_FILENO) == -1)
+        {
+            throw std::runtime_error("dup2 error");
+        }
+    }
+    close(writablePipeEnd);
 #endif
     readerThread = std::thread(&HookedConsole::readFromPipe, this);
 }
@@ -52,8 +76,36 @@ void HookedConsole::readFromPipe()
         {
             processBuffer(buffer, bytesRead);
         }
-#else
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+#elif defined(LINUX) || defined(MACOS)
+        fd_set readSet;
+        FD_ZERO(&readSet);
+        FD_SET(readablePipeEnd, &readSet);
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 10000;
+        int32_t result = select(readablePipeEnd + 1, &readSet, nullptr, nullptr, &timeout);
+        if (result > 0 && FD_ISSET(readablePipeEnd, &readSet))
+        {
+            ssize_t bytes = read(readablePipeEnd, buffer, bufferSize);
+            if (bytes > 0)
+            {
+                processBuffer(buffer, static_cast<unsigned long>(bytes));
+            }
+            else if (bytes == 0)
+            {
+                break;
+            }
+            else if (errno != EAGAIN && errno != EINTR)
+            {
+                throw std::runtime_error("read error");
+                break;
+            }
+        }
+        else if (result < 0)
+        {
+            throw std::runtime_error("select error");
+            break;
+        }
 #endif
     }
 }
