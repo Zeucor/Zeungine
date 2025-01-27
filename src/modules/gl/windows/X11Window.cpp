@@ -268,7 +268,10 @@ bool X11Window::pollMessages()
 					{XK_Up, KEYCODE_UP},
 					{XK_KP_Up, KEYCODE_UP},
 					{XK_Down, KEYCODE_DOWN},
-					{XK_KP_Down, KEYCODE_DOWN}
+					{XK_KP_Down, KEYCODE_DOWN},
+					{XK_Num_Lock, KEYCODE_NUMLOCK},
+					{XK_Caps_Lock, KEYCODE_CAPSLOCK},
+					{XK_Pause, KEYCODE_PAUSE}
 				};
 				static auto specialKeyMapEnd = specialKeyMap.end();
 				auto keycodeIter = specialKeyMap.find(keysym);

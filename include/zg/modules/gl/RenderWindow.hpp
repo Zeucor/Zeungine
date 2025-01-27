@@ -29,6 +29,9 @@ namespace zg::modules::gl
 #define KEYCODE_PGUP 0x82
 #define KEYCODE_PGDOWN 0x83
 #define KEYCODE_INSERT 0x84
+#define KEYCODE_NUMLOCK 0x85
+#define KEYCODE_CAPSLOCK 0x86
+#define KEYCODE_PAUSE 0x87
 	struct RenderWindow : IWindow
 	{
 		std::shared_ptr<IPlatformWindow> iPlatformWindow;
