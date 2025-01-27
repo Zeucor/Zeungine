@@ -438,9 +438,49 @@ void X11Window::close()
 	}
 	return;
 }
-void X11Window::minimize() {}
-void X11Window::maximize() {}
-void X11Window::restore() {}
+void X11Window::minimize()
+{
+	XIconifyWindow(display, window, screen);
+	XFlush(display);
+}
+void X11Window::maximize()
+{
+	Atom wmState = XInternAtom(display, "_NET_WM_STATE", False);
+	Atom maxHorz = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+	Atom maxVert = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+	XEvent event = {0};
+	event.xclient.type = ClientMessage;
+	event.xclient.message_type = wmState;
+	event.xclient.display = display;
+	event.xclient.window = window;
+	event.xclient.format = 32;
+	event.xclient.data.l[0] = 1;
+	event.xclient.data.l[1] = maxHorz;
+	event.xclient.data.l[2] = maxVert;
+	event.xclient.data.l[3] = 0;
+	event.xclient.data.l[4] = 0;
+	XSendEvent(display, rootWindow, False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
+	XFlush(display);
+}
+void X11Window::restore()
+{
+	Atom wmState = XInternAtom(display, "_NET_WM_STATE", False);
+	Atom maxHorz = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+	Atom maxVert = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+	XEvent event = {0};
+	event.xclient.type = ClientMessage;
+	event.xclient.message_type = wmState;
+	event.xclient.display = display;
+	event.xclient.window = window;
+	event.xclient.format = 32;
+	event.xclient.data.l[0] = 0;
+	event.xclient.data.l[1] = maxHorz;
+	event.xclient.data.l[2] = maxVert;
+	event.xclient.data.l[3] = 0;
+	event.xclient.data.l[4] = 0;
+	XSendEvent(display, rootWindow, False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
+	XFlush(display);
+}
 void X11Window::warpPointer(glm::vec2 coords)
 {
 	XWarpPointer(display, None, window, 0, 0, 0, 0, coords.x, coords.y);
