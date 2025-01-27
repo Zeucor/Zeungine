@@ -93,9 +93,11 @@ void X11Window::init(RenderWindow& renderWindow)
 	// auto currentScreenModes = getCurrentScreenModes();
 	// auto &screen1Mode = currentScreenModes._data[0];
 	// int32_t displayWidth = screen1Mode.size.x, displayHeight = screen1Mode.size.y;
+	int screenWidth = DisplayWidth(display, screen);
+	int screenHeight = DisplayHeight(display, screen);
 	int32_t windowWidth = renderWindow.windowWidth, windowHeight = renderWindow.windowHeight;
-	int32_t windowX = renderWindow.windowX == -1 ? 0 : renderWindow.windowX,
-					windowY = renderWindow.windowY == -1 ? 0 : renderWindow.windowY;
+	int32_t windowX = renderWindow.windowX == -1 ? ((screenWidth - windowWidth) / 2) : renderWindow.windowX,
+					windowY = renderWindow.windowY == -1 ? (screenHeight - windowHeight) / 2 : renderWindow.windowY;
 	window =
 		XCreateWindow(display, RootWindow(display, vi->screen), windowX, windowY, windowWidth, windowHeight, 0, vi->depth,
 									InputOutput, vi->visual, CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
@@ -117,9 +119,23 @@ void X11Window::init(RenderWindow& renderWindow)
 		}
 	}
 	XSizeHints sizehints;
-	sizehints.flags = PPosition | PSize;
-	sizehints.x = 0;
-	sizehints.y = 0;
+	sizehints.flags = PSize;
+	if (renderWindow.windowX != -1 || renderWindow.windowY != -1)
+	{
+		sizehints.flags |= PPosition;
+	}
+	else
+	{
+		Atom netWmFullPlacement = XInternAtom(display, "_NET_WM_FULL_PLACEMENT", True);
+		if (netWmFullPlacement != None)
+		{
+			long value = 1;
+			XChangeProperty(display, window, netWmFullPlacement, XA_CARDINAL, 32, PropModeReplace,
+							(unsigned char*)&value, 1);
+		}
+	}
+	sizehints.x = windowX;
+	sizehints.y = windowY;
 	sizehints.width = windowWidth;
 	sizehints.height = windowHeight;
 	XSetWMNormalHints(display, window, &sizehints);
