@@ -259,12 +259,18 @@ bool X11Window::pollMessages()
 		};
 		case ButtonPress:
 		{
-			buttons.push_back({1, event.xbutton.button - 1, true});
+			auto button = event.xbutton.button - 1;
+			buttons.push_back({1, button, true});
 			break;
 		};
 		case ButtonRelease:
 		{
-			buttons.push_back({1, event.xbutton.button - 1, false});
+			auto button = event.xbutton.button - 1;
+			if (button == 3 || button == 4)
+			{
+				break;
+			}
+			buttons.push_back({1, button, false});
 			break;
 		};
 		case MotionNotify:
