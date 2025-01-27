@@ -124,6 +124,7 @@ void X11Window::init(RenderWindow& renderWindow)
 	sizehints.height = windowHeight;
 	XSetWMNormalHints(display, window, &sizehints);
 	wmDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", 0);
+	wmProtocols = XInternAtom(display, "WM_PROTOCOLS", True);
 	XSetWMProtocols(display, window, &wmDeleteWindow, 1);
 	int supported_rtrn = 0;
 	XkbSetDetectableAutoRepeat(display, true, &supported_rtrn);
@@ -422,7 +423,21 @@ void X11Window::swapBuffers()
 #endif
 }
 void X11Window::destroy() { renderWindowPointer->iVendorRenderer->destroy(); }
-void X11Window::close() {}
+void X11Window::close()
+{
+	XEvent event;
+	event.xclient.type = ClientMessage;
+	event.xclient.window = window;
+	event.xclient.message_type = wmProtocols;
+	event.xclient.format = 32;
+	event.xclient.data.l[0] = wmDeleteWindow;
+	event.xclient.data.l[1] = CurrentTime;
+	if (XSendEvent(display, window, False, NoEventMask, &event) == 0)
+	{
+		throw std::runtime_error("XSendEvent failed");
+	}
+	return;
+}
 void X11Window::minimize() {}
 void X11Window::maximize() {}
 void X11Window::restore() {}

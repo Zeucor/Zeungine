@@ -13,7 +13,8 @@ namespace zg::modules::gl
 		int32_t screen = 0;
 		unsigned long window = 0;
 		unsigned long rootWindow = 0;
-		unsigned long wmDeleteWindow;
+		unsigned long wmDeleteWindow = 0;
+		unsigned long wmProtocols = 0;
 		XVisualInfo visualinfo;
 		GLXFBConfig bestFbc;
 		GLXContext glcontext;
