@@ -441,7 +441,10 @@ void X11Window::close()
 void X11Window::minimize() {}
 void X11Window::maximize() {}
 void X11Window::restore() {}
-void X11Window::warpPointer(glm::vec2 coords) {}
+void X11Window::warpPointer(glm::vec2 coords)
+{
+	XWarpPointer(display, None, window, 0, 0, 0, 0, coords.x, coords.y);
+}
 void X11Window::setXY() {}
 void X11Window::setWidthHeight() {}
 void X11Window::mouseCapture(bool capture)
