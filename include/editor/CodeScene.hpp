@@ -1,11 +1,11 @@
 #pragma once
-#include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/RenderWindow.hpp>
+#include <zg/Scene.hpp>
+#include <zg/Window.hpp>
 namespace zg::editor
 {
-	using namespace zg::modules::gl;
-	struct CodeScene : GLScene
+	using namespace zg;
+	struct CodeScene : Scene
 	{
-		explicit CodeScene(RenderWindow &window);
+		explicit CodeScene(Window &window);
 	};
 }

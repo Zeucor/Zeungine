@@ -21,10 +21,6 @@ endif()
 
 #Dependencies
 
-# Fenster
-add_subdirectory(vendor/fenster build/build_fenster)
-include_directories(vendor/fenster/include)
-
 # Freetype
 add_subdirectory(vendor/freetype build/build_freetype)
 set_target_properties(freetype PROPERTIES DEBUG_POSTFIX "")
@@ -57,13 +53,12 @@ include_directories(vendor/filewatch)
 
 include_directories(include)
 
-option(BUILD_FENSTER "Whether to build Fenster module" ON)
 option(BUILD_OPENGL "Whether to build OpenGL module" ON)
 
 set(ZG_SOURCES
-    src/IEntity.cpp
-    src/IScene.cpp
-    src/IWindow.cpp
+    src/interfaces/IEntity.cpp
+    src/interfaces/IScene.cpp
+    src/interfaces/IWindow.cpp
     src/Logger.cpp
     src/SharedLibrary.cpp
     src/crypto/vector.cpp
@@ -80,52 +75,52 @@ endif()
 if(BUILD_OPENGL)
     add_definitions(-DUSE_GL)
     list(APPEND ZG_SOURCES
-        src/modules/gl/RenderWindow.cpp
-        src/modules/gl/renderers/GLRenderer.cpp
-        src/modules/gl/GLEntity.cpp
-        src/modules/gl/GLScene.cpp
-        src/modules/gl/ISizable.cpp
-        src/modules/gl/entities/AssetBrowser.cpp
-        src/modules/gl/entities/Button.cpp
-        src/modules/gl/entities/Console.cpp
-        src/modules/gl/entities/Cube.cpp
-        src/modules/gl/entities/Dialog.cpp
-        src/modules/gl/entities/DropdownMenu.cpp
-        src/modules/gl/entities/Input.cpp
-        src/modules/gl/entities/Panel.cpp
-        src/modules/gl/entities/Plane.cpp
-        src/modules/gl/entities/SkyBox.cpp
-        src/modules/gl/entities/StatusText.cpp
-        src/modules/gl/entities/Tabs.cpp
-        src/modules/gl/entities/TextView.cpp
-        src/modules/gl/entities/Toolbar.cpp
-        src/modules/gl/lights/DirectionalLight.cpp
-        src/modules/gl/lights/PointLight.cpp
-        src/modules/gl/lights/SpotLight.cpp
-        src/modules/gl/shaders/Shader.cpp
-        src/modules/gl/shaders/ShaderFactory.cpp
-        src/modules/gl/shaders/ShaderManager.cpp
-        src/modules/gl/textures/Texture.cpp
-        src/modules/gl/textures/TextureFactory.cpp
-        src/modules/gl/textures/TextureLoader.cpp
-        src/modules/gl/textures/Framebuffer.cpp
-        src/modules/gl/textures/FramebufferFactory.cpp
-        src/modules/gl/vaos/VAO.cpp
-        src/modules/gl/vaos/VAOFactory.cpp
-        src/modules/gl/vp/View.cpp
-        src/modules/gl/vp/Projection.cpp
-        src/modules/gl/vp/VML.cpp
-        src/modules/gl/gl.c
-        src/modules/gl/fonts/freetype/Freetype.cpp
-        src/modules/gl/raytracing/BVH.cpp)
+        src/Window.cpp
+        src/renderers/GLRenderer.cpp
+        src/Entity.cpp
+        src/Scene.cpp
+        src/interfaces/ISizable.cpp
+        src/entities/AssetBrowser.cpp
+        src/entities/Button.cpp
+        src/entities/Console.cpp
+        src/entities/Cube.cpp
+        src/entities/Dialog.cpp
+        src/entities/DropdownMenu.cpp
+        src/entities/Input.cpp
+        src/entities/Panel.cpp
+        src/entities/Plane.cpp
+        src/entities/SkyBox.cpp
+        src/entities/StatusText.cpp
+        src/entities/Tabs.cpp
+        src/entities/TextView.cpp
+        src/entities/Toolbar.cpp
+        src/lights/DirectionalLight.cpp
+        src/lights/PointLight.cpp
+        src/lights/SpotLight.cpp
+        src/shaders/Shader.cpp
+        src/shaders/ShaderFactory.cpp
+        src/shaders/ShaderManager.cpp
+        src/textures/Texture.cpp
+        src/textures/TextureFactory.cpp
+        src/textures/TextureLoader.cpp
+        src/textures/Framebuffer.cpp
+        src/textures/FramebufferFactory.cpp
+        src/vaos/VAO.cpp
+        src/vaos/VAOFactory.cpp
+        src/vp/View.cpp
+        src/vp/Projection.cpp
+        src/vp/VML.cpp
+        src/gl.c
+        src/fonts/freetype/Freetype.cpp
+        src/raytracing/BVH.cpp)
     if(WIN32)
-        list(APPEND ZG_SOURCES src/modules/gl/wgl.c src/modules/gl/windows/WIN32Window.cpp)
+        list(APPEND ZG_SOURCES src/wgl.c src/windows/WIN32Window.cpp)
     elseif(LINUX)
-        list(APPEND ZG_SOURCES src/modules/gl/glx.c src/modules/gl/windows/X11Window.cpp)
+        list(APPEND ZG_SOURCES src/glx.c src/windows/X11Window.cpp)
     elseif(MACOS)
-    list(APPEND ZG_SOURCES src/modules/gl/windows/MacOSWindow.cpp)
+    list(APPEND ZG_SOURCES src/windows/MacOSWindow.cpp)
     elseif(ANDROID OR IOS)
-        list(APPEND ZG_SOURCES src/modules/gl/egl.c)
+        list(APPEND ZG_SOURCES src/egl.c)
     endif()
 endif()
 
@@ -137,9 +132,6 @@ endif()
 
 add_library(zeungine ${ZG_LIBRARY_TYPE} ${ZG_SOURCES})
 
-if(BUILD_FENSTER)
-    target_link_libraries(zeungine fenster)
-endif()
 if(BUILD_OPENGL)
     if(WIN32)
         find_package(OpenGL REQUIRED)
@@ -172,9 +164,6 @@ endfunction()
 
 include(CTest)
 enable_testing()
-if(BUILD_FENSTER)
-    # create_test(FensterWindow tests/FensterWindow.cpp "" FALSE)
-endif()
 if(BUILD_OPENGL)
     create_test(GLTest tests/GLTest.cpp "" FALSE)
     add_executable(Editor src/editor/Editor.cpp src/editor/EditorScene.cpp src/editor/CodeScene.cpp)

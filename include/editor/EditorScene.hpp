@@ -1,30 +1,30 @@
 #pragma once
-#include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/RenderWindow.hpp>
-#include <zg/modules/gl/entities/AssetBrowser.hpp>
-#include <zg/modules/gl/entities/Button.hpp>
-#include <zg/modules/gl/entities/Console.hpp>
-#include <zg/modules/gl/entities/Dialog.hpp>
-#include <zg/modules/gl/entities/Input.hpp>
-#include <zg/modules/gl/entities/Panel.hpp>
-#include <zg/modules/gl/entities/StatusText.hpp>
-#include <zg/modules/gl/entities/Tabs.hpp>
-#include <zg/modules/gl/entities/Toolbar.hpp>
-#include <zg/modules/gl/fonts/freetype/Freetype.hpp>
+#include <zg/Scene.hpp>
+#include <zg/Window.hpp>
+#include <zg/entities/AssetBrowser.hpp>
+#include <zg/entities/Button.hpp>
+#include <zg/entities/Console.hpp>
+#include <zg/entities/Dialog.hpp>
+#include <zg/entities/Input.hpp>
+#include <zg/entities/Panel.hpp>
+#include <zg/entities/StatusText.hpp>
+#include <zg/entities/Tabs.hpp>
+#include <zg/entities/Toolbar.hpp>
+#include <zg/fonts/freetype/Freetype.hpp>
 #include "Hotswapper.hpp"
 #include "Project.hpp"
 namespace zg::editor
 {
-	using namespace zg::modules::gl;
-	struct EditorScene : GLScene
+	using namespace zg;
+	struct EditorScene : Scene
 	{
 		glm::vec4 editorClearColor = {0.2, 0.2, 0.2, 1};
 		float toolbarHeight;
 		float bottomTabsHeight;
 		filesystem::File robotoRegularFile;
-		modules::gl::fonts::freetype::FreetypeFont robotoRegularFont;
-		RenderWindow* gameWindowPointer = nullptr;
-		RenderWindow* codeWindowPointer = nullptr;
+		fonts::freetype::FreetypeFont robotoRegularFont;
+		Window* gameWindowPointer = nullptr;
+		Window* codeWindowPointer = nullptr;
 		float gameWindowBorderWidth;
 		float gameWindowWidth;
 		float gameWindowHeight;
@@ -48,7 +48,7 @@ namespace zg::editor
 		std::shared_ptr<entities::Console> resourceConsole;
 		std::shared_ptr<entities::AssetBrowser> resourceAssetBrowser;
 		std::shared_ptr<entities::TabsBar> resourcePanelTabs;
-		std::shared_ptr<GLEntity> activeResourcePanelEntity;
+		std::shared_ptr<Entity> activeResourcePanelEntity;
 		IWindow::EventIdentifier resizeID = 0;
 		IWindow::EventIdentifier gameWindowBorderHoverID = 0;
 		IWindow::EventIdentifier gameWindowBorderPressID = 0;
@@ -67,11 +67,11 @@ namespace zg::editor
 		std::shared_ptr<entities::Dialog> activeDialog;
 		std::shared_ptr<hs::Hotswapper> hotswapper;
 		Project project;
-		std::function<void(RenderWindow &)> OnLoad;
-		std::function<void(RenderWindow &, hscpp::AllocationResolver &)> OnHotswapLoad;
-		std::function<void(RenderWindow &)> OnUnLoad;
+		std::function<void(Window &)> OnLoad;
+		std::function<void(Window &, hscpp::AllocationResolver &)> OnHotswapLoad;
+		std::function<void(Window &)> OnUnLoad;
 		bool loaded = false;
-		explicit EditorScene(RenderWindow& window);
+		explicit EditorScene(Window& window);
 		~EditorScene() override;
 		void onEntityAdded(const std::shared_ptr<IEntity>& entity);
 		void setupGameWindow();

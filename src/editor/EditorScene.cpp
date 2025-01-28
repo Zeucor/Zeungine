@@ -2,8 +2,8 @@
 #include <editor/CodeScene.hpp>
 #include <zg/filesystem/Directory.hpp>
 using namespace zg::editor;
-EditorScene::EditorScene(RenderWindow& window):
-	GLScene(window, {0, 0, 50}, {0, 0, -1}, {2, 2}),
+EditorScene::EditorScene(Window& window):
+	Scene(window, {0, 0, 50}, {0, 0, -1}, {2, 2}),
 	toolbarHeight(window.windowHeight / 14),
 	bottomTabsHeight(window.windowHeight / 18),
 	robotoRegularFile("fonts/Roboto/Roboto-Regular.ttf", enums::EFileLocation::Relative, "r"),
@@ -172,7 +172,7 @@ EditorScene::EditorScene(RenderWindow& window):
 		"New Project",
 		dialogWidth,
     	dialogHeight,
-		std::vector<std::shared_ptr<GLEntity>>({closeDialogButton, okayDialogButton, projectNameInput, projectDirectoryInput})
+		std::vector<std::shared_ptr<Entity>>({closeDialogButton, okayDialogButton, projectNameInput, projectDirectoryInput})
   	))
 {
 	(*projectNameInput->textPointer) = "EditorGame";
@@ -200,10 +200,10 @@ EditorScene::EditorScene(RenderWindow& window):
 	{
 		removeActiveResourceEntity();
 		resourcePanelMenu->addPanelEntity(resourceConsole, false);
-		activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceConsole);
+		activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceConsole);
 	}, true);
 	resourcePanelMenu->addPanelEntity(resourceConsole, false);
-	activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceConsole);
+	activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceConsole);
 	resourcePanelMenu->addPanelEntity(resourcePanelTabs, false);
 	setupToolbarOptions();
 	addEntity(toolbar);
@@ -251,11 +251,11 @@ EditorScene::~EditorScene()
 };
 void EditorScene::onEntityAdded(const std::shared_ptr<IEntity>& entity)
 {
-	auto& glEntity = *std::dynamic_pointer_cast<GLEntity>(entity);
+	auto& glEntity = *std::dynamic_pointer_cast<Entity>(entity);
 	auto sizeYTotal = sceneGraphPanelMenu->getSizeYTotal();
 	static const auto indent = 16.f;
 	auto panelItem = std::make_shared<entities::PanelItem>(
-		dynamic_cast<RenderWindow&>(window),
+		dynamic_cast<Window&>(window),
 		*this,
 		glm::vec3(indent / window.windowWidth / 0.5, -sizeYTotal, 0.1),
 		glm::vec3(0),
@@ -278,7 +278,7 @@ void EditorScene::setupGameWindow()
 		gameWindowX,
 		gameWindowY,
 		true);
-  	gameWindowPointer = (RenderWindow *)&gameWindow;
+  	gameWindowPointer = (Window *)&gameWindow;
 	gameWindow.minimize();
 	std::function<void(const std::shared_ptr<IEntity>&)> entityAddedFunction = std::bind(
 		&EditorScene::onEntityAdded, this, std::placeholders::_1);
@@ -307,7 +307,7 @@ void EditorScene::setupGameWindow()
 		if (!pressed)
 		{
 			gameWindowPointer->focused = false;
-			auto &glWindow = (RenderWindow&)window;
+			auto &glWindow = (Window&)window;
 			window.callMouseMoveHandler(glWindow.mouseCoords);
 		}
 	});
@@ -322,13 +322,13 @@ void EditorScene::setupCodeWindow()
 		codeWindowX,
 		codeWindowY,
 		true);
-  codeWindowPointer = (RenderWindow *)&codeWindow;
+  codeWindowPointer = (Window *)&codeWindow;
 	codeWindow.minimize();
-	codeWindow.setIScene(std::make_shared<CodeScene>((RenderWindow &)codeWindow));
+	codeWindow.setIScene(std::make_shared<CodeScene>((Window &)codeWindow));
 };
 void EditorScene::minimizeWindows()
 {
-  auto& glWindow = (RenderWindow&)window;
+  auto& glWindow = (Window&)window;
 	for (auto &windowPointer : glWindow.childWindows)
 	{
 		if (!windowPointer->minimized)
@@ -403,34 +403,34 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 		filesystem::File mainIncludeFile(filesystem::File::toPlatformPath(std::string(includePath) + "/main.hpp"), enums::EFileLocation::Relative, "w+");
 		std::string mainIncludeFileString(R"(#pragma once
 #include <Runtime.hpp>
-#include <zg/modules/gl/GLScene.hpp>
-#include <zg/modules/gl/RenderWindow.hpp>
+#include <zg/Scene.hpp>
+#include <zg/Window.hpp>
 using namespace zg;
-using namespace zg::modules::gl;
-struct MainScene : GLScene
+using namespace zg;
+struct MainScene :
 {
-	explicit MainScene(RenderWindow &window);
+	explicit MainScene(Window &window);
 };
-ZG_API void OnLoad(RenderWindow &window);
-ZG_API void OnHotswapLoad(RenderWindow &window, hscpp::AllocationResolver &allocationResolver);
-ZG_API void OnUnLoad(RenderWindow &window);)");
+ZG_API void OnLoad(Window									  &scene &window);
+ZG_API void OnHotswapLoad(Window									  &scene &window, hscpp::AllocationResolver &allocationResolver);
+ZG_API void OnUnLoad(Window									  &scene &window);)");
 		mainIncludeFile.writeBytes(0, mainIncludeFileString.size(), mainIncludeFileString.data());
 		filesystem::File mainSrcFile(filesystem::File::toPlatformPath(std::string(srcPath) + "/main.cpp"), enums::EFileLocation::Relative, "w+");
 		std::string mainSrcFileString(R"(#include <main.hpp>
-MainScene::MainScene(RenderWindow &window):
-	GLScene(window, {0, 50, 50}, {0, -1, -1}, 80.f)
+MainScene::MainScene(Window									  &scene &window):
+	(window, {0, 50, 50}, {0, -1, -1}, 80.f)
 {
 	clearColor = {0.5, 0, 0.5, 1};
 };
-ZG_API void OnLoad(RenderWindow &window)
+ZG_API void OnLoad(Window									  &scene &window)
 {
 	window.setIScene(std::make_shared<MainScene>(window));
 };
-ZG_API void OnHotswapLoad(RenderWindow &window, hscpp::AllocationResolver &allocationResolver)
+ZG_API void OnHotswapLoad(Window									  &scene &window, hscpp::AllocationResolver &allocationResolver)
 {
 	window.setIScene(std::shared_ptr<MainScene>(allocationResolver.Allocate<MainScene>(window)));
 };
-ZG_API void OnUnLoad(RenderWindow &window)
+ZG_API void OnUnLoad(Window									  &scene &window)
 {
 	window.scene.reset();
 	window.close();
@@ -443,7 +443,7 @@ void EditorScene::loadProject(std::string_view projectDirectory)
 {
 	hotswapper = std::make_shared<hs::Hotswapper>(projectDirectory, *this);
 	resourceAssetBrowser = std::make_shared<entities::AssetBrowser>(
-		dynamic_cast<RenderWindow &>(window),
+		dynamic_cast<Window&>(window),
 		*this,
 		glm::vec3(0, 0, 0.1),
 		glm::vec3(0),
@@ -459,7 +459,7 @@ void EditorScene::loadProject(std::string_view projectDirectory)
 		if (resourceAssetBrowser)
 		{
 			resourcePanelMenu->addPanelEntity(resourceAssetBrowser, false);
-			activeResourcePanelEntity = std::dynamic_pointer_cast<GLEntity>(resourceAssetBrowser);
+			activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceAssetBrowser);
 		}
 	});
 	resourcePanelTabs->addTab("Performance", [&]
