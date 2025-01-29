@@ -38,7 +38,7 @@ using namespace zg;
 struct ExampleScene : Scene
 {
     vp::VML vml; // view mouse look
-    ExampleScene(IWindow &window):
+    ExampleScene(Window &window):
         Scene(window,
               {0, 10, 10}, // camera position
               glm::normalize(glm::vec3(0, -1, -1)), //camera direction
@@ -62,10 +62,10 @@ int main()
     Window window("My Window Title", 640, 480, -1, -1);
     window.runOnThread([](auto &window)
     {
-        window.setIScene(std::make_shared<ExampleScene>(window));
+        window.setIScene(std::make_shared<ExampleScene>((Window &)window));
     });
     window.awaitWindowThread();
-};
+}
 ```
 
 See [tests](/tests) for more usage examples
