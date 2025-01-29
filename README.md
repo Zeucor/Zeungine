@@ -4,8 +4,6 @@
 
 A library that simplifies Game abstraction written in C++, runs on Windows 10/11 and Linux (X11)
 
-Comes with some modules, A `Fenster` module for 2D graphics drawing, and a `GL` module for 3D rendering
-
 Uses CMake for it's build system and comes with some included tests
 
 ## Cloning
@@ -32,12 +30,41 @@ ctest --test-dir build --rerun-failed -VV -C Debug
 ### Usage
 
 ```cpp
-#include <zg/modules/fenster/Fenster.hpp>
-using namespace zg::modules::fenster;
+#include <zg/Window.hpp>
+#include <zg/Scene.hpp>
+#include <zg/vp/VML.hpp>
+#include <zg/entities/Cube.hpp>
+using namespace zg;
+struct ExampleScene : Scene
+{
+    vp::VML vml; // view mouse look
+    ExampleScene(IWindow &window):
+        Scene(window,
+              {0, 10, 10}, // camera position
+              glm::normalize(glm::vec3(0, -1, -1)), //camera direction
+              81.f // fov
+        ),
+        vml(*this)
+    {
+        addEntity(std::make_shared<entities::Cube>(
+            (Window &)window, // reference to window
+            *this, // reference to scene
+            glm::vec3(0, 0, 0), // position
+            glm::vec3(0, 0, 0), // rotation
+            glm::vec3(1, 1, 1), // scale
+            glm::vec3(2, 1, 4), // cube size
+            shaders::RuntimeConstants() // additional shader constants
+        ));
+    };
+};
 int main()
 {
-    FensterWindow game(640, 480);
-    game.awaitWindowThread();
+    Window window("My Window Title", 640, 480, -1, -1);
+    window.runOnThread([](auto &window)
+    {
+        window.setIScene(std::make_shared<ExampleScene>(window));
+    });
+    window.awaitWindowThread();
 };
 ```
 
