@@ -15,7 +15,7 @@ IWindow::IWindow(float _windowWidth,
   framerate(_framerate),
   borderless(_borderless)
 {};
-void IWindow::awaitWindowThread() const
+void IWindow::await() const
 {
   windowThread->join();
 }

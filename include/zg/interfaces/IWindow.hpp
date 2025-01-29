@@ -54,7 +54,7 @@ namespace zg
 						uint32_t framerate);
 		virtual ~IWindow() = default;
 		void run();
-		void awaitWindowThread() const;
+		void await() const;
 		virtual void startWindow() = 0;
 		virtual void preRender();
 		void render();
