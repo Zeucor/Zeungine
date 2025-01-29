@@ -376,8 +376,11 @@ void WIN32Window::warpPointer(glm::vec2 coords)
  	auto currentWindow = renderWindowPointer;
  	while (currentWindow)
  	{
- 		pt.x += currentWindow->windowX;
- 		pt.y += currentWindow->windowY;
+ 		if (currentWindow->parentWindow)
+ 		{
+ 			pt.x += currentWindow->windowX;
+ 			pt.y += currentWindow->windowY;
+ 		}
  		currentWindow = currentWindow->parentWindow;
  	}
  	SetCursorPos(pt.x, pt.y);

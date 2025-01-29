@@ -11,19 +11,19 @@
 #include <zg/vp/VML.hpp>
 using namespace zg;
 struct TestTriangle;
-struct TestScene : zg::
+struct TestScene : Scene
 {
   std::shared_ptr<entities::Cube> cubeEntity;
   vp::VML vml;
-  explicit TestScene(zg::IWindow &_window);
+  explicit TestScene(IWindow &_window);
 };
-struct TestTriangle : zg::Entity
+struct TestTriangle : Entity
 {
   std::vector<glm::vec4> colors;
   std::vector<glm::vec3> normals = {};
   float rotationAmount = 0;
   TestScene &testScene;
-  TestTriangle(zg::IWindow &_window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
+  TestTriangle(IWindow &_window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
     Entity(_window, {
       "Color",
       "Position",
@@ -65,7 +65,7 @@ struct TestTriangle : zg::Entity
   };
   void preRender() override
   {
-    auto &glWindow = (Window									  &scene &)window;
+    auto &glWindow = (Window &)window;
     auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(glWindow.iVendorRenderer);
   	glRenderer.glContext->Disable(GL_CULL_FACE);
     GLcheck(glRenderer, "glEnable");
@@ -80,13 +80,13 @@ struct TestTriangle : zg::Entity
   };
   void postRender() override
   {
-    auto &glWindow = (Window									  &scene &)window;
+    auto &glWindow = (Window &)window;
     auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(glWindow.iVendorRenderer);
     glRenderer.glContext->Enable(GL_CULL_FACE);
     GLcheck(glRenderer, "glEnable");
   };
 };
-void rotateLightPosition(zg::IWindow &window,  &scene, lights::PointLight &light, lights::PointLightShadow &pointLightShadow, float angleSpeed, shaders::Shader &shader)
+void rotateLightPosition(IWindow &window, Scene &scene, lights::PointLight &light, lights::PointLightShadow &pointLightShadow, float angleSpeed, shaders::Shader &shader)
 {
   window.runOnThread([&, angleSpeed](auto &window) mutable
   {
@@ -106,8 +106,8 @@ void rotateLightPosition(zg::IWindow &window,  &scene, lights::PointLight &light
     });
   });
 };
-TestScene::TestScene(zg::IWindow& window):
-  (window, { 0, 10, 10}, glm::normalize(glm::vec3(0, -1, -1)), 81.f),
+TestScene::TestScene(IWindow& window):
+  Scene(window, { 0, 10, 10}, glm::normalize(glm::vec3(0, -1, -1)), 81.f),
   vml(*this)
 {
   pointLights.push_back({
@@ -118,7 +118,7 @@ TestScene::TestScene(zg::IWindow& window):
     1.f,
     250.f
   });
-  pointLightShadows.emplace_back(dynamic_cast<Window									  &scene &>(window), pointLights[0]);
+  pointLightShadows.emplace_back(dynamic_cast<Window &>(window), pointLights[0]);
   directionalLights.push_back({
     {0, 25, 20}, // position
     glm::normalize(glm::vec3(0, -1, -1)), // direction
@@ -127,7 +127,7 @@ TestScene::TestScene(zg::IWindow& window):
     1.f, // nearPlane
     250.f // farPlane
   });
-  directionalLightShadows.emplace_back(dynamic_cast<Window									  &scene &>(window), directionalLights[0]);
+  directionalLightShadows.emplace_back(dynamic_cast<Window &>(window), directionalLights[0]);
   spotLights.push_back({
     {0, 25, -20}, // position
     glm::normalize(glm::vec3(0, -1, 1)), // direction
@@ -138,8 +138,8 @@ TestScene::TestScene(zg::IWindow& window):
     1.f,
     250.f
   });
-  spotLightShadows.emplace_back(dynamic_cast<Window									  &scene &>(window), spotLights[0]);
-  cubeEntity = std::make_shared<entities::Cube>((Window									  &scene&)window, *this,
+  spotLightShadows.emplace_back(dynamic_cast<Window &>(window), spotLights[0]);
+  cubeEntity = std::make_shared<entities::Cube>((Window &)window, *this,
     glm::vec3(0, 3, 0), // position
     glm::vec3(0, 0, 0), // rotation
     glm::vec3(1, 1, 1), // scale
@@ -153,7 +153,7 @@ TestScene::TestScene(zg::IWindow& window):
       "Fog"
     }));
   addEntity(cubeEntity); // size
-  addEntity(std::make_shared<entities::Cube>((Window									  &scene &)window, *this,
+  addEntity(std::make_shared<entities::Cube>((Window &)window, *this,
     glm::vec3(0, 0, 0),
     glm::vec3(0, 0, 0),
     glm::vec3(1, 1, 1),
@@ -176,7 +176,7 @@ TestScene::TestScene(zg::IWindow& window):
   shader.setUniform("fogColor", glm::vec4(0, 0, 0, 1));
   shader.unbind();
   auto skybox = std::make_shared<entities::SkyBox>(
-    (Window									  &scene &)window,
+    (Window &)window,
     *this,
     std::vector<std::string_view>({
       "images/skybox/right.jpg", "images/skybox/left.jpg", "images/skybox/top.jpg",
@@ -213,7 +213,7 @@ TestScene::TestScene(zg::IWindow& window):
 
 int main()
 {
-  Window									  &scene window("Window									  &scene", 1280, 720, -1, -1);
+  Window window("Window", 1280, 720, -1, -1);
   window.clearColor = {0, 0, 0, 1};
   window.runOnThread([](auto &window)
   {
