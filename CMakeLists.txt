@@ -20,6 +20,8 @@ if(LINUX OR MACOS)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
     endif()
     set(BUILD_SHARED_LIBS ON)
+elseif(WINDOWS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4068")
 endif()
 
 #Dependencies
