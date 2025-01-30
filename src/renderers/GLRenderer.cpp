@@ -356,6 +356,7 @@ void GLRenderer::deleteShader(shaders::Shader &shader)
 }
 const bool zg::GLcheck(GLRenderer &renderer, const char* fn, const bool egl)
 {
+#ifndef NDEBUG
 	while (true)
 	{
 		uint32_t err = 0;
@@ -486,6 +487,7 @@ const bool zg::GLcheck(GLRenderer &renderer, const char* fn, const bool egl)
 #endif
 		}
 	}
+#endif
 	return true;
 }
 #endif
