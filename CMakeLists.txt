@@ -74,9 +74,6 @@ set(ZG_SOURCES
     src/strings/HookedConsole.cpp
 )
 
-if(BUILD_FENSTER)
-    list(APPEND ZG_SOURCES src/modules/fenster/Fenster.cpp)
-endif()
 if(BUILD_OPENGL)
     add_definitions(-DUSE_GL)
     list(APPEND ZG_SOURCES
