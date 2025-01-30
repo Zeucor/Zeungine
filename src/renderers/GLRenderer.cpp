@@ -91,15 +91,6 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 void GLRenderer::render()
 {
 	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
-	glContext->ClearColor(
-		renderWindow.clearColor.r,
-		renderWindow.clearColor.g,
-		renderWindow.clearColor.b,
-		renderWindow.clearColor.a
-	);
-	GLcheck(*this, "glClearColor");
-	glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	GLcheck(*this, "glClear");
 	renderWindow.render();
 	for (auto &childWindowPointer : renderWindow.childWindows)
 	{
