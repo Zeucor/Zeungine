@@ -96,7 +96,7 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 #endif
 }
 void GLRenderer::destroy() {}
-std::shared_ptr<IRenderer> zg::createVendorRenderer() { return std::shared_ptr<IRenderer>(new GLRenderer()); }
+std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new GLRenderer()); }
 void GLRenderer::clearColor(glm::vec4 color)
 {
 	glContext->ClearColor(color.r, color.g, color.b, color.a);

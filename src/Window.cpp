@@ -78,8 +78,8 @@ void Window::startWindow()
 {
 	iPlatformWindow = createPlatformWindow();
 	auto &iPlatformWindowRef = *iPlatformWindow;
+	iRenderer = createRenderer();
 	iPlatformWindowRef.init(*this);
-	iRenderer = createVendorRenderer();
 	iPlatformWindowRef.createContext();
 	iRenderer->init(&iPlatformWindowRef);
 	auto &iRendererRef = *iRenderer;

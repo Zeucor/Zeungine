@@ -6,13 +6,17 @@ set(CMAKE_CXX_STANDARD 20)
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_definitions(-DLINUX)
     set(LINUX ON)
+    set(ANGLE_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/linux")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     add_definitions(-DMACOS)
     set(MACOS ON)
+    set(ANGLE_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/macos")
 elseif(WIN32)
     add_definitions(-DWINDOWS)
     set(WINDOWS ON)
+    set(ANGLE_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/windows")
 endif()
+set(ANGLE_INCLUDE_DIR "include/angle")
 
 if(LINUX OR MACOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -fPIC")
@@ -57,8 +61,10 @@ add_subdirectory(vendor/filewatch)
 include_directories(vendor/filewatch)
 
 include_directories(include)
+include_directories(${ANGLE_INCLUDE_DIR})
 
-option(BUILD_OPENGL "Whether to build OpenGL module" ON)
+option(BUILD_OPENGL "Whether to build OpenGL module" OFF)
+option(BUILD_EGL "Whether to build EGL module" ON)
 
 set(ZG_SOURCES
     src/interfaces/IEntity.cpp
@@ -74,47 +80,55 @@ set(ZG_SOURCES
     src/strings/HookedConsole.cpp
 )
 
+list(APPEND ZG_SOURCES
+    src/Window.cpp
+    src/Entity.cpp
+    src/Scene.cpp
+    src/interfaces/ISizable.cpp
+    src/entities/AssetBrowser.cpp
+    src/entities/Button.cpp
+    src/entities/Console.cpp
+    src/entities/Cube.cpp
+    src/entities/Dialog.cpp
+    src/entities/DropdownMenu.cpp
+    src/entities/Input.cpp
+    src/entities/Panel.cpp
+    src/entities/Plane.cpp
+    src/entities/SkyBox.cpp
+    src/entities/StatusText.cpp
+    src/entities/Tabs.cpp
+    src/entities/TextView.cpp
+    src/entities/Toolbar.cpp
+    src/lights/DirectionalLight.cpp
+    src/lights/PointLight.cpp
+    src/lights/SpotLight.cpp
+    src/shaders/Shader.cpp
+    src/shaders/ShaderFactory.cpp
+    src/shaders/ShaderManager.cpp
+    src/textures/Texture.cpp
+    src/textures/TextureFactory.cpp
+    src/textures/TextureLoader.cpp
+    src/textures/Framebuffer.cpp
+    src/textures/FramebufferFactory.cpp
+    src/vaos/VAO.cpp
+    src/vaos/VAOFactory.cpp
+    src/vp/View.cpp
+    src/vp/Projection.cpp
+    src/vp/VML.cpp
+    src/fonts/freetype/Freetype.cpp
+    src/raytracing/BVH.cpp)
+
+if(WIN32)
+    list(APPEND ZG_SOURCES src/windows/WIN32Window.cpp)
+elseif(LINUX)
+    list(APPEND ZG_SOURCES src/windows/X11Window.cpp)
+elseif(MACOS)
+    list(APPEND ZG_SOURCES src/windows/MacOSWindow.mm)
+endif()
+
 if(BUILD_OPENGL)
     add_definitions(-DUSE_GL)
-    list(APPEND ZG_SOURCES
-        src/Window.cpp
-        src/renderers/GLRenderer.cpp
-        src/Entity.cpp
-        src/Scene.cpp
-        src/interfaces/ISizable.cpp
-        src/entities/AssetBrowser.cpp
-        src/entities/Button.cpp
-        src/entities/Console.cpp
-        src/entities/Cube.cpp
-        src/entities/Dialog.cpp
-        src/entities/DropdownMenu.cpp
-        src/entities/Input.cpp
-        src/entities/Panel.cpp
-        src/entities/Plane.cpp
-        src/entities/SkyBox.cpp
-        src/entities/StatusText.cpp
-        src/entities/Tabs.cpp
-        src/entities/TextView.cpp
-        src/entities/Toolbar.cpp
-        src/lights/DirectionalLight.cpp
-        src/lights/PointLight.cpp
-        src/lights/SpotLight.cpp
-        src/shaders/Shader.cpp
-        src/shaders/ShaderFactory.cpp
-        src/shaders/ShaderManager.cpp
-        src/textures/Texture.cpp
-        src/textures/TextureFactory.cpp
-        src/textures/TextureLoader.cpp
-        src/textures/Framebuffer.cpp
-        src/textures/FramebufferFactory.cpp
-        src/vaos/VAO.cpp
-        src/vaos/VAOFactory.cpp
-        src/vp/View.cpp
-        src/vp/Projection.cpp
-        src/vp/VML.cpp
-        src/gl.c
-        src/fonts/freetype/Freetype.cpp
-        src/raytracing/BVH.cpp)
+    list(APPEND ZG_SOURCES src/renderers/GLRenderer.cpp src/gl.c)
     if(WIN32)
         list(APPEND ZG_SOURCES src/wgl.c src/windows/WIN32Window.cpp)
     elseif(LINUX)
@@ -124,6 +138,9 @@ if(BUILD_OPENGL)
     elseif(ANDROID OR IOS)
         list(APPEND ZG_SOURCES src/egl.c)
     endif()
+elseif(BUILD_EGL)
+    add_definitions(-DUSE_EGL)
+    list(APPEND ZG_SOURCES src/renderers/EGLRenderer.cpp)
 endif()
 
 if(WIN32)
@@ -150,6 +167,9 @@ if(LINUX)
 elseif(MACOS)
     find_package(OpenGL REQUIRED)
     target_link_libraries(zeungine ${OPENGL_LIBRARY} "-framework Cocoa" "-framework QuartzCore")
+endif()
+if(LINUX)
+    target_link_libraries(zeungine ${ANGLE_LIB_DIR}/libEGL.so ${ANGLE_LIB_DIR}/libGLESv2.so)
 endif()
 
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)

@@ -15,7 +15,12 @@ TextureFactory::FormatsMap TextureFactory::formats = {
   {Texture::Format::RGBA8, GL_RGBA},
   {Texture::Format::RGBA32F, GL_RGBA},
   {Texture::Format::Depth, GL_DEPTH_COMPONENT},
+#ifdef USE_GL
   {Texture::Format::Stencil, GL_STENCIL_INDEX},
+#endif
+#ifdef USE_EGL
+  {Texture::Format::Stencil, GL_STENCIL_INDEX8},
+#endif
   {Texture::Format::DepthStencil, GL_DEPTH_STENCIL},
   {Texture::Format::Integer32, GL_RED_INTEGER}
 };

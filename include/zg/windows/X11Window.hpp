@@ -15,9 +15,14 @@ namespace zg
 		unsigned long rootWindow = 0;
 		unsigned long wmDeleteWindow = 0;
 		unsigned long wmProtocols = 0;
+#ifdef USE_GL
 		XVisualInfo visualinfo;
 		GLXFBConfig bestFbc;
 		GLXContext glcontext;
+#endif
+#ifdef USE_EGL
+    	EGLConfig eglConfig;
+#endif
 		void init(Window& window) override;
 		void createContext() override;
 		void renderInit();

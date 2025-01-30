@@ -60,5 +60,5 @@ namespace zg
 		virtual void generateVAO(vaos::VAO &vao) = 0;
 		virtual void destroyVAO(vaos::VAO &vao) = 0;
 	};
-	std::shared_ptr<IRenderer> createVendorRenderer();
+	std::shared_ptr<IRenderer> createRenderer();
 }

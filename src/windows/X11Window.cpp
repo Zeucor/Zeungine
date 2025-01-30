@@ -8,9 +8,14 @@
 #include <xkbcommon/xkbcommon.h>
 #include <iostream>
 #include <zg/common.hpp>
+#ifdef USE_GL
 #include <GL/glext.h>
+#endif
 #include <zg/entities/Plane.hpp>
 #include <zg/windows/X11Window.hpp>
+#ifdef USE_EGL
+#include <zg/renderers/EGLRenderer.hpp>
+#endif
 #include <iostream>
 using namespace zg;
 void X11Window::init(Window& renderWindow)
@@ -24,8 +29,9 @@ void X11Window::init(Window& renderWindow)
 	{
 		return;
 	}
-	/*
-	 */
+	defaultRootWindow = DefaultRootWindow(display);
+	screen = DefaultScreen(display);
+#ifdef USE_GL
 	static int visual_attribs[] = {GLX_X_RENDERABLE,
 																 True,
 																 GLX_DRAWABLE_TYPE,
@@ -81,18 +87,39 @@ void X11Window::init(Window& renderWindow)
 	bestFbc = fbc[best_fbc];
 	XFree(fbc);
 	XVisualInfo* vi = glXGetVisualFromFBConfig(display, bestFbc);
-	XSetWindowAttributes attr;
 	Colormap cmap;
 	rootWindow = RootWindow(display, vi->screen);
+	XSetWindowAttributes attr;
 	attr.colormap = cmap = XCreateColormap(display, rootWindow, vi->visual, AllocNone);
 	attr.background_pixmap = None;
 	attr.border_pixel = 0;
 	attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | ButtonPressMask |
 		ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | FocusChangeMask;
-	defaultRootWindow = DefaultRootWindow(display);
-	// auto currentScreenModes = getCurrentScreenModes();
-	// auto &screen1Mode = currentScreenModes._data[0];
-	// int32_t displayWidth = screen1Mode.size.x, displayHeight = screen1Mode.size.y;
+#endif
+#ifdef USE_EGL
+    EGLint numConfigs;
+    EGLint eglAttribs[] = {
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_DEPTH_SIZE, 24,
+        EGL_STENCIL_SIZE, 8,
+        EGL_NONE
+    };
+	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
+    if (!eglChooseConfig(eglRenderer.eglDisplay, eglAttribs, &eglConfig, 1, &numConfigs))
+    {
+        return;
+    }
+	rootWindow = DefaultRootWindow(display);
+	XSetWindowAttributes attr;
+    attr.colormap = XCreateColormap(display, rootWindow, DefaultVisual(display, 0), AllocNone);
+    attr.background_pixmap = None;
+    attr.border_pixel = 0;
+    attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | ButtonPressMask |
+                      ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | FocusChangeMask;
+#endif
 	int screenWidth = DisplayWidth(display, screen);
 	int screenHeight = DisplayHeight(display, screen);
 	int32_t windowWidth = renderWindow.windowWidth, windowHeight = renderWindow.windowHeight;
@@ -100,15 +127,20 @@ void X11Window::init(Window& renderWindow)
 					windowY = renderWindow.windowY == -1 ? (screenHeight - windowHeight) / 2 : renderWindow.windowY;
 	renderWindow.windowX = windowX;
 	renderWindow.windowY = windowY;
+#ifdef USE_GL
 	window =
 		XCreateWindow(display, RootWindow(display, vi->screen), windowX, windowY, windowWidth, windowHeight, 0, vi->depth,
 									InputOutput, vi->visual, CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
+	XFree(vi);
+#endif
+#ifdef USE_EGL
+    window = XCreateWindow(display, rootWindow, windowX, windowY, windowWidth, windowHeight, 0, CopyFromParent,
+                           InputOutput, DefaultVisual(display, screen), CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
+#endif
 	if (!window)
 	{
 		return;
 	}
-	XFree(vi);
-	screen = DefaultScreen(display);
 	if (strlen(renderWindow.title))
 	{
 		XStoreName(display, window, renderWindow.title);
@@ -224,6 +256,24 @@ void X11Window::createContext()
 		XSync(display, False);
 	}
 	glXMakeCurrent(display, window, glcontext);
+#endif
+#ifdef USE_EGL
+	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
+    eglRenderer.eglSurface = eglCreateWindowSurface(eglRenderer.eglDisplay, eglConfig, window, nullptr);
+    if (eglRenderer.eglSurface == EGL_NO_SURFACE)
+    {
+        throw std::runtime_error("EGL_NO_SURFACE");
+    }
+    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    eglRenderer.eglContext = eglCreateContext(eglRenderer.eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
+    if (eglRenderer.eglContext == EGL_NO_CONTEXT)
+    {
+        throw std::runtime_error("EGL_NO_CONTEXT");
+    }
+    if (!eglMakeCurrent(eglRenderer.eglDisplay, eglRenderer.eglSurface, eglRenderer.eglSurface, eglRenderer.eglContext))
+    {
+        throw std::runtime_error("eglMakeCurrent failed!");
+    }
 #endif
 }
 void X11Window::postInit()
@@ -459,6 +509,10 @@ void X11Window::swapBuffers()
 {
 #ifdef USE_GL
 	glXSwapBuffers(display, window);
+#endif
+#ifdef USE_EGL
+	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
+	eglSwapBuffers(eglRenderer.eglDisplay, eglRenderer.eglSurface);
 #endif
 }
 void X11Window::destroy() { renderWindowPointer->iRenderer->destroy(); }

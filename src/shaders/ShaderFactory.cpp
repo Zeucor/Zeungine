@@ -1025,11 +1025,17 @@ uint32_t ShaderFactory::hooksCount = 0;
 ShaderFactory::ShaderHookInfoMap ShaderFactory::shaderHookInfos;
 ShaderFactory::ShaderTypeMap ShaderFactory::shaderTypes = {
 	{ShaderType::Vertex, GL_VERTEX_SHADER},
+#ifdef USE_GL
 	{ShaderType::Geometry, GL_GEOMETRY_SHADER},
-	{ShaderType::Fragment, GL_FRAGMENT_SHADER},
+#endif
+	{ShaderType::Fragment, GL_FRAGMENT_SHADER}
+#ifdef USE_GL
+  ,
 	{ShaderType::TessellationControl, GL_TESS_CONTROL_SHADER},
 	{ShaderType::TessellationEvaluation, GL_TESS_EVALUATION_SHADER},
-	{ShaderType::Compute, GL_COMPUTE_SHADER}};
+	{ShaderType::Compute, GL_COMPUTE_SHADER}
+#endif
+};
 ShaderFactory::ShaderNameMap ShaderFactory::shaderNames = {
 	{ShaderType::Vertex, "VertexShader"},
 	{ShaderType::Geometry, "GeometryShader"},
