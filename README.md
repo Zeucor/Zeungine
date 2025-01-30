@@ -25,7 +25,13 @@ git clone git@github.com:Zeungine/Zeungine.git --recursive
 ###### Linux
 
 ```bash
-sudo apt install libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev
+apt install libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev
+```
+
+also, you may need these libs to build some of the vendor examples
+
+```bash
+apt install libxinerama-dev libxcursor-dev libxi-dev
 ```
 
 ###### MacOS
