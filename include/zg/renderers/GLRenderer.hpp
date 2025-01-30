@@ -16,7 +16,7 @@ namespace zg
 		void clearColor(glm::vec4 color) override;
 		void clear() override;
 		void viewport(glm::ivec4 vp) const override;
-		void setUniform(shaders::Shader &shader, const std::string_view name, const void *value, uint32_t size, enums::EUniformType uniformType) override;
+		void setUniform(shaders::Shader &shader, const std::string_view name, const void *pointer, uint32_t size, enums::EUniformType uniformType) override;
 		void setBlock(shaders::Shader &shader, const std::string_view name, const void* pointer, size_t size) override;
 		void deleteBuffer(uint32_t id) override;
 		void bindShader(const shaders::Shader &shader) override;

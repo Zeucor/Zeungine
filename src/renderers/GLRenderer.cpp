@@ -121,12 +121,11 @@ void GLRenderer::viewport(glm::ivec4 vp) const
 	glContext->Viewport(vp.x, vp.y, vp.z, vp.w);
 	GLcheck(*this, "glViewport");
 }
-void GLRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* value, uint32_t size,
+void GLRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
 														enums::EUniformType uniformType)
 {
 	GLint location = glContext->GetUniformLocation(shader.program, name.data());
 	GLcheck(*this, "glGetUniformLocation");
-	auto pointer = &value;
 	if (location == -1)
 	{
 		return;

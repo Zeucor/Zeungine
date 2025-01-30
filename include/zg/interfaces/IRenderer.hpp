@@ -33,7 +33,7 @@ namespace zg
 		virtual void clearColor(glm::vec4 color) = 0;
 		virtual void clear() = 0;
 		virtual void viewport(glm::ivec4 vp) const = 0;
-		virtual void setUniform(shaders::Shader &shader, const std::string_view name, const void *value, uint32_t size, enums::EUniformType uniformType) = 0;
+		virtual void setUniform(shaders::Shader &shader, const std::string_view name, const void *pointer, uint32_t size, enums::EUniformType uniformType) = 0;
 		virtual void setBlock(shaders::Shader &shader, const std::string_view name, const void* pointer, size_t size) = 0;
 		virtual void deleteBuffer(uint32_t id) = 0;
 		virtual void bindShader(const shaders::Shader &shader) = 0;
