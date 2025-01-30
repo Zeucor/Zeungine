@@ -336,7 +336,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   {
                     ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                     {
-                      return "  outUV = inUV;";
+                      return "  outUV = normalize(inUV);";
                     }
                   }
             }
@@ -831,7 +831,10 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   {
                     ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                     {
-                      return "  FragColor = texture(TextureCube, inUV);";
+                      std::string string = "  vec3 sampleDir = normalize(inUV);\n";
+                      string += "  sampleDir = clamp(sampleDir, -0.999, 0.999);\n";
+                      string += "  FragColor = texture(TextureCube, sampleDir);";
+                      return string;
                     }
                   }
             }
@@ -1053,7 +1056,9 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	ShaderPair shaderPair;
 	auto& shaderString = shaderPair.first;
 	auto& shaderHooks = hooks[shaderType];
-	shaderString += "#version 430 core\n";
+	shaderString += "#version 460 core\n";
+  shaderString += "precision highp float;\n";
+  shaderString += "precision highp samplerCube;\n";
 	currentInLayoutIndex = 0;
 	currentOutLayoutIndex = 0;
 	appendHooks(shaderString, shaderHooks["preLayout"], constants, shader);
