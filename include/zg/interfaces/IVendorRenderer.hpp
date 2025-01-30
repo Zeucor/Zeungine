@@ -20,6 +20,7 @@ namespace zg
 		virtual void clear() = 0;
 		virtual void viewport(glm::ivec4 vp) = 0;
 		virtual void setUniform(shaders::Shader &shader, const std::string_view name, const void *value, uint32_t size, enums::EUniformType uniformType) = 0;
+		virtual void setBlock(shaders::Shader &shader, const std::string_view name, const void* pointer, size_t size) = 0;
 	};
 	std::shared_ptr<IVendorRenderer> createVendorRenderer();
 }

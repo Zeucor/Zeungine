@@ -201,6 +201,25 @@ void GLRenderer::setUniform(shaders::Shader &shader, const std::string_view name
 	}
 	assert(false && "Should not reach here");
 }
+void GLRenderer::setBlock(shaders::Shader &shader, const std::string_view name, const void* pointer, size_t size)
+{
+	auto blockIndex = glContext->GetUniformBlockIndex(shader.program, name.data());
+	if (blockIndex == -1)
+	{
+		return;
+	}
+	auto& uboBinding = shader.uboBindings[name];
+	auto& bindingIndex = std::get<0>(uboBinding);
+	glContext->UniformBlockBinding(shader.program, blockIndex, bindingIndex);
+	GLcheck(*this, "glUniformBlockBinding");
+	auto& uboBufferIndex = std::get<1>(uboBinding);
+	glContext->BindBuffer(GL_UNIFORM_BUFFER, uboBufferIndex);
+	GLcheck(*this, "glBindBuffer");
+	glContext->BufferData(GL_UNIFORM_BUFFER, size, pointer, GL_STATIC_DRAW);
+	GLcheck(*this, "glBufferData");
+	glContext->BindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, size);
+	GLcheck(*this, "glBindBufferRange");
+}
 const bool zg::GLcheck(GLRenderer &renderer, const char* fn, const bool egl)
 {
 	while (true)

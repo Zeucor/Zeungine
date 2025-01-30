@@ -17,6 +17,7 @@ namespace zg
 		void clear() override;
 		void viewport(glm::ivec4 vp) override;
 		void setUniform(shaders::Shader &shader, const std::string_view name, const void *value, uint32_t size, enums::EUniformType uniformType) override;
+		void setBlock(shaders::Shader &shader, const std::string_view name, const void* pointer, size_t size) override;
 	};
 	const bool GLcheck(GLRenderer &renderer, const char* fn, const bool egl = false);
 }

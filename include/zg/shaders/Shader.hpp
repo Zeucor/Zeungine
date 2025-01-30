@@ -103,24 +103,8 @@ namespace zg::shaders
 		template <typename T>
 		void setBlock(const std::string_view name, const T& value, uint32_t size = 0)
 		{
-			auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
-			auto blockIndex = glRenderer.glContext->GetUniformBlockIndex(program, name.data());
-			if (blockIndex == -1)
-			{
-				return;
-			}
-			auto& uboBinding = uboBindings[name];
-			auto& bindingIndex = std::get<0>(uboBinding);
-			glRenderer.glContext->UniformBlockBinding(program, blockIndex, bindingIndex);
-			GLcheck(glRenderer, "glUniformBlockBinding");
-			auto& uboBufferIndex = std::get<1>(uboBinding);
-			glRenderer.glContext->BindBuffer(GL_UNIFORM_BUFFER, uboBufferIndex);
-			GLcheck(glRenderer, "glBindBuffer");
 			auto pointerSize = size ? size : sizeof(value);
-			glRenderer.glContext->BufferData(GL_UNIFORM_BUFFER, pointerSize, &value, GL_STATIC_DRAW);
-			GLcheck(glRenderer, "glBufferData");
-			glRenderer.glContext->BindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, pointerSize);
-			GLcheck(glRenderer, "glBindBufferRange");
+			window.iVendorRenderer->setBlock(*this, name, &value, pointerSize);
 		};
 		void setSSBO(const std::string_view name, const void* pointer, uint32_t size);
 		void setTexture(const std::string_view name, const textures::Texture& texture, const int32_t& unit);
