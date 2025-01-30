@@ -1,11 +1,11 @@
 #pragma once
 #ifdef USE_GL
 #include "../common.hpp"
-#include "../interfaces/IVendorRenderer.hpp"
+#include "../interfaces/IRenderer.hpp"
 #include "../interfaces/IPlatformWindow.hpp"
 namespace zg
 {
-	struct GLRenderer : IVendorRenderer
+	struct GLRenderer : IRenderer
 	{
 		GladGLContext *glContext = 0;
 		GLRenderer();

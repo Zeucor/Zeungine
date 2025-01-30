@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <zg/glm.hpp>
-#include "./IVendorRenderer.hpp"
+#include "./IRenderer.hpp"
 namespace zg
 {
 	struct Window;

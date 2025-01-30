@@ -17,10 +17,10 @@ namespace zg
 	{
 		struct Texture;
 	}
-	struct IVendorRenderer
+	struct IRenderer
 	{
 		IPlatformWindow* platformWindowPointer = nullptr;
-		virtual ~IVendorRenderer() = default;
+		virtual ~IRenderer() = default;
 		virtual void init(IPlatformWindow *platformWindowPointer) = 0;
 		virtual void render() = 0;
 		virtual void destroy() = 0;
@@ -40,5 +40,5 @@ namespace zg
 		virtual bool compileProgram(shaders::Shader &shader, const shaders::ShaderMap& shaderMap) = 0;
 		virtual void deleteShader(shaders::Shader &shader) = 0;
 	};
-	std::shared_ptr<IVendorRenderer> createVendorRenderer();
+	std::shared_ptr<IRenderer> createVendorRenderer();
 }

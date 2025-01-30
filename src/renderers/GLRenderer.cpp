@@ -103,9 +103,9 @@ void GLRenderer::render()
 	platformWindowPointer->swapBuffers();
 }
 void GLRenderer::destroy(){}
-std::shared_ptr<IVendorRenderer> zg::createVendorRenderer()
+std::shared_ptr<IRenderer> zg::createVendorRenderer()
 {
-	return std::shared_ptr<IVendorRenderer>(new GLRenderer());
+	return std::shared_ptr<IRenderer>(new GLRenderer());
 }
 void GLRenderer::clearColor(glm::vec4 color)
 {
