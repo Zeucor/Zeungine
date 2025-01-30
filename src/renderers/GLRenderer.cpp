@@ -55,17 +55,21 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 	GLcheck(*this, "glClearDepth");
 	glContext->DepthRange(0.0, 1.0);
 	GLcheck(*this, "glDepthRange");
-	glContext->Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-	GLcheck(*this, "glEnable:GL_SAMPLE_ALPHA_TO_COVERAGE");
+	// glContext->Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+	// GLcheck(*this, "glEnable:GL_SAMPLE_ALPHA_TO_COVERAGE");
 	glContext->Enable(GL_BLEND);
 	GLcheck(*this, "glEnable:GL_BLEND");
-	glContext->Enable(GL_DITHER);
-	GLcheck(*this, "glEnable:GL_DITHER");
+	glContext->Disable(GL_DITHER);
+	GLcheck(*this, "glDisable:GL_DITHER");
+	glContext->Disable(GL_POLYGON_SMOOTH);
+	GLcheck(*this, "glDisable:GL_POLYGON_SMOOTH");
 #ifndef MACOS
-	glContext->BlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
-	GLcheck(*this, "glBlendEquationSeparate");
+	// glContext->BlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+	// GLcheck(*this, "glBlendEquationSeparate");
 	glContext->BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	GLcheck(*this, "glBlendFunc");
+	glContext->Enable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	GLcheck(*this, "glEnable:GL_TEXTURE_CUBE_MAP_SEAMLESS");
 	glContext->Enable(GL_DEBUG_OUTPUT);
 	GLcheck(*this, "glEnable");
 	glContext->Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -488,10 +492,15 @@ void GLRenderer::postInitTexture(const textures::Texture& texture)
 	GLcheck(*this, "glTexParameteri");
 	glContext->TexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, filterType);
 	GLcheck(*this, "glTexParameteri");
-	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	GLcheck(*this, "glTexParameteri");
-	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	GLcheck(*this, "glTexParameteri");
+	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_R, GL_REPEAT);
+	GLcheck(*this, "glTexParameteri");
+	GLfloat maxAniso = 1.0f;
+	glContext->TexParameterf(texture.target, GL_TEXTURE_MAX_ANISOTROPY, maxAniso);
+	GLcheck(*this, "glTexParameterf");
 	texture.unbind();
 }
 void GLRenderer::destroyTexture(textures::Texture& texture)
