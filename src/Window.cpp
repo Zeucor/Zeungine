@@ -96,7 +96,15 @@ void Window::startWindow()
 				continue;
 			childWindow.render();
 		}
-		iRendererRef.render();
+		render();
+		for (auto& childWindowPointer : childWindows)
+		{
+			auto& childWindow = *childWindowPointer;
+			if (childWindow.minimized)
+				continue;
+			childWindow.framebufferPlane->render();
+		}
+		iPlatformWindowRef.swapBuffers();
 	}
 _exit:
 	scene.reset();

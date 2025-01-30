@@ -91,19 +91,6 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 	glXSwapIntervalEXT(x11Window.display, x11Window.window, platformWindowPointer->renderWindowPointer->vsync);
 #endif
 }
-void GLRenderer::render()
-{
-	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
-	renderWindow.render();
-	for (auto& childWindowPointer : renderWindow.childWindows)
-	{
-		auto& childWindow = *childWindowPointer;
-		if (childWindow.minimized)
-			continue;
-		childWindow.framebufferPlane->render();
-	}
-	platformWindowPointer->swapBuffers();
-}
 void GLRenderer::destroy() {}
 std::shared_ptr<IRenderer> zg::createVendorRenderer() { return std::shared_ptr<IRenderer>(new GLRenderer()); }
 void GLRenderer::clearColor(glm::vec4 color)
