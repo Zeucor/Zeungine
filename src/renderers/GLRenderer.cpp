@@ -106,6 +106,14 @@ std::shared_ptr<IVendorRenderer> zg::createVendorRenderer()
 {
 	return std::shared_ptr<IVendorRenderer>(new GLRenderer());
 }
+void GLRenderer::clearColor(glm::vec4 color)
+{
+	glContext->ClearColor(color.r, color.g, color.b, color.a);
+}
+void GLRenderer::clear()
+{
+	glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
 const bool zg::GLcheck(GLRenderer &renderer, const char* fn, const bool egl)
 {
 	while (true)

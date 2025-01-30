@@ -15,7 +15,7 @@ struct TestScene : Scene
 {
   std::shared_ptr<entities::Cube> cubeEntity;
   vp::VML vml;
-  explicit TestScene(IWindow &_window);
+  explicit TestScene(Window &_window);
 };
 struct TestTriangle : Entity
 {
@@ -23,7 +23,7 @@ struct TestTriangle : Entity
   std::vector<glm::vec3> normals = {};
   float rotationAmount = 0;
   TestScene &testScene;
-  TestTriangle(IWindow &_window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
+  TestTriangle(Window &_window, TestScene &testScene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale):
     Entity(_window, {
       "Color",
       "Position",
@@ -65,10 +65,11 @@ struct TestTriangle : Entity
   };
   void preRender() override
   {
-    auto &glWindow = (Window &)window;
-    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(glWindow.iVendorRenderer);
+#ifdef USE_GL
+    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
   	glRenderer.glContext->Disable(GL_CULL_FACE);
     GLcheck(glRenderer, "glEnable");
+#endif
     const auto &model = getModelMatrix();
     shader.bind();
     testScene.entityPreRender(*this);
@@ -80,13 +81,14 @@ struct TestTriangle : Entity
   };
   void postRender() override
   {
-    auto &glWindow = (Window &)window;
-    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(glWindow.iVendorRenderer);
+#ifdef USE_GL
+    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
     glRenderer.glContext->Enable(GL_CULL_FACE);
     GLcheck(glRenderer, "glEnable");
+#endif
   };
 };
-void rotateLightPosition(IWindow &window, Scene &scene, lights::PointLight &light, lights::PointLightShadow &pointLightShadow, float angleSpeed, shaders::Shader &shader)
+void rotateLightPosition(Window &window, Scene &scene, lights::PointLight &light, lights::PointLightShadow &pointLightShadow, float angleSpeed, shaders::Shader &shader)
 {
   window.runOnThread([&, angleSpeed](auto &window) mutable
   {
@@ -106,7 +108,7 @@ void rotateLightPosition(IWindow &window, Scene &scene, lights::PointLight &ligh
     });
   });
 };
-TestScene::TestScene(IWindow& window):
+TestScene::TestScene(Window& window):
   Scene(window, { 0, 10, 10}, glm::normalize(glm::vec3(0, -1, -1)), 81.f),
   vml(*this)
 {

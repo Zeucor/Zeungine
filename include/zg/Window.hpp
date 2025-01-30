@@ -94,7 +94,7 @@ namespace zg
 		void setXY(float x, float y) override;
 		void setWidthHeight(float width, float height) override;
 		void mouseCapture(bool capture);
-		IWindow &createChildWindow(const char *title,
+		Window &createChildWindow(const char *title,
 															 IScene &scene,
 															 float windowWidth,
 															 float windowHeight,

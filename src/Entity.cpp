@@ -1,18 +1,18 @@
 #include <zg/Entity.hpp>
 #include <zg/shaders/ShaderManager.hpp>
 using namespace zg;
-Entity::Entity(zg::IWindow &_window,
-									 const shaders::RuntimeConstants &constants,
-									 uint32_t indiceCount,
-						 			 const std::vector<uint32_t> &_indices,
-									 uint32_t elementCount,
-						 			 const std::vector<glm::vec3> &_positions,
-									 glm::vec3 _position,
-									 glm::vec3 _rotation,
-									 glm::vec3 _scale,
-									 std::string_view _name):
+Entity::Entity(Window &_window,
+			   const shaders::RuntimeConstants &constants,
+			   uint32_t indiceCount,
+			   const std::vector<uint32_t> &_indices,
+			   uint32_t elementCount,
+			   const std::vector<glm::vec3> &_positions,
+			   glm::vec3 _position,
+			   glm::vec3 _rotation,
+			   glm::vec3 _scale,
+			   std::string_view _name):
 	IEntity(_window),
-	VAO(dynamic_cast<Window &>(_window), constants, indiceCount, elementCount),
+	VAO(_window, constants, indiceCount, elementCount),
 	indices(_indices),
 	positions(_positions),
 	position(_position),

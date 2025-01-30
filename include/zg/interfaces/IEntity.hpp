@@ -2,12 +2,12 @@
 #include <cstddef>
 namespace zg
 {
-	struct IWindow;
+	struct Window;
 	struct IEntity
 	{
-		IWindow &window;
+		Window &window;
 		size_t ID = 0;
-		IEntity(IWindow &_window);
+		IEntity(Window &_window);
 		virtual ~IEntity() = default;
 		virtual void update();
 		virtual void render();

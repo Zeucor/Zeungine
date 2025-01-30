@@ -246,7 +246,7 @@ void IWindow::runRunnables()
   {
     auto runnable = runnablesCopy.front();
     runnablesCopy.pop();
-    runnable(*this);
+    runnable(dynamic_cast<Window &>(*this));
   }
 };
 void IWindow::updateDeltaTime()
@@ -277,7 +277,7 @@ void IWindow::restore(){};
 void IWindow::warpPointer(glm::vec2 coords){};
 void IWindow::setXY(float x, float y){};
 void IWindow::setWidthHeight(float width, float height){};
-IWindow &IWindow::createChildWindow(const char *title,
+Window &IWindow::createChildWindow(const char *title,
                                     IScene &scene,
                                     float windowWidth,
                                     float windowHeight,

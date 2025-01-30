@@ -7,6 +7,7 @@
 #include <zg/glm.hpp>
 namespace zg
 {
+	struct Window;
 	struct IWindow
 	{
 		float windowWidth;
@@ -17,7 +18,7 @@ namespace zg
 #if defined(WINDOWS) || defined(LINUX)
 		std::shared_ptr<std::thread> windowThread;
 #endif
-		using Runnable = std::function<void(IWindow&)>;
+		using Runnable = std::function<void(Window&)>;
 		std::queue<Runnable> runnables;
 		using Key = uint32_t;
 		using Button = uint32_t;
@@ -99,7 +100,7 @@ namespace zg
 		virtual void warpPointer(glm::vec2 coords);
 		virtual void setXY(float x, float y);
 		virtual void setWidthHeight(float width, float height);
-		virtual IWindow &createChildWindow(const char *title,
+		virtual Window &createChildWindow(const char *title,
 																			 IScene &scene,
 																			 float windowWidth,
 																			 float windowHeight,

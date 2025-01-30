@@ -1,6 +1,6 @@
 #pragma once
 #include <zg/interfaces/IEntity.hpp>
-#include <zg/interfaces/IWindow.hpp>
+#include <zg/Window.hpp>
 #include <zg/vaos/VAO.hpp>
 #include <zg/shaders/Shader.hpp>
 #include <zg/renderers/GLRenderer.hpp>
@@ -26,16 +26,16 @@ namespace zg
 		using MouseHoverHandler = std::function<void(bool )>;
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		std::string name;
-		Entity(zg::IWindow &_window,
-						 const shaders::RuntimeConstants &constants,
-						 uint32_t indiceCount,
-						 const std::vector<uint32_t> &indices,
-						 uint32_t elementCount,
-						 const std::vector<glm::vec3> &positions,
-						 glm::vec3 position,
-						 glm::vec3 rotation,
-						 glm::vec3 scale,
-						 std::string_view name);
+		Entity(Window &_window,
+			   const shaders::RuntimeConstants &constants,
+			   uint32_t indiceCount,
+			   const std::vector<uint32_t> &indices,
+			   uint32_t elementCount,
+			   const std::vector<glm::vec3> &positions,
+			   glm::vec3 position,
+			   glm::vec3 rotation,
+			   glm::vec3 scale,
+			   std::string_view name);
 		void update() override;
 		virtual void preRender();
     void render() override;

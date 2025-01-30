@@ -1,8 +1,8 @@
 #include <zg/interfaces/IScene.hpp>
 #include <zg/interfaces/IEntity.hpp>
-#include <zg/interfaces/IWindow.hpp>
+#include <zg/Window.hpp>
 using namespace zg;
-IScene::IScene(IWindow& _window):
+IScene::IScene(Window& _window):
 	window(_window)
 {
 };

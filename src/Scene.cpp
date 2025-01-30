@@ -8,7 +8,7 @@
 #include <zg/vaos/VAO.hpp>
 #include <iostream>
 using namespace zg;
-Scene::Scene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *_framebufferPointer):
+Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *_framebufferPointer):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),
 	projection((Window &)window, fov),
@@ -16,7 +16,7 @@ Scene::Scene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirecti
 {
 	hookMouseEvents();
 };
-Scene::Scene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *_framebufferPointer):
+Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *_framebufferPointer):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),
 	projection((Window &)window, orthoSize),
@@ -109,8 +109,8 @@ void Scene::preRender()
 	else
 		glRenderer.glContext->Viewport(0, 0, static_cast<GLsizei>(window.windowWidth), static_cast<GLsizei>(window.windowHeight));
 	GLcheck(glRenderer, "glViewport");
-	glRenderer.glContext->ClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-	glRenderer.glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glRenderer.clearColor(clearColor);
+	glRenderer.clear();
 };
 void Scene::render()
 {

@@ -13,6 +13,8 @@ namespace zg
 		void init(IPlatformWindow* platformWindowPointer) override;
 		void render() override;
 		void destroy() override;
+		void clearColor(glm::vec4 color) override;
+		void clear() override;
 	};
 	const bool GLcheck(GLRenderer &renderer, const char* fn, const bool egl = false);
 }

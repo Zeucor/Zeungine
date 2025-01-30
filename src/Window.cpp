@@ -260,7 +260,7 @@ void Window::mouseCapture(bool capture)
 {
 	iPlatformWindow->mouseCapture(capture);
 }
-zg::IWindow &Window::createChildWindow(const char* title,
+zg::Window &Window::createChildWindow(const char* title,
 																					 IScene &scene,
 																					 float windowWidth,
 																					 float windowHeight,

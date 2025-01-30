@@ -27,8 +27,8 @@ namespace zg
 		std::array<IWindow::EventIdentifier, 7 - 0 + 1> mousePressIDs;
 		IWindow::EventIdentifier mouseMoveID;
 		Entity *currentHoveredEntity = 0;
-		Scene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer = 0);
-		Scene(IWindow &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer = 0);
+		Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer = 0);
+		Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer = 0);
 		~Scene();
 		void preRender() override;
 		void render() override;

@@ -14,7 +14,7 @@ int main()
 	Window window("My Simple Window", 640, 480, -1, -1);
 	window.runOnThread([](auto &window)
 	{
-		window.setIScene(std::make_shared<SimpleScene>((Window &)window));
+		window.setIScene(std::make_shared<SimpleScene>(window));
 	});
 	window.run();
 }

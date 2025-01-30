@@ -15,7 +15,7 @@ struct ExampleScene : Scene
 			vml(*this)
 	{
 		addEntity(std::make_shared<entities::Cube>(
-				(Window &)window, // reference to window
+				window, // reference to window
 				*this, // reference to scene
 				glm::vec3(0, 0, 0), // position
 				glm::vec3(0, 0, 0), // rotation
@@ -30,7 +30,7 @@ int main()
 	Window window("My Window Title", 640, 480, -1, -1);
 	window.runOnThread([](auto &window)
 	{
-			window.setIScene(std::make_shared<ExampleScene>((Window &)window));
+		window.setIScene(std::make_shared<ExampleScene>(window));
 	});
 	window.run();
 }
