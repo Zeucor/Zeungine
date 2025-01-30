@@ -76,6 +76,40 @@ void MacOSWindow::postInit()
 }
 bool MacOSWindow::pollMessages()
 {
+	@autoreleasepool
+	{
+		NSEvent *event;
+		while ((event = [NSApp nextEventMatchingMask:NSEventMaskAny
+								untilDate:nil
+								inMode:NSDefaultRunLoopMode
+								dequeue:YES]))
+		{
+			switch ([event type])
+			{
+				case NSEventTypeKeyDown:
+					std::cout << "Key Down" << std::endl;
+					break;
+				case NSEventTypeKeyUp:
+					std::cout << "Key Up" << std::endl;
+					break;
+				case NSEventTypeMouseMoved:
+					std::cout << "Mouse Moved" << std::endl;
+					break;
+				case NSEventTypeLeftMouseDragged:
+				case NSEventTypeRightMouseDragged:
+				case NSEventTypeOtherMouseDragged:
+					std::cout << "Mouse Dragged" << std::endl;
+					break;
+				case NSEventTypeApplicationDefined:
+					return false;
+				default:
+					break;
+			}
+			[NSApp sendEvent:event];
+			[NSApp updateWindows];
+		}
+	}
+	return true;
 }
 void MacOSWindow::swapBuffers()
 {
