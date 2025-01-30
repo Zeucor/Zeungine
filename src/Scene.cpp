@@ -30,9 +30,11 @@ Scene::~Scene()
 };
 void Scene::preRender()
 {
+	auto &iRenderer = *window.iRenderer;
 	for (auto &directionaLightShadow : directionalLightShadows)
 	{
 		directionaLightShadow.framebuffer.bind();
+		iRenderer.clear();
 		directionaLightShadow.shader.bind();
 		directionaLightShadow.shader.setBlock("LightSpaceMatrix", directionaLightShadow.lightSpaceMatrix, sizeof(glm::mat4));
 		for (auto &entityPair : entities)
@@ -54,6 +56,7 @@ void Scene::preRender()
 	for (auto &spotLightShadow : spotLightShadows)
 	{
 		spotLightShadow.framebuffer.bind();
+		iRenderer.clear();
 		spotLightShadow.shader.bind();
 		spotLightShadow.shader.setBlock("LightSpaceMatrix", spotLightShadow.lightSpaceMatrix, sizeof(glm::mat4));
 		for (auto &entityPair : entities)
@@ -75,6 +78,7 @@ void Scene::preRender()
 	for (auto &pointLightShadow : pointLightShadows)
 	{
 		pointLightShadow.framebuffer.bind();
+		iRenderer.clear();
 		pointLightShadow.shader.bind();
 		pointLightShadow.shader.setBlock("PointLightSpaceMatrix", pointLightShadow.shadowTransforms, sizeof(glm::mat4) * 6);
 		pointLightShadow.shader.setUniform("nearPlane", pointLightShadow.pointLight.nearPlane);
@@ -96,7 +100,6 @@ void Scene::preRender()
 		pointLightShadow.shader.unbind();
 		pointLightShadow.framebuffer.unbind();
 	}
-	auto &iRenderer = *window.iRenderer;
 	if (framebufferPointer != 0)
 	{
 		auto &framebuffer = *framebufferPointer;	
