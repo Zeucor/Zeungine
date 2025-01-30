@@ -39,9 +39,9 @@ namespace zg
 		void midInitTexture(const textures::Texture &texture, const std::vector<images::ImageLoader::ImagePair>& images) override;
 		void postInitTexture(const textures::Texture &texture) override;
 		void destroyTexture(textures::Texture &texture) override;
-		void vaoUpdateIndices(const vaos::VAO &vao, const std::vector<uint32_t> &indices) override;
-		void vaoUpdateElements(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) override;
-		void vaoDraw(const vaos::VAO &vao) override;
+		void updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t> &indices) override;
+		void updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) override;
+		void drawVAO(const vaos::VAO &vao) override;
 		void generateVAO(vaos::VAO &vao) override;
 		void destroyVAO(vaos::VAO &vao) override;
 	};

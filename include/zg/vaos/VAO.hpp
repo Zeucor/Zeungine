@@ -20,6 +20,6 @@ namespace zg::vaos
 	void updateIndices(const std::vector<uint32_t> &indices);
 	template<typename T>
 	void updateElements(const std::string_view constant, const std::vector<T> &elements) const;
-	void vaoDraw() const;
+	void drawVAO() const;
   };
 };

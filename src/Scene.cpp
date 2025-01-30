@@ -46,7 +46,7 @@ void Scene::preRender()
 			}
 			const auto &model = glEntity.getModelMatrix();
 			directionaLightShadow.shader.setBlock("Model", model);
-			vbo.vaoDraw();
+			vbo.drawVAO();
 		}
 		directionaLightShadow.shader.unbind();
 		directionaLightShadow.framebuffer.unbind();
@@ -67,7 +67,7 @@ void Scene::preRender()
 			}
 			const auto &model = glEntity.getModelMatrix();
 			spotLightShadow.shader.setBlock("Model", model);
-			vbo.vaoDraw();
+			vbo.drawVAO();
 		}
 		spotLightShadow.shader.unbind();
 		spotLightShadow.framebuffer.unbind();
@@ -91,7 +91,7 @@ void Scene::preRender()
 			}
 			const auto &model = glEntity.getModelMatrix();
 			pointLightShadow.shader.setBlock("Model", model);
-			vbo.vaoDraw();
+			vbo.drawVAO();
 		}
 		pointLightShadow.shader.unbind();
 		pointLightShadow.framebuffer.unbind();

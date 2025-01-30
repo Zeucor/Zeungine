@@ -19,18 +19,18 @@ VAO::~VAO()
 };
 void VAO::updateIndices(const std::vector<uint32_t> &indices)
 {
-  vaoWindow.iRenderer->vaoUpdateIndices(*this, indices);
+  vaoWindow.iRenderer->updateIndicesVAO(*this, indices);
 };
 template<typename T>
 void VAO::updateElements(const std::string_view constant, const std::vector<T> &elements) const
 {
   auto elementsAsChar = (uint8_t *)elements.data();
-  vaoWindow.iRenderer->vaoUpdateElements(*this, constant, elementsAsChar);
+  vaoWindow.iRenderer->updateElementsVAO(*this, constant, elementsAsChar);
 };
 template void VAO::updateElements<glm::vec2>(const std::string_view , const std::vector<glm::vec2> &) const;
 template void VAO::updateElements<glm::vec3>(const std::string_view , const std::vector<glm::vec3> &) const;
 template void VAO::updateElements<glm::vec4>(const std::string_view , const std::vector<glm::vec4> &) const;
-void VAO::vaoDraw() const
+void VAO::drawVAO() const
 {
-  vaoWindow.iRenderer->vaoDraw(*this);
+  vaoWindow.iRenderer->drawVAO(*this);
 };

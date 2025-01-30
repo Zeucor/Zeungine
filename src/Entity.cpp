@@ -33,7 +33,7 @@ void Entity::render()
 {
   preRender();
 	shader.bind();
-	vaoDraw();
+	drawVAO();
 	shader.unbind();
 	for (auto &childEntity : children)
 	{

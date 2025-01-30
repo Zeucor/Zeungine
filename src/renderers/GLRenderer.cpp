@@ -512,7 +512,7 @@ void GLRenderer::destroyTexture(textures::Texture& texture)
 	glContext->DeleteTextures(1, &texture.id);
 	GLcheck(*this, "glDeleteTextures");
 }
-void GLRenderer::vaoUpdateIndices(const vaos::VAO &vao, const std::vector<uint32_t>& indices)
+void GLRenderer::updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t>& indices)
 {
 	glContext->BindVertexArray(vao.vao);
 	GLcheck(*this, "glBindVertexArray");
@@ -525,7 +525,7 @@ void GLRenderer::vaoUpdateIndices(const vaos::VAO &vao, const std::vector<uint32
 	glContext->BindVertexArray(0);
 	GLcheck(*this, "glBindVertexArray");
 }
-void GLRenderer::vaoUpdateElements(const vaos::VAO &vao, const std::string_view constant, uint8_t* elementsAsChar)
+void GLRenderer::updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
 	glContext->BindVertexArray(vao.vao);
 	GLcheck(*this, "glBindVertexArray");
@@ -543,7 +543,7 @@ void GLRenderer::vaoUpdateElements(const vaos::VAO &vao, const std::string_view 
 	glContext->BindVertexArray(0);
 	GLcheck(*this, "glBindVertexArray");
 }
-void GLRenderer::vaoDraw(const vaos::VAO &vao)
+void GLRenderer::drawVAO(const vaos::VAO &vao)
 {
 	glContext->BindVertexArray(vao.vao);
 	GLcheck(*this, "glBindVertexArray");

@@ -55,9 +55,9 @@ namespace zg
 		virtual void midInitTexture(const textures::Texture &texture, const std::vector<images::ImageLoader::ImagePair>& images) = 0;
 		virtual void postInitTexture(const textures::Texture &texture) = 0;
 		virtual void destroyTexture(textures::Texture &texture) = 0;
-		virtual void vaoUpdateIndices(const vaos::VAO &vao, const std::vector<uint32_t> &indices) = 0;
-		virtual void vaoUpdateElements(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) = 0;
-		virtual void vaoDraw(const vaos::VAO &vao) = 0;
+		virtual void updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t> &indices) = 0;
+		virtual void updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) = 0;
+		virtual void drawVAO(const vaos::VAO &vao) = 0;
 		virtual void generateVAO(vaos::VAO &vao) = 0;
 		virtual void destroyVAO(vaos::VAO &vao) = 0;
 	};
