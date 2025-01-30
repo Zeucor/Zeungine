@@ -47,7 +47,7 @@ void MacOSWindow::createContext()
 #ifdef USE_GL
 	NSOpenGLPixelFormatAttribute attributes[] =
 	{
-		NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion4_1Core,
+		NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
 		NSOpenGLPFAColorSize, 24,
 		NSOpenGLPFAAlphaSize, 8,
 		NSOpenGLPFADepthSize, 24,
