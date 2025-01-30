@@ -2,15 +2,37 @@
 
 <img src="/images/zeungine-logo.png" alt="Zeungine Logo" width="400" height="400">
 
-A library that simplifies Game abstraction written in C++, runs on Windows 10/11 and Linux (X11)
+A library that simplifies 3D Game abstraction written in C++. Supports on Windows 10/11, Linux (X11) and MacOS
 
 Uses CMake for it's build system and comes with some included tests
 
-## Cloning
+### Cloning
 
 ```bash
-git clone git@github.com:ZeunO8/Zeungine.git --recurse-submodules
+git clone git@github.com:Zeungine/Zeungine.git --recursive
 ```
+
+### Dependencies
+
+###### All platforms
+
+`cmake`
+
+###### Windows
+
+`Visual Studio 2022` or newer for MSVC
+
+###### Linux
+
+```bash
+sudo apt install libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev
+```
+
+###### MacOS
+
+`XCode` for `clang` compiler
+`cmake`: `brew install cmake`
+
 
 ### Building
 
