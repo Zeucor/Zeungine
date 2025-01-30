@@ -255,7 +255,7 @@ void EditorScene::onEntityAdded(const std::shared_ptr<IEntity>& entity)
 	auto sizeYTotal = sceneGraphPanelMenu->getSizeYTotal();
 	static const auto indent = 16.f;
 	auto panelItem = std::make_shared<entities::PanelItem>(
-		dynamic_cast<Window&>(window),
+		window,
 		*this,
 		glm::vec3(indent / window.windowWidth / 0.5, -sizeYTotal, 0.1),
 		glm::vec3(0),
@@ -443,7 +443,7 @@ void EditorScene::loadProject(std::string_view projectDirectory)
 {
 	hotswapper = std::make_shared<hs::Hotswapper>(projectDirectory, *this);
 	resourceAssetBrowser = std::make_shared<entities::AssetBrowser>(
-		dynamic_cast<Window&>(window),
+		window,
 		*this,
 		glm::vec3(0, 0, 0.1),
 		glm::vec3(0),

@@ -55,14 +55,14 @@ void TabsBar::addTab(std::string_view name, const TabClickHandler &handler, bool
 	}
   static const auto indent = 16.f;
   auto panelItem = std::make_shared<Tab>(
-  	dynamic_cast<Window &>(window),
-		scene,
-		glm::vec3(sizeXTotal, 0, 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
+  	window,
+	scene,
+	glm::vec3(sizeXTotal, 0, 0.1),
+	glm::vec3(0),
+	glm::vec3(1),
     color,
-		name,
-		font,
+	name,
+	font,
     height,
     handler,
     active,

@@ -98,7 +98,7 @@ void Console::hookedCallback(const std::vector<std::string> &lines)
 			consoleTextViews.resize(index + 1);
 			static auto indent = 8 / window.windowWidth / 0.5;
 			auto consoleTextView = std::make_shared<TextView>(
-				dynamic_cast<Window &>(window),
+				window,
 				scene,
 				glm::vec3(0),
 				glm::vec3(0),

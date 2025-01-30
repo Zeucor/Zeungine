@@ -18,7 +18,7 @@ Entity::Entity(Window &_window,
 	position(_position),
 	rotation(_rotation),
 	scale(_scale),
-	shader(*shaders::ShaderManager::getShaderByConstants(dynamic_cast<Window &>(_window), constants).second),
+	shader(*shaders::ShaderManager::getShaderByConstants(_window, constants).second),
 	name(_name)
 {};
 void Entity::update()

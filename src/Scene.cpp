@@ -96,21 +96,16 @@ void Scene::preRender()
 		pointLightShadow.shader.unbind();
 		pointLightShadow.framebuffer.unbind();
 	}
-	auto &glWindow = *dynamic_cast<Window*>(&window);
-  auto glRendererPointer = dynamic_cast<GLRenderer *>(glWindow.iVendorRenderer.get());
-	if (!glRendererPointer)
-		throw std::runtime_error("Could not get GLRenderer!");
-	auto &glRenderer = *glRendererPointer;
+	auto &iVendorRenderer = *window.iVendorRenderer;
 	if (framebufferPointer != 0)
 	{
-		auto &framebuffer = *framebufferPointer;
-		glRenderer.glContext->Viewport(0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y);
+		auto &framebuffer = *framebufferPointer;	
+		iVendorRenderer.viewport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
 	}
 	else
-		glRenderer.glContext->Viewport(0, 0, static_cast<GLsizei>(window.windowWidth), static_cast<GLsizei>(window.windowHeight));
-	GLcheck(glRenderer, "glViewport");
-	glRenderer.clearColor(clearColor);
-	glRenderer.clear();
+		iVendorRenderer.viewport({0, 0, static_cast<GLsizei>(window.windowWidth), static_cast<GLsizei>(window.windowHeight)});
+	iVendorRenderer.clearColor(clearColor);
+	iVendorRenderer.clear();
 };
 void Scene::render()
 {

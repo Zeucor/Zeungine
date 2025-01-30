@@ -120,7 +120,7 @@ TestScene::TestScene(Window& window):
     1.f,
     250.f
   });
-  pointLightShadows.emplace_back(dynamic_cast<Window &>(window), pointLights[0]);
+  pointLightShadows.emplace_back(window, pointLights[0]);
   directionalLights.push_back({
     {0, 25, 20}, // position
     glm::normalize(glm::vec3(0, -1, -1)), // direction
@@ -129,7 +129,7 @@ TestScene::TestScene(Window& window):
     1.f, // nearPlane
     250.f // farPlane
   });
-  directionalLightShadows.emplace_back(dynamic_cast<Window &>(window), directionalLights[0]);
+  directionalLightShadows.emplace_back(window, directionalLights[0]);
   spotLights.push_back({
     {0, 25, -20}, // position
     glm::normalize(glm::vec3(0, -1, 1)), // direction
@@ -140,7 +140,7 @@ TestScene::TestScene(Window& window):
     1.f,
     250.f
   });
-  spotLightShadows.emplace_back(dynamic_cast<Window &>(window), spotLights[0]);
+  spotLightShadows.emplace_back(window, spotLights[0]);
   cubeEntity = std::make_shared<entities::Cube>((Window &)window, *this,
     glm::vec3(0, 3, 0), // position
     glm::vec3(0, 0, 0), // rotation

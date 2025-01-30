@@ -111,9 +111,10 @@ SkyBox::SkyBox(Window &window,
 };
 void SkyBox::preRender()
 {
-	auto &glWindow = dynamic_cast<Window &>(window);
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(glWindow.iVendorRenderer);
+#ifdef USE_GL
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
 	glRenderer.glContext->DepthFunc(GL_LEQUAL);
+#endif
 	shader.bind();
 	scene.entityPreRender(*this);
 	auto view = glm::mat4(glm::mat3(scene.view.matrix));
@@ -124,7 +125,8 @@ void SkyBox::preRender()
 };
 void SkyBox::postRender()
 {
-	auto &glWindow = dynamic_cast<Window &>(window);
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(glWindow.iVendorRenderer);
+#ifdef USE_GL
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
 	glRenderer.glContext->DepthFunc(GL_LESS);
+#endif
 };

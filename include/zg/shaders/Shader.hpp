@@ -47,82 +47,57 @@ namespace zg::shaders
 		template <typename T>
 		void setUniform(const std::string_view name, const T& value, uint32_t size = 0)
 		{
-			auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
 			auto pointerSize = size ? size : sizeof(value);
-			GLint location = glRenderer.glContext->GetUniformLocation(program, name.data());
-			GLcheck(glRenderer, "glGetUniformLocation");
-			auto pointer = &value;
-			if (location == -1)
-			{
-				return;
-			}
+			enums::EUniformType uniformType;
 			if constexpr (std::is_same_v<T, bool>)
 			{
-				glRenderer.glContext->Uniform1i(location, (int32_t)(*(bool*)pointer));
-				GLcheck(glRenderer, "glUniform1i");
-				return;
+				uniformType = enums::EUniformType::_1b;
 			}
 			else if constexpr (std::is_same_v<T, int32_t>)
 			{
-				glRenderer.glContext->Uniform1i(location, *(int32_t*)pointer);
-				GLcheck(glRenderer, "glUniform1i");
-				return;
+				uniformType = enums::EUniformType::_1i;
 			}
 			else if constexpr (std::is_same_v<T, uint32_t>)
 			{
-				glRenderer.glContext->Uniform1ui(location, *(uint32_t*)pointer);
-				GLcheck(glRenderer, "glUniform1ui");
-				return;
+				uniformType = enums::EUniformType::_1ui;
 			}
 			else if constexpr (std::is_same_v<T, float*>)
 			{
-				glRenderer.glContext->Uniform1fv(location, pointerSize, &((float**)pointer)[0][0]);
-				GLcheck(glRenderer, "glUniform1fv");
-				return;
+				uniformType = enums::EUniformType::_1fv;
 			}
 			else if constexpr (std::is_same_v<T, float>)
 			{
-				glRenderer.glContext->Uniform1f(location, *(float*)pointer);
-				GLcheck(glRenderer, "glUniform1f");
-				return;
+				uniformType = enums::EUniformType::_1f;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec2>)
 			{
-				glRenderer.glContext->Uniform2fv(location, 1, &(*(glm::vec2*)pointer)[0]);
-				GLcheck(glRenderer, "glUniform2fv");
-				return;
+				uniformType = enums::EUniformType::_2fv;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec3>)
 			{
-				glRenderer.glContext->Uniform3fv(location, 1, &(*(glm::vec3*)pointer)[0]);
-				GLcheck(glRenderer, "glUniform3fv");
-				return;
+				uniformType = enums::EUniformType::_3fv;
 			}
 			else if constexpr (std::is_same_v<T, glm::vec4>)
 			{
-				glRenderer.glContext->Uniform4fv(location, 1, &(*(glm::vec4*)pointer)[0]);
-				GLcheck(glRenderer, "glUniform4fv");
-				return;
+				uniformType = enums::EUniformType::_4fv;
 			}
 			else if constexpr (std::is_same_v<T, glm::mat2>)
 			{
-				glRenderer.glContext->UniformMatrix2fv(location, 1, GL_FALSE, &(*(glm::mat2*)pointer)[0][0]);
-				GLcheck(glRenderer, "glUniformMatrix2fv");
-				return;
+				uniformType = enums::EUniformType::_Matrix2fv;
 			}
 			else if constexpr (std::is_same_v<T, glm::mat3>)
 			{
-				glRenderer.glContext->UniformMatrix3fv(location, 1, GL_FALSE, &(*(glm::mat3*)pointer)[0][0]);
-				GLcheck(glRenderer, "glUniformMatrix3fv");
-				return;
+				uniformType = enums::EUniformType::_Matrix3fv;
 			}
 			else if constexpr (std::is_same_v<T, glm::mat4>)
 			{
-				glRenderer.glContext->UniformMatrix4fv(location, 1, GL_FALSE, &(*(glm::mat4*)pointer)[0][0]);
-				GLcheck(glRenderer, "glUniformMatrix4fv");
-				return;
+				uniformType = enums::EUniformType::_Matrix4fv;
 			}
-			throw std::runtime_error("setUniform: unsupported type");
+			else
+			{
+				throw std::runtime_error("setUniform: unsupported type");
+			}
+			window.iVendorRenderer->setUniform(*this, name, &value, pointerSize, uniformType);
 		};
 
 		template <typename T>

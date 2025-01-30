@@ -109,10 +109,97 @@ std::shared_ptr<IVendorRenderer> zg::createVendorRenderer()
 void GLRenderer::clearColor(glm::vec4 color)
 {
 	glContext->ClearColor(color.r, color.g, color.b, color.a);
+	GLcheck(*this, "glClearColor");
 }
 void GLRenderer::clear()
 {
 	glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	GLcheck(*this, "glClear");
+}
+void GLRenderer::viewport(glm::ivec4 vp)
+{
+	glContext->Viewport(vp.x, vp.y, vp.z, vp.w);
+	GLcheck(*this, "glViewport");
+}
+void GLRenderer::setUniform(shaders::Shader &shader, const std::string_view name, const void *value, uint32_t size, enums::EUniformType uniformType)
+{
+	GLint location = glContext->GetUniformLocation(shader.program, name.data());
+	GLcheck(*this, "glGetUniformLocation");
+	auto pointer = &value;
+	if (location == -1)
+	{
+		return;
+	}
+	switch (uniformType)
+	{
+	case enums::EUniformType::_1b:
+	{
+		glContext->Uniform1i(location, (int32_t)(*(bool*)pointer));
+		GLcheck(*this, "glUniform1i");
+		return;
+	}
+	case enums::EUniformType::_1i:
+	{
+		glContext->Uniform1i(location, *(int32_t*)pointer);
+		GLcheck(*this, "glUniform1i");
+		return;
+	}
+	case enums::EUniformType::_1ui:
+	{
+		glContext->Uniform1ui(location, *(uint32_t*)pointer);
+		GLcheck(*this, "glUniform1ui");
+		return;
+	}
+	case enums::EUniformType::_1fv:
+	{
+		glContext->Uniform1fv(location, size, &((float**)pointer)[0][0]);
+		GLcheck(*this, "glUniform1fv");
+		return;
+	}
+	case enums::EUniformType::_1f:
+	{
+		glContext->Uniform1f(location, *(float*)pointer);
+		GLcheck(*this, "glUniform1f");
+		return;
+	}
+	case enums::EUniformType::_2fv:
+	{
+		glContext->Uniform2fv(location, 1, &(*(glm::vec2*)pointer)[0]);
+		GLcheck(*this, "glUniform2fv");
+		return;
+	}
+	case enums::EUniformType::_3fv:
+	{
+		glContext->Uniform3fv(location, 1, &(*(glm::vec3*)pointer)[0]);
+		GLcheck(*this, "glUniform3fv");
+		return;
+	}
+	case enums::EUniformType::_4fv:
+	{
+		glContext->Uniform4fv(location, 1, &(*(glm::vec4*)pointer)[0]);
+		GLcheck(*this, "glUniform4fv");
+		return;
+	}
+	case enums::EUniformType::_Matrix2fv:
+	{
+		glContext->UniformMatrix2fv(location, 1, GL_FALSE, &(*(glm::mat2*)pointer)[0][0]);
+		GLcheck(*this, "glUniformMatrix2fv");
+		return;
+	}
+	case enums::EUniformType::_Matrix3fv:
+	{
+		glContext->UniformMatrix3fv(location, 1, GL_FALSE, &(*(glm::mat3*)pointer)[0][0]);
+		GLcheck(*this, "glUniformMatrix3fv");
+		return;
+	}
+	case enums::EUniformType::_Matrix4fv:
+	{
+		glContext->UniformMatrix4fv(location, 1, GL_FALSE, &(*(glm::mat4*)pointer)[0][0]);
+		GLcheck(*this, "glUniformMatrix4fv");
+		return;
+	}
+	}
+	assert(false && "Should not reach here");
 }
 const bool zg::GLcheck(GLRenderer &renderer, const char* fn, const bool egl)
 {

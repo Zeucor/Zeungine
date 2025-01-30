@@ -46,7 +46,7 @@ void DropdownMenu::addOption(std::string_view name, const OptionPressHandler &ha
 		auto &childItem = *std::dynamic_pointer_cast<DropdownItem>(child.second);
 		sizeYTotal += childItem.size.y;
 	}
-  auto dropdownItem = std::make_shared<DropdownItem>(dynamic_cast<Window&>(window), scene, glm::vec3(0, -sizeYTotal, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0.1, 0.1, 0.1, 1), name, handler, font);
+  auto dropdownItem = std::make_shared<DropdownItem>(window, scene, glm::vec3(0, -sizeYTotal, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0.1, 0.1, 0.1, 1), name, handler, font);
   addChild(dropdownItem);
   sizeYTotal += dropdownItem->size.y;
 	float sizeXMax = 0;
