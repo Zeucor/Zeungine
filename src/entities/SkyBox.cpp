@@ -115,8 +115,6 @@ void SkyBox::preRender()
 	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iRenderer);
 	glRenderer.glContext->DepthFunc(GL_LEQUAL);
 	GLcheck(glRenderer, "glDepthFunc");
-	glRenderer.glContext->Disable(GL_DEPTH_TEST);
-	GLcheck(glRenderer, "glDisable:GL_DEPTH_TEST");
 	glRenderer.glContext->BlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
 	GLcheck(glRenderer, "glBlendFunc");
 #endif
@@ -134,8 +132,6 @@ void SkyBox::postRender()
 	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iRenderer);
 	glRenderer.glContext->DepthFunc(GL_LESS);
 	GLcheck(glRenderer, "glDepthFunc");
-	glRenderer.glContext->Enable(GL_DEPTH_TEST);
-	GLcheck(glRenderer, "glEnable:GL_DEPTH_TEST");
 	glRenderer.glContext->BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	GLcheck(glRenderer, "glBlendFunc");
 #endif
