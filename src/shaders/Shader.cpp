@@ -3,10 +3,10 @@
 #include <zg/textures/Texture.hpp>
 using namespace zg::shaders;
 Shader::Shader(Window &window, const RuntimeConstants &constants, const std::vector<ShaderType> &shaderTypes):
-  window(window),
-	shaders(ShaderFactory::generateShaderMap(constants, *this, shaderTypes))
+  window(window)
 {
-  ShaderFactory::compileProgram(*this, shaders, program);
+  shaders = ShaderFactory::generateShaderMap(constants, *this, shaderTypes);
+  ShaderFactory::compileProgram(*this, shaders);
 };
 Shader::~Shader()
 {

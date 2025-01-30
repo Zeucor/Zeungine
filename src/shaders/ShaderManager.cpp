@@ -9,7 +9,7 @@ Shader& ShaderManager::getShaderByID(Window &window, uint32_t id)
     throw std::runtime_error("Shader not found");
   return *shaderIter->second;
 };
-std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants(Window &window, const RuntimeConstants &constants, const std::vector<Shader::ShaderType> &shaderTypes)
+std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants(Window &window, const RuntimeConstants &constants, const std::vector<ShaderType> &shaderTypes)
 {
   auto hash = crypto::hashVector(constants);
   auto hashIter = window.shaderContext->shadersByHash.find(hash);

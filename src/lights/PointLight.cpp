@@ -13,9 +13,9 @@ PointLightShadow::PointLightShadow(Window &window, PointLight &pointLight):
 			"Model",
 			"PointLightSpaceMatrix"
       }, {
-        shaders::Shader::ShaderType::Vertex,
-			 	shaders::Shader::ShaderType::Geometry,
-			 	shaders::Shader::ShaderType::Fragment
+        shaders::ShaderType::Vertex,
+			 	shaders::ShaderType::Geometry,
+			 	shaders::ShaderType::Fragment
       }
  		).second
 	),

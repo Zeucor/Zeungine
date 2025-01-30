@@ -1,5 +1,6 @@
 #ifdef USE_GL
 #include <zg/renderers/GLRenderer.hpp>
+#include <zg/shaders/ShaderFactory.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
 #include <zg/Logger.hpp>
@@ -275,6 +276,83 @@ void GLRenderer::setTexture(shaders::Shader &shader, const std::string_view name
 	glContext->ActiveTexture(GL_TEXTURE0 + unit);
 	GLcheck(*this, "glActiveTexture");
 	texture.bind();
+}
+bool GLRenderer::compileShader(shaders::Shader &shader, shaders::ShaderType shaderType, shaders::ShaderPair &shaderPair)
+{
+	auto& shaderString = shaderPair.first;
+	auto& shaderInt = shaderPair.second;
+	shaderInt = glContext->CreateShader(shaders::ShaderFactory::shaderTypes[shaderType]);
+	GLcheck(*this, "glCreateShader");
+	const GLchar* source = shaderString.c_str();
+	GLint lengths[] = {(GLint)shaderString.size()};
+	glContext->ShaderSource(shaderInt, 1, &(source), lengths);
+	GLcheck(*this, "glShaderSource");
+	glContext->CompileShader(shaderInt);
+	GLcheck(*this, "glCompileShader");
+	auto success = checkCompileErrors(shader, shaderInt, true, shaders::ShaderFactory::shaderNames[shaderType].data());
+	return success;
+}
+bool GLRenderer::compileProgram(shaders::Shader &shader, const shaders::ShaderMap& shaderMap)
+{
+	shader.program = glContext->CreateProgram();
+	GLcheck(*this, "glCreateProgram");
+	for (const auto& shaderMapPair : shaderMap)
+	{
+		glContext->AttachShader(shader.program, shaderMapPair.second.second);
+		GLcheck(*this, "glAttachShader");
+	}
+	glContext->LinkProgram(shader.program);
+	for (const auto& shaderMapPair : shaderMap)
+	{
+		glContext->DeleteShader(shaderMapPair.second.second);
+		GLcheck(*this, "glDeleteShader");
+	}
+	auto success = checkCompileErrors(shader, shader.program, false, "Program");
+	return success;
+}
+bool GLRenderer::checkCompileErrors(shaders::Shader &shader, const GLuint& id, bool isShader, const char* shaderType)
+{
+	GLint success = 0;
+	if (isShader)
+	{
+		glContext->GetShaderiv(id, GL_COMPILE_STATUS, &success);
+		GLcheck(*this, "glGetShaderiv");
+		if (!success)
+		{
+			GLint infoLogLength;
+			glContext->GetShaderiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
+			GLcheck(*this, "glGetShaderiv");
+			GLchar* infoLog = new GLchar[infoLogLength + 1];
+			glContext->GetShaderInfoLog(id, infoLogLength, 0, infoLog);
+			GLcheck(*this, "glGetShaderInfoLog");
+			printf("SHADER_COMPILATION_ERROR(%s):\n%s\n", shaderType, infoLog);
+			delete[] infoLog;
+			return false;
+		}
+	}
+	else
+	{
+		glContext->GetProgramiv(id, GL_LINK_STATUS, &success);
+		GLcheck(*this, "glGetProgramiv");
+		if (!success)
+		{
+			GLint infoLogLength;
+			glContext->GetProgramiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
+			GLcheck(*this, "glGetProgramiv");
+			GLchar* infoLog = new GLchar[infoLogLength + 1];
+			glContext->GetProgramInfoLog(id, infoLogLength, 0, infoLog);
+			GLcheck(*this, "glGetProgramInfoLog");
+			printf("PROGRAM_LINKING_ERROR(%s):\n%s\n", shaderType, infoLog);
+			delete[] infoLog;
+			return false;
+		}
+	}
+	return true;
+}
+void GLRenderer::deleteShader(shaders::Shader &shader)
+{
+	glContext->DeleteProgram(shader.program);
+	GLcheck(*this, "glDeleteProgram");
 }
 const bool zg::GLcheck(GLRenderer &renderer, const char* fn, const bool egl)
 {

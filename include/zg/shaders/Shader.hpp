@@ -9,6 +9,7 @@
 #include "../common.hpp"
 #include "RuntimeConstants.hpp"
 #include <zg/renderers/GLRenderer.hpp>
+#include <zg/enums/ShaderType.hpp>
 namespace zg::textures
 {
 	struct Texture;
@@ -18,19 +19,6 @@ namespace zg::shaders
 {
 	struct Shader
 	{
-		enum class ShaderType
-		{
-			Unknown = 0,
-			Vertex,
-			Geometry,
-			Fragment,
-			TessellationControl,
-			TessellationEvaluation,
-			Compute
-		};
-
-		using ShaderPair = std::pair<std::string, GLuint>;
-		using ShaderMap = std::map<ShaderType, ShaderPair>;
 		using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
 		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> uboBindings;
 		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> ssboBindings;

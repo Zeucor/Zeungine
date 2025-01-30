@@ -1,13 +1,13 @@
-#include <zg/shaders/ShaderFactory.hpp>
-#include <zg/lights/Lights.hpp>
-#include <zg/interfaces/IWindow.hpp>
-#include <stdexcept>
 #include <glm/fwd.hpp>
+#include <stdexcept>
+#include <zg/interfaces/IWindow.hpp>
+#include <zg/lights/Lights.hpp>
 #include <zg/renderers/GLRenderer.hpp>
+#include <zg/shaders/ShaderFactory.hpp>
 using namespace zg::shaders;
 ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
   {
-    Shader::ShaderType::Vertex, {
+    ShaderType::Vertex, {
       {
         "layout", {
           {
@@ -346,7 +346,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
     }
   },
   {
-    Shader::ShaderType::Geometry, {
+    ShaderType::Geometry, {
       {
         "preLayout",
         {
@@ -419,7 +419,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
     }
   },
   {
-    Shader::ShaderType::Fragment, {
+    ShaderType::Fragment, {
       {
         "layout",
         {
@@ -1021,165 +1021,100 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
 uint32_t ShaderFactory::hooksCount = 0;
 ShaderFactory::ShaderHookInfoMap ShaderFactory::shaderHookInfos;
 ShaderFactory::ShaderTypeMap ShaderFactory::shaderTypes = {
-  {Shader::ShaderType::Vertex, GL_VERTEX_SHADER},
-  {Shader::ShaderType::Geometry, GL_GEOMETRY_SHADER},
-  {Shader::ShaderType::Fragment, GL_FRAGMENT_SHADER},
-  {Shader::ShaderType::TessellationControl, GL_TESS_CONTROL_SHADER},
-  {Shader::ShaderType::TessellationEvaluation, GL_TESS_EVALUATION_SHADER},
-  {Shader::ShaderType::Compute, GL_COMPUTE_SHADER}
-};
+	{ShaderType::Vertex, GL_VERTEX_SHADER},
+	{ShaderType::Geometry, GL_GEOMETRY_SHADER},
+	{ShaderType::Fragment, GL_FRAGMENT_SHADER},
+	{ShaderType::TessellationControl, GL_TESS_CONTROL_SHADER},
+	{ShaderType::TessellationEvaluation, GL_TESS_EVALUATION_SHADER},
+	{ShaderType::Compute, GL_COMPUTE_SHADER}};
 ShaderFactory::ShaderNameMap ShaderFactory::shaderNames = {
-  {Shader::ShaderType::Vertex, "VertexShader"},
-  {Shader::ShaderType::Geometry, "GeometryShader"},
-  {Shader::ShaderType::Fragment, "FragmentShader"},
-  {Shader::ShaderType::TessellationControl, "TessellationControlShader"},
-  {Shader::ShaderType::TessellationEvaluation, "TessellationEvaluationShader"},
-  {Shader::ShaderType::Compute, "ComputeShader"}
-};
+	{ShaderType::Vertex, "VertexShader"},
+	{ShaderType::Geometry, "GeometryShader"},
+	{ShaderType::Fragment, "FragmentShader"},
+	{ShaderType::TessellationControl, "TessellationControlShader"},
+	{ShaderType::TessellationEvaluation, "TessellationEvaluationShader"},
+	{ShaderType::Compute, "ComputeShader"}};
 uint32_t ShaderFactory::currentInLayoutIndex = 0;
 uint32_t ShaderFactory::currentOutLayoutIndex = 0;
 uint32_t ShaderFactory::currentBindingIndex = 0;
-
-Shader::ShaderMap ShaderFactory::generateShaderMap(const RuntimeConstants& constants, Shader& shader, const std::vector<Shader::ShaderType> &shaderTypes)
+ShaderMap ShaderFactory::generateShaderMap(const RuntimeConstants& constants, Shader& shader,
+																					 const std::vector<ShaderType>& shaderTypes)
 {
-  Shader::ShaderMap shaderMap;
-  for (auto &shaderType : shaderTypes)
-  {
-    shaderMap[shaderType] = generateShader(shaderType, constants, shader);
-  }
-  return shaderMap;
-};
-
-Shader::ShaderPair ShaderFactory::generateShader(const Shader::ShaderType& shaderType,
-                                                 const RuntimeConstants& constants,
-                                                 Shader& shader)
-{
-  Shader::ShaderPair shaderPair;
-  auto& shaderString = shaderPair.first;
-  auto& shaderHooks = hooks[shaderType];
-  shaderString += "#version 430 core\n";
-  currentInLayoutIndex = 0;
-  currentOutLayoutIndex = 0;
-  appendHooks(shaderString, shaderHooks["preLayout"], constants, shader);
-  appendHooks(shaderString, shaderHooks["layout"], constants, shader);
-  appendHooks(shaderString, shaderHooks["preMain"], constants, shader);
-  shaderString += "void main()\n{\n";
-  appendHooks(shaderString, shaderHooks["preInMain"], constants, shader);
-  appendHooks(shaderString, shaderHooks["postInMain"], constants, shader);
-  shaderString += "}\n";
-  appendHooks(shaderString, shaderHooks["postMain"], constants, shader);
-  if (!compileShader(shader, shaderType, shaderPair))
-  {
-    throw std::runtime_error("Failed to compile fragment shader");
-  }
-  return shaderPair;
-};
-
-void ShaderFactory::appendHooks(std::string& shaderString, RuntimeHooksMap& runtimeHooks,
-                                const RuntimeConstants& constants, Shader& shader)
-{
-  for (const auto& constant : constants)
-  {
-    const auto& constantHooks = runtimeHooks[constant];
-    for (auto& hook : constantHooks)
-    {
-      shaderString += hook.second(shader, constants) + "\n";
-    }
-  }
+	ShaderMap shaderMap;
+	for (auto& shaderType : shaderTypes)
+	{
+		shaderMap[shaderType] = generateShader(shaderType, constants, shader);
+	}
+	return shaderMap;
 }
-
-bool ShaderFactory::compileShader(Shader &shader, const Shader::ShaderType& shaderType, Shader::ShaderPair& shaderPair)
+ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const RuntimeConstants& constants,
+																				 Shader& shader)
 {
-  auto& shaderString = shaderPair.first;
-	auto& shaderInt = shaderPair.second;
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(shader.window.iVendorRenderer);
-  shaderInt = glRenderer.glContext->CreateShader(shaderTypes[shaderType]);
-  const GLchar* source = shaderString.c_str();
-  GLint lengths[] = {(GLint)shaderString.size()};
-  glRenderer.glContext->ShaderSource(shaderInt, 1, &(source), lengths);
-  glRenderer.glContext->CompileShader(shaderInt);
-  return checkCompileErrors(shader, shaderInt, true, shaderNames[shaderType].data());
-};
-
-bool ShaderFactory::compileProgram(Shader &shader, const Shader::ShaderMap& shaderMap, GLuint& program)
+	ShaderPair shaderPair;
+	auto& shaderString = shaderPair.first;
+	auto& shaderHooks = hooks[shaderType];
+	shaderString += "#version 430 core\n";
+	currentInLayoutIndex = 0;
+	currentOutLayoutIndex = 0;
+	appendHooks(shaderString, shaderHooks["preLayout"], constants, shader);
+	appendHooks(shaderString, shaderHooks["layout"], constants, shader);
+	appendHooks(shaderString, shaderHooks["preMain"], constants, shader);
+	shaderString += "void main()\n{\n";
+	appendHooks(shaderString, shaderHooks["preInMain"], constants, shader);
+	appendHooks(shaderString, shaderHooks["postInMain"], constants, shader);
+	shaderString += "}\n";
+	appendHooks(shaderString, shaderHooks["postMain"], constants, shader);
+	if (!compileShader(shader, shaderType, shaderPair))
+	{
+		throw std::runtime_error("Failed to compile fragment shader");
+	}
+	return shaderPair;
+}
+void ShaderFactory::appendHooks(std::string& shaderString, RuntimeHooksMap& runtimeHooks,
+																const RuntimeConstants& constants, Shader& shader)
 {
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(shader.window.iVendorRenderer);
-  program = glRenderer.glContext->CreateProgram();
-  for (const auto& shaderMapPair : shaderMap)
-  {
-    glRenderer.glContext->AttachShader(program, shaderMapPair.second.second);
-  }
-  glRenderer.glContext->LinkProgram(program);
-  for (const auto& shaderMapPair : shaderMap)
-  {
-    glRenderer.glContext->DeleteShader(shaderMapPair.second.second);
-  }
-  return checkCompileErrors(shader, program, false, "Program");
-};
-
-const bool ShaderFactory::checkCompileErrors(Shader &shader, const GLuint& id, bool isShader, const char* shaderType)
+	for (const auto& constant : constants)
+	{
+		const auto& constantHooks = runtimeHooks[constant];
+		for (auto& hook : constantHooks)
+		{
+			shaderString += hook.second(shader, constants) + "\n";
+		}
+	}
+}
+bool ShaderFactory::compileShader(Shader& shader, ShaderType shaderType, ShaderPair& shaderPair)
 {
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(shader.window.iVendorRenderer);
-  GLint success = 0;
-  if (isShader)
-  {
-    glRenderer.glContext->GetShaderiv(id, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-      GLint infoLogLength;
-      glRenderer.glContext->GetShaderiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
-      GLchar* infoLog = new GLchar[infoLogLength + 1];
-      glRenderer.glContext->GetShaderInfoLog(id, infoLogLength, 0, infoLog);
-      printf("SHADER_COMPILATION_ERROR(%s):\n%s\n", shaderType, infoLog);
-      delete[] infoLog;
-      return false;
-    }
-  }
-  else
-  {
-    glRenderer.glContext->GetProgramiv(id, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-      GLint infoLogLength;
-      glRenderer.glContext->GetProgramiv(id, GL_INFO_LOG_LENGTH, &infoLogLength);
-      GLchar* infoLog = new GLchar[infoLogLength + 1];
-      glRenderer.glContext->GetProgramInfoLog(id, infoLogLength, 0, infoLog);
-      printf("PROGRAM_LINKING_ERROR(%s):\n%s\n", shaderType, infoLog);
-      delete[] infoLog;
-      return false;
-    }
-  }
-  return true;
-};
-
+	return shader.window.iVendorRenderer->compileShader(shader, shaderType, shaderPair);
+}
+bool ShaderFactory::compileProgram(Shader& shader, const ShaderMap& shaderMap)
+{
+	return shader.window.iVendorRenderer->compileProgram(shader, shaderMap);
+}
 void ShaderFactory::deleteProgram(Shader& shader)
 {
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(shader.window.iVendorRenderer);
-  glRenderer.glContext->DeleteProgram(shader.program);
-};
-
-uint32_t ShaderFactory::addHook(const Shader::ShaderType& shaderType, const std::string_view hookName,
-                                const std::string_view runtimeConstant, const Shader::ShaderHook& hook)
+	shader.window.iVendorRenderer->deleteShader(shader);
+}
+uint32_t ShaderFactory::addHook(const ShaderType& shaderType, const std::string_view hookName,
+																const std::string_view runtimeConstant, const Shader::ShaderHook& hook)
 {
-  auto id = ++hooksCount;
-  hooks[shaderType][hookName][runtimeConstant].emplace(id, hook);
-  shaderHookInfos[id] = {shaderType, hookName, runtimeConstant};
-  return id;
-};
-
+	auto id = ++hooksCount;
+	hooks[shaderType][hookName][runtimeConstant].emplace(id, hook);
+	shaderHookInfos[id] = {shaderType, hookName, runtimeConstant};
+	return id;
+}
 void ShaderFactory::deleteHook(uint32_t id)
 {
-  auto infoIter = shaderHookInfos.find(id);
-  if (infoIter == shaderHookInfos.end())
-    return;
-  auto hooksIter = hooks.find(std::get<0>(infoIter->second));
-  if (hooksIter == hooks.end())
-    return;
-  auto hookIter = hooksIter->second.find(std::get<1>(infoIter->second));
-  if (hookIter == hooksIter->second.end())
-    return;
-  auto runtimeHookIter = hookIter->second.find(std::get<2>(infoIter->second));
-  if (runtimeHookIter == hookIter->second.end())
-    return;
-  runtimeHookIter->second.erase(id);
-};
+	auto infoIter = shaderHookInfos.find(id);
+	if (infoIter == shaderHookInfos.end())
+		return;
+	auto hooksIter = hooks.find(std::get<0>(infoIter->second));
+	if (hooksIter == hooks.end())
+		return;
+	auto hookIter = hooksIter->second.find(std::get<1>(infoIter->second));
+	if (hookIter == hooksIter->second.end())
+		return;
+	auto runtimeHookIter = hookIter->second.find(std::get<2>(infoIter->second));
+	if (runtimeHookIter == hookIter->second.end())
+		return;
+	runtimeHookIter->second.erase(id);
+}

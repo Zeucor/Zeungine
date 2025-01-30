@@ -25,6 +25,10 @@ namespace zg
 		void addUBO(shaders::Shader &shader, const std::string_view name, uint32_t bindingIndex) override;
 		void setSSBO(shaders::Shader &shader, const std::string_view name, const void *pointer, size_t size) override;
 		void setTexture(shaders::Shader &shader, const std::string_view name, const textures::Texture &texture, const int32_t unit) override;
+		bool compileShader(shaders::Shader &shader, shaders::ShaderType shaderType, shaders::ShaderPair &shaderPair) override;
+		bool compileProgram(shaders::Shader &shader, const shaders::ShaderMap& shaderMap) override;
+		bool checkCompileErrors(shaders::Shader &shader, const GLuint& id, bool isShader, const char* shaderType);
+		void deleteShader(shaders::Shader &shader) override;
 	};
 	const bool GLcheck(GLRenderer &renderer, const char* fn, const bool egl = false);
 }
