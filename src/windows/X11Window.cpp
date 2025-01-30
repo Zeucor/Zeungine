@@ -218,7 +218,7 @@ void X11Window::createContext()
 	else
 	{
 		int context_attribs[] = {
-			GLX_CONTEXT_MAJOR_VERSION_ARB, 4, GLX_CONTEXT_MINOR_VERSION_ARB, 3, GLX_CONTEXT_PROFILE_MASK_ARB,
+			GLX_CONTEXT_MAJOR_VERSION_ARB, 4, GLX_CONTEXT_MINOR_VERSION_ARB, 6, GLX_CONTEXT_PROFILE_MASK_ARB,
 			GLX_CONTEXT_CORE_PROFILE_BIT_ARB, None};
 		glcontext = glXCreateContextAttribsARB(display, bestFbc, 0, True, context_attribs);
 		XSync(display, False);
