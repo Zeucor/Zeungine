@@ -85,14 +85,14 @@ namespace zg::shaders
 			{
 				throw std::runtime_error("setUniform: unsupported type");
 			}
-			window.iVendorRenderer->setUniform(*this, name, &value, pointerSize, uniformType);
+			window.iRenderer->setUniform(*this, name, &value, pointerSize, uniformType);
 		};
 
 		template <typename T>
 		void setBlock(const std::string_view name, const T& value, uint32_t size = 0)
 		{
 			auto pointerSize = size ? size : sizeof(value);
-			window.iVendorRenderer->setBlock(*this, name, &value, pointerSize);
+			window.iRenderer->setBlock(*this, name, &value, pointerSize);
 		};
 		void setSSBO(const std::string_view name, const void* pointer, uint32_t size);
 		void setTexture(const std::string_view name, const textures::Texture& texture, const int32_t unit);

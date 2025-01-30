@@ -461,7 +461,7 @@ void X11Window::swapBuffers()
 	glXSwapBuffers(display, window);
 #endif
 }
-void X11Window::destroy() { renderWindowPointer->iVendorRenderer->destroy(); }
+void X11Window::destroy() { renderWindowPointer->iRenderer->destroy(); }
 void X11Window::close()
 {
 	XEvent event;

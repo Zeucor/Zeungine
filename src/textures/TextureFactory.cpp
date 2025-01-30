@@ -62,17 +62,17 @@ void TextureFactory::initTexture(Texture &texture, const std::vector<std::string
 };
 void TextureFactory::preInitTexture(Texture& texture)
 {
-  texture.window.iVendorRenderer->preInitTexture(texture);
+  texture.window.iRenderer->preInitTexture(texture);
 };
 void TextureFactory::midInitTexture(const Texture& texture, const std::vector<images::ImageLoader::ImagePair>& images)
 {
-  texture.window.iVendorRenderer->midInitTexture(texture, images);
+  texture.window.iRenderer->midInitTexture(texture, images);
 }
 void TextureFactory::postInitTexture(const Texture& texture)
 {
-  texture.window.iVendorRenderer->postInitTexture(texture);
+  texture.window.iRenderer->postInitTexture(texture);
 };
 void TextureFactory::destroyTexture(Texture& texture)
 {
-  texture.window.iVendorRenderer->destroyTexture(texture);
+  texture.window.iRenderer->destroyTexture(texture);
 };

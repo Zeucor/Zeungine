@@ -121,7 +121,7 @@ void MacOSWindow::destroy()
 		[(NSOpenGLContext*)glContext release];
 	if (nsWindow)
 		[(NSWindow*)nsWindow release];
-	renderWindowPointer->iVendorRenderer->destroy();
+	renderWindowPointer->iRenderer->destroy();
 }
 void MacOSWindow::close()
 {

@@ -23,9 +23,9 @@ Framebuffer::~Framebuffer()
 };
 void Framebuffer::bind() const
 {
-  window.iVendorRenderer->bindFramebuffer(*this);
+  window.iRenderer->bindFramebuffer(*this);
 };
 void Framebuffer::unbind()
 {
-  window.iVendorRenderer->unbindFramebuffer(*this);
+  window.iRenderer->unbindFramebuffer(*this);
 };

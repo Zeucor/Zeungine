@@ -96,16 +96,16 @@ void Scene::preRender()
 		pointLightShadow.shader.unbind();
 		pointLightShadow.framebuffer.unbind();
 	}
-	auto &iVendorRenderer = *window.iVendorRenderer;
+	auto &iRenderer = *window.iRenderer;
 	if (framebufferPointer != 0)
 	{
 		auto &framebuffer = *framebufferPointer;	
-		iVendorRenderer.viewport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
+		iRenderer.viewport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
 	}
 	else
-		iVendorRenderer.viewport({0, 0, static_cast<GLsizei>(window.windowWidth), static_cast<GLsizei>(window.windowHeight)});
-	iVendorRenderer.clearColor(clearColor);
-	iVendorRenderer.clear();
+		iRenderer.viewport({0, 0, static_cast<GLsizei>(window.windowWidth), static_cast<GLsizei>(window.windowHeight)});
+	iRenderer.clearColor(clearColor);
+	iRenderer.clear();
 };
 void Scene::render()
 {

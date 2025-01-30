@@ -112,7 +112,7 @@ SkyBox::SkyBox(Window &window,
 void SkyBox::preRender()
 {
 #ifdef USE_GL
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iRenderer);
 	glRenderer.glContext->DepthFunc(GL_LEQUAL);
 #endif
 	shader.bind();
@@ -126,7 +126,7 @@ void SkyBox::preRender()
 void SkyBox::postRender()
 {
 #ifdef USE_GL
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
+	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iRenderer);
 	glRenderer.glContext->DepthFunc(GL_LESS);
 #endif
 };

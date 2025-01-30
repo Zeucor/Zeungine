@@ -1084,15 +1084,15 @@ void ShaderFactory::appendHooks(std::string& shaderString, RuntimeHooksMap& runt
 }
 bool ShaderFactory::compileShader(Shader& shader, ShaderType shaderType, ShaderPair& shaderPair)
 {
-	return shader.window.iVendorRenderer->compileShader(shader, shaderType, shaderPair);
+	return shader.window.iRenderer->compileShader(shader, shaderType, shaderPair);
 }
 bool ShaderFactory::compileProgram(Shader& shader, const ShaderMap& shaderMap)
 {
-	return shader.window.iVendorRenderer->compileProgram(shader, shaderMap);
+	return shader.window.iRenderer->compileProgram(shader, shaderMap);
 }
 void ShaderFactory::deleteProgram(Shader& shader)
 {
-	shader.window.iVendorRenderer->deleteShader(shader);
+	shader.window.iRenderer->deleteShader(shader);
 }
 uint32_t ShaderFactory::addHook(const ShaderType& shaderType, const std::string_view hookName,
 																const std::string_view runtimeConstant, const Shader::ShaderHook& hook)

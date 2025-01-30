@@ -66,7 +66,7 @@ struct TestTriangle : Entity
   void preRender() override
   {
 #ifdef USE_GL
-    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
+    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iRenderer);
   	glRenderer.glContext->Disable(GL_CULL_FACE);
     GLcheck(glRenderer, "glEnable");
 #endif
@@ -82,7 +82,7 @@ struct TestTriangle : Entity
   void postRender() override
   {
 #ifdef USE_GL
-    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
+    auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iRenderer);
     glRenderer.glContext->Enable(GL_CULL_FACE);
     GLcheck(glRenderer, "glEnable");
 #endif

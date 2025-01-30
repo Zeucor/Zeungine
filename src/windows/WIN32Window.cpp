@@ -347,7 +347,7 @@ void WIN32Window::swapBuffers()
 }
 void WIN32Window::destroy()
 {
-	renderWindowPointer->iVendorRenderer->destroy();
+	renderWindowPointer->iRenderer->destroy();
 	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(hRenderingContext);
 }

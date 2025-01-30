@@ -15,7 +15,7 @@ VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Fog", false},		 {"Lighting", false}, {"LightSpaceMatrix", false}};
 void VAOFactory::generate(VAO &vao)
 {
-	vao.vaoWindow.iVendorRenderer->generateVAO(vao);
+	vao.vaoWindow.iRenderer->generateVAO(vao);
 };
 size_t VAOFactory::getStride(const RuntimeConstants& constants)
 {
@@ -46,5 +46,5 @@ size_t VAOFactory::getOffset(const RuntimeConstants& constants, const std::strin
 bool VAOFactory::isVAOConstant(const std::string_view constant) { return VAOConstants[constant]; }
 void VAOFactory::destroy(VAO &vao)
 {
-	vao.vaoWindow.iVendorRenderer->destroyVAO(vao);
+	vao.vaoWindow.iRenderer->destroyVAO(vao);
 };

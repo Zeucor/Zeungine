@@ -35,9 +35,9 @@ Texture::~Texture()
 };
 void Texture::bind() const
 {
-  window.iVendorRenderer->bindTexture(*this);
+  window.iRenderer->bindTexture(*this);
 };
 void Texture::unbind() const
 {
-  window.iVendorRenderer->bindTexture(*this);
+  window.iRenderer->bindTexture(*this);
 };

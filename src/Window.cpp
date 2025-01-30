@@ -40,7 +40,7 @@ Window::Window(Window &_parentWindow,
 						 			 bool _vsync,
 									 uint32_t framerate):
 	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
-	iVendorRenderer(_parentWindow.iVendorRenderer),
+	iRenderer(_parentWindow.iRenderer),
 	title(_childTitle),
 	isChildWindow(true),
 	parentWindow(&_parentWindow),
@@ -79,10 +79,10 @@ void Window::startWindow()
 	iPlatformWindow = createPlatformWindow();
 	auto &iPlatformWindowRef = *iPlatformWindow;
 	iPlatformWindowRef.init(*this);
-	iVendorRenderer = createVendorRenderer();
+	iRenderer = createVendorRenderer();
 	iPlatformWindowRef.createContext();
-	iVendorRenderer->init(&iPlatformWindowRef);
-	auto &iVendorRendererRef = *iVendorRenderer;
+	iRenderer->init(&iPlatformWindowRef);
+	auto &iRendererRef = *iRenderer;
 	iPlatformWindowRef.postInit();
 	while (iPlatformWindowRef.pollMessages())
 	{
@@ -96,7 +96,7 @@ void Window::startWindow()
 				continue;
 			childWindow.render();
 		}
-		iVendorRendererRef.render();
+		iRendererRef.render();
 	}
 _exit:
 	scene.reset();

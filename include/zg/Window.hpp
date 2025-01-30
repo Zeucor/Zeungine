@@ -37,7 +37,7 @@ namespace zg
 	struct Window : IWindow
 	{
 		std::shared_ptr<IPlatformWindow> iPlatformWindow;
-		std::shared_ptr<IRenderer> iVendorRenderer;
+		std::shared_ptr<IRenderer> iRenderer;
 		const char *title;
 		int windowKeys[256];
 		int windowButtons[7];
