@@ -5,7 +5,9 @@ namespace zg
 {
 	struct MacOSWindow : IPlatformWindow
 	{
-		float dpiScale = 1.0f;
+		void *nsWindow = 0;
+		void *nsView;
+		void *glContext = 0;
 		void init(Window& window) override;
 		void createContext() override;
 		void renderInit();
