@@ -71,7 +71,7 @@ void X11Window::init(Window& renderWindow)
 			if (!pict_format)
 				continue;
 			if (best_fbc < 0 ||
-					(samp_buf && samples > best_num_samp) /* || (pict_format->direct.alphaMask > best_alpha_mask) */)
+					(samp_buf && samples > best_num_samp) || (pict_format->direct.alphaMask > best_alpha_mask))
 				best_fbc = index, best_num_samp = samples, best_alpha_mask = pict_format->direct.alphaMask;
 			if (worst_fbc < 0 || !samp_buf || samples < worst_num_samp)
 				worst_fbc = index, worst_num_samp = samples;
