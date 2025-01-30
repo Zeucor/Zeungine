@@ -21,7 +21,7 @@ void View::addPhiTheta(float addPhi, float addTheta)
 	newDirection.x = sin(theta) * cos(phi);
 	newDirection.y = cos(theta);
 	newDirection.z = sin(theta) * sin(phi);
-	direction = newDirection + 1e-6;
+	direction = newDirection;
   update();
 };
 zg::IWindow::EventIdentifier View::addResizeHandler(const IWindow::ViewResizeHandler &callback)
