@@ -86,7 +86,7 @@ int main()
     {
         window.setIScene(std::make_shared<ExampleScene>((Window &)window));
     });
-    window.await();
+    window.run();
 }
 ```
 
