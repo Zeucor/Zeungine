@@ -107,6 +107,6 @@ namespace zg::shaders
 			window.iVendorRenderer->setBlock(*this, name, &value, pointerSize);
 		};
 		void setSSBO(const std::string_view name, const void* pointer, uint32_t size);
-		void setTexture(const std::string_view name, const textures::Texture& texture, const int32_t& unit);
+		void setTexture(const std::string_view name, const textures::Texture& texture, const int32_t unit);
 	};
 }

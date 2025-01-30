@@ -220,6 +220,62 @@ void GLRenderer::setBlock(shaders::Shader &shader, const std::string_view name, 
 	glContext->BindBufferRange(GL_UNIFORM_BUFFER, bindingIndex, uboBufferIndex, 0, size);
 	GLcheck(*this, "glBindBufferRange");
 }
+void GLRenderer::deleteBuffer(uint32_t id)
+{
+    glContext->DeleteBuffers(1, &id);
+    GLcheck(*this, "glDeleteBuffers");
+}
+void GLRenderer::bindShader(const shaders::Shader &shader)
+{
+	glContext->UseProgram(shader.program);
+	GLcheck(*this, "glUseProgram");
+}
+void GLRenderer::unbindShader(const shaders::Shader &shader)
+{
+	glContext->UseProgram(0);
+	GLcheck(*this, "glUseProgram");
+}
+void GLRenderer::addSSBO(shaders::Shader &shader, const std::string_view name, uint32_t bindingIndex)
+{
+	GLuint ssboBufferID;
+	glContext->GenBuffers(1, &ssboBufferID);
+	GLcheck(*this, "glGenBuffers");
+	auto& ssboBinding = shader.ssboBindings[name];
+	std::get<0>(ssboBinding) = bindingIndex;
+	std::get<1>(ssboBinding) = ssboBufferID;
+}
+void GLRenderer::addUBO(shaders::Shader &shader, const std::string_view name, uint32_t bindingIndex)
+{
+	GLuint uboBufferID;
+	glContext->GenBuffers(1, &uboBufferID);
+	GLcheck(*this, "glGenBuffers");
+	auto& uboBinding = shader.uboBindings[name];
+	std::get<0>(uboBinding) = bindingIndex;
+	std::get<1>(uboBinding) = uboBufferID;
+}
+void GLRenderer::setSSBO(shaders::Shader &shader, const std::string_view name, const void *pointer, size_t size)
+{
+	auto ssboIter = shader.ssboBindings.find(name.data());
+	if (ssboIter == shader.ssboBindings.end())
+	{
+		return;
+	}
+	auto& bindingIndex = std::get<0>(ssboIter->second);
+	auto& buffer = std::get<1>(ssboIter->second);
+	glContext->BindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingIndex, buffer);
+	GLcheck(*this, "glBindBufferBase");
+	glContext->BindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+	GLcheck(*this, "glBindBuffer");
+	glContext->BufferData(GL_SHADER_STORAGE_BUFFER, size, pointer, GL_STATIC_DRAW);
+	GLcheck(*this, "glBufferData");
+}
+void GLRenderer::setTexture(shaders::Shader &shader, const std::string_view name, const textures::Texture &texture, const int32_t unit)
+{
+	shader.setUniform(name, unit);
+	glContext->ActiveTexture(GL_TEXTURE0 + unit);
+	GLcheck(*this, "glActiveTexture");
+	texture.bind();
+}
 const bool zg::GLcheck(GLRenderer &renderer, const char* fn, const bool egl)
 {
 	while (true)
