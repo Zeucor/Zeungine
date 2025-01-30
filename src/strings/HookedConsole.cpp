@@ -1,4 +1,7 @@
 #include <zg/strings/HookedConsole.hpp>
+#ifdef MACOS
+#include <unistd.h>
+#endif
 using namespace zg::strings;
 HookedConsole::HookedConsole(const std::function<void(const std::vector<std::string> &)> &_outputCallback, StdHandleToRedirect handle):
     outputCallback(_outputCallback),

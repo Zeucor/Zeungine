@@ -28,7 +28,6 @@ Window::Window(const char* title,
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
-	run();
 };
 Window::Window(Window &_parentWindow,
 									 Scene &_parentScene,

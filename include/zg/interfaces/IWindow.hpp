@@ -14,7 +14,9 @@ namespace zg
 		float windowX;
 		float windowY;
 		uint32_t framerate = 60;
+#if defined(WINDOWS) || defined(LINUX)
 		std::shared_ptr<std::thread> windowThread;
+#endif
 		using Runnable = std::function<void(IWindow&)>;
 		std::queue<Runnable> runnables;
 		using Key = uint32_t;
@@ -54,7 +56,6 @@ namespace zg
 						uint32_t framerate);
 		virtual ~IWindow() = default;
 		void run();
-		void await() const;
 		virtual void startWindow() = 0;
 		virtual void preRender();
 		void render();

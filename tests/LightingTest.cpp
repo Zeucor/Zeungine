@@ -219,5 +219,5 @@ int main()
   {
     window.setIScene(std::make_shared<TestScene>(window));
   });
-  window.await();
+  window.run();
 };

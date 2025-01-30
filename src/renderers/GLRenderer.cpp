@@ -63,6 +63,7 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 	GLcheck(*this, "glEnable:GL_BLEND");
 	glContext->Enable(GL_DITHER);
 	GLcheck(*this, "glEnable:GL_DITHER");
+#ifndef MACOS
 	glContext->BlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
 	GLcheck(*this, "glBlendEquationSeparate");
 	glContext->BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -77,6 +78,7 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 			std::cerr << "OpenGL Debug Message: " << message << std::endl;
 		}
 	}, nullptr);
+#endif
 #ifdef _WIN32
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 	wglSwapIntervalEXT(platformWindowPointer->renderWindowPointer->vsync);

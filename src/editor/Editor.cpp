@@ -8,5 +8,5 @@ int32_t main()
 	{
 		runningWindow.setIScene(std::make_shared<EditorScene>((Window&)runningWindow));
 	});
-	window.await();
+	window.run();
 };

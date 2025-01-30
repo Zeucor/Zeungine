@@ -15,13 +15,14 @@ IWindow::IWindow(float _windowWidth,
   framerate(_framerate),
   borderless(_borderless)
 {};
-void IWindow::await() const
-{
-  windowThread->join();
-}
 void IWindow::run()
 {
+#if defined(WINDOWS) || defined(LINUX)
   windowThread = std::make_shared<std::thread>(&IWindow::startWindow, this);
+  windowThread->join();
+#elif defined(MACOS)
+  startWindow();
+#endif
 }
 void IWindow::preRender(){};
 void IWindow::render()
