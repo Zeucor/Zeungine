@@ -1,9 +1,11 @@
 #ifdef USE_GL
-#include <zg/renderers/GLRenderer.hpp>
-#include <zg/shaders/ShaderFactory.hpp>
+#include <zg/Logger.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
-#include <zg/Logger.hpp>
+#include <zg/renderers/GLRenderer.hpp>
+#include <zg/shaders/ShaderFactory.hpp>
+#include <zg/textures/TextureFactory.hpp>
+#include <zg/vaos/VAOFactory.hpp>
 #ifdef _WIN32
 #include <zg/SharedLibrary.hpp>
 #endif
@@ -15,16 +17,15 @@
 #endif
 using namespace zg;
 #ifdef _WIN32
-typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALEXTPROC) (int interval);
+typedef BOOL(APIENTRY* PFNWGLSWAPINTERVALEXTPROC)(int interval);
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
 zg::SharedLibrary opengl32Library("opengl32.dll");
 #endif
-void *getProc(const char* name) {
+void* getProc(const char* name)
+{
 #ifdef _WIN32
 	void* p = (void*)wglGetProcAddress(name);
-	if(p == 0 ||
-		 (p == (void*)0x1) || (p == (void*)0x2) || (p == (void*)0x3) ||
-		 (p == (void*)-1) )
+	if (p == 0 || (p == (void*)0x1) || (p == (void*)0x2) || (p == (void*)0x3) || (p == (void*)-1))
 	{
 		return opengl32Library.getProc<void*>(name);
 	}
@@ -33,13 +34,8 @@ void *getProc(const char* name) {
 	return dlsym(RTLD_DEFAULT, name);
 #endif
 }
-GLRenderer::GLRenderer():
-	glContext(new GladGLContext)
-{}
-GLRenderer::~GLRenderer()
-{
-	delete glContext;
-}
+GLRenderer::GLRenderer() : glContext(new GladGLContext) {}
+GLRenderer::~GLRenderer() { delete glContext; }
 void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 {
 	this->platformWindowPointer = platformWindowPointer;
@@ -52,7 +48,8 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 	GLcheck(*this, "glCullFace");
 	glContext->FrontFace(GL_CCW);
 	GLcheck(*this, "glFrontFace");
-	glContext->Viewport(0, 0, platformWindowPointer->renderWindowPointer->windowWidth, platformWindowPointer->renderWindowPointer->windowHeight);
+	glContext->Viewport(0, 0, platformWindowPointer->renderWindowPointer->windowWidth,
+											platformWindowPointer->renderWindowPointer->windowHeight);
 	GLcheck(*this, "glViewport");
 	glContext->ClearDepth(1.0);
 	GLcheck(*this, "glClearDepth");
@@ -73,40 +70,42 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 	GLcheck(*this, "glEnable");
 	glContext->Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	GLcheck(*this, "glEnable");
-	glContext->DebugMessageCallback([](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message, const void* userParam) {
-		if (type == GL_DEBUG_TYPE_ERROR )
+	glContext->DebugMessageCallback(
+		[](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message,
+			 const void* userParam)
 		{
-			std::cerr << "OpenGL Debug Message: " << message << std::endl;
-		}
-	}, nullptr);
+			if (type == GL_DEBUG_TYPE_ERROR)
+			{
+				std::cerr << "OpenGL Debug Message: " << message << std::endl;
+			}
+		},
+		nullptr);
 #endif
 #ifdef _WIN32
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 	wglSwapIntervalEXT(platformWindowPointer->renderWindowPointer->vsync);
 #elif defined(LINUX)
-	PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalEXT");
-	auto &x11Window = *(X11Window *)platformWindowPointer;
+	PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT =
+		(PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalEXT");
+	auto& x11Window = *(X11Window*)platformWindowPointer;
 	glXSwapIntervalEXT(x11Window.display, x11Window.window, platformWindowPointer->renderWindowPointer->vsync);
 #endif
 }
 void GLRenderer::render()
 {
-	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	renderWindow.render();
-	for (auto &childWindowPointer : renderWindow.childWindows)
+	for (auto& childWindowPointer : renderWindow.childWindows)
 	{
-		auto &childWindow = *childWindowPointer;
+		auto& childWindow = *childWindowPointer;
 		if (childWindow.minimized)
 			continue;
 		childWindow.framebufferPlane->render();
 	}
 	platformWindowPointer->swapBuffers();
 }
-void GLRenderer::destroy(){}
-std::shared_ptr<IRenderer> zg::createVendorRenderer()
-{
-	return std::shared_ptr<IRenderer>(new GLRenderer());
-}
+void GLRenderer::destroy() {}
+std::shared_ptr<IRenderer> zg::createVendorRenderer() { return std::shared_ptr<IRenderer>(new GLRenderer()); }
 void GLRenderer::clearColor(glm::vec4 color)
 {
 	glContext->ClearColor(color.r, color.g, color.b, color.a);
@@ -117,12 +116,13 @@ void GLRenderer::clear()
 	glContext->Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	GLcheck(*this, "glClear");
 }
-void GLRenderer::viewport(glm::ivec4 vp)
+void GLRenderer::viewport(glm::ivec4 vp) const
 {
 	glContext->Viewport(vp.x, vp.y, vp.z, vp.w);
 	GLcheck(*this, "glViewport");
 }
-void GLRenderer::setUniform(shaders::Shader &shader, const std::string_view name, const void *value, uint32_t size, enums::EUniformType uniformType)
+void GLRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* value, uint32_t size,
+														enums::EUniformType uniformType)
 {
 	GLint location = glContext->GetUniformLocation(shader.program, name.data());
 	GLcheck(*this, "glGetUniformLocation");
@@ -134,75 +134,75 @@ void GLRenderer::setUniform(shaders::Shader &shader, const std::string_view name
 	switch (uniformType)
 	{
 	case enums::EUniformType::_1b:
-	{
-		glContext->Uniform1i(location, (int32_t)(*(bool*)pointer));
-		GLcheck(*this, "glUniform1i");
-		return;
-	}
+		{
+			glContext->Uniform1i(location, (int32_t)(*(bool*)pointer));
+			GLcheck(*this, "glUniform1i");
+			return;
+		}
 	case enums::EUniformType::_1i:
-	{
-		glContext->Uniform1i(location, *(int32_t*)pointer);
-		GLcheck(*this, "glUniform1i");
-		return;
-	}
+		{
+			glContext->Uniform1i(location, *(int32_t*)pointer);
+			GLcheck(*this, "glUniform1i");
+			return;
+		}
 	case enums::EUniformType::_1ui:
-	{
-		glContext->Uniform1ui(location, *(uint32_t*)pointer);
-		GLcheck(*this, "glUniform1ui");
-		return;
-	}
+		{
+			glContext->Uniform1ui(location, *(uint32_t*)pointer);
+			GLcheck(*this, "glUniform1ui");
+			return;
+		}
 	case enums::EUniformType::_1fv:
-	{
-		glContext->Uniform1fv(location, size, &((float**)pointer)[0][0]);
-		GLcheck(*this, "glUniform1fv");
-		return;
-	}
+		{
+			glContext->Uniform1fv(location, size, &((float**)pointer)[0][0]);
+			GLcheck(*this, "glUniform1fv");
+			return;
+		}
 	case enums::EUniformType::_1f:
-	{
-		glContext->Uniform1f(location, *(float*)pointer);
-		GLcheck(*this, "glUniform1f");
-		return;
-	}
+		{
+			glContext->Uniform1f(location, *(float*)pointer);
+			GLcheck(*this, "glUniform1f");
+			return;
+		}
 	case enums::EUniformType::_2fv:
-	{
-		glContext->Uniform2fv(location, 1, &(*(glm::vec2*)pointer)[0]);
-		GLcheck(*this, "glUniform2fv");
-		return;
-	}
+		{
+			glContext->Uniform2fv(location, 1, &(*(glm::vec2*)pointer)[0]);
+			GLcheck(*this, "glUniform2fv");
+			return;
+		}
 	case enums::EUniformType::_3fv:
-	{
-		glContext->Uniform3fv(location, 1, &(*(glm::vec3*)pointer)[0]);
-		GLcheck(*this, "glUniform3fv");
-		return;
-	}
+		{
+			glContext->Uniform3fv(location, 1, &(*(glm::vec3*)pointer)[0]);
+			GLcheck(*this, "glUniform3fv");
+			return;
+		}
 	case enums::EUniformType::_4fv:
-	{
-		glContext->Uniform4fv(location, 1, &(*(glm::vec4*)pointer)[0]);
-		GLcheck(*this, "glUniform4fv");
-		return;
-	}
+		{
+			glContext->Uniform4fv(location, 1, &(*(glm::vec4*)pointer)[0]);
+			GLcheck(*this, "glUniform4fv");
+			return;
+		}
 	case enums::EUniformType::_Matrix2fv:
-	{
-		glContext->UniformMatrix2fv(location, 1, GL_FALSE, &(*(glm::mat2*)pointer)[0][0]);
-		GLcheck(*this, "glUniformMatrix2fv");
-		return;
-	}
+		{
+			glContext->UniformMatrix2fv(location, 1, GL_FALSE, &(*(glm::mat2*)pointer)[0][0]);
+			GLcheck(*this, "glUniformMatrix2fv");
+			return;
+		}
 	case enums::EUniformType::_Matrix3fv:
-	{
-		glContext->UniformMatrix3fv(location, 1, GL_FALSE, &(*(glm::mat3*)pointer)[0][0]);
-		GLcheck(*this, "glUniformMatrix3fv");
-		return;
-	}
+		{
+			glContext->UniformMatrix3fv(location, 1, GL_FALSE, &(*(glm::mat3*)pointer)[0][0]);
+			GLcheck(*this, "glUniformMatrix3fv");
+			return;
+		}
 	case enums::EUniformType::_Matrix4fv:
-	{
-		glContext->UniformMatrix4fv(location, 1, GL_FALSE, &(*(glm::mat4*)pointer)[0][0]);
-		GLcheck(*this, "glUniformMatrix4fv");
-		return;
-	}
+		{
+			glContext->UniformMatrix4fv(location, 1, GL_FALSE, &(*(glm::mat4*)pointer)[0][0]);
+			GLcheck(*this, "glUniformMatrix4fv");
+			return;
+		}
 	}
 	assert(false && "Should not reach here");
 }
-void GLRenderer::setBlock(shaders::Shader &shader, const std::string_view name, const void* pointer, size_t size)
+void GLRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
 {
 	auto blockIndex = glContext->GetUniformBlockIndex(shader.program, name.data());
 	if (blockIndex == -1)
@@ -223,20 +223,20 @@ void GLRenderer::setBlock(shaders::Shader &shader, const std::string_view name, 
 }
 void GLRenderer::deleteBuffer(uint32_t id)
 {
-    glContext->DeleteBuffers(1, &id);
-    GLcheck(*this, "glDeleteBuffers");
+	glContext->DeleteBuffers(1, &id);
+	GLcheck(*this, "glDeleteBuffers");
 }
-void GLRenderer::bindShader(const shaders::Shader &shader)
+void GLRenderer::bindShader(const shaders::Shader& shader)
 {
 	glContext->UseProgram(shader.program);
 	GLcheck(*this, "glUseProgram");
 }
-void GLRenderer::unbindShader(const shaders::Shader &shader)
+void GLRenderer::unbindShader(const shaders::Shader& shader)
 {
 	glContext->UseProgram(0);
 	GLcheck(*this, "glUseProgram");
 }
-void GLRenderer::addSSBO(shaders::Shader &shader, const std::string_view name, uint32_t bindingIndex)
+void GLRenderer::addSSBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
 {
 	GLuint ssboBufferID;
 	glContext->GenBuffers(1, &ssboBufferID);
@@ -245,7 +245,7 @@ void GLRenderer::addSSBO(shaders::Shader &shader, const std::string_view name, u
 	std::get<0>(ssboBinding) = bindingIndex;
 	std::get<1>(ssboBinding) = ssboBufferID;
 }
-void GLRenderer::addUBO(shaders::Shader &shader, const std::string_view name, uint32_t bindingIndex)
+void GLRenderer::addUBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
 {
 	GLuint uboBufferID;
 	glContext->GenBuffers(1, &uboBufferID);
@@ -254,7 +254,7 @@ void GLRenderer::addUBO(shaders::Shader &shader, const std::string_view name, ui
 	std::get<0>(uboBinding) = bindingIndex;
 	std::get<1>(uboBinding) = uboBufferID;
 }
-void GLRenderer::setSSBO(shaders::Shader &shader, const std::string_view name, const void *pointer, size_t size)
+void GLRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
 {
 	auto ssboIter = shader.ssboBindings.find(name.data());
 	if (ssboIter == shader.ssboBindings.end())
@@ -270,14 +270,15 @@ void GLRenderer::setSSBO(shaders::Shader &shader, const std::string_view name, c
 	glContext->BufferData(GL_SHADER_STORAGE_BUFFER, size, pointer, GL_STATIC_DRAW);
 	GLcheck(*this, "glBufferData");
 }
-void GLRenderer::setTexture(shaders::Shader &shader, const std::string_view name, const textures::Texture &texture, const int32_t unit)
+void GLRenderer::setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
+														const int32_t unit)
 {
 	shader.setUniform(name, unit);
 	glContext->ActiveTexture(GL_TEXTURE0 + unit);
 	GLcheck(*this, "glActiveTexture");
 	texture.bind();
 }
-bool GLRenderer::compileShader(shaders::Shader &shader, shaders::ShaderType shaderType, shaders::ShaderPair &shaderPair)
+bool GLRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType shaderType, shaders::ShaderPair& shaderPair)
 {
 	auto& shaderString = shaderPair.first;
 	auto& shaderInt = shaderPair.second;
@@ -292,7 +293,7 @@ bool GLRenderer::compileShader(shaders::Shader &shader, shaders::ShaderType shad
 	auto success = checkCompileErrors(shader, shaderInt, true, shaders::ShaderFactory::shaderNames[shaderType].data());
 	return success;
 }
-bool GLRenderer::compileProgram(shaders::Shader &shader, const shaders::ShaderMap& shaderMap)
+bool GLRenderer::compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap)
 {
 	shader.program = glContext->CreateProgram();
 	GLcheck(*this, "glCreateProgram");
@@ -310,7 +311,7 @@ bool GLRenderer::compileProgram(shaders::Shader &shader, const shaders::ShaderMa
 	auto success = checkCompileErrors(shader, shader.program, false, "Program");
 	return success;
 }
-bool GLRenderer::checkCompileErrors(shaders::Shader &shader, const GLuint& id, bool isShader, const char* shaderType)
+bool GLRenderer::checkCompileErrors(shaders::Shader& shader, const GLuint& id, bool isShader, const char* shaderType)
 {
 	GLint success = 0;
 	if (isShader)
@@ -349,12 +350,266 @@ bool GLRenderer::checkCompileErrors(shaders::Shader &shader, const GLuint& id, b
 	}
 	return true;
 }
-void GLRenderer::deleteShader(shaders::Shader &shader)
+void GLRenderer::deleteShader(shaders::Shader& shader)
 {
 	glContext->DeleteProgram(shader.program);
 	GLcheck(*this, "glDeleteProgram");
 }
-const bool zg::GLcheck(GLRenderer &renderer, const char* fn, const bool egl)
+void GLRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const
+{
+	glContext->BindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+	GLcheck(*this, "glBindFramebuffer");
+	viewport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
+}
+void GLRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) const
+{
+	glContext->BindFramebuffer(GL_FRAMEBUFFER, 0);
+	GLcheck(*this, "glBindFramebuffer");
+}
+void GLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
+{
+	if (framebuffer.depthTexturePointer)
+	{
+		glContext->GenRenderbuffers(1, &framebuffer.renderbufferID);
+		GLcheck(*this, "glGenRenderbuffers");
+	}
+	glContext->GenFramebuffers(1, &framebuffer.id);
+	GLcheck(*this, "glGenFramebuffers");
+	glContext->BindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+	GLcheck(*this, "glBindFramebuffer");
+	GLenum frameBufferTarget;
+	switch (framebuffer.texture.format)
+	{
+	case textures::Texture::Depth:
+		frameBufferTarget = GL_DEPTH_ATTACHMENT;
+		glContext->DrawBuffer(GL_NONE);
+		glContext->ReadBuffer(GL_NONE);
+		break;
+	default:
+		frameBufferTarget = GL_COLOR_ATTACHMENT0;
+		break;
+	}
+	if (framebuffer.depthTexturePointer)
+	{
+		glContext->BindRenderbuffer(GL_RENDERBUFFER, framebuffer.renderbufferID);
+		GLcheck(*this, "glBindRenderbuffer");
+		glContext->RenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, framebuffer.depthTexturePointer->size.x,
+																	 framebuffer.depthTexturePointer->size.y);
+		GLcheck(*this, "glRenderbufferStorage");
+		glContext->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
+																			 framebuffer.renderbufferID);
+		GLcheck(*this, "glFramebufferRenderbuffer");
+	}
+	if (framebuffer.texture.target == GL_TEXTURE_CUBE_MAP)
+	{
+		glContext->FramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, framebuffer.texture.id, 0);
+		GLcheck(*this, "glFramebufferTexture");
+	}
+	else
+	{
+		glContext->FramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, framebuffer.texture.id, 0);
+		GLcheck(*this, "glFramebufferTexture2D");
+	}
+	glContext->BindFramebuffer(GL_FRAMEBUFFER, 0);
+	GLcheck(*this, "glBindFramebuffer");
+}
+void GLRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer)
+{
+	glContext->DeleteFramebuffers(1, &framebuffer.id);
+	GLcheck(*this, "glDeleteFramebuffers");
+}
+void GLRenderer::bindTexture(const textures::Texture& texture)
+{
+	glContext->BindTexture(texture.target, texture.id);
+	GLcheck(*this, "glBindTexture");
+}
+void GLRenderer::unbindTexture(const textures::Texture& texture)
+{
+	glContext->BindTexture(texture.target, 0);
+	GLcheck(*this, "glBindTexture");
+}
+void GLRenderer::preInitTexture(textures::Texture& texture)
+{
+	glContext->GenTextures(1, &texture.id);
+	GLcheck(*this, "glGenTextures");
+	if (texture.size.w > 0)
+		texture.target = GL_TEXTURE_CUBE_MAP;
+	else if (texture.size.y == 0)
+		texture.target = GL_TEXTURE_1D;
+	else if (texture.size.z <= 1)
+		texture.target = GL_TEXTURE_2D;
+	else
+		texture.target = GL_TEXTURE_3D;
+	texture.bind();
+	glContext->PixelStorei(GL_PACK_ALIGNMENT, 1);
+	GLcheck(*this, "glPixelStorei");
+}
+void GLRenderer::midInitTexture(const textures::Texture& texture,
+																const std::vector<images::ImageLoader::ImagePair>& images)
+{
+	if (texture.target == GL_TEXTURE_1D)
+	{
+		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
+		glContext->TexImage1D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
+													0, textures::TextureFactory::formats[texture.format],
+													textures::TextureFactory::types[{texture.format, texture.type}], data);
+		GLcheck(*this, "glTexImage1D");
+	}
+	else if (texture.target == GL_TEXTURE_2D)
+	{
+		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
+		glContext->TexImage2D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
+													texture.size.y, 0, textures::TextureFactory::formats[texture.format],
+													textures::TextureFactory::types[{texture.format, texture.type}], data);
+		GLcheck(*this, "glTexImage2D");
+	}
+	else if (texture.target == GL_TEXTURE_3D)
+	{
+		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
+		glContext->TexImage3D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
+													texture.size.y, texture.size.z, 0, textures::TextureFactory::formats[texture.format],
+													textures::TextureFactory::types[{texture.format, texture.type}], data);
+		GLcheck(*this, "glTexImage3D");
+	}
+	else if (texture.target == GL_TEXTURE_CUBE_MAP)
+	{
+		for (uint8_t face = 0; face < 6; ++face)
+		{
+			bool haveImage = images.size() > face;
+			auto imageSize = haveImage ? std::get<0>(images[face]) : glm::uvec2(0, 0);
+			void* data = haveImage ? std::get<1>(images[face]).get() : 0;
+			glContext->TexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0,
+														textures::TextureFactory::internalFormats[texture.format], imageSize.x, imageSize.y, 0,
+														textures::TextureFactory::formats[texture.format],
+														textures::TextureFactory::types[{texture.format, texture.type}], data);
+			GLcheck(*this, "glTexImage2D");
+		}
+	}
+}
+void GLRenderer::postInitTexture(const textures::Texture& texture)
+{
+	GLenum filterType;
+	switch (texture.filterType)
+	{
+	case textures::Texture::FilterType::Nearest:
+		filterType = GL_NEAREST;
+		break;
+	case textures::Texture::FilterType::Linear:
+		filterType = GL_LINEAR;
+		break;
+	}
+	glContext->TexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, filterType);
+	GLcheck(*this, "glTexParameteri");
+	glContext->TexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, filterType);
+	GLcheck(*this, "glTexParameteri");
+	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	GLcheck(*this, "glTexParameteri");
+	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	GLcheck(*this, "glTexParameteri");
+	texture.unbind();
+}
+void GLRenderer::destroyTexture(textures::Texture& texture)
+{
+	glContext->DeleteTextures(1, &texture.id);
+	GLcheck(*this, "glDeleteTextures");
+}
+void GLRenderer::vaoUpdateIndices(const vaos::VAO &vao, const std::vector<uint32_t>& indices)
+{
+	glContext->BindVertexArray(vao.vao);
+	GLcheck(*this, "glBindVertexArray");
+	glContext->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao.ebo);
+	GLcheck(*this, "glBindBuffer");
+	auto& constantSize = vaos::VAOFactory::constantSizes["Indice"];
+	glContext->BufferData(GL_ELEMENT_ARRAY_BUFFER, vao.indiceCount * std::get<1>(constantSize), indices.data(),
+												GL_STATIC_DRAW);
+	GLcheck(*this, "glBufferData");
+	glContext->BindVertexArray(0);
+	GLcheck(*this, "glBindVertexArray");
+}
+void GLRenderer::vaoUpdateElements(const vaos::VAO &vao, const std::string_view constant, uint8_t* elementsAsChar)
+{
+	glContext->BindVertexArray(vao.vao);
+	GLcheck(*this, "glBindVertexArray");
+	glContext->BindBuffer(GL_ARRAY_BUFFER, vao.vbo);
+	GLcheck(*this, "glBindBuffer");
+	auto& constantSize = vaos::VAOFactory::constantSizes[constant];
+	auto offset = vaos::VAOFactory::getOffset(vao.constants, constant);
+	auto elementStride = std::get<0>(constantSize) * std::get<1>(constantSize);
+	for (size_t index = offset, c = 1, elementIndex = 0; c <= vao.elementCount;
+			 index += vao.stride, c++, elementIndex += elementStride)
+	{
+		glContext->BufferSubData(GL_ARRAY_BUFFER, index, elementStride, &elementsAsChar[elementIndex]);
+		GLcheck(*this, "glBufferSubData");
+	}
+	glContext->BindVertexArray(0);
+	GLcheck(*this, "glBindVertexArray");
+}
+void GLRenderer::vaoDraw(const vaos::VAO &vao)
+{
+	glContext->BindVertexArray(vao.vao);
+	GLcheck(*this, "glBindVertexArray");
+	GLenum drawMode = GL_TRIANGLES;
+	GLenum polygonMode = GL_FILL;
+	glContext->PolygonMode(GL_FRONT_AND_BACK, polygonMode);
+	GLcheck(*this, "glPolygonMode");
+	glContext->DrawElements(drawMode, vao.indiceCount, GL_UNSIGNED_INT, 0);
+	GLcheck(*this, "glDrawElements");
+}
+void GLRenderer::generateVAO(vaos::VAO &vao)
+{
+	glContext->GenVertexArrays(1, &vao.vao);
+	GLcheck(*this, "glGenVertexArrays");
+	glContext->GenBuffers(1, &vao.ebo);
+	GLcheck(*this, "glGenBuffers");
+	glContext->GenBuffers(1, &vao.vbo);
+	GLcheck(*this, "glGenBuffers");
+	glContext->BindVertexArray(vao.vao);
+	GLcheck(*this, "glBindVertexArray");
+	glContext->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao.ebo);
+	GLcheck(*this, "glBindBuffer");
+	glContext->BindBuffer(GL_ARRAY_BUFFER, vao.vbo);
+	GLcheck(*this, "glBindBuffer");
+	auto stride = vaos::VAOFactory::getStride(vao.constants);
+	glContext->BufferData(GL_ARRAY_BUFFER, stride * vao.elementCount, 0, GL_STATIC_DRAW);
+	GLcheck(*this, "glBufferData");
+	size_t attribIndex = 0;
+	size_t offset = 0;
+	for (auto& constant : vao.constants)
+	{
+		if (!vaos::VAOFactory::isVAOConstant(constant))
+			continue;
+		glContext->EnableVertexAttribArray(attribIndex);
+		GLcheck(*this, "glEnableVertexAttribArray");
+		auto& constantSize = vaos::VAOFactory::constantSizes[constant];
+		if (std::get<2>(constantSize) == GL_FLOAT)
+		{
+			glContext->VertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize),
+																								GL_FALSE, stride, (const void*)offset);
+			GLcheck(*this, "glVertexAttribPointer");
+		}
+		else
+		{
+			glContext->VertexAttribIPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize),
+																								 stride, (const void*)offset);
+			GLcheck(*this, "glVertexAttribIPointer");
+		}
+		offset += std::get<0>(constantSize) * std::get<1>(constantSize);
+		attribIndex++;
+	}
+}
+void GLRenderer::destroyVAO(vaos::VAO &vao)
+{
+	glContext->DeleteVertexArrays(1, &vao.vao);
+	GLcheck(*this, "glDeleteVertexArrays");
+	vao.vao = 0;
+	glContext->DeleteBuffers(1, &vao.vbo);
+	GLcheck(*this, "glDeleteBuffers");
+	vao.vbo = 0;
+	glContext->DeleteBuffers(1, &vao.ebo);
+	GLcheck(*this, "glDeleteBuffers");
+	vao.ebo = 0;
+}
+const bool zg::GLcheck(const GLRenderer& renderer, const char* fn, const bool egl)
 {
 #ifndef NDEBUG
 	while (true)
@@ -368,122 +623,153 @@ const bool zg::GLcheck(GLRenderer &renderer, const char* fn, const bool egl)
 #endif
 		if (err == GL_NO_ERROR
 #if defined(_Android)
-			|| err == EGL_SUCCESS
+				|| err == EGL_SUCCESS
 #endif
-			)
+		)
 		{
 			/*|
-			  |*/
+				|*/
 			break;
 		}
 		switch (err)
 		{
 		case GL_INVALID_ENUM:
-		{
-			Logger::print(Logger::Error, "GL_INVALID_ENUM", "(", fn, "): ", "An unacceptable value is specified for an enumerated argument. The offending command is ignored and has no other side effect than to set the error flag.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "GL_INVALID_ENUM", "(", fn, "): ",
+											"An unacceptable value is specified for an enumerated argument. The offending command is ignored "
+											"and has no other side effect than to set the error flag.");
+				break;
+			};
 		case GL_INVALID_VALUE:
-		{
-			Logger::print(Logger::Error, "GL_INVALID_VALUE", "(", fn, "): ", "A numeric argument is out of range. The offending command is ignored and has no other side effect than to set the error flag.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "GL_INVALID_VALUE", "(", fn, "): ",
+											"A numeric argument is out of range. The offending command is ignored and has no other side "
+											"effect than to set the error flag.");
+				break;
+			};
 		case GL_INVALID_OPERATION:
-		{
-			Logger::print(Logger::Error, "GL_INVALID_OPERATION", "(", fn, "): ", "The specified operation is not allowed in the current state. The offending command is ignored and has no other side effect than to set the error flag.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "GL_INVALID_OPERATION", "(", fn, "): ",
+											"The specified operation is not allowed in the current state. The offending command is ignored "
+											"and has no other side effect than to set the error flag.");
+				break;
+			};
 		case GL_INVALID_FRAMEBUFFER_OPERATION:
-		{
-			Logger::print(Logger::Error, "GL_INVALID_FRAMEBUFFER_OPERATION", "(", fn, "): ", "The framebuffer object is not complete. The offending command is ignored and has no other side effect than to set the error flag.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "GL_INVALID_FRAMEBUFFER_OPERATION", "(", fn, "): ",
+											"The framebuffer object is not complete. The offending command is ignored and has no other side "
+											"effect than to set the error flag.");
+				break;
+			};
 		case GL_OUT_OF_MEMORY:
-		{
-			Logger::print(Logger::Error, "GL_OUT_OF_MEMORY", "(", fn, "): ", "There is not enough memory left to execute the command. The state of the GL is undefined, except for the state of the error flags, after this error is recorded.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "GL_OUT_OF_MEMORY", "(", fn, "): ",
+											"There is not enough memory left to execute the command. The state of the GL is undefined, "
+											"except for the state of the error flags, after this error is recorded.");
+				break;
+			};
 		case GL_STACK_UNDERFLOW:
-		{
-			Logger::print(Logger::Error, "GL_STACK_UNDERFLOW", "(", fn, "): ", "An attempt has been made to perform an operation that would cause an internal stack to underflow.");
-			break;
-		};
+			{
+				Logger::print(
+					Logger::Error, "GL_STACK_UNDERFLOW", "(", fn,
+					"): ", "An attempt has been made to perform an operation that would cause an internal stack to underflow.");
+				break;
+			};
 		case GL_STACK_OVERFLOW:
-		{
-			Logger::print(Logger::Error, "GL_STACK_OVERFLOW", "(", fn, "): ", "An attempt has been made to perform an operation that would cause an internal stack to overflow.");
-			break;
-		};
+			{
+				Logger::print(
+					Logger::Error, "GL_STACK_OVERFLOW", "(", fn,
+					"): ", "An attempt has been made to perform an operation that would cause an internal stack to overflow.");
+				break;
+			};
 #if defined(_Android)
 		case EGL_NOT_INITIALIZED:
-		{
-			Logger::print(Logger::Error, "EGL_NOT_INITIALIZED", "(", fn, "): ", "EGL is not initialized, or could not be initialized, for the specified EGL display connection.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_NOT_INITIALIZED", "(", fn, "): ",
+											"EGL is not initialized, or could not be initialized, for the specified EGL display connection.");
+				break;
+			};
 		case EGL_BAD_ACCESS:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_ACCESS", "(", fn, "): ", "EGL cannot access a requested resource (for example a context is bound in another thread).");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_ACCESS", "(", fn, "): ",
+											"EGL cannot access a requested resource (for example a context is bound in another thread).");
+				break;
+			};
 		case EGL_BAD_ALLOC:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_ALLOC", "(", fn, "): ", "EGL failed to allocate resources for the requested operation.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_ALLOC", "(", fn,
+											"): ", "EGL failed to allocate resources for the requested operation.");
+				break;
+			};
 		case EGL_BAD_ATTRIBUTE:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_ATTRIBUTE", "(", fn, "): ", "An unrecognized attribute or attribute value was passed in the attribute list.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_ATTRIBUTE", "(", fn,
+											"): ", "An unrecognized attribute or attribute value was passed in the attribute list.");
+				break;
+			};
 		case EGL_BAD_CONTEXT:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_CONTEXT", "(", fn, "): ", "An EGLContext argument does not name a valid EGL rendering context.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_CONTEXT", "(", fn,
+											"): ", "An EGLContext argument does not name a valid EGL rendering context.");
+				break;
+			};
 		case EGL_BAD_CONFIG:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_CONFIG", "(", fn, "): ", "An EGLConfig argument does not name a valid EGL frame buffer configuration.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_CONFIG", "(", fn,
+											"): ", "An EGLConfig argument does not name a valid EGL frame buffer configuration.");
+				break;
+			};
 		case EGL_BAD_CURRENT_SURFACE:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_CURRENT_SURFACE", "(", fn, "): ", "The current surface of the calling thread is a window, pixel buffer or pixmap that is no longer valid.");
-			break;
-		};
+			{
+				Logger::print(
+					Logger::Error, "EGL_BAD_CURRENT_SURFACE", "(", fn, "): ",
+					"The current surface of the calling thread is a window, pixel buffer or pixmap that is no longer valid.");
+				break;
+			};
 		case EGL_BAD_DISPLAY:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_DISPLAY", "(", fn, "): ", "An EGLDisplay argument does not name a valid EGL display connection.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_DISPLAY", "(", fn,
+											"): ", "An EGLDisplay argument does not name a valid EGL display connection.");
+				break;
+			};
 		case EGL_BAD_SURFACE:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_SURFACE", "(", fn, "): ", "An EGLSurface argument does not name a valid surface (window, pixel buffer or pixmap) configured for GL rendering.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_SURFACE", "(", fn, "): ",
+											"An EGLSurface argument does not name a valid surface (window, pixel buffer or pixmap) "
+											"configured for GL rendering.");
+				break;
+			};
 		case EGL_BAD_MATCH:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_MATCH", "(", fn, "): ", "Arguments are inconsistent (for example, a valid context requires buffers not supplied by a valid surface).");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_MATCH", "(", fn, "): ",
+											"Arguments are inconsistent (for example, a valid context requires buffers not supplied by a "
+											"valid surface).");
+				break;
+			};
 		case EGL_BAD_PARAMETER:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_PARAMETER", "(", fn, "): ", "One or more argument values are invalid.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_PARAMETER", "(", fn, "): ", "One or more argument values are invalid.");
+				break;
+			};
 		case EGL_BAD_NATIVE_PIXMAP:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_NATIVE_PIXMAP", "(", fn, "): ", "A NativePixmapType argument does not refer to a valid native pixmap.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_NATIVE_PIXMAP", "(", fn,
+											"): ", "A NativePixmapType argument does not refer to a valid native pixmap.");
+				break;
+			};
 		case EGL_BAD_NATIVE_WINDOW:
-		{
-			Logger::print(Logger::Error, "EGL_BAD_NATIVE_WINDOW", "(", fn, "): ", "A NativeWindowType argument does not refer to a valid native window.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_BAD_NATIVE_WINDOW", "(", fn,
+											"): ", "A NativeWindowType argument does not refer to a valid native window.");
+				break;
+			};
 		case EGL_CONTEXT_LOST:
-		{
-			Logger::print(Logger::Error, "EGL_CONTEXT_LOST", "(", fn, "): ", "A power management event has occurred. The application must destroy all contexts and reinitialise OpenGL ES state and objects to continue rendering.");
-			break;
-		};
+			{
+				Logger::print(Logger::Error, "EGL_CONTEXT_LOST", "(", fn, "): ",
+											"A power management event has occurred. The application must destroy all contexts and "
+											"reinitialise OpenGL ES state and objects to continue rendering.");
+				break;
+			};
 #endif
 		}
 	}

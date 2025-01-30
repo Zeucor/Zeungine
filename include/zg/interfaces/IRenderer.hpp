@@ -3,6 +3,7 @@
 #include <zg/glm.hpp>
 #include <zg/enums/EUniformType.hpp>
 #include <zg/enums/ShaderType.hpp>
+#include <zg/images/ImageLoader.hpp>
 #include <map>
 namespace zg
 {
@@ -16,6 +17,11 @@ namespace zg
 	namespace textures
 	{
 		struct Texture;
+		struct Framebuffer;
+	}
+	namespace vaos
+	{
+		struct VAO;
 	}
 	struct IRenderer
 	{
@@ -26,7 +32,7 @@ namespace zg
 		virtual void destroy() = 0;
 		virtual void clearColor(glm::vec4 color) = 0;
 		virtual void clear() = 0;
-		virtual void viewport(glm::ivec4 vp) = 0;
+		virtual void viewport(glm::ivec4 vp) const = 0;
 		virtual void setUniform(shaders::Shader &shader, const std::string_view name, const void *value, uint32_t size, enums::EUniformType uniformType) = 0;
 		virtual void setBlock(shaders::Shader &shader, const std::string_view name, const void* pointer, size_t size) = 0;
 		virtual void deleteBuffer(uint32_t id) = 0;
@@ -39,6 +45,21 @@ namespace zg
 		virtual bool compileShader(shaders::Shader &shader, shaders::ShaderType shaderType, shaders::ShaderPair &shaderPair) = 0;
 		virtual bool compileProgram(shaders::Shader &shader, const shaders::ShaderMap& shaderMap) = 0;
 		virtual void deleteShader(shaders::Shader &shader) = 0;
+		virtual void bindFramebuffer(const textures::Framebuffer &framebuffer) const = 0;
+		virtual void unbindFramebuffer(const textures::Framebuffer &framebuffer) const = 0;
+		virtual void initFramebuffer(textures::Framebuffer &framebuffer) = 0;
+		virtual void destroyFramebuffer(textures::Framebuffer &framebuffer) = 0;
+		virtual void bindTexture(const textures::Texture &texture) = 0;
+		virtual void unbindTexture(const textures::Texture &texture) = 0;
+		virtual void preInitTexture(textures::Texture &texture) = 0;
+		virtual void midInitTexture(const textures::Texture &texture, const std::vector<images::ImageLoader::ImagePair>& images) = 0;
+		virtual void postInitTexture(const textures::Texture &texture) = 0;
+		virtual void destroyTexture(textures::Texture &texture) = 0;
+		virtual void vaoUpdateIndices(const vaos::VAO &vao, const std::vector<uint32_t> &indices) = 0;
+		virtual void vaoUpdateElements(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) = 0;
+		virtual void vaoDraw(const vaos::VAO &vao) = 0;
+		virtual void generateVAO(vaos::VAO &vao) = 0;
+		virtual void destroyVAO(vaos::VAO &vao) = 0;
 	};
 	std::shared_ptr<IRenderer> createVendorRenderer();
 }

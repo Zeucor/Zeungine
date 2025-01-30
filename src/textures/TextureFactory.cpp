@@ -62,80 +62,17 @@ void TextureFactory::initTexture(Texture &texture, const std::vector<std::string
 };
 void TextureFactory::preInitTexture(Texture& texture)
 {
-  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(texture.window.iVendorRenderer);
-  glRenderer.glContext->GenTextures(1, &texture.id);
-  GLcheck(glRenderer, "glGenTextures");
-  if (texture.size.w > 0)
-    texture.target = GL_TEXTURE_CUBE_MAP;
-  else if (texture.size.y == 0)
-    texture.target = GL_TEXTURE_1D;
-  else if (texture.size.z <= 1)
-    texture.target = GL_TEXTURE_2D;
-  else
-    texture.target = GL_TEXTURE_3D;
-  texture.bind();
-  glRenderer.glContext->PixelStorei(GL_PACK_ALIGNMENT, 1);
-  GLcheck(glRenderer, "glPixelStorei");
+  texture.window.iVendorRenderer->preInitTexture(texture);
 };
 void TextureFactory::midInitTexture(const Texture& texture, const std::vector<images::ImageLoader::ImagePair>& images)
 {
-  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(texture.window.iVendorRenderer);
-  if (texture.target == GL_TEXTURE_1D)
-  {
-    void *data = images.size() ? std::get<1>(images[0]).get() : 0;
-    glRenderer.glContext->TexImage1D(texture.target, 0, internalFormats[texture.format], texture.size.x, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-    GLcheck(glRenderer, "glTexImage1D");
-  }
-  else if (texture.target == GL_TEXTURE_2D)
-  {
-    void *data = images.size() ? std::get<1>(images[0]).get() : 0;
-    glRenderer.glContext->TexImage2D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-    GLcheck(glRenderer, "glTexImage2D");
-  }
-  else if (texture.target == GL_TEXTURE_3D)
-  {
-    void *data = images.size() ? std::get<1>(images[0]).get() : 0;
-    glRenderer.glContext->TexImage3D(texture.target, 0, internalFormats[texture.format], texture.size.x, texture.size.y, texture.size.z, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-    GLcheck(glRenderer, "glTexImage3D");
-  }
-  else if (texture.target == GL_TEXTURE_CUBE_MAP)
-  {
-    for (uint8_t face = 0; face < 6; ++face)
-    {
-      bool haveImage = images.size() > face;
-      auto imageSize = haveImage ? std::get<0>(images[face]) : glm::uvec2(0, 0);
-      void *data = haveImage ? std::get<1>(images[face]).get() : 0;
-      glRenderer.glContext->TexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, internalFormats[texture.format], imageSize.x, imageSize.y, 0, formats[texture.format], types[{texture.format, texture.type}], data);
-      GLcheck(glRenderer, "glTexImage2D");
-    }
-  }
+  texture.window.iVendorRenderer->midInitTexture(texture, images);
 }
 void TextureFactory::postInitTexture(const Texture& texture)
 {
-  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(texture.window.iVendorRenderer);
-  GLenum filterType;
-  switch (texture.filterType)
-  {
-  case Texture::FilterType::Nearest:
-    filterType = GL_NEAREST;
-    break;
-  case Texture::FilterType::Linear:
-    filterType = GL_LINEAR;
-    break;
-  }
-  glRenderer.glContext->TexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, filterType);
-  GLcheck(glRenderer, "glTexParameteri");
-  glRenderer.glContext->TexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, filterType);
-  GLcheck(glRenderer, "glTexParameteri");
-  glRenderer.glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  GLcheck(glRenderer, "glTexParameteri");
-  glRenderer.glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  GLcheck(glRenderer, "glTexParameteri");
-  texture.unbind();
+  texture.window.iVendorRenderer->postInitTexture(texture);
 };
 void TextureFactory::destroyTexture(Texture& texture)
 {
-  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(texture.window.iVendorRenderer);
-  glRenderer.glContext->DeleteTextures(1, &texture.id);
-  GLcheck(glRenderer, "glDeleteTextures");
+  texture.window.iVendorRenderer->destroyTexture(texture);
 };

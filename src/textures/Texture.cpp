@@ -35,13 +35,9 @@ Texture::~Texture()
 };
 void Texture::bind() const
 {
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
-  glRenderer.glContext->BindTexture(target, id);
-  GLcheck(glRenderer, "glBindTexture");
+  window.iVendorRenderer->bindTexture(*this);
 };
 void Texture::unbind() const
 {
-	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
-  glRenderer.glContext->BindTexture(target, 0);
-  GLcheck(glRenderer, "glBindTexture");
+  window.iVendorRenderer->bindTexture(*this);
 };

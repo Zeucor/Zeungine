@@ -23,15 +23,9 @@ Framebuffer::~Framebuffer()
 };
 void Framebuffer::bind() const
 {
-  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
-  glRenderer.glContext->BindFramebuffer(GL_FRAMEBUFFER, id);
-  GLcheck(glRenderer, "glBindFramebuffer");
-  glRenderer.glContext->Viewport(0, 0, texture.size.x, texture.size.y);
-  GLcheck(glRenderer, "glViewport");
+  window.iVendorRenderer->bindFramebuffer(*this);
 };
 void Framebuffer::unbind()
 {
-  auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iVendorRenderer);
-  glRenderer.glContext->BindFramebuffer(GL_FRAMEBUFFER, 0);
-  GLcheck(glRenderer, "glBindFramebuffer");
+  window.iVendorRenderer->unbindFramebuffer(*this);
 };
