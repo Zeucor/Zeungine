@@ -300,24 +300,6 @@ void WIN32Window::init(Window &renderWindow)
 	hDeviceContext = GetDC(hwnd);
 	SetupPixelFormat(hDeviceContext);
 }
-void WIN32Window::createContext()
-{
-#ifdef USE_GL
-	HGLRC hTempRC = wglCreateContext(hDeviceContext);
-	wglMakeCurrent(hDeviceContext, hTempRC);
-	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
-	wglMakeCurrent(nullptr, nullptr);
-	int attribList[] = {
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-		0
-	};
-	hRenderingContext = wglCreateContextAttribsARB(hDeviceContext, 0, attribList);
-	wglDeleteContext(hTempRC);
-	wglMakeCurrent(hDeviceContext, hRenderingContext);
-#endif
-}
 void WIN32Window::postInit()
 {
 	ShowWindow(hwnd, SW_NORMAL);

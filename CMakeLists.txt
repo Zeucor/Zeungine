@@ -170,6 +170,16 @@ elseif(MACOS)
 endif()
 if(LINUX)
     target_link_libraries(zeungine ${ANGLE_LIB_DIR}/libEGL.so ${ANGLE_LIB_DIR}/libGLESv2.so)
+elseif(MACOS)
+    target_link_libraries(zeungine
+        ${ANGLE_LIB_DIR}/libEGL.dylib
+        ${ANGLE_LIB_DIR}/libGLESv2.dylib
+        ${ANGLE_LIB_DIR}/libthird_party_abseil-cpp_absl.dylib
+        ${ANGLE_LIB_DIR}/libc++_chrome.dylib
+        ${ANGLE_LIB_DIR}/libchrome_zlib.dylib
+        ${ANGLE_LIB_DIR}/libdawn_native.dylib
+        ${ANGLE_LIB_DIR}/libdawn_platform.dylib
+        ${ANGLE_LIB_DIR}/libdawn_proc.dylib)
 endif()
 
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
@@ -189,21 +199,19 @@ endfunction()
 
 include(CTest)
 enable_testing()
-if(BUILD_OPENGL)
-    create_test(LightingTest tests/LightingTest.cpp "" FALSE)
-    create_test(SimpleCubeTest tests/SimpleCubeTest.cpp "" FALSE)
-    create_test(SimpleWindowTest tests/SimpleWindowTest.cpp "" FALSE)
-    add_executable(Editor src/editor/Editor.cpp src/editor/EditorScene.cpp src/editor/CodeScene.cpp)
-    target_link_libraries(Editor zeungine)
-    set(SKYBOX_OUT_DIRECTORY ${CMAKE_BINARY_DIR}/images/skybox)
-    file(MAKE_DIRECTORY ${SKYBOX_OUT_DIRECTORY})
-    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/back.jpg ${SKYBOX_OUT_DIRECTORY}/back.jpg COPYONLY)
-    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/front.jpg ${SKYBOX_OUT_DIRECTORY}/front.jpg COPYONLY)
-    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/left.jpg ${SKYBOX_OUT_DIRECTORY}/left.jpg COPYONLY)
-    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/right.jpg ${SKYBOX_OUT_DIRECTORY}/right.jpg COPYONLY)
-    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/top.jpg ${SKYBOX_OUT_DIRECTORY}/top.jpg COPYONLY)
-    configure_file(${CMAKE_SOURCE_DIR}/images/skybox/bottom.jpg ${SKYBOX_OUT_DIRECTORY}/bottom.jpg COPYONLY)
-endif()
+create_test(LightingTest tests/LightingTest.cpp "" FALSE)
+create_test(SimpleCubeTest tests/SimpleCubeTest.cpp "" FALSE)
+create_test(SimpleWindowTest tests/SimpleWindowTest.cpp "" FALSE)
+add_executable(Editor src/editor/Editor.cpp src/editor/EditorScene.cpp src/editor/CodeScene.cpp)
+target_link_libraries(Editor zeungine)
+set(SKYBOX_OUT_DIRECTORY ${CMAKE_BINARY_DIR}/images/skybox)
+file(MAKE_DIRECTORY ${SKYBOX_OUT_DIRECTORY})
+configure_file(${CMAKE_SOURCE_DIR}/images/skybox/back.jpg ${SKYBOX_OUT_DIRECTORY}/back.jpg COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/images/skybox/front.jpg ${SKYBOX_OUT_DIRECTORY}/front.jpg COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/images/skybox/left.jpg ${SKYBOX_OUT_DIRECTORY}/left.jpg COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/images/skybox/right.jpg ${SKYBOX_OUT_DIRECTORY}/right.jpg COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/images/skybox/top.jpg ${SKYBOX_OUT_DIRECTORY}/top.jpg COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/images/skybox/bottom.jpg ${SKYBOX_OUT_DIRECTORY}/bottom.jpg COPYONLY)
 set(FONTS_DIRECTORY ${CMAKE_BINARY_DIR}/fonts)
 set(IMAGES_DIRECTORY ${CMAKE_BINARY_DIR}/images)
 file(COPY ${CMAKE_SOURCE_DIR}/fonts/Roboto/Roboto-Regular.ttf DESTINATION ${FONTS_DIRECTORY}/Roboto)

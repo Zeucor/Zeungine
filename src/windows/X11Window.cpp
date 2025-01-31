@@ -234,48 +234,6 @@ static bool isExtensionSupported(const char* extList, const char* extension)
 
 	return false;
 }
-void X11Window::createContext()
-{
-#ifdef USE_GL
-	const char* glxExts = glXQueryExtensionsString(display, screen);
-	glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
-	glXCreateContextAttribsARB =
-		(glXCreateContextAttribsARBProc)glXGetProcAddressARB((const GLubyte*)"glXCreateContextAttribsARB");
-	ctxErrorOccurred = false;
-	int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
-	if (!isExtensionSupported(glxExts, "GLX_ARB_create_context") || !glXCreateContextAttribsARB)
-	{
-		glcontext = glXCreateNewContext(display, bestFbc, GLX_RGBA_TYPE, 0, True);
-	}
-	else
-	{
-		int context_attribs[] = {
-			GLX_CONTEXT_MAJOR_VERSION_ARB, 4, GLX_CONTEXT_MINOR_VERSION_ARB, 6, GLX_CONTEXT_PROFILE_MASK_ARB,
-			GLX_CONTEXT_CORE_PROFILE_BIT_ARB, None};
-		glcontext = glXCreateContextAttribsARB(display, bestFbc, 0, True, context_attribs);
-		XSync(display, False);
-	}
-	glXMakeCurrent(display, window, glcontext);
-#endif
-#ifdef USE_EGL
-	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
-    eglRenderer.eglSurface = eglCreateWindowSurface(eglRenderer.eglDisplay, eglConfig, window, nullptr);
-    if (eglRenderer.eglSurface == EGL_NO_SURFACE)
-    {
-        throw std::runtime_error("EGL_NO_SURFACE");
-    }
-    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-    eglRenderer.eglContext = eglCreateContext(eglRenderer.eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
-    if (eglRenderer.eglContext == EGL_NO_CONTEXT)
-    {
-        throw std::runtime_error("EGL_NO_CONTEXT");
-    }
-    if (!eglMakeCurrent(eglRenderer.eglDisplay, eglRenderer.eglSurface, eglRenderer.eglSurface, eglRenderer.eglContext))
-    {
-        throw std::runtime_error("eglMakeCurrent failed!");
-    }
-#endif
-}
 void X11Window::postInit()
 {
 	XMapRaised(display, window);

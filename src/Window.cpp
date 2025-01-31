@@ -79,10 +79,10 @@ void Window::startWindow()
 	iPlatformWindow = createPlatformWindow();
 	auto &iPlatformWindowRef = *iPlatformWindow;
 	iRenderer = createRenderer();
-	iPlatformWindowRef.init(*this);
-	iPlatformWindowRef.createContext();
-	iRenderer->init(&iPlatformWindowRef);
 	auto &iRendererRef = *iRenderer;
+	iPlatformWindowRef.init(*this);
+	iRendererRef.createContext(&iPlatformWindowRef);
+	iRendererRef.init();
 	iPlatformWindowRef.postInit();
 	while (iPlatformWindowRef.pollMessages())
 	{

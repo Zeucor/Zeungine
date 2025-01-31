@@ -3,7 +3,13 @@
 #import <zg/entities/Plane.hpp>
 #import <iostream>
 #import <Cocoa/Cocoa.h>
+#ifdef USE_GL
 #import <OpenGL/gl3.h>
+#include <zg/renderers/GLRenderer.hpp>
+#endif
+#ifdef USE_EGL
+#include <zg/renderers/EGLRenderer.hpp>
+#endif
 #import <QuartzCore/CAMetalLayer.h>
 using namespace zg;
 @interface MacOSWindowDelegate : NSObject <NSWindowDelegate>
@@ -42,9 +48,10 @@ void MacOSWindow::init(Window &renderWindow)
 		nsWindow = window;
 	}
 }
-void MacOSWindow::createContext()
-{
 #ifdef USE_GL
+void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
+{
+	this->platformWindowPointer = platformWindowPointer;
 	NSOpenGLPixelFormatAttribute attributes[] =
 	{
 		NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion4_1Core,
@@ -62,8 +69,30 @@ void MacOSWindow::createContext()
 	[context setView:contentView];
 	nsView = contentView;
 	glContext = context;
-#endif
 }
+#endif
+#ifdef USE_EGL
+void EGLRenderer::createContext(IPlatformWindow* platformWindowPointer)
+{
+	this->platformWindowPointer = platformWindowPointer;
+	auto window = (NSWindow *)(*dynamic_cast<MacOSWindow*>(platformWindowPointer)).nsWindow;
+    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, window, nullptr);
+    if (eglSurface == EGL_NO_SURFACE)
+    {
+        throw std::runtime_error("EGL_NO_SURFACE");
+    }
+    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
+    if (eglContext == EGL_NO_CONTEXT)
+    {
+        throw std::runtime_error("EGL_NO_CONTEXT");
+    }
+    if (!eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
+    {
+        throw std::runtime_error("eglMakeCurrent failed!");
+    }
+}
+#endif
 void MacOSWindow::postInit()
 {
 	@autoreleasepool

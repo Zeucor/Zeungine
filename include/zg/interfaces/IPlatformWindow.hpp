@@ -10,7 +10,6 @@ namespace zg
 		Window *renderWindowPointer = nullptr;
 		virtual ~IPlatformWindow() = default;
 		virtual void init(Window &renderWindow) = 0;
-		virtual void createContext() = 0;
 		virtual void postInit() = 0;
 		virtual bool pollMessages() = 0;
 		virtual void swapBuffers() = 0;

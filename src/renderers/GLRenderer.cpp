@@ -36,9 +36,8 @@ void* getProc(const char* name)
 }
 GLRenderer::GLRenderer() : glContext(new GladGLContext) {}
 GLRenderer::~GLRenderer() { delete glContext; }
-void GLRenderer::init(IPlatformWindow* platformWindowPointer)
+void GLRenderer::init()
 {
-	this->platformWindowPointer = platformWindowPointer;
 	gladLoadGLContext(glContext, (GLADloadfunc)getProc);
 	glContext->Enable(GL_DEPTH_TEST);
 	GLcheck(*this, "glEnable");
@@ -95,6 +94,48 @@ void GLRenderer::init(IPlatformWindow* platformWindowPointer)
 	glXSwapIntervalEXT(x11Window.display, x11Window.window, platformWindowPointer->renderWindowPointer->vsync);
 #endif
 }
+#ifdef WINDOWS
+void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
+{
+	this->platformWindowPointer = platformWindowPointer;
+#ifdef WINDOWS
+	HGLRC hTempRC = wglCreateContext(hDeviceContext);
+	wglMakeCurrent(hDeviceContext, hTempRC);
+	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+	wglMakeCurrent(nullptr, nullptr);
+	int attribList[] = {
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+		0
+	};
+	hRenderingContext = wglCreateContextAttribsARB(hDeviceContext, 0, attribList);
+	wglDeleteContext(hTempRC);
+	wglMakeCurrent(hDeviceContext, hRenderingContext);
+#endif
+#ifdef LINUX
+	const char* glxExts = glXQueryExtensionsString(display, screen);
+	glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
+	glXCreateContextAttribsARB =
+		(glXCreateContextAttribsARBProc)glXGetProcAddressARB((const GLubyte*)"glXCreateContextAttribsARB");
+	ctxErrorOccurred = false;
+	int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
+	if (!isExtensionSupported(glxExts, "GLX_ARB_create_context") || !glXCreateContextAttribsARB)
+	{
+		glcontext = glXCreateNewContext(display, bestFbc, GLX_RGBA_TYPE, 0, True);
+	}
+	else
+	{
+		int context_attribs[] = {
+			GLX_CONTEXT_MAJOR_VERSION_ARB, 4, GLX_CONTEXT_MINOR_VERSION_ARB, 6, GLX_CONTEXT_PROFILE_MASK_ARB,
+			GLX_CONTEXT_CORE_PROFILE_BIT_ARB, None};
+		glcontext = glXCreateContextAttribsARB(display, bestFbc, 0, True, context_attribs);
+		XSync(display, False);
+	}
+	glXMakeCurrent(display, window, glcontext);
+#endif
+}
+#endif
 void GLRenderer::destroy() {}
 std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new GLRenderer()); }
 void GLRenderer::clearColor(glm::vec4 color)

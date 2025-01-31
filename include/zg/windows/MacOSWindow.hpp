@@ -9,7 +9,6 @@ namespace zg
 		void *nsView;
 		void *glContext = 0;
 		void init(Window& window) override;
-		void createContext() override;
 		void renderInit();
 		void postInit() override;
 		bool pollMessages() override;

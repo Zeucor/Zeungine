@@ -9,8 +9,14 @@
 #if defined(LINUX) || defined(MACOS)
 #include <dlfcn.h>
 #endif
+#ifdef WINDOWS
+#include <zg/windows/WIN32Window.hpp>
+#endif
 #ifdef LINUX
 #include <zg/windows/X11Window.hpp>
+#endif
+#ifdef MACOS
+#include <zg/windows/MacOSWindow.hpp>
 #endif
 using namespace zg;
 EGLRenderer::EGLRenderer()
@@ -26,9 +32,8 @@ EGLRenderer::EGLRenderer()
 	}
 }
 EGLRenderer::~EGLRenderer(){}
-void EGLRenderer::init(IPlatformWindow* platformWindowPointer)
+void EGLRenderer::init()
 {
-	this->platformWindowPointer = platformWindowPointer;
 	glEnable(GL_DEPTH_TEST);
 	GLcheck(*this, "glEnable");
 	glEnable(GL_CULL_FACE);
@@ -50,8 +55,6 @@ void EGLRenderer::init(IPlatformWindow* platformWindowPointer)
 	GLcheck(*this, "glEnable:GL_BLEND");
 	glDisable(GL_DITHER);
 	GLcheck(*this, "glDisable:GL_DITHER");
-	glDisable(GL_POLYGON_SMOOTH);
-	GLcheck(*this, "glDisable:GL_POLYGON_SMOOTH");
 #ifndef MACOS
 	// glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
 	// GLcheck(*this, "glBlendEquationSeparate");
@@ -75,6 +78,32 @@ void EGLRenderer::init(IPlatformWindow* platformWindowPointer)
 		nullptr);
 #endif
 }
+#if defined(WINDOWS) || defined(LINUX)
+void EGLRenderer::createContext()
+{
+#ifdef WINDOWS
+	auto window = (*dynamic_cast<WIN32Window*>(platformWindowPointer)).hwnd;
+#endif
+#ifdef LINUX
+	auto window = (*dynamic_cast<X11Window*>(platformWindowPointer)).window;
+#endif
+    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, window, nullptr);
+    if (eglSurface == EGL_NO_SURFACE)
+    {
+        throw std::runtime_error("EGL_NO_SURFACE");
+    }
+    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
+    if (eglContext == EGL_NO_CONTEXT)
+    {
+        throw std::runtime_error("EGL_NO_CONTEXT");
+    }
+    if (!eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
+    {
+        throw std::runtime_error("eglMakeCurrent failed!");
+    }
+}
+#endif
 void EGLRenderer::destroy() {}
 std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new EGLRenderer()); }
 void EGLRenderer::clearColor(glm::vec4 color)
@@ -351,10 +380,13 @@ void EGLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 	switch (framebuffer.texture.format)
 	{
 	case textures::Texture::Depth:
+	{
 		frameBufferTarget = GL_DEPTH_ATTACHMENT;
-		glDrawBuffer(GL_NONE);
+		GLenum noneBuffer = GL_NONE;
+		glDrawBuffers(1, &noneBuffer);
 		glReadBuffer(GL_NONE);
 		break;
+	}
 	default:
 		frameBufferTarget = GL_COLOR_ATTACHMENT0;
 		break;
@@ -405,7 +437,7 @@ void EGLRenderer::preInitTexture(textures::Texture& texture)
 	if (texture.size.w > 0)
 		texture.target = GL_TEXTURE_CUBE_MAP;
 	else if (texture.size.y == 0)
-		texture.target = GL_TEXTURE_1D;
+		throw std::runtime_error("GL_TEXTURE_1D not supported in EGL");
 	else if (texture.size.z <= 1)
 		texture.target = GL_TEXTURE_2D;
 	else
@@ -417,15 +449,7 @@ void EGLRenderer::preInitTexture(textures::Texture& texture)
 void EGLRenderer::midInitTexture(const textures::Texture& texture,
 																const std::vector<images::ImageLoader::ImagePair>& images)
 {
-	if (texture.target == GL_TEXTURE_1D)
-	{
-		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
-		glTexImage1D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
-													0, textures::TextureFactory::formats[texture.format],
-													textures::TextureFactory::types[{texture.format, texture.type}], data);
-		GLcheck(*this, "glTexImage1D");
-	}
-	else if (texture.target == GL_TEXTURE_2D)
+	if (texture.target == GL_TEXTURE_2D)
 	{
 		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
 		glTexImage2D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
@@ -478,9 +502,6 @@ void EGLRenderer::postInitTexture(const textures::Texture& texture)
 	GLcheck(*this, "glTexParameteri");
 	glTexParameteri(texture.target, GL_TEXTURE_WRAP_R, GL_REPEAT);
 	GLcheck(*this, "glTexParameteri");
-	GLfloat maxAniso = 1.0f;
-	glTexParameterf(texture.target, GL_TEXTURE_MAX_ANISOTROPY, maxAniso);
-	GLcheck(*this, "glTexParameterf");
 	texture.unbind();
 }
 void EGLRenderer::destroyTexture(textures::Texture& texture)
@@ -524,9 +545,6 @@ void EGLRenderer::drawVAO(const vaos::VAO &vao)
 	glBindVertexArray(vao.vao);
 	GLcheck(*this, "glBindVertexArray");
 	GLenum drawMode = GL_TRIANGLES;
-	GLenum polygonMode = GL_FILL;
-	glPolygonMode(GL_FRONT_AND_BACK, polygonMode);
-	GLcheck(*this, "glPolygonMode");
 	glDrawElements(drawMode, vao.indiceCount, GL_UNSIGNED_INT, 0);
 	GLcheck(*this, "glDrawElements");
 }

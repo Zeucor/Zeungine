@@ -11,9 +11,11 @@ namespace zg
 		EGLSurface eglSurface = EGL_NO_SURFACE;
 		EGLContext eglContext = EGL_NO_CONTEXT;
 		EGLint major, minor;
+    	EGLConfig eglConfig;
 		EGLRenderer();
 		~EGLRenderer() override;
-		void init(IPlatformWindow* platformWindowPointer) override;
+		void init() override;
+		void createContext(IPlatformWindow* platformWindowPointer) override;
 		void destroy() override;
 		void clearColor(glm::vec4 color) override;
 		void clear() override;

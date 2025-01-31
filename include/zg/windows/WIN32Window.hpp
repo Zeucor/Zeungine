@@ -12,7 +12,6 @@ namespace zg
 		HGLRC hRenderingContext;
 		float dpiScale = 1.0f;
 		void init(Window& window) override;
-		void createContext() override;
 		void renderInit();
 		void postInit() override;
 		bool pollMessages() override;
