@@ -440,6 +440,7 @@ void GLRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) con
 }
 void GLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 {
+	framebuffer.rendererData = new textures::GLFramebufferImpl();
 	auto& framebufferImpl = *(textures::GLFramebufferImpl*)framebuffer.rendererData;
 	auto& textureImpl = *(textures::GLTextureImpl*)framebuffer.texture.rendererData;
 	if (framebuffer.depthTexturePointer)
