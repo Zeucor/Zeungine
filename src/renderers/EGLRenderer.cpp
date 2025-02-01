@@ -365,7 +365,8 @@ void EGLRenderer::deleteShader(shaders::Shader& shader)
 }
 void EGLRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+	auto& framebufferImpl = *(textures::GLFramebufferImpl*)framebuffer.rendererData;
+	glBindFramebuffer(GL_FRAMEBUFFER, framebufferImpl.id);
 	GLcheck(*this, "glBindFramebuffer");
 	viewport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
 }
@@ -376,14 +377,17 @@ void EGLRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) co
 }
 void EGLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 {
+	framebuffer.rendererData = new textures::GLFramebufferImpl();
+	auto& framebufferImpl = *(textures::GLFramebufferImpl*)framebuffer.rendererData;
+	auto& textureImpl = *(textures::GLTextureImpl*)framebuffer.texture.rendererData;
 	if (framebuffer.depthTexturePointer)
 	{
-		glGenRenderbuffers(1, &framebuffer.renderbufferID);
+		glGenRenderbuffers(1, &framebufferImpl.renderbufferID);
 		GLcheck(*this, "glGenRenderbuffers");
 	}
-	glGenFramebuffers(1, &framebuffer.id);
+	glGenFramebuffers(1, &framebufferImpl.id);
 	GLcheck(*this, "glGenFramebuffers");
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebufferImpl.id);
 	GLcheck(*this, "glBindFramebuffer");
 	GLenum frameBufferTarget;
 	switch (framebuffer.texture.format)
@@ -402,32 +406,32 @@ void EGLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 	}
 	if (framebuffer.depthTexturePointer)
 	{
-		glBindRenderbuffer(GL_RENDERBUFFER, framebuffer.renderbufferID);
+		glBindRenderbuffer(GL_RENDERBUFFER, framebufferImpl.renderbufferID);
 		GLcheck(*this, "glBindRenderbuffer");
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, framebuffer.depthTexturePointer->size.x,
 																	 framebuffer.depthTexturePointer->size.y);
 		GLcheck(*this, "glRenderbufferStorage");
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
-																			 framebuffer.renderbufferID);
+																			 framebufferImpl.renderbufferID);
 		GLcheck(*this, "glFramebufferRenderbuffer");
 	}
-	if (framebuffer.texture.target == GL_TEXTURE_CUBE_MAP)
+	if (textureImpl.target == GL_TEXTURE_CUBE_MAP)
 	{
 #ifdef USE_GL
-		glFramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, framebuffer.texture.id, 0);
+		glFramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, textureImpl.id, 0);
 		GLcheck(*this, "glFramebufferTexture");
 #elif defined(USE_EGL)
 		int count = 0;
 		for (GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X; count < 6; count++, face++)
 		{
-			glFramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, face, framebuffer.texture.id, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, face, textureImpl.id, 0);
 			GLcheck(*this, "glFramebufferTexture2D");
 		}
 #endif
 	}
 	else
 	{
-		glFramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, framebuffer.texture.id, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, textureImpl.id, 0);
 		GLcheck(*this, "glFramebufferTexture2D");
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -435,31 +439,37 @@ void EGLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 }
 void EGLRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer)
 {
-	glDeleteFramebuffers(1, &framebuffer.id);
+	auto& framebufferImpl = *(textures::GLFramebufferImpl*)framebuffer.rendererData;
+	glDeleteFramebuffers(1, &framebufferImpl.id);
 	GLcheck(*this, "glDeleteFramebuffers");
+	delete &framebufferImpl;
 }
 void EGLRenderer::bindTexture(const textures::Texture& texture)
 {
-	glBindTexture(texture.target, texture.id);
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	glBindTexture(textureImpl.target, textureImpl.id);
 	GLcheck(*this, "glBindTexture");
 }
 void EGLRenderer::unbindTexture(const textures::Texture& texture)
 {
-	glBindTexture(texture.target, 0);
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	glBindTexture(textureImpl.target, 0);
 	GLcheck(*this, "glBindTexture");
 }
 void EGLRenderer::preInitTexture(textures::Texture& texture)
 {
-	glGenTextures(1, &texture.id);
+	texture.rendererData = new textures::GLTextureImpl();
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	glGenTextures(1, &textureImpl.id);
 	GLcheck(*this, "glGenTextures");
 	if (texture.size.w > 0)
-		texture.target = GL_TEXTURE_CUBE_MAP;
+		textureImpl.target = GL_TEXTURE_CUBE_MAP;
 	else if (texture.size.y == 0)
 		throw std::runtime_error("GL_TEXTURE_1D not supported in EGL");
 	else if (texture.size.z <= 1)
-		texture.target = GL_TEXTURE_2D;
+		textureImpl.target = GL_TEXTURE_2D;
 	else
-		texture.target = GL_TEXTURE_3D;
+		textureImpl.target = GL_TEXTURE_3D;
 	texture.bind();
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	GLcheck(*this, "glPixelStorei");
@@ -467,23 +477,24 @@ void EGLRenderer::preInitTexture(textures::Texture& texture)
 void EGLRenderer::midInitTexture(const textures::Texture& texture,
 																const std::vector<images::ImageLoader::ImagePair>& images)
 {
-	if (texture.target == GL_TEXTURE_2D)
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	if (textureImpl.target == GL_TEXTURE_2D)
 	{
 		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
-		glTexImage2D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
+		glTexImage2D(textureImpl.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
 													texture.size.y, 0, textures::TextureFactory::formats[texture.format],
 													textures::TextureFactory::types[{texture.format, texture.type}], data);
 		GLcheck(*this, "glTexImage2D");
 	}
-	else if (texture.target == GL_TEXTURE_3D)
+	else if (textureImpl.target == GL_TEXTURE_3D)
 	{
 		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
-		glTexImage3D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
+		glTexImage3D(textureImpl.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
 													texture.size.y, texture.size.z, 0, textures::TextureFactory::formats[texture.format],
 													textures::TextureFactory::types[{texture.format, texture.type}], data);
 		GLcheck(*this, "glTexImage3D");
 	}
-	else if (texture.target == GL_TEXTURE_CUBE_MAP)
+	else if (textureImpl.target == GL_TEXTURE_CUBE_MAP)
 	{
 		for (uint8_t face = 0; face < 6; ++face)
 		{
@@ -500,6 +511,7 @@ void EGLRenderer::midInitTexture(const textures::Texture& texture,
 }
 void EGLRenderer::postInitTexture(const textures::Texture& texture)
 {
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
 	GLenum filterType;
 	switch (texture.filterType)
 	{
@@ -510,22 +522,24 @@ void EGLRenderer::postInitTexture(const textures::Texture& texture)
 		filterType = GL_LINEAR;
 		break;
 	}
-	glTexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, filterType);
+	glTexParameteri(textureImpl.target, GL_TEXTURE_MIN_FILTER, filterType);
 	GLcheck(*this, "glTexParameteri");
-	glTexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, filterType);
+	glTexParameteri(textureImpl.target, GL_TEXTURE_MAG_FILTER, filterType);
 	GLcheck(*this, "glTexParameteri");
-	glTexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(textureImpl.target, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	GLcheck(*this, "glTexParameteri");
-	glTexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(textureImpl.target, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	GLcheck(*this, "glTexParameteri");
-	glTexParameteri(texture.target, GL_TEXTURE_WRAP_R, GL_REPEAT);
+	glTexParameteri(textureImpl.target, GL_TEXTURE_WRAP_R, GL_REPEAT);
 	GLcheck(*this, "glTexParameteri");
 	texture.unbind();
 }
 void EGLRenderer::destroyTexture(textures::Texture& texture)
 {
-	glDeleteTextures(1, &texture.id);
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	glDeleteTextures(1, &textureImpl.id);
 	GLcheck(*this, "glDeleteTextures");
+	delete &textureImpl;
 }
 void EGLRenderer::updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t>& indices)
 {
