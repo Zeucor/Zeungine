@@ -79,8 +79,9 @@ void EGLRenderer::init()
 #endif
 }
 #if defined(WINDOWS) || defined(LINUX)
-void EGLRenderer::createContext()
+void EGLRenderer::createContext(IPlatformWindow *platformWindowPointer)
 {
+	this->platformWindowPointer = platformWindowPointer;
 #ifdef WINDOWS
 	auto window = (*dynamic_cast<WIN32Window*>(platformWindowPointer)).hwnd;
 #endif

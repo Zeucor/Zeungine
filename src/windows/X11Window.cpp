@@ -108,7 +108,7 @@ void X11Window::init(Window& renderWindow)
         EGL_NONE
     };
 	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
-    if (!eglChooseConfig(eglRenderer.eglDisplay, eglAttribs, &eglConfig, 1, &numConfigs))
+    if (!eglChooseConfig(eglRenderer.eglDisplay, eglAttribs, &eglRenderer.eglConfig, 1, &numConfigs))
     {
         return;
     }
