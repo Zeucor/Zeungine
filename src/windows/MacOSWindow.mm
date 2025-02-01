@@ -88,7 +88,7 @@ void EGLRenderer::createContext(IPlatformWindow* platformWindowPointer)
     {
         throw std::runtime_error("EGL_NO_SURFACE");
     }
-    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    EGLint contextAttribs[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_CONTEXT_MINOR_VERSION, 1, EGL_NONE };
     eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
     if (eglContext == EGL_NO_CONTEXT)
     {
