@@ -1081,7 +1081,11 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
   shaderString += "precision highp float;\n";
   shaderString += "precision highp samplerCube;\n";
 #elif defined(USE_EGL)
+#ifdef MACOS
+  shaderString += "#version 300 es\n";
+#else
   shaderString += "#version 310 es\n";
+#endif
   if (shaderType == ShaderType::Geometry)
   {
     const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
