@@ -220,13 +220,22 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer) {}
 void VulkanRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer) {}
 void VulkanRenderer::bindTexture(const textures::Texture& texture) {}
 void VulkanRenderer::unbindTexture(const textures::Texture& texture) {}
-void VulkanRenderer::preInitTexture(textures::Texture& texture) {}
+void VulkanRenderer::preInitTexture(textures::Texture& texture)
+{
+	texture.rendererData = new VulkanTextureImpl();
+	return;
+}
 void VulkanRenderer::midInitTexture(const textures::Texture& texture,
 																		const std::vector<images::ImageLoader::ImagePair>& images)
 {
 }
 void VulkanRenderer::postInitTexture(const textures::Texture& texture) {}
-void VulkanRenderer::destroyTexture(textures::Texture& texture) {}
+void VulkanRenderer::destroyTexture(textures::Texture& texture)
+{
+	auto textureImpl = (VulkanTextureImpl*)texture.rendererData;
+	// do vulkan texture destroy
+	delete textureImpl;
+}
 void VulkanRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices) {}
 void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
