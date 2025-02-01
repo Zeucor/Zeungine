@@ -17,11 +17,36 @@
 #include <vulkan/vulkan.h>
 namespace zg
 {
+	namespace textures
+	{
+		struct Framebuffer;
+	}
 	struct VulkanRenderer : IRenderer
 	{
 		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 		VkInstance instance;
 		VkDebugUtilsMessengerEXT debugMessenger;
+		VkSurfaceKHR surface;
+		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+		VkDevice device;
+		VkQueue graphicsQueue;
+		VkQueue presentQueue;
+		VkSwapchainKHR swapChain;
+		std::vector<VkImage> swapChainImages;
+		VkFormat swapChainImageFormat;
+		VkExtent2D swapChainExtent;
+		std::vector<VkImageView> swapChainImageViews;
+		std::vector<VkFramebuffer> swapChainFramebuffers;
+		VkRenderPass renderPass;
+		VkCommandPool commandPool;
+		std::vector<VkCommandBuffer> commandBuffers;
+		VkCommandBuffer* commandBuffer;
+		std::shared_ptr<textures::Framebuffer> currentFramebuffer;
+		std::vector<VkSemaphore> imageAvailableSemaphores;
+		std::vector<VkSemaphore> renderFinishedSemaphores;
+		std::vector<VkFence> inFlightFences;
+		uint32_t currentFrame = 0;
+		uint32_t imageIndex = -1;
 		VulkanRenderer();
 		~VulkanRenderer() override;
 		void createContext(IPlatformWindow* platformWindowPointer) override;
@@ -29,7 +54,9 @@ namespace zg
 #ifndef NDEBUG
 		void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 		bool checkValidationLayersSupport();
-		VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
+		VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+																					const VkAllocationCallbacks* pAllocator,
+																					VkDebugUtilsMessengerEXT* pDebugMessenger);
 		void setupDebugMessenger();
 #endif
 		void createSurface();
