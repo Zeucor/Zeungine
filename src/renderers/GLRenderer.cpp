@@ -606,9 +606,10 @@ void GLRenderer::destroyTexture(textures::Texture& texture)
 }
 void GLRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices)
 {
-	glContext->BindVertexArray(vao.vao);
+	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
+	glContext->BindVertexArray(vaoImpl.vao);
 	GLcheck(*this, "glBindVertexArray");
-	glContext->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao.ebo);
+	glContext->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, vaoImpl.ebo);
 	GLcheck(*this, "glBindBuffer");
 	auto& constantSize = vaos::VAOFactory::constantSizes["Indice"];
 	glContext->BufferData(GL_ELEMENT_ARRAY_BUFFER, vao.indiceCount * std::get<1>(constantSize), indices.data(),
@@ -619,9 +620,10 @@ void GLRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32
 }
 void GLRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
-	glContext->BindVertexArray(vao.vao);
+	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
+	glContext->BindVertexArray(vaoImpl.vao);
 	GLcheck(*this, "glBindVertexArray");
-	glContext->BindBuffer(GL_ARRAY_BUFFER, vao.vbo);
+	glContext->BindBuffer(GL_ARRAY_BUFFER, vaoImpl.vbo);
 	GLcheck(*this, "glBindBuffer");
 	auto& constantSize = vaos::VAOFactory::constantSizes[constant];
 	auto offset = vaos::VAOFactory::getOffset(vao.constants, constant);
@@ -637,7 +639,8 @@ void GLRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view 
 }
 void GLRenderer::drawVAO(const vaos::VAO& vao)
 {
-	glContext->BindVertexArray(vao.vao);
+	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
+	glContext->BindVertexArray(vaoImpl.vao);
 	GLcheck(*this, "glBindVertexArray");
 	GLenum drawMode = GL_TRIANGLES;
 	GLenum polygonMode = GL_FILL;
@@ -648,17 +651,19 @@ void GLRenderer::drawVAO(const vaos::VAO& vao)
 }
 void GLRenderer::generateVAO(vaos::VAO& vao)
 {
-	glContext->GenVertexArrays(1, &vao.vao);
+	vao.rendererData = new vaos::GLVAOImpl();
+	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
+	glContext->GenVertexArrays(1, &vaoImpl.vao);
 	GLcheck(*this, "glGenVertexArrays");
-	glContext->GenBuffers(1, &vao.ebo);
+	glContext->GenBuffers(1, &vaoImpl.ebo);
 	GLcheck(*this, "glGenBuffers");
-	glContext->GenBuffers(1, &vao.vbo);
+	glContext->GenBuffers(1, &vaoImpl.vbo);
 	GLcheck(*this, "glGenBuffers");
-	glContext->BindVertexArray(vao.vao);
+	glContext->BindVertexArray(vaoImpl.vao);
 	GLcheck(*this, "glBindVertexArray");
-	glContext->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, vao.ebo);
+	glContext->BindBuffer(GL_ELEMENT_ARRAY_BUFFER, vaoImpl.ebo);
 	GLcheck(*this, "glBindBuffer");
-	glContext->BindBuffer(GL_ARRAY_BUFFER, vao.vbo);
+	glContext->BindBuffer(GL_ARRAY_BUFFER, vaoImpl.vbo);
 	GLcheck(*this, "glBindBuffer");
 	auto stride = vaos::VAOFactory::getStride(vao.constants);
 	glContext->BufferData(GL_ARRAY_BUFFER, stride * vao.elementCount, 0, GL_STATIC_DRAW);
@@ -690,15 +695,17 @@ void GLRenderer::generateVAO(vaos::VAO& vao)
 }
 void GLRenderer::destroyVAO(vaos::VAO& vao)
 {
-	glContext->DeleteVertexArrays(1, &vao.vao);
+	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
+	glContext->DeleteVertexArrays(1, &vaoImpl.vao);
 	GLcheck(*this, "glDeleteVertexArrays");
-	vao.vao = 0;
-	glContext->DeleteBuffers(1, &vao.vbo);
+	vaoImpl.vao = 0;
+	glContext->DeleteBuffers(1, &vaoImpl.vbo);
 	GLcheck(*this, "glDeleteBuffers");
-	vao.vbo = 0;
-	glContext->DeleteBuffers(1, &vao.ebo);
+	vaoImpl.vbo = 0;
+	glContext->DeleteBuffers(1, &vaoImpl.ebo);
 	GLcheck(*this, "glDeleteBuffers");
-	vao.ebo = 0;
+	vaoImpl.ebo = 0;
+	delete &vaoImpl;
 }
 const bool zg::GLcheck(const GLRenderer& renderer, const char* fn, const bool egl)
 {
