@@ -283,7 +283,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const RuntimeConstants& constants)-> std::string
                 {
-                  std::string string("  for (uint i = 0; i < 4; ++i){\n");
+                  std::string string("  for (int i = 0; i < 4; ++i){\n");
                   string += "    outDirectionalLightSpacePositions[i] = ";
                   string += "directionalLightSpaceMatrices.matrix[i] * ";
                   if (std::find(constants.begin(), constants.end(), "Model") != constants.end())
@@ -874,24 +874,40 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   return std::string("  vec3 normal = normalize(inNormal);\n") +
                     "  vec3 viewDir = normalize(cameraPosition.value - inFragPosition.xyz);\n"
                     "  vec3 lightingColor = vec3(0.0);\n"
-                    "  uint pointLightCount = pointLights.length();\n"
-                    "  uint directionalLightCount = directionalLights.length();\n"
-                    "  uint spotLightCount = spotLights.length();\n"
-                    "  for (uint i = 0; i < pointLightCount; ++i){\n"
+                    "  int pointLightCount = pointLights.length();\n"
+                    "  int directionalLightCount = directionalLights.length();\n"
+                    "  int spotLightCount = spotLights.length();\n"
+                    "  for (int i = 0; i < pointLightCount; ++i){\n"
+                    "    float shadowFactor = 0.0;"
                     "    vec3 lightDir = normalize(pointLights[i].position - inFragPosition.xyz);\n"
-                    "    float shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[i], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal);\n"
+                    "    switch (i) {\n"
+                    "      case 0: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[0], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
+                    "      case 1: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[1], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
+                    "      case 2: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[2], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
+                    "      case 3: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[3], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
+                    "    }\n"
                     "    lightingColor += calculatePointLight(pointLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
                     "  }\n"
-                    "  for (uint i = 0; i < directionalLightCount; ++i){\n" +
-                    "    vec3 lightDir = normalize(-directionalLights[i].direction);\n" +
-                    "    float shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[i], normal, lightDir);\n"
+                    "  for (int i = 0; i < directionalLightCount; ++i){\n"
+                    "    vec3 lightDir = normalize(-directionalLights[i].direction);\n"
+                    "    float shadowFactor = 0.0;"
+                    "    switch (i) {\n"
+                    "      case 0: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[0], normal, lightDir); break;\n"
+                    "      case 1: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[1], normal, lightDir); break;\n"
+                    "      case 2: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[2], normal, lightDir); break;\n"
+                    "      case 3: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[3], normal, lightDir); break;\n"
+                    "    }\n"
                     "    lightingColor += calculateDirectionalLight(directionalLights[i], normal, viewDir, shadowFactor, lightDir);\n"
-                    +
                     "  }\n"
-                    "  for (uint i = 0; i < spotLightCount; ++i){\n"
+                    "  for (int i = 0; i < spotLightCount; ++i){\n"
                     "    vec3 lightDir = normalize(spotLights[i].position - inFragPosition.xyz);\n"
-                    "    float shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[i], normal, lightDir);\n"
-                    +
+                    "    float shadowFactor = 0.0;"
+                    "    switch (i) {\n"
+                    "      case 0: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[0], normal, lightDir); break;\n"
+                    "      case 1: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[1], normal, lightDir); break;\n"
+                    "      case 2: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[2], normal, lightDir); break;\n"
+                    "      case 3: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[3], normal, lightDir); break;\n"
+                    "    }\n"
                     "    lightingColor += calculateSpotLight(spotLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
                     "  }\n"
                     "  FragColor = FragColor * vec4(lightingColor, 1.0);";
