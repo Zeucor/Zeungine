@@ -2,6 +2,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#if defined(USE_GL) || defined(USE_EGL)
 #ifdef USE_GL
 #include <glad/gl.h>
 #endif
@@ -15,4 +16,10 @@
 #endif
 #ifdef _WIN32
 #include <GL/wglext.h>
+#endif
+#define ZG_FLOAT GL_FLOAT
+#define ZG_UNSIGNED_INT GL_UNSIGNED_INT
+#elif defined(USE_VULKAN)
+#define ZG_FLOAT 0
+#define ZG_UNSIGNED_INT 0
 #endif

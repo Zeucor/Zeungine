@@ -1040,6 +1040,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
 uint32_t ShaderFactory::hooksCount = 0;
 ShaderFactory::ShaderHookInfoMap ShaderFactory::shaderHookInfos;
 ShaderFactory::ShaderTypeMap ShaderFactory::shaderTypes = {
+#if defined(USE_GL) || defined(USE_EGL)
 	{ShaderType::Vertex, GL_VERTEX_SHADER},
 	{ShaderType::Geometry, GL_GEOMETRY_SHADER},
 	{ShaderType::Fragment, GL_FRAGMENT_SHADER}
@@ -1048,6 +1049,7 @@ ShaderFactory::ShaderTypeMap ShaderFactory::shaderTypes = {
 	{ShaderType::TessellationControl, GL_TESS_CONTROL_SHADER},
 	{ShaderType::TessellationEvaluation, GL_TESS_EVALUATION_SHADER},
 	{ShaderType::Compute, GL_COMPUTE_SHADER}
+#endif
 #endif
 };
 ShaderFactory::ShaderNameMap ShaderFactory::shaderNames = {
@@ -1081,11 +1083,7 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
   shaderString += "precision highp float;\n";
   shaderString += "precision highp samplerCube;\n";
 #elif defined(USE_EGL)
-#ifdef MACOS
-  shaderString += "#version 300 es\n";
-#else
   shaderString += "#version 310 es\n";
-#endif
   if (shaderType == ShaderType::Geometry)
   {
     const char* extensions = (const char*)glGetString(GL_EXTENSIONS);

@@ -106,7 +106,7 @@ void Scene::preRender()
 		iRenderer.viewport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
 	}
 	else
-		iRenderer.viewport({0, 0, static_cast<GLsizei>(window.windowWidth), static_cast<GLsizei>(window.windowHeight)});
+		iRenderer.viewport({0, 0, window.windowWidth, window.windowHeight});
 	iRenderer.clearColor(clearColor);
 	iRenderer.clear();
 };

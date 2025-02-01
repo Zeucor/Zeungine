@@ -563,7 +563,7 @@ void EGLRenderer::drawVAO(const vaos::VAO &vao)
 	glBindVertexArray(vao.vao);
 	GLcheck(*this, "glBindVertexArray");
 	GLenum drawMode = GL_TRIANGLES;
-	glDrawElements(drawMode, vao.indiceCount, GL_UNSIGNED_INT, 0);
+	glDrawElements(drawMode, vao.indiceCount, ZG_UNSIGNED_INT, 0);
 	GLcheck(*this, "glDrawElements");
 }
 void EGLRenderer::generateVAO(vaos::VAO &vao)
@@ -592,7 +592,7 @@ void EGLRenderer::generateVAO(vaos::VAO &vao)
 		glEnableVertexAttribArray(attribIndex);
 		GLcheck(*this, "glEnableVertexAttribArray");
 		auto& constantSize = vaos::VAOFactory::constantSizes[constant];
-		if (std::get<2>(constantSize) == GL_FLOAT)
+		if (std::get<2>(constantSize) == ZG_FLOAT)
 		{
 			glVertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize),
 																								GL_FALSE, stride, (const void*)offset);

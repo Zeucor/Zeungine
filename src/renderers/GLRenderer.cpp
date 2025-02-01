@@ -631,7 +631,7 @@ void GLRenderer::drawVAO(const vaos::VAO &vao)
 	GLenum polygonMode = GL_FILL;
 	glContext->PolygonMode(GL_FRONT_AND_BACK, polygonMode);
 	GLcheck(*this, "glPolygonMode");
-	glContext->DrawElements(drawMode, vao.indiceCount, GL_UNSIGNED_INT, 0);
+	glContext->DrawElements(drawMode, vao.indiceCount, ZG_UNSIGNED_INT, 0);
 	GLcheck(*this, "glDrawElements");
 }
 void GLRenderer::generateVAO(vaos::VAO &vao)
@@ -660,7 +660,7 @@ void GLRenderer::generateVAO(vaos::VAO &vao)
 		glContext->EnableVertexAttribArray(attribIndex);
 		GLcheck(*this, "glEnableVertexAttribArray");
 		auto& constantSize = vaos::VAOFactory::constantSizes[constant];
-		if (std::get<2>(constantSize) == GL_FLOAT)
+		if (std::get<2>(constantSize) == ZG_FLOAT)
 		{
 			glContext->VertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize),
 																								GL_FALSE, stride, (const void*)offset);

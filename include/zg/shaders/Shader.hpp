@@ -5,11 +5,11 @@
 #include <string>
 #include <vector>
 #include <zg/Window.hpp>
+#include <zg/enums/ShaderType.hpp>
 #include <zg/glm.hpp>
+#include <zg/renderers/GLRenderer.hpp>
 #include "../common.hpp"
 #include "RuntimeConstants.hpp"
-#include <zg/renderers/GLRenderer.hpp>
-#include <zg/enums/ShaderType.hpp>
 namespace zg::textures
 {
 	struct Texture;
@@ -20,12 +20,15 @@ namespace zg::shaders
 	struct Shader
 	{
 		using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
-		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> uboBindings;
-		std::unordered_map<std::string_view, std::tuple<uint32_t, GLuint>> ssboBindings;
-		Window &window;
+		std::unordered_map<std::string_view, std::tuple<uint32_t, uint32_t>> uboBindings;
+		std::unordered_map<std::string_view, std::tuple<uint32_t, uint32_t>> ssboBindings;
+		Window& window;
 		ShaderMap shaders;
+#if defined(USE_GL) || defined(USE_EGL)
 		GLuint program = 0;
-		Shader(Window &window, const RuntimeConstants& constants, const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
+#endif
+		Shader(Window& window, const RuntimeConstants& constants,
+					 const std::vector<ShaderType>& shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
 		~Shader();
 		void bind() const;
 		void unbind() const;
@@ -97,4 +100,4 @@ namespace zg::shaders
 		void setSSBO(const std::string_view name, const void* pointer, uint32_t size);
 		void setTexture(const std::string_view name, const textures::Texture& texture, const int32_t unit);
 	};
-}
+} // namespace zg::shaders

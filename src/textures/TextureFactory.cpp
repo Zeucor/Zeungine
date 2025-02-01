@@ -1,6 +1,7 @@
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/textures/TextureFactory.hpp>
 using namespace zg::textures;
+#if defined(USE_GL) || defined(USE_EGL)
 TextureFactory::InternalFormatsMap TextureFactory::internalFormats = {
   {Texture::Format::RGB8, GL_RGB8},
   {Texture::Format::RGBA8, GL_RGBA8},
@@ -27,14 +28,15 @@ TextureFactory::FormatsMap TextureFactory::formats = {
 TextureFactory::TypesMap TextureFactory::types = {
   {{Texture::Format::RGB8, Texture::Type::UnsignedByte}, GL_UNSIGNED_BYTE},
   {{Texture::Format::RGBA8, Texture::Type::UnsignedByte}, GL_UNSIGNED_BYTE},
-  {{Texture::Format::RGBA8, Texture::Type::Float}, GL_FLOAT},
-  {{Texture::Format::RGBA32F, Texture::Type::Float}, GL_FLOAT},
-  {{Texture::Format::DepthStencil, Texture::Type::UnsignedInt24_8}, GL_UNSIGNED_INT_24_8},
-  {{Texture::Format::DepthStencil, Texture::Type::Float}, GL_FLOAT_32_UNSIGNED_INT_24_8_REV},
+  {{Texture::Format::RGBA8, Texture::Type::Float}, ZG_FLOAT},
+  {{Texture::Format::RGBA32F, Texture::Type::Float}, ZG_FLOAT},
+  {{Texture::Format::DepthStencil, Texture::Type::UnsignedInt24_8}, ZG_UNSIGNED_INT_24_8},
+  {{Texture::Format::DepthStencil, Texture::Type::Float}, ZG_FLOAT_32_UNSIGNED_INT_24_8_REV},
   {{Texture::Format::Stencil, Texture::Type::UnsignedByte}, GL_UNSIGNED_BYTE},
-  {{Texture::Format::Depth, Texture::Type::Float}, GL_FLOAT},
+  {{Texture::Format::Depth, Texture::Type::Float}, ZG_FLOAT},
   {{Texture::Format::Integer32, Texture::Type::Int}, GL_INT}
 };
+#endif
 void TextureFactory::initTexture(Texture &texture, const void *data)
 {
   preInitTexture(texture);

@@ -5,7 +5,7 @@ namespace zg::vaos
 {
 	struct VAOFactory
 	{
-    using ConstantSizeMap = std::unordered_map<std::string_view, std::tuple<uint8_t, size_t, GLenum>>;
+    using ConstantSizeMap = std::unordered_map<std::string_view, std::tuple<uint8_t, size_t, int32_t>>;
     using VAOConstantMap = std::unordered_map<std::string_view, bool>;
     static ConstantSizeMap constantSizes;
     static VAOConstantMap VAOConstants;
