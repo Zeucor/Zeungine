@@ -1041,9 +1041,7 @@ uint32_t ShaderFactory::hooksCount = 0;
 ShaderFactory::ShaderHookInfoMap ShaderFactory::shaderHookInfos;
 ShaderFactory::ShaderTypeMap ShaderFactory::shaderTypes = {
 	{ShaderType::Vertex, GL_VERTEX_SHADER},
-#ifdef USE_GL
 	{ShaderType::Geometry, GL_GEOMETRY_SHADER},
-#endif
 	{ShaderType::Fragment, GL_FRAGMENT_SHADER}
 #ifdef USE_GL
   ,
@@ -1080,11 +1078,35 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	auto& shaderHooks = hooks[shaderType];
 #ifdef USE_GL
 	shaderString += "#version 460 core\n";
-#elif defined(USE_EGL)
-  shaderString += "#version 310 es\n";
-#endif
   shaderString += "precision highp float;\n";
   shaderString += "precision highp samplerCube;\n";
+#elif defined(USE_EGL)
+  shaderString += "#version 310 es\n";
+  if (shaderType == ShaderType::Geometry)
+  {
+    const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+    if (strstr(extensions, "GL_EXT_geometry_shader") == NULL)
+    {
+      printf("GL_EXT_geometry_shader not supported!\n");
+    }
+    else
+    {
+      shaderString += "#extension GL_EXT_geometry_shader : require\n";
+      printf("GL_EXT_geometry_shader is supported.\n");
+    }
+    if (strstr(extensions, "GL_OES_geometry_shader") == NULL)
+    {
+      printf("GL_OES_geometry_shader not supported!\n");
+    }
+    else
+    {
+      shaderString += "#extension GL_OES_geometry_shader : require\n";
+      printf("GL_OES_geometry_shader is supported.\n");
+    }
+  }
+  shaderString += "precision mediump float;\n";
+  shaderString += "precision mediump samplerCube;\n";
+#endif
 	currentInLayoutIndex = 0;
 	currentOutLayoutIndex = 0;
 	appendHooks(shaderString, shaderHooks["preLayout"], constants, shader);
