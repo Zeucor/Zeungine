@@ -413,8 +413,17 @@ void EGLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 	}
 	if (framebuffer.texture.target == GL_TEXTURE_CUBE_MAP)
 	{
+#ifdef USE_GL
 		glFramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, framebuffer.texture.id, 0);
 		GLcheck(*this, "glFramebufferTexture");
+#elif defined(USE_EGL)
+		int count = 0;
+		for (GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X; count < 6; count++, face++)
+		{
+			glFramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, face, framebuffer.texture.id, 0);
+			GLcheck(*this, "glFramebufferTexture2D");
+		}
+#endif
 	}
 	else
 	{
