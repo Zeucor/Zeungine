@@ -194,46 +194,6 @@ void X11Window::init(Window& renderWindow)
 										(unsigned char*)&motifHints, sizeof(motifHints) / sizeof(long));
 	}
 }
-#define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
-#define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
-typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
-static bool ctxErrorOccurred = false;
-static int ctxErrorHandler(Display* dpy, XErrorEvent* ev)
-{
-	ctxErrorOccurred = true;
-	return 0;
-}
-static bool isExtensionSupported(const char* extList, const char* extension)
-{
-	const char* start;
-	const char *where, *terminator;
-
-	/* Extension names should not have spaces. */
-	where = strchr(extension, ' ');
-	if (where || *extension == '\0')
-		return false;
-
-	/* It takes a bit of care to be fool-proof about parsing the
-		 OpenGL extensions string. Don't be fooled by sub-strings,
-		 etc. */
-	for (start = extList;;)
-	{
-		where = strstr(start, extension);
-
-		if (!where)
-			break;
-
-		terminator = where + strlen(extension);
-
-		if (where == start || *(where - 1) == ' ')
-			if (*terminator == ' ' || *terminator == '\0')
-				return true;
-
-		start = terminator;
-	}
-
-	return false;
-}
 void X11Window::postInit()
 {
 	XMapRaised(display, window);

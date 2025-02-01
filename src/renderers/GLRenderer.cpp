@@ -94,6 +94,48 @@ void GLRenderer::init()
 	glXSwapIntervalEXT(x11Window.display, x11Window.window, platformWindowPointer->renderWindowPointer->vsync);
 #endif
 }
+#ifdef LINUX
+#define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
+#define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
+typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+static bool ctxErrorOccurred = false;
+static int ctxErrorHandler(Display* dpy, XErrorEvent* ev)
+{
+	ctxErrorOccurred = true;
+	return 0;
+}
+static bool isExtensionSupported(const char* extList, const char* extension)
+{
+	const char* start;
+	const char *where, *terminator;
+
+	/* Extension names should not have spaces. */
+	where = strchr(extension, ' ');
+	if (where || *extension == '\0')
+		return false;
+
+	/* It takes a bit of care to be fool-proof about parsing the
+		 OpenGL extensions string. Don't be fooled by sub-strings,
+		 etc. */
+	for (start = extList;;)
+	{
+		where = strstr(start, extension);
+
+		if (!where)
+			break;
+
+		terminator = where + strlen(extension);
+
+		if (where == start || *(where - 1) == ' ')
+			if (*terminator == ' ' || *terminator == '\0')
+				return true;
+
+		start = terminator;
+	}
+
+	return false;
+}
+#endif
 #if defined(WINDOWS) || defined(LINUX)
 void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
@@ -114,7 +156,8 @@ void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	wglMakeCurrent(hDeviceContext, hRenderingContext);
 #endif
 #ifdef LINUX
-	const char* glxExts = glXQueryExtensionsString(display, screen);
+	auto &x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
+	const char* glxExts = glXQueryExtensionsString(x11Window.display, x11Window.screen);
 	glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
 	glXCreateContextAttribsARB =
 		(glXCreateContextAttribsARBProc)glXGetProcAddressARB((const GLubyte*)"glXCreateContextAttribsARB");
@@ -122,17 +165,17 @@ void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	int (*oldHandler)(Display*, XErrorEvent*) = XSetErrorHandler(&ctxErrorHandler);
 	if (!isExtensionSupported(glxExts, "GLX_ARB_create_context") || !glXCreateContextAttribsARB)
 	{
-		glcontext = glXCreateNewContext(display, bestFbc, GLX_RGBA_TYPE, 0, True);
+		x11Window.glcontext = glXCreateNewContext(x11Window.display, x11Window.bestFbc, GLX_RGBA_TYPE, 0, True);
 	}
 	else
 	{
 		int context_attribs[] = {
 			GLX_CONTEXT_MAJOR_VERSION_ARB, 4, GLX_CONTEXT_MINOR_VERSION_ARB, 6, GLX_CONTEXT_PROFILE_MASK_ARB,
 			GLX_CONTEXT_CORE_PROFILE_BIT_ARB, None};
-		glcontext = glXCreateContextAttribsARB(display, bestFbc, 0, True, context_attribs);
-		XSync(display, False);
+		x11Window.glcontext = glXCreateContextAttribsARB(x11Window.display, x11Window.bestFbc, 0, True, context_attribs);
+		XSync(x11Window.display, False);
 	}
-	glXMakeCurrent(display, window, glcontext);
+	glXMakeCurrent(x11Window.display, x11Window.window, x11Window.glcontext);
 #endif
 }
 #endif
