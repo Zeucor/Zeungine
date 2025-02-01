@@ -49,19 +49,13 @@ void EGLRenderer::init()
 	GLcheck(*this, "glClearDepth");
 	glDepthRangef(0.0, 1.0);
 	GLcheck(*this, "glDepthRange");
-	// glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-	// GLcheck(*this, "glEnable:GL_SAMPLE_ALPHA_TO_COVERAGE");
 	glEnable(GL_BLEND);
 	GLcheck(*this, "glEnable:GL_BLEND");
 	glDisable(GL_DITHER);
 	GLcheck(*this, "glDisable:GL_DITHER");
 #ifndef MACOS
-	// glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
-	// GLcheck(*this, "glBlendEquationSeparate");
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	GLcheck(*this, "glBlendFunc");
-	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	GLcheck(*this, "glEnable:GL_TEXTURE_CUBE_MAP_SEAMLESS");
 	glEnable(GL_DEBUG_OUTPUT);
 	GLcheck(*this, "glEnable");
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
