@@ -14,8 +14,8 @@ namespace zg
     	EGLConfig eglConfig;
 		EGLRenderer();
 		~EGLRenderer() override;
-		void init() override;
 		void createContext(IPlatformWindow* platformWindowPointer) override;
+		void init() override;
 		void destroy() override;
 		void clearColor(glm::vec4 color) override;
 		void clear() override;

@@ -36,64 +36,6 @@ void* getProc(const char* name)
 }
 GLRenderer::GLRenderer() : glContext(new GladGLContext) {}
 GLRenderer::~GLRenderer() { delete glContext; }
-void GLRenderer::init()
-{
-	gladLoadGLContext(glContext, (GLADloadfunc)getProc);
-	glContext->Enable(GL_DEPTH_TEST);
-	GLcheck(*this, "glEnable");
-	glContext->Enable(GL_CULL_FACE);
-	GLcheck(*this, "glEnable");
-	glContext->CullFace(GL_BACK);
-	GLcheck(*this, "glCullFace");
-	glContext->FrontFace(GL_CCW);
-	GLcheck(*this, "glFrontFace");
-	glContext->Viewport(0, 0, platformWindowPointer->renderWindowPointer->windowWidth,
-											platformWindowPointer->renderWindowPointer->windowHeight);
-	GLcheck(*this, "glViewport");
-	glContext->ClearDepth(1.0);
-	GLcheck(*this, "glClearDepth");
-	glContext->DepthRange(0.0, 1.0);
-	GLcheck(*this, "glDepthRange");
-	// glContext->Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-	// GLcheck(*this, "glEnable:GL_SAMPLE_ALPHA_TO_COVERAGE");
-	glContext->Enable(GL_BLEND);
-	GLcheck(*this, "glEnable:GL_BLEND");
-	glContext->Disable(GL_DITHER);
-	GLcheck(*this, "glDisable:GL_DITHER");
-	glContext->Disable(GL_POLYGON_SMOOTH);
-	GLcheck(*this, "glDisable:GL_POLYGON_SMOOTH");
-#ifndef MACOS
-	// glContext->BlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
-	// GLcheck(*this, "glBlendEquationSeparate");
-	glContext->BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GLcheck(*this, "glBlendFunc");
-	glContext->Enable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	GLcheck(*this, "glEnable:GL_TEXTURE_CUBE_MAP_SEAMLESS");
-	glContext->Enable(GL_DEBUG_OUTPUT);
-	GLcheck(*this, "glEnable");
-	glContext->Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-	GLcheck(*this, "glEnable");
-	glContext->DebugMessageCallback(
-		[](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message,
-			 const void* userParam)
-		{
-			if (type == GL_DEBUG_TYPE_ERROR)
-			{
-				std::cerr << "OpenGL Debug Message: " << message << std::endl;
-			}
-		},
-		nullptr);
-#endif
-#ifdef _WIN32
-	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-	wglSwapIntervalEXT(platformWindowPointer->renderWindowPointer->vsync);
-#elif defined(LINUX)
-	PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT =
-		(PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalEXT");
-	auto& x11Window = *(X11Window*)platformWindowPointer;
-	glXSwapIntervalEXT(x11Window.display, x11Window.window, platformWindowPointer->renderWindowPointer->vsync);
-#endif
-}
 #ifdef LINUX
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
@@ -179,6 +121,64 @@ void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 #endif
 }
 #endif
+void GLRenderer::init()
+{
+	gladLoadGLContext(glContext, (GLADloadfunc)getProc);
+	glContext->Enable(GL_DEPTH_TEST);
+	GLcheck(*this, "glEnable");
+	glContext->Enable(GL_CULL_FACE);
+	GLcheck(*this, "glEnable");
+	glContext->CullFace(GL_BACK);
+	GLcheck(*this, "glCullFace");
+	glContext->FrontFace(GL_CCW);
+	GLcheck(*this, "glFrontFace");
+	glContext->Viewport(0, 0, platformWindowPointer->renderWindowPointer->windowWidth,
+											platformWindowPointer->renderWindowPointer->windowHeight);
+	GLcheck(*this, "glViewport");
+	glContext->ClearDepth(1.0);
+	GLcheck(*this, "glClearDepth");
+	glContext->DepthRange(0.0, 1.0);
+	GLcheck(*this, "glDepthRange");
+	// glContext->Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+	// GLcheck(*this, "glEnable:GL_SAMPLE_ALPHA_TO_COVERAGE");
+	glContext->Enable(GL_BLEND);
+	GLcheck(*this, "glEnable:GL_BLEND");
+	glContext->Disable(GL_DITHER);
+	GLcheck(*this, "glDisable:GL_DITHER");
+	glContext->Disable(GL_POLYGON_SMOOTH);
+	GLcheck(*this, "glDisable:GL_POLYGON_SMOOTH");
+#ifndef MACOS
+	// glContext->BlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+	// GLcheck(*this, "glBlendEquationSeparate");
+	glContext->BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GLcheck(*this, "glBlendFunc");
+	glContext->Enable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	GLcheck(*this, "glEnable:GL_TEXTURE_CUBE_MAP_SEAMLESS");
+	glContext->Enable(GL_DEBUG_OUTPUT);
+	GLcheck(*this, "glEnable");
+	glContext->Enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	GLcheck(*this, "glEnable");
+	glContext->DebugMessageCallback(
+		[](GLuint source, GLuint type, GLuint id, GLuint severity, GLsizei length, const GLchar* message,
+			 const void* userParam)
+		{
+			if (type == GL_DEBUG_TYPE_ERROR)
+			{
+				std::cerr << "OpenGL Debug Message: " << message << std::endl;
+			}
+		},
+		nullptr);
+#endif
+#ifdef _WIN32
+	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
+	wglSwapIntervalEXT(platformWindowPointer->renderWindowPointer->vsync);
+#elif defined(LINUX)
+	PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT =
+		(PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte*)"glXSwapIntervalEXT");
+	auto& x11Window = *(X11Window*)platformWindowPointer;
+	glXSwapIntervalEXT(x11Window.display, x11Window.window, platformWindowPointer->renderWindowPointer->vsync);
+#endif
+}
 void GLRenderer::destroy() {}
 std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new GLRenderer()); }
 void GLRenderer::clearColor(glm::vec4 color)

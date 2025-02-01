@@ -46,6 +46,33 @@ EGLRenderer::EGLRenderer()
     }
 }
 EGLRenderer::~EGLRenderer(){}
+#if defined(WINDOWS) || defined(LINUX)
+void EGLRenderer::createContext(IPlatformWindow *platformWindowPointer)
+{
+	this->platformWindowPointer = platformWindowPointer;
+#ifdef WINDOWS
+	auto window = (*dynamic_cast<WIN32Window*>(platformWindowPointer)).hwnd;
+#endif
+#ifdef LINUX
+	auto window = (*dynamic_cast<X11Window*>(platformWindowPointer)).window;
+#endif
+    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, window, nullptr);
+    if (eglSurface == EGL_NO_SURFACE)
+    {
+        throw std::runtime_error("EGL_NO_SURFACE");
+    }
+    EGLint contextAttribs[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_CONTEXT_MINOR_VERSION, 1, EGL_NONE };
+    eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
+    if (eglContext == EGL_NO_CONTEXT)
+    {
+        throw std::runtime_error("EGL_NO_CONTEXT");
+    }
+    if (!eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
+    {
+        throw std::runtime_error("eglMakeCurrent failed!");
+    }
+}
+#endif
 void EGLRenderer::init()
 {
 	glEnable(GL_DEPTH_TEST);
@@ -86,33 +113,6 @@ void EGLRenderer::init()
 		nullptr);
 #endif
 }
-#if defined(WINDOWS) || defined(LINUX)
-void EGLRenderer::createContext(IPlatformWindow *platformWindowPointer)
-{
-	this->platformWindowPointer = platformWindowPointer;
-#ifdef WINDOWS
-	auto window = (*dynamic_cast<WIN32Window*>(platformWindowPointer)).hwnd;
-#endif
-#ifdef LINUX
-	auto window = (*dynamic_cast<X11Window*>(platformWindowPointer)).window;
-#endif
-    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, window, nullptr);
-    if (eglSurface == EGL_NO_SURFACE)
-    {
-        throw std::runtime_error("EGL_NO_SURFACE");
-    }
-    EGLint contextAttribs[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_CONTEXT_MINOR_VERSION, 1, EGL_NONE };
-    eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
-    if (eglContext == EGL_NO_CONTEXT)
-    {
-        throw std::runtime_error("EGL_NO_CONTEXT");
-    }
-    if (!eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
-    {
-        throw std::runtime_error("eglMakeCurrent failed!");
-    }
-}
-#endif
 void EGLRenderer::destroy() {}
 std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new EGLRenderer()); }
 void EGLRenderer::clearColor(glm::vec4 color)

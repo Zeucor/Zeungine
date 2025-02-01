@@ -6,9 +6,6 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/textures/TextureFactory.hpp>
 #include <zg/vaos/VAOFactory.hpp>
-#if defined(LINUX) || defined(MACOS)
-#include <dlfcn.h>
-#endif
 #ifdef WINDOWS
 #include <zg/windows/WIN32Window.hpp>
 #endif
@@ -23,12 +20,12 @@ VulkanRenderer::VulkanRenderer()
 {
 }
 VulkanRenderer::~VulkanRenderer(){}
-void VulkanRenderer::init()
-{
-}
 void VulkanRenderer::createContext(IPlatformWindow *platformWindowPointer)
 {
 	this->platformWindowPointer = platformWindowPointer;
+}
+void VulkanRenderer::init()
+{
 }
 void VulkanRenderer::destroy() {}
 std::shared_ptr<IRenderer> zg::createRenderer()

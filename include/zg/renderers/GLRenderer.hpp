@@ -10,8 +10,8 @@ namespace zg
 		GladGLContext *glContext = 0;
 		GLRenderer();
 		~GLRenderer() override;
-		void init() override;
 		void createContext(IPlatformWindow* platformWindowPointer) override;
+		void init() override;
 		void destroy() override;
 		void clearColor(glm::vec4 color) override;
 		void clear() override;
