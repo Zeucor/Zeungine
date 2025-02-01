@@ -104,9 +104,18 @@ void MacOSWindow::postInit()
 {
 	@autoreleasepool
 	{
+#ifdef USE_GL
 		[(NSOpenGLContext*)glContext makeCurrentContext];
 		GLint swapInterval = renderWindowPointer->vsync ? 1 : 0;
 		[(NSOpenGLContext*)glContext setValues:&swapInterval forParameter:NSOpenGLContextParameterSwapInterval];
+#elif defined(USE_EGL)
+		auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
+		EGLint swapInterval = renderWindowPointer->vsync ? 1 : 0;
+		if (!eglSwapInterval(eglRenderer.eglDisplay, swapInterval))
+		{
+			throw std::runtime_error("Failed to set swap interval");
+		}
+#endif
 		[NSApp activateIgnoringOtherApps:YES];
 	}
 }
@@ -149,12 +158,32 @@ bool MacOSWindow::pollMessages()
 }
 void MacOSWindow::swapBuffers()
 {
+#ifdef USE_GL
 	[(NSOpenGLContext*)glContext flushBuffer];
+#elif defined(USE_EGL)
+	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
+    if (!eglSwapBuffers(eglRenderer.eglDisplay, eglRenderer.eglSurface))
+    {
+        throw std::runtime_error("eglSwapBuffers failed");
+    }
+#endif
 }
 void MacOSWindow::destroy()
 {
+#ifdef USE_GL
 	if (glContext)
 		[(NSOpenGLContext*)glContext release];
+#elif defined(USE_EGL)
+	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
+    if (eglRenderer.eglContext != EGL_NO_CONTEXT)
+    {
+        if (!eglDestroyContext(eglRenderer.eglDisplay, eglRenderer.eglContext))
+        {
+            throw std::runtime_error("Failed to destroy EGL context");
+        }
+        eglRenderer.eglContext = EGL_NO_CONTEXT;
+    }
+#endif
 	if (nsWindow)
 		[(NSWindow*)nsWindow release];
 	renderWindowPointer->iRenderer->destroy();
