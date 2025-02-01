@@ -33,6 +33,7 @@ namespace zg::textures
 		Format format;
 		Type type;
 		FilterType filterType;
+		void* rendererData = 0;
 		explicit Texture(Window& window, const glm::ivec4& size, const void* data = 0, const Format& format = RGBA8,
 										 const Type& type = UnsignedByte, const FilterType& filterType = Linear);
 		explicit Texture(Window& window, const glm::ivec4& size, const std::string_view path = "",
