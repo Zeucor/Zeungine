@@ -1121,7 +1121,9 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	appendHooks(shaderString, shaderHooks["postMain"], constants, shader);
 	if (!compileShader(shader, shaderType, shaderPair))
 	{
+#ifndef USE_VULKAN
 		throw std::runtime_error("Failed to compile fragment shader");
+#endif
 	}
 	return shaderPair;
 }
