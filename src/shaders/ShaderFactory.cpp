@@ -1062,7 +1062,11 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	ShaderPair shaderPair;
 	auto& shaderString = shaderPair.first;
 	auto& shaderHooks = hooks[shaderType];
+#ifdef USE_GL
 	shaderString += "#version 460 core\n";
+#elif defined(USE_EGL)
+  shaderString += "#version 310 es\n";
+#endif
   shaderString += "precision highp float;\n";
   shaderString += "precision highp samplerCube;\n";
 	currentInLayoutIndex = 0;
