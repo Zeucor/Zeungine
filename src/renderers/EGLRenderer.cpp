@@ -30,6 +30,20 @@ EGLRenderer::EGLRenderer()
 	{
     	throw std::runtime_error("eglInitialize error");
 	}
+    EGLint numConfigs;
+    EGLint eglAttribs[] = {
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_DEPTH_SIZE, 24,
+        EGL_STENCIL_SIZE, 8,
+        EGL_NONE
+    };
+    if (!eglChooseConfig(eglDisplay, eglAttribs, &eglConfig, 1, &numConfigs))
+    {
+        throw std::runtime_error("eglChooseConfig error");
+    }
 }
 EGLRenderer::~EGLRenderer(){}
 void EGLRenderer::init()

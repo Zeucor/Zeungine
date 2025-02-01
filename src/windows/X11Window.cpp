@@ -97,21 +97,6 @@ void X11Window::init(Window& renderWindow)
 		ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | FocusChangeMask;
 #endif
 #ifdef USE_EGL
-    EGLint numConfigs;
-    EGLint eglAttribs[] = {
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 24,
-        EGL_STENCIL_SIZE, 8,
-        EGL_NONE
-    };
-	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
-    if (!eglChooseConfig(eglRenderer.eglDisplay, eglAttribs, &eglRenderer.eglConfig, 1, &numConfigs))
-    {
-        return;
-    }
 	rootWindow = DefaultRootWindow(display);
 	XSetWindowAttributes attr;
     attr.colormap = XCreateColormap(display, rootWindow, DefaultVisual(display, 0), AllocNone);
