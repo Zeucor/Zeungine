@@ -10,16 +10,20 @@ namespace zg::textures
 	struct Framebuffer
 	{
 		Window& window;
-#if defined(USE_GL) || defined(USE_EGL)
-		GLuint id = 0;
-		GLuint renderbufferID = 0;
-#endif
 		Texture& texture;
 		Texture* depthTexturePointer = 0;
+		void* rendererData = 0;
 		Framebuffer(Window& window, Texture& texture);
 		Framebuffer(Window& window, Texture& texture, Texture& depthTexture);
 		~Framebuffer();
 		void bind() const;
 		void unbind();
 	};
+#if defined(USE_GL) || defined(USE_EGL)
+	struct GLFramebufferImpl
+	{
+		GLuint id = 0;
+		GLuint renderbufferID = 0;
+	};
+#endif
 } // namespace zg::textures
