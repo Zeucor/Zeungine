@@ -88,17 +88,14 @@ void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
 	wglMakeCurrent(nullptr, nullptr);
 	int attribList[] = {
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-		0
-	};
+		WGL_CONTEXT_MAJOR_VERSION_ARB,		4, WGL_CONTEXT_MINOR_VERSION_ARB, 3, WGL_CONTEXT_PROFILE_MASK_ARB,
+		WGL_CONTEXT_CORE_PROFILE_BIT_ARB, 0};
 	hRenderingContext = wglCreateContextAttribsARB(hDeviceContext, 0, attribList);
 	wglDeleteContext(hTempRC);
 	wglMakeCurrent(hDeviceContext, hRenderingContext);
 #endif
 #ifdef LINUX
-	auto &x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
+	auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
 	const char* glxExts = glXQueryExtensionsString(x11Window.display, x11Window.screen);
 	glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
 	glXCreateContextAttribsARB =
@@ -112,7 +109,7 @@ void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	else
 	{
 		int context_attribs[] = {
-			GLX_CONTEXT_MAJOR_VERSION_ARB, 4, GLX_CONTEXT_MINOR_VERSION_ARB, 6, GLX_CONTEXT_PROFILE_MASK_ARB,
+			GLX_CONTEXT_MAJOR_VERSION_ARB,		4,	 GLX_CONTEXT_MINOR_VERSION_ARB, 6, GLX_CONTEXT_PROFILE_MASK_ARB,
 			GLX_CONTEXT_CORE_PROFILE_BIT_ARB, None};
 		x11Window.glcontext = glXCreateContextAttribsARB(x11Window.display, x11Window.bestFbc, 0, True, context_attribs);
 		XSync(x11Window.display, False);
@@ -431,7 +428,8 @@ void GLRenderer::deleteShader(shaders::Shader& shader)
 }
 void GLRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const
 {
-	glContext->BindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+	auto& framebufferImpl = *(textures::GLFramebufferImpl*)framebuffer.rendererData;
+	glContext->BindFramebuffer(GL_FRAMEBUFFER, framebufferImpl.id);
 	GLcheck(*this, "glBindFramebuffer");
 	viewport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
 }
@@ -442,14 +440,16 @@ void GLRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) con
 }
 void GLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 {
+	auto& framebufferImpl = *(textures::GLFramebufferImpl*)framebuffer.rendererData;
+	auto& textureImpl = *(textures::GLTextureImpl*)framebuffer.texture.rendererData;
 	if (framebuffer.depthTexturePointer)
 	{
-		glContext->GenRenderbuffers(1, &framebuffer.renderbufferID);
+		glContext->GenRenderbuffers(1, &framebufferImpl.renderbufferID);
 		GLcheck(*this, "glGenRenderbuffers");
 	}
-	glContext->GenFramebuffers(1, &framebuffer.id);
+	glContext->GenFramebuffers(1, &framebufferImpl.id);
 	GLcheck(*this, "glGenFramebuffers");
-	glContext->BindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+	glContext->BindFramebuffer(GL_FRAMEBUFFER, framebufferImpl.id);
 	GLcheck(*this, "glBindFramebuffer");
 	GLenum frameBufferTarget;
 	switch (framebuffer.texture.format)
@@ -465,23 +465,23 @@ void GLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 	}
 	if (framebuffer.depthTexturePointer)
 	{
-		glContext->BindRenderbuffer(GL_RENDERBUFFER, framebuffer.renderbufferID);
+		glContext->BindRenderbuffer(GL_RENDERBUFFER, framebufferImpl.renderbufferID);
 		GLcheck(*this, "glBindRenderbuffer");
 		glContext->RenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, framebuffer.depthTexturePointer->size.x,
 																	 framebuffer.depthTexturePointer->size.y);
 		GLcheck(*this, "glRenderbufferStorage");
 		glContext->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
-																			 framebuffer.renderbufferID);
+																			 framebufferImpl.renderbufferID);
 		GLcheck(*this, "glFramebufferRenderbuffer");
 	}
-	if (framebuffer.texture.target == GL_TEXTURE_CUBE_MAP)
+	if (textureImpl.target == GL_TEXTURE_CUBE_MAP)
 	{
-		glContext->FramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, framebuffer.texture.id, 0);
+		glContext->FramebufferTexture(GL_FRAMEBUFFER, frameBufferTarget, textureImpl.id, 0);
 		GLcheck(*this, "glFramebufferTexture");
 	}
 	else
 	{
-		glContext->FramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, framebuffer.texture.id, 0);
+		glContext->FramebufferTexture2D(GL_FRAMEBUFFER, frameBufferTarget, GL_TEXTURE_2D, textureImpl.id, 0);
 		GLcheck(*this, "glFramebufferTexture2D");
 	}
 	glContext->BindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -489,31 +489,37 @@ void GLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 }
 void GLRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer)
 {
-	glContext->DeleteFramebuffers(1, &framebuffer.id);
+	auto& framebufferImpl = *(textures::GLFramebufferImpl*)framebuffer.rendererData;
+	glContext->DeleteFramebuffers(1, &framebufferImpl.id);
 	GLcheck(*this, "glDeleteFramebuffers");
+	delete &framebufferImpl;
 }
 void GLRenderer::bindTexture(const textures::Texture& texture)
 {
-	glContext->BindTexture(texture.target, texture.id);
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	glContext->BindTexture(textureImpl.target, textureImpl.id);
 	GLcheck(*this, "glBindTexture");
 }
 void GLRenderer::unbindTexture(const textures::Texture& texture)
 {
-	glContext->BindTexture(texture.target, 0);
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	glContext->BindTexture(textureImpl.target, 0);
 	GLcheck(*this, "glBindTexture");
 }
 void GLRenderer::preInitTexture(textures::Texture& texture)
 {
-	glContext->GenTextures(1, &texture.id);
+	texture.rendererData = new textures::GLTextureImpl();
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	glContext->GenTextures(1, &textureImpl.id);
 	GLcheck(*this, "glGenTextures");
 	if (texture.size.w > 0)
-		texture.target = GL_TEXTURE_CUBE_MAP;
+		textureImpl.target = GL_TEXTURE_CUBE_MAP;
 	else if (texture.size.y == 0)
-		texture.target = GL_TEXTURE_1D;
+		textureImpl.target = GL_TEXTURE_1D;
 	else if (texture.size.z <= 1)
-		texture.target = GL_TEXTURE_2D;
+		textureImpl.target = GL_TEXTURE_2D;
 	else
-		texture.target = GL_TEXTURE_3D;
+		textureImpl.target = GL_TEXTURE_3D;
 	texture.bind();
 	glContext->PixelStorei(GL_PACK_ALIGNMENT, 1);
 	GLcheck(*this, "glPixelStorei");
@@ -521,31 +527,33 @@ void GLRenderer::preInitTexture(textures::Texture& texture)
 void GLRenderer::midInitTexture(const textures::Texture& texture,
 																const std::vector<images::ImageLoader::ImagePair>& images)
 {
-	if (texture.target == GL_TEXTURE_1D)
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	if (textureImpl.target == GL_TEXTURE_1D)
 	{
 		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
-		glContext->TexImage1D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
-													0, textures::TextureFactory::formats[texture.format],
+		glContext->TexImage1D(textureImpl.target, 0, textures::TextureFactory::internalFormats[texture.format],
+													texture.size.x, 0, textures::TextureFactory::formats[texture.format],
 													textures::TextureFactory::types[{texture.format, texture.type}], data);
 		GLcheck(*this, "glTexImage1D");
 	}
-	else if (texture.target == GL_TEXTURE_2D)
+	else if (textureImpl.target == GL_TEXTURE_2D)
 	{
 		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
-		glContext->TexImage2D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
-													texture.size.y, 0, textures::TextureFactory::formats[texture.format],
+		glContext->TexImage2D(textureImpl.target, 0, textures::TextureFactory::internalFormats[texture.format],
+													texture.size.x, texture.size.y, 0, textures::TextureFactory::formats[texture.format],
 													textures::TextureFactory::types[{texture.format, texture.type}], data);
 		GLcheck(*this, "glTexImage2D");
 	}
-	else if (texture.target == GL_TEXTURE_3D)
+	else if (textureImpl.target == GL_TEXTURE_3D)
 	{
 		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
-		glContext->TexImage3D(texture.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
-													texture.size.y, texture.size.z, 0, textures::TextureFactory::formats[texture.format],
+		glContext->TexImage3D(textureImpl.target, 0, textures::TextureFactory::internalFormats[texture.format],
+													texture.size.x, texture.size.y, texture.size.z, 0,
+													textures::TextureFactory::formats[texture.format],
 													textures::TextureFactory::types[{texture.format, texture.type}], data);
 		GLcheck(*this, "glTexImage3D");
 	}
-	else if (texture.target == GL_TEXTURE_CUBE_MAP)
+	else if (textureImpl.target == GL_TEXTURE_CUBE_MAP)
 	{
 		for (uint8_t face = 0; face < 6; ++face)
 		{
@@ -562,6 +570,7 @@ void GLRenderer::midInitTexture(const textures::Texture& texture,
 }
 void GLRenderer::postInitTexture(const textures::Texture& texture)
 {
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
 	GLenum filterType;
 	switch (texture.filterType)
 	{
@@ -572,27 +581,29 @@ void GLRenderer::postInitTexture(const textures::Texture& texture)
 		filterType = GL_LINEAR;
 		break;
 	}
-	glContext->TexParameteri(texture.target, GL_TEXTURE_MIN_FILTER, filterType);
+	glContext->TexParameteri(textureImpl.target, GL_TEXTURE_MIN_FILTER, filterType);
 	GLcheck(*this, "glTexParameteri");
-	glContext->TexParameteri(texture.target, GL_TEXTURE_MAG_FILTER, filterType);
+	glContext->TexParameteri(textureImpl.target, GL_TEXTURE_MAG_FILTER, filterType);
 	GLcheck(*this, "glTexParameteri");
-	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glContext->TexParameteri(textureImpl.target, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	GLcheck(*this, "glTexParameteri");
-	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glContext->TexParameteri(textureImpl.target, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	GLcheck(*this, "glTexParameteri");
-	glContext->TexParameteri(texture.target, GL_TEXTURE_WRAP_R, GL_REPEAT);
+	glContext->TexParameteri(textureImpl.target, GL_TEXTURE_WRAP_R, GL_REPEAT);
 	GLcheck(*this, "glTexParameteri");
 	GLfloat maxAniso = 1.0f;
-	glContext->TexParameterf(texture.target, GL_TEXTURE_MAX_ANISOTROPY, maxAniso);
+	glContext->TexParameterf(textureImpl.target, GL_TEXTURE_MAX_ANISOTROPY, maxAniso);
 	GLcheck(*this, "glTexParameterf");
 	texture.unbind();
 }
 void GLRenderer::destroyTexture(textures::Texture& texture)
 {
-	glContext->DeleteTextures(1, &texture.id);
+	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
+	glContext->DeleteTextures(1, &textureImpl.id);
 	GLcheck(*this, "glDeleteTextures");
+	delete &textureImpl;
 }
-void GLRenderer::updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t>& indices)
+void GLRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices)
 {
 	glContext->BindVertexArray(vao.vao);
 	GLcheck(*this, "glBindVertexArray");
@@ -605,7 +616,7 @@ void GLRenderer::updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32
 	glContext->BindVertexArray(0);
 	GLcheck(*this, "glBindVertexArray");
 }
-void GLRenderer::updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t* elementsAsChar)
+void GLRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
 	glContext->BindVertexArray(vao.vao);
 	GLcheck(*this, "glBindVertexArray");
@@ -623,7 +634,7 @@ void GLRenderer::updateElementsVAO(const vaos::VAO &vao, const std::string_view 
 	glContext->BindVertexArray(0);
 	GLcheck(*this, "glBindVertexArray");
 }
-void GLRenderer::drawVAO(const vaos::VAO &vao)
+void GLRenderer::drawVAO(const vaos::VAO& vao)
 {
 	glContext->BindVertexArray(vao.vao);
 	GLcheck(*this, "glBindVertexArray");
@@ -634,7 +645,7 @@ void GLRenderer::drawVAO(const vaos::VAO &vao)
 	glContext->DrawElements(drawMode, vao.indiceCount, ZG_UNSIGNED_INT, 0);
 	GLcheck(*this, "glDrawElements");
 }
-void GLRenderer::generateVAO(vaos::VAO &vao)
+void GLRenderer::generateVAO(vaos::VAO& vao)
 {
 	glContext->GenVertexArrays(1, &vao.vao);
 	GLcheck(*this, "glGenVertexArrays");
@@ -662,21 +673,21 @@ void GLRenderer::generateVAO(vaos::VAO &vao)
 		auto& constantSize = vaos::VAOFactory::constantSizes[constant];
 		if (std::get<2>(constantSize) == ZG_FLOAT)
 		{
-			glContext->VertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize),
-																								GL_FALSE, stride, (const void*)offset);
+			glContext->VertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), GL_FALSE,
+																		 stride, (const void*)offset);
 			GLcheck(*this, "glVertexAttribPointer");
 		}
 		else
 		{
-			glContext->VertexAttribIPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize),
-																								 stride, (const void*)offset);
+			glContext->VertexAttribIPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), stride,
+																			(const void*)offset);
 			GLcheck(*this, "glVertexAttribIPointer");
 		}
 		offset += std::get<0>(constantSize) * std::get<1>(constantSize);
 		attribIndex++;
 	}
 }
-void GLRenderer::destroyVAO(vaos::VAO &vao)
+void GLRenderer::destroyVAO(vaos::VAO& vao)
 {
 	glContext->DeleteVertexArrays(1, &vao.vao);
 	GLcheck(*this, "glDeleteVertexArrays");
