@@ -108,5 +108,21 @@ namespace zg
 		void destroyVAO(vaos::VAO& vao) override;
 	};
 	bool VKcheck(const char* fn, VkResult result);
+	struct VulkanTextureImpl
+	{
+		VkImage textureImage;
+		VkDeviceMemory textureImageMemory;
+		VkImageView textureImageView;
+		VkSampler textureSampler;
+		VkImageLayout layout;
+	};
+	struct VulkanFramebufferImpl
+	{
+		VkRenderPass renderPass;
+		VkFramebuffer framebuffer;
+		uint32_t attachmentsSize;
+		uint32_t width;
+		uint32_t height;
+	};
 } // namespace zg
 #endif
