@@ -94,7 +94,7 @@ void GLRenderer::init()
 	glXSwapIntervalEXT(x11Window.display, x11Window.window, platformWindowPointer->renderWindowPointer->vsync);
 #endif
 }
-#ifdef WINDOWS
+#if defined(WINDOWS) || defined(LINUX)
 void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
 	this->platformWindowPointer = platformWindowPointer;
