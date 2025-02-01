@@ -1,49 +1,85 @@
 #pragma once
 #ifdef USE_VULKAN
 #include "../common.hpp"
-#include "../interfaces/IRenderer.hpp"
 #include "../interfaces/IPlatformWindow.hpp"
+#include "../interfaces/IRenderer.hpp"
+#ifdef ANDROID
+#define VK_USE_PLATFORM_ANDROID_KHR
+#elif defined(IOS)
+#define VK_USE_PLATFORM_IOS_MVK
+#elif defined(MACOS)
+#define VK_USE_PLATFORM_MACOS_MVK
+#elif defined(WINDOWS)
+#define VK_USE_PLATFORM_WIN32_KHR
+#elif defined(LINUX)
+#define VK_USE_PLATFORM_XLIB_KHR
+#endif
+#include <vulkan/vulkan.h>
 namespace zg
 {
 	struct VulkanRenderer : IRenderer
 	{
+		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+		VkInstance instance;
+		VkDebugUtilsMessengerEXT debugMessenger;
 		VulkanRenderer();
 		~VulkanRenderer() override;
 		void createContext(IPlatformWindow* platformWindowPointer) override;
+		void createInstance();
+#ifndef NDEBUG
+		void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+		bool checkValidationLayersSupport();
+		VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
+		void setupDebugMessenger();
+#endif
+		void createSurface();
+		void pickPhysicalDevice();
+		void createLogicalDevice();
+		void createSwapChain();
+		void createImageViews();
+		void createRenderPass();
+		void createFramebuffers();
+		void createCommandPool();
+		void createCommandBuffers();
+		void createSyncObjects();
 		void init() override;
 		void destroy() override;
 		void clearColor(glm::vec4 color) override;
 		void clear() override;
 		void viewport(glm::ivec4 vp) const override;
-		void setUniform(shaders::Shader &shader, const std::string_view name, const void *pointer, uint32_t size, enums::EUniformType uniformType) override;
-		void setBlock(shaders::Shader &shader, const std::string_view name, const void* pointer, size_t size) override;
+		void setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
+										enums::EUniformType uniformType) override;
+		void setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
 		void deleteBuffer(uint32_t id) override;
-		void bindShader(const shaders::Shader &shader) override;
-		void unbindShader(const shaders::Shader &shader) override;
-		void addSSBO(shaders::Shader &shader, const std::string_view name, uint32_t bindingIndex) override;
-		void addUBO(shaders::Shader &shader, const std::string_view name, uint32_t bindingIndex) override;
-		void setSSBO(shaders::Shader &shader, const std::string_view name, const void *pointer, size_t size) override;
-		void setTexture(shaders::Shader &shader, const std::string_view name, const textures::Texture &texture, const int32_t unit) override;
-		bool compileShader(shaders::Shader &shader, shaders::ShaderType shaderType, shaders::ShaderPair &shaderPair) override;
-		bool compileProgram(shaders::Shader &shader, const shaders::ShaderMap& shaderMap) override;
+		void bindShader(const shaders::Shader& shader) override;
+		void unbindShader(const shaders::Shader& shader) override;
+		void addSSBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex) override;
+		void addUBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex) override;
+		void setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
+		void setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
+										const int32_t unit) override;
+		bool compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
+											 shaders::ShaderPair& shaderPair) override;
+		bool compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap) override;
 		bool checkCompileErrors(shaders::Shader& shader, const uint32_t& id, bool isShader, const char* shaderType);
-		void deleteShader(shaders::Shader &shader) override;
-		void bindFramebuffer(const textures::Framebuffer &framebuffer) const override;
-		void unbindFramebuffer(const textures::Framebuffer &framebuffer) const override;
-		void initFramebuffer(textures::Framebuffer &framebuffer) override;
-		void destroyFramebuffer(textures::Framebuffer &framebuffer) override;
-		void bindTexture(const textures::Texture &texture) override;
-		void unbindTexture(const textures::Texture &texture) override;
-		void preInitTexture(textures::Texture &texture) override;
-		void midInitTexture(const textures::Texture &texture, const std::vector<images::ImageLoader::ImagePair>& images) override;
-		void postInitTexture(const textures::Texture &texture) override;
-		void destroyTexture(textures::Texture &texture) override;
-		void updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t> &indices) override;
-		void updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) override;
-		void drawVAO(const vaos::VAO &vao) override;
-		void generateVAO(vaos::VAO &vao) override;
-		void destroyVAO(vaos::VAO &vao) override;
+		void deleteShader(shaders::Shader& shader) override;
+		void bindFramebuffer(const textures::Framebuffer& framebuffer) const override;
+		void unbindFramebuffer(const textures::Framebuffer& framebuffer) const override;
+		void initFramebuffer(textures::Framebuffer& framebuffer) override;
+		void destroyFramebuffer(textures::Framebuffer& framebuffer) override;
+		void bindTexture(const textures::Texture& texture) override;
+		void unbindTexture(const textures::Texture& texture) override;
+		void preInitTexture(textures::Texture& texture) override;
+		void midInitTexture(const textures::Texture& texture,
+												const std::vector<images::ImageLoader::ImagePair>& images) override;
+		void postInitTexture(const textures::Texture& texture) override;
+		void destroyTexture(textures::Texture& texture) override;
+		void updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices) override;
+		void updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar) override;
+		void drawVAO(const vaos::VAO& vao) override;
+		void generateVAO(vaos::VAO& vao) override;
+		void destroyVAO(vaos::VAO& vao) override;
 	};
-	const bool VKcheck(const VulkanRenderer &renderer, const char* fn);
-}
+	bool VKcheck(const char* fn, VkResult result);
+} // namespace zg
 #endif

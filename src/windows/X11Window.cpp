@@ -95,8 +95,7 @@ void X11Window::init(Window& renderWindow)
 	attr.border_pixel = 0;
 	attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | ButtonPressMask |
 		ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | FocusChangeMask;
-#endif
-#ifdef USE_EGL
+#elif defined(USE_EGL) || defined(USE_VULKAN)
 	rootWindow = DefaultRootWindow(display);
 	XSetWindowAttributes attr;
     attr.colormap = XCreateColormap(display, rootWindow, DefaultVisual(display, 0), AllocNone);
@@ -117,8 +116,7 @@ void X11Window::init(Window& renderWindow)
 		XCreateWindow(display, RootWindow(display, vi->screen), windowX, windowY, windowWidth, windowHeight, 0, vi->depth,
 									InputOutput, vi->visual, CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
 	XFree(vi);
-#endif
-#ifdef USE_EGL
+#elif defined(USE_EGL) || defined(USE_VULKAN)
     window = XCreateWindow(display, rootWindow, windowX, windowY, windowWidth, windowHeight, 0, CopyFromParent,
                            InputOutput, DefaultVisual(display, screen), CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
 #endif

@@ -183,7 +183,9 @@ if(LINUX)
         ${ANGLE_LIB_DIR}/libchrome_zlib.so
         ${ANGLE_LIB_DIR}/libdawn_native.so
         ${ANGLE_LIB_DIR}/libdawn_platform.so
-        ${ANGLE_LIB_DIR}/libdawn_proc.so)
+        ${ANGLE_LIB_DIR}/libdawn_proc.so
+        ${ANGLE_LIB_DIR}/libvk_swiftshader.so
+        vulkan)
 elseif(MACOS)
     target_link_libraries(zeungine
         ${ANGLE_LIB_DIR}/libEGL.dylib
