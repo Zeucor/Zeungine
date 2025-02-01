@@ -7,7 +7,9 @@ namespace zg
 	{
 		void *nsWindow = 0;
 		void *nsView;
+#ifdef USE_GL
 		void *glContext = 0;
+#endif
 		void init(Window& window) override;
 		void renderInit();
 		void postInit() override;
