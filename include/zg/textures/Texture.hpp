@@ -30,10 +30,6 @@ namespace zg::textures
 		};
 		Window& window;
 		glm::ivec4 size;
-#if defined(USE_GL) || defined(USE_EGL)
-		GLuint id = 0;
-		GLenum target = 0;
-#endif
 		Format format;
 		Type type;
 		FilterType filterType;
@@ -49,4 +45,11 @@ namespace zg::textures
 		void bind() const;
 		void unbind() const;
 	};
+#if defined(USE_GL) || defined(USE_EGL)
+	struct GLTextureImpl
+	{
+		GLuint id = 0;
+		GLenum target = 0;
+	};
+#endif
 } // namespace zg::textures
