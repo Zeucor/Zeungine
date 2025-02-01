@@ -149,7 +149,7 @@ void VulkanRenderer::setupDebugMessenger()
 void VulkanRenderer::createSurface()
 {
 #ifdef LINUX
-	auto &x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
+	auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
 	VkXlibSurfaceCreateInfoKHR surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
 	surfaceCreateInfo.dpy = x11Window.display;
@@ -160,7 +160,7 @@ void VulkanRenderer::createSurface()
 	}
 #elif defined(ANDROID)
 #elif defined(WINDOWS)
-	auto &win32Window = *dynamic_cast<WIN32Window*>(platformWindowPointer);
+	auto& win32Window = *dynamic_cast<WIN32Window*>(platformWindowPointer);
 	VkWin32SurfaceCreateFlagsKHR surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	surfaceCreateInfo.dpy = win32Window.hInstance;
