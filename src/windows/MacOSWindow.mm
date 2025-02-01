@@ -75,8 +75,15 @@ void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 void EGLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
 	this->platformWindowPointer = platformWindowPointer;
-	auto window = (NSWindow *)(*dynamic_cast<MacOSWindow*>(platformWindowPointer)).nsWindow;
-    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, window, nullptr);
+	auto macWindow = dynamic_cast<MacOSWindow*>(platformWindowPointer);
+	NSView *contentView = [macWindow->nsWindow contentView];
+	if (![contentView wantsLayer])
+	{
+		[contentView setWantsLayer:YES];
+	}
+	macWindow->nsView = contentView;
+	auto nativeWindow = (void *)contentView.layer;
+    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, nativeWindow, nullptr);
     if (eglSurface == EGL_NO_SURFACE)
     {
         throw std::runtime_error("EGL_NO_SURFACE");
