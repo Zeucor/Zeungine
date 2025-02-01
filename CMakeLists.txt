@@ -169,7 +169,15 @@ elseif(MACOS)
     target_link_libraries(zeungine ${OPENGL_LIBRARY} "-framework Cocoa" "-framework QuartzCore")
 endif()
 if(LINUX)
-    target_link_libraries(zeungine ${ANGLE_LIB_DIR}/libEGL.so ${ANGLE_LIB_DIR}/libGLESv2.so)
+    target_link_libraries(zeungine
+        ${ANGLE_LIB_DIR}/libEGL.so
+        ${ANGLE_LIB_DIR}/libGLESv2.so
+        ${ANGLE_LIB_DIR}/libthird_party_abseil-cpp_absl.so
+        ${ANGLE_LIB_DIR}/libc++.so
+        ${ANGLE_LIB_DIR}/libchrome_zlib.so
+        ${ANGLE_LIB_DIR}/libdawn_native.so
+        ${ANGLE_LIB_DIR}/libdawn_platform.so
+        ${ANGLE_LIB_DIR}/libdawn_proc.so)
 elseif(MACOS)
     target_link_libraries(zeungine
         ${ANGLE_LIB_DIR}/libEGL.dylib
