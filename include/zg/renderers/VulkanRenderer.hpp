@@ -138,6 +138,7 @@ namespace zg
 		void drawVAO(const vaos::VAO& vao) override;
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
+		void ensureEntity(Entity& entity) override;
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

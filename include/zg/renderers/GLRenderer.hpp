@@ -54,6 +54,7 @@ namespace zg
 		void drawVAO(const vaos::VAO& vao) override;
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
+		void ensureEntity(Entity& entity) override;
 	};
 	const bool GLcheck(const GLRenderer& renderer, const char* fn, const bool egl = false);
 } // namespace zg

@@ -53,6 +53,7 @@ namespace zg
 		void drawVAO(const vaos::VAO& vao) override;
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
+		void ensureEntity(Entity& entity) override;
 	};
 	bool VKcheck(const char* fn, VkResult result);
 } // namespace zg

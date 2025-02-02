@@ -20,7 +20,9 @@ Entity::Entity(Window &_window,
 	scale(_scale),
 	shader(*shaders::ShaderManager::getShaderByConstants(_window, constants).second),
 	name(_name)
-{};
+{
+	window.iRenderer->ensureEntity(*this);
+};
 void Entity::update()
 {
 	for (auto &childEntity : children)

@@ -15,6 +15,7 @@
 #ifdef MACOS
 #include <zg/windows/MacOSWindow.hpp>
 #endif
+#include <zg/crypto/vector.hpp>
 using namespace zg;
 static std::unordered_map<shaders::ShaderType, shaderc_shader_kind> stageEShaderc = {
 	{shaders::ShaderType::Vertex, shaderc_vertex_shader},
@@ -746,7 +747,7 @@ void VulkanRenderer::setBlock(shaders::Shader& shader, const std::string_view na
 void VulkanRenderer::deleteBuffer(uint32_t id) {}
 void VulkanRenderer::bindShader(const shaders::Shader& shader)
 {
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.graphicsPipeline);
 	// if (currentFramebuffer.pointer)
 	// {
@@ -783,25 +784,23 @@ void VulkanRenderer::bindShader(const shaders::Shader& shader)
 	// }
 }
 void VulkanRenderer::unbindShader(const shaders::Shader& shader) {}
-void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex)
+void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
+														 uint32_t bindingIndex)
 {
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
 	auto ssboIter = shaderImpl.ssboBindings.find(stringName);
-	std::tuple<uint32_t, VkBuffer, VkDeviceMemory, uint32_t, uint32_t> *ssboBindingPointer = 0;
+	std::tuple<uint32_t, VkBuffer, VkDeviceMemory, uint32_t, uint32_t>* ssboBindingPointer = 0;
 	if (ssboIter == shaderImpl.ssboBindings.end())
 	{
 		ssboBindingPointer = &shaderImpl.ssboBindings[stringName];
 		std::get<3>(*ssboBindingPointer) = bindingIndex;
 		shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
 		int32_t uboLayoutBindingIndex = -1;
-		VkDescriptorSetLayoutBinding layoutBinding = {
-		    (uint32_t)bindingIndex,
-		    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-		    1,
-		    (VkShaderStageFlags)stageStageFlag[shaderType],
-		    0};
-		shaderImpl.uboLayoutBindings[uboLayoutBindingIndex = (shaderImpl.uboLayoutBindings.size() - 1)] = {{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding};
+		VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
+																									(VkShaderStageFlags)stageStageFlag[shaderType], 0};
+		shaderImpl.uboLayoutBindings[uboLayoutBindingIndex = (shaderImpl.uboLayoutBindings.size() - 1)] = {
+			{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding};
 		std::get<4>(*ssboBindingPointer) = uboLayoutBindingIndex;
 	}
 	else
@@ -812,18 +811,16 @@ void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shader
 	}
 	std::get<0>(*ssboBindingPointer) |= (uint32_t)shaderType;
 }
-void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
+void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
+														uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
 {
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
 	shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
-	VkDescriptorSetLayoutBinding layoutBinding = {
-	    (uint32_t)bindingIndex,
-	    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-	    (uint32_t)1,
-	    (VkShaderStageFlags)stageStageFlag[shaderType],
-	    0};
-	shaderImpl.uboLayoutBindings[shaderImpl.uboLayoutBindings.size() - 1] = {{ELayoutBindingType::UniformBuffer, bufferSize, stringName, bindingIndex, isArray}, layoutBinding};
+	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, (uint32_t)1,
+																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
+	shaderImpl.uboLayoutBindings[shaderImpl.uboLayoutBindings.size() - 1] = {
+		{ELayoutBindingType::UniformBuffer, bufferSize, stringName, bindingIndex, isArray}, layoutBinding};
 	shaderImpl.uboStringBindings[stringName] = bindingIndex;
 	for (uint32_t index = 0; index < 1; index++)
 	{
@@ -941,7 +938,8 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	multisampling.sampleShadingEnable = VK_FALSE;
 	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	colorBlendAttachment.colorWriteMask =
+		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	colorBlendAttachment.blendEnable = VK_TRUE;
 	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -960,7 +958,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	colorBlending.blendConstants[2] = 0.0f;
 	colorBlending.blendConstants[3] = 0.0f;
 	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
-	for (auto &uboLayoutBinding : shaderImpl.uboLayoutBindings)
+	for (auto& uboLayoutBinding : shaderImpl.uboLayoutBindings)
 	{
 		layoutBindings.push_back(uboLayoutBinding.second);
 	}
@@ -968,7 +966,8 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	descriptorSetLayoutInfo.bindingCount = layoutBindings.size();
 	descriptorSetLayoutInfo.pBindings = layoutBindings.data();
-	if (!VKcheck("vkCreateDescriptorSetLayout", vkCreateDescriptorSetLayout(device, &descriptorSetLayoutInfo, nullptr, &shaderImpl.descriptorSetLayout)))
+	if (!VKcheck("vkCreateDescriptorSetLayout",
+							 vkCreateDescriptorSetLayout(device, &descriptorSetLayoutInfo, nullptr, &shaderImpl.descriptorSetLayout)))
 	{
 		throw std::runtime_error("Failed to create descriptor set layout");
 	}
@@ -976,7 +975,8 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 1;
 	pipelineLayoutInfo.pSetLayouts = &shaderImpl.descriptorSetLayout;
-	if (!VKcheck("vkCreatePipelineLayout", vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &shaderImpl.pipelineLayout)))
+	if (!VKcheck("vkCreatePipelineLayout",
+							 vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &shaderImpl.pipelineLayout)))
 	{
 		throw std::runtime_error("failed to create pipeline layout!");
 	}
@@ -1004,7 +1004,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	// 	else
 	// 	{
 	// 		auto &framebuffer = currentFramebuffer.pointer ? *currentFramebuffer.pointer :
-	// *shader.scenePointer->framebuffers._data[0].pointer; 		auto &vulkanFramebuffer = *(VulkanFramebuffer
+	// *shader.scenePointer->framebuffers[0].pointer; 		auto &vulkanFramebuffer = *(VulkanFramebuffer
 	// *)framebuffer.vendorData; 		pipelineInfo.renderPass = vulkanFramebuffer.renderPass; 		auto hasDepth =
 	// framebuffer.attachments.reduce(Function<Boolean, FramebufferAttachment &, Boolean>([](FramebufferAttachment
 	// &framebufferAttachment, Boolean hasDepth)
@@ -1039,7 +1039,9 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	// 	}
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-	if (!VKcheck("vkCreateGraphicsPipelines", vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &shaderImpl.graphicsPipeline)))
+	if (!VKcheck(
+				"vkCreateGraphicsPipelines",
+				vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &shaderImpl.graphicsPipeline)))
 	{
 		throw std::runtime_error("failed to create graphics pipeline!");
 	}
@@ -1124,6 +1126,119 @@ void VulkanRenderer::destroyVAO(vaos::VAO& vao)
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	delete &vaoImpl;
 }
+void VulkanRenderer::ensureEntity(Entity& entity)
+{
+	auto& vaoImpl = *(VulkanVAOImpl*)(dynamic_cast<vaos::VAO&>(entity).rendererData);
+	auto& shaderImpl = *(VulkanShaderImpl*)entity.shader.rendererData;
+	auto constantsHash = crypto::hashVector(entity.shader.constants);
+	
+	uint32_t poolSizeCount = (shaderImpl.uboLayoutBindings.size() != 0) +
+				   (shaderImpl.ssboBindings.size() != 0);
+	uint32_t poolSizeIndex = 0;
+	VkDescriptorPoolSize initialPoolSize{};
+	std::vector<VkDescriptorPoolSize> poolSizes(poolSizeCount, initialPoolSize);
+	if (shaderImpl.uboLayoutBindings.size())
+	{
+		poolSizes[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[poolSizeIndex].descriptorCount = shaderImpl.uboLayoutBindings.size();
+		poolSizeIndex++;
+	}
+	if (shaderImpl.ssboBindings.size())
+	{
+		poolSizes[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		poolSizes[poolSizeIndex].descriptorCount = shaderImpl.ssboBindings.size();
+	}
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = poolSizes.size();
+	poolInfo.pPoolSizes = poolSizes.data();
+	poolInfo.maxSets = shaderImpl.uboLayoutBindings.size() + shaderImpl.ssboBindings.size();
+
+	auto &shaderDescriptorPool = vaoImpl.shaderDescriptorPool[constantsHash];
+
+	if (!VKcheck("vkCreateDescriptorPool", vkCreateDescriptorPool(device, &poolInfo, nullptr, &shaderDescriptorPool)))
+	{
+		throw std::runtime_error("Failed to create descriptor pool!");
+	}
+
+	auto &shaderDescriptorSet = vaoImpl.shaderDescriptorSet[constantsHash];
+
+	std::vector<VkDescriptorSetLayout> layouts(1, shaderImpl.descriptorSetLayout);
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = shaderDescriptorPool;
+	allocInfo.descriptorSetCount = 1;
+	allocInfo.pSetLayouts = &layouts[0];
+
+	if (!VKcheck("vkAllocateDescriptorSets", vkAllocateDescriptorSets(device, &allocInfo, &shaderDescriptorSet)))
+	{
+		throw std::runtime_error("failed to allocate descriptor sets!");
+	}
+
+	auto &shaderBufferInfos = vaoImpl.shaderBufferInfos[constantsHash];
+	for (auto uboLayoutBindingPair : shaderImpl.uboLayoutBindings)
+	{
+		if (std::get<0>(uboLayoutBindingPair.first) != ELayoutBindingType::UniformBuffer)
+		{
+			continue;
+		}
+		auto &descriptorSetLayoutBinding = uboLayoutBindingPair.second;
+		auto &shaderUniformBuffers = vaoImpl.shaderUniformBuffers[constantsHash];
+		auto &shaderUniformBuffersMemory = vaoImpl.shaderUniformBuffersMemory[constantsHash];
+		auto &shaderUniformBuffersMapped = vaoImpl.shaderUniformBuffersMapped[constantsHash];
+		shaderUniformBuffers.resize(shaderUniformBuffers.size() + 1);
+		shaderUniformBuffersMemory.resize(shaderUniformBuffersMemory.size() + 1);
+		const auto &bufferSize = std::get<1>(uboLayoutBindingPair.first);
+		int32_t uniformBuffersIndex = -1,
+			  uniformBuffersMemoryIndex = -1,
+			  uniformBuffersMappedIndex = -1;
+		createBuffer(bufferSize * descriptorSetLayoutBinding.descriptorCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, shaderUniformBuffers[uniformBuffersIndex = (shaderUniformBuffers.size() - 1)], shaderUniformBuffersMemory[uniformBuffersMemoryIndex = (shaderUniformBuffersMemory.size() - 1)]);
+		auto &isArray = std::get<4>(uboLayoutBindingPair.first);
+		if (!isArray)
+		{
+			shaderUniformBuffersMapped.resize(shaderUniformBuffersMapped.size() + 1);
+			vkMapMemory(device, shaderUniformBuffersMemory[uniformBuffersMemoryIndex], 0, bufferSize, 0, &shaderUniformBuffersMapped[uniformBuffersMappedIndex = (shaderUniformBuffersMapped.size() - 1)]);
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.buffer = shaderUniformBuffers[uniformBuffersIndex];
+			bufferInfo.offset = 0;
+			bufferInfo.range = bufferSize;
+			shaderBufferInfos.push_back({{std::get<0>(uboLayoutBindingPair.first), std::get<3>(uboLayoutBindingPair.first)}, bufferInfo});
+			vaoImpl.shaderUniformLocationTable[constantsHash][std::get<2>(uboLayoutBindingPair.first)] = uniformBuffersMappedIndex;
+		}
+		else
+		{
+			for (uint32_t index = 0; index < descriptorSetLayoutBinding.descriptorCount; index++)
+			{
+				shaderUniformBuffersMapped.resize(shaderUniformBuffersMapped.size() + 1);
+				vkMapMemory(device, shaderUniformBuffersMemory[uniformBuffersMemoryIndex], index * bufferSize, bufferSize, 0, &shaderUniformBuffersMapped[uniformBuffersMappedIndex = (shaderUniformBuffersMapped.size() - 1)]);
+				VkDescriptorBufferInfo bufferInfo{};
+				bufferInfo.buffer = shaderUniformBuffers[uniformBuffersIndex];
+				bufferInfo.offset = index * bufferSize;
+				bufferInfo.range = bufferSize;
+				shaderBufferInfos.push_back({{std::get<0>(uboLayoutBindingPair.first), std::get<3>(uboLayoutBindingPair.first) + index}, bufferInfo});
+				vaoImpl.shaderUniformLocationTable[constantsHash][std::get<2>(uboLayoutBindingPair.first) + "[" + std::to_string(index) + "]"] = uniformBuffersMappedIndex;
+			}
+		}
+	}
+
+	for (auto &bufferInfoPair : shaderBufferInfos)
+	{
+		if (std::get<0>(bufferInfoPair.first) != ELayoutBindingType::UniformBuffer)
+		{
+			continue;
+		}
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = shaderDescriptorSet;
+		descriptorWrite.dstBinding = std::get<1>(bufferInfoPair.first);
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfoPair.second;
+		vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+	}
+};
 VkCommandBuffer VulkanRenderer::beginSingleTimeCommands()
 {
 	VkCommandBuffer commandBuffer;

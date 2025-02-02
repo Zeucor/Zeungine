@@ -36,6 +36,7 @@ namespace zg
 	{
 		struct VAO;
 	}
+	struct Entity;
 	struct IRenderer
 	{
 		IPlatformWindow* platformWindowPointer = nullptr;
@@ -83,6 +84,7 @@ namespace zg
 		virtual void drawVAO(const vaos::VAO& vao) = 0;
 		virtual void generateVAO(vaos::VAO& vao) = 0;
 		virtual void destroyVAO(vaos::VAO& vao) = 0;
+		virtual void ensureEntity(Entity& entity) = 0;
 	};
 	std::shared_ptr<IRenderer> createRenderer();
 } // namespace zg
