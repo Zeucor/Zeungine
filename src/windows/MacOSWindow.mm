@@ -6,9 +6,10 @@
 #ifdef USE_GL
 #import <OpenGL/gl3.h>
 #include <zg/renderers/GLRenderer.hpp>
-#endif
-#ifdef USE_EGL
+#elif defined(USE_EGL)
 #include <zg/renderers/EGLRenderer.hpp>
+#elif defined(USE_VULKAN)
+#include <zg/renderers/VulkanRenderer.hpp>
 #endif
 #import <QuartzCore/CAMetalLayer.h>
 using namespace zg;
@@ -70,8 +71,7 @@ void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	nsView = contentView;
 	glContext = context;
 }
-#endif
-#ifdef USE_EGL
+#elif defined(USE_EGL)
 void EGLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
 	this->platformWindowPointer = platformWindowPointer;
@@ -98,6 +98,19 @@ void EGLRenderer::createContext(IPlatformWindow* platformWindowPointer)
     {
         throw std::runtime_error("eglMakeCurrent failed!");
     }
+}
+#elif defined(USE_VULKAN)
+void VulkanRenderer::createSurface()
+{
+	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
+	// VkWin32SurfaceCreateFlagsKHR surfaceCreateInfo{};
+	// surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	// surfaceCreateInfo.dpy = win32Window.hInstance;
+	// surfaceCreateInfo.window = win32Window.hwnd;
+	// if (!VKcheck("vkCreateWin32SurfaceKHR", vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+	// {
+	// 	throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
+	// }
 }
 #endif
 void MacOSWindow::postInit()
