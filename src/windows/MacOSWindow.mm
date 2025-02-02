@@ -54,6 +54,7 @@ void MacOSWindow::init(Window &renderWindow)
 	nsImage = [[NSImage alloc] initWithSize:NSMakeSize(renderWindow.windowWidth, renderWindow.windowHeight)];
 	NSRect rect = NSMakeRect(0, 0, renderWindow.windowWidth, renderWindow.windowHeight);
 	nsImageView = [[NSImageView alloc] initWithFrame:rect];
+	[(NSView*)nsView addSubview:(NSImageView *)nsImageView];
 }
 #ifdef USE_GL
 void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
@@ -228,6 +229,12 @@ void MacOSWindow::swapBuffers()
 	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 	vulkanRenderer.endSingleTimeCommands(commandBuffer);
 	commandBuffer = vulkanRenderer.beginSingleTimeCommands();
+	VkMappedMemoryRange range{};
+	range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+	range.memory = vulkanRenderer.stagingBufferMemory;
+	range.offset = 0;
+	range.size = VK_WHOLE_SIZE;
+	vkInvalidateMappedMemoryRanges(vulkanRenderer.device, 1, &range);
 	VkBufferImageCopy region{};
 	region.bufferOffset = 0;
 	region.bufferRowLength = 0;
@@ -241,6 +248,14 @@ void MacOSWindow::swapBuffers()
 	region.imageExtent.depth = 1;
 	vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vulkanRenderer.stagingBuffer, 1, &region);
 	vulkanRenderer.endSingleTimeCommands(commandBuffer);
+	commandBuffer = vulkanRenderer.beginSingleTimeCommands();
+    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+    vulkanRenderer.endSingleTimeCommands(commandBuffer);
+	vkQueueWaitIdle(vulkanRenderer.graphicsQueue);
 	@autoreleasepool
 	{
 		unsigned char* bitmapData = (unsigned char*)bitmap;
@@ -267,9 +282,19 @@ void MacOSWindow::swapBuffers()
 			return;
 		}
 		NSImage *image = (NSImage *)nsImage;
+		NSArray *reps = [image representations];
+		if ([reps count] > 0)
+		{
+			for (NSImageRep *rep in reps)
+			{
+				[image removeRepresentation:rep];
+			}
+		}
 		[image addRepresentation:bitmapRep];
-		[(NSImageView *)nsImageView setImage:(NSImage *)nsImage];
-		[(NSView*)nsView addSubview:(NSImageView *)nsImageView];
+		[(NSImageView *)nsImageView setImage:nil];
+		[(NSImageView *)nsImageView setImage:image]; 
+		[(NSView *)nsView displayIfNeeded];
+		[(NSView*)nsView setNeedsDisplay:YES];
 	}
 #endif
 }
