@@ -33,7 +33,7 @@ namespace zg
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
 	};
-	constexpr int MAX_FRAMES_IN_FLIGHT = 3;
+	constexpr int MAX_FRAMES_IN_FLIGHT = 1;
 	struct VulkanRenderer : IRenderer
 	{
 		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
@@ -60,6 +60,8 @@ namespace zg
 		std::vector<VkFence> inFlightFences;
 		uint32_t currentFrame = 0;
 		uint32_t imageIndex = -1;
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
 		VulkanRenderer();
 		~VulkanRenderer() override;
 		void createContext(IPlatformWindow* platformWindowPointer) override;
@@ -89,6 +91,7 @@ namespace zg
 		void createCommandPool();
 		void createCommandBuffers();
 		void createSyncObjects();
+		void createImageStagingBuffer();
 		void init() override;
 		void destroy() override;
 		void preBeginRenderPass() override;

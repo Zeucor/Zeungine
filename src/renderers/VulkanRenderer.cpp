@@ -35,6 +35,7 @@ void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	createCommandPool();
 	createCommandBuffers();
 	createSyncObjects();
+	createImageStagingBuffer();
 }
 void VulkanRenderer::createInstance()
 {
@@ -375,7 +376,7 @@ void VulkanRenderer::createSwapChain()
 	createInfo.imageColorSpace = surfaceFormat.colorSpace;
 	createInfo.imageExtent = extent;
 	createInfo.imageArrayLayers = 1;
-	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 	uint32_t queueFamilyIndices[] = {(uint32_t)indices.graphicsFamily, (uint32_t)indices.presentFamily};
 	if (indices.graphicsFamily != indices.presentFamily)
@@ -441,7 +442,7 @@ VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkS
 {
 	for (auto& availableFormat : availableFormats)
 	{
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM)
+		if (availableFormat.format == VK_FORMAT_R8G8B8A8_UNORM)
 		{
 			return availableFormat;
 		}
@@ -615,8 +616,33 @@ void VulkanRenderer::createSyncObjects()
 	}
 	return;
 }
+void VulkanRenderer::createImageStagingBuffer()
+{
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
+	VkBufferCreateInfo bufferCreateInfo{};
+	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferCreateInfo.size = renderWindow.windowWidth * renderWindow.windowHeight * 4; // RGBA8
+	bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	vkCreateBuffer(device, &bufferCreateInfo, nullptr, &stagingBuffer);
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements(device, stagingBuffer, &memRequirements);
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	if (vkAllocateMemory(device, &allocInfo, nullptr, &stagingBufferMemory) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to allocate buffer memory!");
+	}
+	vkBindBufferMemory(device, stagingBuffer, stagingBufferMemory, 0);
+}
 void VulkanRenderer::init() {}
-void VulkanRenderer::destroy() {}
+void VulkanRenderer::destroy()
+{
+	vkFreeMemory(device, stagingBufferMemory, nullptr);
+	vkDestroyBuffer(device, stagingBuffer, nullptr);
+}
 void VulkanRenderer::preBeginRenderPass()
 {
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;

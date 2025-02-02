@@ -9,6 +9,9 @@ namespace zg
 		void *nsView;
 #ifdef USE_GL
 		void *glContext = 0;
+#elif defined(USE_VULKAN)
+		void* bitmap = 0;
+		void* nsImage = 0;
 #endif
 		void init(Window& window) override;
 		void renderInit();
