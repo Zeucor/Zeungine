@@ -200,6 +200,7 @@ elseif(MACOS)
         ${ZG_LIB_DIR}/libdawn_platform.dylib
         ${ZG_LIB_DIR}/libdawn_proc.dylib
         ${ZG_LIB_DIR}/libvk_swiftshader.dylib
+        ${ZG_LIB_DIR}/libshaderc_shared.dylib
         ${Vulkan_LIBRARIES})
 endif()
 
