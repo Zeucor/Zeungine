@@ -10,7 +10,7 @@ VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {{"Indice", {3, sizeof(u
 																												 {"Color", {4, sizeof(float), ZG_FLOAT4}},
 																												 {"Position", {3, sizeof(float), ZG_FLOAT3}},
 																												 {"Normal", {3, sizeof(float), ZG_FLOAT3}},
-																												 {"UV2", {2, sizeof(float), ZG_FLOAT3}},
+																												 {"UV2", {2, sizeof(float), ZG_FLOAT2}},
 																												 {"UV3", {3, sizeof(float), ZG_FLOAT3}}};
 VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Indice", false}, {"Color", true},			{"Position", true},					{"Normal", true}, {"UV2", true},
