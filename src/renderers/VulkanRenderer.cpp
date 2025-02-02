@@ -630,7 +630,8 @@ void VulkanRenderer::createImageStagingBuffer()
 	VkMemoryAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	allocInfo.memoryTypeIndex = findMemoryType(
+		memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	if (vkAllocateMemory(device, &allocInfo, nullptr, &stagingBufferMemory) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate buffer memory!");
@@ -778,13 +779,51 @@ void VulkanRenderer::destroyTexture(textures::Texture& texture)
 	// do vulkan texture destroy
 	delete textureImpl;
 }
-void VulkanRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices) {}
+void VulkanRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices)
+{
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	memcpy(vaoImpl.indiceData, indices.data(), vaoImpl.indiceBufferSize);
+}
 void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto& constantSize = vaos::VAOFactory::constantSizes[constant];
+	auto offset = vaos::VAOFactory::getOffset(vao.constants, constant);
+	auto elementStride = std::get<0>(constantSize) * std::get<1>(constantSize);
+	for (size_t index = offset, c = 1, elementIndex = 0; c <= vao.elementCount;
+			 index += vao.stride, c++, elementIndex += elementStride)
+	{
+		memcpy((char*)vaoImpl.vertexData + index, &elementsAsChar[elementIndex], elementStride);
+	}
 }
 void VulkanRenderer::drawVAO(const vaos::VAO& vao) {}
-void VulkanRenderer::generateVAO(vaos::VAO& vao) {}
-void VulkanRenderer::destroyVAO(vaos::VAO& vao) {}
+void VulkanRenderer::generateVAO(vaos::VAO& vao)
+{
+	vao.rendererData = new VulkanVAOImpl();
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto stride = vaos::VAOFactory::getStride(vao.constants);
+	VkDeviceSize vertexBufferSize = stride * vao.elementCount;
+	if (!vertexBufferSize)
+	{
+		return;
+	}
+	auto& constantSize = vaos::VAOFactory::constantSizes["Indice"];
+	VkDeviceSize indiceBufferSize = vao.indiceCount * std::get<1>(constantSize);
+	if (!indiceBufferSize)
+	{
+		return;
+	}
+	ensureBuffer(vaoImpl.vertexBuffer, vaoImpl.vertexBufferMemory, vaoImpl.vertexData, vaoImpl.vertexBufferSize,
+							 vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+	ensureBuffer(vaoImpl.indiceBuffer, vaoImpl.indiceBufferMemory, vaoImpl.indiceData, vaoImpl.indiceBufferSize,
+							 indiceBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+	return;
+}
+void VulkanRenderer::destroyVAO(vaos::VAO& vao)
+{
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	delete &vaoImpl;
+}
 VkCommandBuffer VulkanRenderer::beginSingleTimeCommands()
 {
 	VkCommandBuffer commandBuffer;
@@ -807,8 +846,6 @@ VkCommandBuffer VulkanRenderer::beginSingleTimeCommands()
 	}
 	return commandBuffer;
 }
-
-// Function to end the single-time command and submit it to the GPU
 void VulkanRenderer::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 {
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
@@ -838,7 +875,67 @@ uint32_t VulkanRenderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFla
 		}
 	}
 	throw std::runtime_error("VulkanRenderer-findMemoryType: failed to find suitable memory type!");
-};
+}
+void VulkanRenderer::ensureBuffer(VkBuffer& buffer, VkDeviceMemory& bufferMemory, void*& bufferData,
+																	uint32_t& bufferSize, uint32_t newBufferSize, VkBufferUsageFlagBits extraUsageFlags)
+{
+	if (buffer == VK_NULL_HANDLE || newBufferSize != bufferSize)
+	{
+		if (buffer)
+		{
+			// size has changed create new buffer
+			VkBuffer newBuffer;
+			VkDeviceMemory newBufferMemory;
+			void* newBufferData;
+			createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | extraUsageFlags,
+									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, newBuffer,
+									 newBufferMemory);
+			vkMapMemory(device, newBufferMemory, 0, newBufferSize, 0, (void**)&newBufferData);
+			memcpy(newBufferData, bufferData, newBufferSize < bufferSize ? newBufferSize : bufferSize);
+			vkDestroyBuffer(device, buffer, nullptr);
+			vkFreeMemory(device, bufferMemory, nullptr);
+			buffer = newBuffer;
+			bufferMemory = newBufferMemory;
+			bufferData = newBufferData;
+		}
+		else
+		{
+			createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | extraUsageFlags,
+									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
+			vkMapMemory(device, bufferMemory, 0, newBufferSize, 0, (void**)&bufferData);
+		}
+		bufferSize = newBufferSize;
+	}
+}
+void VulkanRenderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+																	VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+{
+	VkBufferCreateInfo bufferInfo{};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = size;
+	bufferInfo.usage = usage;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if (!VKcheck("vkCreateBuffer", vkCreateBuffer(device, &bufferInfo, nullptr, &buffer)))
+	{
+		throw std::runtime_error("failed to create buffer!");
+	}
+
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+
+	VkMemoryAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+	if (!VKcheck("vkAllocateMemory", vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory)))
+	{
+		throw std::runtime_error("failed to allocate buffer memory!");
+	}
+
+	vkBindBufferMemory(device, buffer, bufferMemory, 0);
+}
 bool zg::VKcheck(const char* fn, VkResult result)
 {
 	switch (result)

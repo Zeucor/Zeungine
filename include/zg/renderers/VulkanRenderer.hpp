@@ -1,6 +1,7 @@
 #pragma once
 #ifdef USE_VULKAN
 #include "../common.hpp"
+#include "../enums/ELayoutBindingType.hpp"
 #include "../interfaces/IPlatformWindow.hpp"
 #include "../interfaces/IRenderer.hpp"
 #ifdef ANDROID
@@ -138,6 +139,10 @@ namespace zg
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+		void ensureBuffer(VkBuffer& buffer, VkDeviceMemory& bufferMemory, void*& bufferData, uint32_t& bufferSize,
+											uint32_t newBufferSize, VkBufferUsageFlagBits extraUsageFlags);
+		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
+											VkDeviceMemory& bufferMemory);
 	};
 	bool VKcheck(const char* fn, VkResult result);
 	struct VulkanTextureImpl
@@ -155,6 +160,26 @@ namespace zg
 		uint32_t attachmentsSize;
 		uint32_t width;
 		uint32_t height;
+	};
+	struct VulkanVAOImpl
+	{
+		VkBuffer vertexBuffer = VK_NULL_HANDLE;
+		VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
+		void* vertexData = 0;
+		uint32_t vertexBufferSize;
+		VkBuffer indiceBuffer = VK_NULL_HANDLE;
+		VkDeviceMemory indiceBufferMemory = VK_NULL_HANDLE;
+		void* indiceData = 0;
+		uint32_t indiceBufferSize;
+		std::unordered_map<uint32_t, VkDescriptorPool> shaderDescriptorPool;
+		std::unordered_map<uint32_t, VkDescriptorSet> shaderDescriptorSet;
+		std::unordered_map<uint32_t, std::vector<VkBuffer>> shaderUniformBuffers;
+		std::unordered_map<uint32_t, std::vector<VkDeviceMemory>> shaderUniformBuffersMemory;
+		std::unordered_map<uint32_t, std::vector<void*>> shaderUniformBuffersMapped;
+		std::unordered_map<uint32_t,
+											 std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t>, VkDescriptorBufferInfo>>>
+			shaderBufferInfos;
+		std::unordered_map<uint32_t, std::unordered_map<std::string, int32_t>> shaderUniformLocationTable;
 	};
 } // namespace zg
 #endif
