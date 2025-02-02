@@ -26,6 +26,15 @@ void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	setupDebugMessenger();
 #endif
 	createSurface();
+	pickPhysicalDevice();
+	createLogicalDevice();
+	createSwapChain();
+	createImageViews();
+	createRenderPass();
+	createFramebuffers();
+	createCommandPool();
+	createCommandBuffers();
+	createSyncObjects();
 }
 void VulkanRenderer::createInstance()
 {
@@ -141,7 +150,7 @@ void VulkanRenderer::setupDebugMessenger()
 	if (!VKcheck("CreateDebugUtilsMessengerEXT",
 							 CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger)))
 	{
-		throw std::runtime_error("VulkanDriver-setupDebugMessenger: failed to set up debug messenger!");
+		throw std::runtime_error("VulkanRenderer-setupDebugMessenger: failed to set up debug messenger!");
 	}
 };
 #endif
@@ -156,7 +165,7 @@ void VulkanRenderer::createSurface()
 	surfaceCreateInfo.window = x11Window.window;
 	if (!VKcheck("vkCreateXlibSurfaceKHR", vkCreateXlibSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
 	{
-		throw std::runtime_error("VulkanDriver-createSurface: failed to create Xlib surface");
+		throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
 	}
 #elif defined(ANDROID)
 #elif defined(WINDOWS)
@@ -167,14 +176,291 @@ void VulkanRenderer::createSurface()
 	surfaceCreateInfo.window = win32Window.hwnd;
 	if (!VKcheck("vkCreateWin32SurfaceKHR", vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
 	{
-		throw std::runtime_error("VulkanDriver-createSurface: failed to create Xlib surface");
+		throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
 	}
 #endif
 }
 #endif
-void VulkanRenderer::pickPhysicalDevice() {}
-void VulkanRenderer::createLogicalDevice() {}
-void VulkanRenderer::createSwapChain() {}
+void VulkanRenderer::pickPhysicalDevice()
+{
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+	if (deviceCount == 0)
+	{
+		throw std::runtime_error("VulkanRenderer-getPhysicalDevice: failed to find GPUs with Vulkan support!");
+	}
+	std::vector<VkPhysicalDevice> devices;
+	devices.resize(deviceCount);
+	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+	std::map<uint32_t, VkPhysicalDevice> physicalDeviceScores;
+	for (auto& device : devices)
+	{
+		physicalDeviceScores[rateDeviceSuitability(device)] = device;
+	}
+	auto end = physicalDeviceScores.rend();
+	auto begin = physicalDeviceScores.rbegin();
+	uint32_t selectedDeviceScore;
+	for (auto iter = begin; iter != end; ++iter)
+	{
+		auto device = iter->second;
+		if (isDeviceSuitable(device))
+		{
+			physicalDevice = device;
+			selectedDeviceScore = iter->first;
+			break;
+		}
+		continue;
+	}
+	if (physicalDevice == VK_NULL_HANDLE)
+	{
+		throw std::runtime_error("VulkanRenderer-getPhysicalDevice: failed to find a suitable GPU!");
+	}
+	VkPhysicalDeviceProperties physicalDeviceProperties;
+	vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+	std::cout << "Selected Physical Device: '" << physicalDeviceProperties.deviceName
+						<< "' with score of: " << selectedDeviceScore << std::endl;
+	return;
+}
+uint32_t VulkanRenderer::rateDeviceSuitability(VkPhysicalDevice device)
+{
+	uint32_t score = 0;
+	VkPhysicalDeviceProperties properties;
+	vkGetPhysicalDeviceProperties(device, &properties);
+	VkPhysicalDeviceFeatures features;
+	vkGetPhysicalDeviceFeatures(device, &features);
+	if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+	{
+		score += 1000;
+	}
+	else if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+	{
+		score += 500;
+	}
+	score += properties.limits.maxImageDimension2D;
+	if (!features.geometryShader)
+	{
+		return 0;
+	}
+	auto indices = findQueueFamilies(device);
+	if (indices.graphicsFamily != indices.presentFamily)
+	{
+		score += 1000;
+	}
+	return score;
+}
+bool VulkanRenderer::isDeviceSuitable(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices = findQueueFamilies(device);
+	return indices.isComplete();
+}
+QueueFamilyIndices VulkanRenderer::findQueueFamilies(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices;
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+	std::vector<VkQueueFamilyProperties> queueFamilies;
+	queueFamilies.resize(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+	int32_t index = 0;
+	for (auto& queueFamily : queueFamilies)
+	{
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			indices.graphicsFamily = index;
+		}
+		VkBool32 presentSupport = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface, &presentSupport);
+		if (presentSupport)
+		{
+			indices.presentFamily = index;
+		}
+		if (indices.isComplete())
+		{
+			break;
+		}
+		index++;
+		continue;
+	}
+	return indices;
+}
+void VulkanRenderer::createLogicalDevice()
+{
+	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	std::vector<int32_t> uniqueQueueFamilies({indices.graphicsFamily, indices.presentFamily});
+	float queuePriority = 1;
+	int32_t index = 0;
+	for (auto& queueFamily : uniqueQueueFamilies)
+	{
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.push_back(queueCreateInfo);
+		if (index == 0 && queueFamily == uniqueQueueFamilies[1])
+		{
+			break;
+		}
+		continue;
+	}
+	VkDeviceCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	createInfo.queueCreateInfoCount = queueCreateInfos.size();
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+	std::vector<const char*> extensions;
+	extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	extensions.push_back("VK_KHR_maintenance1");
+	// extensions[2] = VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME;
+	// extensions[3] = VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME;
+	// extensions[4] = VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME;
+	createInfo.enabledExtensionCount = extensions.size();
+	createInfo.ppEnabledExtensionNames = extensions.data();
+	createInfo.enabledLayerCount = 0;
+	VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
+	descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+	descriptorIndexingFeatures.pNext = nullptr;
+	VkPhysicalDeviceFeatures2 deviceFeatures{};
+	deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	deviceFeatures.features.depthClamp = VK_TRUE;
+	deviceFeatures.features.depthBiasClamp = VK_TRUE;
+	deviceFeatures.features.samplerAnisotropy = VK_TRUE;
+	deviceFeatures.pNext = &descriptorIndexingFeatures;
+	vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures);
+	assert(descriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing);
+	assert(descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind);
+	assert(descriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing);
+	assert(descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind);
+	assert(descriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing);
+	assert(descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind);
+	createInfo.pNext = &deviceFeatures;
+	auto createdDevice = VKcheck("vkCreateDevice", vkCreateDevice(physicalDevice, &createInfo, nullptr, &device));
+	if (!createdDevice)
+	{
+		throw std::runtime_error("VulkanRenderer-createLogicalDevice: failed to create device");
+	}
+	vkGetDeviceQueue(device, indices.graphicsFamily, 0, &graphicsQueue);
+	vkGetDeviceQueue(device, indices.presentFamily, 0, &presentQueue);
+	return;
+}
+void VulkanRenderer::createSwapChain()
+{
+	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
+	{
+		imageCount = swapChainSupport.capabilities.maxImageCount;
+	}
+	VkSwapchainCreateInfoKHR createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	createInfo.surface = surface;
+	createInfo.minImageCount = imageCount;
+	createInfo.imageFormat = surfaceFormat.format;
+	createInfo.imageColorSpace = surfaceFormat.colorSpace;
+	createInfo.imageExtent = extent;
+	createInfo.imageArrayLayers = 1;
+	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+	uint32_t queueFamilyIndices[] = {(uint32_t)indices.graphicsFamily, (uint32_t)indices.presentFamily};
+	if (indices.graphicsFamily != indices.presentFamily)
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		createInfo.queueFamilyIndexCount = 2;
+		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+	}
+	else
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	}
+	createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+	VkSurfaceCapabilitiesKHR surfaceCapabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities);
+	if (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
+	{
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	}
+	else if (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR)
+	{
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
+	}
+	else if (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR)
+	{
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
+	}
+	createInfo.presentMode = presentMode;
+	createInfo.clipped = VK_TRUE;
+	createInfo.oldSwapchain = VK_NULL_HANDLE;
+	if (!VKcheck("vkCreateSwapchainKHR", vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain)))
+	{
+		throw std::runtime_error("VulkanRenderer-createSwapChain: failed to create Swapchain");
+	}
+	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+	swapChainImages.resize(imageCount);
+	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+	swapChainImageFormat = surfaceFormat.format;
+	swapChainExtent = extent;
+	return;
+}
+SwapChainSupportDetails VulkanRenderer::querySwapChainSupport(VkPhysicalDevice device)
+{
+	SwapChainSupportDetails details;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+	uint32_t formatCount;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+	if (formatCount != 0)
+	{
+		details.formats.resize(formatCount);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+	}
+	uint32_t presentModeCount;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+	if (presentModeCount != 0)
+	{
+		details.presentModes.resize(presentModeCount);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+	}
+	return details;
+}
+VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
+{
+	for (auto &availableFormat : availableFormats)
+	{
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM)
+		{
+			return availableFormat;
+		}
+	}
+	return availableFormats[0];
+}
+VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes)
+{
+	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
+	for (auto &availablePresentMode : availablePresentModes)
+	{
+		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR && !renderWindow.vsync)
+		{
+			return availablePresentMode;
+		}
+		else if (availablePresentMode == VK_PRESENT_MODE_FIFO_KHR && renderWindow.vsync)
+		{
+			return availablePresentMode;
+		}
+	}
+	return VK_PRESENT_MODE_IMMEDIATE_KHR;
+}
+VkExtent2D VulkanRenderer::chooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities)
+{
+	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
+	VkExtent2D actualExtent = {
+	    static_cast<uint32_t>(renderWindow.windowWidth),
+	    static_cast<uint32_t>(renderWindow.windowHeight)};
+	actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+	actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+	return actualExtent;
+}
 void VulkanRenderer::createImageViews() {}
 void VulkanRenderer::createRenderPass() {}
 void VulkanRenderer::createFramebuffers() {}
@@ -187,6 +473,14 @@ std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRender
 void VulkanRenderer::clearColor(glm::vec4 color) {}
 void VulkanRenderer::clear() {}
 void VulkanRenderer::viewport(glm::ivec4 vp) const {}
+void VulkanRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeConstants& constants,
+																const std::vector<shaders::ShaderType>& shaderTypes)
+{
+	// shader.rendererData = new VulkanShaderImpl();
+	// auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	// shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
+	// shaders::ShaderFactory::compileProgram(shader, shaderImpl.shaders);
+}
 void VulkanRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer,
 																uint32_t size, enums::EUniformType uniformType)
 {
@@ -214,6 +508,7 @@ bool VulkanRenderer::checkCompileErrors(shaders::Shader& shader, const uint32_t&
 	return false;
 }
 void VulkanRenderer::deleteShader(shaders::Shader& shader) {}
+void VulkanRenderer::destroyShader(shaders::Shader& shader) {}
 void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const {}
 void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) const {}
 void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer) {}

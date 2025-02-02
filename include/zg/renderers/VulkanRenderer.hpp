@@ -21,6 +21,18 @@ namespace zg
 	{
 		struct Framebuffer;
 	}
+	struct QueueFamilyIndices
+	{
+		int32_t graphicsFamily = -1;
+		int32_t presentFamily = -1;
+		bool isComplete() { return graphicsFamily > -1 && presentFamily > -1; };
+	};
+	struct SwapChainSupportDetails
+	{
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
+	};
 	struct VulkanRenderer : IRenderer
 	{
 		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
@@ -61,8 +73,15 @@ namespace zg
 #endif
 		void createSurface();
 		void pickPhysicalDevice();
+		uint32_t rateDeviceSuitability(VkPhysicalDevice device);
+		bool isDeviceSuitable(VkPhysicalDevice device);
+		QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 		void createLogicalDevice();
 		void createSwapChain();
+		SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+		VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+		VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+		VkExtent2D chooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities);
 		void createImageViews();
 		void createRenderPass();
 		void createFramebuffers();
@@ -74,7 +93,8 @@ namespace zg
 		void clearColor(glm::vec4 color) override;
 		void clear() override;
 		void viewport(glm::ivec4 vp) const override;
-		void initShader(shaders::Shader& shader, const shaders::RuntimeConstants &constants, const std::vector<shaders::ShaderType> &shaderTypes) override;
+		void initShader(shaders::Shader& shader, const shaders::RuntimeConstants& constants,
+										const std::vector<shaders::ShaderType>& shaderTypes) override;
 		void setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
 										enums::EUniformType uniformType) override;
 		void setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
