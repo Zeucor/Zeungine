@@ -28,26 +28,19 @@ EGLRenderer::EGLRenderer()
 	}
 	if (!eglInitialize(eglDisplay, &major, &minor))
 	{
-    	throw std::runtime_error("eglInitialize error");
+		throw std::runtime_error("eglInitialize error");
 	}
-    EGLint numConfigs;
-    EGLint eglAttribs[] = {
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 24,
-        EGL_STENCIL_SIZE, 8,
-        EGL_NONE
-    };
-    if (!eglChooseConfig(eglDisplay, eglAttribs, &eglConfig, 1, &numConfigs))
-    {
-        throw std::runtime_error("eglChooseConfig error");
-    }
+	EGLint numConfigs;
+	EGLint eglAttribs[] = {EGL_RED_SIZE,	 8,	 EGL_GREEN_SIZE,	 8, EGL_BLUE_SIZE, 8, EGL_ALPHA_SIZE, 8,
+												 EGL_DEPTH_SIZE, 24, EGL_STENCIL_SIZE, 8, EGL_NONE};
+	if (!eglChooseConfig(eglDisplay, eglAttribs, &eglConfig, 1, &numConfigs))
+	{
+		throw std::runtime_error("eglChooseConfig error");
+	}
 }
-EGLRenderer::~EGLRenderer(){}
+EGLRenderer::~EGLRenderer() {}
 #if defined(WINDOWS) || defined(LINUX)
-void EGLRenderer::createContext(IPlatformWindow *platformWindowPointer)
+void EGLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
 	this->platformWindowPointer = platformWindowPointer;
 #ifdef WINDOWS
@@ -56,21 +49,21 @@ void EGLRenderer::createContext(IPlatformWindow *platformWindowPointer)
 #ifdef LINUX
 	auto window = (*dynamic_cast<X11Window*>(platformWindowPointer)).window;
 #endif
-    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, window, nullptr);
-    if (eglSurface == EGL_NO_SURFACE)
-    {
-        throw std::runtime_error("EGL_NO_SURFACE");
-    }
-    EGLint contextAttribs[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_CONTEXT_MINOR_VERSION, 1, EGL_NONE };
-    eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
-    if (eglContext == EGL_NO_CONTEXT)
-    {
-        throw std::runtime_error("EGL_NO_CONTEXT");
-    }
-    if (!eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
-    {
-        throw std::runtime_error("eglMakeCurrent failed!");
-    }
+	eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, window, nullptr);
+	if (eglSurface == EGL_NO_SURFACE)
+	{
+		throw std::runtime_error("EGL_NO_SURFACE");
+	}
+	EGLint contextAttribs[] = {EGL_CONTEXT_MAJOR_VERSION, 3, EGL_CONTEXT_MINOR_VERSION, 1, EGL_NONE};
+	eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
+	if (eglContext == EGL_NO_CONTEXT)
+	{
+		throw std::runtime_error("EGL_NO_CONTEXT");
+	}
+	if (!eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
+	{
+		throw std::runtime_error("eglMakeCurrent failed!");
+	}
 }
 #endif
 void EGLRenderer::init()
@@ -84,7 +77,7 @@ void EGLRenderer::init()
 	glFrontFace(GL_CCW);
 	GLcheck(*this, "glFrontFace");
 	glViewport(0, 0, platformWindowPointer->renderWindowPointer->windowWidth,
-											platformWindowPointer->renderWindowPointer->windowHeight);
+						 platformWindowPointer->renderWindowPointer->windowHeight);
 	GLcheck(*this, "glViewport");
 	glClearDepthf(1.0);
 	GLcheck(*this, "glClearDepth");
@@ -130,10 +123,19 @@ void EGLRenderer::viewport(glm::ivec4 vp) const
 	glViewport(vp.x, vp.y, vp.z, vp.w);
 	GLcheck(*this, "glViewport");
 }
-void EGLRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
-														enums::EUniformType uniformType)
+void EGLRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeConstants& constants,
+														 const std::vector<shaders::ShaderType>& shaderTypes)
 {
-	GLint location = glGetUniformLocation(shader.program, name.data());
+	shader.rendererData = new shaders::GLShaderImpl();
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
+	shaders::ShaderFactory::compileProgram(shader, shaderImpl.shaders);
+}
+void EGLRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
+														 enums::EUniformType uniformType)
+{
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	GLint location = glGetUniformLocation(shaderImpl.program, name.data());
 	GLcheck(*this, "glGetUniformLocation");
 	if (location == -1)
 	{
@@ -212,14 +214,15 @@ void EGLRenderer::setUniform(shaders::Shader& shader, const std::string_view nam
 }
 void EGLRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
 {
-	auto blockIndex = glGetUniformBlockIndex(shader.program, name.data());
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	auto blockIndex = glGetUniformBlockIndex(shaderImpl.program, name.data());
 	if (blockIndex == -1)
 	{
 		return;
 	}
-	auto& uboBinding = shader.uboBindings[name];
+	auto& uboBinding = shaderImpl.uboBindings[name];
 	auto& bindingIndex = std::get<0>(uboBinding);
-	glUniformBlockBinding(shader.program, blockIndex, bindingIndex);
+	glUniformBlockBinding(shaderImpl.program, blockIndex, bindingIndex);
 	GLcheck(*this, "glUniformBlockBinding");
 	auto& uboBufferIndex = std::get<1>(uboBinding);
 	glBindBuffer(GL_UNIFORM_BUFFER, uboBufferIndex);
@@ -236,7 +239,8 @@ void EGLRenderer::deleteBuffer(uint32_t id)
 }
 void EGLRenderer::bindShader(const shaders::Shader& shader)
 {
-	glUseProgram(shader.program);
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	glUseProgram(shaderImpl.program);
 	GLcheck(*this, "glUseProgram");
 }
 void EGLRenderer::unbindShader(const shaders::Shader& shader)
@@ -246,26 +250,29 @@ void EGLRenderer::unbindShader(const shaders::Shader& shader)
 }
 void EGLRenderer::addSSBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
 {
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	GLuint ssboBufferID;
 	glGenBuffers(1, &ssboBufferID);
 	GLcheck(*this, "glGenBuffers");
-	auto& ssboBinding = shader.ssboBindings[name];
+	auto& ssboBinding = shaderImpl.ssboBindings[name];
 	std::get<0>(ssboBinding) = bindingIndex;
 	std::get<1>(ssboBinding) = ssboBufferID;
 }
 void EGLRenderer::addUBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
 {
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	GLuint uboBufferID;
 	glGenBuffers(1, &uboBufferID);
 	GLcheck(*this, "glGenBuffers");
-	auto& uboBinding = shader.uboBindings[name];
+	auto& uboBinding = shaderImpl.uboBindings[name];
 	std::get<0>(uboBinding) = bindingIndex;
 	std::get<1>(uboBinding) = uboBufferID;
 }
 void EGLRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
 {
-	auto ssboIter = shader.ssboBindings.find(name.data());
-	if (ssboIter == shader.ssboBindings.end())
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	auto ssboIter = shaderImpl.ssboBindings.find(name.data());
+	if (ssboIter == shaderImpl.ssboBindings.end())
 	{
 		return;
 	}
@@ -279,14 +286,15 @@ void EGLRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, 
 	GLcheck(*this, "glBufferData");
 }
 void EGLRenderer::setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
-														const int32_t unit)
+														 const int32_t unit)
 {
 	shader.setUniform(name, unit);
 	glActiveTexture(GL_TEXTURE0 + unit);
 	GLcheck(*this, "glActiveTexture");
 	texture.bind();
 }
-bool EGLRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType shaderType, shaders::ShaderPair& shaderPair)
+bool EGLRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
+																shaders::ShaderPair& shaderPair)
 {
 	auto& shaderString = shaderPair.first;
 	auto& shaderInt = shaderPair.second;
@@ -303,20 +311,21 @@ bool EGLRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType sha
 }
 bool EGLRenderer::compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap)
 {
-	shader.program = glCreateProgram();
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	shaderImpl.program = glCreateProgram();
 	GLcheck(*this, "glCreateProgram");
 	for (const auto& shaderMapPair : shaderMap)
 	{
-		glAttachShader(shader.program, shaderMapPair.second.second);
+		glAttachShader(shaderImpl.program, shaderMapPair.second.second);
 		GLcheck(*this, "glAttachShader");
 	}
-	glLinkProgram(shader.program);
+	glLinkProgram(shaderImpl.program);
 	for (const auto& shaderMapPair : shaderMap)
 	{
 		glDeleteShader(shaderMapPair.second.second);
 		GLcheck(*this, "glDeleteShader");
 	}
-	auto success = checkCompileErrors(shader, shader.program, false, "Program");
+	auto success = checkCompileErrors(shader, shaderImpl.program, false, "Program");
 	return success;
 }
 bool EGLRenderer::checkCompileErrors(shaders::Shader& shader, const GLuint& id, bool isShader, const char* shaderType)
@@ -360,8 +369,23 @@ bool EGLRenderer::checkCompileErrors(shaders::Shader& shader, const GLuint& id, 
 }
 void EGLRenderer::deleteShader(shaders::Shader& shader)
 {
-	glDeleteProgram(shader.program);
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	glDeleteProgram(shaderImpl.program);
 	GLcheck(*this, "glDeleteProgram");
+}
+void EGLRenderer::destroyShader(shaders::Shader& shader)
+{
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	for (auto& bindingPair : shaderImpl.ssboBindings)
+	{
+		deleteBuffer(std::get<1>(bindingPair.second));
+	}
+	for (auto& bindingPair : shaderImpl.uboBindings)
+	{
+		deleteBuffer(std::get<1>(bindingPair.second));
+	}
+	deleteShader(shader);
+	delete &shaderImpl;
 }
 void EGLRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const
 {
@@ -393,13 +417,13 @@ void EGLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 	switch (framebuffer.texture.format)
 	{
 	case textures::Texture::Depth:
-	{
-		frameBufferTarget = GL_DEPTH_ATTACHMENT;
-		GLenum noneBuffer = GL_NONE;
-		glDrawBuffers(1, &noneBuffer);
-		glReadBuffer(GL_NONE);
-		break;
-	}
+		{
+			frameBufferTarget = GL_DEPTH_ATTACHMENT;
+			GLenum noneBuffer = GL_NONE;
+			glDrawBuffers(1, &noneBuffer);
+			glReadBuffer(GL_NONE);
+			break;
+		}
 	default:
 		frameBufferTarget = GL_COLOR_ATTACHMENT0;
 		break;
@@ -409,10 +433,9 @@ void EGLRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 		glBindRenderbuffer(GL_RENDERBUFFER, framebufferImpl.renderbufferID);
 		GLcheck(*this, "glBindRenderbuffer");
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, framebuffer.depthTexturePointer->size.x,
-																	 framebuffer.depthTexturePointer->size.y);
+													framebuffer.depthTexturePointer->size.y);
 		GLcheck(*this, "glRenderbufferStorage");
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
-																			 framebufferImpl.renderbufferID);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebufferImpl.renderbufferID);
 		GLcheck(*this, "glFramebufferRenderbuffer");
 	}
 	if (textureImpl.target == GL_TEXTURE_CUBE_MAP)
@@ -475,23 +498,23 @@ void EGLRenderer::preInitTexture(textures::Texture& texture)
 	GLcheck(*this, "glPixelStorei");
 }
 void EGLRenderer::midInitTexture(const textures::Texture& texture,
-																const std::vector<images::ImageLoader::ImagePair>& images)
+																 const std::vector<images::ImageLoader::ImagePair>& images)
 {
 	auto& textureImpl = *(textures::GLTextureImpl*)texture.rendererData;
 	if (textureImpl.target == GL_TEXTURE_2D)
 	{
 		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
 		glTexImage2D(textureImpl.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
-													texture.size.y, 0, textures::TextureFactory::formats[texture.format],
-													textures::TextureFactory::types[{texture.format, texture.type}], data);
+								 texture.size.y, 0, textures::TextureFactory::formats[texture.format],
+								 textures::TextureFactory::types[{texture.format, texture.type}], data);
 		GLcheck(*this, "glTexImage2D");
 	}
 	else if (textureImpl.target == GL_TEXTURE_3D)
 	{
 		void* data = images.size() ? std::get<1>(images[0]).get() : 0;
 		glTexImage3D(textureImpl.target, 0, textures::TextureFactory::internalFormats[texture.format], texture.size.x,
-													texture.size.y, texture.size.z, 0, textures::TextureFactory::formats[texture.format],
-													textures::TextureFactory::types[{texture.format, texture.type}], data);
+								 texture.size.y, texture.size.z, 0, textures::TextureFactory::formats[texture.format],
+								 textures::TextureFactory::types[{texture.format, texture.type}], data);
 		GLcheck(*this, "glTexImage3D");
 	}
 	else if (textureImpl.target == GL_TEXTURE_CUBE_MAP)
@@ -501,10 +524,9 @@ void EGLRenderer::midInitTexture(const textures::Texture& texture,
 			bool haveImage = images.size() > face;
 			auto imageSize = haveImage ? std::get<0>(images[face]) : glm::uvec2(0, 0);
 			void* data = haveImage ? std::get<1>(images[face]).get() : 0;
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0,
-														textures::TextureFactory::internalFormats[texture.format], imageSize.x, imageSize.y, 0,
-														textures::TextureFactory::formats[texture.format],
-														textures::TextureFactory::types[{texture.format, texture.type}], data);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, textures::TextureFactory::internalFormats[texture.format],
+									 imageSize.x, imageSize.y, 0, textures::TextureFactory::formats[texture.format],
+									 textures::TextureFactory::types[{texture.format, texture.type}], data);
 			GLcheck(*this, "glTexImage2D");
 		}
 	}
@@ -541,7 +563,7 @@ void EGLRenderer::destroyTexture(textures::Texture& texture)
 	GLcheck(*this, "glDeleteTextures");
 	delete &textureImpl;
 }
-void EGLRenderer::updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t>& indices)
+void EGLRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices)
 {
 	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
 	glBindVertexArray(vaoImpl.vao);
@@ -549,13 +571,12 @@ void EGLRenderer::updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint3
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vaoImpl.ebo);
 	GLcheck(*this, "glBindBuffer");
 	auto& constantSize = vaos::VAOFactory::constantSizes["Indice"];
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, vao.indiceCount * std::get<1>(constantSize), indices.data(),
-												GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, vao.indiceCount * std::get<1>(constantSize), indices.data(), GL_STATIC_DRAW);
 	GLcheck(*this, "glBufferData");
 	glBindVertexArray(0);
 	GLcheck(*this, "glBindVertexArray");
 }
-void EGLRenderer::updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t* elementsAsChar)
+void EGLRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
 	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
 	glBindVertexArray(vaoImpl.vao);
@@ -574,7 +595,7 @@ void EGLRenderer::updateElementsVAO(const vaos::VAO &vao, const std::string_view
 	glBindVertexArray(0);
 	GLcheck(*this, "glBindVertexArray");
 }
-void EGLRenderer::drawVAO(const vaos::VAO &vao)
+void EGLRenderer::drawVAO(const vaos::VAO& vao)
 {
 	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
 	glBindVertexArray(vaoImpl.vao);
@@ -583,7 +604,7 @@ void EGLRenderer::drawVAO(const vaos::VAO &vao)
 	glDrawElements(drawMode, vao.indiceCount, ZG_UNSIGNED_INT, 0);
 	GLcheck(*this, "glDrawElements");
 }
-void EGLRenderer::generateVAO(vaos::VAO &vao)
+void EGLRenderer::generateVAO(vaos::VAO& vao)
 {
 	vao.rendererData = new vaos::GLVAOImpl();
 	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
@@ -613,21 +634,21 @@ void EGLRenderer::generateVAO(vaos::VAO &vao)
 		auto& constantSize = vaos::VAOFactory::constantSizes[constant];
 		if (std::get<2>(constantSize) == ZG_FLOAT)
 		{
-			glVertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize),
-																								GL_FALSE, stride, (const void*)offset);
+			glVertexAttribPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), GL_FALSE, stride,
+														(const void*)offset);
 			GLcheck(*this, "glVertexAttribPointer");
 		}
 		else
 		{
-			glVertexAttribIPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize),
-																								 stride, (const void*)offset);
+			glVertexAttribIPointer(attribIndex, std::get<0>(constantSize), std::get<2>(constantSize), stride,
+														 (const void*)offset);
 			GLcheck(*this, "glVertexAttribIPointer");
 		}
 		offset += std::get<0>(constantSize) * std::get<1>(constantSize);
 		attribIndex++;
 	}
 }
-void EGLRenderer::destroyVAO(vaos::VAO &vao)
+void EGLRenderer::destroyVAO(vaos::VAO& vao)
 {
 	auto& vaoImpl = *(vaos::GLVAOImpl*)vao.rendererData;
 	glDeleteVertexArrays(1, &vaoImpl.vao);

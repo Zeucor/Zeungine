@@ -193,10 +193,19 @@ void GLRenderer::viewport(glm::ivec4 vp) const
 	glContext->Viewport(vp.x, vp.y, vp.z, vp.w);
 	GLcheck(*this, "glViewport");
 }
+void GLRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeConstants& constants,
+														const std::vector<shaders::ShaderType>& shaderTypes)
+{
+	shader.rendererData = new shaders::GLShaderImpl();
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
+	shaders::ShaderFactory::compileProgram(shader, shaderImpl.shaders);
+}
 void GLRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
 														enums::EUniformType uniformType)
 {
-	GLint location = glContext->GetUniformLocation(shader.program, name.data());
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	GLint location = glContext->GetUniformLocation(shaderImpl.program, name.data());
 	GLcheck(*this, "glGetUniformLocation");
 	if (location == -1)
 	{
@@ -275,14 +284,15 @@ void GLRenderer::setUniform(shaders::Shader& shader, const std::string_view name
 }
 void GLRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
 {
-	auto blockIndex = glContext->GetUniformBlockIndex(shader.program, name.data());
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	auto blockIndex = glContext->GetUniformBlockIndex(shaderImpl.program, name.data());
 	if (blockIndex == -1)
 	{
 		return;
 	}
-	auto& uboBinding = shader.uboBindings[name];
+	auto& uboBinding = shaderImpl.uboBindings[name];
 	auto& bindingIndex = std::get<0>(uboBinding);
-	glContext->UniformBlockBinding(shader.program, blockIndex, bindingIndex);
+	glContext->UniformBlockBinding(shaderImpl.program, blockIndex, bindingIndex);
 	GLcheck(*this, "glUniformBlockBinding");
 	auto& uboBufferIndex = std::get<1>(uboBinding);
 	glContext->BindBuffer(GL_UNIFORM_BUFFER, uboBufferIndex);
@@ -299,7 +309,8 @@ void GLRenderer::deleteBuffer(uint32_t id)
 }
 void GLRenderer::bindShader(const shaders::Shader& shader)
 {
-	glContext->UseProgram(shader.program);
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	glContext->UseProgram(shaderImpl.program);
 	GLcheck(*this, "glUseProgram");
 }
 void GLRenderer::unbindShader(const shaders::Shader& shader)
@@ -309,26 +320,29 @@ void GLRenderer::unbindShader(const shaders::Shader& shader)
 }
 void GLRenderer::addSSBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
 {
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	GLuint ssboBufferID;
 	glContext->GenBuffers(1, &ssboBufferID);
 	GLcheck(*this, "glGenBuffers");
-	auto& ssboBinding = shader.ssboBindings[name];
+	auto& ssboBinding = shaderImpl.ssboBindings[name];
 	std::get<0>(ssboBinding) = bindingIndex;
 	std::get<1>(ssboBinding) = ssboBufferID;
 }
 void GLRenderer::addUBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
 {
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	GLuint uboBufferID;
 	glContext->GenBuffers(1, &uboBufferID);
 	GLcheck(*this, "glGenBuffers");
-	auto& uboBinding = shader.uboBindings[name];
+	auto& uboBinding = shaderImpl.uboBindings[name];
 	std::get<0>(uboBinding) = bindingIndex;
 	std::get<1>(uboBinding) = uboBufferID;
 }
 void GLRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
 {
-	auto ssboIter = shader.ssboBindings.find(name.data());
-	if (ssboIter == shader.ssboBindings.end())
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	auto ssboIter = shaderImpl.ssboBindings.find(name.data());
+	if (ssboIter == shaderImpl.ssboBindings.end())
 	{
 		return;
 	}
@@ -366,20 +380,21 @@ bool GLRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType shad
 }
 bool GLRenderer::compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap)
 {
-	shader.program = glContext->CreateProgram();
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	shaderImpl.program = glContext->CreateProgram();
 	GLcheck(*this, "glCreateProgram");
 	for (const auto& shaderMapPair : shaderMap)
 	{
-		glContext->AttachShader(shader.program, shaderMapPair.second.second);
+		glContext->AttachShader(shaderImpl.program, shaderMapPair.second.second);
 		GLcheck(*this, "glAttachShader");
 	}
-	glContext->LinkProgram(shader.program);
+	glContext->LinkProgram(shaderImpl.program);
 	for (const auto& shaderMapPair : shaderMap)
 	{
 		glContext->DeleteShader(shaderMapPair.second.second);
 		GLcheck(*this, "glDeleteShader");
 	}
-	auto success = checkCompileErrors(shader, shader.program, false, "Program");
+	auto success = checkCompileErrors(shader, shaderImpl.program, false, "Program");
 	return success;
 }
 bool GLRenderer::checkCompileErrors(shaders::Shader& shader, const GLuint& id, bool isShader, const char* shaderType)
@@ -423,8 +438,23 @@ bool GLRenderer::checkCompileErrors(shaders::Shader& shader, const GLuint& id, b
 }
 void GLRenderer::deleteShader(shaders::Shader& shader)
 {
-	glContext->DeleteProgram(shader.program);
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	glContext->DeleteProgram(shaderImpl.program);
 	GLcheck(*this, "glDeleteProgram");
+}
+void GLRenderer::destroyShader(shaders::Shader& shader)
+{
+	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
+	for (auto& bindingPair : shaderImpl.ssboBindings)
+	{
+		deleteBuffer(std::get<1>(bindingPair.second));
+	}
+	for (auto& bindingPair : shaderImpl.uboBindings)
+	{
+		deleteBuffer(std::get<1>(bindingPair.second));
+	}
+	deleteShader(shader);
+	delete &shaderImpl;
 }
 void GLRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const
 {

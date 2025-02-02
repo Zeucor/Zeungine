@@ -1147,10 +1147,6 @@ bool ShaderFactory::compileProgram(Shader& shader, const ShaderMap& shaderMap)
 {
 	return shader.window.iRenderer->compileProgram(shader, shaderMap);
 }
-void ShaderFactory::deleteProgram(Shader& shader)
-{
-	shader.window.iRenderer->deleteShader(shader);
-}
 uint32_t ShaderFactory::addHook(const ShaderType& shaderType, const std::string_view hookName,
 																const std::string_view runtimeConstant, const Shader::ShaderHook& hook)
 {
