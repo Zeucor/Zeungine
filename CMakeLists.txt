@@ -3,8 +3,8 @@ project(Zeungine VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(ANGLE_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}")
-message(STATUS "ANGLE_LIB_DIR: ${ANGLE_LIB_DIR}")
+set(ZG_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "ZG_LIB_DIR: ${ZG_LIB_DIR}")
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_definitions(-DLINUX)
     set(LINUX ON)
@@ -178,27 +178,28 @@ elseif(MACOS)
 endif()
 if(LINUX)
     target_link_libraries(zeungine
-        ${ANGLE_LIB_DIR}/libEGL.so
-        ${ANGLE_LIB_DIR}/libGLESv2.so
-        ${ANGLE_LIB_DIR}/libthird_party_abseil-cpp_absl.so
-        ${ANGLE_LIB_DIR}/libc++.so
-        ${ANGLE_LIB_DIR}/libchrome_zlib.so
-        ${ANGLE_LIB_DIR}/libdawn_native.so
-        ${ANGLE_LIB_DIR}/libdawn_platform.so
-        ${ANGLE_LIB_DIR}/libdawn_proc.so
-        ${ANGLE_LIB_DIR}/libvk_swiftshader.so
+        ${ZG_LIB_DIR}/libEGL.so
+        ${ZG_LIB_DIR}/libGLESv2.so
+        ${ZG_LIB_DIR}/libthird_party_abseil-cpp_absl.so
+        ${ZG_LIB_DIR}/libc++.so
+        ${ZG_LIB_DIR}/libchrome_zlib.so
+        ${ZG_LIB_DIR}/libdawn_native.so
+        ${ZG_LIB_DIR}/libdawn_platform.so
+        ${ZG_LIB_DIR}/libdawn_proc.so
+        ${ZG_LIB_DIR}/libvk_swiftshader.so
+        ${ZG_LIB_DIR}/libshaderc_shared.so
         vulkan)
 elseif(MACOS)
     target_link_libraries(zeungine
-        ${ANGLE_LIB_DIR}/libEGL.dylib
-        ${ANGLE_LIB_DIR}/libGLESv2.dylib
-        ${ANGLE_LIB_DIR}/libthird_party_abseil-cpp_absl.dylib
-        ${ANGLE_LIB_DIR}/libc++_chrome.dylib
-        ${ANGLE_LIB_DIR}/libchrome_zlib.dylib
-        ${ANGLE_LIB_DIR}/libdawn_native.dylib
-        ${ANGLE_LIB_DIR}/libdawn_platform.dylib
-        ${ANGLE_LIB_DIR}/libdawn_proc.dylib
-        ${ANGLE_LIB_DIR}/libvk_swiftshader.dylib
+        ${ZG_LIB_DIR}/libEGL.dylib
+        ${ZG_LIB_DIR}/libGLESv2.dylib
+        ${ZG_LIB_DIR}/libthird_party_abseil-cpp_absl.dylib
+        ${ZG_LIB_DIR}/libc++_chrome.dylib
+        ${ZG_LIB_DIR}/libchrome_zlib.dylib
+        ${ZG_LIB_DIR}/libdawn_native.dylib
+        ${ZG_LIB_DIR}/libdawn_platform.dylib
+        ${ZG_LIB_DIR}/libdawn_proc.dylib
+        ${ZG_LIB_DIR}/libvk_swiftshader.dylib
         ${Vulkan_LIBRARIES})
 endif()
 
