@@ -16,6 +16,7 @@
 #define VK_USE_PLATFORM_XLIB_KHR
 #endif
 #include <vulkan/vulkan.h>
+#include <shaderc/shaderc.hpp>
 namespace zg
 {
 	namespace textures

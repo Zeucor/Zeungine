@@ -2,13 +2,16 @@
 #include <zg/interfaces/IEntity.hpp>
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/vaos/VAOFactory.hpp>
+#ifdef USE_VULKAN
+#include <zg/renderers/VulkanRenderer.hpp>
+#endif
 using namespace zg::vaos;
 VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {{"Indice", {3, sizeof(uint32_t), ZG_UNSIGNED_INT}},
-																												 {"Color", {4, sizeof(float), ZG_FLOAT}},
-																												 {"Position", {3, sizeof(float), ZG_FLOAT}},
-																												 {"Normal", {3, sizeof(float), ZG_FLOAT}},
-																												 {"UV2", {2, sizeof(float), ZG_FLOAT}},
-																												 {"UV3", {3, sizeof(float), ZG_FLOAT}}};
+																												 {"Color", {4, sizeof(float), ZG_FLOAT4}},
+																												 {"Position", {3, sizeof(float), ZG_FLOAT3}},
+																												 {"Normal", {3, sizeof(float), ZG_FLOAT3}},
+																												 {"UV2", {2, sizeof(float), ZG_FLOAT3}},
+																												 {"UV3", {3, sizeof(float), ZG_FLOAT3}}};
 VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Indice", false}, {"Color", true},			{"Position", true},					{"Normal", true}, {"UV2", true},
 	{"UV3", true},		 {"View", false},			{"Projection", false},			{"Model", false}, {"CameraPosition", false},

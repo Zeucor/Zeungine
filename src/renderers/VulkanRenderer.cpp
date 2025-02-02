@@ -1,5 +1,4 @@
 #ifdef USE_VULKAN
-#include <shaderc/shaderc.hpp>
 #include <zg/Logger.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
@@ -21,6 +20,11 @@ static std::unordered_map<shaders::ShaderType, shaderc_shader_kind> stageEShader
 	{shaders::ShaderType::Vertex, shaderc_vertex_shader},
 	{shaders::ShaderType::Fragment, shaderc_fragment_shader},
 	{shaders::ShaderType::Compute, shaderc_compute_shader}};
+static std::unordered_map<shaders::ShaderType, VkShaderStageFlagBits> stageStageFlag = {
+	{shaders::ShaderType::Vertex, VK_SHADER_STAGE_VERTEX_BIT},
+	{shaders::ShaderType::Fragment, VK_SHADER_STAGE_FRAGMENT_BIT},
+	{shaders::ShaderType::Compute, VK_SHADER_STAGE_COMPUTE_BIT},
+};
 VulkanRenderer::VulkanRenderer() {}
 VulkanRenderer::~VulkanRenderer() {}
 void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
@@ -755,16 +759,20 @@ bool VulkanRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType 
 	shaderc::Compiler compiler;
 	shaderc::CompileOptions compileOptions;
 	auto& shaderString = shaderPair.first;
-	auto& shaderInt = shaderPair.second;
+	auto& shaderModule = shaderPair.second;
 	shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(shaderString.c_str(), shaderString.size(),
 																																	 stageEShaderc[shaderType], "main", compileOptions);
-	checkCompileErrors(module, true, shaders::stageShaderNames[shaderType].c_str());
+	if (!checkCompileErrors(module, true, shaders::stageShaderNames[shaderType].c_str()))
+	{
+		return false;
+	}
 	std::vector<uint32_t> vertexSpv(module.cbegin(), module.cend());
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	shaderImpl.shaders[shaderType] = {shaderString, createShaderModule(vertexSpv)};
+	shaderModule = createShaderModule(vertexSpv);
+	shaderImpl.shaders[shaderType] = shaderPair;
 	return true;
 }
-VkShaderModule VulkanRenderer::createShaderModule(const std::vector<uint32_t> &code)
+VkShaderModule VulkanRenderer::createShaderModule(const std::vector<uint32_t>& code)
 {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -777,8 +785,186 @@ VkShaderModule VulkanRenderer::createShaderModule(const std::vector<uint32_t> &c
 	}
 	return shaderModule;
 }
-bool VulkanRenderer::compileProgram(shaders::Shader& shader) { return false; }
-bool VulkanRenderer::checkCompileErrors(const shaderc::SpvCompilationResult &module, bool isShader, const char *shaderType)
+bool VulkanRenderer::compileProgram(shaders::Shader& shader)
+{
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+	for (auto& shaderPair : shaderImpl.shaders)
+	{
+		VkPipelineShaderStageCreateInfo shaderStageInfo{};
+		shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		shaderStageInfo.stage = stageStageFlag[shaderPair.first];
+		shaderStageInfo.module = (VkShaderModule)shaderPair.second.second;
+		shaderStageInfo.pName = "main";
+		shaderStages.push_back(shaderStageInfo);
+	}
+	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	VkVertexInputBindingDescription bindingDescription{};
+	bindingDescription.binding = 0;
+	bindingDescription.stride = vaos::VAOFactory::getStride(shader.constants);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+	uint32_t attribIndex = 0;
+	uint32_t offset = 0;
+	for (auto& constant : shader.constants)
+	{
+		if (!vaos::VAOFactory::isVAOConstant(constant))
+			continue;
+		auto& constantSize = vaos::VAOFactory::constantSizes[constant];
+		VkVertexInputAttributeDescription vertexInputAttributeDescription;
+		vertexInputAttributeDescription.location = attribIndex;
+		vertexInputAttributeDescription.binding = 0;
+		vertexInputAttributeDescription.format = (VkFormat)std::get<2>(constantSize);
+		vertexInputAttributeDescription.offset = offset;
+		attributeDescriptions.push_back(vertexInputAttributeDescription);
+		offset += std::get<0>(constantSize) * std::get<1>(constantSize);
+		attribIndex++;
+	}
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+	vertexInputInfo.vertexAttributeDescriptionCount = attributeDescriptions.size();
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssembly.primitiveRestartEnable = VK_FALSE;
+	VkViewport viewport{};
+	VkRect2D scissor{};
+	viewport.x = 0.0f;
+	viewport.y = swapChainExtent.height;
+	viewport.width = (float)swapChainExtent.width;
+	viewport.height = -(float)swapChainExtent.height;
+	scissor.extent = swapChainExtent;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	scissor.offset = {0, 0};
+	VkPipelineViewportStateCreateInfo viewportState{};
+	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportState.viewportCount = 1;
+	viewportState.pViewports = &viewport;
+	viewportState.scissorCount = 1;
+	viewportState.pScissors = &scissor;
+	VkPipelineRasterizationStateCreateInfo rasterizer{};
+	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	rasterizer.depthClampEnable = VK_TRUE;
+	rasterizer.rasterizerDiscardEnable = VK_FALSE;
+	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+	rasterizer.lineWidth = 1.0f;
+	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	rasterizer.depthBiasEnable = VK_FALSE;
+	VkPipelineMultisampleStateCreateInfo multisampling{};
+	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	multisampling.sampleShadingEnable = VK_FALSE;
+	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	colorBlendAttachment.blendEnable = VK_TRUE;
+	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+	VkPipelineColorBlendStateCreateInfo colorBlending{};
+	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	colorBlending.logicOpEnable = VK_FALSE;
+	colorBlending.logicOp = VK_LOGIC_OP_COPY;
+	colorBlending.attachmentCount = 1;
+	colorBlending.pAttachments = &colorBlendAttachment;
+	colorBlending.blendConstants[0] = 0.0f;
+	colorBlending.blendConstants[1] = 0.0f;
+	colorBlending.blendConstants[2] = 0.0f;
+	colorBlending.blendConstants[3] = 0.0f;
+	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+	for (auto &uboLayoutBinding : shaderImpl.uboLayoutBindings)
+	{
+		layoutBindings.push_back(uboLayoutBinding.second);
+	}
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};
+	descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	descriptorSetLayoutInfo.bindingCount = layoutBindings.size();
+	descriptorSetLayoutInfo.pBindings = layoutBindings.data();
+	if (!VKcheck("vkCreateDescriptorSetLayout", vkCreateDescriptorSetLayout(device, &descriptorSetLayoutInfo, nullptr, &shaderImpl.descriptorSetLayout)))
+	{
+		throw std::runtime_error("Failed to create descriptor set layout");
+	}
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &shaderImpl.descriptorSetLayout;
+	if (!VKcheck("vkCreatePipelineLayout", vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &shaderImpl.pipelineLayout)))
+	{
+		throw std::runtime_error("failed to create pipeline layout!");
+	}
+	std::vector<VkDynamicState> dynamicStates({VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR});
+	VkPipelineDynamicStateCreateInfo dynamicState{};
+	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamicState.dynamicStateCount = dynamicStates.size();
+	dynamicState.pDynamicStates = dynamicStates.data();
+	VkGraphicsPipelineCreateInfo pipelineInfo{};
+	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineInfo.stageCount = 2;
+	pipelineInfo.pStages = shaderStages.data();
+	pipelineInfo.pVertexInputState = &vertexInputInfo;
+	pipelineInfo.pInputAssemblyState = &inputAssembly;
+	pipelineInfo.pViewportState = &viewportState;
+	pipelineInfo.pDynamicState = &dynamicState;
+	pipelineInfo.pRasterizationState = &rasterizer;
+	pipelineInfo.pMultisampleState = &multisampling;
+	pipelineInfo.pColorBlendState = &colorBlending;
+	pipelineInfo.layout = shaderImpl.pipelineLayout;
+	pipelineInfo.renderPass = renderPass;
+	// 	if (shader.scenePointer->sceneIndex == 0)
+	// 	{
+	// 	}
+	// 	else
+	// 	{
+	// 		auto &framebuffer = currentFramebuffer.pointer ? *currentFramebuffer.pointer :
+	// *shader.scenePointer->framebuffers._data[0].pointer; 		auto &vulkanFramebuffer = *(VulkanFramebuffer
+	// *)framebuffer.vendorData; 		pipelineInfo.renderPass = vulkanFramebuffer.renderPass; 		auto hasDepth =
+	// framebuffer.attachments.reduce(Function<Boolean, FramebufferAttachment &, Boolean>([](FramebufferAttachment
+	// &framebufferAttachment, Boolean hasDepth)
+	// 														   {
+	//    if (framebufferAttachment.type == EFramebufferAttachmentType::Depth ||
+	//        framebufferAttachment.type == EFramebufferAttachmentType::DepthStencil)
+	//    {
+	//     hasDepth = true;
+	//    }
+	//    return hasDepth; }),
+	// 							       false);
+	// 		auto hasStencil = framebuffer.attachments.reduce(Function<Boolean, FramebufferAttachment &,
+	// Boolean>([](FramebufferAttachment &framebufferAttachment, Boolean hasStencil)
+	// 														     {
+	//    if (framebufferAttachment.type == EFramebufferAttachmentType::DepthStencil)
+	//    {
+	//     hasStencil = true;
+	//    }
+	//    return hasStencil; }),
+	// 								 false);
+	// 		if (hasDepth)
+	// 		{
+	// 			VkPipelineDepthStencilStateCreateInfo depthStencil{};
+	// 			depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	// 			depthStencil.depthTestEnable = VK_TRUE;
+	// 			depthStencil.depthWriteEnable = VK_TRUE;
+	// 			depthStencil.depthCompareOp = VK_COMPARE_OP_GREATER;
+	// 			depthStencil.depthBoundsTestEnable = VK_FALSE;
+	// 			depthStencil.stencilTestEnable = /*hasStencil ? VK_TRUE :*/ VK_FALSE;
+	// 			pipelineInfo.pDepthStencilState = &depthStencil;
+	// 		}
+	// 	}
+	pipelineInfo.subpass = 0;
+	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+	if (!VKcheck("vkCreateGraphicsPipelines", vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &shaderImpl.graphicsPipeline)))
+	{
+		throw std::runtime_error("failed to create graphics pipeline!");
+	}
+	return true;
+}
+bool VulkanRenderer::checkCompileErrors(const shaderc::SpvCompilationResult& module, bool isShader,
+																				const char* shaderType)
 {
 	if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 	{

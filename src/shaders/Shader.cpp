@@ -3,7 +3,8 @@
 #include <zg/textures/Texture.hpp>
 using namespace zg::shaders;
 Shader::Shader(Window &window, const RuntimeConstants &constants, const std::vector<ShaderType> &shaderTypes):
-  window(window)
+  window(window),
+  constants(constants)
 {
   window.iRenderer->initShader(*this, constants, shaderTypes);
 }
