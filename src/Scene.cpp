@@ -100,6 +100,7 @@ void Scene::preRender()
 		pointLightShadow.shader.unbind();
 		pointLightShadow.framebuffer.unbind();
 	}
+#if defined(USE_GL) || defined(USE_EGL)
 	if (framebufferPointer != 0)
 	{
 		auto &framebuffer = *framebufferPointer;	
@@ -109,6 +110,7 @@ void Scene::preRender()
 		iRenderer.viewport({0, 0, window.windowWidth, window.windowHeight});
 	iRenderer.clearColor(clearColor);
 	iRenderer.clear();
+#endif
 };
 void Scene::render()
 {

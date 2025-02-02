@@ -90,6 +90,9 @@ namespace zg
 		void createSyncObjects();
 		void init() override;
 		void destroy() override;
+		void preBeginRenderPass() override;
+		void beginRenderPass() override;
+		void postRenderPass() override;
 		void clearColor(glm::vec4 color) override;
 		void clear() override;
 		void viewport(glm::ivec4 vp) const override;

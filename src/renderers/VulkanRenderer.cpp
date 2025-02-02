@@ -592,18 +592,92 @@ void VulkanRenderer::createSyncObjects()
 	for (size_t j = 0; j < MAX_FRAMES_IN_FLIGHT; j++)
 	{
 		if (!VKcheck("vkCreateSemaphore",
-							vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[j])) ||
+								 vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[j])) ||
 				!VKcheck("vkCreateSemaphore",
-							vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[j])) ||
+								 vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[j])) ||
 				!VKcheck("vkCreateFence", vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[j])))
 		{
-			throw std::runtime_error("VulkanRenderer-createSyncObjects: failed to create synchronization objects for a frame!");
+			throw std::runtime_error(
+				"VulkanRenderer-createSyncObjects: failed to create synchronization objects for a frame!");
 		}
 	}
 	return;
 }
 void VulkanRenderer::init() {}
 void VulkanRenderer::destroy() {}
+void VulkanRenderer::preBeginRenderPass()
+{
+	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE,
+												&imageIndex);
+	vkResetFences(device, 1, &inFlightFences[currentFrame]);
+	commandBuffer = &commandBuffers[currentFrame];
+	vkResetCommandBuffer(*commandBuffer, 0);
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	if (!VKcheck("vkBeginCommandBuffer", vkBeginCommandBuffer(*commandBuffer, &beginInfo)))
+	{
+		throw std::runtime_error("failed to begin recording command buffer!");
+	}
+	return;
+}
+void VulkanRenderer::beginRenderPass()
+{
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = renderPass;
+	renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
+	renderPassInfo.renderArea.offset = {0, 0};
+	renderPassInfo.renderArea.extent = swapChainExtent;
+	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
+	glm::vec4 clearColor(0, 0, 0, 1);
+	if (renderWindow.scene)
+	{
+		clearColor = ((Scene&)*renderWindow.scene).clearColor;
+	}
+	VkClearValue vkClearColor = {{{clearColor.r, clearColor.g, clearColor.b, clearColor.a}}};
+	renderPassInfo.clearValueCount = 1;
+	renderPassInfo.pClearValues = &vkClearColor;
+	vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	return;
+}
+void VulkanRenderer::postRenderPass()
+{
+	vkCmdEndRenderPass(*commandBuffer);
+	if (!VKcheck("vkEndCommandBuffer", vkEndCommandBuffer(*commandBuffer)))
+	{
+		throw std::runtime_error("failed to record command buffer!");
+	}
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = commandBuffer;
+	VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = signalSemaphores;
+	if (!VKcheck("vkQueueSubmit", vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame])))
+	{
+		throw std::runtime_error("failed to submit draw command buffer!");
+	}
+	vkQueueWaitIdle(graphicsQueue);
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = signalSemaphores;
+	VkSwapchainKHR swapChains[] = {swapChain};
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = swapChains;
+	presentInfo.pImageIndices = &imageIndex;
+	vkQueueWaitIdle(presentQueue);
+	vkQueuePresentKHR(presentQueue, &presentInfo);
+	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	return;
+}
 std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new VulkanRenderer()); }
 void VulkanRenderer::clearColor(glm::vec4 color) {}
 void VulkanRenderer::clear() {}

@@ -89,6 +89,7 @@ void Window::startWindow()
 		runRunnables();
 		updateKeyboard();
 		updateMouse();
+		iRenderer->preBeginRenderPass();
 		for (auto &childWindowPointer : childWindows)
 		{
 			auto &childWindow = *childWindowPointer;
@@ -96,6 +97,7 @@ void Window::startWindow()
 				continue;
 			childWindow.render();
 		}
+		iRenderer->beginRenderPass();
 		render();
 		for (auto& childWindowPointer : childWindows)
 		{
@@ -104,6 +106,7 @@ void Window::startWindow()
 				continue;
 			childWindow.framebufferPlane->render();
 		}
+		iRenderer->postRenderPass();
 		iPlatformWindowRef.swapBuffers();
 	}
 _exit:
