@@ -47,6 +47,8 @@ void MacOSWindow::init(Window &renderWindow)
 		[window setDelegate:[[MacOSWindowDelegate alloc] init]];
 		[window makeKeyAndOrderFront:nil];
 		nsWindow = window;
+		NSView *contentView = [(NSWindow *)nsWindow contentView];
+		nsView = contentView;
 	}
 }
 #ifdef USE_GL
@@ -66,9 +68,7 @@ void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	};
 	NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attributes];
 	NSOpenGLContext *context = [[NSOpenGLContext alloc] initWithFormat:pixelFormat shareContext:nil];
-	NSView *contentView = [(NSWindow *)nsWindow contentView];
-	[context setView:contentView];
-	nsView = contentView;
+	[context setView:nsView];
 	glContext = context;
 }
 #elif defined(USE_EGL)
@@ -103,14 +103,13 @@ void EGLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 void VulkanRenderer::createSurface()
 {
 	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
-	// VkWin32SurfaceCreateFlagsKHR surfaceCreateInfo{};
-	// surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	// surfaceCreateInfo.dpy = win32Window.hInstance;
-	// surfaceCreateInfo.window = win32Window.hwnd;
-	// if (!VKcheck("vkCreateWin32SurfaceKHR", vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
-	// {
-	// 	throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
-	// }
+	VkMacOSSurfaceCreateInfoMVK surfaceCreateInfo{};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
+	surfaceCreateInfo.pView = macWindow.nsView;
+	if (!VKcheck("vkCreateMacOSSurfaceMVK", vkCreateMacOSSurfaceMVK(instance, &surfaceCreateInfo, nullptr, &surface)))
+	{
+		throw std::runtime_error("VulkanRenderer-createSurface: failed to create MacOS surface");
+	}
 }
 #endif
 void MacOSWindow::postInit()
