@@ -744,8 +744,7 @@ void VulkanRenderer::setUniform(shaders::Shader& shader, const std::string_view 
 {
 	setBlock(shader, name, pointer, size);
 }
-void VulkanRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer,
-															size_t size)
+void VulkanRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
 {
 	int32_t location = getUniformLocation(shader, name);
 	if (location == -1)
@@ -853,24 +852,26 @@ void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderT
 }
 void VulkanRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
 {
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
 	auto ssboIter = shaderImpl.ssboBindings.find(stringName);
 	if (ssboIter == shaderImpl.ssboBindings.end())
 	{
 		return;
 	}
-	auto &buffer = std::get<1>(ssboIter->second);
-	auto &deviceMemory = std::get<2>(ssboIter->second);
-	auto &bindingIndex = std::get<3>(ssboIter->second);
+	auto& buffer = std::get<1>(ssboIter->second);
+	auto& deviceMemory = std::get<2>(ssboIter->second);
+	auto& bindingIndex = std::get<3>(ssboIter->second);
 	if (buffer == VK_NULL_HANDLE)
 	{
-		createBuffer(size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, buffer, deviceMemory);
+		createBuffer(
+			size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, buffer, deviceMemory);
 	}
-	void *bufferData;
+	void* bufferData;
 	vkMapMemory(device, deviceMemory, 0, size, 0, &bufferData);
 	uint32_t bufferOffset = 0;
-	memcpy((char *)bufferData, pointer, size);
+	memcpy((char*)bufferData, pointer, size);
 	vkUnmapMemory(device, deviceMemory);
 	VkDescriptorBufferInfo storageBufferInfo{};
 	storageBufferInfo.buffer = buffer;
@@ -1302,7 +1303,7 @@ void VulkanRenderer::ensureEntity(Entity& entity)
 				shaderBufferInfos.push_back(
 					{{std::get<0>(uboLayoutBindingPair.first), std::get<3>(uboLayoutBindingPair.first) + index}, bufferInfo});
 				shaderImpl.shaderUniformLocationTable[shaderHash][std::get<2>(uboLayoutBindingPair.first) + "[" +
-																											 std::to_string(index) + "]"] = uniformBuffersMappedIndex;
+																													std::to_string(index) + "]"] = uniformBuffersMappedIndex;
 			}
 		}
 	}
