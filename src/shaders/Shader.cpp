@@ -1,10 +1,12 @@
 #include <zg/shaders/Shader.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/textures/Texture.hpp>
+#include <zg/crypto/vector.hpp>
 using namespace zg::shaders;
 Shader::Shader(Window &window, const RuntimeConstants &constants, const std::vector<ShaderType> &shaderTypes):
   window(window),
-  constants(constants)
+  constants(constants),
+  hash(crypto::hashVector(constants))
 {
   window.iRenderer->initShader(*this, constants, shaderTypes);
 }

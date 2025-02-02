@@ -22,6 +22,7 @@ namespace zg::shaders
 		using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
 		Window& window;
 		RuntimeConstants constants;
+		size_t hash = 0;
 		void* rendererData = 0;
 		Shader(Window& window, const RuntimeConstants& constants,
 					 const std::vector<ShaderType>& shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});

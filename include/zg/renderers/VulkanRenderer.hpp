@@ -107,6 +107,7 @@ namespace zg
 		void setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
 										enums::EUniformType uniformType) override;
 		void setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
+		int32_t getUniformLocation(shaders::Shader &shader, const std::string_view &name);
 		void deleteBuffer(uint32_t id) override;
 		void bindShader(const shaders::Shader& shader) override;
 		void unbindShader(const shaders::Shader& shader) override;
@@ -174,15 +175,6 @@ namespace zg
 		VkDeviceMemory indiceBufferMemory = VK_NULL_HANDLE;
 		void* indiceData = 0;
 		uint32_t indiceBufferSize;
-		std::unordered_map<uint32_t, VkDescriptorPool> shaderDescriptorPool;
-		std::unordered_map<uint32_t, VkDescriptorSet> shaderDescriptorSet;
-		std::unordered_map<uint32_t, std::vector<VkBuffer>> shaderUniformBuffers;
-		std::unordered_map<uint32_t, std::vector<VkDeviceMemory>> shaderUniformBuffersMemory;
-		std::unordered_map<uint32_t, std::vector<void*>> shaderUniformBuffersMapped;
-		std::unordered_map<uint32_t,
-											 std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t>, VkDescriptorBufferInfo>>>
-			shaderBufferInfos;
-		std::unordered_map<uint32_t, std::unordered_map<std::string, int32_t>> shaderUniformLocationTable;
 	};
 	struct VulkanShaderImpl
 	{
@@ -203,6 +195,15 @@ namespace zg
 		std::unordered_map<std::string, std::tuple<uint32_t, VkBuffer, VkDeviceMemory, uint32_t, uint32_t>> ssboBindings;
 		std::unordered_map<std::string, uint32_t> textureArrayBindings;
 		std::unordered_map<std::string, uint32_t> uboStringBindings;
+		std::unordered_map<uint32_t, VkDescriptorPool> shaderDescriptorPool;
+		std::unordered_map<uint32_t, VkDescriptorSet> shaderDescriptorSet;
+		std::unordered_map<uint32_t, std::vector<VkBuffer>> shaderUniformBuffers;
+		std::unordered_map<uint32_t, std::vector<VkDeviceMemory>> shaderUniformBuffersMemory;
+		std::unordered_map<uint32_t, std::vector<void*>> shaderUniformBuffersMapped;
+		std::unordered_map<uint32_t,
+											 std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t>, VkDescriptorBufferInfo>>>
+			shaderBufferInfos;
+		std::unordered_map<uint32_t, std::unordered_map<std::string, int32_t>> shaderUniformLocationTable;
 	};
 } // namespace zg
 #endif

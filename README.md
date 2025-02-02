@@ -87,7 +87,7 @@ struct ExampleScene : Scene
 };
 int main()
 {
-    Window window("My Window Title", 640, 480, -1, -1);
+    Window window("Cube Window", 640, 480, -1, -1);
     window.runOnThread([](auto &window)
     {
         window.setIScene(std::make_shared<ExampleScene>((Window &)window));
