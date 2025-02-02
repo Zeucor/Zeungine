@@ -30,8 +30,8 @@ void MetalRenderer::setBlock(shaders::Shader& shader, const std::string_view nam
 void MetalRenderer::deleteBuffer(uint32_t id) {}
 void MetalRenderer::bindShader(const shaders::Shader& shader) {}
 void MetalRenderer::unbindShader(const shaders::Shader& shader) {}
-void MetalRenderer::addSSBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex) {}
-void MetalRenderer::addUBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex) {}
+void MetalRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) {}
+void MetalRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) {}
 void MetalRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) {}
 void MetalRenderer::setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
 																const int32_t unit)

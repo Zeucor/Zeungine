@@ -57,8 +57,8 @@ namespace zg
 		virtual void deleteBuffer(uint32_t id) = 0;
 		virtual void bindShader(const shaders::Shader& shader) = 0;
 		virtual void unbindShader(const shaders::Shader& shader) = 0;
-		virtual void addSSBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex) = 0;
-		virtual void addUBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex) = 0;
+		virtual void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) = 0;
+		virtual void addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount = 1, bool isArray = false) = 0;
 		virtual void setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) = 0;
 		virtual void setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
 														const int32_t unit) = 0;

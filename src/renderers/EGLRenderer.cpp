@@ -248,7 +248,7 @@ void EGLRenderer::unbindShader(const shaders::Shader& shader)
 	glUseProgram(0);
 	GLcheck(*this, "glUseProgram");
 }
-void EGLRenderer::addSSBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
+void EGLRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	GLuint ssboBufferID;
@@ -258,7 +258,7 @@ void EGLRenderer::addSSBO(shaders::Shader& shader, const std::string_view name, 
 	std::get<0>(ssboBinding) = bindingIndex;
 	std::get<1>(ssboBinding) = ssboBufferID;
 }
-void EGLRenderer::addUBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
+void EGLRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	GLuint uboBufferID;

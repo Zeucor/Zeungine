@@ -27,8 +27,8 @@ namespace zg
 		void deleteBuffer(uint32_t id) override;
 		void bindShader(const shaders::Shader& shader) override;
 		void unbindShader(const shaders::Shader& shader) override;
-		void addSSBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex) override;
-		void addUBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex) override;
+		void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) override;
+		void addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) override;
 		void setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
 		void setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
 										const int32_t unit) override;

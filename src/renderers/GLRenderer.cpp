@@ -318,7 +318,7 @@ void GLRenderer::unbindShader(const shaders::Shader& shader)
 	glContext->UseProgram(0);
 	GLcheck(*this, "glUseProgram");
 }
-void GLRenderer::addSSBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
+void GLRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	GLuint ssboBufferID;
@@ -328,7 +328,7 @@ void GLRenderer::addSSBO(shaders::Shader& shader, const std::string_view name, u
 	std::get<0>(ssboBinding) = bindingIndex;
 	std::get<1>(ssboBinding) = ssboBufferID;
 }
-void GLRenderer::addUBO(shaders::Shader& shader, const std::string_view name, uint32_t bindingIndex)
+void GLRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	GLuint uboBufferID;

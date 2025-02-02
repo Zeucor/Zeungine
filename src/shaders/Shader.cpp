@@ -20,13 +20,13 @@ void Shader::unbind() const
 {
   window.iRenderer->unbindShader(*this);
 }
-void Shader::addSSBO(const std::string_view name, uint32_t bindingIndex)
+void Shader::addSSBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex)
 {
-  window.iRenderer->addSSBO(*this, name, bindingIndex);
+  window.iRenderer->addSSBO(*this, shaderType, name, bindingIndex);
 }
-void Shader::addUBO(const std::string_view name, uint32_t bindingIndex)
+void Shader::addUBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
 {
-  window.iRenderer->addUBO(*this, name, bindingIndex);
+  window.iRenderer->addUBO(*this, shaderType, name, bindingIndex, bufferSize, descriptorCount, isArray);
 }
 void Shader::setSSBO(const std::string_view name, const void *pointer, uint32_t size)
 {

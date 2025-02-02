@@ -28,8 +28,8 @@ namespace zg::shaders
 		~Shader();
 		void bind() const;
 		void unbind() const;
-		void addSSBO(const std::string_view name, uint32_t bindingIndex);
-		void addUBO(const std::string_view name, uint32_t bindingIndex);
+		void addSSBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex);
+		void addUBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount = 1, bool isArray = false);
 
 		template <typename T>
 		void setUniform(const std::string_view name, const T& value, uint32_t size = 0)

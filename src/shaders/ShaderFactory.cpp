@@ -104,7 +104,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO("View", bindingIndex);
+                  shader.addUBO(ShaderType::Vertex, "View", bindingIndex, sizeof(glm::mat4));
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform View {\n" +
                     "  mat4 matrix;\n" +
                     "} view;";
@@ -119,7 +119,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO("Projection", bindingIndex);
+                  shader.addUBO(ShaderType::Vertex, "Projection", bindingIndex, sizeof(glm::mat4));
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Projection {\n" +
                     "  mat4 matrix;\n" +
                     "} projection;";
@@ -134,7 +134,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO("Model", bindingIndex);
+                  shader.addUBO(ShaderType::Vertex, "Model", bindingIndex, sizeof(glm::mat4));
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Model {\n" +
                     "  mat4 matrix;\n" +
                     "} model;";
@@ -175,7 +175,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO("LightSpaceMatrix", bindingIndex);
+                  shader.addUBO(ShaderType::Vertex, "LightSpaceMatrix", bindingIndex, sizeof(glm::mat4));
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform LightSpaceMatrix {\n" +
                     "  mat4 matrix;\n" +
                     "} lightSpaceMatrix;";
@@ -190,7 +190,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   std::string string;
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO("DirectionalLightSpaceMatrices", bindingIndex);
+                  shader.addUBO(ShaderType::Vertex, "DirectionalLightSpaceMatrices", bindingIndex, sizeof(glm::mat4));
                   string += "layout(binding = " + std::to_string(bindingIndex) +
                     ") uniform DirectionalLightSpaceMatrices {\n" +
                     " mat4 matrix[4];\n" +
@@ -199,7 +199,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     ") out vec4 outDirectionalLightSpacePositions[4];\n";
                   ShaderFactory::currentOutLayoutIndex += 4;
                   bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO("SpotLightSpaceMatrices", bindingIndex);
+                  shader.addUBO(ShaderType::Vertex, "SpotLightSpaceMatrices", bindingIndex, sizeof(glm::mat4));
                   string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform SpotLightSpaceMatrices {\n"
                     +
                     "  mat4 matrix[4];\n" +
@@ -372,7 +372,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
                     auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                    shader.addUBO("PointLightSpaceMatrix", bindingIndex);
+                    shader.addUBO(ShaderType::Geometry, "PointLightSpaceMatrix", bindingIndex, sizeof(glm::mat4));
                     return "layout(binding = " + std::to_string(bindingIndex) + ") uniform PointLightSpaceMatrix {\n" +
                       "  mat4 matrix[6];\n" +
                       "} pointLightSpaceMatrix;";
@@ -502,7 +502,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO("CameraPosition", bindingIndex);
+                  shader.addUBO(ShaderType::Fragment, "CameraPosition", bindingIndex, sizeof(glm::vec3));
                   return "layout(binding = " + std::to_string(bindingIndex) + ") uniform CameraPosition {\n" +
                     " vec3 value;\n" +
                     "} cameraPosition;";
@@ -573,19 +573,19 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  float farPlane;\n"
                     "};\n";
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addSSBO("PointLights", bindingIndex);
+                  shader.addSSBO(ShaderType::Fragment, "PointLights", bindingIndex);
                   string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer PointLightBuffer {\n"
                     +
                     " PointLight pointLights[];\n" +
                     "};\n";
                   bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addSSBO("DirectionalLights", bindingIndex);
+                  shader.addSSBO(ShaderType::Fragment, "DirectionalLights", bindingIndex);
                   string += "layout(std430, binding = " + std::to_string(bindingIndex) +
                     ") buffer DirectionalLightBuffer {\n" +
                     " DirectionalLight directionalLights[];\n" +
                     "};\n";
                   bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addSSBO("SpotLights", bindingIndex);
+                  shader.addSSBO(ShaderType::Fragment, "SpotLights", bindingIndex);
                   string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer SpotLightBuffer {\n"
                     +
                     " SpotLight spotLights[];\n" +
