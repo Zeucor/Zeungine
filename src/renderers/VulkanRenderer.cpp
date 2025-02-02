@@ -744,7 +744,44 @@ void VulkanRenderer::setUniform(shaders::Shader& shader, const std::string_view 
 }
 void VulkanRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) {}
 void VulkanRenderer::deleteBuffer(uint32_t id) {}
-void VulkanRenderer::bindShader(const shaders::Shader& shader) {}
+void VulkanRenderer::bindShader(const shaders::Shader& shader)
+{
+	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.graphicsPipeline);
+	// if (currentFramebuffer.pointer)
+	// {
+	// 	auto &framebuffer = *currentFramebuffer.pointer;
+	// 	auto &vulkanFramebuffer = *(VulkanFramebuffer *)framebuffer.vendorData;
+	// 	VkViewport viewport{};
+	// 	viewport.x = 0.0f;
+	// 	viewport.y = vulkanFramebuffer.height;
+	// 	viewport.width = (float)vulkanFramebuffer.width;
+	// 	viewport.height = -(float)vulkanFramebuffer.height;
+	// 	viewport.minDepth = 0.0f;
+	// 	viewport.maxDepth = 1.0f;
+	// 	vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
+	// 	VkRect2D scissor{};
+	// 	scissor.offset = {0, 0};
+	// 	scissor.extent.width = vulkanFramebuffer.width;
+	// 	scissor.extent.height = vulkanFramebuffer.height;
+	// 	vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+	// }
+	// else
+	// {
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = swapChainExtent.height;
+	viewport.width = (float)swapChainExtent.width;
+	viewport.height = -(float)swapChainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
+	VkRect2D scissor{};
+	scissor.offset = {0, 0};
+	scissor.extent = swapChainExtent;
+	vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+	// }
+}
 void VulkanRenderer::unbindShader(const shaders::Shader& shader) {}
 void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex)
 {
