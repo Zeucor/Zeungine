@@ -16,7 +16,6 @@
 #include <zg/windows/MacOSWindow.hpp>
 #endif
 using namespace zg;
-constexpr int MAX_FRAMES_IN_FLIGHT = 5;
 VulkanRenderer::VulkanRenderer() {}
 VulkanRenderer::~VulkanRenderer() {}
 void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
@@ -49,6 +48,7 @@ void VulkanRenderer::createInstance()
 	VkInstanceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
+	createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 	//
 	std::vector<const char*> extensions;
 	extensions.push_back("VK_KHR_surface");
@@ -56,7 +56,11 @@ void VulkanRenderer::createInstance()
 	extensions.push_back("VK_KHR_xlib_surface");
 #elif defined(ANDROID)
 	extensions.push_back("VK_KHR_android_surface");
+#elif defined(MACOS)
+	extensions.push_back("VK_MVK_macos_surface");
+	extensions.push_back("VK_EXT_headless_surface");
 #endif
+	extensions.push_back("VK_KHR_portability_enumeration");
 #ifndef NDEBUG
 	extensions.push_back("VK_EXT_debug_utils");
 #endif
@@ -323,17 +327,25 @@ void VulkanRenderer::createLogicalDevice()
 	descriptorIndexingFeatures.pNext = nullptr;
 	VkPhysicalDeviceFeatures2 deviceFeatures{};
 	deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	deviceFeatures.pNext = &descriptorIndexingFeatures;
+	vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures);
 	deviceFeatures.features.depthClamp = VK_TRUE;
 	deviceFeatures.features.depthBiasClamp = VK_TRUE;
 	deviceFeatures.features.samplerAnisotropy = VK_TRUE;
-	deviceFeatures.pNext = &descriptorIndexingFeatures;
-	vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures);
-	assert(descriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing);
-	assert(descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind);
-	assert(descriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing);
-	assert(descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind);
-	assert(descriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing);
-	assert(descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind);
+	deviceFeatures.features.robustBufferAccess = VK_TRUE;
+	// descriptorIndexingFeatures.robustBufferAccessUpdateAfterBind = VK_FALSE;
+	descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_FALSE;
+	descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_FALSE;
+	descriptorIndexingFeatures.descriptorBindingUniformTexelBufferUpdateAfterBind = VK_FALSE;
+	descriptorIndexingFeatures.descriptorBindingStorageTexelBufferUpdateAfterBind = VK_FALSE;
+	// assert(descriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing);
+	// assert(descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind);
+	// assert(descriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing);
+	// #ifndef MACOS
+	// 	assert(descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind);
+	// #endif
+	// 	assert(descriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing);
+	// 	assert(descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind);
 	createInfo.pNext = &deviceFeatures;
 	auto createdDevice = VKcheck("vkCreateDevice", vkCreateDevice(physicalDevice, &createInfo, nullptr, &device));
 	if (!createdDevice)
@@ -607,6 +619,7 @@ void VulkanRenderer::init() {}
 void VulkanRenderer::destroy() {}
 void VulkanRenderer::preBeginRenderPass()
 {
+	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE,
 												&imageIndex);
@@ -629,7 +642,7 @@ void VulkanRenderer::beginRenderPass()
 	renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
 	renderPassInfo.renderArea.offset = {0, 0};
 	renderPassInfo.renderArea.extent = swapChainExtent;
-	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	glm::vec4 clearColor(0, 0, 0, 1);
 	if (renderWindow.scene)
 	{
@@ -675,7 +688,6 @@ void VulkanRenderer::postRenderPass()
 	presentInfo.pImageIndices = &imageIndex;
 	vkQueueWaitIdle(presentQueue);
 	vkQueuePresentKHR(presentQueue, &presentInfo);
-	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	return;
 }
 std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new VulkanRenderer()); }
@@ -747,6 +759,60 @@ void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_v
 void VulkanRenderer::drawVAO(const vaos::VAO& vao) {}
 void VulkanRenderer::generateVAO(vaos::VAO& vao) {}
 void VulkanRenderer::destroyVAO(vaos::VAO& vao) {}
+VkCommandBuffer VulkanRenderer::beginSingleTimeCommands()
+{
+	VkCommandBuffer commandBuffer;
+	VkCommandBufferAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = commandPool;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandBufferCount = 1;
+	if (vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to allocate command buffer!");
+	}
+	VkCommandBufferBeginInfo beginInfo = {};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	beginInfo.pInheritanceInfo = nullptr;
+	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to begin command buffer!");
+	}
+	return commandBuffer;
+}
+
+// Function to end the single-time command and submit it to the GPU
+void VulkanRenderer::endSingleTimeCommands(VkCommandBuffer commandBuffer)
+{
+	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to end command buffer!");
+	}
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to submit command buffer!");
+	}
+	vkQueueWaitIdle(graphicsQueue);
+	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+}
+uint32_t VulkanRenderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
+	VkPhysicalDeviceMemoryProperties memProperties;
+	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+	{
+		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+		{
+			return i;
+		}
+	}
+	throw std::runtime_error("VulkanRenderer-findMemoryType: failed to find suitable memory type!");
+};
 bool zg::VKcheck(const char* fn, VkResult result)
 {
 	switch (result)

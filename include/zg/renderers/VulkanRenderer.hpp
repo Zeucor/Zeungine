@@ -33,6 +33,7 @@ namespace zg
 		std::vector<VkSurfaceFormatKHR> formats;
 		std::vector<VkPresentModeKHR> presentModes;
 	};
+	constexpr int MAX_FRAMES_IN_FLIGHT = 3;
 	struct VulkanRenderer : IRenderer
 	{
 		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
@@ -131,6 +132,9 @@ namespace zg
 		void drawVAO(const vaos::VAO& vao) override;
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
+		VkCommandBuffer beginSingleTimeCommands();
+		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	};
 	bool VKcheck(const char* fn, VkResult result);
 	struct VulkanTextureImpl
