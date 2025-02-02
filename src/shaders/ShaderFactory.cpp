@@ -1078,7 +1078,7 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	ShaderPair shaderPair;
 	auto& shaderString = shaderPair.first;
 	auto& shaderHooks = hooks[shaderType];
-#ifdef USE_GL
+#if defined(USE_GL) || defined(USE_VULKAN)
 	shaderString += "#version 460 core\n";
   shaderString += "precision highp float;\n";
   shaderString += "precision highp samplerCube;\n";
@@ -1143,9 +1143,9 @@ bool ShaderFactory::compileShader(Shader& shader, ShaderType shaderType, ShaderP
 {
 	return shader.window.iRenderer->compileShader(shader, shaderType, shaderPair);
 }
-bool ShaderFactory::compileProgram(Shader& shader, const ShaderMap& shaderMap)
+bool ShaderFactory::compileProgram(Shader& shader)
 {
-	return shader.window.iRenderer->compileProgram(shader, shaderMap);
+	return shader.window.iRenderer->compileProgram(shader);
 }
 uint32_t ShaderFactory::addHook(const ShaderType& shaderType, const std::string_view hookName,
 																const std::string_view runtimeConstant, const Shader::ShaderHook& hook)

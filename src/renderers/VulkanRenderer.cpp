@@ -1,4 +1,5 @@
 #ifdef USE_VULKAN
+#include <shaderc/shaderc.hpp>
 #include <zg/Logger.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
@@ -16,6 +17,10 @@
 #include <zg/windows/MacOSWindow.hpp>
 #endif
 using namespace zg;
+static std::unordered_map<shaders::ShaderType, shaderc_shader_kind> stageEShaderc = {
+	{shaders::ShaderType::Vertex, shaderc_vertex_shader},
+	{shaders::ShaderType::Fragment, shaderc_fragment_shader},
+	{shaders::ShaderType::Compute, shaderc_compute_shader}};
 VulkanRenderer::VulkanRenderer() {}
 VulkanRenderer::~VulkanRenderer() {}
 void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
@@ -724,10 +729,10 @@ void VulkanRenderer::viewport(glm::ivec4 vp) const {}
 void VulkanRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeConstants& constants,
 																const std::vector<shaders::ShaderType>& shaderTypes)
 {
-	// shader.rendererData = new VulkanShaderImpl();
-	// auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	// shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
-	// shaders::ShaderFactory::compileProgram(shader, shaderImpl.shaders);
+	shader.rendererData = new VulkanShaderImpl();
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
+	shaders::ShaderFactory::compileProgram(shader);
 }
 void VulkanRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer,
 																uint32_t size, enums::EUniformType uniformType)
@@ -747,13 +752,40 @@ void VulkanRenderer::setTexture(shaders::Shader& shader, const std::string_view 
 bool VulkanRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
 																	 shaders::ShaderPair& shaderPair)
 {
-	return false;
+	shaderc::Compiler compiler;
+	shaderc::CompileOptions compileOptions;
+	auto& shaderString = shaderPair.first;
+	auto& shaderInt = shaderPair.second;
+	shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(shaderString.c_str(), shaderString.size(),
+																																	 stageEShaderc[shaderType], "main", compileOptions);
+	checkCompileErrors(module, true, shaders::stageShaderNames[shaderType].c_str());
+	std::vector<uint32_t> vertexSpv(module.cbegin(), module.cend());
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	shaderImpl.shaders[shaderType] = {shaderString, createShaderModule(vertexSpv)};
+	return true;
 }
-bool VulkanRenderer::compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap) { return false; }
-bool VulkanRenderer::checkCompileErrors(shaders::Shader& shader, const uint32_t& id, bool isShader,
-																				const char* shaderType)
+VkShaderModule VulkanRenderer::createShaderModule(const std::vector<uint32_t> &code)
 {
-	return false;
+	VkShaderModuleCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	createInfo.codeSize = 4 * code.size();
+	createInfo.pCode = code.data();
+	VkShaderModule shaderModule;
+	if (!VKcheck("vkCreateShaderModule", vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule)))
+	{
+		throw std::runtime_error("failed to create shader module!");
+	}
+	return shaderModule;
+};
+bool VulkanRenderer::compileProgram(shaders::Shader& shader) { return false; }
+bool VulkanRenderer::checkCompileErrors(const shaderc::SpvCompilationResult &module, bool isShader, const char *shaderType)
+{
+	if (module.GetCompilationStatus() != shaderc_compilation_status_success)
+	{
+		std::cerr << "SHADER_COMPILATION_ERROR[" << shaderType << "]: " << module.GetErrorMessage().c_str() << std::endl;
+		return false;
+	}
+	return true;
 }
 void VulkanRenderer::deleteShader(shaders::Shader& shader) {}
 void VulkanRenderer::destroyShader(shaders::Shader& shader) {}

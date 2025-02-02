@@ -27,7 +27,7 @@ namespace zg::shaders
 		static void appendHooks(std::string& shaderString, RuntimeHooksMap& runtimeHooks, const RuntimeConstants& constants,
 														Shader& shader);
 		static bool compileShader(Shader& shader, ShaderType shaderType, ShaderPair& shaderPair);
-		static bool compileProgram(Shader& shader, const ShaderMap& shaderMap);
+		static bool compileProgram(Shader& shader);
 		static void deleteProgram(Shader& shader);
 		static uint32_t addHook(const ShaderType& shaderType, const std::string_view hookName,
 														const std::string_view runtimeConstant, const Shader::ShaderHook& hook);

@@ -116,8 +116,9 @@ namespace zg
 										const int32_t unit) override;
 		bool compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
 											 shaders::ShaderPair& shaderPair) override;
-		bool compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap) override;
-		bool checkCompileErrors(shaders::Shader& shader, const uint32_t& id, bool isShader, const char* shaderType);
+		VkShaderModule createShaderModule(const std::vector<uint32_t> &code);
+		bool compileProgram(shaders::Shader& shader) override;
+		bool checkCompileErrors(const shaderc::SpvCompilationResult &module, bool isShader, const char *shaderType);
 		void deleteShader(shaders::Shader& shader) override;
 		void destroyShader(shaders::Shader& shader) override;
 		void bindFramebuffer(const textures::Framebuffer& framebuffer) const override;
@@ -180,6 +181,26 @@ namespace zg
 											 std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t>, VkDescriptorBufferInfo>>>
 			shaderBufferInfos;
 		std::unordered_map<uint32_t, std::unordered_map<std::string, int32_t>> shaderUniformLocationTable;
+	};
+	struct VulkanShaderImpl
+	{
+		/**
+		 * @brief
+		 * tuple: 0: layoutBindingType
+		 *        1: bufferSize
+		 *        2: bindingName
+		 *        3: bindingIndex
+		 *        4: isArray
+		 */
+		std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t, std::string, uint32_t, bool>, VkDescriptorSetLayoutBinding>> uboLayoutBindings;
+		VkDescriptorSetLayout descriptorSetLayout;
+		VkPipelineLayout pipelineLayout;
+		VkPipeline graphicsPipeline;
+		shaders::ShaderMap shaders;
+		std::unordered_map<uint32_t, bool> entityTable;
+		std::unordered_map<std::string, std::tuple<uint32_t, VkBuffer, VkDeviceMemory, uint32_t, uint32_t>> ssboBindings;
+		std::unordered_map<std::string, uint32_t> textureArrayBindings;
+		std::unordered_map<std::string, uint32_t> uboStringBindings;
 	};
 } // namespace zg
 #endif

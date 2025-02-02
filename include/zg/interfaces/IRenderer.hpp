@@ -12,8 +12,20 @@ namespace zg
 	namespace shaders
 	{
 		struct Shader;
-		using ShaderPair = std::pair<std::string, uint32_t>;
+#if defined(USE_GL) || defined(USE_EGL)
+		using PShaderType = uint32_t;
+#elif defined(USE_VULKAN)
+		typedef void * PShaderType;
+#endif
+		using ShaderPair = std::pair<std::string, PShaderType>;
 		using ShaderMap = std::map<ShaderType, ShaderPair>;
+		inline static std::unordered_map<ShaderType, std::string> stageShaderNames =
+		{
+		    {ShaderType::Vertex, "vertex"},
+		    {ShaderType::Geometry, "geometry"},
+		    {ShaderType::Fragment, "fragment"},
+		    {ShaderType::Compute, "compute"}
+		};
 	} // namespace shaders
 	namespace textures
 	{
@@ -52,7 +64,7 @@ namespace zg
 														const int32_t unit) = 0;
 		virtual bool compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
 															 shaders::ShaderPair& shaderPair) = 0;
-		virtual bool compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap) = 0;
+		virtual bool compileProgram(shaders::Shader& shader) = 0;
 		virtual void deleteShader(shaders::Shader& shader) = 0;
 		virtual void destroyShader(shaders::Shader& shader) = 0;
 		virtual void bindFramebuffer(const textures::Framebuffer& framebuffer) const = 0;

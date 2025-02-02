@@ -33,7 +33,7 @@ namespace zg
 										const int32_t unit) override;
 		bool compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
 											 shaders::ShaderPair& shaderPair) override;
-		bool compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap) override;
+		bool compileProgram(shaders::Shader& shader) override;
 		bool checkCompileErrors(shaders::Shader& shader, const uint32_t& id, bool isShader, const char* shaderType);
 		void deleteShader(shaders::Shader& shader) override;
 		void destroyShader(shaders::Shader& shader) override;

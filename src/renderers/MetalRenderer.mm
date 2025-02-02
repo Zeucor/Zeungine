@@ -42,7 +42,7 @@ bool MetalRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType s
 {
 	return false;
 }
-bool MetalRenderer::compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap) { return false; }
+bool MetalRenderer::compileProgram(shaders::Shader& shader) { return false; }
 bool MetalRenderer::checkCompileErrors(shaders::Shader& shader, const uint32_t& id, bool isShader,
 																				const char* shaderType)
 {

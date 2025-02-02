@@ -199,7 +199,7 @@ void GLRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeConst
 	shader.rendererData = new shaders::GLShaderImpl();
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
-	shaders::ShaderFactory::compileProgram(shader, shaderImpl.shaders);
+	shaders::ShaderFactory::compileProgram(shader);
 }
 void GLRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
 														enums::EUniformType uniformType)
@@ -378,18 +378,18 @@ bool GLRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType shad
 	auto success = checkCompileErrors(shader, shaderInt, true, shaders::ShaderFactory::shaderNames[shaderType].data());
 	return success;
 }
-bool GLRenderer::compileProgram(shaders::Shader& shader, const shaders::ShaderMap& shaderMap)
+bool GLRenderer::compileProgram(shaders::Shader& shader)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	shaderImpl.program = glContext->CreateProgram();
 	GLcheck(*this, "glCreateProgram");
-	for (const auto& shaderMapPair : shaderMap)
+	for (const auto& shaderMapPair : shaderImpl.shaderMap)
 	{
 		glContext->AttachShader(shaderImpl.program, shaderMapPair.second.second);
 		GLcheck(*this, "glAttachShader");
 	}
 	glContext->LinkProgram(shaderImpl.program);
-	for (const auto& shaderMapPair : shaderMap)
+	for (const auto& shaderMapPair : shaderImpl.shaderMap)
 	{
 		glContext->DeleteShader(shaderMapPair.second.second);
 		GLcheck(*this, "glDeleteShader");
