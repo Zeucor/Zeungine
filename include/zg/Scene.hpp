@@ -30,6 +30,7 @@ namespace zg
 		Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer = 0);
 		Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer = 0);
 		~Scene();
+		virtual void update();
 		void preRender() override;
 		void render() override;
 		void entityPreRender(IEntity &entity) override;

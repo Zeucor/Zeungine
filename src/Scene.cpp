@@ -28,8 +28,10 @@ Scene::~Scene()
 {
 	unhookMouseEvents();
 };
+void Scene::update() {}
 void Scene::preRender()
 {
+	update();
 	auto &iRenderer = *window.iRenderer;
 	for (auto &directionaLightShadow : directionalLightShadows)
 	{

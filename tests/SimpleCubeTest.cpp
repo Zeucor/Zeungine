@@ -6,6 +6,7 @@ using namespace zg;
 struct ExampleScene : Scene
 {
 	vp::VML vml; // view mouse look
+	float deltaTimeCounter = 0;
 	ExampleScene(Window &window):
 			Scene(window,
 						{0, 10, 10}, // camera position
@@ -14,6 +15,7 @@ struct ExampleScene : Scene
 			),
 			vml(*this)
 	{
+		clearColor = {1, 0, 1, 1};
 		addEntity(std::make_shared<entities::Cube>(
 				window, // reference to window
 				*this, // reference to scene
@@ -24,6 +26,11 @@ struct ExampleScene : Scene
 				shaders::RuntimeConstants() // additional shader constants
 		));
 	};
+	void update() override
+	{
+		deltaTimeCounter += window.deltaTime;
+		clearColor = {std::sin(deltaTimeCounter), std::cos(deltaTimeCounter), std::tan(deltaTimeCounter), 1};
+	}
 };
 int main()
 {
