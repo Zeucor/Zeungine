@@ -173,6 +173,8 @@ if(LINUX)
 elseif(MACOS)
     find_package(OpenGL REQUIRED)
     target_link_libraries(zeungine ${OPENGL_LIBRARY} "-framework Cocoa" "-framework QuartzCore")
+    find_package(Vulkan REQUIRED)
+    include_directories(${Vulkan_INCLUDE_DIRS})
 endif()
 if(LINUX)
     target_link_libraries(zeungine
@@ -195,7 +197,9 @@ elseif(MACOS)
         ${ANGLE_LIB_DIR}/libchrome_zlib.dylib
         ${ANGLE_LIB_DIR}/libdawn_native.dylib
         ${ANGLE_LIB_DIR}/libdawn_platform.dylib
-        ${ANGLE_LIB_DIR}/libdawn_proc.dylib)
+        ${ANGLE_LIB_DIR}/libdawn_proc.dylib
+        ${ANGLE_LIB_DIR}/libvk_swiftshader.dylib
+        ${Vulkan_LIBRARIES})
 endif()
 
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
