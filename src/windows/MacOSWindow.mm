@@ -178,8 +178,33 @@ bool MacOSWindow::pollMessages()
 					std::cout << "Key Up" << std::endl;
 					break;
 				case NSEventTypeMouseMoved:
-					std::cout << "Mouse Moved" << std::endl;
+				{
+					NSPoint location = [event locationInWindow];
+					std::cout << "Mouse Moved: X=" << location.x << " Y=" << location.y << std::endl;
+					auto x = location.x;
+					auto y = renderWindowPointer->windowHeight - location.y;
+					bool hadChildFocus = false;
+					for (auto &childWindowPointer : renderWindowPointer->childWindows)
+					{
+						auto &childWindow = *childWindowPointer;
+						if (childWindow.minimized)
+							continue;
+						if (!childWindow.focused)
+							continue;
+						auto childX = x - childWindow.windowX;
+						auto childY = childWindow.windowHeight - (renderWindowPointer->windowHeight - y - childWindow.windowY);
+						childWindow.mouseCoords.x = childX, childWindow.mouseCoords.y = childY;
+						childWindow.mouseMoved = true;
+						hadChildFocus = true;
+						break;
+					}
+					if (!hadChildFocus)
+					{
+						renderWindowPointer->mouseCoords.y = y, renderWindowPointer->mouseCoords.x = x;
+						renderWindowPointer->mouseMoved = true;
+					}
 					break;
+				}
 				case NSEventTypeLeftMouseDragged:
 				case NSEventTypeRightMouseDragged:
 				case NSEventTypeOtherMouseDragged:
