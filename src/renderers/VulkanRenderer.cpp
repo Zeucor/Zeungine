@@ -776,7 +776,7 @@ VkShaderModule VulkanRenderer::createShaderModule(const std::vector<uint32_t> &c
 		throw std::runtime_error("failed to create shader module!");
 	}
 	return shaderModule;
-};
+}
 bool VulkanRenderer::compileProgram(shaders::Shader& shader) { return false; }
 bool VulkanRenderer::checkCompileErrors(const shaderc::SpvCompilationResult &module, bool isShader, const char *shaderType)
 {
