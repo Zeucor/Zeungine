@@ -16,6 +16,7 @@
 #include <zg/windows/MacOSWindow.hpp>
 #endif
 using namespace zg;
+constexpr int MAX_FRAMES_IN_FLIGHT = 5;
 VulkanRenderer::VulkanRenderer() {}
 VulkanRenderer::~VulkanRenderer() {}
 void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
@@ -424,9 +425,9 @@ SwapChainSupportDetails VulkanRenderer::querySwapChainSupport(VkPhysicalDevice d
 	}
 	return details;
 }
-VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
+VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
-	for (auto &availableFormat : availableFormats)
+	for (auto& availableFormat : availableFormats)
 	{
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM)
 		{
@@ -435,10 +436,10 @@ VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkS
 	}
 	return availableFormats[0];
 }
-VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes)
+VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
 {
-	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
-	for (auto &availablePresentMode : availablePresentModes)
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
+	for (auto& availablePresentMode : availablePresentModes)
 	{
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR && !renderWindow.vsync)
 		{
@@ -453,20 +454,154 @@ VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPrese
 }
 VkExtent2D VulkanRenderer::chooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities)
 {
-	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
-	VkExtent2D actualExtent = {
-	    static_cast<uint32_t>(renderWindow.windowWidth),
-	    static_cast<uint32_t>(renderWindow.windowHeight)};
-	actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-	actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
+	VkExtent2D actualExtent = {static_cast<uint32_t>(renderWindow.windowWidth),
+														 static_cast<uint32_t>(renderWindow.windowHeight)};
+	actualExtent.width =
+		std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+	actualExtent.height =
+		std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 	return actualExtent;
 }
-void VulkanRenderer::createImageViews() {}
-void VulkanRenderer::createRenderPass() {}
-void VulkanRenderer::createFramebuffers() {}
-void VulkanRenderer::createCommandPool() {}
-void VulkanRenderer::createCommandBuffers() {}
-void VulkanRenderer::createSyncObjects() {}
+void VulkanRenderer::createImageViews()
+{
+	auto swapChainImagesSize = swapChainImages.size();
+	swapChainImageViews.resize(swapChainImagesSize);
+	for (uint32_t index = 0; index < swapChainImagesSize; index++)
+	{
+		VkImageViewCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		createInfo.image = swapChainImages[index];
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		createInfo.format = swapChainImageFormat;
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		createInfo.subresourceRange.baseMipLevel = 0;
+		createInfo.subresourceRange.levelCount = 1;
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		createInfo.subresourceRange.layerCount = 1;
+		if (!VKcheck("vkCreateImageView", vkCreateImageView(device, &createInfo, nullptr, &(swapChainImageViews[index]))))
+		{
+			throw std::runtime_error("VulkanRenderer-createImageViews: failed to create imageView");
+		}
+	}
+	return;
+}
+void VulkanRenderer::createRenderPass()
+{
+	VkAttachmentDescription colorAttachment{};
+	colorAttachment.format = swapChainImageFormat;
+	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	VkAttachmentReference colorAttachmentRef{};
+	colorAttachmentRef.attachment = 0;
+	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	VkSubpassDescription subpass{};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &colorAttachmentRef;
+	VkSubpassDependency dependency{};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	VkRenderPassCreateInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.attachmentCount = 1;
+	renderPassInfo.pAttachments = &colorAttachment;
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &subpass;
+	renderPassInfo.dependencyCount = 1;
+	renderPassInfo.pDependencies = &dependency;
+	if (!VKcheck("vkCreateRenderPass", vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass)))
+	{
+		throw std::runtime_error("VulkanRenderer-createRenderPass: failed to create render pass!");
+	}
+	return;
+}
+void VulkanRenderer::createFramebuffers()
+{
+	auto swapChainImageViewsSize = swapChainImageViews.size();
+	swapChainFramebuffers.resize(swapChainImageViewsSize);
+	for (uint32_t index = 0; index < swapChainImageViewsSize; index++)
+	{
+		VkImageView attachments[] = {swapChainImageViews[index]};
+		VkFramebufferCreateInfo framebufferInfo{};
+		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebufferInfo.renderPass = renderPass;
+		framebufferInfo.attachmentCount = 1;
+		framebufferInfo.pAttachments = attachments;
+		framebufferInfo.width = swapChainExtent.width;
+		framebufferInfo.height = swapChainExtent.height;
+		framebufferInfo.layers = 1;
+		if (!VKcheck("vkCreateFramebuffer",
+								 vkCreateFramebuffer(device, &framebufferInfo, nullptr, &(swapChainFramebuffers[index]))))
+		{
+			throw std::runtime_error("VulkanRenderer-createFramebuffers: failed to create framebuffer!");
+		}
+	}
+	return;
+}
+void VulkanRenderer::createCommandPool()
+{
+	QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
+	VkCommandPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
+	if (!VKcheck("vkCreateCommandPool", vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool)))
+	{
+		throw std::runtime_error("VulkanRenderer-createCommandPool: failed to create command pool!");
+	}
+	return;
+}
+void VulkanRenderer::createCommandBuffers()
+{
+	commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = commandPool;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandBufferCount = commandBuffers.size();
+	if (!VKcheck("vkAllocateCommandBuffers", vkAllocateCommandBuffers(device, &allocInfo, &commandBuffers[0])))
+	{
+		throw std::runtime_error("VulkanRenderer-createCommandBuffers: failed to allocate command buffers!");
+	}
+	return;
+}
+void VulkanRenderer::createSyncObjects()
+{
+	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+	VkSemaphoreCreateInfo semaphoreInfo{};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	VkFenceCreateInfo fenceInfo{};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+	for (size_t j = 0; j < MAX_FRAMES_IN_FLIGHT; j++)
+	{
+		if (!VKcheck("vkCreateSemaphore",
+							vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[j])) ||
+				!VKcheck("vkCreateSemaphore",
+							vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[j])) ||
+				!VKcheck("vkCreateFence", vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[j])))
+		{
+			throw std::runtime_error("VulkanRenderer-createSyncObjects: failed to create synchronization objects for a frame!");
+		}
+	}
+	return;
+}
 void VulkanRenderer::init() {}
 void VulkanRenderer::destroy() {}
 std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new VulkanRenderer()); }
