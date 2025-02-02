@@ -52,6 +52,8 @@ void MacOSWindow::init(Window &renderWindow)
 		nsView = contentView;
 	}
 	nsImage = [[NSImage alloc] initWithSize:NSMakeSize(renderWindow.windowWidth, renderWindow.windowHeight)];
+	NSRect rect = NSMakeRect(0, 0, renderWindow.windowWidth, renderWindow.windowHeight);
+	nsImageView = [[NSImageView alloc] initWithFrame:rect];
 }
 #ifdef USE_GL
 void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
@@ -266,10 +268,8 @@ void MacOSWindow::swapBuffers()
 		}
 		NSImage *image = (NSImage *)nsImage;
 		[image addRepresentation:bitmapRep];
-		NSRect rect = NSMakeRect(0, 0, renderWindow.windowWidth, renderWindow.windowHeight);
-		NSImageView *imageView = [[NSImageView alloc] initWithFrame:rect];
-		[imageView setImage:image];
-		[(NSView*)nsView addSubview:imageView];
+		[(NSImageView *)nsImageView setImage:(NSImage *)nsImage];
+		[(NSView*)nsView addSubview:(NSImageView *)nsImageView];
 	}
 #endif
 }
