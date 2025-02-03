@@ -78,7 +78,7 @@ void MacOSWindow::init(Window &renderWindow)
 		nsWindow = window;
 		NSView *contentView = [(NSWindow *)nsWindow contentView];
 		nsView = contentView;
-		NSMenu *mainMenu = [[NSMenu alloc] init];
+		NSMenu *mainMenu = [[NSMenu alloc] initWithTitle:nsTitle];
 		[NSApp setMainMenu:mainMenu];
 	}
 	nsImage = [[NSImage alloc] initWithSize:NSMakeSize(renderWindow.windowWidth, renderWindow.windowHeight)];
