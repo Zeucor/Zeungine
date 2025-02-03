@@ -325,11 +325,21 @@ void VulkanRenderer::createLogicalDevice()
 	createInfo.queueCreateInfoCount = queueCreateInfos.size();
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
 	std::vector<const char*> extensions;
+	// check extensions
+	uint32_t extensionCount = 0;
+	// Query number of available extensions
+	vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
+	std::vector<VkExtensionProperties> deviceExtensions(extensionCount);
+	vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, deviceExtensions.data());
+	for (const auto& ext : deviceExtensions)
+	{
+		if (std::strcmp(ext.extensionName, "VK_KHR_portability_subset") == 0)
+		{
+			extensions.push_back("VK_KHR_portability_subset");
+		}
+	}
 	extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	extensions.push_back("VK_KHR_maintenance1");
-#ifdef MACOS
-	extensions.push_back("VK_KHR_portability_subset");
-#endif
 	// extensions[2] = VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME;
 	// extensions[3] = VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME;
 	// extensions[4] = VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME;
