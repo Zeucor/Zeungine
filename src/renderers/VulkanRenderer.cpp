@@ -59,7 +59,6 @@ void VulkanRenderer::createInstance()
 	VkInstanceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
-	createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 	//
 	std::vector<const char*> extensions;
 	extensions.push_back("VK_KHR_surface");
@@ -70,8 +69,9 @@ void VulkanRenderer::createInstance()
 #elif defined(MACOS)
 	extensions.push_back("VK_MVK_macos_surface");
 	extensions.push_back("VK_EXT_headless_surface");
-#endif
 	extensions.push_back("VK_KHR_portability_enumeration");
+	createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 #ifndef NDEBUG
 	extensions.push_back("VK_EXT_debug_utils");
 #endif
@@ -327,6 +327,9 @@ void VulkanRenderer::createLogicalDevice()
 	std::vector<const char*> extensions;
 	extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	extensions.push_back("VK_KHR_maintenance1");
+#ifdef MACOS
+	extensions.push_back("VK_KHR_portability_subset");
+#endif
 	// extensions[2] = VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME;
 	// extensions[3] = VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME;
 	// extensions[4] = VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME;
