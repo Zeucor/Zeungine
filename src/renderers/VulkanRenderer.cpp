@@ -389,10 +389,10 @@ void VulkanRenderer::createLogicalDevice()
 	deviceFeatures.features.samplerAnisotropy = VK_TRUE;
 	deviceFeatures.features.robustBufferAccess = VK_TRUE;
 	// descriptorIndexingFeatures.robustBufferAccessUpdateAfterBind = VK_FALSE;
-	descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
-	descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
-	descriptorIndexingFeatures.descriptorBindingUniformTexelBufferUpdateAfterBind = VK_TRUE;
-	descriptorIndexingFeatures.descriptorBindingStorageTexelBufferUpdateAfterBind = VK_TRUE;
+	descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_FALSE;
+	descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_FALSE;
+	descriptorIndexingFeatures.descriptorBindingUniformTexelBufferUpdateAfterBind = VK_FALSE;
+	descriptorIndexingFeatures.descriptorBindingStorageTexelBufferUpdateAfterBind = VK_FALSE;
 	// assert(descriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing);
 	// assert(descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind);
 	// assert(descriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing);
