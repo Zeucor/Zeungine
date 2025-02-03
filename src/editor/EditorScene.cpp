@@ -177,8 +177,8 @@ EditorScene::EditorScene(Window& window):
 {
 	(*projectNameInput->textPointer) = "EditorGame";
 	(*projectDirectoryInput->textPointer) = "C:/Users/Steven/Projects/EditorGame";
-	projectNameInput->handleKey(0, true);
-	projectDirectoryInput->handleKey(0, true);
+	// projectNameInput->handleKey(0, true);
+	// projectDirectoryInput->handleKey(0, true);
 	closeDialogButton->handler = [&]()
 	{
 		removeEntity(activeDialog->ID);
@@ -355,7 +355,7 @@ void EditorScene::setupToolbarOptions()
 	{
 		addEntity(newProjectDialog);
 		activeDialog = newProjectDialog;
-		bvh.removeEntity(*this, *toolbar->fileDropdown);
+		bvh->removeEntity(*this, *toolbar->fileDropdown);
 		toolbar->file->removeChild(toolbar->fileDropdownID);
 	});
 	fileDropdown.addOption("Open Project", []()

@@ -29,6 +29,7 @@ namespace zg
 		void unbindShader(const shaders::Shader& shader) override;
 		void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) override;
 		void addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) override;
+		void addTexture(shaders::Shader &shader, uint32_t bindingIndex, shaders::ShaderType shaderType, std::string_view textureName, uint32_t descriptorCount) override;
 		void setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
 		void setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
 										const int32_t unit) override;
@@ -38,8 +39,8 @@ namespace zg
 		bool checkCompileErrors(shaders::Shader& shader, const GLuint& id, bool isShader, const char* shaderType);
 		void deleteShader(shaders::Shader& shader) override;
 		void destroyShader(shaders::Shader& shader) override;
-		void bindFramebuffer(const textures::Framebuffer& framebuffer) const override;
-		void unbindFramebuffer(const textures::Framebuffer& framebuffer) const override;
+		void bindFramebuffer(const textures::Framebuffer& framebuffer) override;
+		void unbindFramebuffer(const textures::Framebuffer& framebuffer) override;
 		void initFramebuffer(textures::Framebuffer& framebuffer) override;
 		void destroyFramebuffer(textures::Framebuffer& framebuffer) override;
 		void bindTexture(const textures::Texture& texture) override;
@@ -54,7 +55,7 @@ namespace zg
 		void drawVAO(const vaos::VAO& vao) override;
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
-		void ensureEntity(Entity& entity) override;
+		void ensureShader(shaders::Shader& shader) override;
 	};
 	const bool GLcheck(const GLRenderer& renderer, const char* fn, const bool egl = false);
 } // namespace zg

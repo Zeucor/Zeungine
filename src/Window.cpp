@@ -90,6 +90,7 @@ void Window::startWindow()
 		updateKeyboard();
 		updateMouse();
 		iRenderer->preBeginRenderPass();
+		update();
 		for (auto &childWindowPointer : childWindows)
 		{
 			auto &childWindow = *childWindowPointer;

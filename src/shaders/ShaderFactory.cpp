@@ -601,7 +601,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  std::string string("layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex) + ") uniform sampler2D directionalLightSamplers[4];");
+                  auto bindingIndex = ShaderFactory::currentBindingIndex;
+                  shader.addTexture(bindingIndex, ShaderType::Fragment, "directionalLightSamplers", 4);
+                  std::string string("layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D directionalLightSamplers[4];");
                   currentBindingIndex += 4;
                   return string;
                 }
@@ -614,7 +616,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  std::string string("layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex) + ") uniform sampler2D spotLightSamplers[4];");
+                  auto bindingIndex = ShaderFactory::currentBindingIndex;
+                  shader.addTexture(bindingIndex, ShaderType::Fragment, "spotLightSamplers", 4);
+                  std::string string("layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D spotLightSamplers[4];");
                   currentBindingIndex += 4;
                   return string;
                 }
@@ -627,7 +631,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
-                    std::string string("layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex) + ") uniform samplerCube pointLightSamplers[4];");
+                    auto bindingIndex = ShaderFactory::currentBindingIndex;
+                    shader.addTexture(bindingIndex, ShaderType::Fragment, "pointLightSamplers", 4);
+                    std::string string("layout(binding = " + std::to_string(bindingIndex) + ") uniform samplerCube pointLightSamplers[4];");
                     currentBindingIndex += 4;
                     return string;
                   }
@@ -668,7 +674,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                       {
                         std::string string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
                           ") out vec4 FragColor;\n");
-                        string += "layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex++) + ") uniform sampler2D Texture2D;";
+                        auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                        shader.addTexture(bindingIndex, ShaderType::Fragment, "Texture2D");
+                        string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D Texture2D;";
                         return string;
                       }
                     }
@@ -681,7 +689,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                       {
                         std::string string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
                           ") out vec4 FragColor;\n");
-                        string += "layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex++) + ") uniform sampler3D Texture3D;";
+                        auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                        shader.addTexture(bindingIndex, ShaderType::Fragment, "Texture3D");
+                        string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler3D Texture3D;";
                         return string;
                       }
                     }
@@ -694,7 +704,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     {
                       std::string string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
                           ") out vec4 FragColor;\n");
-                      string += "layout(binding = " + std::to_string(ShaderFactory::currentBindingIndex++) + ") uniform samplerCube TextureCube;";
+                      auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                      shader.addTexture(bindingIndex, ShaderType::Fragment, "TextureCube");
+                      string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform samplerCube TextureCube;";
                       return string;
                     }
                   }

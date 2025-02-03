@@ -30,6 +30,10 @@ void Shader::addUBO(ShaderType shaderType, const std::string_view name, uint32_t
 {
   window.iRenderer->addUBO(*this, shaderType, name, bindingIndex, bufferSize, descriptorCount, isArray);
 }
+void Shader::addTexture(uint32_t bindingIndex, shaders::ShaderType shaderType, std::string_view textureName, uint32_t descriptorCount)
+{
+  window.iRenderer->addTexture(*this, bindingIndex, shaderType, textureName, descriptorCount);
+}
 void Shader::setSSBO(const std::string_view name, const void *pointer, uint32_t size)
 {
   window.iRenderer->setSSBO(*this, name, pointer, size);

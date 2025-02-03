@@ -99,7 +99,7 @@ void PanelMenu::addPanelEntity(const std::shared_ptr<Entity> &entity, bool align
 	    auto &childItem = *sizablePointer;
 			childItem.setSize({sizeXMax, childItem.size.y, childItem.size.z});
 			auto glEntityPointer = std::dynamic_pointer_cast<Entity>(sizablePointer);
-	    scene.bvh.updateEntity(*glEntityPointer);
+	    scene.bvh->updateEntity(*glEntityPointer);
 		}
 	}
 	setSize(glm::vec3(0));

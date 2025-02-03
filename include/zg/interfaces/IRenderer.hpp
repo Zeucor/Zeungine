@@ -60,6 +60,7 @@ namespace zg
 		virtual void unbindShader(const shaders::Shader& shader) = 0;
 		virtual void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) = 0;
 		virtual void addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount = 1, bool isArray = false) = 0;
+		virtual void addTexture(shaders::Shader &shader, uint32_t bindingIndex, shaders::ShaderType shaderType, std::string_view textureName, uint32_t descriptorCount) = 0;
 		virtual void setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) = 0;
 		virtual void setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
 														const int32_t unit) = 0;
@@ -68,8 +69,8 @@ namespace zg
 		virtual bool compileProgram(shaders::Shader& shader) = 0;
 		virtual void deleteShader(shaders::Shader& shader) = 0;
 		virtual void destroyShader(shaders::Shader& shader) = 0;
-		virtual void bindFramebuffer(const textures::Framebuffer& framebuffer) const = 0;
-		virtual void unbindFramebuffer(const textures::Framebuffer& framebuffer) const = 0;
+		virtual void bindFramebuffer(const textures::Framebuffer& framebuffer) = 0;
+		virtual void unbindFramebuffer(const textures::Framebuffer& framebuffer) = 0;
 		virtual void initFramebuffer(textures::Framebuffer& framebuffer) = 0;
 		virtual void destroyFramebuffer(textures::Framebuffer& framebuffer) = 0;
 		virtual void bindTexture(const textures::Texture& texture) = 0;
@@ -84,7 +85,7 @@ namespace zg
 		virtual void drawVAO(const vaos::VAO& vao) = 0;
 		virtual void generateVAO(vaos::VAO& vao) = 0;
 		virtual void destroyVAO(vaos::VAO& vao) = 0;
-		virtual void ensureEntity(Entity& entity) = 0;
+		virtual void ensureShader(shaders::Shader& shader) = 0;
 	};
 	std::shared_ptr<IRenderer> createRenderer();
 } // namespace zg

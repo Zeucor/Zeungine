@@ -8,27 +8,45 @@
 #include <zg/vaos/VAO.hpp>
 #include <iostream>
 using namespace zg;
-Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *_framebufferPointer):
+Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *_framebufferPointer, bool _useBVH):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),
 	projection((Window &)window, fov),
-	framebufferPointer(_framebufferPointer)
+	framebufferPointer(_framebufferPointer),
+	useBVH(_useBVH)
 {
+	if (useBVH)
+	{
+		bvh = std::make_unique<raytracing::BVH>();
+	}
 	hookMouseEvents();
 };
-Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *_framebufferPointer):
+Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *_framebufferPointer, bool _useBVH):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),
 	projection((Window &)window, orthoSize),
-	framebufferPointer(_framebufferPointer)
+	framebufferPointer(_framebufferPointer),
+	useBVH(_useBVH)
 {
+	if (useBVH)
+	{
+		bvh = std::make_unique<raytracing::BVH>();
+	}
 	hookMouseEvents();
 };
 Scene::~Scene()
 {
 	unhookMouseEvents();
 };
-void Scene::update() {}
+void Scene::update()
+{
+	auto it = entities.begin();
+	auto end = entities.end();
+	for (; it != end; it++)
+	{
+		it->second->update();
+	}
+}
 void Scene::preRender()
 {
 	update();
@@ -116,9 +134,12 @@ void Scene::preRender()
 };
 void Scene::render()
 {
-	if (bvh.changed)
+	if (useBVH)
 	{
-		bvh.buildBVH();
+		if (bvh->changed)
+		{
+			bvh->buildBVH();
+		}
 	}
 	preRender();
 	auto it = entities.begin();
@@ -192,9 +213,9 @@ void Scene::resize(glm::vec2 newSize)
 void Scene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs)
 {
 	auto &glEntity = (Entity &)*entity;
-	if (glEntity.addToBVH)
+	if (useBVH && glEntity.addToBVH)
 	{
-		bvh.addEntity(glEntity);
+		bvh->addEntity(glEntity);
 		// for (auto &triangleID : triangleIDs)
 		// {
 		// 	triangleIDsToEntityIDsMap[triangleID] = entityIDs;
@@ -212,14 +233,17 @@ void Scene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vec
 void Scene::preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs)
 {
 	auto &glEntity = (Entity &)*entity;
-	if (glEntity.addToBVH)
+	if (useBVH && glEntity.addToBVH)
 	{
-		bvh.removeEntity(*this, glEntity);
+		bvh->removeEntity(*this, glEntity);
 	}
 };
 Entity *Scene::findEntityByPrimID(const size_t &primID)
 {
-	auto &tri = bvh.triangles[bvh.bvh.prim_ids[primID]];
+	if (!useBVH)
+		return 0;
+	auto& _bvh = *bvh;
+	auto &tri = _bvh.triangles[_bvh.bvh.prim_ids[primID]];
 	auto &userData = tri.userData;
 	if (!userData)
 		return 0;
@@ -231,9 +255,12 @@ void Scene::hookMouseEvents()
 	{
 		mousePressIDs[button] = window.addMousePressHandler(button, [&, button](auto pressed)
 		{
+			if (!useBVH)
+				return;
+			auto& _bvh = *bvh;
 			auto &screenCoord = ((Window &)window).mouseCoords;
-			auto ray = bvh.mouseCoordToRay(window.windowHeight, screenCoord, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
-			auto primID = bvh.trace(ray);
+			auto ray = _bvh.mouseCoordToRay(window.windowHeight, screenCoord, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
+			auto primID = _bvh.trace(ray);
 			if (primID == raytracing::invalidID)
 			{
 				return;
@@ -244,8 +271,11 @@ void Scene::hookMouseEvents()
 	}
 	mouseMoveID = window.addMouseMoveHandler([&](auto coords)
 	{
-		auto ray = bvh.mouseCoordToRay(window.windowHeight, coords, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
-		auto primID = bvh.trace(ray);
+		if (!useBVH)
+			return;
+		auto& _bvh = *bvh;
+		auto ray = _bvh.mouseCoordToRay(window.windowHeight, coords, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
+		auto primID = _bvh.trace(ray);
 		if (primID == raytracing::invalidID)
 		{
 			if (currentHoveredEntity)

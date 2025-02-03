@@ -57,6 +57,7 @@ namespace zg
 		virtual ~IWindow() = default;
 		void run();
 		virtual void startWindow() = 0;
+		void update();
 		virtual void preRender();
 		void render();
 		virtual void postRender();

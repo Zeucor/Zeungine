@@ -60,7 +60,7 @@ TextView::TextView(Window &window,
 	updateElements("UV2", uvs);
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
-	TextView::update();
+	// TextView::update();
 	resizeID = window.addResizeHandler([&](auto newSize)
 	{
 		forceUpdate();

@@ -49,8 +49,8 @@ bool MetalRenderer::checkCompileErrors(shaders::Shader& shader, const uint32_t& 
 	return false;
 }
 void MetalRenderer::deleteShader(shaders::Shader& shader) {}
-void MetalRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const {}
-void MetalRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) const {}
+void MetalRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) {}
+void MetalRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) {}
 void MetalRenderer::initFramebuffer(textures::Framebuffer& framebuffer) {}
 void MetalRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer) {}
 void MetalRenderer::bindTexture(const textures::Texture& texture) {}

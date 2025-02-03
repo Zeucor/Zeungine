@@ -177,7 +177,7 @@ void FreetypeFont::stringToTexture(const std::string_view string,
 		texturePointer.reset(new textures::Texture(window, glm::ivec4(scaledSize.x, scaledSize.y, 1, 0), 0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Nearest));
 	}
 	textures::Framebuffer framebuffer(window, *texturePointer);
-	Scene scene(window, {scaledSize.x / 2.f, scaledSize.y / 2.f, 50}, {0, 0, -1}, glm::vec2(scaledSize), &framebuffer);
+	Scene scene(window, {scaledSize.x / 2.f, scaledSize.y / 2.f, 50}, {0, 0, -1}, glm::vec2(scaledSize), &framebuffer, false);
 	strings::Utf8Iterator iterator(string, 0);
 	const uint64_t &stringSize = string.size();
 	auto &face = *facePointer.get();

@@ -387,14 +387,14 @@ void EGLRenderer::destroyShader(shaders::Shader& shader)
 	deleteShader(shader);
 	delete &shaderImpl;
 }
-void EGLRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const
+void EGLRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 {
 	auto& framebufferImpl = *(textures::GLFramebufferImpl*)framebuffer.rendererData;
 	glBindFramebuffer(GL_FRAMEBUFFER, framebufferImpl.id);
 	GLcheck(*this, "glBindFramebuffer");
 	viewport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
 }
-void EGLRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) const
+void EGLRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLcheck(*this, "glBindFramebuffer");

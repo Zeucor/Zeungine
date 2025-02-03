@@ -1,5 +1,6 @@
 #pragma once
 #include "../common.hpp"
+#include <zg/glm.hpp>
 namespace zg
 {
 	struct Window;
@@ -12,6 +13,7 @@ namespace zg::textures
 		Window& window;
 		Texture& texture;
 		Texture* depthTexturePointer = 0;
+		glm::vec4 clearColor = glm::vec4(0);
 		void* rendererData = 0;
 		Framebuffer(Window& window, Texture& texture);
 		Framebuffer(Window& window, Texture& texture, Texture& depthTexture);

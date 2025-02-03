@@ -215,7 +215,7 @@ Toolbar::Toolbar(Window &window,
 		{
 			if (fileDropdownID)
 			{
-				scene.bvh.removeEntity(scene, *fileDropdown);
+				scene.bvh->removeEntity(scene, *fileDropdown);
 				file->removeChild(fileDropdownID);
 			}
 			else
@@ -323,7 +323,7 @@ Toolbar::Toolbar(Window &window,
 		{
 			if (editDropdownID)
 			{
-				scene.bvh.removeEntity(scene, *editDropdown);
+				scene.bvh->removeEntity(scene, *editDropdown);
 				edit->removeChild(editDropdownID);
 			}
 			else
@@ -416,7 +416,7 @@ Toolbar::Toolbar(Window &window,
 		{
 			if (helpDropdownID)
 			{
-				scene.bvh.removeEntity(scene, *helpDropdown);
+				scene.bvh->removeEntity(scene, *helpDropdown);
 				help->removeChild(helpDropdownID);
 			}
 			else

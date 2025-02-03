@@ -456,14 +456,14 @@ void GLRenderer::destroyShader(shaders::Shader& shader)
 	deleteShader(shader);
 	delete &shaderImpl;
 }
-void GLRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const
+void GLRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 {
 	auto& framebufferImpl = *(textures::GLFramebufferImpl*)framebuffer.rendererData;
 	glContext->BindFramebuffer(GL_FRAMEBUFFER, framebufferImpl.id);
 	GLcheck(*this, "glBindFramebuffer");
 	viewport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
 }
-void GLRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) const
+void GLRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
 {
 	glContext->BindFramebuffer(GL_FRAMEBUFFER, 0);
 	GLcheck(*this, "glBindFramebuffer");

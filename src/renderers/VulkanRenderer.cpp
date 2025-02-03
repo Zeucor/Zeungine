@@ -26,6 +26,37 @@ static std::unordered_map<shaders::ShaderType, VkShaderStageFlagBits> stageStage
 	{shaders::ShaderType::Fragment, VK_SHADER_STAGE_FRAGMENT_BIT},
 	{shaders::ShaderType::Compute, VK_SHADER_STAGE_COMPUTE_BIT},
 };
+static std::unordered_map<textures::Texture::Format, VkFormat> textureFormat_Format = {
+	{textures::Texture::Format::RGBA8, VK_FORMAT_R8G8B8A8_SRGB},
+	{textures::Texture::Format::Depth, VK_FORMAT_D32_SFLOAT},
+	{textures::Texture::Format::DepthStencil, VK_FORMAT_D32_SFLOAT_S8_UINT}};
+static std::unordered_map<textures::Texture::Format, VkImageLayout> textureFormat_imageLayout = {
+	{textures::Texture::Format::RGBA8, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
+	{textures::Texture::Format::Depth, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL},
+	{textures::Texture::Format::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}};
+static std::unordered_map<textures::Texture::Format, VkImageLayout> textureFormat_descriptor_imageLayout = {
+	{textures::Texture::Format::RGBA8, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
+	{textures::Texture::Format::Depth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL},
+	{textures::Texture::Format::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL}};
+static std::unordered_map<textures::Texture::Format, VkImageAspectFlags> textureFormat_imageAspect = {
+	{textures::Texture::Format::RGBA8, VK_IMAGE_ASPECT_COLOR_BIT},
+	{textures::Texture::Format::Depth, VK_IMAGE_ASPECT_DEPTH_BIT},
+	{textures::Texture::Format::DepthStencil, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT}};
+// static std::unordered_map<EFramebufferAttachmentType, VkFormat> attachmentType_Format = {
+// 	{EFramebufferAttachmentType::Color, VK_FORMAT_R8G8B8A8_SRGB},
+// 	{EFramebufferAttachmentType::Depth, VK_FORMAT_D32_SFLOAT},
+// 	{EFramebufferAttachmentType::DepthStencil, VK_FORMAT_D32_SFLOAT_S8_UINT}
+// };
+// static std::unordered_map<EFramebufferAttachmentType, VkImageLayout> attachmentType_finalLayout = {
+// 	{EFramebufferAttachmentType::Color, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
+// 	{EFramebufferAttachmentType::Depth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL},
+// 	{EFramebufferAttachmentType::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}
+// };
+// static std::unordered_map<EFramebufferAttachmentType, VkImageLayout> attachmentType_attachment_finalLayout = {
+// 	{EFramebufferAttachmentType::Color, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
+// 	{EFramebufferAttachmentType::Depth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL},
+// 	{EFramebufferAttachmentType::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL}
+// };
 VulkanRenderer::VulkanRenderer() {}
 VulkanRenderer::~VulkanRenderer() {}
 void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
@@ -358,10 +389,10 @@ void VulkanRenderer::createLogicalDevice()
 	deviceFeatures.features.samplerAnisotropy = VK_TRUE;
 	deviceFeatures.features.robustBufferAccess = VK_TRUE;
 	// descriptorIndexingFeatures.robustBufferAccessUpdateAfterBind = VK_FALSE;
-	descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_FALSE;
-	descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_FALSE;
-	descriptorIndexingFeatures.descriptorBindingUniformTexelBufferUpdateAfterBind = VK_FALSE;
-	descriptorIndexingFeatures.descriptorBindingStorageTexelBufferUpdateAfterBind = VK_FALSE;
+	descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+	descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
+	descriptorIndexingFeatures.descriptorBindingUniformTexelBufferUpdateAfterBind = VK_TRUE;
+	descriptorIndexingFeatures.descriptorBindingStorageTexelBufferUpdateAfterBind = VK_TRUE;
 	// assert(descriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing);
 	// assert(descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind);
 	// assert(descriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing);
@@ -751,6 +782,7 @@ void VulkanRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeC
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
 	shaders::ShaderFactory::compileProgram(shader);
+	ensureShader(shader);
 }
 void VulkanRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer,
 																uint32_t size, enums::EUniformType uniformType)
@@ -765,12 +797,12 @@ void VulkanRenderer::setBlock(shaders::Shader& shader, const std::string_view na
 		return;
 	}
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	memcpy(shaderImpl.shaderUniformBuffersMapped[shader.hash][location], pointer, size);
+	memcpy(shaderImpl.uniformBuffersMapped[location], pointer, size);
 }
 int32_t VulkanRenderer::getUniformLocation(shaders::Shader& shader, const std::string_view& name)
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	auto& table = shaderImpl.shaderUniformLocationTable[shader.hash];
+	auto& table = shaderImpl.uniformLocationTable;
 	std::string stringName(name);
 	auto iter = table.find(stringName);
 	if (iter == table.end())
@@ -785,39 +817,38 @@ void VulkanRenderer::bindShader(const shaders::Shader& shader)
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.graphicsPipeline);
-	// if (currentFramebuffer.pointer)
-	// {
-	// 	auto &framebuffer = *currentFramebuffer.pointer;
-	// 	auto &vulkanFramebuffer = *(VulkanFramebuffer *)framebuffer.vendorData;
-	// 	VkViewport viewport{};
-	// 	viewport.x = 0.0f;
-	// 	viewport.y = vulkanFramebuffer.height;
-	// 	viewport.width = (float)vulkanFramebuffer.width;
-	// 	viewport.height = -(float)vulkanFramebuffer.height;
-	// 	viewport.minDepth = 0.0f;
-	// 	viewport.maxDepth = 1.0f;
-	// 	vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
-	// 	VkRect2D scissor{};
-	// 	scissor.offset = {0, 0};
-	// 	scissor.extent.width = vulkanFramebuffer.width;
-	// 	scissor.extent.height = vulkanFramebuffer.height;
-	// 	vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
-	// }
-	// else
-	// {
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = swapChainExtent.height;
-	viewport.width = (float)swapChainExtent.width;
-	viewport.height = -(float)swapChainExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
-	VkRect2D scissor{};
-	scissor.offset = {0, 0};
-	scissor.extent = swapChainExtent;
-	vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
-	// }
+	if (currentFramebufferImpl)
+	{
+		auto &framebufferImpl = *currentFramebufferImpl;
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = framebufferImpl.height;
+		viewport.width = (float)framebufferImpl.width;
+		viewport.height = -(float)framebufferImpl.height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent.width = framebufferImpl.width;
+		scissor.extent.height = framebufferImpl.height;
+		vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+	}
+	else
+	{
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = swapChainExtent.height;
+		viewport.width = (float)swapChainExtent.width;
+		viewport.height = -(float)swapChainExtent.height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent = swapChainExtent;
+		vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+	}
 }
 void VulkanRenderer::unbindShader(const shaders::Shader& shader) {}
 void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
@@ -863,6 +894,23 @@ void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderT
 		shaderImpl.uboStringBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
 	}
 }
+void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, shaders::ShaderType shaderType,
+																std::string_view textureName, uint32_t descriptorCount)
+{
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
+	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+																								(uint32_t)descriptorCount,
+																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
+	std::string stringName(textureName);
+	shaderImpl.uboLayoutBindings[shaderImpl.uboLayoutBindings.size() - 1] = {
+		{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding};
+	shaderImpl.textureBindings[stringName] = bindingIndex;
+	for (uint32_t index = 0; index < descriptorCount; index++)
+	{
+		shaderImpl.textureArrayBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
+	}
+}
 void VulkanRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
@@ -892,7 +940,7 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, const std::string_view nam
 	storageBufferInfo.range = size;
 	VkWriteDescriptorSet descriptorWrite{};
 	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = shaderImpl.shaderDescriptorSet[shader.hash];
+	descriptorWrite.dstSet = shaderImpl.descriptorSet;
 	descriptorWrite.dstBinding = bindingIndex;
 	descriptorWrite.dstArrayElement = 0;
 	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -903,6 +951,25 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, const std::string_view nam
 void VulkanRenderer::setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
 																const int32_t unit)
 {
+	texture.bind();
+	std::string stringName(name);
+	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	VkWriteDescriptorSet descriptorWrite{};
+	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	descriptorWrite.dstSet = shaderImpl.descriptorSet;
+	auto& bindingIndex = shaderImpl.textureBindings[stringName];
+	descriptorWrite.dstBinding = bindingIndex;
+	descriptorWrite.dstArrayElement = 0;
+	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	descriptorWrite.descriptorCount = 1;
+	VkDescriptorImageInfo imageInfo{};
+	imageInfo.imageLayout = textureFormat_descriptor_imageLayout[texture.format];
+	imageInfo.imageView = textureImpl.textureImageView;
+	imageInfo.sampler = textureImpl.textureSampler;
+	descriptorWrite.pImageInfo = &imageInfo;
+	vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+	texture.unbind();
 }
 bool VulkanRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
 																	 shaders::ShaderPair& shaderPair)
@@ -1076,8 +1143,8 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	// 	else
 	// 	{
 	// 		auto &framebuffer = currentFramebuffer.pointer ? *currentFramebuffer.pointer :
-	// *shader.scenePointer->framebuffers[0].pointer; 		auto &vulkanFramebuffer = *(VulkanFramebuffer
-	// *)framebuffer.vendorData; 		pipelineInfo.renderPass = vulkanFramebuffer.renderPass; 		auto hasDepth =
+	// *shader.scenePointer->framebuffers[0].pointer; 		auto &framebufferImpl = *(VulkanFramebuffer
+	// *)framebuffer.vendorData; 		pipelineInfo.renderPass = framebufferImpl.renderPass; 		auto hasDepth =
 	// framebuffer.attachments.reduce(Function<Boolean, FramebufferAttachment &, Boolean>([](FramebufferAttachment
 	// &framebufferAttachment, Boolean hasDepth)
 	// 														   {
@@ -1131,20 +1198,416 @@ bool VulkanRenderer::checkCompileErrors(const shaderc::SpvCompilationResult& mod
 }
 void VulkanRenderer::deleteShader(shaders::Shader& shader) {}
 void VulkanRenderer::destroyShader(shaders::Shader& shader) {}
-void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer) const {}
-void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer) const {}
-void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer) {}
+void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
+{
+	auto& framebufferImpl = *(const VulkanFramebufferImpl*)framebuffer.rendererData;
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = framebufferImpl.renderPass;
+	renderPassInfo.framebuffer = framebufferImpl.framebuffer;
+	renderPassInfo.renderArea.offset = {0, 0};
+	renderPassInfo.renderArea.extent.width = framebufferImpl.width;
+	renderPassInfo.renderArea.extent.height = framebufferImpl.height;
+	std::vector<VkClearValue> clearValues;
+	VkClearValue clearValue;
+	switch (framebuffer.texture.format)
+	{
+	case textures::Texture::Depth:
+		{
+			clearValue.depthStencil = {0.0f, 0};
+			break;
+		}
+	default:
+		clearValue.color = {
+			{framebuffer.clearColor.r, framebuffer.clearColor.g, framebuffer.clearColor.b, framebuffer.clearColor.a}};
+		break;
+	}
+	clearValues.push_back(clearValue);
+	renderPassInfo.clearValueCount = clearValues.size();
+	renderPassInfo.pClearValues = clearValues.data();
+	vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	currentFramebufferImpl = &framebufferImpl;
+}
+void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
+{
+	vkCmdEndRenderPass(*commandBuffer);
+	currentFramebufferImpl = 0;
+}
+void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
+{
+	framebuffer.rendererData = new VulkanFramebufferImpl();
+	auto& framebufferImpl = *(VulkanFramebufferImpl*)framebuffer.rendererData;
+	std::vector<VkAttachmentDescription> attachments;
+	VkAttachmentDescription attachment{};
+	attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	switch (framebuffer.texture.format)
+	{
+	case textures::Texture::Depth:
+		{
+			attachment.format = VK_FORMAT_D32_SFLOAT;
+			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			break;
+		}
+	default:
+		attachment.format = VK_FORMAT_R8G8B8A8_SRGB;
+		attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		break;
+	}
+	attachments.push_back(attachment);
+	std::vector<VkAttachmentReference> colorAttachmentRefs;
+	std::vector<VkAttachmentReference> depthAttachmentRefs;
+	uint32_t attachmentIndex = 0;
+	VkAttachmentReference ref{};
+	ref.attachment = attachmentIndex++;
+	switch (framebuffer.texture.format)
+	{
+	case textures::Texture::Depth:
+		{
+			ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			depthAttachmentRefs.push_back(ref);
+			break;
+		}
+	default:
+		ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachmentRefs.push_back(ref);
+		break;
+	}
+	VkSubpassDescription subpass{};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.colorAttachmentCount = colorAttachmentRefs.size();
+	subpass.pColorAttachments = colorAttachmentRefs.data();
+	subpass.pDepthStencilAttachment = depthAttachmentRefs.data();
+	VkSubpassDependency dependency{};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+
+	switch (framebuffer.texture.format)
+	{
+	case textures::Texture::Depth:
+		{
+			dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			break;
+		}
+	default:
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		break;
+	}
+	VkRenderPassCreateInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.attachmentCount = attachments.size();
+	renderPassInfo.pAttachments = attachments.data();
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &subpass;
+	renderPassInfo.dependencyCount = 1;
+	renderPassInfo.pDependencies = &dependency;
+	if (!VKcheck("vkCreateRenderPass", vkCreateRenderPass(device, &renderPassInfo, nullptr, &framebufferImpl.renderPass)))
+	{
+		throw std::runtime_error("VulkanRenderer-framebufferCreate: failed to create render pass!");
+	}
+	std::vector<VkImageView> imageViews;
+	auto& textureImpl = *(VulkanTextureImpl*)framebuffer.texture.rendererData;
+	framebufferImpl.width = framebuffer.texture.size.x;
+	framebufferImpl.height = framebuffer.texture.size.y;
+	imageViews.push_back(textureImpl.textureImageView);
+	VkFramebufferCreateInfo framebufferInfo{};
+	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	framebufferInfo.renderPass = framebufferImpl.renderPass;
+	framebufferInfo.attachmentCount = imageViews.size();
+	framebufferInfo.pAttachments = imageViews.data();
+	framebufferInfo.width = framebufferImpl.width;
+	framebufferInfo.height = framebufferImpl.height;
+	framebufferInfo.layers = 1;
+	if (!VKcheck("vkCreateFramebuffer",
+							 vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebufferImpl.framebuffer)))
+	{
+		throw std::runtime_error("VulkanRenderer-framebufferCreate: failed to create framebuffer!");
+	}
+}
 void VulkanRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer) {}
-void VulkanRenderer::bindTexture(const textures::Texture& texture) {}
+void VulkanRenderer::bindTexture(const textures::Texture& texture)
+{
+	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
+	if (textureImpl.layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
+		VkFormat format;
+		if (texture.format == textures::Texture::Format::RGBA8)
+		{
+			format = textureFormat_Format[texture.format];
+		}
+		else if (texture.format == textures::Texture::Format::Depth ||
+						 texture.format == textures::Texture::Format::DepthStencil)
+		{
+			format = findDepthFormat(texture.format);
+		}
+		auto aspectMask = textureFormat_imageAspect[texture.format];
+		transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, aspectMask);
+	}
+}
 void VulkanRenderer::unbindTexture(const textures::Texture& texture) {}
+void VulkanRenderer::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
+																 VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image,
+																 VkDeviceMemory& imageMemory)
+{
+	VkImageCreateInfo imageInfo{};
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.extent.width = width;
+	imageInfo.extent.height = height;
+	imageInfo.extent.depth = 1;
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	imageInfo.format = format;
+	imageInfo.tiling = tiling;
+	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	imageInfo.usage = usage;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if (!VKcheck("vkCreateImage", vkCreateImage(device, &imageInfo, nullptr, &image)))
+	{
+		throw std::runtime_error("failed to create image!");
+	}
+
+	VkMemoryRequirements memRequirements;
+	vkGetImageMemoryRequirements(device, image, &memRequirements);
+
+	VkMemoryAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+	if (!VKcheck("vkAllocateMemory", vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory)))
+	{
+		throw std::runtime_error("failed to allocate image memory!");
+	}
+
+	vkBindImageMemory(device, image, imageMemory, 0);
+}
+VkImageView VulkanRenderer::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+{
+	VkImageViewCreateInfo viewInfo{};
+	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewInfo.image = image;
+	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewInfo.format = format;
+	viewInfo.subresourceRange.aspectMask = aspectFlags;
+	viewInfo.subresourceRange.baseMipLevel = 0;
+	viewInfo.subresourceRange.levelCount = 1;
+	viewInfo.subresourceRange.baseArrayLayer = 0;
+	viewInfo.subresourceRange.layerCount = 1;
+	VkImageView imageView;
+	if (vkCreateImageView(device, &viewInfo, nullptr, &imageView) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create texture image view!");
+	}
+	return imageView;
+}
+VkFormat VulkanRenderer::findDepthFormat(uint32_t _format)
+{
+	std::vector<VkFormat> candidates;
+	textures::Texture::Format format = (textures::Texture::Format)_format;
+	switch (format)
+	{
+	case textures::Texture::Format::Depth:
+		{
+			candidates.push_back(VK_FORMAT_D32_SFLOAT);
+			break;
+		};
+	case textures::Texture::Format::DepthStencil:
+		{
+			candidates.push_back(VK_FORMAT_D32_SFLOAT_S8_UINT);
+			candidates.push_back(VK_FORMAT_D24_UNORM_S8_UINT);
+			break;
+		};
+	}
+	return findSupportedFormat(candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+}
+VkFormat VulkanRenderer::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+																						 VkFormatFeatureFlags features)
+{
+	for (VkFormat format : candidates)
+	{
+		VkFormatProperties props;
+		vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
+		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
+		{
+			return format;
+		}
+		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
+		{
+			return format;
+		}
+	}
+	throw std::runtime_error("failed to find supported format!");
+}
+void VulkanRenderer::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+{
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+	VkBufferImageCopy region{};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0;
+	region.bufferImageHeight = 0;
+	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+	region.imageOffset = {0, 0, 0};
+	region.imageExtent = {width, height, 1};
+	vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	endSingleTimeCommands(commandBuffer);
+}
+void VulkanRenderer::transitionImageLayout(VulkanTextureImpl& textureImpl, VkImage image, VkFormat format,
+																					 VkImageLayout oldLayout, VkImageLayout newLayout,
+																					 VkImageAspectFlags aspectMask)
+{
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = oldLayout;
+	barrier.newLayout = newLayout;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.subresourceRange.aspectMask = aspectMask;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = 1;
+
+	VkPipelineStageFlags sourceStage;
+	VkPipelineStageFlags destinationStage;
+
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else
+	{
+		throw std::invalid_argument("unsupported layout transition!");
+	}
+
+	vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+	endSingleTimeCommands(commandBuffer);
+
+	textureImpl.layout = newLayout;
+}
 void VulkanRenderer::preInitTexture(textures::Texture& texture)
 {
 	texture.rendererData = new VulkanTextureImpl();
-	return;
+	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
+	VkFormat format;
+	if (texture.format == textures::Texture::Format::RGBA8)
+	{
+		format = textureFormat_Format[texture.format];
+	}
+	else if (texture.format == textures::Texture::Format::Depth ||
+					 texture.format == textures::Texture::Format::DepthStencil)
+	{
+		format = findDepthFormat(texture.format);
+	}
+	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	switch (texture.format)
+	{
+	case textures::Texture::Format::RGBA8:
+		{
+			usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			break;
+		};
+	case textures::Texture::Format::Depth:
+	case textures::Texture::Format::DepthStencil:
+		{
+			usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			break;
+		}
+	}
+	// TODO: Vulkan: Implement createImage1D && createImage3D
+	createImage(texture.size.x, texture.size.y, format, VK_IMAGE_TILING_OPTIMAL, usage,
+							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImpl.textureImage, textureImpl.textureImageMemory);
+	auto aspectMask = textureFormat_imageAspect[texture.format];
+	textureImpl.textureImageView = createImageView(textureImpl.textureImage, format, aspectMask);
+	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_UNDEFINED,
+												VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, aspectMask);
+	// create sampler
+	VkPhysicalDeviceProperties properties{};
+	vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+	VkSamplerCreateInfo samplerInfo{};
+	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	samplerInfo.magFilter = VK_FILTER_LINEAR;
+	samplerInfo.minFilter = VK_FILTER_LINEAR;
+	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.anisotropyEnable = VK_TRUE;
+	samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	samplerInfo.unnormalizedCoordinates = VK_FALSE;
+	samplerInfo.compareEnable = VK_FALSE;
+	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	if (!VKcheck("vkCreateSampler", vkCreateSampler(device, &samplerInfo, nullptr, &textureImpl.textureSampler)))
+	{
+		throw std::runtime_error("failed to create texture sampler!");
+	}
 }
 void VulkanRenderer::midInitTexture(const textures::Texture& texture,
 																		const std::vector<images::ImageLoader::ImagePair>& images)
 {
+	void* bytes = images.size() ? std::get<1>(images[0]).get() : 0;
+	if (!bytes)
+	{
+		return;
+	}
+	VkFormat format;
+	if (texture.format == textures::Texture::Format::RGBA8)
+	{
+		format = textureFormat_Format[texture.format];
+	}
+	else if (texture.format == textures::Texture::Format::Depth ||
+					 texture.format == textures::Texture::Format::DepthStencil)
+	{
+		format = findDepthFormat(texture.format);
+	}
+	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
+	VkDeviceSize imageSize = texture.size.x * texture.size.y * 4;
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+							 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
+							 stagingBufferMemory);
+	void* data = 0;
+	vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+	memcpy(data, bytes, static_cast<size_t>(imageSize));
+	vkUnmapMemory(device, stagingBufferMemory);
+	copyBufferToImage(stagingBuffer, textureImpl.textureImage, static_cast<uint32_t>(texture.size.x),
+										static_cast<uint32_t>(texture.size.y));
+	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+												textureFormat_descriptor_imageLayout[texture.format],
+												textureFormat_imageAspect[texture.format]);
+	vkDestroyBuffer(device, stagingBuffer, nullptr);
+	vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 void VulkanRenderer::postInitTexture(const textures::Texture& texture) {}
 void VulkanRenderer::destroyTexture(textures::Texture& texture)
@@ -1184,7 +1647,7 @@ void VulkanRenderer::drawVAO(const vaos::VAO& vao)
 	vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
 	vkCmdBindIndexBuffer(*commandBuffer, vaoImpl.indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
 	vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
-													&shaderImpl.shaderDescriptorSet[shader.hash], 0, nullptr);
+													&shaderImpl.descriptorSet, 0, nullptr);
 	auto& indices = vao.indiceCount;
 	if (!indices)
 	{
@@ -1219,12 +1682,9 @@ void VulkanRenderer::destroyVAO(vaos::VAO& vao)
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	delete &vaoImpl;
 }
-void VulkanRenderer::ensureEntity(Entity& entity)
+void VulkanRenderer::ensureShader(shaders::Shader& shader)
 {
-	auto& vaoImpl = *(VulkanVAOImpl*)(dynamic_cast<vaos::VAO&>(entity).rendererData);
-	auto& shaderImpl = *(VulkanShaderImpl*)entity.shader.rendererData;
-	auto& shaderHash = entity.shader.hash;
-
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	uint32_t poolSizeCount = (shaderImpl.uboLayoutBindings.size() != 0) + (shaderImpl.ssboBindings.size() != 0);
 	uint32_t poolSizeIndex = 0;
 	VkDescriptorPoolSize initialPoolSize{};
@@ -1247,28 +1707,28 @@ void VulkanRenderer::ensureEntity(Entity& entity)
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = shaderImpl.uboLayoutBindings.size() + shaderImpl.ssboBindings.size();
 
-	auto& shaderDescriptorPool = shaderImpl.shaderDescriptorPool[shaderHash];
+	auto& descriptorPool = shaderImpl.descriptorPool;
 
-	if (!VKcheck("vkCreateDescriptorPool", vkCreateDescriptorPool(device, &poolInfo, nullptr, &shaderDescriptorPool)))
+	if (!VKcheck("vkCreateDescriptorPool", vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool)))
 	{
 		throw std::runtime_error("Failed to create descriptor pool!");
 	}
 
-	auto& shaderDescriptorSet = shaderImpl.shaderDescriptorSet[shaderHash];
+	auto& descriptorSet = shaderImpl.descriptorSet;
 
 	std::vector<VkDescriptorSetLayout> layouts(1, shaderImpl.descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = shaderDescriptorPool;
+	allocInfo.descriptorPool = descriptorPool;
 	allocInfo.descriptorSetCount = 1;
 	allocInfo.pSetLayouts = &layouts[0];
 
-	if (!VKcheck("vkAllocateDescriptorSets", vkAllocateDescriptorSets(device, &allocInfo, &shaderDescriptorSet)))
+	if (!VKcheck("vkAllocateDescriptorSets", vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet)))
 	{
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 
-	auto& shaderBufferInfos = shaderImpl.shaderBufferInfos[shaderHash];
+	auto& bufferInfos = shaderImpl.bufferInfos;
 	for (auto uboLayoutBindingPair : shaderImpl.uboLayoutBindings)
 	{
 		if (std::get<0>(uboLayoutBindingPair.first) != ELayoutBindingType::UniformBuffer)
@@ -1276,52 +1736,51 @@ void VulkanRenderer::ensureEntity(Entity& entity)
 			continue;
 		}
 		auto& descriptorSetLayoutBinding = uboLayoutBindingPair.second;
-		auto& shaderUniformBuffers = shaderImpl.shaderUniformBuffers[shaderHash];
-		auto& shaderUniformBuffersMemory = shaderImpl.shaderUniformBuffersMemory[shaderHash];
-		auto& shaderUniformBuffersMapped = shaderImpl.shaderUniformBuffersMapped[shaderHash];
-		shaderUniformBuffers.resize(shaderUniformBuffers.size() + 1);
-		shaderUniformBuffersMemory.resize(shaderUniformBuffersMemory.size() + 1);
+		auto& uniformBuffers = shaderImpl.uniformBuffers;
+		auto& uniformBuffersMemory = shaderImpl.uniformBuffersMemory;
+		auto& uniformBuffersMapped = shaderImpl.uniformBuffersMapped;
+		uniformBuffers.resize(uniformBuffers.size() + 1);
+		uniformBuffersMemory.resize(uniformBuffersMemory.size() + 1);
 		const auto& bufferSize = std::get<1>(uboLayoutBindingPair.first);
 		int32_t uniformBuffersIndex = -1, uniformBuffersMemoryIndex = -1, uniformBuffersMappedIndex = -1;
 		createBuffer(bufferSize * descriptorSetLayoutBinding.descriptorCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-								 shaderUniformBuffers[uniformBuffersIndex = (shaderUniformBuffers.size() - 1)],
-								 shaderUniformBuffersMemory[uniformBuffersMemoryIndex = (shaderUniformBuffersMemory.size() - 1)]);
+								 uniformBuffers[uniformBuffersIndex = (uniformBuffers.size() - 1)],
+								 uniformBuffersMemory[uniformBuffersMemoryIndex = (uniformBuffersMemory.size() - 1)]);
 		auto& isArray = std::get<4>(uboLayoutBindingPair.first);
 		if (!isArray)
 		{
-			shaderUniformBuffersMapped.resize(shaderUniformBuffersMapped.size() + 1);
-			vkMapMemory(device, shaderUniformBuffersMemory[uniformBuffersMemoryIndex], 0, bufferSize, 0,
-									&shaderUniformBuffersMapped[uniformBuffersMappedIndex = (shaderUniformBuffersMapped.size() - 1)]);
+			uniformBuffersMapped.resize(uniformBuffersMapped.size() + 1);
+			vkMapMemory(device, uniformBuffersMemory[uniformBuffersMemoryIndex], 0, bufferSize, 0,
+									&uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
 			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = shaderUniformBuffers[uniformBuffersIndex];
+			bufferInfo.buffer = uniformBuffers[uniformBuffersIndex];
 			bufferInfo.offset = 0;
 			bufferInfo.range = bufferSize;
-			shaderBufferInfos.push_back(
+			bufferInfos.push_back(
 				{{std::get<0>(uboLayoutBindingPair.first), std::get<3>(uboLayoutBindingPair.first)}, bufferInfo});
-			shaderImpl.shaderUniformLocationTable[shaderHash][std::get<2>(uboLayoutBindingPair.first)] =
-				uniformBuffersMappedIndex;
+			shaderImpl.uniformLocationTable[std::get<2>(uboLayoutBindingPair.first)] = uniformBuffersMappedIndex;
 		}
 		else
 		{
 			for (uint32_t index = 0; index < descriptorSetLayoutBinding.descriptorCount; index++)
 			{
-				shaderUniformBuffersMapped.resize(shaderUniformBuffersMapped.size() + 1);
-				vkMapMemory(device, shaderUniformBuffersMemory[uniformBuffersMemoryIndex], index * bufferSize, bufferSize, 0,
-										&shaderUniformBuffersMapped[uniformBuffersMappedIndex = (shaderUniformBuffersMapped.size() - 1)]);
+				uniformBuffersMapped.resize(uniformBuffersMapped.size() + 1);
+				vkMapMemory(device, uniformBuffersMemory[uniformBuffersMemoryIndex], index * bufferSize, bufferSize, 0,
+										&uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
 				VkDescriptorBufferInfo bufferInfo{};
-				bufferInfo.buffer = shaderUniformBuffers[uniformBuffersIndex];
+				bufferInfo.buffer = uniformBuffers[uniformBuffersIndex];
 				bufferInfo.offset = index * bufferSize;
 				bufferInfo.range = bufferSize;
-				shaderBufferInfos.push_back(
+				bufferInfos.push_back(
 					{{std::get<0>(uboLayoutBindingPair.first), std::get<3>(uboLayoutBindingPair.first) + index}, bufferInfo});
-				shaderImpl.shaderUniformLocationTable[shaderHash][std::get<2>(uboLayoutBindingPair.first) + "[" +
-																													std::to_string(index) + "]"] = uniformBuffersMappedIndex;
+				shaderImpl.uniformLocationTable[std::get<2>(uboLayoutBindingPair.first) + "[" + std::to_string(index) + "]"] =
+					uniformBuffersMappedIndex;
 			}
 		}
 	}
 
-	for (auto& bufferInfoPair : shaderBufferInfos)
+	for (auto& bufferInfoPair : bufferInfos)
 	{
 		if (std::get<0>(bufferInfoPair.first) != ELayoutBindingType::UniformBuffer)
 		{
@@ -1329,7 +1788,7 @@ void VulkanRenderer::ensureEntity(Entity& entity)
 		}
 		VkWriteDescriptorSet descriptorWrite{};
 		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = shaderDescriptorSet;
+		descriptorWrite.dstSet = descriptorSet;
 		descriptorWrite.dstBinding = std::get<1>(bufferInfoPair.first);
 		descriptorWrite.dstArrayElement = 0;
 		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
