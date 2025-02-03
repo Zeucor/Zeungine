@@ -392,11 +392,11 @@ void MacOSWindow::warpPointer(glm::vec2 coords)
 	CGWarpMouseCursorPosition(point);
 	CGAssociateMouseAndMouseCursorPosition(YES);
 }
-void MacOSWindowWindow::showPointer()
+void MacOSWindow::showPointer()
 {
 	CGDisplayShowCursor(kCGDirectMainDisplay);
 }
-void MacOSWindowWindow::hidePointer()
+void MacOSWindow::hidePointer()
 {
 	CGDisplayHideCursor(kCGDirectMainDisplay);
 }
