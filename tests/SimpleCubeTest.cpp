@@ -7,8 +7,12 @@ struct ExampleScene : Scene
 {
 	vp::VML vml; // view mouse look
 	float deltaTimeCounter = 0;
-	ExampleScene(Window &window):
-			Scene(window,
+	uint32_t mPressID = 0;
+	uint32_t nPressID = 0;
+	uint32_t rPressID = 0;
+	uint32_t qPressID = 0;
+	ExampleScene(Window &_window):
+			Scene(_window,
 						{0, 10, 10}, // camera position
 						glm::normalize(glm::vec3(0, -1, -1)), //camera direction
 						81.f // fov
@@ -25,7 +29,33 @@ struct ExampleScene : Scene
 				glm::vec3(2, 1, 4), // cube size
 				shaders::RuntimeConstants() // additional shader constants
 		));
-	};
+		mPressID = window.addKeyPressHandler('m', [&](auto pressed)
+		{
+			if (pressed)
+				window.maximize();
+		});
+		nPressID = window.addKeyPressHandler('n', [&](auto pressed)
+		{
+			if (pressed)
+				window.minimize();
+		});
+		rPressID = window.addKeyPressHandler('r', [&](auto pressed)
+		{
+			if (pressed)
+				window.restore();
+		});
+		qPressID = window.addKeyPressHandler('q', [&](auto pressed)
+		{
+			if (pressed)
+				window.close();
+		});
+	}
+	~ExampleScene()
+	{
+		window.removeKeyPressHandler('m', mPressID);
+		window.removeKeyPressHandler('n', nPressID);
+		window.removeKeyPressHandler('r', rPressID);
+	}
 	void update() override
 	{
 		deltaTimeCounter += window.deltaTime;
