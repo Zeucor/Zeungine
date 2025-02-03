@@ -50,5 +50,13 @@ namespace zg
 		void callMousePressHandler(const IWindow::Button& button, int pressed);
 		void callMouseMoveHandler(glm::vec2 coords);
 		void callMouseHoverHandler(bool hovered);
+		template<typename T>
+		void flipUVsY(std::vector<T>& uvs)
+		{
+			for (auto& uv : uvs)
+			{
+				uv.y = 1 - uv.y;
+			}
+		}
 	};
 } // namespace zg

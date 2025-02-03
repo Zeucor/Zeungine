@@ -61,6 +61,7 @@ VulkanRenderer::VulkanRenderer() {}
 VulkanRenderer::~VulkanRenderer() {}
 void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
+	this->renderer = RENDERER_VULKAN;
 	this->platformWindowPointer = platformWindowPointer;
 	createInstance();
 #ifndef NDEBUG
@@ -782,27 +783,26 @@ void VulkanRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeC
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
 	shaders::ShaderFactory::compileProgram(shader);
-	ensureShader(shader);
 }
-void VulkanRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer,
+void VulkanRenderer::setUniform(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer,
 																uint32_t size, enums::EUniformType uniformType)
 {
-	setBlock(shader, name, pointer, size);
+	setBlock(shader, vao, name, pointer, size);
 }
-void VulkanRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
+void VulkanRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size)
 {
-	int32_t location = getUniformLocation(shader, name);
+	int32_t location = getUniformLocation(shader, vao, name);
 	if (location == -1)
 	{
 		return;
 	}
-	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	memcpy(shaderImpl.uniformBuffersMapped[location], pointer, size);
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	memcpy(vaoImpl.uniformBuffersMapped[location], pointer, size);
 }
-int32_t VulkanRenderer::getUniformLocation(shaders::Shader& shader, const std::string_view& name)
+int32_t VulkanRenderer::getUniformLocation(shaders::Shader& shader, vaos::VAO& vao, const std::string_view& name)
 {
-	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	auto& table = shaderImpl.uniformLocationTable;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto& table = vaoImpl.uniformLocationTable;
 	std::string stringName(name);
 	auto iter = table.find(stringName);
 	if (iter == table.end())
@@ -810,7 +810,6 @@ int32_t VulkanRenderer::getUniformLocation(shaders::Shader& shader, const std::s
 		return -1;
 	}
 	return iter->second;
-	;
 }
 void VulkanRenderer::deleteBuffer(uint32_t id) {}
 void VulkanRenderer::bindShader(const shaders::Shader& shader)
@@ -857,23 +856,23 @@ void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shader
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
 	auto ssboIter = shaderImpl.ssboBindings.find(stringName);
-	std::tuple<uint32_t, VkBuffer, VkDeviceMemory, uint32_t, uint32_t>* ssboBindingPointer = 0;
+	std::tuple<uint32_t, uint32_t, uint32_t>* ssboBindingPointer = 0;
 	if (ssboIter == shaderImpl.ssboBindings.end())
 	{
 		ssboBindingPointer = &shaderImpl.ssboBindings[stringName];
-		std::get<3>(*ssboBindingPointer) = bindingIndex;
+		std::get<1>(*ssboBindingPointer) = bindingIndex;
 		shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
 		int32_t uboLayoutBindingIndex = -1;
 		VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
 																									(VkShaderStageFlags)stageStageFlag[shaderType], 0};
 		shaderImpl.uboLayoutBindings[uboLayoutBindingIndex = (shaderImpl.uboLayoutBindings.size() - 1)] = {
 			{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding};
-		std::get<4>(*ssboBindingPointer) = uboLayoutBindingIndex;
+		std::get<2>(*ssboBindingPointer) = uboLayoutBindingIndex;
 	}
 	else
 	{
 		ssboBindingPointer = &ssboIter->second;
-		auto uboLayoutBindingIndex = std::get<4>(*ssboBindingPointer);
+		auto uboLayoutBindingIndex = std::get<2>(*ssboBindingPointer);
 		shaderImpl.uboLayoutBindings[uboLayoutBindingIndex].second.stageFlags |= stageStageFlag[shaderType];
 	}
 	std::get<0>(*ssboBindingPointer) |= (uint32_t)shaderType;
@@ -911,18 +910,24 @@ void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, 
 		shaderImpl.textureArrayBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
 	}
 }
-void VulkanRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
+void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size)
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	std::string stringName(name);
 	auto ssboIter = shaderImpl.ssboBindings.find(stringName);
 	if (ssboIter == shaderImpl.ssboBindings.end())
 	{
 		return;
 	}
-	auto& buffer = std::get<1>(ssboIter->second);
-	auto& deviceMemory = std::get<2>(ssboIter->second);
-	auto& bindingIndex = std::get<3>(ssboIter->second);
+	auto ssboBufferIter = vaoImpl.ssboBuffers.find(stringName);
+	if (ssboBufferIter == vaoImpl.ssboBuffers.end())
+	{
+		return;
+	}
+	auto& buffer = std::get<0>(ssboBufferIter->second);
+	auto& deviceMemory = std::get<1>(ssboBufferIter->second);
+	auto& bindingIndex = std::get<1>(ssboIter->second);
 	if (buffer == VK_NULL_HANDLE)
 	{
 		createBuffer(
@@ -940,7 +945,7 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, const std::string_view nam
 	storageBufferInfo.range = size;
 	VkWriteDescriptorSet descriptorWrite{};
 	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = shaderImpl.descriptorSet;
+	descriptorWrite.dstSet = vaoImpl.descriptorSet;
 	descriptorWrite.dstBinding = bindingIndex;
 	descriptorWrite.dstArrayElement = 0;
 	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -948,16 +953,17 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, const std::string_view nam
 	descriptorWrite.pBufferInfo = &storageBufferInfo;
 	vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
 }
-void VulkanRenderer::setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
+void VulkanRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const textures::Texture& texture,
 																const int32_t unit)
 {
 	texture.bind();
 	std::string stringName(name);
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	VkWriteDescriptorSet descriptorWrite{};
 	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = shaderImpl.descriptorSet;
+	descriptorWrite.dstSet = vaoImpl.descriptorSet;
 	auto& bindingIndex = shaderImpl.textureBindings[stringName];
 	descriptorWrite.dstBinding = bindingIndex;
 	descriptorWrite.dstArrayElement = 0;
@@ -1647,7 +1653,7 @@ void VulkanRenderer::drawVAO(const vaos::VAO& vao)
 	vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
 	vkCmdBindIndexBuffer(*commandBuffer, vaoImpl.indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
 	vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
-													&shaderImpl.descriptorSet, 0, nullptr);
+													&vaoImpl.descriptorSet, 0, nullptr);
 	auto& indices = vao.indiceCount;
 	if (!indices)
 	{
@@ -1682,9 +1688,10 @@ void VulkanRenderer::destroyVAO(vaos::VAO& vao)
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	delete &vaoImpl;
 }
-void VulkanRenderer::ensureShader(shaders::Shader& shader)
+void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	uint32_t poolSizeCount = (shaderImpl.uboLayoutBindings.size() != 0) + (shaderImpl.ssboBindings.size() != 0);
 	uint32_t poolSizeIndex = 0;
 	VkDescriptorPoolSize initialPoolSize{};
@@ -1707,14 +1714,14 @@ void VulkanRenderer::ensureShader(shaders::Shader& shader)
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = shaderImpl.uboLayoutBindings.size() + shaderImpl.ssboBindings.size();
 
-	auto& descriptorPool = shaderImpl.descriptorPool;
+	auto& descriptorPool = vaoImpl.descriptorPool;
 
 	if (!VKcheck("vkCreateDescriptorPool", vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool)))
 	{
 		throw std::runtime_error("Failed to create descriptor pool!");
 	}
 
-	auto& descriptorSet = shaderImpl.descriptorSet;
+	auto& descriptorSet = vaoImpl.descriptorSet;
 
 	std::vector<VkDescriptorSetLayout> layouts(1, shaderImpl.descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
@@ -1728,7 +1735,7 @@ void VulkanRenderer::ensureShader(shaders::Shader& shader)
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 
-	auto& bufferInfos = shaderImpl.bufferInfos;
+	auto& bufferInfos = vaoImpl.bufferInfos;
 	for (auto uboLayoutBindingPair : shaderImpl.uboLayoutBindings)
 	{
 		if (std::get<0>(uboLayoutBindingPair.first) != ELayoutBindingType::UniformBuffer)
@@ -1736,9 +1743,9 @@ void VulkanRenderer::ensureShader(shaders::Shader& shader)
 			continue;
 		}
 		auto& descriptorSetLayoutBinding = uboLayoutBindingPair.second;
-		auto& uniformBuffers = shaderImpl.uniformBuffers;
-		auto& uniformBuffersMemory = shaderImpl.uniformBuffersMemory;
-		auto& uniformBuffersMapped = shaderImpl.uniformBuffersMapped;
+		auto& uniformBuffers = vaoImpl.uniformBuffers;
+		auto& uniformBuffersMemory = vaoImpl.uniformBuffersMemory;
+		auto& uniformBuffersMapped = vaoImpl.uniformBuffersMapped;
 		uniformBuffers.resize(uniformBuffers.size() + 1);
 		uniformBuffersMemory.resize(uniformBuffersMemory.size() + 1);
 		const auto& bufferSize = std::get<1>(uboLayoutBindingPair.first);
@@ -1759,7 +1766,7 @@ void VulkanRenderer::ensureShader(shaders::Shader& shader)
 			bufferInfo.range = bufferSize;
 			bufferInfos.push_back(
 				{{std::get<0>(uboLayoutBindingPair.first), std::get<3>(uboLayoutBindingPair.first)}, bufferInfo});
-			shaderImpl.uniformLocationTable[std::get<2>(uboLayoutBindingPair.first)] = uniformBuffersMappedIndex;
+			vaoImpl.uniformLocationTable[std::get<2>(uboLayoutBindingPair.first)] = uniformBuffersMappedIndex;
 		}
 		else
 		{
@@ -1774,7 +1781,7 @@ void VulkanRenderer::ensureShader(shaders::Shader& shader)
 				bufferInfo.range = bufferSize;
 				bufferInfos.push_back(
 					{{std::get<0>(uboLayoutBindingPair.first), std::get<3>(uboLayoutBindingPair.first) + index}, bufferInfo});
-				shaderImpl.uniformLocationTable[std::get<2>(uboLayoutBindingPair.first) + "[" + std::to_string(index) + "]"] =
+				vaoImpl.uniformLocationTable[std::get<2>(uboLayoutBindingPair.first) + "[" + std::to_string(index) + "]"] =
 					uniformBuffersMappedIndex;
 			}
 		}

@@ -34,11 +34,11 @@ void Shader::addTexture(uint32_t bindingIndex, shaders::ShaderType shaderType, s
 {
   window.iRenderer->addTexture(*this, bindingIndex, shaderType, textureName, descriptorCount);
 }
-void Shader::setSSBO(const std::string_view name, const void *pointer, uint32_t size)
+void Shader::setSSBO(const std::string_view name, vaos::VAO& vao, const void *pointer, uint32_t size)
 {
-  window.iRenderer->setSSBO(*this, name, pointer, size);
+  window.iRenderer->setSSBO(*this, vao, name, pointer, size);
 }
-void Shader::setTexture(const std::string_view name, const textures::Texture &texture, const int32_t unit)
+void Shader::setTexture(const std::string_view name, vaos::VAO& vao, const textures::Texture &texture, const int32_t unit)
 {
-  window.iRenderer->setTexture(*this, name, texture, unit);
+  window.iRenderer->setTexture(*this, vao, name, texture, unit);
 }

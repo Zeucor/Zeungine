@@ -42,6 +42,7 @@ EGLRenderer::~EGLRenderer() {}
 #if defined(WINDOWS) || defined(LINUX)
 void EGLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
+	this->renderer = RENDERER_EGL;
 	this->platformWindowPointer = platformWindowPointer;
 #ifdef WINDOWS
 	auto window = (*dynamic_cast<WIN32Window*>(platformWindowPointer)).hwnd;
@@ -131,7 +132,7 @@ void EGLRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeCons
 	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
 	shaders::ShaderFactory::compileProgram(shader);
 }
-void EGLRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
+void EGLRenderer::setUniform(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, uint32_t size,
 														 enums::EUniformType uniformType)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
@@ -212,7 +213,7 @@ void EGLRenderer::setUniform(shaders::Shader& shader, const std::string_view nam
 	}
 	assert(false && "Should not reach here");
 }
-void EGLRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
+void EGLRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	auto blockIndex = glGetUniformBlockIndex(shaderImpl.program, name.data());
@@ -268,7 +269,7 @@ void EGLRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType
 	std::get<0>(uboBinding) = bindingIndex;
 	std::get<1>(uboBinding) = uboBufferID;
 }
-void EGLRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
+void EGLRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	auto ssboIter = shaderImpl.ssboBindings.find(name.data());
@@ -285,7 +286,7 @@ void EGLRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, 
 	glBufferData(GL_SHADER_STORAGE_BUFFER, size, pointer, GL_STATIC_DRAW);
 	GLcheck(*this, "glBufferData");
 }
-void EGLRenderer::setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
+void EGLRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const textures::Texture& texture,
 														 const int32_t unit)
 {
 	shader.setUniform(name, unit);

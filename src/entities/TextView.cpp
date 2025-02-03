@@ -55,6 +55,15 @@ TextView::TextView(Window &window,
 	resizeHandler(resizeHandler),
 	reFontSizeHandler(reFontSizeHandler)
 {
+	switch (window.iRenderer->renderer)
+	{
+	default:
+		break;
+	case RENDERER_VULKAN:
+	case RENDERER_METAL:
+		flipUVsY(uvs);
+		break;
+	}
 	computeNormals(indices, positions, normals);
 	updateIndices(indices);
 	updateElements("UV2", uvs);
@@ -113,13 +122,13 @@ void TextView::preRender()
 {
   auto &model = getModelMatrix();
 	shader.bind();
-	shader.setBlock("Model", model);
-	shader.setBlock("View", scene.view.matrix);
-	shader.setBlock("Projection", scene.projection.matrix);
-	shader.setBlock("CameraPosition", scene.view.position, 16);
+	shader.setBlock("Model", *this, model);
+	shader.setBlock("View", *this, scene.view.matrix);
+	shader.setBlock("Projection", *this, scene.projection.matrix);
+	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
 	if (size.x && size.y)
-	  shader.setTexture("Texture2D", *texturePointer, 0);
-	shader.setUniform("TextColor", textColor);
+	  shader.setTexture("Texture2D", *this, *texturePointer, 0);
+	shader.setUniform("TextColor", *this, textColor);
 	shader.unbind();
 }
 void TextView::setSize(glm::vec2 size)

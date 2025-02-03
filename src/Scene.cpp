@@ -56,7 +56,6 @@ void Scene::preRender()
 		directionaLightShadow.framebuffer.bind();
 		iRenderer.clear();
 		directionaLightShadow.shader.bind();
-		directionaLightShadow.shader.setBlock("LightSpaceMatrix", directionaLightShadow.lightSpaceMatrix, sizeof(glm::mat4));
 		for (auto &entityPair : entities)
 		{
 			auto &entityPointer = entityPair.second;
@@ -66,8 +65,9 @@ void Scene::preRender()
 			{
 				continue;
 			}
+			directionaLightShadow.shader.setBlock("LightSpaceMatrix", glEntity, directionaLightShadow.lightSpaceMatrix, sizeof(glm::mat4));
 			const auto &model = glEntity.getModelMatrix();
-			directionaLightShadow.shader.setBlock("Model", model);
+			directionaLightShadow.shader.setBlock("Model", glEntity, model);
 			vbo.drawVAO();
 		}
 		directionaLightShadow.shader.unbind();
@@ -78,7 +78,6 @@ void Scene::preRender()
 		spotLightShadow.framebuffer.bind();
 		iRenderer.clear();
 		spotLightShadow.shader.bind();
-		spotLightShadow.shader.setBlock("LightSpaceMatrix", spotLightShadow.lightSpaceMatrix, sizeof(glm::mat4));
 		for (auto &entityPair : entities)
 		{
 			auto &entityPointer = entityPair.second;
@@ -88,8 +87,9 @@ void Scene::preRender()
 			{
 				continue;
 			}
+			spotLightShadow.shader.setBlock("LightSpaceMatrix", glEntity, spotLightShadow.lightSpaceMatrix, sizeof(glm::mat4));
 			const auto &model = glEntity.getModelMatrix();
-			spotLightShadow.shader.setBlock("Model", model);
+			spotLightShadow.shader.setBlock("Model", glEntity, model);
 			vbo.drawVAO();
 		}
 		spotLightShadow.shader.unbind();
@@ -100,10 +100,6 @@ void Scene::preRender()
 		pointLightShadow.framebuffer.bind();
 		iRenderer.clear();
 		pointLightShadow.shader.bind();
-		pointLightShadow.shader.setBlock("PointLightSpaceMatrix", pointLightShadow.shadowTransforms, sizeof(glm::mat4) * 6);
-		pointLightShadow.shader.setUniform("nearPlane", pointLightShadow.pointLight.nearPlane);
-		pointLightShadow.shader.setUniform("farPlane", pointLightShadow.pointLight.farPlane);
-		pointLightShadow.shader.setUniform("lightPos", pointLightShadow.pointLight.position);
 		for (auto &entityPair : entities)
 		{
 			auto &entityPointer = entityPair.second;
@@ -113,8 +109,12 @@ void Scene::preRender()
 			{
 				continue;
 			}
+			pointLightShadow.shader.setBlock("PointLightSpaceMatrix", glEntity, pointLightShadow.shadowTransforms, sizeof(glm::mat4) * 6);
+			pointLightShadow.shader.setUniform("nearPlane", glEntity, pointLightShadow.pointLight.nearPlane);
+			pointLightShadow.shader.setUniform("farPlane", glEntity, pointLightShadow.pointLight.farPlane);
+			pointLightShadow.shader.setUniform("lightPos", glEntity, pointLightShadow.pointLight.position);
 			const auto &model = glEntity.getModelMatrix();
-			pointLightShadow.shader.setBlock("Model", model);
+			pointLightShadow.shader.setBlock("Model", glEntity, model);
 			vbo.drawVAO();
 		}
 		pointLightShadow.shader.unbind();
@@ -159,7 +159,7 @@ void Scene::entityPreRender(IEntity &entity)
 		directionalLightSpaceMatrices[index] = directionalLightShadow.lightSpaceMatrix;
 		++index;
 	}
-	glEntity.shader.setBlock("DirectionalLightSpaceMatrices", directionalLightSpaceMatrices, sizeof(glm::mat4) * 4);
+	glEntity.shader.setBlock("DirectionalLightSpaceMatrices", glEntity, directionalLightSpaceMatrices, sizeof(glm::mat4) * 4);
 	glm::mat4 spotLightSpaceMatrices[4];
 	index = 0;
 	for (auto &spotLightShadow : spotLightShadows)
@@ -167,13 +167,13 @@ void Scene::entityPreRender(IEntity &entity)
 		spotLightSpaceMatrices[index] = spotLightShadow.lightSpaceMatrix;
 		++index;
 	}
-	glEntity.shader.setBlock("SpotLightSpaceMatrices", spotLightSpaceMatrices, sizeof(glm::mat4) * 4);
+	glEntity.shader.setBlock("SpotLightSpaceMatrices", glEntity, spotLightSpaceMatrices, sizeof(glm::mat4) * 4);
 	int32_t unit = 0;
 	index = 0;
 	uint32_t unitRemaining = 4;
 	for (auto &directionalLightShadow : directionalLightShadows)
 	{
-		glEntity.shader.setTexture("directionalLightSamplers[" + std::to_string(index) + "]", directionalLightShadow.texture, unit);
+		glEntity.shader.setTexture("directionalLightSamplers[" + std::to_string(index) + "]", glEntity, directionalLightShadow.texture, unit);
 		++unit;
 		--unitRemaining;
 	}
@@ -182,7 +182,7 @@ void Scene::entityPreRender(IEntity &entity)
 	unitRemaining = 4;
 	for (auto &spotLightShadow : spotLightShadows)
 	{
-		glEntity.shader.setTexture("spotLightSamplers[" + std::to_string(index) + "]", spotLightShadow.texture, unit);
+		glEntity.shader.setTexture("spotLightSamplers[" + std::to_string(index) + "]", glEntity, spotLightShadow.texture, unit);
 		++unit;
 		--unitRemaining;
 	}
@@ -191,7 +191,7 @@ void Scene::entityPreRender(IEntity &entity)
 	unitRemaining = 4;
 	for (auto &pointLightShadow : pointLightShadows)
 	{
-		glEntity.shader.setTexture("pointLightSamplers[" + std::to_string(index) + "]", pointLightShadow.texture, unit);
+		glEntity.shader.setTexture("pointLightSamplers[" + std::to_string(index) + "]", glEntity, pointLightShadow.texture, unit);
 		++unit;
 		--unitRemaining;
 	}

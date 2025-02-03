@@ -81,6 +81,7 @@ static bool isExtensionSupported(const char* extList, const char* extension)
 #if defined(WINDOWS) || defined(LINUX)
 void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
+	this->renderer = RENDERER_GL;
 	this->platformWindowPointer = platformWindowPointer;
 #ifdef WINDOWS
 	HGLRC hTempRC = wglCreateContext(hDeviceContext);
@@ -201,7 +202,7 @@ void GLRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeConst
 	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
 	shaders::ShaderFactory::compileProgram(shader);
 }
-void GLRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
+void GLRenderer::setUniform(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, uint32_t size,
 														enums::EUniformType uniformType)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
@@ -282,7 +283,7 @@ void GLRenderer::setUniform(shaders::Shader& shader, const std::string_view name
 	}
 	assert(false && "Should not reach here");
 }
-void GLRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
+void GLRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	auto blockIndex = glContext->GetUniformBlockIndex(shaderImpl.program, name.data());
@@ -338,7 +339,7 @@ void GLRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType,
 	std::get<0>(uboBinding) = bindingIndex;
 	std::get<1>(uboBinding) = uboBufferID;
 }
-void GLRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size)
+void GLRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size)
 {
 	auto& shaderImpl = *(shaders::GLShaderImpl*)shader.rendererData;
 	auto ssboIter = shaderImpl.ssboBindings.find(name.data());
@@ -355,7 +356,7 @@ void GLRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, c
 	glContext->BufferData(GL_SHADER_STORAGE_BUFFER, size, pointer, GL_STATIC_DRAW);
 	GLcheck(*this, "glBufferData");
 }
-void GLRenderer::setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
+void GLRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const textures::Texture& texture,
 														const int32_t unit)
 {
 	shader.setUniform(name, unit);

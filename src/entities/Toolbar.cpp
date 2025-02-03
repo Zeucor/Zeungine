@@ -509,10 +509,10 @@ void Toolbar::preRender()
 	const auto &model = getModelMatrix();
 	shader.bind();
 	scene.entityPreRender(*this);
-	shader.setBlock("Model", model);
-	shader.setBlock("View", scene.view.matrix);
-	shader.setBlock("Projection", scene.projection.matrix);
-	shader.setBlock("CameraPosition", scene.view.position, 16);
+	shader.setBlock("Model", *this, model);
+	shader.setBlock("View", *this, scene.view.matrix);
+	shader.setBlock("Projection", *this, scene.projection.matrix);
+	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader.unbind();
 };
 void Toolbar::setSize(glm::vec2  newSize)

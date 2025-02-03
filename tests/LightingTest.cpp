@@ -73,10 +73,10 @@ struct TestTriangle : Entity
     const auto &model = getModelMatrix();
     shader.bind();
     testScene.entityPreRender(*this);
-    shader.setBlock("Model", model);
-    shader.setBlock("View", testScene.view.matrix);
-    shader.setBlock("Projection", testScene.projection.matrix);
-    shader.setBlock("CameraPosition", testScene.view.position, 16);
+    shader.setBlock("Model", *this, model);
+    shader.setBlock("View", *this, testScene.view.matrix);
+    shader.setBlock("Projection", *this, testScene.projection.matrix);
+    shader.setBlock("CameraPosition", *this, testScene.view.position, 16);
     shader.unbind();
   };
   void postRender() override
@@ -99,9 +99,9 @@ void rotateLightPosition(Window &window, Scene &scene, lights::PointLight &light
     glm::vec4 newPosition = rotationMatrix * glm::vec4(light.position, 1.0f);
     light.position = glm::vec3(newPosition);
     pointLightShadow.updateShadowTransforms();
-    shader.bind();
-    shader.setSSBO("PointLights", scene.pointLights.data(), scene.pointLights.size() * sizeof(lights::PointLight));
-    shader.unbind();
+    // shader.bind();
+    // shader.setSSBO("PointLights", scene.pointLights.data(), scene.pointLights.size() * sizeof(lights::PointLight));
+    // shader.unbind();
     window.runOnThread([&, angleSpeed](auto &window)
     {
       rotateLightPosition(window, scene, light, pointLightShadow, angleSpeed, shader);
@@ -170,13 +170,13 @@ TestScene::TestScene(Window& window):
     })));
   auto &shader = cubeEntity->shader;
   rotateLightPosition(window, *this, pointLights[0], pointLightShadows[0], glm::radians(180.0f), shader);
-  shader.bind();
-  shader.setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
-  shader.setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(lights::DirectionalLight));
-  shader.setSSBO("SpotLights", spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
-  shader.setUniform("fogDensity", 0.035f);
-  shader.setUniform("fogColor", glm::vec4(0, 0, 0, 1));
-  shader.unbind();
+  // shader.bind();
+  // shader.setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
+  // shader.setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(lights::DirectionalLight));
+  // shader.setSSBO("SpotLights", spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
+  // shader.setUniform("fogDensity", 0.035f);
+  // shader.setUniform("fogColor", glm::vec4(0, 0, 0, 1));
+  // shader.unbind();
   auto skybox = std::make_shared<entities::SkyBox>(
     (Window &)window,
     *this,

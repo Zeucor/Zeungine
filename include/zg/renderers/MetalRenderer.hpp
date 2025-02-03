@@ -20,17 +20,17 @@ namespace zg
 		void viewport(glm::ivec4 vp) const override;
 		void initShader(shaders::Shader& shader, const shaders::RuntimeConstants& constants,
 										const std::vector<shaders::ShaderType>& shaderTypes) override;
-		void setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
+		void setUniform(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, uint32_t size,
 										enums::EUniformType uniformType) override;
-		void setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
+		void setBlock(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size) override;
 		void deleteBuffer(uint32_t id) override;
 		void bindShader(const shaders::Shader& shader) override;
 		void unbindShader(const shaders::Shader& shader) override;
 		void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) override;
 		void addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) override;
 		void addTexture(shaders::Shader &shader, uint32_t bindingIndex, shaders::ShaderType shaderType, std::string_view textureName, uint32_t descriptorCount) override;
-		void setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
-		void setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
+		void setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size) override;
+		void setTexture(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const textures::Texture& texture,
 										const int32_t unit) override;
 		bool compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
 											 shaders::ShaderPair& shaderPair) override;
@@ -54,7 +54,7 @@ namespace zg
 		void drawVAO(const vaos::VAO& vao) override;
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
-		void ensureShader(shaders::Shader& shader) override;
+		void ensureEntity(shaders::Shader& shader, vaos::VAO& vao) override;
 	};
 	bool VKcheck(const char* fn, VkResult result);
 } // namespace zg

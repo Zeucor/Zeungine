@@ -10,6 +10,7 @@
 #include <zg/renderers/GLRenderer.hpp>
 #include "../common.hpp"
 #include "RuntimeConstants.hpp"
+#include <zg/vaos/VAO.hpp>
 namespace zg::textures
 {
 	struct Texture;
@@ -34,7 +35,7 @@ namespace zg::shaders
 		void addTexture(uint32_t bindingIndex, shaders::ShaderType shaderType, std::string_view textureName, uint32_t descriptorCount = 1);
 
 		template <typename T>
-		void setUniform(const std::string_view name, const T& value, uint32_t size = 0)
+		void setUniform(const std::string_view name, vaos::VAO& vao, const T& value, uint32_t size = 0)
 		{
 			auto pointerSize = size ? size : sizeof(value);
 			enums::EUniformType uniformType;
@@ -86,17 +87,17 @@ namespace zg::shaders
 			{
 				throw std::runtime_error("setUniform: unsupported type");
 			}
-			window.iRenderer->setUniform(*this, name, &value, pointerSize, uniformType);
+			window.iRenderer->setUniform(*this, vao, name, &value, pointerSize, uniformType);
 		};
 
 		template <typename T>
-		void setBlock(const std::string_view name, const T& value, uint32_t size = 0)
+		void setBlock(const std::string_view name, vaos::VAO& vao, const T& value, uint32_t size = 0)
 		{
 			auto pointerSize = size ? size : sizeof(value);
-			window.iRenderer->setBlock(*this, name, &value, pointerSize);
+			window.iRenderer->setBlock(*this, vao, name, &value, pointerSize);
 		};
-		void setSSBO(const std::string_view name, const void* pointer, uint32_t size);
-		void setTexture(const std::string_view name, const textures::Texture& texture, const int32_t unit);
+		void setSSBO(const std::string_view name, vaos::VAO& vao, const void* pointer, uint32_t size);
+		void setTexture(const std::string_view name, vaos::VAO& vao, const textures::Texture& texture, const int32_t unit);
 	};
 #if defined(USE_GL) || defined(USE_EGL)
 	struct GLShaderImpl

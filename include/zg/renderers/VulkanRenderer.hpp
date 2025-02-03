@@ -15,8 +15,8 @@
 #elif defined(LINUX)
 #define VK_USE_PLATFORM_XLIB_KHR
 #endif
-#include <vulkan/vulkan.h>
 #include <shaderc/shaderc.hpp>
+#include <vulkan/vulkan.h>
 namespace zg
 {
 	namespace textures
@@ -61,6 +61,14 @@ namespace zg
 		VkDeviceMemory indiceBufferMemory = VK_NULL_HANDLE;
 		void* indiceData = 0;
 		uint32_t indiceBufferSize;
+		VkDescriptorPool descriptorPool;
+		VkDescriptorSet descriptorSet;
+		std::unordered_map<std::string, std::pair<VkBuffer, VkDeviceMemory>> ssboBuffers;
+		std::vector<VkBuffer> uniformBuffers;
+		std::vector<VkDeviceMemory> uniformBuffersMemory;
+		std::vector<void*> uniformBuffersMapped;
+		std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t>, VkDescriptorBufferInfo>> bufferInfos;
+		std::unordered_map<std::string, int32_t> uniformLocationTable;
 	};
 	struct VulkanShaderImpl
 	{
@@ -72,22 +80,17 @@ namespace zg
 		 *        3: bindingIndex
 		 *        4: isArray
 		 */
-		std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t, std::string, uint32_t, bool>, VkDescriptorSetLayoutBinding>> uboLayoutBindings;
+		std::vector<
+			std::pair<std::tuple<ELayoutBindingType, uint32_t, std::string, uint32_t, bool>, VkDescriptorSetLayoutBinding>>
+			uboLayoutBindings;
 		VkDescriptorSetLayout descriptorSetLayout;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 		shaders::ShaderMap shaders;
-		std::unordered_map<std::string, std::tuple<uint32_t, VkBuffer, VkDeviceMemory, uint32_t, uint32_t>> ssboBindings;
+		std::unordered_map<std::string, std::tuple<uint32_t, uint32_t, uint32_t>> ssboBindings;
 		std::unordered_map<std::string, uint32_t> textureArrayBindings;
 		std::unordered_map<std::string, uint32_t> textureBindings;
 		std::unordered_map<std::string, uint32_t> uboStringBindings;
-		VkDescriptorPool descriptorPool;
-		VkDescriptorSet descriptorSet;
-		std::vector<VkBuffer> uniformBuffers;
-		std::vector<VkDeviceMemory> uniformBuffersMemory;
-		std::vector<void*> uniformBuffersMapped;
-		std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t>, VkDescriptorBufferInfo>> bufferInfos;
-		std::unordered_map<std::string, int32_t> uniformLocationTable;
 	};
 	constexpr int MAX_FRAMES_IN_FLIGHT = 1;
 	struct VulkanRenderer : IRenderer
@@ -118,7 +121,7 @@ namespace zg
 		uint32_t imageIndex = -1;
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
-		const VulkanFramebufferImpl *currentFramebufferImpl = 0;
+		const VulkanFramebufferImpl* currentFramebufferImpl = 0;
 		VulkanRenderer();
 		~VulkanRenderer() override;
 		void createContext(IPlatformWindow* platformWindowPointer) override;
@@ -159,24 +162,28 @@ namespace zg
 		void viewport(glm::ivec4 vp) const override;
 		void initShader(shaders::Shader& shader, const shaders::RuntimeConstants& constants,
 										const std::vector<shaders::ShaderType>& shaderTypes) override;
-		void setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer, uint32_t size,
+		void setUniform(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, uint32_t size,
 										enums::EUniformType uniformType) override;
-		void setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
-		int32_t getUniformLocation(shaders::Shader &shader, const std::string_view &name);
+		void setBlock(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer,
+									size_t size) override;
+		int32_t getUniformLocation(shaders::Shader& shader, vaos::VAO& vao, const std::string_view& name);
 		void deleteBuffer(uint32_t id) override;
 		void bindShader(const shaders::Shader& shader) override;
 		void unbindShader(const shaders::Shader& shader) override;
-		void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) override;
-		void addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) override;
-		void addTexture(shaders::Shader &shader, uint32_t bindingIndex, shaders::ShaderType shaderType, std::string_view textureName, uint32_t descriptorCount) override;
-		void setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) override;
-		void setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
+		void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
+								 uint32_t bindingIndex) override;
+		void addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
+								uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) override;
+		void addTexture(shaders::Shader& shader, uint32_t bindingIndex, shaders::ShaderType shaderType,
+										std::string_view textureName, uint32_t descriptorCount) override;
+		void setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size) override;
+		void setTexture(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const textures::Texture& texture,
 										const int32_t unit) override;
 		bool compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
 											 shaders::ShaderPair& shaderPair) override;
-		VkShaderModule createShaderModule(const std::vector<uint32_t> &code);
+		VkShaderModule createShaderModule(const std::vector<uint32_t>& code);
 		bool compileProgram(shaders::Shader& shader) override;
-		bool checkCompileErrors(const shaderc::SpvCompilationResult &module, bool isShader, const char *shaderType);
+		bool checkCompileErrors(const shaderc::SpvCompilationResult& module, bool isShader, const char* shaderType);
 		void deleteShader(shaders::Shader& shader) override;
 		void destroyShader(shaders::Shader& shader) override;
 		void bindFramebuffer(const textures::Framebuffer& framebuffer) override;
@@ -185,12 +192,15 @@ namespace zg
 		void destroyFramebuffer(textures::Framebuffer& framebuffer) override;
 		void bindTexture(const textures::Texture& texture) override;
 		void unbindTexture(const textures::Texture& texture) override;
-		void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory);
+		void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+										 VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 		VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 		VkFormat findDepthFormat(uint32_t format);
-		VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+		VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+																 VkFormatFeatureFlags features);
 		void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-		void transitionImageLayout(VulkanTextureImpl &textureImpl, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageAspectFlags aspectMask);
+		void transitionImageLayout(VulkanTextureImpl& textureImpl, VkImage image, VkFormat format, VkImageLayout oldLayout,
+															 VkImageLayout newLayout, VkImageAspectFlags aspectMask);
 		void preInitTexture(textures::Texture& texture) override;
 		void midInitTexture(const textures::Texture& texture,
 												const std::vector<images::ImageLoader::ImagePair>& images) override;
@@ -201,7 +211,7 @@ namespace zg
 		void drawVAO(const vaos::VAO& vao) override;
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
-		void ensureShader(shaders::Shader& shader) override;
+		void ensureEntity(shaders::Shader& shader, vaos::VAO& vao) override;
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

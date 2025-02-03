@@ -14,6 +14,7 @@ MetalRenderer::MetalRenderer() {}
 MetalRenderer::~MetalRenderer() {}
 void MetalRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
+	this->renderer = RENDERER_METAL;
 	this->platformWindowPointer = platformWindowPointer;
 }
 void MetalRenderer::init() {}
@@ -22,18 +23,18 @@ std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRender
 void MetalRenderer::clearColor(glm::vec4 color) {}
 void MetalRenderer::clear() {}
 void MetalRenderer::viewport(glm::ivec4 vp) const {}
-void MetalRenderer::setUniform(shaders::Shader& shader, const std::string_view name, const void* pointer,
+void MetalRenderer::setUniform(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer,
 																uint32_t size, enums::EUniformType uniformType)
 {
 }
-void MetalRenderer::setBlock(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) {}
+void MetalRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size) {}
 void MetalRenderer::deleteBuffer(uint32_t id) {}
 void MetalRenderer::bindShader(const shaders::Shader& shader) {}
 void MetalRenderer::unbindShader(const shaders::Shader& shader) {}
 void MetalRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) {}
 void MetalRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) {}
-void MetalRenderer::setSSBO(shaders::Shader& shader, const std::string_view name, const void* pointer, size_t size) {}
-void MetalRenderer::setTexture(shaders::Shader& shader, const std::string_view name, const textures::Texture& texture,
+void MetalRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size) {}
+void MetalRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const textures::Texture& texture,
 																const int32_t unit)
 {
 }

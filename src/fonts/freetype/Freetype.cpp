@@ -59,15 +59,17 @@ FreetypeCharacter::FreetypeCharacter(Window &window, const FreetypeFont &freeTyp
 	}
 	size = {face->glyph->bitmap.width, face->glyph->bitmap.rows};
 	bearing = {face->glyph->bitmap_left, face->glyph->bitmap_top};
+	auto& renderer = window.iRenderer->renderer;
 	if (size.x == 0 || size.y == 0)
 	{
 		goto _setAdvance;
 	}
 	{
+		auto flipY = (renderer == RENDERER_GL || renderer == RENDERER_EGL);
 		uint64_t imgSize = size.x * size.y * 4;
 		std::shared_ptr<uint8_t[]> rgbaImg(new uint8_t[imgSize]);
 		auto rgbaImgPointer = rgbaImg.get();
-		for (int64_t imgY = size.y - 1, rgbaImgY = 0; imgY >= 0; imgY--, rgbaImgY++)
+		for (int64_t imgY = flipY ? size.y - 1 : 0, rgbaImgY = 0; flipY ? imgY >= 0 : imgY < size.y; flipY ? imgY-- : imgY++, rgbaImgY++)
 		{
 			for (uint64_t imgX = 0; imgX < size.x; imgX++)
 			{
