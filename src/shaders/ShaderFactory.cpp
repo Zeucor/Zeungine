@@ -705,7 +705,11 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
 	                {
 	                	++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
 	                	{
-	                		return "uniform vec4 TextColor;";
+                      auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                      shader.addUBO(ShaderType::Fragment, "TextColor", bindingIndex, sizeof(glm::vec3));
+	                		return "layout(binding = " + std::to_string(bindingIndex) + ") uniform TextColor {\n"
+                      "  vec4 value;\n"
+                      "} textColor;";
 	                	}
 	                }
 						}
@@ -805,7 +809,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     std::string string("  vec4 sampled = texture(Texture2D, inUV);\n");
                   	if (std::find(constants.begin(), constants.end(), "TextColor") != constants.end())
                   	{
-											string += "  FragColor = vec4(TextColor.r, TextColor.g, TextColor.b, sampled.a * TextColor.a);";
+											string += "  FragColor = vec4(textColor.value.r, textColor.value.g, textColor.value.b, sampled.a * textColor.value.a);";
                   	}
                   	else
                   	{
