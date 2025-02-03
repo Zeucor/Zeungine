@@ -1,3 +1,4 @@
+#include <AppKit/AppKit.h>
 #ifdef MACOS
 #import <zg/windows/MacOSWindow.hpp>
 #import <zg/entities/Plane.hpp>
@@ -45,6 +46,7 @@ using namespace zg;
 }
 - (BOOL)windowShouldClose:(id)sender
 {
+	macOSWindowPointer->closed = true;
 	[NSApp terminate:nil];
 	return YES;
 }
@@ -76,6 +78,8 @@ void MacOSWindow::init(Window &renderWindow)
 		nsWindow = window;
 		NSView *contentView = [(NSWindow *)nsWindow contentView];
 		nsView = contentView;
+		NSMenu *mainMenu = [[NSMenu alloc] init];
+		[NSApp setMainMenu:mainMenu];
 	}
 	nsImage = [[NSImage alloc] initWithSize:NSMakeSize(renderWindow.windowWidth, renderWindow.windowHeight)];
 	NSRect rect = NSMakeRect(0, 0, renderWindow.windowWidth, renderWindow.windowHeight);
@@ -187,6 +191,8 @@ void MacOSWindow::postInit()
 }
 bool MacOSWindow::pollMessages()
 {
+	if (closed)
+		return false;
 	@autoreleasepool
 	{
 		NSEvent *event;
@@ -198,11 +204,17 @@ bool MacOSWindow::pollMessages()
 			switch ([event type])
 			{
 				case NSEventTypeKeyDown:
-					std::cout << "Key Down" << std::endl;
-					break;
 				case NSEventTypeKeyUp:
-					std::cout << "Key Up" << std::endl;
+				{
+					auto keypress = [event type] == NSEventTypeKeyDown;
+				    NSString *characters = [event characters];
+					if (characters.length > 0)
+					{
+						unichar unicodeChar = [characters characterAtIndex:0];
+						renderWindowPointer->windowKeys[unicodeChar] = keypress;
+					}
 					break;
+				}
 				case NSEventTypeMouseMoved:
 				{
 					NSPoint location = [event locationInWindow];
@@ -248,6 +260,8 @@ bool MacOSWindow::pollMessages()
 }
 void MacOSWindow::swapBuffers()
 {
+	if (closed)
+		return;
 #ifdef USE_GL
 	[(NSOpenGLContext*)glContext flushBuffer];
 #elif defined(USE_EGL)
@@ -373,15 +387,28 @@ void MacOSWindow::destroy()
 }
 void MacOSWindow::close()
 {
+	auto window = (NSWindow *)nsWindow;
+	[window close];
+	closed = true;
 }
 void MacOSWindow::minimize()
 {
+	auto window = (NSWindow *)nsWindow;
+	[window miniaturize:nil];
 }
 void MacOSWindow::maximize()
 {
+	auto window = (NSWindow *)nsWindow;
+	[window setStyleMask:([nsWindow styleMask] | NSWindowStyleMaskResizable)];
+	[window zoom:nil];
 }
 void MacOSWindow::restore()
 {
+	auto window = (NSWindow *)nsWindow;
+	if ([window isMiniaturized])
+		[window deminiaturize:nil];
+	else if ([window isZoomed])
+		[window zoom:nil];
 }
 void MacOSWindow::warpPointer(glm::vec2 coords)
 {

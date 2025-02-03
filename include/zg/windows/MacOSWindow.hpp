@@ -14,6 +14,7 @@ namespace zg
 		void* nsImage = 0;
 		void* nsImageView = 0;
 #endif
+		bool closed = false;
 		void init(Window& window) override;
 		void renderInit();
 		void postInit() override;
