@@ -391,7 +391,10 @@ void MacOSWindow::restore()
 }
 void MacOSWindow::warpPointer(glm::vec2 coords)
 {
-    CGPoint point = CGPointMake(coords.x, coords.y);
+	auto window = ((NSWindow*)nsWindow);
+	auto x = window.frame.origin.x + coords.x;
+	auto y = window.screen.frame.size.height - window.frame.origin.y - coords.y;
+    CGPoint point = CGPointMake(x, y);
 	CGWarpMouseCursorPosition(point);
 	CGAssociateMouseAndMouseCursorPosition(YES);
 }
