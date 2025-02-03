@@ -296,16 +296,12 @@ bool X11Window::pollMessages()
 		};
 		case FocusIn:
 		{
-			if (renderWindowPointer->focused)
-				break;
-			renderWindowPointer->focused = true;
+			renderWindowPointer->callFocusHandler(true);
 			break;
 		};
 		case FocusOut:
 		{
-			if (!renderWindowPointer->focused)
-				break;
-			renderWindowPointer->focused = false;
+			renderWindowPointer->callFocusHandler(false);
 			break;
 		};
 		case ConfigureNotify:
@@ -478,6 +474,16 @@ void X11Window::restore()
 void X11Window::warpPointer(glm::vec2 coords)
 {
 	XWarpPointer(display, None, window, 0, 0, 0, 0, coords.x, coords.y);
+}
+void X11Window::showPointer()
+{
+	XFixesShowCursor(display, rootWindow);
+	XSync(display, True);
+}
+void X11Window::hidePointer()
+{
+	XFixesHideCursor(display, rootWindow);
+	XSync(display, True);
 }
 void X11Window::setXY()
 {

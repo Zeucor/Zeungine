@@ -203,16 +203,12 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 		};
 	case WM_SETFOCUS:
 		{
-			if (glWindow->focused)
-				break;
-			glWindow->focused = true;
+			glWindow->callFocusHandler(true);
 			break;
 		};
 	case WM_KILLFOCUS:
 		{
-			if (!glWindow->focused)
-				break;
-			glWindow->focused = false;
+			glWindow->callFocusHandler(false);
 			break;
 		};
 	default:
@@ -366,6 +362,14 @@ void WIN32Window::warpPointer(glm::vec2 coords)
  		currentWindow = currentWindow->parentWindow;
  	}
  	SetCursorPos(pt.x, pt.y);
+}
+void WIN32Window::showPointer()
+{
+	ShowCursor(TRUE);
+}
+void WIN32Window::hidePointer()
+{
+	ShowCursor(FALSE);
 }
 void WIN32Window::setXY()
 {

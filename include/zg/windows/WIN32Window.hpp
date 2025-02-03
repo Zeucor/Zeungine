@@ -22,6 +22,8 @@ namespace zg
 		void maximize() override;
 		void restore() override;
 		void warpPointer(glm::vec2 coords) override;
+		void showPointer() override;
+		void hidePointer() override;
 		void setXY() override;
 		void setWidthHeight() override;
 		void mouseCapture(bool capture) override;

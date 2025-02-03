@@ -19,6 +19,8 @@ namespace zg
 		virtual void maximize() = 0;
 		virtual void restore() = 0;
 		virtual void warpPointer(glm::vec2 coords) = 0;
+		virtual void showPointer() = 0;
+		virtual void hidePointer() = 0;
 		virtual void setXY() = 0;
 		virtual void setWidthHeight() = 0;
 		virtual void mouseCapture(bool capture) = 0;

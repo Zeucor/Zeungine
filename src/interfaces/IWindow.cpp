@@ -193,6 +193,7 @@ void IWindow::callMouseMoveHandler(glm::vec2 coords)
 		handler(coords);
 	}
 };
+// resize
 IWindow::EventIdentifier IWindow::addResizeHandler(const ViewResizeHandler& callback)
 {
 	auto id = ++viewResizeHandlers.first;
@@ -221,6 +222,38 @@ void IWindow::callResizeHandler(glm::vec2 newSize)
 		handler(newSize);
 	}
 };
+// focus
+IWindow::EventIdentifier IWindow::addFocusHandler(const FocusHandler& callback)
+{
+	auto id = ++focusHandlers.first;
+	focusHandlers.second[id] = callback;
+	return id;
+}
+void IWindow::removeFocusHandler(EventIdentifier& id)
+{
+	auto& handlers = focusHandlers.second;
+	auto handlerIter = handlers.find(id);
+	if (handlerIter == handlers.end())
+	{
+		return;
+	}
+	handlers.erase(handlerIter);
+	id = 0;
+}
+void IWindow::callFocusHandler(bool focused)
+{
+	if (this->focused == focused)
+		return;
+	auto& handlersMap = focusHandlers.second;
+	std::vector<FocusHandler> handlersCopy;
+	for (const auto& pair : handlersMap)
+		handlersCopy.push_back(pair.second);
+	this->focused = focused;
+	for (auto& handler : handlersCopy)
+	{
+		handler(focused);
+	}
+}
 std::shared_ptr<IScene> IWindow::setIScene(const std::shared_ptr<IScene>& scene)
 {
 	this->scene = scene;

@@ -34,19 +34,13 @@ using namespace zg;
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
 	auto& renderWindow = *macOSWindowPointer->renderWindowPointer;
-    if (renderWindow.focused)
-		return;
-	std::cout << "Window focused" << std::endl;
-	renderWindow.focused = true;
+	renderWindow.callFocusHandler(true);
 	CGAssociateMouseAndMouseCursorPosition(YES);
 }
 - (void)windowDidResignKey:(NSNotification *)notification
 {
 	auto& renderWindow = *macOSWindowPointer->renderWindowPointer;
-    if (!renderWindow.focused)
-		return;
-	std::cout << "Window unfocused" << std::endl;
-	renderWindow.focused = false;
+	renderWindow.callFocusHandler(false);
 	CGAssociateMouseAndMouseCursorPosition(NO);
 }
 - (BOOL)windowShouldClose:(id)sender
@@ -397,6 +391,14 @@ void MacOSWindow::warpPointer(glm::vec2 coords)
     CGPoint point = CGPointMake(x, y);
 	CGWarpMouseCursorPosition(point);
 	CGAssociateMouseAndMouseCursorPosition(YES);
+}
+void MacOSWindowWindow::showPointer()
+{
+	CGDisplayShowCursor(kCGDirectMainDisplay);
+}
+void MacOSWindowWindow::hidePointer()
+{
+	CGDisplayHideCursor(kCGDirectMainDisplay);
 }
 void MacOSWindow::setXY()
 {
