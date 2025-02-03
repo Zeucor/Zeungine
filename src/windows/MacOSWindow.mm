@@ -13,10 +13,42 @@
 #endif
 #import <QuartzCore/CAMetalLayer.h>
 #include <Metal/Metal.h>
+#include <ApplicationServices/ApplicationServices.h>
 using namespace zg;
 @interface MacOSWindowDelegate : NSObject <NSWindowDelegate>
+{
+    MacOSWindow* macOSWindowPointer;
+}
+- (instancetype)initWithWindow:(MacOSWindow*)window;
 @end
 @implementation MacOSWindowDelegate
+- (instancetype)initWithWindow:(MacOSWindow*)window
+{
+    self = [super init];
+    if (self)
+    {
+        macOSWindowPointer = window;
+    }
+    return self;
+}
+- (void)windowDidBecomeKey:(NSNotification *)notification
+{
+	auto& renderWindow = *macOSWindowPointer->renderWindowPointer;
+    if (renderWindow.focused)
+		return;
+	std::cout << "Window focused" << std::endl;
+	renderWindow.focused = true;
+	CGAssociateMouseAndMouseCursorPosition(YES);
+}
+- (void)windowDidResignKey:(NSNotification *)notification
+{
+	auto& renderWindow = *macOSWindowPointer->renderWindowPointer;
+    if (!renderWindow.focused)
+		return;
+	std::cout << "Window unfocused" << std::endl;
+	renderWindow.focused = false;
+	CGAssociateMouseAndMouseCursorPosition(NO);
+}
 - (BOOL)windowShouldClose:(id)sender
 {
 	[NSApp terminate:nil];
@@ -45,7 +77,7 @@ void MacOSWindow::init(Window &renderWindow)
 							defer:NO];
 		NSString *nsTitle = [NSString stringWithUTF8String:renderWindow.title];
 		[window setTitle:nsTitle];
-		[window setDelegate:[[MacOSWindowDelegate alloc] init]];
+		[window setDelegate:[[MacOSWindowDelegate alloc] initWithWindow:this]];
 		[window makeKeyAndOrderFront:nil];
 		nsWindow = window;
 		NSView *contentView = [(NSWindow *)nsWindow contentView];
@@ -180,9 +212,8 @@ bool MacOSWindow::pollMessages()
 				case NSEventTypeMouseMoved:
 				{
 					NSPoint location = [event locationInWindow];
-					std::cout << "Mouse Moved: X=" << location.x << " Y=" << location.y << std::endl;
 					auto x = location.x;
-					auto y = renderWindowPointer->windowHeight - location.y;
+					auto y = location.y;
 					bool hadChildFocus = false;
 					for (auto &childWindowPointer : renderWindowPointer->childWindows)
 					{
@@ -360,6 +391,9 @@ void MacOSWindow::restore()
 }
 void MacOSWindow::warpPointer(glm::vec2 coords)
 {
+    CGPoint point = CGPointMake(coords.x, coords.y);
+	CGWarpMouseCursorPosition(point);
+	CGAssociateMouseAndMouseCursorPosition(YES);
 }
 void MacOSWindow::setXY()
 {
