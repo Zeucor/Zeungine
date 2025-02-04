@@ -1692,20 +1692,29 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	uint32_t poolSizeCount = (shaderImpl.uboLayoutBindings.size() != 0) + (shaderImpl.ssboBindings.size() != 0);
-	uint32_t poolSizeIndex = 0;
-	VkDescriptorPoolSize initialPoolSize{};
-	std::vector<VkDescriptorPoolSize> poolSizes(poolSizeCount, initialPoolSize);
-	if (shaderImpl.uboLayoutBindings.size())
+	std::vector<VkDescriptorPoolSize> poolSizes;
+	auto getPoolSize = [&](auto type) -> VkDescriptorPoolSize&
 	{
-		poolSizes[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[poolSizeIndex].descriptorCount = shaderImpl.uboLayoutBindings.size();
-		poolSizeIndex++;
+		for (auto& poolSize : poolSizes)
+		{
+			if (poolSize.type == type)
+			{
+				return poolSize;
+			}
+		}
+		poolSizes.push_back({type, 0});
+		return poolSizes[poolSizes.size() - 1];
+	};
+	for (auto& uboLayoutBinding : shaderImpl.uboLayoutBindings)
+	{
+		auto& layoutBinding = uboLayoutBinding.second;
+		auto& poolSize = getPoolSize(layoutBinding.descriptorType);
+		poolSize.descriptorCount++;
 	}
 	if (shaderImpl.ssboBindings.size())
 	{
-		poolSizes[poolSizeIndex].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		poolSizes[poolSizeIndex].descriptorCount = shaderImpl.ssboBindings.size();
+		auto layoutBinding = getPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+		layoutBinding.descriptorCount = shaderImpl.ssboBindings.size();
 	}
 
 	VkDescriptorPoolCreateInfo poolInfo{};
