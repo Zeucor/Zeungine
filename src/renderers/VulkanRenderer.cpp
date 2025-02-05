@@ -67,9 +67,9 @@ void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 #ifndef NDEBUG
 	setupDebugMessenger();
 #endif
-	createSurface();
 	pickPhysicalDevice();
 	createLogicalDevice();
+	createSurface();
 	createSwapChain();
 	createImageViews();
 	createRenderPass();
@@ -206,15 +206,15 @@ void VulkanRenderer::setupDebugMessenger()
 void VulkanRenderer::createSurface()
 {
 #ifdef LINUX
-	auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
-	VkXlibSurfaceCreateInfoKHR surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.dpy = x11Window.display;
-	surfaceCreateInfo.window = x11Window.window;
-	if (!VKcheck("vkCreateXlibSurfaceKHR", vkCreateXlibSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
-	{
-		throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
-	}
+	// auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
+	// VkXlibSurfaceCreateInfoKHR surfaceCreateInfo{};
+	// surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+	// surfaceCreateInfo.dpy = x11Window.display;
+	// surfaceCreateInfo.window = x11Window.window;
+	// if (!VKcheck("vkCreateXlibSurfaceKHR", vkCreateXlibSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+	// {
+	// 	throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
+	// }
 #elif defined(ANDROID)
 #elif defined(WINDOWS)
 	auto& win32Window = *dynamic_cast<WIN32Window*>(platformWindowPointer);
@@ -251,8 +251,8 @@ void VulkanRenderer::pickPhysicalDevice()
 	{
 		physicalDeviceScores[rateDeviceSuitability(device)] = device;
 	}
-	auto end = physicalDeviceScores.rend();
-	auto begin = physicalDeviceScores.rbegin();
+	auto end = physicalDeviceScores.end();
+	auto begin = physicalDeviceScores.begin();
 	uint32_t selectedDeviceScore;
 	for (auto iter = begin; iter != end; ++iter)
 	{
@@ -300,6 +300,7 @@ uint32_t VulkanRenderer::rateDeviceSuitability(VkPhysicalDevice device)
 	{
 		score += 1000;
 	}
+	std::cout << "Rated physical device [" << properties.deviceName << "] a score of: " << score << std::endl;
 	return score;
 }
 bool VulkanRenderer::isDeviceSuitable(VkPhysicalDevice device)

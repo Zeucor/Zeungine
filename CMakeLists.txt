@@ -188,7 +188,7 @@ if(LINUX)
         ${ZG_LIB_DIR}/libdawn_proc.so
         ${ZG_LIB_DIR}/libvk_swiftshader.so
         ${ZG_LIB_DIR}/libshaderc_shared.so
-        vulkan)
+        ${ZG_LIB_DIR}/libvulkan.so.1)
 elseif(MACOS)
     target_link_libraries(zeungine
         ${ZG_LIB_DIR}/libEGL.dylib
