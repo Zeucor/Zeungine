@@ -208,17 +208,9 @@ if(LINUX)
         ${ZG_LIB_DIR}/libvulkan.so.1)
 elseif(MACOS)
     target_link_libraries(zeungine
-        ${ZG_LIB_DIR}/libEGL.dylib
-        ${ZG_LIB_DIR}/libGLESv2.dylib
-        ${ZG_LIB_DIR}/libthird_party_abseil-cpp_absl.dylib
-        ${ZG_LIB_DIR}/libc++_chrome.dylib
-        ${ZG_LIB_DIR}/libchrome_zlib.dylib
-        ${ZG_LIB_DIR}/libdawn_native.dylib
-        ${ZG_LIB_DIR}/libdawn_platform.dylib
-        ${ZG_LIB_DIR}/libdawn_proc.dylib
         ${ZG_LIB_DIR}/libvk_swiftshader.dylib
         ${ZG_LIB_DIR}/libshaderc_shared.dylib
-        ${Vulkan_LIBRARIES})
+        ${ZG_LIB_DIR}/libvulkan.dylib.1)
 endif()
 
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
