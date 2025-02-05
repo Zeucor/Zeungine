@@ -95,7 +95,7 @@ void VulkanRenderer::createInstance()
 	std::vector<const char*> extensions;
 	extensions.push_back("VK_KHR_surface");
 #if defined(LINUX)
-	extensions.push_back("VK_KHR_xlib_surface");
+	// extensions.push_back("VK_KHR_xlib_surface");
 #elif defined(ANDROID)
 	extensions.push_back("VK_KHR_android_surface");
 #elif defined(MACOS)
