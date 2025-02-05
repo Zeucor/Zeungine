@@ -37,7 +37,11 @@ void XCBWindow::init(Window& renderWindow)
 void XCBWindow::postInit() {}
 bool XCBWindow::pollMessages() { return true; }
 void XCBWindow::swapBuffers() {}
-void XCBWindow::destroy() {}
+void XCBWindow::destroy()
+{
+	xcb_destroy_window(connection, window);
+	xcb_disconnect(connection);
+}
 void XCBWindow::close() {}
 void XCBWindow::minimize() {}
 void XCBWindow::maximize() {}
