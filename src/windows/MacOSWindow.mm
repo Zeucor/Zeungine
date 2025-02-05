@@ -440,8 +440,4 @@ void MacOSWindow::mouseCapture(bool capture)
 	else
 	{}
 }
-std::shared_ptr<IPlatformWindow> zg::createPlatformWindow()
-{
-	return std::shared_ptr<IPlatformWindow>(new MacOSWindow());
-}
 #endif

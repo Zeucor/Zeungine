@@ -119,6 +119,7 @@ _exit:
 	}
 	childWindows.clear();
 	iPlatformWindowRef.destroy();
+	delete iPlatformWindow;
 }
 void Window::updateKeyboard()
 {

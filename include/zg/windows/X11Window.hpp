@@ -1,5 +1,6 @@
 #pragma once
 #ifdef LINUX
+#ifdef USE_X11
 #include "../Window.hpp"
 #include <X11/Xutil.h>
 #include <GL/glx.h>
@@ -38,4 +39,5 @@ namespace zg
 		void mouseCapture(bool capture) override;
 	};
 }
+#endif
 #endif

@@ -36,7 +36,7 @@ namespace zg
 #define LAST_UNDEFINED_ASCII_IN_RANGE 0x9F
 	struct Window : IWindow
 	{
-		std::shared_ptr<IPlatformWindow> iPlatformWindow;
+		IPlatformWindow* iPlatformWindow;
 		std::shared_ptr<IRenderer> iRenderer;
 		const char *title;
 		int windowKeys[256];

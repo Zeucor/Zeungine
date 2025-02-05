@@ -417,8 +417,4 @@ void WIN32Window::mouseCapture(bool capture)
 	else
 		ReleaseCapture();
 }
-std::shared_ptr<IPlatformWindow> zg::createPlatformWindow()
-{
-	return std::shared_ptr<IPlatformWindow>(new WIN32Window());
-}
 #endif

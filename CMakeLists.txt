@@ -15,7 +15,7 @@ elseif(WIN32)
     add_definitions(-DWINDOWS)
     set(WINDOWS ON)
 endif()
-set(ANGLE_INCLUDE_DIR "include/angle")
+set(SWIFTSHADER_INCLUDE_DIR "include/SwiftShader")
 
 if(LINUX OR MACOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -fPIC")
@@ -59,8 +59,27 @@ set(BuildTests OFF)
 add_subdirectory(vendor/filewatch)
 include_directories(vendor/filewatch)
 
+# windowing USE_Xs
+find_package(PkgConfig REQUIRED)
+if(LINUX)
+    pkg_check_modules(XCB xcb)
+    if(XCB_FOUND)
+        add_definitions(-DUSE_XCB)
+        set(USE_XCB ON)
+    endif()
+    find_package(X11)
+    if(X11_FOUND)
+        add_definitions(-DUSE_X11)
+        set(USE_X11 ON)
+    endif()
+elseif(WINDOWS)
+    set(USE_WIN32)
+elseif(MACOS)
+    set(USE_MACOS)
+endif()
+
 include_directories(include)
-include_directories(${ANGLE_INCLUDE_DIR})
+include_directories(${SWIFTSHADER_INCLUDE_DIR})
 
 option(BUILD_OPENGL "Whether to build OpenGL module" OFF)
 option(BUILD_EGL "Whether to build EGL module" OFF)
@@ -78,6 +97,7 @@ set(ZG_SOURCES
     src/filesystem/Directory.cpp
     src/editor/Hotswapper.cpp
     src/strings/HookedConsole.cpp
+    src/interfaces/IPlatformWindow.cpp
 )
 
 list(APPEND ZG_SOURCES
@@ -121,7 +141,12 @@ list(APPEND ZG_SOURCES
 if(WIN32)
     list(APPEND ZG_SOURCES src/windows/WIN32Window.cpp)
 elseif(LINUX)
-    list(APPEND ZG_SOURCES src/windows/X11Window.cpp)
+    if(USE_X11)
+        list(APPEND ZG_SOURCES src/windows/X11Window.cpp)
+    endif()
+    if(USE_XCB)
+        list(APPEND ZG_SOURCES src/windows/XCBWindow.cpp)
+    endif()
 elseif(MACOS)
     list(APPEND ZG_SOURCES src/windows/MacOSWindow.mm)
 endif()

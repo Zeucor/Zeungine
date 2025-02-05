@@ -1,4 +1,5 @@
 #ifdef LINUX
+#ifdef USE_X11
 #include <X11/XKBlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
@@ -513,8 +514,5 @@ void X11Window::mouseCapture(bool capture)
 		XUngrabPointer(display, CurrentTime);
 	}
 }
-std::shared_ptr<IPlatformWindow> zg::createPlatformWindow()
-{
-	return std::shared_ptr<IPlatformWindow>(new X11Window());
-}
+#endif
 #endif

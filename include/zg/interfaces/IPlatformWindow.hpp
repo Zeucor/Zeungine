@@ -25,5 +25,26 @@ namespace zg
 		virtual void setWidthHeight() = 0;
 		virtual void mouseCapture(bool capture) = 0;
 	};
-	std::shared_ptr<IPlatformWindow> createPlatformWindow();
+	inline static uint8_t WINDOW_TYPE_WIN32 = 1;
+	inline static uint8_t WINDOW_TYPE_MACOS = 2;
+	inline static uint8_t WINDOW_TYPE_X11 = 4;
+	inline static uint8_t WINDOW_TYPE_XCB = 8;
+	inline static uint8_t SUPPORTED_WINDOW_TYPES = ([]
+	{
+		uint8_t supported = 0;
+#ifdef USE_WIN32
+		supported |= WINDOW_TYPE_WIN32;
+#endif
+#ifdef USE_MACOS
+		supported |= WINDOW_TYPE_MACOS;
+#endif
+#ifdef USE_X11
+		supported |= WINDOW_TYPE_X11;
+#endif
+#ifdef USE_XCB
+		supported |= WINDOW_TYPE_XCB;
+#endif
+		return supported;
+	})();
+	IPlatformWindow* createPlatformWindow();
 }
