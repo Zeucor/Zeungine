@@ -203,14 +203,6 @@ elseif(MACOS)
 endif()
 if(LINUX)
     target_link_libraries(zeungine
-        ${ZG_LIB_DIR}/libEGL.so
-        ${ZG_LIB_DIR}/libGLESv2.so
-        ${ZG_LIB_DIR}/libthird_party_abseil-cpp_absl.so
-        ${ZG_LIB_DIR}/libc++.so
-        ${ZG_LIB_DIR}/libchrome_zlib.so
-        ${ZG_LIB_DIR}/libdawn_native.so
-        ${ZG_LIB_DIR}/libdawn_platform.so
-        ${ZG_LIB_DIR}/libdawn_proc.so
         ${ZG_LIB_DIR}/libvk_swiftshader.so
         ${ZG_LIB_DIR}/libshaderc_shared.so
         ${ZG_LIB_DIR}/libvulkan.so.1)
