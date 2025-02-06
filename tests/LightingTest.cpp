@@ -93,9 +93,9 @@ void rotateLightPosition(Window &window, Scene &scene, lights::PointLight &light
   window.runOnThread([&, angleSpeed](auto &window) mutable
   {
     auto &deltaTime = window.deltaTime;
-    auto adjustedDeltaTime = (std::min)(1.0f / 144.f, deltaTime);
+    auto adjustedDeltaTime = (std::min)((long double)1.0 / (long double)144.0, deltaTime);
     auto adjustedCurrentAngleSpeed = adjustedDeltaTime * angleSpeed;
-    static const glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), adjustedCurrentAngleSpeed, glm::vec3(0, 1, 0));
+    static const glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), (float)adjustedCurrentAngleSpeed, glm::vec3(0, 1, 0));
     glm::vec4 newPosition = rotationMatrix * glm::vec4(light.position, 1.0f);
     light.position = glm::vec3(newPosition);
     pointLightShadow.updateShadowTransforms();

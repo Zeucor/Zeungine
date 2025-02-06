@@ -118,9 +118,11 @@ void VulkanRenderer::createInstance()
 	{
 		extensions.push_back("VK_MVK_macos_surface");
 	}
-	extensions.push_back("VK_EXT_headless_surface");
 	extensions.push_back("VK_KHR_portability_enumeration");
 	createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
+#ifdef USE_SWIFTSHADER
+	extensions.push_back("VK_EXT_headless_surface");
 #endif
 #ifndef NDEBUG
 	extensions.push_back("VK_EXT_debug_utils");
@@ -354,7 +356,8 @@ QueueFamilyIndices VulkanRenderer::findQueueFamilies(VkPhysicalDevice device)
 			indices.graphicsFamily = index;
 		}
 		VkBool32 presentSupport = false;
-		if (!VKcheck("vkGetPhysicalDeviceSurfaceSupportKHR", vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface, &presentSupport)))
+		if (!VKcheck("vkGetPhysicalDeviceSurfaceSupportKHR",
+								 vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface, &presentSupport)))
 		{
 			throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceSupportKHR failed");
 		}
@@ -400,12 +403,14 @@ void VulkanRenderer::createLogicalDevice()
 	// check extensions
 	uint32_t extensionCount = 0;
 	// Query number of available extensions
-	if (!VKcheck("vkEnumerateDeviceExtensionProperties", vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr)))
+	if (!VKcheck("vkEnumerateDeviceExtensionProperties",
+							 vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkEnumerateDeviceExtensionProperties failed");
 	}
 	std::vector<VkExtensionProperties> deviceExtensions(extensionCount);
-	if (!VKcheck("vkEnumerateDeviceExtensionProperties", vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, deviceExtensions.data())))
+	if (!VKcheck("vkEnumerateDeviceExtensionProperties",
+							 vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, deviceExtensions.data())))
 	{
 		throw std::runtime_error("VulkanRenderer-vkEnumerateDeviceExtensionProperties failed");
 	}
@@ -492,7 +497,8 @@ void VulkanRenderer::createSwapChain()
 	}
 	createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
 	VkSurfaceCapabilitiesKHR surfaceCapabilities;
-	if (!VKcheck("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities)))
+	if (!VKcheck("vkGetPhysicalDeviceSurfaceCapabilitiesKHR",
+							 vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed");
 	}
@@ -520,7 +526,8 @@ void VulkanRenderer::createSwapChain()
 		throw std::runtime_error("VulkanRenderer-vkGetSwapchainImagesKHR failed");
 	}
 	swapChainImages.resize(imageCount);
-	if (!VKcheck("vkGetSwapchainImagesKHR", vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data())))
+	if (!VKcheck("vkGetSwapchainImagesKHR",
+							 vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data())))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetSwapchainImagesKHR failed");
 	}
@@ -531,32 +538,38 @@ void VulkanRenderer::createSwapChain()
 SwapChainSupportDetails VulkanRenderer::querySwapChainSupport(VkPhysicalDevice device)
 {
 	SwapChainSupportDetails details;
-	if (!VKcheck("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities)))
+	if (!VKcheck("vkGetPhysicalDeviceSurfaceCapabilitiesKHR",
+							 vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed");
 	}
 	uint32_t formatCount;
-	if (!VKcheck("vkGetPhysicalDeviceSurfaceFormatsKHR", vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr)))
+	if (!VKcheck("vkGetPhysicalDeviceSurfaceFormatsKHR",
+							 vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceFormatsKHR failed");
 	}
 	if (formatCount != 0)
 	{
 		details.formats.resize(formatCount);
-		if (!VKcheck("vkGetPhysicalDeviceSurfaceFormatsKHR", vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data())))
+		if (!VKcheck("vkGetPhysicalDeviceSurfaceFormatsKHR",
+								 vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data())))
 		{
 			throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceFormatsKHR failed");
 		}
 	}
 	uint32_t presentModeCount;
-	if (!VKcheck("vkGetPhysicalDeviceSurfacePresentModesKHR", vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr)))
+	if (!VKcheck("vkGetPhysicalDeviceSurfacePresentModesKHR",
+							 vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfacePresentModesKHR failed");
 	}
 	if (presentModeCount != 0)
 	{
 		details.presentModes.resize(presentModeCount);
-		if (!VKcheck("vkGetPhysicalDeviceSurfacePresentModesKHR", vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data())))
+		if (!VKcheck(
+					"vkGetPhysicalDeviceSurfacePresentModesKHR",
+					vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data())))
 		{
 			throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfacePresentModesKHR failed");
 		}
@@ -777,6 +790,9 @@ void VulkanRenderer::init()
 	submitInfo.commandBufferCount = 1;
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.swapchainCount = 1;
+#ifdef USE_SWIFTSHADER
+	vkMapMemory(device, stagingBufferMemory, 0, VK_WHOLE_SIZE, 0, &bitmap);
+#endif
 }
 void VulkanRenderer::destroy()
 {
@@ -790,7 +806,9 @@ void VulkanRenderer::preBeginRenderPass()
 	{
 		throw std::runtime_error("VulkanRenderer-vkWaitForFences failed");
 	}
-	if (!VKcheck("vkAcquireNextImageKHR", vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex)))
+	if (!VKcheck("vkAcquireNextImageKHR",
+							 vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame],
+																		 VK_NULL_HANDLE, &imageIndex)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkAcquireNextImageKHR failed");
 	}
@@ -867,6 +885,7 @@ void VulkanRenderer::postRenderPass()
 #ifndef USE_MACOS
 void VulkanRenderer::swapBuffers()
 {
+	// std::cout << "swapping buffers: " << ++swapBufferCount << std::endl;
 	if (!VKcheck("vkQueuePresentKHR", vkQueuePresentKHR(presentQueue, &presentInfo)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
@@ -890,12 +909,13 @@ void VulkanRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeC
 	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
 	shaders::ShaderFactory::compileProgram(shader);
 }
-void VulkanRenderer::setUniform(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer,
-																uint32_t size, enums::EUniformType uniformType)
+void VulkanRenderer::setUniform(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name,
+																const void* pointer, uint32_t size, enums::EUniformType uniformType)
 {
 	setBlock(shader, vao, name, pointer, size);
 }
-void VulkanRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size)
+void VulkanRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer,
+															size_t size)
 {
 	int32_t location = getUniformLocation(shader, vao, name);
 	if (location == -1)
@@ -924,7 +944,7 @@ void VulkanRenderer::bindShader(const shaders::Shader& shader)
 	vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.graphicsPipeline);
 	if (currentFramebufferImpl)
 	{
-		auto &framebufferImpl = *currentFramebufferImpl;
+		auto& framebufferImpl = *currentFramebufferImpl;
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = framebufferImpl.height;
@@ -1016,7 +1036,8 @@ void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, 
 		shaderImpl.textureArrayBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
 	}
 }
-void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer, size_t size)
+void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer,
+														 size_t size)
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
@@ -1062,8 +1083,8 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std:
 	descriptorWrite.pBufferInfo = &storageBufferInfo;
 	vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
 }
-void VulkanRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const textures::Texture& texture,
-																const int32_t unit)
+void VulkanRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name,
+																const textures::Texture& texture, const int32_t unit)
 {
 	texture.bind();
 	std::string stringName(name);
@@ -2033,6 +2054,58 @@ void VulkanRenderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, V
 	}
 
 	vkBindBufferMemory(device, buffer, bufferMemory, 0);
+}
+void VulkanRenderer::getCurrentImageToBitmap()
+{
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+	VkImage image = swapChainImages[currentFrame];
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.image = image;
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = 1;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = 1;
+	barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+	barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr,
+											 0, nullptr, 1, &barrier);
+	endSingleTimeCommands(commandBuffer);
+	commandBuffer = beginSingleTimeCommands();
+	VkMappedMemoryRange range{};
+	range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+	range.memory = stagingBufferMemory;
+	range.offset = 0;
+	range.size = VK_WHOLE_SIZE;
+	vkInvalidateMappedMemoryRanges(device, 1, &range);
+	VkBufferImageCopy region{};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0;
+	region.bufferImageHeight = 0;
+	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = 1;
+	region.imageExtent.width = renderWindow.windowWidth;
+	region.imageExtent.height = renderWindow.windowHeight;
+	region.imageExtent.depth = 1;
+	vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer, 1, &region);
+	endSingleTimeCommands(commandBuffer);
+	commandBuffer = beginSingleTimeCommands();
+	barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+	barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+	barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
+											 nullptr, 0, nullptr, 1, &barrier);
+	endSingleTimeCommands(commandBuffer);
+	vkQueueWaitIdle(graphicsQueue);
 }
 bool zg::VKcheck(const char* fn, VkResult result)
 {

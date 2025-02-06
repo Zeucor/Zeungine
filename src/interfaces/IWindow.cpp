@@ -128,7 +128,29 @@ void IWindow::callAnyKeyPressHandler(Key key, bool pressed)
 	{
 		handler(key, pressed);
 	}
-};
+}
+void IWindow::handleKey(Key key, int32_t mod, bool pressed)
+{
+	bool hadChildFocus = false;
+	auto& window = *dynamic_cast<Window*>(this);
+	for (auto& childWindowPointer : window.childWindows)
+	{
+		auto& childWindow = *childWindowPointer;
+		if (childWindow.minimized)
+			continue;
+		if (!childWindow.focused)
+			continue;
+		childWindow.mod = mod;
+		childWindow.windowKeys[key] = pressed;
+		hadChildFocus = true;
+		break;
+	}
+	if (!hadChildFocus)
+	{
+		window.mod = mod;
+		window.windowKeys[key] = pressed;
+	}
+}
 // Mouse
 IWindow::EventIdentifier IWindow::addMousePressHandler(Button button, const MousePressHandler& callback)
 {
@@ -275,7 +297,7 @@ void IWindow::runRunnables()
 void IWindow::updateDeltaTime()
 {
 	auto currentTime = std::chrono::steady_clock::now();
-	std::chrono::duration<float> duration = currentTime - lastFrameTime;
+	std::chrono::duration<long double> duration = currentTime - lastFrameTime;
 	deltaTime = duration.count();
 	lastFrameTime = currentTime;
 };

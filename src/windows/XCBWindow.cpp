@@ -20,9 +20,11 @@ void XCBWindow::init(Window& renderWindow)
 	setup = xcb_get_setup(connection);
 	xcb_screen_iterator_t iter = xcb_setup_roots_iterator(setup);
 	screen = iter.data;
+	root = screen->root;
 	window = xcb_generate_id(connection);
 	uint32_t value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
-	uint32_t value_list[] = {screen->white_pixel, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE};
+	uint32_t value_list[] = {screen->white_pixel,
+													 XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE};
 	xcb_create_window(connection,
 										XCB_COPY_FROM_PARENT, // depth
 										window,
@@ -53,13 +55,55 @@ void XCBWindow::init(Window& renderWindow)
 	keysyms = xcb_key_symbols_alloc(connection);
 	if (!keysyms)
 	{
-		std::cerr << "Failed to allocate key symbols!" << std::endl;
-		return;
+		throw std::runtime_error("Failed to allocate key symbols!");
+	}
+	display = XOpenDisplay(0);
+	if (!display)
+	{
+		throw std::runtime_error("Failed to openXlib display!");
+	}
+	XSync(display, False);
+	screenNumber = DefaultScreen(display);
+	initAtoms();
+}
+void XCBWindow::initAtoms()
+{
+	const char* atomNames[] = {"WM_PROTOCOLS",
+														 "WM_DELETE_WINDOW",
+														 "_NET_WM_STATE",
+														 "_NET_WM_STATE_HIDDEN",
+														 "_NET_WM_STATE_MAXIMIZED_HORZ",
+														 "_NET_WM_STATE_MAXIMIZED_VERT"};
+
+	xcb_intern_atom_cookie_t cookies[6];
+	xcb_intern_atom_reply_t* replies[6];
+
+	for (int i = 0; i < 6; i++)
+	{
+		cookies[i] = xcb_intern_atom(connection, 0, strlen(atomNames[i]), atomNames[i]);
+	}
+
+	for (int i = 0; i < 6; i++)
+	{
+		replies[i] = xcb_intern_atom_reply(connection, cookies[i], nullptr);
+	}
+
+	wm_protocols = replies[0] ? replies[0]->atom : XCB_ATOM_NONE;
+	wm_delete_window = replies[1] ? replies[1]->atom : XCB_ATOM_NONE;
+	atom_net_wm_state = replies[2] ? replies[2]->atom : XCB_ATOM_NONE;
+	atom_net_wm_state_hidden = replies[3] ? replies[3]->atom : XCB_ATOM_NONE;
+	atom_net_wm_state_maximized_horz = replies[4] ? replies[4]->atom : XCB_ATOM_NONE;
+	atom_net_wm_state_maximized_vert = replies[5] ? replies[5]->atom : XCB_ATOM_NONE;
+
+	for (int i = 0; i < 6; i++)
+	{
+		free(replies[i]);
 	}
 }
 void XCBWindow::postInit() {}
 bool XCBWindow::pollMessages()
 {
+	auto& window = *renderWindowPointer;
 	xcb_generic_event_t* event;
 	while ((event = xcb_poll_for_event(connection)))
 	{
@@ -76,12 +120,9 @@ bool XCBWindow::pollMessages()
 				xcb_key_press_event_t* keyEvent = (xcb_key_press_event_t*)event;
 				bool shiftPressed = keyEvent->state & (XCB_MOD_MASK_SHIFT);
 				xcb_keysym_t keysym = xcb_key_symbols_get_keysym(keysyms, keyEvent->detail, shiftPressed ? 1 : 0);
-				uint32_t unicodeChar = xkb_keysym_to_utf32(keysym);
-				if (unicodeChar)
-				{
-					std::cout << "Key " << (pressed ? "pressed: " : "released: ") << static_cast<char>(unicodeChar) << " ("
-										<< keysym << ") Shift: " << shiftPressed << std::endl;
-				}
+				uint32_t keycode = xkb_keysym_to_utf32(keysym);
+				int32_t mod = 0;
+				window.handleKey(keycode, mod, pressed);
 				break;
 			}
 		case XCB_CLIENT_MESSAGE:
@@ -108,13 +149,62 @@ bool XCBWindow::pollMessages()
 }
 void XCBWindow::destroy()
 {
+	XCloseDisplay(display);
 	xcb_destroy_window(connection, window);
 	xcb_disconnect(connection);
 }
-void XCBWindow::close() {}
-void XCBWindow::minimize() {}
-void XCBWindow::maximize() {}
-void XCBWindow::restore() {}
+void XCBWindow::close()
+{
+	xcb_client_message_event_t event = {};
+	event.response_type = XCB_CLIENT_MESSAGE;
+	event.window = window;
+	event.format = 32;
+	event.type = wm_protocols;
+	event.data.data32[0] = wm_delete_window;
+	event.data.data32[1] = XCB_CURRENT_TIME;
+	xcb_send_event(connection, false, window, XCB_EVENT_MASK_NO_EVENT, (const char*)&event);
+	xcb_flush(connection);
+}
+void XCBWindow::minimize()
+{
+	XIconifyWindow(display, window, screenNumber);
+	XFlush(display);
+}
+void XCBWindow::maximize()
+{
+	xcb_client_message_event_t event = {};
+	event.response_type = XCB_CLIENT_MESSAGE;
+	event.window = window;
+	event.format = 32;
+	event.type = atom_net_wm_state;
+	event.data.data32[0] = 1; // _NET_WM_STATE_ADD
+	event.data.data32[1] = atom_net_wm_state_maximized_horz;
+	event.data.data32[2] = atom_net_wm_state_maximized_vert;
+	event.data.data32[3] = 0;
+	event.data.data32[4] = 0;
+	xcb_send_event(connection, false, root, XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
+								 (const char*)&event);
+	xcb_flush(connection);
+}
+void XCBWindow::restore()
+{
+	Atom wmState = XInternAtom(display, "_NET_WM_STATE", False);
+	Atom maxHorz = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+	Atom maxVert = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+	XEvent event = {0};
+	event.xclient.type = ClientMessage;
+	event.xclient.message_type = wmState;
+	event.xclient.display = display;
+	event.xclient.window = window;
+	event.xclient.format = 32;
+	event.xclient.data.l[0] = 0;
+	event.xclient.data.l[1] = maxHorz;
+	event.xclient.data.l[2] = maxVert;
+	event.xclient.data.l[3] = 0;
+	event.xclient.data.l[4] = 0;
+	XSendEvent(display, root, False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
+	XFlush(display);
+}
 void XCBWindow::warpPointer(glm::vec2 coords) {}
 void XCBWindow::showPointer() {}
 void XCBWindow::hidePointer() {}

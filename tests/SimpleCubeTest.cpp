@@ -2,11 +2,12 @@
 #include <zg/Scene.hpp>
 #include <zg/vp/VML.hpp>
 #include <zg/entities/Cube.hpp>
+#include <iostream>
 using namespace zg;
 struct ExampleScene : Scene
 {
 	vp::VML vml; // view mouse look
-	float deltaTimeCounter = 0;
+	long double deltaTimeCounter = 0;
 	uint32_t mPressID = 0;
 	uint32_t nPressID = 0;
 	uint32_t rPressID = 0;

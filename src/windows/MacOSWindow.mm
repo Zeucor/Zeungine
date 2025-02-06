@@ -183,10 +183,6 @@ void MacOSWindow::postInit()
 		{
 			throw std::runtime_error("Failed to set swap interval");
 		}
-#elif defined(MACOS)
-		auto& vulkanRenderer = *std::dynamic_pointer_cast<VulkanRenderer>(renderWindowPointer->iRenderer);
-		vkMapMemory(vulkanRenderer.device, vulkanRenderer.stagingBufferMemory, 0, VK_WHOLE_SIZE, 0, &bitmap);
-#endif
 		[NSApp activateIgnoringOtherApps:YES];
 	}
 }
@@ -271,53 +267,7 @@ void VulkanRenderer::swapBuffers()
 {
 	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
 	auto& vulkanRenderer = *std::dynamic_pointer_cast<VulkanRenderer>(renderWindow.iRenderer);
-	auto currentFrame = currentFrame;
-	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-	VkImage image = swapChainImages[currentFrame];
-	VkImageMemoryBarrier barrier{};
-	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.image = image;
-	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	barrier.subresourceRange.baseMipLevel = 0;
-	barrier.subresourceRange.levelCount = 1;
-	barrier.subresourceRange.baseArrayLayer = 0;
-	barrier.subresourceRange.layerCount = 1;
-	barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-	endSingleTimeCommands(commandBuffer);
-	commandBuffer = beginSingleTimeCommands();
-	VkMappedMemoryRange range{};
-	range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-	range.memory = stagingBufferMemory;
-	range.offset = 0;
-	range.size = VK_WHOLE_SIZE;
-	vkInvalidateMappedMemoryRanges(device, 1, &range);
-	VkBufferImageCopy region{};
-	region.bufferOffset = 0;
-	region.bufferRowLength = 0;
-	region.bufferImageHeight = 0;
-	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	region.imageSubresource.mipLevel = 0;
-	region.imageSubresource.baseArrayLayer = 0;
-	region.imageSubresource.layerCount = 1;
-	region.imageExtent.width = renderWindow.windowWidth;
-	region.imageExtent.height = renderWindow.windowHeight;
-	region.imageExtent.depth = 1;
-	vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer, 1, &region);
-	endSingleTimeCommands(commandBuffer);
-	commandBuffer = beginSingleTimeCommands();
-    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-    barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-    vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-    endSingleTimeCommands(commandBuffer);
-	vkQueueWaitIdle(graphicsQueue);
+	vulkanRenderer.getCurrentImageToBitmap();
 	@autoreleasepool
 	{
 		unsigned char* bitmapData = (unsigned char*)bitmap;

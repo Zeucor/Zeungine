@@ -217,7 +217,7 @@ if(LINUX)
     if(USE_X11)
         target_link_libraries(zeungine X11 Xrandr Xext Xfixes xkbcommon Xrender)
     elseif(USE_XCB)
-        target_link_libraries(zeungine xcb xkbcommon xcb-util xcb-keysyms)
+        target_link_libraries(zeungine xcb xkbcommon xcb-util xcb-keysyms X11 Xrandr Xext Xfixes xkbcommon Xrender)
     endif()
 elseif(MACOS)
     find_package(OpenGL REQUIRED)
@@ -227,9 +227,9 @@ elseif(MACOS)
 endif()
 if(LINUX)
     target_link_libraries(zeungine
+        ${ZG_LIB_DIR}/libvulkan.so.1
         ${ZG_LIB_DIR}/libvk_swiftshader.so
-        ${ZG_LIB_DIR}/libshaderc_shared.so
-        ${ZG_LIB_DIR}/libvulkan.so.1)
+        ${ZG_LIB_DIR}/libshaderc_shared.so)
 elseif(MACOS)
     target_link_libraries(zeungine
         ${ZG_LIB_DIR}/libvk_swiftshader.dylib

@@ -171,24 +171,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam,
 			}
 			auto keycode = GL_KEYCODES[keycodeHiword];
 			auto keypress = !((lParam >> 31) & 1);
-			bool hadChildFocus = false;
-			for (auto &childWindowPointer : glWindow->childWindows)
-			{
-				auto &childWindow = *childWindowPointer;
-				if (childWindow.minimized)
-					continue;
-				if (!childWindow.focused)
-					continue;
-				childWindow.mod = mod;
-				childWindow.windowKeys[keycode] = keypress;
-				hadChildFocus = true;
-				break;
-			}
-			if (!hadChildFocus)
-			{
-				glWindow->mod = mod;
-				glWindow->windowKeys[keycode] = keypress;
-			}
+			glWindow->handleKey(keycode, mod, keypress);
 		}
 		break;
 	case WM_DESTROY:

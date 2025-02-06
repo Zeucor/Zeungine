@@ -43,7 +43,7 @@ namespace zg
 		std::shared_ptr<IScene> scene;
 		bool open = true;
 		std::chrono::steady_clock::time_point lastFrameTime;
-		float deltaTime = 0;
+		long double deltaTime = 0;
 		bool justWarpedPointer = false;
 		bool borderless = false;
 		bool minimized = false;
@@ -70,6 +70,7 @@ namespace zg
 		void callKeyPressHandler(Key key, int pressed);
 		void callKeyUpdateHandler(Key key);
 		void callAnyKeyPressHandler(Key key, bool pressed);
+		void handleKey(Key key, int32_t mod, bool pressed);
 		// Mouse
 		virtual void updateMouse() = 0;
 		EventIdentifier addMousePressHandler(Button button, const MousePressHandler& callback);

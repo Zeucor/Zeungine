@@ -131,6 +131,10 @@ namespace zg
 		VkPipelineStageFlags waitStages[1];
 		VkSemaphore signalSemaphores[1];
 		VkSwapchainKHR swapChains[1];
+#ifdef USE_SWIFTSHADER
+		void* bitmap = 0;
+#endif
+		uint32_t swapBufferCount = 0;
 		VulkanRenderer();
 		~VulkanRenderer() override;
 		void createContext(IPlatformWindow* platformWindowPointer) override;
@@ -229,6 +233,7 @@ namespace zg
 											uint32_t newBufferSize, VkBufferUsageFlagBits extraUsageFlags);
 		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
 											VkDeviceMemory& bufferMemory);
+		void getCurrentImageToBitmap();
 	};
 	bool VKcheck(const char* fn, VkResult result);
 } // namespace zg

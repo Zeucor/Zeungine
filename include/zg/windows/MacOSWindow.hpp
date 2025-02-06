@@ -10,7 +10,6 @@ namespace zg
 #ifdef USE_GL
 		void *glContext = 0;
 #elif defined(USE_VULKAN)
-		void* bitmap = 0;
 		void* nsImage = 0;
 		void* nsImageView = 0;
 #endif
