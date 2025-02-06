@@ -131,8 +131,8 @@ void IWindow::callAnyKeyPressHandler(Key key, bool pressed)
 }
 void IWindow::handleKey(Key key, int32_t mod, bool pressed)
 {
-	bool hadChildFocus = false;
 	auto& window = *dynamic_cast<Window*>(this);
+	bool hadChildFocus = false;
 	for (auto& childWindowPointer : window.childWindows)
 	{
 		auto& childWindow = *childWindowPointer;
@@ -203,7 +203,7 @@ void IWindow::callMousePressHandler(Button button, int pressed)
 			handler(!!pressed);
 		}
 	}
-};
+}
 void IWindow::callMouseMoveHandler(glm::vec2 coords)
 {
 	auto& handlersMap = mouseMoveHandlers.second;
@@ -214,7 +214,49 @@ void IWindow::callMouseMoveHandler(glm::vec2 coords)
 	{
 		handler(coords);
 	}
-};
+}
+void IWindow::handleMouseMove(uint32_t x, uint32_t y)
+{
+	auto& window = *dynamic_cast<Window*>(this);
+	bool hadChildFocus = false;
+	for (auto &childWindowPointer : window.childWindows)
+	{
+		auto &childWindow = *childWindowPointer;
+		if (childWindow.minimized)
+			continue;
+		if (!childWindow.focused)
+			continue;
+		auto childX = x - childWindow.windowX;
+		auto childY = childWindow.windowHeight - (window.windowHeight - y - childWindow.windowY);
+		childWindow.mouseCoords.x = childX, childWindow.mouseCoords.y = childY;
+		childWindow.mouseMoved = true;
+		hadChildFocus = true;
+		break;
+	}
+	if (!hadChildFocus)
+	{
+		window.mouseCoords.y = y, window.mouseCoords.x = x;
+		window.mouseMoved = true;
+	}
+}
+void IWindow::handleMousePress(Button button, bool pressed)
+{
+	auto& window = *dynamic_cast<Window*>(this);
+	bool hadChildFocus = false;
+	for (auto &childWindowPointer : window.childWindows)
+	{
+		auto &childWindow = *childWindowPointer;
+		if (childWindow.minimized)
+			continue;
+		if (!childWindow.focused)
+			continue;
+		childWindow.windowButtons[button] = pressed;
+		hadChildFocus = true;
+		break;
+	}
+	if (!hadChildFocus)
+		window.windowButtons[button] = pressed;
+}
 // resize
 IWindow::EventIdentifier IWindow::addResizeHandler(const ViewResizeHandler& callback)
 {

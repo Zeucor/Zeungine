@@ -50,6 +50,7 @@ struct ExampleScene : Scene
 			if (pressed)
 				window.close();
 		});
+		window.setXY(320, 320);
 	}
 	~ExampleScene()
 	{

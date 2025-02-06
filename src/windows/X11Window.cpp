@@ -212,7 +212,7 @@ bool X11Window::pollMessages()
 		case ButtonPress:
 		{
 			auto button = event.xbutton.button - 1;
-			buttons.push_back({1, button, true});
+			renderWindowPointer->handleMousePress(button, true);
 			break;
 		};
 		case ButtonRelease:
@@ -222,7 +222,7 @@ bool X11Window::pollMessages()
 			{
 				break;
 			}
-			buttons.push_back({1, button, false});
+			renderWindowPointer->handleMousePress(button, false);
 			break;
 		};
 		case MotionNotify:
@@ -342,26 +342,7 @@ bool X11Window::pollMessages()
 	{
 		auto x = pointerXY.x;
 		auto y = renderWindowPointer->windowHeight - pointerXY.y;
-		bool hadChildFocus = false;
-		for (auto &childWindowPointer : renderWindowPointer->childWindows)
-		{
-			auto &childWindow = *childWindowPointer;
-			if (childWindow.minimized)
-				continue;
-			if (!childWindow.focused)
-				continue;
-			auto childX = x - childWindow.windowX;
-			auto childY = childWindow.windowHeight - (renderWindowPointer->windowHeight - y - childWindow.windowY);
-			childWindow.mouseCoords.x = childX, childWindow.mouseCoords.y = childY;
-			childWindow.mouseMoved = true;
-			hadChildFocus = true;
-			break;
-		}
-		if (!hadChildFocus)
-		{
-			renderWindowPointer->mouseCoords.y = y, renderWindowPointer->mouseCoords.x = x;
-			renderWindowPointer->mouseMoved = true;
-		}
+		renderWindowPointer->handleMouseMove(x, y);
 	}
 	for (auto &buttonTuple : buttons)
 	{

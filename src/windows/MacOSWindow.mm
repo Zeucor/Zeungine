@@ -219,26 +219,7 @@ bool MacOSWindow::pollMessages()
 					NSPoint location = [event locationInWindow];
 					auto x = location.x;
 					auto y = location.y;
-					bool hadChildFocus = false;
-					for (auto &childWindowPointer : renderWindowPointer->childWindows)
-					{
-						auto &childWindow = *childWindowPointer;
-						if (childWindow.minimized)
-							continue;
-						if (!childWindow.focused)
-							continue;
-						auto childX = x - childWindow.windowX;
-						auto childY = childWindow.windowHeight - (renderWindowPointer->windowHeight - y - childWindow.windowY);
-						childWindow.mouseCoords.x = childX, childWindow.mouseCoords.y = childY;
-						childWindow.mouseMoved = true;
-						hadChildFocus = true;
-						break;
-					}
-					if (!hadChildFocus)
-					{
-						renderWindowPointer->mouseCoords.y = y, renderWindowPointer->mouseCoords.x = x;
-						renderWindowPointer->mouseMoved = true;
-					}
+					renderWindowPointer->handleMouseMove(x, y);
 					break;
 				}
 				case NSEventTypeLeftMouseDragged:

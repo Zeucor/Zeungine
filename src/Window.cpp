@@ -84,6 +84,7 @@ void Window::startWindow()
 	iRendererRef.createContext(&iPlatformWindowRef);
 	iRendererRef.init();
 	iPlatformWindowRef.postInit();
+	runRunnables();
 	while (iPlatformWindowRef.pollMessages())
 	{
 		runRunnables();

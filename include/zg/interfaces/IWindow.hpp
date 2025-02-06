@@ -79,6 +79,8 @@ namespace zg
 		void removeMouseMoveHandler(EventIdentifier& id);
 		void callMousePressHandler(Button button, int pressed);
 		void callMouseMoveHandler(glm::vec2 coords);
+		void handleMouseMove(uint32_t x, uint32_t y);
+		void handleMousePress(Button button, bool pressed);
 		// resize
 		EventIdentifier addResizeHandler(const ViewResizeHandler& callback);
 		void removeResizeHandler(EventIdentifier& id);

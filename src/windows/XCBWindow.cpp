@@ -4,7 +4,9 @@
 #include <X11/Xlib.h>
 #include <X11/keysymdef.h>
 #include <iostream>
+#include <xcb/xfixes.h>
 #include <xkbcommon/xkbcommon.h>
+#include <X11/extensions/Xfixes.h>
 #include <zg/common.hpp>
 #include <zg/windows/XCBWindow.hpp>
 using namespace zg;
@@ -24,7 +26,9 @@ void XCBWindow::init(Window& renderWindow)
 	window = xcb_generate_id(connection);
 	uint32_t value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
 	uint32_t value_list[] = {screen->white_pixel,
-													 XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE};
+													 XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE |
+														 XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_BUTTON_PRESS |
+														 XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_FOCUS_CHANGE};
 	xcb_create_window(connection,
 										XCB_COPY_FROM_PARENT, // depth
 										window,
@@ -135,7 +139,31 @@ bool XCBWindow::pollMessages()
 				}
 				break;
 			}
+		case XCB_MOTION_NOTIFY:
+			{
+				xcb_motion_notify_event_t* motion = (xcb_motion_notify_event_t*)event;
+				window.handleMouseMove(motion->event_x, window.windowHeight - motion->event_y);
+				break;
+			}
+		case XCB_BUTTON_PRESS:
+			{
+				xcb_button_press_event_t* buttonPress = (xcb_button_press_event_t*)event;
+				window.handleMousePress(buttonPress->detail - 1, true);
+				break;
+			}
+		case XCB_BUTTON_RELEASE:
+			{
+				xcb_button_release_event_t* buttonRelease = (xcb_button_release_event_t*)event;
+				window.handleMousePress(buttonRelease->detail - 1, false);
+				break;
+			}
+		case XCB_FOCUS_IN:
+			window.callFocusHandler(true);
+			break;
 
+		case XCB_FOCUS_OUT:
+			window.callFocusHandler(false);
+			break;
 		case XCB_DESTROY_NOTIFY:
 			free(event);
 			return false;
@@ -205,11 +233,34 @@ void XCBWindow::restore()
 	XSendEvent(display, root, False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
 	XFlush(display);
 }
-void XCBWindow::warpPointer(glm::vec2 coords) {}
-void XCBWindow::showPointer() {}
-void XCBWindow::hidePointer() {}
-void XCBWindow::setXY() {}
-void XCBWindow::setWidthHeight() {}
+void XCBWindow::warpPointer(glm::vec2 coords)
+{
+	xcb_warp_pointer(connection, XCB_NONE, window, 0, 0, 0, 0, static_cast<int16_t>(coords.x),
+									 static_cast<int16_t>(coords.y));
+	xcb_flush(connection);
+}
+void XCBWindow::showPointer()
+{
+	XFixesShowCursor(display, root);
+	XSync(display, True);
+}
+void XCBWindow::hidePointer()
+{
+	XFixesHideCursor(display, root);
+	XSync(display, True);
+}
+void XCBWindow::setXY()
+{
+	uint32_t values[] = {renderWindowPointer->windowX, renderWindowPointer->windowY};
+	xcb_configure_window(connection, window, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
+	xcb_flush(connection);
+}
+void XCBWindow::setWidthHeight()
+{
+	uint32_t values[] = {renderWindowPointer->windowWidth, renderWindowPointer->windowHeight};
+	xcb_configure_window(connection, window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+	xcb_flush(connection);
+}
 void XCBWindow::mouseCapture(bool capture) {}
 #endif
 #endif
