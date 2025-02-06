@@ -12,8 +12,12 @@
 #ifdef LINUX
 #if defined(USE_X11)
 #include <zg/windows/X11Window.hpp>
-#elif defined(USE_XCB)
+#endif
+#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
 #include <zg/windows/XCBWindow.hpp>
+#endif
+#if defined(USE_WAYLAND)
+// #include <zg/windows/WaylandWindow.hpp>
 #endif
 #endif
 #ifdef MACOS
@@ -99,25 +103,45 @@ void VulkanRenderer::createInstance()
 	std::vector<const char*> extensions;
 	extensions.push_back("VK_KHR_surface");
 	auto& windowType = platformWindowPointer->windowType;
-#if defined(LINUX)
-	if (windowType & WINDOW_TYPE_XCB)
+	switch (windowType)
+	{
+	case WINDOW_TYPE_XCB:
 	{
 		extensions.push_back("VK_KHR_xcb_surface");
+		break;
 	}
-	else if (windowType & WINDOW_TYPE_X11)
+	case WINDOW_TYPE_X11:
 	{
 		extensions.push_back("VK_KHR_xlib_surface");
+		break;
 	}
-#elif defined(ANDROID)
-	if (windowType & WINDOW_TYPE_ANDROID)
+	case WINDOW_TYPE_WAYLAND:
+	{
+		extensions.push_back("VK_KHR_wayland_surface");
+		break;
+	}
+	case WINDOW_TYPE_WIN32:
+	{
+		extensions.push_back("VK_KHR_win32_surface");
+		break;
+	}
+	case WINDOW_TYPE_ANDROID:
 	{
 		extensions.push_back("VK_KHR_android_surface");
+		break;
 	}
-#elif defined(MACOS)
-	if (windowType & WINDOW_TYPE_MACOS)
+	case WINDOW_TYPE_MACOS:
 	{
 		extensions.push_back("VK_MVK_macos_surface");
+		break;
 	}
+	case WINDOW_TYPE_IOS:
+	{
+		extensions.push_back("VK_MVK_ios_surface");
+		break;
+	}
+	}
+#if defined(MACOS)
 	extensions.push_back("VK_KHR_portability_enumeration");
 	createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
@@ -225,28 +249,41 @@ void VulkanRenderer::setupDebugMessenger()
 #if defined(LINUX) || defined(ANDROID) || defined(WINDOWS)
 void VulkanRenderer::createSurface()
 {
+	auto& windowType = platformWindowPointer->windowType;
 #ifdef LINUX
-#ifdef USE_X11
-	auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
-	VkXlibSurfaceCreateInfoKHR surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.dpy = x11Window.display;
-	surfaceCreateInfo.window = x11Window.window;
-	if (!VKcheck("vkCreateXlibSurfaceKHR", vkCreateXlibSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+	if (windowType == WINDOW_TYPE_X11)
 	{
-		throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
+		// auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
+		// VkXlibSurfaceCreateInfoKHR surfaceCreateInfo{};
+		// surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+		// surfaceCreateInfo.dpy = x11Window.display;
+		// surfaceCreateInfo.window = x11Window.window;
+		// if (!VKcheck("vkCreateXlibSurfaceKHR", vkCreateXlibSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+		// {
+		// 	throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
+		// }
+		auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
+		VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
+		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+		surfaceCreateInfo.connection = x11Window.connection;
+		surfaceCreateInfo.window = x11Window.window;
+		if (!VKcheck("vkCreateXcbSurfaceKHR", vkCreateXcbSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+		{
+			throw std::runtime_error("VulkanRenderer-createSurface: failed to create XCB surface");
+		}
 	}
-#elif defined(USE_XCB)
-	auto& xcbWindow = *dynamic_cast<XCBWindow*>(platformWindowPointer);
-	VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.connection = xcbWindow.connection;
-	surfaceCreateInfo.window = xcbWindow.window;
-	if (!VKcheck("vkCreateXcbSurfaceKHR", vkCreateXcbSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+	if (windowType == WINDOW_TYPE_XCB)
 	{
-		throw std::runtime_error("VulkanRenderer-createSurface: failed to create XCB surface");
+		auto& xcbWindow = *dynamic_cast<XCBWindow*>(platformWindowPointer);
+		VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
+		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+		surfaceCreateInfo.connection = xcbWindow.connection;
+		surfaceCreateInfo.window = xcbWindow.window;
+		if (!VKcheck("vkCreateXcbSurfaceKHR", vkCreateXcbSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+		{
+			throw std::runtime_error("VulkanRenderer-createSurface: failed to create XCB surface");
+		}
 	}
-#endif
 #elif defined(ANDROID)
 #elif defined(WINDOWS)
 	auto& win32Window = *dynamic_cast<WIN32Window*>(platformWindowPointer);

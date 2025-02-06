@@ -25,28 +25,48 @@ namespace zg
 		virtual void setWidthHeight() = 0;
 		virtual void mouseCapture(bool capture) = 0;
 	};
-	inline static uint8_t WINDOW_TYPE_WIN32 = 1;
-	inline static uint8_t WINDOW_TYPE_MACOS = 2;
-	inline static uint8_t WINDOW_TYPE_X11 = 4;
-	inline static uint8_t WINDOW_TYPE_XCB = 8;
-	inline static uint8_t WINDOW_TYPE_ANDROID = 16;
-	inline static uint8_t WINDOW_TYPE_IOS = 32;
-	inline static uint8_t SUPPORTED_WINDOW_TYPES = ([]
+	inline static constexpr uint8_t WINDOW_TYPE_WIN32 = 1;
+	inline static constexpr uint8_t WINDOW_TYPE_MACOS = 2;
+	inline static constexpr uint8_t WINDOW_TYPE_X11 = 4;
+	inline static constexpr uint8_t WINDOW_TYPE_XCB = 8;
+	inline static constexpr uint8_t WINDOW_TYPE_WAYLAND = 16;
+	inline static constexpr uint8_t WINDOW_TYPE_ANDROID = 32;
+	inline static constexpr uint8_t WINDOW_TYPE_IOS = 64;
+	inline static uint8_t SELECTED_WINDOW_TYPE = ([]
 	{
-		uint8_t supported = 0;
+		uint8_t selected = 0;
 #ifdef USE_WIN32
-		supported |= WINDOW_TYPE_WIN32;
+		selected = WINDOW_TYPE_WIN32;
 #endif
 #ifdef USE_MACOS
-		supported |= WINDOW_TYPE_MACOS;
+		selected = WINDOW_TYPE_MACOS;
 #endif
-#ifdef USE_X11
-		supported |= WINDOW_TYPE_X11;
+#ifdef USE_IOS
+		selected = WINDOW_TYPE_IOS;
 #endif
-#ifdef USE_XCB
-		supported |= WINDOW_TYPE_XCB;
+#ifdef USE_ANDROID
+		selected = WINDOW_TYPE_ANDROID;
 #endif
-		return supported;
+#ifdef LINUX
+		auto xdgSessionType = getenv("XDG_SESSION_TYPE");
+		if (strcmp(xdgSessionType, "x11") == 0)
+		{
+#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
+			selected = WINDOW_TYPE_XCB;
+#elif defined(USE_X11)
+			selected = WINDOW_TYPE_X11;
+#endif
+		}
+		else if (strcmp(xdgSessionType, "wayland") == 0)
+		{
+#ifdef USE_WAYLAND
+			selected = WINDOW_TYPE_WAYLAND;
+#else
+			throw std::runtime_error("XDG_SESSION_TYPE is 'wayland', yet Zeungine not built with Wayland support!")
+#endif
+		}
+#endif
+		return selected;
 	})();
 	IPlatformWindow* createPlatformWindow();
 }

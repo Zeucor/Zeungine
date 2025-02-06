@@ -3,6 +3,7 @@
 #ifdef USE_X11
 #include "../Window.hpp"
 #include <X11/Xutil.h>
+#include <xcb/xcb.h>
 #include <GL/glx.h>
 typedef struct _XDisplay Display;
 namespace zg
@@ -10,6 +11,7 @@ namespace zg
 	struct X11Window : IPlatformWindow
 	{
 		Display *display = 0;
+		xcb_connection_t* connection = 0;
 		int32_t defaultRootWindow = 0;
 		int32_t screen = 0;
 		unsigned long window = 0;

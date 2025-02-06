@@ -6,7 +6,7 @@
 #ifdef USE_MACOS
 #include <zg/windows/MacOSWindow.hpp>
 #endif
-#ifdef USE_XCB
+#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
 #include <zg/windows/XCBWindow.hpp>
 #endif
 #ifdef USE_X11
@@ -15,28 +15,49 @@
 using namespace zg;
 IPlatformWindow* zg::createPlatformWindow()
 {
-    if (SUPPORTED_WINDOW_TYPES & WINDOW_TYPE_WIN32)
+    if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_WIN32)
     {
 #ifdef USE_WIN32
         return new WIN32Window();
 #endif
     }
-    else if (SUPPORTED_WINDOW_TYPES & WINDOW_TYPE_MACOS)
+    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_MACOS)
     {
 #ifdef USE_MACOS
 	    return new MacOSWindow();
 #endif
     }
-    else if (SUPPORTED_WINDOW_TYPES & WINDOW_TYPE_XCB)
+    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_IOS)
     {
-#ifdef USE_XCB
-	    return new XCBWindow();
+#ifdef USE_MACOS
+	    return new iOSWindow();
 #endif
     }
-    else if (SUPPORTED_WINDOW_TYPES & WINDOW_TYPE_X11)
+    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_XCB)
+    {
+#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
+	    return new XCBWindow();
+#endif
+#ifdef USE_X11
+	    return new X11Window();
+#endif
+    }
+    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_X11)
     {
 #ifdef USE_X11
 	    return new X11Window();
+#endif
+    }
+    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_WAYLAND)
+    {
+#ifdef USE_WAYLAND
+	    return 0; // return new WaylandWindow();
+#endif
+    }
+    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_ANDROID)
+    {
+#ifdef USE_ANDROID
+	    return new AndroidWindow();
 #endif
     }
     throw std::runtime_error("Window type not supported!");

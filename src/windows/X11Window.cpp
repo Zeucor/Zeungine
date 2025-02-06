@@ -26,9 +26,14 @@ void X11Window::init(Window& renderWindow)
 	XInitThreads();
 	display = XOpenDisplay(0);
 	const char* xserver = getenv("DISPLAY");
-	if (display == (Display*)0)
+	if (display == 0)
 	{
-		return;
+		throw std::runtime_error("Unable to open XDisplay!");
+	}
+	connection = xcb_connect(nullptr, nullptr);
+	if (xcb_connection_has_error(connection))
+	{
+		throw std::runtime_error("Failed to connect to X server!");
 	}
 	defaultRootWindow = DefaultRootWindow(display);
 	screen = DefaultScreen(display);

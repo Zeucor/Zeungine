@@ -1,6 +1,6 @@
 #pragma once
 #ifdef LINUX
-#ifdef USE_XCB
+#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
 #include "../Window.hpp"
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>

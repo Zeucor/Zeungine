@@ -15,8 +15,12 @@
 #elif defined(LINUX)
 #if defined(USE_X11)
 #define VK_USE_PLATFORM_XLIB_KHR
-#elif defined(USE_XCB)
+#endif
+#if defined(USE_XCB) || defined(USE_X11)
 #define VK_USE_PLATFORM_XCB_KHR
+#endif
+#if defined(USE_WAYLAND)
+#define VK_USE_PLATFORM_WAYLAND_KHR
 #endif
 #endif
 #include <shaderc/shaderc.hpp>

@@ -1,5 +1,5 @@
 #ifdef LINUX
-#ifdef USE_XCB
+#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
 #include <X11/XKBlib.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
