@@ -273,26 +273,7 @@ bool X11Window::pollMessages()
 					keycode = keycodeIter->second;
 			}
 			auto keypress = event.type == KeyPress;
-			bool hadChildFocus = false;
-			for (auto &childWindowPointer : renderWindowPointer->childWindows)
-			{
-				auto &childWindow = *childWindowPointer;
-				if (childWindow.minimized)
-					continue;
-				if (!childWindow.focused)
-					continue;
-				childWindow.mod = mod;
-				childWindow.windowKeys[keycode] = keypress;
-				hadChildFocus = true;
-				break;
-			}
-			if (!hadChildFocus)
-			{
-				renderWindowPointer->mod = mod;
-				renderWindowPointer->windowKeys[keycode] = keypress;
-			}
-			// instance.keypresses(XkbKeycodeToKeysym(display, event.xkey.keycode, 0, event.xkey.state & ShiftMask ? 1 : 0), true);
-			// instance.keypresses(XkbKeycodeToKeysym(display, event.xkey.keycode, 0, event.xkey.state & ShiftMask ? 1 : 0), false);
+			renderWindowPointer->handleKey(keycode, mod, keypress);
 			break;
 		};
 		case FocusIn:

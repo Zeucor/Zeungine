@@ -203,13 +203,15 @@ bool MacOSWindow::pollMessages()
 				case NSEventTypeKeyDown:
 				case NSEventTypeKeyUp:
 				{
-					auto keypress = [event type] == NSEventTypeKeyDown;
+					auto pressed = [event type] == NSEventTypeKeyDown;
+					int32_t mod = 0; // TODO: support mod
 				    NSString *characters = [event characters];
+					uint32_t keycode = 0;
 					if (characters.length > 0)
 					{
-						unichar unicodeChar = [characters characterAtIndex:0];
-						renderWindowPointer->windowKeys[unicodeChar] = keypress;
+						keycode = [characters characterAtIndex:0];
 					}
+					renderWindowPointer->handleKey(keycode, mod, pressed);
 					break;
 				}
 				case NSEventTypeMouseMoved:
