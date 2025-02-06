@@ -772,6 +772,11 @@ void VulkanRenderer::createImageStagingBuffer()
 void VulkanRenderer::init()
 {
 	waitStages[0] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.commandBufferCount = 1;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.swapchainCount = 1;
 }
 void VulkanRenderer::destroy()
 {
@@ -833,12 +838,9 @@ void VulkanRenderer::postRenderPass()
 	{
 		throw std::runtime_error("failed to record command buffer!");
 	}
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
-	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
-	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = commandBuffer;
 	signalSemaphores[0] = renderFinishedSemaphores[currentFrame];
 	submitInfo.signalSemaphoreCount = 1;
@@ -852,10 +854,8 @@ void VulkanRenderer::postRenderPass()
 		throw std::runtime_error("VulkanRenderer-vkQueueWaitIdle failed");
 	}
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pWaitSemaphores = signalSemaphores;
 	swapChains[0] = {swapChain};
-	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapChains;
 	presentInfo.pImageIndices = &imageIndex;
 	if (!VKcheck("vkQueueWaitIdle", vkQueueWaitIdle(presentQueue)))
