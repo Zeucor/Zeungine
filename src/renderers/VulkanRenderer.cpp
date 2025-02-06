@@ -864,6 +864,7 @@ void VulkanRenderer::postRenderPass()
 	}
 	return;
 }
+#ifndef USE_MACOS
 void VulkanRenderer::swapBuffers()
 {
 	if (!VKcheck("vkQueuePresentKHR", vkQueuePresentKHR(presentQueue, &presentInfo)))
@@ -871,6 +872,7 @@ void VulkanRenderer::swapBuffers()
 		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
 	}
 }
+#endif
 IRenderer* zg::createRenderer()
 {
 #if true
