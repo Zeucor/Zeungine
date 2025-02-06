@@ -12,6 +12,9 @@
 #ifdef USE_X11
 #include <zg/windows/X11Window.hpp>
 #endif
+#ifdef USE_WAYLAND
+#include <zg/windows/WaylandWindow.hpp>
+#endif
 using namespace zg;
 IPlatformWindow* zg::createPlatformWindow()
 {
@@ -33,27 +36,28 @@ IPlatformWindow* zg::createPlatformWindow()
 	    return new iOSWindow();
 #endif
     }
-    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_XCB)
+#ifdef LINUX
+    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_XCB || SELECTED_WINDOW_TYPE == WINDOW_TYPE_X11 || SELECTED_WINDOW_TYPE == WINDOW_TYPE_WAYLAND)
     {
+
+		auto xdgSessionType = getenv("XDG_SESSION_TYPE");
+		if (strcmp(xdgSessionType, "x11") == 0)
+		{
 #if defined(USE_XCB) || defined(USE_SWIFTSHADER)
-	    return new XCBWindow();
+            return new XCBWindow();
 #endif
 #ifdef USE_X11
-	    return new X11Window();
+	        return new X11Window();
 #endif
-    }
-    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_X11)
-    {
-#ifdef USE_X11
-	    return new X11Window();
-#endif
-    }
-    else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_WAYLAND)
-    {
+		}
+		else if (strcmp(xdgSessionType, "wayland") == 0)
+		{
 #ifdef USE_WAYLAND
-	    return 0; // return new WaylandWindow();
+	        return new WaylandWindow();
 #endif
+		}
     }
+#endif
     else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_ANDROID)
     {
 #ifdef USE_ANDROID

@@ -17,7 +17,7 @@
 #include <zg/windows/XCBWindow.hpp>
 #endif
 #if defined(USE_WAYLAND)
-// #include <zg/windows/WaylandWindow.hpp>
+#include <zg/windows/WaylandWindow.hpp>
 #endif
 #endif
 #ifdef MACOS
@@ -253,15 +253,6 @@ void VulkanRenderer::createSurface()
 #ifdef LINUX
 	if (windowType == WINDOW_TYPE_X11)
 	{
-		// auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
-		// VkXlibSurfaceCreateInfoKHR surfaceCreateInfo{};
-		// surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-		// surfaceCreateInfo.dpy = x11Window.display;
-		// surfaceCreateInfo.window = x11Window.window;
-		// if (!VKcheck("vkCreateXlibSurfaceKHR", vkCreateXlibSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
-		// {
-		// 	throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
-		// }
 		auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
 		VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
@@ -272,7 +263,7 @@ void VulkanRenderer::createSurface()
 			throw std::runtime_error("VulkanRenderer-createSurface: failed to create XCB surface");
 		}
 	}
-	if (windowType == WINDOW_TYPE_XCB)
+	else if (windowType == WINDOW_TYPE_XCB)
 	{
 		auto& xcbWindow = *dynamic_cast<XCBWindow*>(platformWindowPointer);
 		VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
@@ -280,6 +271,18 @@ void VulkanRenderer::createSurface()
 		surfaceCreateInfo.connection = xcbWindow.connection;
 		surfaceCreateInfo.window = xcbWindow.window;
 		if (!VKcheck("vkCreateXcbSurfaceKHR", vkCreateXcbSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+		{
+			throw std::runtime_error("VulkanRenderer-createSurface: failed to create XCB surface");
+		}
+	}
+	else if (windowType == WINDOW_TYPE_WAYLAND)
+	{
+		auto& waylandWindow = *dynamic_cast<WaylandWindow*>(platformWindowPointer);
+		VkWaylandSurfaceCreateInfoKHR surfaceCreateInfo{};
+		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+		surfaceCreateInfo.display = waylandWindow.display;
+		surfaceCreateInfo.surface = waylandWindow.surface;
+		if (!VKcheck("vkCreateWaylandSurfaceKHR", vkCreateWaylandSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
 		{
 			throw std::runtime_error("VulkanRenderer-createSurface: failed to create XCB surface");
 		}
