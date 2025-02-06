@@ -2,11 +2,11 @@
 #ifdef USE_XCB
 #include <X11/XKBlib.h>
 #include <X11/Xlib.h>
+#include <X11/extensions/Xfixes.h>
 #include <X11/keysymdef.h>
 #include <iostream>
 #include <xcb/xfixes.h>
 #include <xkbcommon/xkbcommon.h>
-#include <X11/extensions/Xfixes.h>
 #include <zg/common.hpp>
 #include <zg/windows/XCBWindow.hpp>
 using namespace zg;
@@ -261,6 +261,21 @@ void XCBWindow::setWidthHeight()
 	xcb_configure_window(connection, window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
 	xcb_flush(connection);
 }
-void XCBWindow::mouseCapture(bool capture) {}
+void XCBWindow::mouseCapture(bool capture)
+{
+	if (capture)
+	{
+		int result = XGrabPointer(display, window, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+															GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
+		if (result != GrabSuccess)
+		{
+			std::cerr << "Failed to GrabPointer" << std::endl;
+		}
+	}
+	else
+	{
+		XUngrabPointer(display, CurrentTime);
+	}
+}
 #endif
 #endif
