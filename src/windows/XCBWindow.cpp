@@ -1,6 +1,10 @@
 #ifdef LINUX
 #ifdef USE_XCB
+#include <X11/XKBlib.h>
+#include <X11/Xlib.h>
+#include <X11/keysymdef.h>
 #include <iostream>
+#include <xkbcommon/xkbcommon.h>
 #include <zg/common.hpp>
 #include <zg/windows/XCBWindow.hpp>
 using namespace zg;
@@ -18,7 +22,7 @@ void XCBWindow::init(Window& renderWindow)
 	screen = iter.data;
 	window = xcb_generate_id(connection);
 	uint32_t value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
-	uint32_t value_list[] = {screen->white_pixel, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS};
+	uint32_t value_list[] = {screen->white_pixel, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE};
 	xcb_create_window(connection,
 										XCB_COPY_FROM_PARENT, // depth
 										window,
@@ -46,6 +50,12 @@ void XCBWindow::init(Window& renderWindow)
 	free(wm_delete_reply);
 	xcb_map_window(connection, window);
 	xcb_flush(connection);
+	keysyms = xcb_key_symbols_alloc(connection);
+	if (!keysyms)
+	{
+		std::cerr << "Failed to allocate key symbols!" << std::endl;
+		return;
+	}
 }
 void XCBWindow::postInit() {}
 bool XCBWindow::pollMessages()
@@ -53,22 +63,32 @@ bool XCBWindow::pollMessages()
 	xcb_generic_event_t* event;
 	while ((event = xcb_poll_for_event(connection)))
 	{
-		switch (event->response_type & ~0x80)
+		auto eventType = event->response_type & ~0x80;
+		switch (eventType)
 		{
 		case XCB_EXPOSE:
-			std::cout << "Window exposed (redraw needed)." << std::endl;
 			break;
 
 		case XCB_KEY_PRESS:
-			std::cout << "Key pressed! Exiting event loop." << std::endl;
-			break;
-
+		case XCB_KEY_RELEASE:
+			{
+				auto pressed = eventType == XCB_KEY_PRESS;
+				xcb_key_press_event_t* keyEvent = (xcb_key_press_event_t*)event;
+				bool shiftPressed = keyEvent->state & (XCB_MOD_MASK_SHIFT);
+				xcb_keysym_t keysym = xcb_key_symbols_get_keysym(keysyms, keyEvent->detail, shiftPressed ? 1 : 0);
+				uint32_t unicodeChar = xkb_keysym_to_utf32(keysym);
+				if (unicodeChar)
+				{
+					std::cout << "Key " << (pressed ? "pressed: " : "released: ") << static_cast<char>(unicodeChar) << " ("
+										<< keysym << ") Shift: " << shiftPressed << std::endl;
+				}
+				break;
+			}
 		case XCB_CLIENT_MESSAGE:
 			{
 				xcb_client_message_event_t* cm = (xcb_client_message_event_t*)event;
 				if (cm->data.data32[0] == wm_delete_window)
 				{
-					std::cout << "Window close requested." << std::endl;
 					free(event);
 					return false;
 				}
@@ -76,7 +96,6 @@ bool XCBWindow::pollMessages()
 			}
 
 		case XCB_DESTROY_NOTIFY:
-			std::cout << "Window destroyed." << std::endl;
 			free(event);
 			return false;
 

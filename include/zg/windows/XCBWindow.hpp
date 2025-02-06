@@ -3,6 +3,7 @@
 #ifdef USE_XCB
 #include "../Window.hpp"
 #include <xcb/xcb.h>
+#include <xcb/xcb_keysyms.h>
 namespace zg
 {
 	struct XCBWindow : IPlatformWindow
@@ -12,6 +13,7 @@ namespace zg
 		xcb_screen_t* screen = 0;
 		xcb_window_t window = 0;
 		xcb_atom_t wm_delete_window;
+		xcb_key_symbols_t* keysyms;
 		void init(Window& window) override;
 		void renderInit();
 		void postInit() override;
