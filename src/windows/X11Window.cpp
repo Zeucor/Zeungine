@@ -403,16 +403,6 @@ bool X11Window::pollMessages()
 	}
 	return true;
 }
-void X11Window::swapBuffers()
-{
-#ifdef USE_GL
-	glXSwapBuffers(display, window);
-#endif
-#ifdef USE_EGL
-	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
-	eglSwapBuffers(eglRenderer.eglDisplay, eglRenderer.eglSurface);
-#endif
-}
 void X11Window::destroy() { renderWindowPointer->iRenderer->destroy(); }
 void X11Window::close()
 {

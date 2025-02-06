@@ -60,6 +60,7 @@ namespace zg
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
 		void ensureEntity(shaders::Shader& shader, vaos::VAO& vao) override;
+		void swapBuffers() override;
 	};
 	const bool GLcheck(const EGLRenderer& renderer, const char* fn, const bool egl = false);
 } // namespace zg

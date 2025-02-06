@@ -178,7 +178,12 @@ void GLRenderer::init()
 #endif
 }
 void GLRenderer::destroy() {}
-std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new GLRenderer()); }
+IRenderer* zg::createRenderer()
+{
+#if true
+	return new GLRenderer();
+#endif
+}
 void GLRenderer::clearColor(glm::vec4 color)
 {
 	glContext->ClearColor(color.r, color.g, color.b, color.a);
@@ -737,6 +742,20 @@ void GLRenderer::destroyVAO(vaos::VAO& vao)
 	GLcheck(*this, "glDeleteBuffers");
 	vaoImpl.ebo = 0;
 	delete &vaoImpl;
+}
+void GLRenderer::swapBuffers()
+{
+#ifdef WINDOWS
+	auto& win32Window = *dynamic_cast<WIN32Window *>(platformWindowPointer);
+	SwapBuffers(win32Window.hDeviceContext);
+#endif
+#ifdef USE_X11
+	auto& x11Window = *dynamic_cast<X11Window *>(platformWindowPointer);
+	glXSwapBuffers(x11Window.display, x11Window.window);
+#endif
+#ifdef USE_XCB
+	throw std::runtime_error("XCB swapBuffers not yet supported");
+#endif
 }
 const bool zg::GLcheck(const GLRenderer& renderer, const char* fn, const bool egl)
 {

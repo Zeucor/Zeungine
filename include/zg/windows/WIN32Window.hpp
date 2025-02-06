@@ -15,7 +15,6 @@ namespace zg
 		void renderInit();
 		void postInit() override;
 		bool pollMessages() override;
-		void swapBuffers() override;
 		void destroy() override;
 		void close() override;
 		void minimize() override;

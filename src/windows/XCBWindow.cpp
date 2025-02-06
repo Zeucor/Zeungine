@@ -85,8 +85,8 @@ bool XCBWindow::pollMessages()
 		}
 		free(event);
 	}
+	return true;
 }
-void XCBWindow::swapBuffers() {}
 void XCBWindow::destroy()
 {
 	xcb_destroy_window(connection, window);

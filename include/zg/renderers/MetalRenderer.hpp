@@ -55,6 +55,7 @@ namespace zg
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
 		void ensureEntity(shaders::Shader& shader, vaos::VAO& vao) override;
+		void swapBuffers() override;
 	};
 	bool VKcheck(const char* fn, VkResult result);
 } // namespace zg

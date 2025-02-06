@@ -89,7 +89,7 @@ void Window::startWindow()
 		runRunnables();
 		updateKeyboard();
 		updateMouse();
-		iRenderer->preBeginRenderPass();
+		iRendererRef.preBeginRenderPass();
 		update();
 		for (auto &childWindowPointer : childWindows)
 		{
@@ -98,7 +98,7 @@ void Window::startWindow()
 				continue;
 			childWindow.render();
 		}
-		iRenderer->beginRenderPass();
+		iRendererRef.beginRenderPass();
 		render();
 		for (auto& childWindowPointer : childWindows)
 		{
@@ -107,8 +107,8 @@ void Window::startWindow()
 				continue;
 			childWindow.framebufferPlane->render();
 		}
-		iRenderer->postRenderPass();
-		iPlatformWindowRef.swapBuffers();
+		iRendererRef.postRenderPass();
+		iRendererRef.swapBuffers();
 	}
 _exit:
 	scene.reset();
@@ -118,7 +118,9 @@ _exit:
 		delete childWindowPointer;
 	}
 	childWindows.clear();
+	iRendererRef.destroy();
 	iPlatformWindowRef.destroy();
+	delete iRenderer;
 	delete iPlatformWindow;
 }
 void Window::updateKeyboard()

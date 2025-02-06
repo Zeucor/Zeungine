@@ -108,7 +108,12 @@ void EGLRenderer::init()
 #endif
 }
 void EGLRenderer::destroy() {}
-std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new EGLRenderer()); }
+IRenderer* zg::createRenderer()
+{
+#if true
+	return new EGLRenderer();
+#endif
+}
 void EGLRenderer::clearColor(glm::vec4 color)
 {
 	glClearColor(color.r, color.g, color.b, color.a);
@@ -662,6 +667,10 @@ void EGLRenderer::destroyVAO(vaos::VAO& vao)
 	GLcheck(*this, "glDeleteBuffers");
 	vaoImpl.ebo = 0;
 	delete &vaoImpl;
+}
+void EGLRenderer::swapBuffers()
+{
+	eglSwapBuffers(eglDisplay, eglSurface);
 }
 const bool zg::GLcheck(const EGLRenderer& renderer, const char* fn, const bool egl)
 {

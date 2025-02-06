@@ -259,24 +259,21 @@ bool MacOSWindow::pollMessages()
 	}
 	return true;
 }
-void MacOSWindow::swapBuffers()
-{
-	if (closed)
-		return;
 #ifdef USE_GL
-	[(NSOpenGLContext*)glContext flushBuffer];
-#elif defined(USE_EGL)
-	auto &eglRenderer = *std::dynamic_pointer_cast<EGLRenderer>(renderWindowPointer->iRenderer);
-    if (!eglSwapBuffers(eglRenderer.eglDisplay, eglRenderer.eglSurface))
-    {
-        throw std::runtime_error("eglSwapBuffers failed");
-    }
-#elif defined(USE_VULKAN)
-	auto& renderWindow = *renderWindowPointer;
+void GLRenderer::swapBuffers()
+{
+	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
+	[(NSOpenGLContext*)macWindow.glContext flushBuffer];
+}
+#endif
+#ifdef USE_VULKAN
+void VulkanRenderer::swapBuffers()
+{
+	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
 	auto& vulkanRenderer = *std::dynamic_pointer_cast<VulkanRenderer>(renderWindow.iRenderer);
-	auto currentFrame = vulkanRenderer.currentFrame;
-	VkCommandBuffer commandBuffer = vulkanRenderer.beginSingleTimeCommands();
-	VkImage image = vulkanRenderer.swapChainImages[currentFrame];
+	auto currentFrame = currentFrame;
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+	VkImage image = swapChainImages[currentFrame];
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
@@ -292,14 +289,14 @@ void MacOSWindow::swapBuffers()
 	barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 	barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-	vulkanRenderer.endSingleTimeCommands(commandBuffer);
-	commandBuffer = vulkanRenderer.beginSingleTimeCommands();
+	endSingleTimeCommands(commandBuffer);
+	commandBuffer = beginSingleTimeCommands();
 	VkMappedMemoryRange range{};
 	range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-	range.memory = vulkanRenderer.stagingBufferMemory;
+	range.memory = stagingBufferMemory;
 	range.offset = 0;
 	range.size = VK_WHOLE_SIZE;
-	vkInvalidateMappedMemoryRanges(vulkanRenderer.device, 1, &range);
+	vkInvalidateMappedMemoryRanges(device, 1, &range);
 	VkBufferImageCopy region{};
 	region.bufferOffset = 0;
 	region.bufferRowLength = 0;
@@ -311,16 +308,16 @@ void MacOSWindow::swapBuffers()
 	region.imageExtent.width = renderWindow.windowWidth;
 	region.imageExtent.height = renderWindow.windowHeight;
 	region.imageExtent.depth = 1;
-	vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vulkanRenderer.stagingBuffer, 1, &region);
-	vulkanRenderer.endSingleTimeCommands(commandBuffer);
-	commandBuffer = vulkanRenderer.beginSingleTimeCommands();
+	vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer, 1, &region);
+	endSingleTimeCommands(commandBuffer);
+	commandBuffer = beginSingleTimeCommands();
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
     vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-    vulkanRenderer.endSingleTimeCommands(commandBuffer);
-	vkQueueWaitIdle(vulkanRenderer.graphicsQueue);
+    endSingleTimeCommands(commandBuffer);
+	vkQueueWaitIdle(graphicsQueue);
 	@autoreleasepool
 	{
 		unsigned char* bitmapData = (unsigned char*)bitmap;
@@ -330,7 +327,7 @@ void MacOSWindow::swapBuffers()
 			bitmapData[i * 4 + 0] = bitmapData[i * 4 + 2];
 			bitmapData[i * 4 + 2] = temp;
 		}
-		NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:(unsigned char**)&bitmap
+		NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:&bitmapData
 																					pixelsWide:renderWindow.windowWidth
 																					pixelsHigh:renderWindow.windowHeight
 																				bitsPerSample:8
@@ -346,7 +343,7 @@ void MacOSWindow::swapBuffers()
 			NSLog(@"Failed to create NSBitmapImageRep");
 			return;
 		}
-		NSImage *image = (NSImage *)nsImage;
+		NSImage *image = (NSImage *)macWindow.nsImage;
 		NSArray *reps = [image representations];
 		if ([reps count] > 0)
 		{
@@ -356,13 +353,13 @@ void MacOSWindow::swapBuffers()
 			}
 		}
 		[image addRepresentation:bitmapRep];
-		[(NSImageView *)nsImageView setImage:nil];
-		[(NSImageView *)nsImageView setImage:image]; 
-		[(NSView *)nsView displayIfNeeded];
-		[(NSView*)nsView setNeedsDisplay:YES];
+		[(NSImageView *)macWindownsImageView setImage:nil];
+		[(NSImageView *)macWindownsImageView setImage:image]; 
+		[(NSView *)macWindownsView displayIfNeeded];
+		[(NSView *)macWindownsView setNeedsDisplay:YES];
 	}
-#endif
 }
+#endif
 void MacOSWindow::destroy()
 {
 #ifdef USE_GL

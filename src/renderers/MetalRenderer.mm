@@ -19,7 +19,12 @@ void MetalRenderer::createContext(IPlatformWindow* platformWindowPointer)
 }
 void MetalRenderer::init() {}
 void MetalRenderer::destroy() {}
-std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new MetalRenderer()); }
+IRenderer* zg::createRenderer()
+{
+#if true
+	return new MetalRenderer();
+#endif
+}
 void MetalRenderer::clearColor(glm::vec4 color) {}
 void MetalRenderer::clear() {}
 void MetalRenderer::viewport(glm::ivec4 vp) const {}

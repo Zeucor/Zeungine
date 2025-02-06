@@ -126,6 +126,11 @@ namespace zg
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
 		const VulkanFramebufferImpl* currentFramebufferImpl = 0;
+		VkSubmitInfo submitInfo{};
+		VkPresentInfoKHR presentInfo{};
+		VkPipelineStageFlags waitStages[1];
+		VkSemaphore signalSemaphores[1];
+		VkSwapchainKHR swapChains[1];
 		VulkanRenderer();
 		~VulkanRenderer() override;
 		void createContext(IPlatformWindow* platformWindowPointer) override;
@@ -216,6 +221,7 @@ namespace zg
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
 		void ensureEntity(shaders::Shader& shader, vaos::VAO& vao) override;
+		void swapBuffers() override;
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

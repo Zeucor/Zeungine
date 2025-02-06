@@ -95,6 +95,7 @@ namespace zg
 		virtual void generateVAO(vaos::VAO& vao) = 0;
 		virtual void destroyVAO(vaos::VAO& vao) = 0;
 		virtual void ensureEntity(shaders::Shader& shader, vaos::VAO& vao) = 0;
+		virtual void swapBuffers() = 0;
 	};
-	std::shared_ptr<IRenderer> createRenderer();
+	IRenderer* createRenderer();
 } // namespace zg

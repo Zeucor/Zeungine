@@ -131,23 +131,19 @@ void VulkanRenderer::createInstance()
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	std::vector<const char*> layers;
 #ifndef NDEBUG
-#ifndef USE_SWIFTSHADER
 	if (checkValidationLayersSupport())
 	{
-#endif
 		layers.push_back("VK_LAYER_KHRONOS_validation");
 		createInfo.enabledLayerCount = layers.size();
 		createInfo.ppEnabledLayerNames = layers.data();
 		populateDebugMessengerCreateInfo(debugCreateInfo);
 		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
-#ifndef USE_SWIFTSHADER
 	}
 	else
 	{
 		std::cout << "Validation layers requested, but not available" << std::endl;
 		createInfo.enabledLayerCount = 0;
 	}
-#endif
 #endif
 	// VkAllocationCallbacks allocator = createAllocator("Instance");
 	auto createdInstance = VKcheck("vkCreateInstance", vkCreateInstance(&createInfo, 0, &instance));
@@ -773,7 +769,10 @@ void VulkanRenderer::createImageStagingBuffer()
 		throw std::runtime_error("VulkanRenderer-vkBindBufferMemory failed");
 	}
 }
-void VulkanRenderer::init() {}
+void VulkanRenderer::init()
+{
+	waitStages[0] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+}
 void VulkanRenderer::destroy()
 {
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
@@ -834,16 +833,14 @@ void VulkanRenderer::postRenderPass()
 	{
 		throw std::runtime_error("failed to record command buffer!");
 	}
-	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
-	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = commandBuffer;
-	VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+	signalSemaphores[0] = renderFinishedSemaphores[currentFrame];
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
 	if (!VKcheck("vkQueueSubmit", vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame])))
@@ -854,11 +851,10 @@ void VulkanRenderer::postRenderPass()
 	{
 		throw std::runtime_error("VulkanRenderer-vkQueueWaitIdle failed");
 	}
-	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pWaitSemaphores = signalSemaphores;
-	VkSwapchainKHR swapChains[] = {swapChain};
+	swapChains[0] = {swapChain};
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapChains;
 	presentInfo.pImageIndices = &imageIndex;
@@ -866,13 +862,21 @@ void VulkanRenderer::postRenderPass()
 	{
 		throw std::runtime_error("VulkanRenderer-vkQueueWaitIdle failed");
 	}
+	return;
+}
+void VulkanRenderer::swapBuffers()
+{
 	if (!VKcheck("vkQueuePresentKHR", vkQueuePresentKHR(presentQueue, &presentInfo)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
 	}
-	return;
 }
-std::shared_ptr<IRenderer> zg::createRenderer() { return std::shared_ptr<IRenderer>(new VulkanRenderer()); }
+IRenderer* zg::createRenderer()
+{
+#if true
+	return new VulkanRenderer();
+#endif
+}
 void VulkanRenderer::clearColor(glm::vec4 color) {}
 void VulkanRenderer::clear() {}
 void VulkanRenderer::viewport(glm::ivec4 vp) const {}

@@ -320,10 +320,6 @@ bool WIN32Window::pollMessages()
 	}
 	return true;
 }
-void WIN32Window::swapBuffers()
-{
-	SwapBuffers(hDeviceContext);
-}
 void WIN32Window::destroy()
 {
 	renderWindowPointer->iRenderer->destroy();
