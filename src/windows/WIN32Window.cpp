@@ -240,6 +240,7 @@ void SetupPixelFormat(HDC hDeviceContext)
 void WIN32Window::init(Window &renderWindow)
 {
 	renderWindowPointer = &renderWindow;
+	windowType = WINDOW_TYPE_WIN32;
 	if (!setDPIAware)
 	{
 		HRESULT hr = SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);

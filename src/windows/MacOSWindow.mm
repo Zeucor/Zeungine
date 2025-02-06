@@ -54,6 +54,7 @@ using namespace zg;
 void MacOSWindow::init(Window &renderWindow)
 {
 	renderWindowPointer = &renderWindow;
+	windowType = WINDOW_TYPE_MACOS;
 	@autoreleasepool
 	{
 		if (NSApp == nil)

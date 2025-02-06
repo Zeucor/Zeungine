@@ -8,6 +8,7 @@ namespace zg
 	struct IPlatformWindow
 	{
 		Window *renderWindowPointer = nullptr;
+		uint8_t windowType = 0;
 		virtual ~IPlatformWindow() = default;
 		virtual void init(Window &renderWindow) = 0;
 		virtual void postInit() = 0;
@@ -29,6 +30,8 @@ namespace zg
 	inline static uint8_t WINDOW_TYPE_MACOS = 2;
 	inline static uint8_t WINDOW_TYPE_X11 = 4;
 	inline static uint8_t WINDOW_TYPE_XCB = 8;
+	inline static uint8_t WINDOW_TYPE_ANDROID = 16;
+	inline static uint8_t WINDOW_TYPE_IOS = 32;
 	inline static uint8_t SUPPORTED_WINDOW_TYPES = ([]
 	{
 		uint8_t supported = 0;

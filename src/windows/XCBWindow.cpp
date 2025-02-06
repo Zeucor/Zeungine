@@ -7,6 +7,7 @@ using namespace zg;
 void XCBWindow::init(Window& renderWindow)
 {
 	renderWindowPointer = &renderWindow;
+	windowType = WINDOW_TYPE_XCB;
 	connection = xcb_connect(nullptr, nullptr);
 	if (xcb_connection_has_error(connection))
 	{
@@ -31,11 +32,60 @@ void XCBWindow::init(Window& renderWindow)
 											8, // Format (8-bit string)
 											titleLength, // Length of the title
 											renderWindow.title);
+	xcb_intern_atom_cookie_t wm_protocols_cookie = xcb_intern_atom(connection, 1, 12, "WM_PROTOCOLS");
+	xcb_intern_atom_cookie_t wm_delete_cookie = xcb_intern_atom(connection, 0, 16, "WM_DELETE_WINDOW");
+	xcb_intern_atom_reply_t* wm_protocols_reply = xcb_intern_atom_reply(connection, wm_protocols_cookie, nullptr);
+	xcb_intern_atom_reply_t* wm_delete_reply = xcb_intern_atom_reply(connection, wm_delete_cookie, nullptr);
+	if (wm_protocols_reply && wm_delete_reply)
+	{
+		wm_delete_window = wm_delete_reply->atom;
+		xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, wm_protocols_reply->atom, XCB_ATOM_ATOM, 32, 1,
+												&wm_delete_window);
+	}
+	free(wm_protocols_reply);
+	free(wm_delete_reply);
 	xcb_map_window(connection, window);
 	xcb_flush(connection);
 }
 void XCBWindow::postInit() {}
-bool XCBWindow::pollMessages() { return true; }
+bool XCBWindow::pollMessages()
+{
+	xcb_generic_event_t* event;
+	while ((event = xcb_poll_for_event(connection)))
+	{
+		switch (event->response_type & ~0x80)
+		{
+		case XCB_EXPOSE:
+			std::cout << "Window exposed (redraw needed)." << std::endl;
+			break;
+
+		case XCB_KEY_PRESS:
+			std::cout << "Key pressed! Exiting event loop." << std::endl;
+			break;
+
+		case XCB_CLIENT_MESSAGE:
+			{
+				xcb_client_message_event_t* cm = (xcb_client_message_event_t*)event;
+				if (cm->data.data32[0] == wm_delete_window)
+				{
+					std::cout << "Window close requested." << std::endl;
+					free(event);
+					return false;
+				}
+				break;
+			}
+
+		case XCB_DESTROY_NOTIFY:
+			std::cout << "Window destroyed." << std::endl;
+			free(event);
+			return false;
+
+		default:
+			break;
+		}
+		free(event);
+	}
+}
 void XCBWindow::swapBuffers() {}
 void XCBWindow::destroy()
 {

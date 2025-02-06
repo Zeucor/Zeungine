@@ -22,7 +22,7 @@ using namespace zg;
 void X11Window::init(Window& renderWindow)
 {
 	renderWindowPointer = &renderWindow;
-
+	windowType = WINDOW_TYPE_X11;
 	XInitThreads();
 	display = XOpenDisplay(0);
 	const char* xserver = getenv("DISPLAY");

@@ -11,6 +11,7 @@ namespace zg
 		const xcb_setup_t* setup = 0;
 		xcb_screen_t* screen = 0;
 		xcb_window_t window = 0;
+		xcb_atom_t wm_delete_window;
 		void init(Window& window) override;
 		void renderInit();
 		void postInit() override;

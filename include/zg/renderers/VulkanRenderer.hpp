@@ -13,7 +13,11 @@
 #elif defined(WINDOWS)
 #define VK_USE_PLATFORM_WIN32_KHR
 #elif defined(LINUX)
+#if defined(USE_X11)
 #define VK_USE_PLATFORM_XLIB_KHR
+#elif defined(USE_XCB)
+#define VK_USE_PLATFORM_XCB_KHR
+#endif
 #endif
 #include <shaderc/shaderc.hpp>
 #include <vulkan/vulkan.h>
