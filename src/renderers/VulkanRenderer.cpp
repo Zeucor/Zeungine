@@ -463,6 +463,7 @@ void VulkanRenderer::createLogicalDevice()
 	}
 	extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	extensions.push_back("VK_KHR_maintenance1");
+	extensions.push_back("VK_KHR_swapchain");
 	// extensions[2] = VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME;
 	// extensions[3] = VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME;
 	// extensions[4] = VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME;

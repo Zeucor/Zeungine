@@ -1,10 +1,13 @@
 #pragma once
 #ifdef LINUX
 #if defined(USE_WAYLAND)
+#include <zg/Window.hpp>
 #include <wayland-client-protocol.h>
 #include <wayland-client.h>
 #include <wayland-util.h>
-#include "../Window.hpp"
+#include <wayland/wayland-xdg-shell-client-protocol.h>
+#include <wayland/xdg-decoration-unstable-v1-client-protocol.h>
+#include <poll.h>
 namespace zg
 {
 	struct WaylandWindow : IPlatformWindow
@@ -15,8 +18,12 @@ namespace zg
 		wl_surface* surface = 0;
 		wl_seat* seat = 0;
 		wl_pointer* seatPointer = 0;
-		wl_shell* shell = 0;
-		wl_shm* shm = 0;
+		xdg_wm_base* xdgWm = 0;
+		xdg_surface* xdgSurface = 0;
+		xdg_toplevel* xdgToplevel = 0;
+		zxdg_decoration_manager_v1* decorationManager = 0;
+		zxdg_toplevel_decoration_v1* toplevelDecoration = 0;
+		bool shouldClose = false;
 		void init(Window& window) override;
 		void renderInit();
 		void postInit() override;

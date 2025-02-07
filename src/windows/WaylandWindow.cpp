@@ -1,33 +1,104 @@
 #ifdef LINUX
 #if defined(USE_WAYLAND)
-#include <zg/windows/WaylandWindow.hpp>
 #include <iostream>
+#include <wayland/wayland-xdg-shell-client-protocol.h>
+#include <zg/windows/WaylandWindow.hpp>
 using namespace zg;
+static void xdgWmBasePing(void* data, xdg_wm_base* wm_base, uint32_t serial) { xdg_wm_base_pong(wm_base, serial); }
+static const xdg_wm_base_listener xdgWmBaseListener = {.ping = xdgWmBasePing};
 static void registry_handler(void* data, struct wl_registry* registry, uint32_t id, const char* interface,
 														 uint32_t version)
 {
 	auto& waylandWindow = *static_cast<WaylandWindow*>(data);
-	std::cout << interface << std::endl;
+	auto printInterface = [&] { std::cout << interface << std::endl; };
 	if (strcmp(interface, wl_compositor_interface.name) == 0)
 	{
 		waylandWindow.compositor = (wl_compositor*)wl_registry_bind(registry, id, &wl_compositor_interface, 1);
+		printInterface();
 	}
-	else if (strcmp(interface, wl_shell_interface.name) == 0)
+	else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
 	{
-		waylandWindow.shell = (wl_shell*)wl_registry_bind(registry, id, &wl_shell_interface, 1);
-	}
-	else if (strcmp(interface, wl_shm_interface.name) == 0)
-	{
-		waylandWindow.shm = (wl_shm*)wl_registry_bind(registry, id, &wl_shm_interface, 1);
+		waylandWindow.xdgWm = (xdg_wm_base*)wl_registry_bind(registry, id, &xdg_wm_base_interface, 1);
+		xdg_wm_base_add_listener(waylandWindow.xdgWm, &xdgWmBaseListener, data);
 	}
 	else if (strcmp(interface, wl_seat_interface.name) == 0)
 	{
-		// Binding to the wl_seat interface to get a valid seat
 		waylandWindow.seat = (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface, 1);
+		waylandWindow.seatPointer = wl_seat_get_pointer(waylandWindow.seat);
+	}
+	else if (strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0)
+	{
+		waylandWindow.decorationManager =
+			(zxdg_decoration_manager_v1*)wl_registry_bind(registry, id, &zxdg_decoration_manager_v1_interface, 1);
 	}
 }
-static void registry_remove_object(void* data, struct wl_registry* registry, uint32_t name) { /* no-op */ }
+static void registry_remove_object(void* data, struct wl_registry* registry, uint32_t name) {}
 static struct wl_registry_listener registry_listener = {&registry_handler, &registry_remove_object};
+static void handleShellSurfaceConfigure(void* data, struct xdg_surface* shellSurface, uint32_t serial)
+{
+	xdg_surface_ack_configure(shellSurface, serial);
+	// if (resize)
+	// {
+	//     readyToResize = 1;
+	// }
+}
+static const struct xdg_surface_listener shellSurfaceListener = {.configure = handleShellSurfaceConfigure};
+static void handleToplevelConfigure(void* data, struct xdg_toplevel* toplevel, int32_t width, int32_t height,
+																		struct wl_array* states)
+{
+	if (width != 0 && height != 0)
+	{
+		// resize = 1;
+		// newWidth = width;
+		// newHeight = height;
+	}
+}
+
+static void handleToplevelClose(void* data, struct xdg_toplevel* toplevel)
+{
+	auto& waylandWindow = *static_cast<WaylandWindow*>(data);
+	waylandWindow.shouldClose = true;
+}
+static const struct xdg_toplevel_listener toplevelListener = {.configure = handleToplevelConfigure,
+																															.close = handleToplevelClose};
+void frame_callback_handler(void* data, struct wl_callback* callback, uint32_t time)
+{
+	wl_callback_destroy(callback);
+	// request_redraw = true; // Flag the next frame
+}
+void pointer_handle_enter(void* data, struct wl_pointer* pointer, uint32_t serial, struct wl_surface* surface,
+													wl_fixed_t sx, wl_fixed_t sy)
+{
+	// Mouse entered the surface
+}
+
+void pointer_handle_leave(void* data, struct wl_pointer* pointer, uint32_t serial, struct wl_surface* surface)
+{
+	// Mouse left the surface
+}
+
+void pointer_handle_motion(void* data, struct wl_pointer* pointer, uint32_t time, wl_fixed_t sx, wl_fixed_t sy)
+{
+	// Mouse moved
+}
+
+void pointer_handle_button(void* data, struct wl_pointer* pointer, uint32_t serial, uint32_t time, uint32_t button,
+													 uint32_t state)
+{
+	// Mouse button pressed or released
+}
+
+void pointer_handle_axis(void* data, struct wl_pointer* pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
+{
+	// Mouse wheel scrolled
+}
+
+static struct wl_pointer_listener pointer_listener = {.enter = pointer_handle_enter,
+																											.leave = pointer_handle_leave,
+																											.motion = pointer_handle_motion,
+																											.button = pointer_handle_button,
+																											.axis = pointer_handle_axis};
+static const struct wl_callback_listener frame_listener = {frame_callback_handler};
 void WaylandWindow::init(Window& renderWindow)
 {
 	renderWindowPointer = &renderWindow;
@@ -50,14 +121,59 @@ void WaylandWindow::init(Window& renderWindow)
 	{
 		throw std::runtime_error("Failed to create Wayland surface");
 	}
-	seatPointer = wl_seat_get_pointer(seat);
-	wl_shell_surface* shell_surface = wl_shell_get_shell_surface(shell, surface);
-	wl_shell_surface_set_toplevel(shell_surface);
+	xdgSurface = xdg_wm_base_get_xdg_surface(xdgWm, surface);
+	xdg_surface_add_listener(xdgSurface, &shellSurfaceListener, this);
+	xdgToplevel = xdg_surface_get_toplevel(xdgSurface);
+	xdg_toplevel_add_listener(xdgToplevel, &toplevelListener, this);
+	if (decorationManager)
+	{
+		toplevelDecoration = zxdg_decoration_manager_v1_get_toplevel_decoration(decorationManager, xdgToplevel);
+		zxdg_toplevel_decoration_v1_set_mode(toplevelDecoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+		wl_surface_commit(surface); // <-- Ensure this is done
+	}
+	else
+	{
+		std::cerr << "Server-side decorations not available, using client-side decorations\n";
+	}
+	xdg_toplevel_set_title(xdgToplevel, renderWindowPointer->title);
+	xdg_toplevel_set_app_id(xdgToplevel, renderWindowPointer->title);
+	struct wl_callback* frame_callback = wl_surface_frame(surface);
+	wl_callback_add_listener(frame_callback, &frame_listener, nullptr);
+	if (seatPointer)
+	{
+		wl_pointer_add_listener(seatPointer, &pointer_listener, this);
+	}
+	wl_surface_commit(surface);
+	wl_display_roundtrip(display);
 	wl_surface_commit(surface);
 }
 void WaylandWindow::postInit() {}
-bool WaylandWindow::pollMessages() { wl_display_dispatch(display); }
-void WaylandWindow::destroy() {}
+bool WaylandWindow::pollMessages()
+{
+	if (shouldClose)
+		return false;
+	while (wl_display_prepare_read(display) != 0) // If reading isn't possible, dispatch events first
+	{
+		wl_display_dispatch_pending(display);
+	}
+	wl_display_flush(display); // Send any queued requests
+	wl_display_read_events(display); // Read new events (non-blocking)
+	wl_display_dispatch_pending(display); // Dispatch new events
+	return true;
+}
+void WaylandWindow::destroy()
+{
+	if (toplevelDecoration)
+		zxdg_toplevel_decoration_v1_destroy(toplevelDecoration);
+	if (xdgToplevel)
+		xdg_toplevel_destroy(xdgToplevel);
+	if (xdgSurface)
+		xdg_surface_destroy(xdgSurface);
+	if (surface)
+		wl_surface_destroy(surface);
+	if (display)
+		wl_display_disconnect(display);
+}
 void WaylandWindow::close() {}
 void WaylandWindow::minimize() {}
 void WaylandWindow::maximize() {}
