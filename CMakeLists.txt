@@ -30,7 +30,6 @@ elseif(WIN32)
     add_definitions(-DWINDOWS)
     set(WINDOWS ON)
 endif()
-set(SWIFTSHADER_INCLUDE_DIR "include/SwiftShader")
 
 # Add build flags
 if(LINUX OR MACOS)
@@ -67,6 +66,7 @@ endif()
 if(USE_SWIFTSHADER)
     message(STATUS "Compiling with SwiftShader backend")
     add_definitions(-DUSE_SWIFTSHADER)
+    set(SWIFTSHADER_INCLUDE_DIR "include/SwiftShader")
 endif()
 
 # Dependencies
@@ -138,7 +138,9 @@ endif()
 
 # Includes
 include_directories(include)
-include_directories(${SWIFTSHADER_INCLUDE_DIR})
+if(USE_SWIFTSHADER)
+    include_directories(${SWIFTSHADER_INCLUDE_DIR})
+endif()
 
 # Sources
 set(ZG_SOURCES
