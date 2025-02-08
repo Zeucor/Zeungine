@@ -1,5 +1,6 @@
 #pragma once
 #ifdef USE_VULKAN
+#include <tuple>
 #include "../common.hpp"
 #include "../enums/ELayoutBindingType.hpp"
 #include "../interfaces/IPlatformWindow.hpp"
@@ -61,12 +62,12 @@ namespace zg
 	};
 	struct VulkanVAOImpl
 	{
-		VkBuffer vertexBuffer = VK_NULL_HANDLE;
-		VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
+		VkBuffer vertexBuffer = 0;
+		VkDeviceMemory vertexBufferMemory = 0;
 		void* vertexData = 0;
 		uint32_t vertexBufferSize;
-		VkBuffer indiceBuffer = VK_NULL_HANDLE;
-		VkDeviceMemory indiceBufferMemory = VK_NULL_HANDLE;
+		VkBuffer indiceBuffer = 0;
+		VkDeviceMemory indiceBufferMemory = 0;
 		void* indiceData = 0;
 		uint32_t indiceBufferSize;
 		VkDescriptorPool descriptorPool;
@@ -131,14 +132,12 @@ namespace zg
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
 		const VulkanFramebufferImpl* currentFramebufferImpl = 0;
-		VkSubmitInfo submitInfo{};
-		VkPresentInfoKHR presentInfo{};
+		VkSubmitInfo submitInfo;
+		VkPresentInfoKHR presentInfo;
 		VkPipelineStageFlags waitStages[1];
 		VkSemaphore signalSemaphores[1];
 		VkSwapchainKHR swapChains[1];
-#ifdef USE_SWIFTSHADER
 		void* bitmap = 0;
-#endif
 		uint32_t swapBufferCount = 0;
 		VulkanRenderer();
 		~VulkanRenderer() override;

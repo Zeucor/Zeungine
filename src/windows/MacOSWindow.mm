@@ -184,6 +184,7 @@ void MacOSWindow::postInit()
 			throw std::runtime_error("Failed to set swap interval");
 		}
 		[NSApp activateIgnoringOtherApps:YES];
+#endif
 	}
 }
 bool MacOSWindow::pollMessages()
@@ -249,27 +250,27 @@ void GLRenderer::swapBuffers()
 void VulkanRenderer::swapBuffers()
 {
 	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
-	auto& vulkanRenderer = *std::dynamic_pointer_cast<VulkanRenderer>(renderWindow.iRenderer);
+	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(macWindow.renderWindowPointer->iRenderer);
 	vulkanRenderer.getCurrentImageToBitmap();
 	@autoreleasepool
 	{
-		unsigned char* bitmapData = (unsigned char*)bitmap;
-		for (int i = 0; i < renderWindow.windowWidth * renderWindow.windowHeight; ++i)
+		unsigned char* bitmapData = (unsigned char*)vulkanRenderer.bitmap;
+		for (int i = 0; i < macWindow.renderWindowPointer->windowWidth * macWindow.renderWindowPointer->windowHeight; ++i)
 		{
 			unsigned char temp = bitmapData[i * 4 + 0];
 			bitmapData[i * 4 + 0] = bitmapData[i * 4 + 2];
 			bitmapData[i * 4 + 2] = temp;
 		}
 		NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:&bitmapData
-																					pixelsWide:renderWindow.windowWidth
-																					pixelsHigh:renderWindow.windowHeight
+																					pixelsWide:macWindow.renderWindowPointer->windowWidth
+																					pixelsHigh:macWindow.renderWindowPointer->windowHeight
 																				bitsPerSample:8
 																				samplesPerPixel:4
 																					hasAlpha:YES
 																					isPlanar:NO
 																				colorSpaceName:NSDeviceRGBColorSpace
 																					bitmapFormat:0
-																					bytesPerRow:renderWindow.windowWidth * 4
+																					bytesPerRow:macWindow.renderWindowPointer->windowWidth * 4
 																					bitsPerPixel:32];
 		if (bitmapRep == nil)
 		{
@@ -286,10 +287,10 @@ void VulkanRenderer::swapBuffers()
 			}
 		}
 		[image addRepresentation:bitmapRep];
-		[(NSImageView *)macWindownsImageView setImage:nil];
-		[(NSImageView *)macWindownsImageView setImage:image]; 
-		[(NSView *)macWindownsView displayIfNeeded];
-		[(NSView *)macWindownsView setNeedsDisplay:YES];
+		[(NSImageView *)macWindow.nsImageView setImage:nil];
+		[(NSImageView *)macWindow.nsImageView setImage:image]; 
+		[(NSView *)macWindow.nsView displayIfNeeded];
+		[(NSView *)macWindow.nsView setNeedsDisplay:YES];
 	}
 }
 #endif
@@ -309,7 +310,7 @@ void MacOSWindow::destroy()
         eglRenderer.eglContext = EGL_NO_CONTEXT;
     }
 #elif defined(MACOS)
-	auto& vulkanRenderer = *std::dynamic_pointer_cast<VulkanRenderer>(renderWindowPointer->iRenderer);
+	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(renderWindowPointer->iRenderer);
 	vkUnmapMemory(vulkanRenderer.device, vulkanRenderer.stagingBufferMemory);
 #endif
 	if (nsWindow)
