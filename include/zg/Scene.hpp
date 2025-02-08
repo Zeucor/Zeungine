@@ -41,5 +41,5 @@ namespace zg
 		Entity *findEntityByPrimID(const size_t &primID);
 		void hookMouseEvents();
 		void unhookMouseEvents();
-  };
+	};
 }

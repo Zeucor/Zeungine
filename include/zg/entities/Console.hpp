@@ -12,26 +12,26 @@ namespace zg::entities
 	struct Console : Entity, ISizable
 	{
 		std::vector<glm::vec4> colors;
-		Scene& scene;
+		Scene &scene;
 		glm::vec4 backgroundColor;
-		fonts::freetype::FreetypeFont& font;
+		fonts::freetype::FreetypeFont &font;
 		float width;
 		float height;
 		std::vector<std::shared_ptr<TextView>> consoleTextViews;
 		strings::HookedConsole hookedConsole;
 		size_t currentIndex = 0;
 		inline static size_t consolesCount = 0;
-		Console(Window& window,
-						Scene& scene,
-						glm::vec3 position,
-						glm::vec3 rotation,
-						glm::vec3 scale,
-						glm::vec4 backgroundColor,
-						fonts::freetype::FreetypeFont& font,
-						float width,
-						float height,
-						const shaders::RuntimeConstants& constants = {},
-						std::string_view name = "");
+		Console(Window &window,
+				Scene &scene,
+				glm::vec3 position,
+				glm::vec3 rotation,
+				glm::vec3 scale,
+				glm::vec4 backgroundColor,
+				fonts::freetype::FreetypeFont &font,
+				float width,
+				float height,
+				const shaders::RuntimeConstants &constants = {},
+				std::string_view name = "");
 		void preRender() override;
 		void setBackgroundColor(glm::vec4 newBackgroundColor);
 		void setSize(glm::vec3 newSize) override;

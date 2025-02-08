@@ -6,14 +6,14 @@
 #include "../Window.hpp"
 namespace zg::lights
 {
-	struct DirectionalLightShadow
+  struct DirectionalLightShadow
   {
-		Window &window;
+    Window &window;
     shaders::Shader &shader;
     DirectionalLight &directionalLight;
     textures::Texture texture;
-		textures::Framebuffer framebuffer;
-		glm::mat4 lightSpaceMatrix;
+    textures::Framebuffer framebuffer;
+    glm::mat4 lightSpaceMatrix;
     DirectionalLightShadow(Window &window, DirectionalLight &directionalLight);
   };
 }

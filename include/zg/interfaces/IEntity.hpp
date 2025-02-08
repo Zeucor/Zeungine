@@ -11,5 +11,5 @@ namespace zg
 		virtual ~IEntity() = default;
 		virtual void update();
 		virtual void render();
-  };
+	};
 }

@@ -6,14 +6,14 @@
 #include "../Window.hpp"
 namespace zg::lights
 {
-	struct SpotLightShadow
+  struct SpotLightShadow
   {
-		Window &window;
+    Window &window;
     shaders::Shader &shader;
     SpotLight &spotLight;
     textures::Texture texture;
-		textures::Framebuffer framebuffer;
-		glm::mat4 lightSpaceMatrix;
+    textures::Framebuffer framebuffer;
+    glm::mat4 lightSpaceMatrix;
     SpotLightShadow(Window &window, SpotLight &spotLight);
   };
 }

@@ -2,58 +2,52 @@
 #include <zg/utilities.hpp>
 using namespace zg::entities;
 TextView::TextView(Window &window,
-                   Scene &scene,
-                   glm::vec3 position,
-                   glm::vec3 rotation,
-                   glm::vec3 scale,
-                   glm::vec4 textColor,
-                   const std::string_view text,
-                   glm::vec2 size,
-                   fonts::freetype::FreetypeFont &font,
-                   float fontSize,
-                   bool textSizeIsNDC,
-                   const RepositionHandler &repositionHandler,
-                   const ResizeHandler &resizeHandler,
-                   const ReFontSizeHandler &reFontSizeHandler,
-                   std::string_view name):
-	Entity(window,
-		{
-			{
-				"UV2", "Position", "Normal", "Texture2D",
-				"View", "Projection", "Model", "CameraPosition",
-				"TextColor"
-			}
-		},
-		6,
-		{
-			0, 1, 2,  2, 3, 0   // Front face
-		},
-		4,
-		{
-			{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
-		},
-		position,
-		rotation,
-		scale,
-		name.empty() ? "TextView " + std::to_string(++textViewsCount) : name
-  ),
-	uvs({
-		// Front face
-		{ 0, 0 },  // 0
-		{ 1, 0 },  // 1
-		{ 1, 1 },  // 2
-		{ 0, 1 }  // 3
-	}),
-	scene(scene),
-	textColor(textColor),
-	text(text),
-	size(size),
-	font(font),
-	fontSize(fontSize),
-	textSizeIsNDC(textSizeIsNDC),
-	repositionHandler(repositionHandler),
-	resizeHandler(resizeHandler),
-	reFontSizeHandler(reFontSizeHandler)
+				   Scene &scene,
+				   glm::vec3 position,
+				   glm::vec3 rotation,
+				   glm::vec3 scale,
+				   glm::vec4 textColor,
+				   const std::string_view text,
+				   glm::vec2 size,
+				   fonts::freetype::FreetypeFont &font,
+				   float fontSize,
+				   bool textSizeIsNDC,
+				   const RepositionHandler &repositionHandler,
+				   const ResizeHandler &resizeHandler,
+				   const ReFontSizeHandler &reFontSizeHandler,
+				   std::string_view name) : Entity(window,
+												   {{"UV2", "Position", "Normal", "Texture2D",
+													 "View", "Projection", "Model", "CameraPosition",
+													 "TextColor"}},
+												   6,
+												   {
+													   0, 1, 2, 2, 3, 0 // Front face
+												   },
+												   4,
+												   {
+													   {-size.x / 2, -size.y / 2, 0}, {size.x / 2, -size.y / 2, 0}, {size.x / 2, size.y / 2, 0}, {-size.x / 2, size.y / 2, 0} // Front
+												   },
+												   position,
+												   rotation,
+												   scale,
+												   name.empty() ? "TextView " + std::to_string(++textViewsCount) : name),
+											uvs({
+												// Front face
+												{0, 0}, // 0
+												{1, 0}, // 1
+												{1, 1}, // 2
+												{0, 1}	// 3
+											}),
+											scene(scene),
+											textColor(textColor),
+											text(text),
+											size(size),
+											font(font),
+											fontSize(fontSize),
+											textSizeIsNDC(textSizeIsNDC),
+											repositionHandler(repositionHandler),
+											resizeHandler(resizeHandler),
+											reFontSizeHandler(reFontSizeHandler)
 {
 	switch (window.iRenderer->renderer)
 	{
@@ -71,9 +65,7 @@ TextView::TextView(Window &window,
 	updateElements("Normal", normals);
 	// TextView::update();
 	resizeID = window.addResizeHandler([&](auto newSize)
-	{
-		forceUpdate();
-	});
+									   { forceUpdate(); });
 	setTextColor(textColor);
 }
 TextView::~TextView()
@@ -120,14 +112,14 @@ void TextView::forceUpdate()
 }
 void TextView::preRender()
 {
-  auto &model = getModelMatrix();
-	shader.bind();
+	auto &model = getModelMatrix();
+	shader.bind(*this);
 	shader.setBlock("Model", *this, model);
 	shader.setBlock("View", *this, scene.view.matrix);
 	shader.setBlock("Projection", *this, scene.projection.matrix);
 	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
 	if (size.x && size.y)
-	  shader.setTexture("Texture2D", *this, *texturePointer, 0);
+		shader.setTexture("Texture2D", *this, *texturePointer, 0);
 	shader.setUniform("TextColor", *this, textColor);
 	shader.unbind();
 }
@@ -135,7 +127,7 @@ void TextView::setSize(glm::vec2 size)
 {
 	this->size = size;
 	positions = {
-		{ -size.x / 2, -size. y / 2, 0}, { size.x / 2, -size. y / 2, 0}, { size.x / 2,  size. y / 2, 0}, { -size.x / 2,  size. y / 2, 0} // Frontm
+		{-size.x / 2, -size.y / 2, 0}, {size.x / 2, -size.y / 2, 0}, {size.x / 2, size.y / 2, 0}, {-size.x / 2, size.y / 2, 0} // Front
 	};
 	updateElements("Position", positions);
 }

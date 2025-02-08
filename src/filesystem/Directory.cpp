@@ -1,7 +1,6 @@
 #include <zg/filesystem/Directory.hpp>
 using namespace zg::filesystem;
-Directory::Directory(std::string_view path):
-	path(path)
+Directory::Directory(std::string_view path) : path(path)
 {
 	if (!std::filesystem::exists(path))
 	{

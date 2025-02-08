@@ -13,22 +13,26 @@ namespace zg::strings
 		const std::string_view string;
 		int64_t index = 0;
 		uint32_t currentCodepoint = 0;
+
 	public:
 		Utf8Iterator() = default;
-		explicit Utf8Iterator(const std::string_view string, const int64_t &index = 0) :
-			string(string),
-			index(index)
-		{};
+		explicit Utf8Iterator(const std::string_view string, const int64_t &index = 0) : string(string),
+																						 index(index) {};
+
 	private:
 		static uint8_t getUTF8ByteLength(int8_t byte)
 		{
-			if ((byte & 0x80) == 0x00) return 1;
-			else if ((byte & 0xE0) == 0xC0) return 2;
-			else if ((byte & 0xF0) == 0xE0) return 3;
-			else if ((byte & 0xF8) == 0xF0) return 4;
+			if ((byte & 0x80) == 0x00)
+				return 1;
+			else if ((byte & 0xE0) == 0xC0)
+				return 2;
+			else if ((byte & 0xF0) == 0xE0)
+				return 3;
+			else if ((byte & 0xF8) == 0xF0)
+				return 4;
 			throw std::runtime_error("Invalid UTF-8 leading byte.");
 		}
-		static uint32_t getCodepoint(const char* startingBytePointer)
+		static uint32_t getCodepoint(const char *startingBytePointer)
 		{
 			auto firstByte = *startingBytePointer;
 			uint32_t codepoint = 0;
@@ -46,7 +50,7 @@ namespace zg::strings
 				break;
 			case 4:
 				codepoint = ((firstByte & 0x07) << 18) | ((startingBytePointer[1] & 0x3F) << 12) |
-					    ((startingBytePointer[2] & 0x3F) << 6) | (startingBytePointer[3] & 0x3F);
+							((startingBytePointer[2] & 0x3F) << 6) | (startingBytePointer[3] & 0x3F);
 				break;
 			default:
 				return 0xFFFD;
@@ -81,6 +85,7 @@ namespace zg::strings
 			}
 			return *this;
 		};
+
 	public:
 		[[nodiscard]] bool hasNextCodepoint() const
 		{
@@ -135,14 +140,14 @@ namespace zg::strings
 		reference_type operator*() const
 		{
 			auto stringData = string.data();
-			const_cast<uint32_t&>(currentCodepoint) = getCodepoint(&stringData[index]);
-			return const_cast<uint32_t&>(currentCodepoint);
+			const_cast<uint32_t &>(currentCodepoint) = getCodepoint(&stringData[index]);
+			return const_cast<uint32_t &>(currentCodepoint);
 		};
 		pointer_type operator->() const
 		{
 			auto stringData = string.data();
-			const_cast<uint32_t&>(currentCodepoint) = getCodepoint(&stringData[index]);
-			return &const_cast<uint32_t&>(currentCodepoint);
+			const_cast<uint32_t &>(currentCodepoint) = getCodepoint(&stringData[index]);
+			return &const_cast<uint32_t &>(currentCodepoint);
 		};
 		Utf8Iterator &operator++()
 		{
@@ -176,12 +181,12 @@ namespace zg::strings
 			tmp.devanceNCodepoints(amount);
 			return tmp;
 		};
-		Utf8Iterator& operator+=(int32_t amount)
+		Utf8Iterator &operator+=(int32_t amount)
 		{
 			advanceNCodepoints(amount);
 			return *this;
 		};
-		Utf8Iterator& operator-=(int32_t amount)
+		Utf8Iterator &operator-=(int32_t amount)
 		{
 			devanceNCodepoints(amount);
 			return *this;
@@ -189,32 +194,32 @@ namespace zg::strings
 		friend bool operator==(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
-			       a.index == b.index;
+				   a.index == b.index;
 		};
 		friend bool operator!=(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string != &b.string ||
-			       a.index != b.index;
+				   a.index != b.index;
 		};
 		friend bool operator>(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
-			       a.index > b.index;
+				   a.index > b.index;
 		};
 		friend bool operator>=(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
-			       a.index >= b.index;
+				   a.index >= b.index;
 		};
 		friend bool operator<=(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
-			       a.index <= b.index;
+				   a.index <= b.index;
 		};
 		friend bool operator<(const Utf8Iterator &a, const Utf8Iterator &b)
 		{
 			return &a.string == &b.string &&
-			       a.index < b.index;
+				   a.index < b.index;
 		};
 	};
 }

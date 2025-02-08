@@ -10,11 +10,11 @@ namespace zg
 #ifdef USE_GL
 		void *glContext = 0;
 #elif defined(USE_VULKAN)
-		void* nsImage = 0;
-		void* nsImageView = 0;
+		void *nsImage = 0;
+		void *nsImageView = 0;
 #endif
 		bool closed = false;
-		void init(Window& window) override;
+		void init(Window &window) override;
 		void renderInit();
 		void postInit() override;
 		bool pollMessages() override;

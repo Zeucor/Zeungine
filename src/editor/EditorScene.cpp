@@ -2,178 +2,169 @@
 #include <editor/CodeScene.hpp>
 #include <zg/filesystem/Directory.hpp>
 using namespace zg::editor;
-EditorScene::EditorScene(Window& window):
-	Scene(window, {0, 0, 50}, {0, 0, -1}, {2, 2}),
-	toolbarHeight(window.windowHeight / 14),
-	bottomTabsHeight(window.windowHeight / 18),
-	robotoRegularFile("fonts/Roboto/Roboto-Regular.ttf", enums::EFileLocation::Relative, "r"),
-	robotoRegularFont(window, robotoRegularFile),
-	gameWindowBorderWidth(4.f),
-	gameWindowWidth(window.windowWidth / 1.75f),
-	gameWindowHeight(window.windowHeight / 1.75f),//- toolbarHeight - bottomTabsHeight),
-	gameWindowX(window.windowWidth / 2.f - gameWindowWidth / 2.f),
-	gameWindowY(toolbarHeight + gameWindowBorderWidth),
-	codeWindowWidth(gameWindowWidth + gameWindowBorderWidth * 2),
-	codeWindowHeight(gameWindowHeight + gameWindowBorderWidth * 2),
-	codeWindowX(gameWindowX - gameWindowBorderWidth),
-	codeWindowY(gameWindowY - gameWindowBorderWidth),
-	toolbarColor(35 / 255.f, 33 / 255.f, 36 / 255.f, 1),
-	toolbar(std::make_shared<entities::Toolbar>(
-		window,
-		*this,
-		glm::vec3(-1, 1, 0),
-		glm::vec3(0, 0, 0),
-		glm::vec3(1, 1, 1),
-		toolbarColor,
-		toolbarHeight,
-		robotoRegularFont
-	)),
-	bottomTabsBar(std::make_shared<entities::TabsBar>(
-		window,
-		*this,
-		glm::vec3(-1 + ((gameWindowX - gameWindowBorderWidth) / window.windowWidth / 0.5), ((bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5) - 1, 0),
-		glm::vec3(0),
-		glm::vec3(1),
-		toolbarColor,
-		robotoRegularFont,
-		gameWindowWidth + gameWindowBorderWidth * 2,
-		bottomTabsHeight - gameWindowBorderWidth * 2)),
-	status(std::make_shared<entities::StatusText>(
-		window,
-		*this,
-		glm::vec3(-1, ((bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5) - 1, 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		toolbarColor,
-		robotoRegularFont,
-		(window.windowWidth - gameWindowWidth) / 2,
-		bottomTabsHeight - gameWindowBorderWidth * 2,
-		"Idle"
-	)),
-	gameWindowBorder(std::make_shared<entities::Plane>(
-		window, *this,
-		glm::vec3(-1 + ((gameWindowX + (gameWindowWidth / 2)) / window.windowWidth / 0.5),
-							1 - ((gameWindowY + (gameWindowHeight / 2)) / window.windowHeight / 0.5), 0.1), glm::vec3(0),
-		glm::vec3(1),
-		glm::vec2((gameWindowWidth + gameWindowBorderWidth * 2) / (window.windowWidth / 2),
-							(gameWindowHeight + gameWindowBorderWidth * 2) / (window.windowHeight / 2)),
-		gameWindowBorderColor)),
-	sceneGraphPanelMenu(std::make_shared<entities::PanelMenu>(
-		window, *this,
-		glm::vec3(-1, 1.f - (toolbarHeight / window.windowHeight / 0.5), 0),
-		glm::vec3(0), glm::vec3(1), glm::vec4(0.5, 0.5, 0.5, 1),
-		robotoRegularFont, "Scene Graph",
-		gameWindowX - gameWindowBorderWidth,
-		gameWindowHeight + gameWindowBorderWidth * 2.f)),
-	resourcePanelMenuHeight(window.windowHeight - ((toolbarHeight + gameWindowHeight + bottomTabsHeight))),
-	resourcePanelMenu(std::make_shared<entities::PanelMenu>(
-		window,
-		*this,
-		glm::vec3(-1, 1 - ((toolbarHeight + gameWindowHeight + gameWindowBorderWidth * 2) / window.windowHeight / 0.5), 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		glm::vec4(0.5, 0.5, 0.5, 1),
-		robotoRegularFont,
-		"",
-		window.windowWidth,
-		resourcePanelMenuHeight
-	)),
-	resourceConsole(std::make_shared<entities::Console>(
-		window,
-		*this,
-		glm::vec3(0, 0, 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		toolbarColor,
-		robotoRegularFont,
-		window.windowWidth,
-		resourcePanelMenuHeight - bottomTabsHeight + gameWindowBorderWidth * 2
-	)),
-	resourcePanelTabs(std::make_shared<entities::TabsBar>(
-		window,
-		*this,
-		glm::vec3(0, (-resourcePanelMenuHeight + bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5, 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		toolbarColor,
-		robotoRegularFont,
-		window.windowWidth,
-		bottomTabsHeight - gameWindowBorderWidth * 2)),
-	dialogWidth(window.windowWidth / 3),
-	dialogHeight(window.windowHeight / 5),
-	closeDialogButtonWidth(window.windowWidth / 44.f),
-	closeDialogButtonHeight(window.windowWidth / 44.f),
-	okayDialogButtonWidth(dialogWidth / 6.f),
-	okayDialogButtonHeight(dialogHeight / 4.5f),
-	closeDialogButton(std::make_shared<entities::Button>(
-		window,
-		*this,
-		glm::vec3(
-			(dialogWidth - closeDialogButtonWidth) / window.windowWidth / 0.5,
-			0,
-			0.1),
-		glm::vec3(0),
-    	glm::vec3(1),
-		glm::vec4(1, 0, 0, 1),
-		glm::vec2(closeDialogButtonWidth, closeDialogButtonHeight),
-		"x",
-		robotoRegularFont,
-    	[](){}
-	)),
-	okayDialogButton(std::make_shared<entities::Button>(
-		window,
-		*this,
-		glm::vec3(
-			(dialogWidth - okayDialogButtonWidth) / window.windowWidth / 0.5,
-			(-dialogHeight + okayDialogButtonHeight) / window.windowHeight / 0.5,
-			0.1),
-		glm::vec3(0),
-    	glm::vec3(1),
-		glm::vec4(0.2f, 0, 0.8f, 1),
-		glm::vec2(okayDialogButtonWidth, okayDialogButtonHeight),
-		"Okay",
-		robotoRegularFont,
-    	[](){}
-	)),
-	projectNameInput(std::make_shared<entities::Input>(
-		window,
-		*this,
-		glm::vec3(16 / window.windowWidth / 0.5, -30 / window.windowHeight / 0.5, 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		glm::vec4(0.5, 0.5, 0.5, 1),
-		robotoRegularFont,
-		dialogWidth - 32,
-	    dialogHeight / 4.5f,
-	    "Project Name",
-		128.f
-	)),
-	projectDirectoryInput(std::make_shared<entities::Input>(
-		window,
-		*this,
-		glm::vec3(16 / window.windowWidth / 0.5, -((dialogHeight / 4.5f) * 2) / window.windowHeight / 0.5, 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		glm::vec4(0.5, 0.5, 0.5, 1),
-		robotoRegularFont,
-		dialogWidth - 32,
-	    dialogHeight / 4.5f,
-	    "Project Directory",
-		128.f
-	)),
-	newProjectDialog(std::make_shared<entities::Dialog>(
-		window,
-		*this,
-		glm::vec3(0, 0, 5.0),
-		glm::vec3(0),
-		glm::vec3(1),
-		glm::vec4(0.6, 0.6, 0.6, 1),
-		robotoRegularFont,
-		"New Project",
-		dialogWidth,
-    	dialogHeight,
-		std::vector<std::shared_ptr<Entity>>({closeDialogButton, okayDialogButton, projectNameInput, projectDirectoryInput})
-  	))
+EditorScene::EditorScene(Window &window) : Scene(window, {0, 0, 50}, {0, 0, -1}, {2, 2}),
+										   toolbarHeight(window.windowHeight / 14),
+										   bottomTabsHeight(window.windowHeight / 18),
+										   robotoRegularFile("fonts/Roboto/Roboto-Regular.ttf", enums::EFileLocation::Relative, "r"),
+										   robotoRegularFont(window, robotoRegularFile),
+										   gameWindowBorderWidth(4.f),
+										   gameWindowWidth(window.windowWidth / 1.75f),
+										   gameWindowHeight(window.windowHeight / 1.75f), //- toolbarHeight - bottomTabsHeight),
+										   gameWindowX(window.windowWidth / 2.f - gameWindowWidth / 2.f),
+										   gameWindowY(toolbarHeight + gameWindowBorderWidth),
+										   codeWindowWidth(gameWindowWidth + gameWindowBorderWidth * 2),
+										   codeWindowHeight(gameWindowHeight + gameWindowBorderWidth * 2),
+										   codeWindowX(gameWindowX - gameWindowBorderWidth),
+										   codeWindowY(gameWindowY - gameWindowBorderWidth),
+										   toolbarColor(35 / 255.f, 33 / 255.f, 36 / 255.f, 1),
+										   toolbar(std::make_shared<entities::Toolbar>(
+											   window,
+											   *this,
+											   glm::vec3(-1, 1, 0),
+											   glm::vec3(0, 0, 0),
+											   glm::vec3(1, 1, 1),
+											   toolbarColor,
+											   toolbarHeight,
+											   robotoRegularFont)),
+										   bottomTabsBar(std::make_shared<entities::TabsBar>(
+											   window,
+											   *this,
+											   glm::vec3(-1 + ((gameWindowX - gameWindowBorderWidth) / window.windowWidth / 0.5), ((bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5) - 1, 0),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   toolbarColor,
+											   robotoRegularFont,
+											   gameWindowWidth + gameWindowBorderWidth * 2,
+											   bottomTabsHeight - gameWindowBorderWidth * 2)),
+										   status(std::make_shared<entities::StatusText>(
+											   window,
+											   *this,
+											   glm::vec3(-1, ((bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5) - 1, 0.1),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   toolbarColor,
+											   robotoRegularFont,
+											   (window.windowWidth - gameWindowWidth) / 2,
+											   bottomTabsHeight - gameWindowBorderWidth * 2,
+											   "Idle")),
+										   gameWindowBorder(std::make_shared<entities::Plane>(
+											   window, *this,
+											   glm::vec3(-1 + ((gameWindowX + (gameWindowWidth / 2)) / window.windowWidth / 0.5),
+														 1 - ((gameWindowY + (gameWindowHeight / 2)) / window.windowHeight / 0.5), 0.1),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   glm::vec2((gameWindowWidth + gameWindowBorderWidth * 2) / (window.windowWidth / 2),
+														 (gameWindowHeight + gameWindowBorderWidth * 2) / (window.windowHeight / 2)),
+											   gameWindowBorderColor)),
+										   sceneGraphPanelMenu(std::make_shared<entities::PanelMenu>(
+											   window, *this,
+											   glm::vec3(-1, 1.f - (toolbarHeight / window.windowHeight / 0.5), 0),
+											   glm::vec3(0), glm::vec3(1), glm::vec4(0.5, 0.5, 0.5, 1),
+											   robotoRegularFont, "Scene Graph",
+											   gameWindowX - gameWindowBorderWidth,
+											   gameWindowHeight + gameWindowBorderWidth * 2.f)),
+										   resourcePanelMenuHeight(window.windowHeight - ((toolbarHeight + gameWindowHeight + bottomTabsHeight))),
+										   resourcePanelMenu(std::make_shared<entities::PanelMenu>(
+											   window,
+											   *this,
+											   glm::vec3(-1, 1 - ((toolbarHeight + gameWindowHeight + gameWindowBorderWidth * 2) / window.windowHeight / 0.5), 0.1),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   glm::vec4(0.5, 0.5, 0.5, 1),
+											   robotoRegularFont,
+											   "",
+											   window.windowWidth,
+											   resourcePanelMenuHeight)),
+										   resourceConsole(std::make_shared<entities::Console>(
+											   window,
+											   *this,
+											   glm::vec3(0, 0, 0.1),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   toolbarColor,
+											   robotoRegularFont,
+											   window.windowWidth,
+											   resourcePanelMenuHeight - bottomTabsHeight + gameWindowBorderWidth * 2)),
+										   resourcePanelTabs(std::make_shared<entities::TabsBar>(
+											   window,
+											   *this,
+											   glm::vec3(0, (-resourcePanelMenuHeight + bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5, 0.1),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   toolbarColor,
+											   robotoRegularFont,
+											   window.windowWidth,
+											   bottomTabsHeight - gameWindowBorderWidth * 2)),
+										   dialogWidth(window.windowWidth / 3),
+										   dialogHeight(window.windowHeight / 5),
+										   closeDialogButtonWidth(window.windowWidth / 44.f),
+										   closeDialogButtonHeight(window.windowWidth / 44.f),
+										   okayDialogButtonWidth(dialogWidth / 6.f),
+										   okayDialogButtonHeight(dialogHeight / 4.5f),
+										   closeDialogButton(std::make_shared<entities::Button>(
+											   window,
+											   *this,
+											   glm::vec3(
+												   (dialogWidth - closeDialogButtonWidth) / window.windowWidth / 0.5,
+												   0,
+												   0.1),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   glm::vec4(1, 0, 0, 1),
+											   glm::vec2(closeDialogButtonWidth, closeDialogButtonHeight),
+											   "x",
+											   robotoRegularFont,
+											   []() {})),
+										   okayDialogButton(std::make_shared<entities::Button>(
+											   window,
+											   *this,
+											   glm::vec3(
+												   (dialogWidth - okayDialogButtonWidth) / window.windowWidth / 0.5,
+												   (-dialogHeight + okayDialogButtonHeight) / window.windowHeight / 0.5,
+												   0.1),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   glm::vec4(0.2f, 0, 0.8f, 1),
+											   glm::vec2(okayDialogButtonWidth, okayDialogButtonHeight),
+											   "Okay",
+											   robotoRegularFont,
+											   []() {})),
+										   projectNameInput(std::make_shared<entities::Input>(
+											   window,
+											   *this,
+											   glm::vec3(16 / window.windowWidth / 0.5, -30 / window.windowHeight / 0.5, 0.1),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   glm::vec4(0.5, 0.5, 0.5, 1),
+											   robotoRegularFont,
+											   dialogWidth - 32,
+											   dialogHeight / 4.5f,
+											   "Project Name",
+											   128.f)),
+										   projectDirectoryInput(std::make_shared<entities::Input>(
+											   window,
+											   *this,
+											   glm::vec3(16 / window.windowWidth / 0.5, -((dialogHeight / 4.5f) * 2) / window.windowHeight / 0.5, 0.1),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   glm::vec4(0.5, 0.5, 0.5, 1),
+											   robotoRegularFont,
+											   dialogWidth - 32,
+											   dialogHeight / 4.5f,
+											   "Project Directory",
+											   128.f)),
+										   newProjectDialog(std::make_shared<entities::Dialog>(
+											   window,
+											   *this,
+											   glm::vec3(0, 0, 5.0),
+											   glm::vec3(0),
+											   glm::vec3(1),
+											   glm::vec4(0.6, 0.6, 0.6, 1),
+											   robotoRegularFont,
+											   "New Project",
+											   dialogWidth,
+											   dialogHeight,
+											   std::vector<std::shared_ptr<Entity>>({closeDialogButton, okayDialogButton, projectNameInput, projectDirectoryInput})))
 {
 	(*projectNameInput->textPointer) = "EditorGame";
 	(*projectDirectoryInput->textPointer) = "C:/Users/Steven/Projects/EditorGame";
@@ -197,11 +188,10 @@ EditorScene::EditorScene(Window& window):
 	addEntity(sceneGraphPanelMenu);
 	addEntity(resourcePanelMenu);
 	resourcePanelTabs->addTab("Console", [&]
-	{
+							  {
 		removeActiveResourceEntity();
 		resourcePanelMenu->addPanelEntity(resourceConsole, false);
-		activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceConsole);
-	}, true);
+		activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceConsole); }, true);
 	resourcePanelMenu->addPanelEntity(resourceConsole, false);
 	activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceConsole);
 	resourcePanelMenu->addPanelEntity(resourcePanelTabs, false);
@@ -213,8 +203,8 @@ EditorScene::EditorScene(Window& window):
 	addEntity(gameWindowBorder);
 	setupGameWindow();
 	setupCodeWindow();
-	resizeID = view.addResizeHandler([&](auto newSize)mutable
-	{
+	resizeID = view.addResizeHandler([&](auto newSize) mutable
+									 {
 		toolbarHeight = newSize.y / 14;
 		bottomTabsHeight = newSize.y / 18;
 		gameWindowWidth = window.windowWidth / 1.75f;
@@ -228,19 +218,16 @@ EditorScene::EditorScene(Window& window):
 		codeWindowX = gameWindowX - gameWindowBorderWidth;
 		codeWindowY = gameWindowY - gameWindowBorderWidth;
 		codeWindowPointer->setWidthHeight(codeWindowWidth, codeWindowHeight);
-		codeWindowPointer->setXY(codeWindowX, codeWindowY);
-	});
+		codeWindowPointer->setXY(codeWindowX, codeWindowY); });
 	bottomTabsBar->addTab("Scene", [&]()
-	{
+						  {
 		minimizeWindows();
 		addEntity(gameWindowBorder);
-		gameWindowPointer->restore();
-	}, true);
+		gameWindowPointer->restore(); }, true);
 	bottomTabsBar->addTab("Code Editor", [&]()
-	{
+						  {
 		minimizeWindows();
-		codeWindowPointer->restore();
-	});
+		codeWindowPointer->restore(); });
 	std::cout << "Opened ZG Editor" << std::endl;
 };
 EditorScene::~EditorScene()
@@ -249,9 +236,9 @@ EditorScene::~EditorScene()
 	gameWindowBorder->removeMouseHoverHandler(gameWindowBorderHoverID);
 	gameWindowBorder->removeMousePressHandler(0, gameWindowBorderPressID);
 };
-void EditorScene::onEntityAdded(const std::shared_ptr<IEntity>& entity)
+void EditorScene::onEntityAdded(const std::shared_ptr<IEntity> &entity)
 {
-	auto& glEntity = *std::dynamic_pointer_cast<Entity>(entity);
+	auto &glEntity = *std::dynamic_pointer_cast<Entity>(entity);
 	auto sizeYTotal = sceneGraphPanelMenu->getSizeYTotal();
 	static const auto indent = 16.f;
 	auto panelItem = std::make_shared<entities::PanelItem>(
@@ -270,7 +257,7 @@ void EditorScene::onEntityAdded(const std::shared_ptr<IEntity>& entity)
 };
 void EditorScene::setupGameWindow()
 {
-	auto& gameWindow = window.createChildWindow(
+	auto &gameWindow = window.createChildWindow(
 		"EditorChild",
 		*this,
 		gameWindowWidth,
@@ -278,20 +265,19 @@ void EditorScene::setupGameWindow()
 		gameWindowX,
 		gameWindowY,
 		true);
-  	gameWindowPointer = (Window *)&gameWindow;
+	gameWindowPointer = (Window *)&gameWindow;
 	gameWindow.minimize();
-	std::function<void(const std::shared_ptr<IEntity>&)> entityAddedFunction = std::bind(
+	std::function<void(const std::shared_ptr<IEntity> &)> entityAddedFunction = std::bind(
 		&EditorScene::onEntityAdded, this, std::placeholders::_1);
 	gameWindow.registerOnEntityAddedFunction(entityAddedFunction);
-	gameWindowBorderHoverID = gameWindowBorder->addMouseHoverHandler([&](const auto& hovered)
-	{
+	gameWindowBorderHoverID = gameWindowBorder->addMouseHoverHandler([&](const auto &hovered)
+																	 {
 		if (hovered)
 			gameWindowBorder->setColor(gameWindowHoveredBorderColor);
 		else
-			gameWindowBorder->setColor(gameWindowBorderColor);
-	});
-	gameWindowBorderPressID = gameWindowBorder->addMousePressHandler(0, [&](const auto& pressed)
-	{
+			gameWindowBorder->setColor(gameWindowBorderColor); });
+	gameWindowBorderPressID = gameWindowBorder->addMousePressHandler(0, [&](const auto &pressed)
+																	 {
 		if (pressed)
 		{
 			gameWindowPointer->focused = true;
@@ -300,21 +286,19 @@ void EditorScene::setupGameWindow()
 				currentHoveredEntity = 0;
 			}
 			gameWindowBorder->setColor(gameWindowActiveBorderColor);
-		}
-	});
-	gameWindowESCPressID = gameWindowPointer->addKeyPressHandler(27, [&](const auto& pressed)
-	{
+		} });
+	gameWindowESCPressID = gameWindowPointer->addKeyPressHandler(27, [&](const auto &pressed)
+																 {
 		if (!pressed)
 		{
 			gameWindowPointer->focused = false;
 			auto &glWindow = (Window&)window;
 			window.callMouseMoveHandler(glWindow.mouseCoords);
-		}
-	});
+		} });
 };
 void EditorScene::setupCodeWindow()
 {
-	auto& codeWindow = window.createChildWindow(
+	auto &codeWindow = window.createChildWindow(
 		"Code Editor",
 		*this,
 		codeWindowWidth,
@@ -322,13 +306,13 @@ void EditorScene::setupCodeWindow()
 		codeWindowX,
 		codeWindowY,
 		true);
-  codeWindowPointer = (Window *)&codeWindow;
+	codeWindowPointer = (Window *)&codeWindow;
 	codeWindow.minimize();
 	codeWindow.setIScene(std::make_shared<CodeScene>((Window &)codeWindow));
 };
 void EditorScene::minimizeWindows()
 {
-  auto& glWindow = (Window&)window;
+	auto &glWindow = (Window &)window;
 	for (auto &windowPointer : glWindow.childWindows)
 	{
 		if (!windowPointer->minimized)
@@ -352,44 +336,34 @@ void EditorScene::setupToolbarOptions()
 {
 	auto &fileDropdown = *toolbar->fileDropdown;
 	fileDropdown.addOption("New Project", [&]()
-	{
+						   {
 		addEntity(newProjectDialog);
 		activeDialog = newProjectDialog;
 		bvh->removeEntity(*this, *toolbar->fileDropdown);
-		toolbar->file->removeChild(toolbar->fileDropdownID);
-	});
-	fileDropdown.addOption("Open Project", []()
-	{
+		toolbar->file->removeChild(toolbar->fileDropdownID); });
+	fileDropdown.addOption("Open Project", []() {
 
 	});
-	fileDropdown.addOption("Save", []()
-	{
+	fileDropdown.addOption("Save", []() {
 
 	});
-	fileDropdown.addOption("Save As", []()
-	{
+	fileDropdown.addOption("Save As", []() {
 
 	});
-	fileDropdown.addOption("Import Assets", []()
-	{
+	fileDropdown.addOption("Import Assets", []() {
 
 	});
-	fileDropdown.addOption("Export", []()
-	{
+	fileDropdown.addOption("Export", []() {
 
 	});
-	fileDropdown.addOption("Recent Files", []()
-	{
+	fileDropdown.addOption("Recent Files", []() {
 
 	});
-	fileDropdown.addOption("Settings", []()
-	{
+	fileDropdown.addOption("Settings", []() {
 
 	});
 	fileDropdown.addOption("Exit", [&]()
-	{
-		window.close();
-	});
+						   { window.close(); });
 }
 void EditorScene::newProject(std::string_view projectName, std::string_view projectDirectory)
 {
@@ -454,16 +428,13 @@ void EditorScene::loadProject(std::string_view projectDirectory)
 		resourcePanelMenuHeight - bottomTabsHeight,
 		projectDirectory);
 	resourcePanelTabs->addTab("Asset Browser", [&]
-	{
+							  {
 		removeActiveResourceEntity();
 		if (resourceAssetBrowser)
 		{
 			resourcePanelMenu->addPanelEntity(resourceAssetBrowser, false);
 			activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceAssetBrowser);
-		}
-	});
+		} });
 	resourcePanelTabs->addTab("Performance", [&]
-	{
-		removeActiveResourceEntity();
-	});
+							  { removeActiveResourceEntity(); });
 };

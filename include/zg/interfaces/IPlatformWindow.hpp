@@ -33,7 +33,7 @@ namespace zg
 	inline static constexpr uint8_t WINDOW_TYPE_ANDROID = 32;
 	inline static constexpr uint8_t WINDOW_TYPE_IOS = 64;
 	inline static uint8_t SELECTED_WINDOW_TYPE = ([]
-	{
+												  {
 		uint8_t selected = 0;
 #ifdef USE_WIN32
 		selected = WINDOW_TYPE_WIN32;
@@ -66,7 +66,6 @@ namespace zg
 #endif
 		}
 #endif
-		return selected;
-	})();
-	IPlatformWindow* createPlatformWindow();
+		return selected; })();
+	IPlatformWindow *createPlatformWindow();
 }

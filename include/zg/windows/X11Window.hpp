@@ -11,7 +11,7 @@ namespace zg
 	struct X11Window : IPlatformWindow
 	{
 		Display *display = 0;
-		xcb_connection_t* connection = 0;
+		xcb_connection_t *connection = 0;
 		int32_t defaultRootWindow = 0;
 		int32_t screen = 0;
 		unsigned long window = 0;
@@ -23,7 +23,7 @@ namespace zg
 		GLXFBConfig bestFbc;
 		GLXContext glcontext;
 #endif
-		void init(Window& window) override;
+		void init(Window &window) override;
 		void renderInit();
 		void postInit() override;
 		bool pollMessages() override;

@@ -8,17 +8,17 @@
 
 namespace zg::filesystem
 {
-	struct File {
+	struct File
+	{
 	public:
 		File() = default;
-		File(const std::string& filePath, enums::EFileLocation fileLocation = enums::EFileLocation::Relative, const std::string& mode = "a+");
-		File& operator=(const File& other);
+		File(const std::string &filePath, enums::EFileLocation fileLocation = enums::EFileLocation::Relative, const std::string &mode = "a+");
+		File &operator=(const File &other);
 		~File();
-
 		bool open();
 		bool close();
-		bool readBytes(size_t index, size_t sizeBytes, void* pointer);
-		bool writeBytes(size_t index, size_t sizeBytes, const void* pointer);
+		bool readBytes(size_t index, size_t sizeBytes, void *pointer);
+		bool writeBytes(size_t index, size_t sizeBytes, const void *pointer);
 		bool truncate(size_t newFileSize);
 		bool sync();
 		size_t size();
@@ -26,8 +26,8 @@ namespace zg::filesystem
 		time_t lastModified() const;
 		bool remove();
 		std::string toString();
-    std::shared_ptr<int8_t[]> toBytes();
-		static bool exists(const std::string& path);
+		std::shared_ptr<int8_t[]> toBytes();
+		static bool exists(const std::string &path);
 		static std::string getUserDirectoryPath();
 		static std::string getProgramDirectoryPath();
 		static std::string getProgramDataPath();

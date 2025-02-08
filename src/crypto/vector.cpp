@@ -4,12 +4,12 @@ std::size_t zg::crypto::combineHashes(size_t hash1, size_t hash2)
 	return hash1 ^ (hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2)); // Knuth's hash combining
 };
 template <typename T>
-std::size_t zg::crypto::hashVector(const std::vector<T>& vec)
+std::size_t zg::crypto::hashVector(const std::vector<T> &vec)
 {
 	std::size_t combinedHash = 0;
-	for (const auto& val : vec)
+	for (const auto &val : vec)
 	{
-		auto valHash = std::hash<T>{}(val); // Hash each value
+		auto valHash = std::hash<T>{}(val);					 // Hash each value
 		combinedHash = combineHashes(combinedHash, valHash); // Combine the hashes
 	}
 	return combinedHash;

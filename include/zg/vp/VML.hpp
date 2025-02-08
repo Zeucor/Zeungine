@@ -2,7 +2,7 @@
 #include "../Scene.hpp"
 namespace zg::vp
 {
-	struct VML
+  struct VML
   {
     Scene &scene;
     uint32_t mouseMoveID = 0;

@@ -718,7 +718,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
 	                	++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
 	                	{
                       auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                      shader.addUBO(ShaderType::Fragment, "TextColor", bindingIndex, sizeof(glm::vec3));
+                      shader.addUBO(ShaderType::Fragment, "TextColor", bindingIndex, sizeof(glm::vec4));
 	                		return "layout(binding = " + std::to_string(bindingIndex) + ") uniform TextColor {\n"
                       "  vec4 value;\n"
                       "} textColor;";

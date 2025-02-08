@@ -20,17 +20,17 @@ namespace zg::shaders
 		static uint32_t currentInLayoutIndex;
 		static uint32_t currentOutLayoutIndex;
 		static uint32_t currentBindingIndex;
-		static ShaderMap generateShaderMap(const RuntimeConstants& constants, Shader& shader,
-																			 const std::vector<ShaderType>& shaderTypes);
-		static ShaderPair generateShader(const ShaderType& shaderType, const RuntimeConstants& runtimeConstants,
-																		 Shader& shader);
-		static void appendHooks(std::string& shaderString, RuntimeHooksMap& runtimeHooks, const RuntimeConstants& constants,
-														Shader& shader);
-		static bool compileShader(Shader& shader, ShaderType shaderType, ShaderPair& shaderPair);
-		static bool compileProgram(Shader& shader);
-		static void deleteProgram(Shader& shader);
-		static uint32_t addHook(const ShaderType& shaderType, const std::string_view hookName,
-														const std::string_view runtimeConstant, const Shader::ShaderHook& hook);
+		static ShaderMap generateShaderMap(const RuntimeConstants &constants, Shader &shader,
+										   const std::vector<ShaderType> &shaderTypes);
+		static ShaderPair generateShader(const ShaderType &shaderType, const RuntimeConstants &runtimeConstants,
+										 Shader &shader);
+		static void appendHooks(std::string &shaderString, RuntimeHooksMap &runtimeHooks, const RuntimeConstants &constants,
+								Shader &shader);
+		static bool compileShader(Shader &shader, ShaderType shaderType, ShaderPair &shaderPair);
+		static bool compileProgram(Shader &shader);
+		static void deleteProgram(Shader &shader);
+		static uint32_t addHook(const ShaderType &shaderType, const std::string_view hookName,
+								const std::string_view runtimeConstant, const Shader::ShaderHook &hook);
 		static void deleteHook(uint32_t id);
 	};
 }; // namespace zg::shaders

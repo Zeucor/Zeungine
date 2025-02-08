@@ -14,11 +14,11 @@ namespace zg
 		glm::vec3 rotation;
 		glm::vec3 scale;
 		glm::mat4 model;
-		shaders::Shader& shader;
+		shaders::Shader &shader;
 		bool affectedByShadows = true;
 		size_t childrenCount = 0;
 		std::map<size_t, std::shared_ptr<Entity>> children;
-		Entity* parentEntity = 0;
+		Entity *parentEntity = 0;
 		bool addToBVH = true;
 		std::unordered_map<IWindow::Button, int> buttons;
 		std::unordered_map<
@@ -30,30 +30,31 @@ namespace zg
 		using MouseHoverHandler = std::function<void(bool)>;
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		std::string name;
-		Entity(Window& _window, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
-					 const std::vector<uint32_t>& indices, uint32_t elementCount, const std::vector<glm::vec3>& positions,
-					 glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, std::string_view name);
+		bool ensured = false;
+		Entity(Window &_window, const shaders::RuntimeConstants &constants, uint32_t indiceCount,
+			   const std::vector<uint32_t> &indices, uint32_t elementCount, const std::vector<glm::vec3> &positions,
+			   glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, std::string_view name);
 		virtual void update() override;
 		virtual void preRender();
 		void render() override;
 		virtual void postRender();
-		const glm::mat4& getModelMatrix();
-		size_t addChild(const std::shared_ptr<Entity>& child);
-		void removeChild(size_t& ID);
-		IWindow::EventIdentifier addMousePressHandler(const IWindow::Button& button,
-																									const IWindow::MousePressHandler& callback);
-		void removeMousePressHandler(const IWindow::Button& button, IWindow::EventIdentifier& id);
-		IWindow::EventIdentifier addMouseMoveHandler(const IWindow::MouseMoveHandler& callback);
-		void removeMouseMoveHandler(IWindow::EventIdentifier& id);
-		IWindow::EventIdentifier addMouseHoverHandler(const MouseHoverHandler& callback);
-		void removeMouseHoverHandler(IWindow::EventIdentifier& id);
-		void callMousePressHandler(const IWindow::Button& button, int pressed);
+		const glm::mat4 &getModelMatrix();
+		size_t addChild(const std::shared_ptr<Entity> &child);
+		void removeChild(size_t &ID);
+		IWindow::EventIdentifier addMousePressHandler(const IWindow::Button &button,
+													  const IWindow::MousePressHandler &callback);
+		void removeMousePressHandler(const IWindow::Button &button, IWindow::EventIdentifier &id);
+		IWindow::EventIdentifier addMouseMoveHandler(const IWindow::MouseMoveHandler &callback);
+		void removeMouseMoveHandler(IWindow::EventIdentifier &id);
+		IWindow::EventIdentifier addMouseHoverHandler(const MouseHoverHandler &callback);
+		void removeMouseHoverHandler(IWindow::EventIdentifier &id);
+		void callMousePressHandler(const IWindow::Button &button, int pressed);
 		void callMouseMoveHandler(glm::vec2 coords);
 		void callMouseHoverHandler(bool hovered);
-		template<typename T>
-		void flipUVsY(std::vector<T>& uvs)
+		template <typename T>
+		void flipUVsY(std::vector<T> &uvs)
 		{
-			for (auto& uv : uvs)
+			for (auto &uv : uvs)
 			{
 				uv.y = 1 - uv.y;
 			}

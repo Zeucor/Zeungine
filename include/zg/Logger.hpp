@@ -14,7 +14,7 @@ namespace zg
 			Info,
 			Error
 		};
-		template<typename... Args>
+		template <typename... Args>
 		static void print(LogType logType, Args... args)
 		{
 			auto logTypeIter = logTypeMap.find(logType);
@@ -27,11 +27,12 @@ namespace zg
 			logArgs(args...);
 			std::cout << std::endl;
 		};
+
 	private:
 		static std::mutex m_mutex;
 		static std::unordered_map<LogType, std::string> logTypeMap;
-		static void logArgs(){};
-		template<typename T, typename... Args>
+		static void logArgs() {};
+		template <typename T, typename... Args>
 		static void logArgs(T value, Args... args)
 		{
 			std::cout << value;

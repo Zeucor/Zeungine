@@ -31,11 +31,11 @@ namespace zg::raytracing
 	using Ray = bvh::v2::Ray<Scalar, 3>;
 	using ThreadPool = bvh::v2::ThreadPool;
 	using ParallelExecutor = bvh::v2::ParallelExecutor;
-  using Config = bvh::v2::DefaultBuilder<Node>::Config;
+	using Config = bvh::v2::DefaultBuilder<Node>::Config;
 	using PrecomputedTri = bvh::v2::PrecomputedTri<Scalar>;
-  using Builder = bvh::v2::DefaultBuilder<Node>;
+	using Builder = bvh::v2::DefaultBuilder<Node>;
 	struct BVH
-  {
+	{
 		std::vector<Tri> triangles;
 		std::vector<PrecomputedTri> precomputedTriangles;
 		ThreadPool threadPool;
@@ -43,26 +43,26 @@ namespace zg::raytracing
 		std::vector<BBox> bboxes;
 		std::vector<Vec3> centers;
 		Config config;
-    Bvh bvh;
+		Bvh bvh;
 		bool changed = false;
 		bool built = false;
-    BVH();
-    Config getDefaultConfig();
+		BVH();
+		Config getDefaultConfig();
 		void buildBBoxesAndCenters();
-    void buildBVH();
-    void precomputeTriangles();
+		void buildBVH();
+		void precomputeTriangles();
 		glm::vec3 unProject(glm::vec3 win, const glm::mat4 &inverseProjectionView, glm::vec4 viewport);
-    Ray mouseCoordToRay(uint32_t windowHeight,
-                        glm::vec2 screenCoord,
-												glm::vec4 viewport,
-												const glm::mat4 &projection,
-												const glm::mat4 &view,
-												float nearPlane,
-												float farPlane);
+		Ray mouseCoordToRay(uint32_t windowHeight,
+							glm::vec2 screenCoord,
+							glm::vec4 viewport,
+							const glm::mat4 &projection,
+							const glm::mat4 &view,
+							float nearPlane,
+							float farPlane);
 		size_t trace(Ray &ray);
 		size_t addTriangle(const Tri &tri);
 		void addEntity(Entity &entity);
 		void updateEntity(Entity &entity);
 		void removeEntity(Scene &scene, Entity &entity);
-  };
+	};
 }

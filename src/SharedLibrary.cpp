@@ -1,7 +1,7 @@
 #include <zg/SharedLibrary.hpp>
 using namespace zg;
 SharedLibrary::SharedLibrary(std::string_view path)
-		: libraryPointer(nullptr)
+	: libraryPointer(nullptr)
 {
 #ifdef _WIN32
 	libraryPointer = LoadLibraryA(path.data());
@@ -12,7 +12,7 @@ SharedLibrary::SharedLibrary(std::string_view path)
 	{
 		throw std::runtime_error("Failed to load library: " + std::string(path));
 	}
-};
+}
 SharedLibrary::~SharedLibrary()
 {
 	if (libraryPointer)
@@ -23,13 +23,13 @@ SharedLibrary::~SharedLibrary()
 		dlclose(libraryPointer);
 #endif
 	}
-};
-SharedLibrary::SharedLibrary(SharedLibrary&& other) noexcept
-		: libraryPointer(other.libraryPointer)
+}
+SharedLibrary::SharedLibrary(SharedLibrary &&other) noexcept
+	: libraryPointer(other.libraryPointer)
 {
 	other.libraryPointer = nullptr;
-};
-SharedLibrary& SharedLibrary::operator=(SharedLibrary&& other) noexcept
+}
+SharedLibrary &SharedLibrary::operator=(SharedLibrary &&other) noexcept
 {
 	if (this != &other)
 	{
@@ -46,4 +46,4 @@ SharedLibrary& SharedLibrary::operator=(SharedLibrary&& other) noexcept
 		other.libraryPointer = nullptr;
 	}
 	return *this;
-};
+}

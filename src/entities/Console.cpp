@@ -3,69 +3,58 @@
 #include <iostream>
 using namespace zg::entities;
 Console::Console(zg::Window &window,
-				             zg::Scene &scene,
-				             glm::vec3 position,
-				             glm::vec3 rotation,
-				             glm::vec3 scale,
-				             glm::vec4 backgroundColor,
-				             fonts::freetype::FreetypeFont &font,
-										 float width,
-										 float height,
-				             const zg::shaders::RuntimeConstants &constants,
-                     std::string_view name):
-	zg::Entity(
-		window,
-		zg::mergeVectors<std::string_view>({
-			{
-				"Color", "Position",
-				"View", "Projection", "Model", "CameraPosition"
-			}
-		}, constants),
-		6,
-		{0, 1, 2,  2, 3, 0},
-    4,
-		{
-			{ 0, -0, 0 }, { 0, -0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }
-		},
-		position,
-		rotation,
-		scale,
-		name.empty() ? "Console " + std::to_string(++consolesCount) : name
-	),
-	scene(scene),
-	backgroundColor(backgroundColor),
-	font(font),
-	width(width),
-	height(height),
-	hookedConsole([&](auto &lines) {
-		hookedCallback(lines);
-	})
+				 zg::Scene &scene,
+				 glm::vec3 position,
+				 glm::vec3 rotation,
+				 glm::vec3 scale,
+				 glm::vec4 backgroundColor,
+				 fonts::freetype::FreetypeFont &font,
+				 float width,
+				 float height,
+				 const zg::shaders::RuntimeConstants &constants,
+				 std::string_view name) : zg::Entity(window,
+													 zg::mergeVectors<std::string_view>({{"Color", "Position",
+																						  "View", "Projection", "Model", "CameraPosition"}},
+																						constants),
+													 6,
+													 {0, 1, 2, 2, 3, 0},
+													 4,
+													 {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}},
+													 position,
+													 rotation,
+													 scale,
+													 name.empty() ? "Console " + std::to_string(++consolesCount) : name),
+										  scene(scene),
+										  backgroundColor(backgroundColor),
+										  font(font),
+										  width(width),
+										  height(height),
+										  hookedConsole([&](auto &lines)
+														{ hookedCallback(lines); })
 {
 	updateIndices(indices);
 	setBackgroundColor(backgroundColor);
 	updateElements("Position", positions);
 	Console::setSize(glm::vec3(0));
 	this->addMousePressHandler(3, [&](auto pressed)
-	{
+							   {
 		if (pressed && currentIndex < consoleTextViews.size() - 1)
 		{
 			currentIndex++;
 			showConsoleLines();
-		}
-	});
+		} });
 	this->addMousePressHandler(4, [&](auto pressed)
-	{
+							   {
 		if (pressed && currentIndex > 0)
 		{
 			currentIndex--;
 			showConsoleLines();
-		}
-	});
+		} });
 };
 void Console::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind();
+	shader.bind(*this);
 	scene.entityPreRender(*this);
 	shader.setBlock("Model", *this, model);
 	shader.setBlock("View", *this, scene.view.matrix);
@@ -83,15 +72,14 @@ void Console::setSize(glm::vec3 newSize)
 {
 	glm::vec3 actualNewSize(width / window.windowWidth / 0.5, height / window.windowHeight / 0.5, 0);
 	positions = {
-		{ 0, -actualNewSize.y, 0 }, { actualNewSize.x, -actualNewSize.y, 0 }, { actualNewSize.x, 0, 0 }, { 0, 0, 0 }
-	};
+		{0, -actualNewSize.y, 0}, {actualNewSize.x, -actualNewSize.y, 0}, {actualNewSize.x, 0, 0}, {0, 0, 0}};
 	updateElements("Position", positions);
 	size = actualNewSize;
 }
 void Console::hookedCallback(const std::vector<std::string> &lines)
 {
 	window.runOnThread([&, lines](auto &iwindow)
-	{
+					   {
 		auto addLine = [&](auto& line)
 		{
 			auto index = consoleTextViews.size();
@@ -127,8 +115,7 @@ void Console::hookedCallback(const std::vector<std::string> &lines)
 		{
 			addLine(line);
 		}
-		showConsoleLines();
-	});
+		showConsoleLines(); });
 }
 void Console::showConsoleLines()
 {

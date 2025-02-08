@@ -12,12 +12,12 @@ namespace zg::entities
 	struct Input : Entity
 	{
 		std::vector<glm::vec4> colors;
-		Scene& scene;
+		Scene &scene;
 		glm::vec2 size;
 		std::string *textPointer = 0;
 		std::shared_ptr<TextView> textView;
-		fonts::freetype::FreetypeFont& font;
-    float width;
+		fonts::freetype::FreetypeFont &font;
+		float width;
 		float height;
 		float NDCWidth;
 		float NDCHeight;
@@ -37,24 +37,24 @@ namespace zg::entities
 		float NDCPadding;
 		inline static size_t inputsCount = 0;
 		inline static Input *activeInput = 0;
-		Input(Window& window,
-					Scene& scene,
-					glm::vec3 position,
-					glm::vec3 rotation,
-					glm::vec3 scale,
-					glm::vec4 backgroundColor,
-					fonts::freetype::FreetypeFont& font,
-          float width,
-					float height,
-          const std::string& placeholderText,
-          float padding = 8,
-					const shaders::RuntimeConstants& constants = {},
-					const std::string_view name = "");
+		Input(Window &window,
+			  Scene &scene,
+			  glm::vec3 position,
+			  glm::vec3 rotation,
+			  glm::vec3 scale,
+			  glm::vec4 backgroundColor,
+			  fonts::freetype::FreetypeFont &font,
+			  float width,
+			  float height,
+			  const std::string &placeholderText,
+			  float padding = 8,
+			  const shaders::RuntimeConstants &constants = {},
+			  const std::string_view name = "");
 		~Input();
 		void preRender() override;
 		void setColor(glm::vec4 color);
-		void setSize(glm::vec2  size);
-		void showTextView(const std::shared_ptr<TextView>& showTextView);
+		void setSize(glm::vec2 size);
+		void showTextView(const std::shared_ptr<TextView> &showTextView);
 		char getShiftedChar(const char &key, bool shiftPressed);
 		void setActive();
 		void setInactive();

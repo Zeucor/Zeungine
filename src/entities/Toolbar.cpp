@@ -1,32 +1,29 @@
 #include <zg/entities/Toolbar.hpp>
 #include <iostream>
 using namespace zg::entities;
-Toolbar::Toolbar(Window &window,
-                 Scene &scene,
-                 glm::vec3 position,
-                 glm::vec3 rotation,
-                 glm::vec3 scale,
-                 glm::vec4 color,
-                 float height,
-								 fonts::freetype::FreetypeFont &font,
-								 std::string_view name):
-	Entity(window, {
-			"Color", "Position",
-			"View", "Projection", "Model", "CameraPosition"
-	}, 6,
-	{
-		0, 1, 2,  2, 3, 0   // Front face
-	}, 4,
-	{
-		{ 0, (-height / window.windowHeight) * 2, 0}, { 2, (-height / window.windowHeight) * 2, 0}, { 2, 0, 0 }, { 0, 0, 0} // Front
-	},
-	position, rotation, scale,
-	name.empty() ? "Toolbar " + std::to_string(++toolbarsCount) : name),
-	colors({color, color, color, color}),
-	scene(scene),
-	font(font),
-	height(height),
-	NDCHeight((height / window.windowHeight) * 2)
+Toolbar::Toolbar(Window &_window,
+				 Scene &scene,
+				 glm::vec3 position,
+				 glm::vec3 rotation,
+				 glm::vec3 scale,
+				 glm::vec4 color,
+				 float height,
+				 fonts::freetype::FreetypeFont &font,
+				 std::string_view name) : Entity(_window, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6,
+												 {
+													 0, 1, 2, 2, 3, 0 // Front face
+												 },
+												 4,
+												 {
+													 {0, (-height / window.windowHeight) * 2, 0}, {2, (-height / window.windowHeight) * 2, 0}, {2, 0, 0}, {0, 0, 0} // Front
+												 },
+												 position, rotation, scale,
+												 name.empty() ? "Toolbar " + std::to_string(++toolbarsCount) : name),
+										  colors({color, color, color, color}),
+										  scene(scene),
+										  font(font),
+										  height(height),
+										  NDCHeight((height / window.windowHeight) * 2)
 {
 	updateIndices(indices);
 	updateElements("Color", colors);
@@ -34,40 +31,38 @@ Toolbar::Toolbar(Window &window,
 	//
 	float toolButtonsX = 2;
 	// X Button
-  xButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (NDCHeight / 4)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(1, 0, 0, 1));
-  addChild(xButton);
-  xString = "x";
-  float xFontSize = height / 1.5;
-  float xLineHeight = 0;
+	xButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (NDCHeight / 4)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(1, 0, 0, 1));
+	addChild(xButton);
+	xString = "x";
+	float xFontSize = height / 1.5;
+	float xLineHeight = 0;
 	auto xTextSize = font.stringSize(xString, xFontSize, xLineHeight, {0, 0});
 	xTextSize.y /= window.windowHeight * 0.5f;
 	xTextSize.x /= window.windowWidth * 0.5f;
-  xTextView = std::make_shared<TextView>(
-  	window,
-  	scene,
-  	glm::vec3(0, 0, 0.1f),
-  	glm::vec3(0),
-  	glm::vec3(1),
-  	glm::vec4(1, 1, 1, 1),
-  	xString,
-  	xTextSize / 2.f,
-  	font,
-  	xFontSize,
+	xTextView = std::make_shared<TextView>(
+		window,
+		scene,
+		glm::vec3(0, 0, 0.1f),
+		glm::vec3(0),
+		glm::vec3(1),
+		glm::vec4(1, 1, 1, 1),
+		xString,
+		xTextSize / 2.f,
+		font,
+		xFontSize,
 		true,
 		TextView::RepositionHandler(),
 		TextView::ResizeHandler(),
 		[&]
 		{
-			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
+			return NDCHeight * window.windowHeight * 0.5f / 2.f;
 		});
-  xButton->addChild(xTextView);
+	xButton->addChild(xTextView);
 	xTextView->addToBVH = false;
 	xButtonLeftMousePressID = xButton->addMousePressHandler(0, [&](auto pressed)
-	{
-		window.close();
-	});
+															{ window.close(); });
 	xButtonMouseHoverID = xButton->addMouseHoverHandler([&](auto hovered)
-	{
+														{
 		if (hovered)
 		{
 			xButton->setColor({0.8, 0, 0, 1});
@@ -75,10 +70,9 @@ Toolbar::Toolbar(Window &window,
 		else
 		{
 			xButton->setColor({1, 0, 0, 1});
-		}
-	});
+		} });
 	// max Button
-	maxButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (xButton->size.x)), -NDCHeight /2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
+	maxButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (xButton->size.x)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
 	addChild(maxButton);
 	maxString = "+";
 	float maxFontSize = height / 1.5;
@@ -102,16 +96,14 @@ Toolbar::Toolbar(Window &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
+			return NDCHeight * window.windowHeight * 0.5f / 2.f;
 		});
 	maxButton->addChild(maxTextView);
 	maxTextView->addToBVH = false;
 	maxButtonLeftMousePressID = maxButton->addMousePressHandler(0, [&](auto pressed)
-	{
-		window.maximize();
-	});
+																{ window.maximize(); });
 	maxButtonMouseHoverID = maxButton->addMouseHoverHandler([&](auto hovered)
-	{
+															{
 		if (hovered)
 		{
 			maxButton->setColor({0.2, 0.2, 0.2, 1});
@@ -119,10 +111,9 @@ Toolbar::Toolbar(Window &window,
 		else
 		{
 			maxButton->setColor({0.4, 0.4, 0.4, 1});
-		}
-	});
+		} });
 	// _ Button
-	_Button = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (maxButton->size.x)), -NDCHeight /2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
+	_Button = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (maxButton->size.x)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
 	addChild(_Button);
 	_String = "-";
 	float FontSize_ = height / 1.5;
@@ -146,16 +137,14 @@ Toolbar::Toolbar(Window &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
+			return NDCHeight * window.windowHeight * 0.5f / 2.f;
 		});
 	_Button->addChild(_TextView);
 	_TextView->addToBVH = false;
 	_ButtonLeftMousePressID = _Button->addMousePressHandler(0, [&](auto pressed)
-	{
-		window.minimize();
-	});
+															{ window.minimize(); });
 	_ButtonMouseHoverID = _Button->addMouseHoverHandler([&](auto hovered)
-	{
+														{
 		if (hovered)
 		{
 			_Button->setColor({0.2, 0.2, 0.2, 1});
@@ -163,8 +152,7 @@ Toolbar::Toolbar(Window &window,
 		else
 		{
 			_Button->setColor({0.4, 0.4, 0.4, 1});
-		}
-	});
+		} });
 	// icon
 	iconTexture.reset(new textures::Texture(window, {128, 128, 1, 0}, std::string_view("images/zeungine-icon.png")));
 	icon = std::make_shared<Plane>(window, scene, glm::vec3(NDCHeight / 4, -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2, NDCHeight), *iconTexture);
@@ -204,13 +192,13 @@ Toolbar::Toolbar(Window &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
+			return NDCHeight * window.windowHeight * 0.5f / 2.f;
 		});
 	fileTextView->addToBVH = false;
 	file->addChild(fileTextView);
 	fileDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-file->size.x / 2, -file->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
 	filePressID = file->addMousePressHandler(0, [&](auto pressed)
-	{
+											 {
 		if (!pressed)
 		{
 			if (fileDropdownID)
@@ -228,10 +216,9 @@ Toolbar::Toolbar(Window &window,
 				if (helpDropdownID)
 					help->callMousePressHandler(0, false);
 			}
-		}
-	});
+		} });
 	fileHoverID = file->addMouseHoverHandler([&, color](auto hovered)
-	{
+											 {
 		if (hovered)
 		{
 			file->setColor({0.6, 0.6, 0.6, 1});
@@ -243,8 +230,7 @@ Toolbar::Toolbar(Window &window,
 		else
 		{
 			file->setColor(color);
-		}
-	});
+		} });
 	// Edit
 	editString = "Edit";
 	float editFontSize = height / 2;
@@ -276,49 +262,40 @@ Toolbar::Toolbar(Window &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
+			return NDCHeight * window.windowHeight * 0.5f / 2.f;
 		});
 	editTextView->addToBVH = false;
 	edit->addChild(editTextView);
 	editDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-edit->size.x / 2, -edit->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
-	editDropdown->addOption("Undo", []()
-	{
+	editDropdown->addOption("Undo", []() {
 
 	});
-	editDropdown->addOption("Redo", []()
-	{
+	editDropdown->addOption("Redo", []() {
 
 	});
-	editDropdown->addOption("Cut", []()
-	{
+	editDropdown->addOption("Cut", []() {
 
 	});
-	editDropdown->addOption("Copy", []()
-	{
+	editDropdown->addOption("Copy", []() {
 
 	});
-	editDropdown->addOption("Paste", []()
-	{
+	editDropdown->addOption("Paste", []() {
 
 	});
-	editDropdown->addOption("Delete", []()
-	{
+	editDropdown->addOption("Delete", []() {
 
 	});
-	editDropdown->addOption("Duplicate", []()
-	{
+	editDropdown->addOption("Duplicate", []() {
 
 	});
-	editDropdown->addOption("Find/Replace", []()
-	{
+	editDropdown->addOption("Find/Replace", []() {
 
 	});
-	editDropdown->addOption("Preferences", []()
-	{
+	editDropdown->addOption("Preferences", []() {
 
 	});
 	editPressID = edit->addMousePressHandler(0, [&](auto pressed)
-	{
+											 {
 		if (!pressed)
 		{
 			if (editDropdownID)
@@ -336,10 +313,9 @@ Toolbar::Toolbar(Window &window,
 				if (helpDropdownID)
 					help->callMousePressHandler(0, false);
 			}
-		}
-	});
+		} });
 	editHoverID = edit->addMouseHoverHandler([&, color](auto hovered)
-	{
+											 {
 		if (hovered)
 		{
 			edit->setColor({0.6, 0.6, 0.6, 1});
@@ -351,8 +327,7 @@ Toolbar::Toolbar(Window &window,
 		else
 		{
 			edit->setColor(color);
-		}
-	});
+		} });
 	// Help
 	helpString = "Help";
 	float helpFontSize = height / 2;
@@ -385,33 +360,28 @@ Toolbar::Toolbar(Window &window,
 		TextView::ResizeHandler(),
 		[&]
 		{
-			return NDCHeight * this->window.windowHeight * 0.5f / 2.f;
+			return NDCHeight * window.windowHeight * 0.5f / 2.f;
 		});
 	helpTextView->addToBVH = false;
 	help->addChild(helpTextView);
 	helpDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-help->size.x / 2, -help->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
-	helpDropdown->addOption("Documentation", []()
-	{
+	helpDropdown->addOption("Documentation", []() {
 
 	});
-	helpDropdown->addOption("Tutorials", []()
-	{
+	helpDropdown->addOption("Tutorials", []() {
 
 	});
-	helpDropdown->addOption("Keyboard Shortcuts", []()
-	{
+	helpDropdown->addOption("Keyboard Shortcuts", []() {
 
 	});
-	helpDropdown->addOption("Report Bug", []()
-	{
+	helpDropdown->addOption("Report Bug", []() {
 
 	});
-	helpDropdown->addOption("About", []()
-	{
+	helpDropdown->addOption("About", []() {
 
 	});
 	helpPressID = help->addMousePressHandler(0, [&](auto pressed)
-	{
+											 {
 		if (!pressed)
 		{
 			if (helpDropdownID)
@@ -429,10 +399,9 @@ Toolbar::Toolbar(Window &window,
 				if (editDropdownID)
 					edit->callMousePressHandler(0, false);
 			}
-		}
-	});
+		} });
 	helpHoverID = help->addMouseHoverHandler([&, color](auto hovered)
-	{
+											 {
 		if (hovered)
 		{
 			help->setColor({0.6, 0.6, 0.6, 1});
@@ -444,11 +413,10 @@ Toolbar::Toolbar(Window &window,
 		else
 		{
 			help->setColor(color);
-		}
-	});
+		} });
 	// Toolbar dragging
 	dragMousePressID = addMousePressHandler(0, [&](auto pressed)
-	{
+											{
 		if (pressed && !dragEnabled)
 		{
 			window.mouseCapture(true);
@@ -458,19 +426,17 @@ Toolbar::Toolbar(Window &window,
 			dragOldCoords = {0, 0};
 			window.mouseCapture(false);
 		}
-		dragEnabled = pressed;
-	});
+		dragEnabled = pressed; });
 	globalDragMousePressID = window.addMousePressHandler(0, [&](auto pressed)
-	{
+														 {
 		if (!pressed && dragEnabled)
 		{
 			dragEnabled = pressed;
 			dragOldCoords = {0, 0};
 			window.mouseCapture(false);
-		}
-	});
+		} });
 	dragMouseMoveID = window.addMouseMoveHandler([&](auto coords)
-	{
+												 {
 		if (!dragEnabled)
 		{
 			return;
@@ -483,8 +449,7 @@ Toolbar::Toolbar(Window &window,
 		auto diff = coords - dragOldCoords;
 		window.setXY(window.windowX + diff.x, window.windowY - diff.y);
 		dragOldCoords.x = coords.x - diff.x;
-		dragOldCoords.y = coords.y - diff.y;
-	});
+		dragOldCoords.y = coords.y - diff.y; });
 };
 Toolbar::~Toolbar()
 {
@@ -495,7 +460,7 @@ Toolbar::~Toolbar()
 	_Button->removeMousePressHandler(0, _ButtonLeftMousePressID);
 	_Button->removeMouseHoverHandler(_ButtonMouseHoverID);
 	removeMousePressHandler(0, dragMousePressID);
-	this->window.removeMousePressHandler(0, globalDragMousePressID);
+	window.removeMousePressHandler(0, globalDragMousePressID);
 	removeMouseMoveHandler(dragMouseMoveID);
 	file->removeMousePressHandler(0, filePressID);
 	file->removeMouseHoverHandler(fileHoverID);
@@ -507,7 +472,7 @@ Toolbar::~Toolbar()
 void Toolbar::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind();
+	shader.bind(*this);
 	scene.entityPreRender(*this);
 	shader.setBlock("Model", *this, model);
 	shader.setBlock("View", *this, scene.view.matrix);
@@ -515,8 +480,7 @@ void Toolbar::preRender()
 	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader.unbind();
 };
-void Toolbar::setSize(glm::vec2  newSize)
-{
+void Toolbar::setSize(glm::vec2 newSize) {
 	// NDCHeight = newSize.y;
 	// positions = {
 	// 	{ 0, -NDCHeight, 0}, { newSize.x, -NDCHeight, 0}, { newSize.x, 0, 0 }, { 0, 0, 0} // Front

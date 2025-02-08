@@ -19,13 +19,13 @@
 #endif
 #include <iostream>
 using namespace zg;
-void X11Window::init(Window& renderWindow)
+void X11Window::init(Window &renderWindow)
 {
 	renderWindowPointer = &renderWindow;
 	windowType = WINDOW_TYPE_X11;
 	XInitThreads();
 	display = XOpenDisplay(0);
-	const char* xserver = getenv("DISPLAY");
+	const char *xserver = getenv("DISPLAY");
 	if (display == 0)
 	{
 		throw std::runtime_error("Unable to open XDisplay!");
@@ -39,33 +39,33 @@ void X11Window::init(Window& renderWindow)
 	screen = DefaultScreen(display);
 #ifdef USE_GL
 	static int visual_attribs[] = {GLX_X_RENDERABLE,
-																 True,
-																 GLX_DRAWABLE_TYPE,
-																 GLX_WINDOW_BIT,
-																 GLX_RENDER_TYPE,
-																 GLX_RGBA_BIT,
-																 GLX_X_VISUAL_TYPE,
-																 GLX_TRUE_COLOR,
-																 GLX_RED_SIZE,
-																 8,
-																 GLX_GREEN_SIZE,
-																 8,
-																 GLX_BLUE_SIZE,
-																 8,
-																 GLX_ALPHA_SIZE,
-																 8,
-																 GLX_DEPTH_SIZE,
-																 24,
-																 GLX_DOUBLEBUFFER,
-																 True,
-																 None};
+								   True,
+								   GLX_DRAWABLE_TYPE,
+								   GLX_WINDOW_BIT,
+								   GLX_RENDER_TYPE,
+								   GLX_RGBA_BIT,
+								   GLX_X_VISUAL_TYPE,
+								   GLX_TRUE_COLOR,
+								   GLX_RED_SIZE,
+								   8,
+								   GLX_GREEN_SIZE,
+								   8,
+								   GLX_BLUE_SIZE,
+								   8,
+								   GLX_ALPHA_SIZE,
+								   8,
+								   GLX_DEPTH_SIZE,
+								   24,
+								   GLX_DOUBLEBUFFER,
+								   True,
+								   None};
 	int glx_major, glx_minor;
 	if (!glXQueryVersion(display, &glx_major, &glx_minor) || ((glx_major == 1) && (glx_minor < 3)) || (glx_major < 1))
 	{
 		return;
 	}
 	int fbcount;
-	GLXFBConfig* fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbcount);
+	GLXFBConfig *fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbcount);
 	if (!fbc)
 	{
 		return;
@@ -73,17 +73,17 @@ void X11Window::init(Window& renderWindow)
 	int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999, best_alpha_mask = -1;
 	for (int index = 0; index < fbcount; ++index)
 	{
-		XVisualInfo* vi = glXGetVisualFromFBConfig(display, fbc[index]);
+		XVisualInfo *vi = glXGetVisualFromFBConfig(display, fbc[index]);
 		if (vi)
 		{
 			int samp_buf, samples, red, green, blue, alpha, depth, transparentType;
 			glXGetFBConfigAttrib(display, fbc[index], GLX_SAMPLE_BUFFERS, &samp_buf);
 			glXGetFBConfigAttrib(display, fbc[index], GLX_SAMPLES, &samples);
-			XRenderPictFormat* pict_format = XRenderFindVisualFormat(display, vi->visual);
+			XRenderPictFormat *pict_format = XRenderFindVisualFormat(display, vi->visual);
 			if (!pict_format)
 				continue;
 			if (best_fbc < 0 ||
-					(samp_buf && samples > best_num_samp) || (pict_format->direct.alphaMask > best_alpha_mask))
+				(samp_buf && samples > best_num_samp) || (pict_format->direct.alphaMask > best_alpha_mask))
 				best_fbc = index, best_num_samp = samples, best_alpha_mask = pict_format->direct.alphaMask;
 			if (worst_fbc < 0 || !samp_buf || samples < worst_num_samp)
 				worst_fbc = index, worst_num_samp = samples;
@@ -92,7 +92,7 @@ void X11Window::init(Window& renderWindow)
 	}
 	bestFbc = fbc[best_fbc];
 	XFree(fbc);
-	XVisualInfo* vi = glXGetVisualFromFBConfig(display, bestFbc);
+	XVisualInfo *vi = glXGetVisualFromFBConfig(display, bestFbc);
 	Colormap cmap;
 	rootWindow = RootWindow(display, vi->screen);
 	XSetWindowAttributes attr;
@@ -100,31 +100,31 @@ void X11Window::init(Window& renderWindow)
 	attr.background_pixmap = None;
 	attr.border_pixel = 0;
 	attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | ButtonPressMask |
-		ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | FocusChangeMask;
+					  ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | FocusChangeMask;
 #elif defined(USE_EGL) || defined(USE_VULKAN)
 	rootWindow = DefaultRootWindow(display);
 	XSetWindowAttributes attr;
-    attr.colormap = XCreateColormap(display, rootWindow, DefaultVisual(display, 0), AllocNone);
-    attr.background_pixmap = None;
-    attr.border_pixel = 0;
-    attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | ButtonPressMask |
-                      ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | FocusChangeMask;
+	attr.colormap = XCreateColormap(display, rootWindow, DefaultVisual(display, 0), AllocNone);
+	attr.background_pixmap = None;
+	attr.border_pixel = 0;
+	attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask | ButtonPressMask |
+					  ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | PointerMotionMask | FocusChangeMask;
 #endif
 	int screenWidth = DisplayWidth(display, screen);
 	int screenHeight = DisplayHeight(display, screen);
 	int32_t windowWidth = renderWindow.windowWidth, windowHeight = renderWindow.windowHeight;
 	int32_t windowX = renderWindow.windowX == -1 ? ((screenWidth - windowWidth) / 2) : renderWindow.windowX,
-					windowY = renderWindow.windowY == -1 ? (screenHeight - windowHeight) / 2 : renderWindow.windowY;
+			windowY = renderWindow.windowY == -1 ? (screenHeight - windowHeight) / 2 : renderWindow.windowY;
 	renderWindow.windowX = windowX;
 	renderWindow.windowY = windowY;
 #ifdef USE_GL
 	window =
 		XCreateWindow(display, RootWindow(display, vi->screen), windowX, windowY, windowWidth, windowHeight, 0, vi->depth,
-									InputOutput, vi->visual, CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
+					  InputOutput, vi->visual, CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
 	XFree(vi);
 #elif defined(USE_EGL) || defined(USE_VULKAN)
-    window = XCreateWindow(display, rootWindow, windowX, windowY, windowWidth, windowHeight, 0, CopyFromParent,
-                           InputOutput, DefaultVisual(display, screen), CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
+	window = XCreateWindow(display, rootWindow, windowX, windowY, windowWidth, windowHeight, 0, CopyFromParent,
+						   InputOutput, DefaultVisual(display, screen), CWColormap | CWEventMask | CWBackPixmap | CWBorderPixel, &attr);
 #endif
 	if (!window)
 	{
@@ -133,10 +133,10 @@ void X11Window::init(Window& renderWindow)
 	if (strlen(renderWindow.title))
 	{
 		XStoreName(display, window, renderWindow.title);
-		XClassHint* classHint = XAllocClassHint();
+		XClassHint *classHint = XAllocClassHint();
 		if (classHint)
 		{
-			classHint->res_name = classHint->res_class = (char*)renderWindow.title;
+			classHint->res_name = classHint->res_class = (char *)renderWindow.title;
 			XSetClassHint(display, window, classHint);
 			XFree(classHint);
 		}
@@ -154,7 +154,7 @@ void X11Window::init(Window& renderWindow)
 		{
 			long value = 1;
 			XChangeProperty(display, window, netWmFullPlacement, XA_CARDINAL, 32, PropModeReplace,
-							(unsigned char*)&value, 1);
+							(unsigned char *)&value, 1);
 		}
 	}
 	sizehints.x = windowX;
@@ -180,7 +180,7 @@ void X11Window::init(Window& renderWindow)
 		} motifHints = {2, 0, 0, 0, 0};
 		Atom motifHintsAtom = XInternAtom(display, "_MOTIF_WM_HINTS", False);
 		XChangeProperty(display, window, motifHintsAtom, motifHintsAtom, 32, PropModeReplace,
-										(unsigned char*)&motifHints, sizeof(motifHints) / sizeof(long));
+						(unsigned char *)&motifHints, sizeof(motifHints) / sizeof(long));
 	}
 }
 void X11Window::postInit()
@@ -241,9 +241,10 @@ bool X11Window::pollMessages()
 			auto keysym = XkbKeycodeToKeysym(display, event.xkey.keycode, 0, event.xkey.state & ShiftMask ? 1 : 0);
 			auto mod = ((event.xkey.state & ControlMask) ? 1 : 0) |
 					   ((event.xkey.state & ShiftMask) ? 2 : 0) |
-					   ((keysym == XK_Super_L || keysym == XK_Super_R) ? 8 : 0);/* |
-							 ((GetKeyState(VK_MENU) & 0x8000) >> 13) |
-							 (((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) >> 12)*/;
+					   ((keysym == XK_Super_L || keysym == XK_Super_R) ? 8 : 0); /* |
+							  ((GetKeyState(VK_MENU) & 0x8000) >> 13) |
+							  (((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) >> 12)*/
+			;
 			auto keycode = xkb_keysym_to_utf32(keysym);
 			if (!keycode)
 			{
@@ -268,8 +269,7 @@ bool X11Window::pollMessages()
 					{XK_KP_Down, KEYCODE_DOWN},
 					{XK_Num_Lock, KEYCODE_NUMLOCK},
 					{XK_Caps_Lock, KEYCODE_CAPSLOCK},
-					{XK_Pause, KEYCODE_PAUSE}
-				};
+					{XK_Pause, KEYCODE_PAUSE}};
 				static auto specialKeyMapEnd = specialKeyMap.end();
 				auto keycodeIter = specialKeyMap.find(keysym);
 				if (keycodeIter == specialKeyMapEnd)
@@ -322,24 +322,24 @@ bool X11Window::pollMessages()
 		{
 			break;
 		};
-		// case SelectionRequest:
-		// {
-		// 	auto &selectionRequestEvent = Clipboard::selectionRequestEvent = &event.xselectionrequest;
-		// 	Atom TARGETSAtom = XInternAtom(display, "TARGETS", 0);
-		// 	if (selectionRequestEvent->target == TARGETSAtom)
-		// 	{
-		// 		Clipboard::onSetEventTARGETS(TARGETSAtom);
-		// 	}
-		// 	else if (selectionRequestEvent->target == Clipboard::utf8Atom)
-		// 	{
-		// 		Clipboard::onSetEvent();
-		// 	}
-		// 	else
-		// 	{
-		// 		Clipboard::onSetEventNo();
-		// 	}
-		// 	break;
-		// };
+			// case SelectionRequest:
+			// {
+			// 	auto &selectionRequestEvent = Clipboard::selectionRequestEvent = &event.xselectionrequest;
+			// 	Atom TARGETSAtom = XInternAtom(display, "TARGETS", 0);
+			// 	if (selectionRequestEvent->target == TARGETSAtom)
+			// 	{
+			// 		Clipboard::onSetEventTARGETS(TARGETSAtom);
+			// 	}
+			// 	else if (selectionRequestEvent->target == Clipboard::utf8Atom)
+			// 	{
+			// 		Clipboard::onSetEvent();
+			// 	}
+			// 	else
+			// 	{
+			// 		Clipboard::onSetEventNo();
+			// 	}
+			// 	break;
+			// };
 		}
 		continue;
 	}
@@ -458,9 +458,9 @@ void X11Window::mouseCapture(bool capture)
 	if (capture)
 	{
 		int result = XGrabPointer(display, window, True,
-			ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
-			GrabModeAsync, GrabModeAsync,
-			None, None, CurrentTime);
+								  ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+								  GrabModeAsync, GrabModeAsync,
+								  None, None, CurrentTime);
 		if (result != GrabSuccess)
 		{
 			std::cerr << "Failed to GrabPointer" << std::endl;

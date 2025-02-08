@@ -28,20 +28,20 @@ namespace zg::textures
 			Linear = 1,
 			Nearest
 		};
-		Window& window;
+		Window &window;
 		glm::ivec4 size;
 		Format format;
 		Type type;
 		FilterType filterType;
-		void* rendererData = 0;
-		explicit Texture(Window& window, const glm::ivec4& size, const void* data = 0, const Format& format = RGBA8,
-										 const Type& type = UnsignedByte, const FilterType& filterType = Linear);
-		explicit Texture(Window& window, const glm::ivec4& size, const std::string_view path = "",
-										 const Format& format = RGBA8, const Type& type = UnsignedByte,
-										 const FilterType& filterType = Linear);
-		explicit Texture(Window& window, const glm::ivec4& size, const std::vector<std::string_view>& paths = {},
-										 const Format& format = RGBA8, const Type& type = UnsignedByte,
-										 const FilterType& filterType = Linear);
+		void *rendererData = 0;
+		explicit Texture(Window &window, const glm::ivec4 &size, const void *data = 0, const Format &format = RGBA8,
+						 const Type &type = UnsignedByte, const FilterType &filterType = Linear);
+		explicit Texture(Window &window, const glm::ivec4 &size, const std::string_view path = "",
+						 const Format &format = RGBA8, const Type &type = UnsignedByte,
+						 const FilterType &filterType = Linear);
+		explicit Texture(Window &window, const glm::ivec4 &size, const std::vector<std::string_view> &paths = {},
+						 const Format &format = RGBA8, const Type &type = UnsignedByte,
+						 const FilterType &filterType = Linear);
 		~Texture();
 		void bind() const;
 		void unbind() const;

@@ -10,9 +10,9 @@ namespace zg
 {
 	struct XCBWindow : IPlatformWindow
 	{
-		xcb_connection_t* connection = 0;
-		const xcb_setup_t* setup = 0;
-		xcb_screen_t* screen = 0;
+		xcb_connection_t *connection = 0;
+		const xcb_setup_t *setup = 0;
+		xcb_screen_t *screen = 0;
 		xcb_window_t window = 0;
 		xcb_window_t root = 0;
 		xcb_atom_t wm_protocols;
@@ -21,10 +21,10 @@ namespace zg
 		xcb_atom_t atom_net_wm_state_hidden;
 		xcb_atom_t atom_net_wm_state_maximized_horz;
 		xcb_atom_t atom_net_wm_state_maximized_vert;
-		xcb_key_symbols_t* keysyms;
-		Display* display = 0;
+		xcb_key_symbols_t *keysyms;
+		Display *display = 0;
 		int32_t screenNumber = 0;
-		void init(Window& window) override;
+		void init(Window &window) override;
 		void initAtoms();
 		void renderInit();
 		void postInit() override;

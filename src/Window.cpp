@@ -8,67 +8,60 @@
 #include <stdexcept>
 using namespace zg;
 #ifdef _WIN32
-extern "C" {
+extern "C"
+{
 	_declspec(dllexport) DWORD NvOptimusEnablement = 1;
 	_declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
-Window::Window(const char* title,
-									 float windowWidth,
-									 float windowHeight,
-									 float windowX,
-									 float windowY,
-									 bool borderless,
-						 			 bool _vsync,
-									 uint32_t framerate):
-	IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
-	title(title),
-	shaderContext(new ShaderContext),
-	vsync(_vsync)
+Window::Window(const char *title,
+			   float windowWidth,
+			   float windowHeight,
+			   float windowX,
+			   float windowY,
+			   bool borderless,
+			   bool _vsync,
+			   uint32_t framerate) : IWindow(windowWidth, windowHeight, windowX, windowY, borderless, framerate),
+									 title(title),
+									 shaderContext(new ShaderContext),
+									 vsync(_vsync)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
-};
+}
 Window::Window(Window &_parentWindow,
-									 Scene &_parentScene,
-									 const char *_childTitle,
-									 float childWindowWidth,
-									 float childWindowHeight,
-									 float childWindowX,
-									 float childWindowY,
-									 bool _NDCFramebufferPlane,
-						 			 bool _vsync,
-									 uint32_t framerate):
-	IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
-	iRenderer(_parentWindow.iRenderer),
-	title(_childTitle),
-	isChildWindow(true),
-	parentWindow(&_parentWindow),
-	parentScene(&_parentScene),
-	shaderContext(_parentWindow.shaderContext),
-	NDCFramebufferPlane(_NDCFramebufferPlane),
-	framebufferTexture(std::make_shared<textures::Texture>(_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
-	framebufferDepthTexture(std::make_shared<textures::Texture>(_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
-	framebuffer(std::make_shared<textures::Framebuffer>(_parentWindow, *framebufferTexture, *framebufferDepthTexture)),
-	framebufferPlane(std::make_shared<entities::Plane>(
-		_parentWindow,
-		*parentScene,
-		glm::vec3(
-			NDCFramebufferPlane ?
-				(-1 + ((childWindowX + (childWindowWidth / 2)) / _parentWindow.windowWidth / 0.5)) :
-				childWindowX + (childWindowWidth / 2),
-			NDCFramebufferPlane ?
-				(1 - ((childWindowY + (childWindowHeight / 2)) / _parentWindow.windowHeight / 0.5)) :
-				_parentWindow.windowHeight - childWindowY - (childWindowHeight / 2), 0.2
-		),
-		glm::vec3(0),
-		glm::vec3(1),
-		glm::vec2(
-			childWindowWidth / (NDCFramebufferPlane ? (_parentWindow.windowWidth / 2) : 1),
-			childWindowHeight / (NDCFramebufferPlane ? (_parentWindow.windowHeight / 2) : 1)
-		),
-		*framebufferTexture)),
-	vsync(_vsync)
+			   Scene &_parentScene,
+			   const char *_childTitle,
+			   float childWindowWidth,
+			   float childWindowHeight,
+			   float childWindowX,
+			   float childWindowY,
+			   bool _NDCFramebufferPlane,
+			   bool _vsync,
+			   uint32_t framerate) : IWindow(childWindowWidth, childWindowHeight, childWindowX, childWindowY, false, framerate),
+									 iRenderer(_parentWindow.iRenderer),
+									 title(_childTitle),
+									 isChildWindow(true),
+									 parentWindow(&_parentWindow),
+									 parentScene(&_parentScene),
+									 shaderContext(_parentWindow.shaderContext),
+									 NDCFramebufferPlane(_NDCFramebufferPlane),
+									 framebufferTexture(std::make_shared<textures::Texture>(_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void *)0)),
+									 framebufferDepthTexture(std::make_shared<textures::Texture>(_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void *)0)),
+									 framebuffer(std::make_shared<textures::Framebuffer>(_parentWindow, *framebufferTexture, *framebufferDepthTexture)),
+									 framebufferPlane(std::make_shared<entities::Plane>(
+										 _parentWindow,
+										 *parentScene,
+										 glm::vec3(
+											 NDCFramebufferPlane ? (-1 + ((childWindowX + (childWindowWidth / 2)) / _parentWindow.windowWidth / 0.5)) : childWindowX + (childWindowWidth / 2),
+											 NDCFramebufferPlane ? (1 - ((childWindowY + (childWindowHeight / 2)) / _parentWindow.windowHeight / 0.5)) : _parentWindow.windowHeight - childWindowY - (childWindowHeight / 2), 0.2),
+										 glm::vec3(0),
+										 glm::vec3(1),
+										 glm::vec2(
+											 childWindowWidth / (NDCFramebufferPlane ? (_parentWindow.windowWidth / 2) : 1),
+											 childWindowHeight / (NDCFramebufferPlane ? (_parentWindow.windowHeight / 2) : 1)),
+										 *framebufferTexture)),
+									 vsync(_vsync)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -102,9 +95,9 @@ void Window::startWindow()
 		}
 		iRendererRef.beginRenderPass();
 		render();
-		for (auto& childWindowPointer : childWindows)
+		for (auto &childWindowPointer : childWindows)
 		{
-			auto& childWindow = *childWindowPointer;
+			auto &childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
 			childWindow.framebufferPlane->render();
@@ -129,7 +122,7 @@ void Window::updateKeyboard()
 {
 	for (unsigned int i = 0; i < 256; ++i)
 	{
-		auto& pressed = windowKeys[i];
+		auto &pressed = windowKeys[i];
 		if (keys[i] != pressed)
 		{
 			callKeyPressHandler(i, pressed);
@@ -146,8 +139,8 @@ void Window::updateMouse()
 {
 	for (unsigned int i = Window::MinMouseButton; i < Window::MaxMouseButton; ++i)
 	{
-_checkPressed:
-		auto& pressed = windowButtons[i];
+	_checkPressed:
+		auto &pressed = windowButtons[i];
 		if (buttons[i] != pressed)
 		{
 			callMousePressHandler(i, pressed);
@@ -163,8 +156,7 @@ _checkPressed:
 		callMouseMoveHandler(mouseCoords);
 		mouseMoved = false;
 	}
-};
-
+}
 void Window::close()
 {
 	if (isChildWindow)
@@ -172,7 +164,7 @@ void Window::close()
 		return;
 	}
 	iPlatformWindow->close();
-};
+}
 void Window::minimize()
 {
 	minimized = true;
@@ -187,7 +179,7 @@ void Window::minimize()
 	{
 		windowButtons[i] = false;
 	}
-};
+}
 void Window::maximize()
 {
 	minimized = false;
@@ -205,7 +197,7 @@ void Window::maximize()
 		oldXY.y = windowY;
 		setXY(0, 0);
 	}
-};
+}
 void Window::restore()
 {
 	minimized = false;
@@ -227,7 +219,7 @@ void Window::preRender()
 	updateKeyboard();
 	updateMouse();
 	framebuffer->bind();
-};
+}
 void Window::postRender()
 {
 	if (!isChildWindow)
@@ -235,24 +227,24 @@ void Window::postRender()
 		return;
 	}
 	framebuffer->unbind();
-};
+}
 void Window::drawLine(int x0, int y0, int x1, int y1, uint32_t color)
 {
-};
+}
 void Window::drawRectangle(int x, int y, int w, int h, uint32_t color)
 {
-};
+}
 void Window::drawCircle(int x, int y, int radius, uint32_t color)
 {
-};
-void Window::drawText(int x, int y, const char* text, int scale, uint32_t color)
+}
+void Window::drawText(int x, int y, const char *text, int scale, uint32_t color)
 {
 }
 void Window::warpPointer(glm::vec2 coords)
 {
 	iPlatformWindow->warpPointer(coords);
 	justWarpedPointer = true;
-};
+}
 void Window::setXY(float x, float y)
 {
 	windowX = x;
@@ -262,7 +254,7 @@ void Window::setXY(float x, float y)
 		return;
 	}
 	iPlatformWindow->setXY();
-};
+}
 void Window::setWidthHeight(float width, float height)
 {
 	windowWidth = width;
@@ -272,22 +264,22 @@ void Window::setWidthHeight(float width, float height)
 		return;
 	}
 	iPlatformWindow->setWidthHeight();
-};
+}
 void Window::mouseCapture(bool capture)
 {
 	iPlatformWindow->mouseCapture(capture);
 }
-zg::Window &Window::createChildWindow(const char* title,
-																					 IScene &scene,
-																					 float windowWidth,
-																					 float windowHeight,
-																					 float windowX,
-																					 float windowY,
-																					 bool NDCFramebufferPlane)
+zg::Window &Window::createChildWindow(const char *title,
+									  IScene &scene,
+									  float windowWidth,
+									  float windowHeight,
+									  float windowX,
+									  float windowY,
+									  bool NDCFramebufferPlane)
 {
 	childWindows.push_back(new Window(*this, (Scene &)scene, title, windowWidth, windowHeight, windowX, windowY, NDCFramebufferPlane));
 	return *childWindows.back();
-};
+}
 void zg::computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals)
 {
 	const glm::vec3 *positionsData = positions.data();
@@ -300,13 +292,13 @@ void zg::computeNormals(const std::vector<uint32_t> &indices, const std::vector<
 	memset(normalsData, 0, nbVertices * sizeof(glm::vec3));
 	for (uint32_t index = 0; index < nbTriangles; index++)
 	{
-		const auto& indice = indicesData[index];
-		const auto& vertex1 = positionsData[indice.x];
-		const auto& vertex2 = positionsData[indice.y];
-		const auto& vertex3 = positionsData[indice.z];
-		auto& normal1 = normalsData[indice.x];
-		auto& normal2 = normalsData[indice.y];
-		auto& normal3 = normalsData[indice.z];
+		const auto &indice = indicesData[index];
+		const auto &vertex1 = positionsData[indice.x];
+		const auto &vertex2 = positionsData[indice.y];
+		const auto &vertex3 = positionsData[indice.z];
+		auto &normal1 = normalsData[indice.x];
+		auto &normal2 = normalsData[indice.y];
+		auto &normal3 = normalsData[indice.z];
 		auto triangleNormal = cross(vertex2 - vertex1, vertex3 - vertex1);
 		if (!static_cast<bool>(triangleNormal.x) && !static_cast<bool>(triangleNormal.y) && !static_cast<bool>(triangleNormal.z))
 		{
@@ -318,7 +310,7 @@ void zg::computeNormals(const std::vector<uint32_t> &indices, const std::vector<
 	}
 	for (uint32_t index = 0; index < nbVertices; index++)
 	{
-		auto& normal = normalsData[index];
+		auto &normal = normalsData[index];
 		normal = glm::normalize(normal);
 	}
-};
+}

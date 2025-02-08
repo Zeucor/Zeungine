@@ -2,12 +2,11 @@
 #include <zg/shaders/ShaderManager.hpp>
 #include <iostream>
 using namespace zg::lights;
-DirectionalLightShadow::DirectionalLightShadow(Window &window, DirectionalLight &directionalLight):
-	window(window),
-	shader(*shaders::ShaderManager::getShaderByConstants(window, {"Color", "Position", "Normal", "Model", "LightSpaceMatrix"}).second),
-	directionalLight(directionalLight),
-  texture(window, glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
-	framebuffer(window, texture)
+DirectionalLightShadow::DirectionalLightShadow(Window &window, DirectionalLight &directionalLight) : window(window),
+																									 shader(*shaders::ShaderManager::getShaderByConstants(window, {"Color", "Position", "Normal", "Model", "LightSpaceMatrix"}).second),
+																									 directionalLight(directionalLight),
+																									 texture(window, glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
+																									 framebuffer(window, texture)
 {
 	glm::vec2 projectionDimensions = {96, 96};
 	glm::mat4 lightProjection = glm::ortho(-projectionDimensions.x, projectionDimensions.x, -projectionDimensions.y, projectionDimensions.y, directionalLight.nearPlane, directionalLight.farPlane);
@@ -21,7 +20,7 @@ DirectionalLightShadow::DirectionalLightShadow(Window &window, DirectionalLight 
 	glm::vec3 right = glm::normalize(glm::cross(worldUp, lightDirection));
 	glm::vec3 correctedUp = glm::normalize(glm::cross(lightDirection, right));
 	glm::mat4 lightView = glm::lookAt(directionalLight.position,
-																	lightTarget,
-																	correctedUp);
+									  lightTarget,
+									  correctedUp);
 	lightSpaceMatrix = lightProjection * lightView;
-};
+}

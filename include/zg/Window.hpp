@@ -36,8 +36,8 @@ namespace zg
 #define LAST_UNDEFINED_ASCII_IN_RANGE 0x9F
 	struct Window : IWindow
 	{
-		IPlatformWindow* iPlatformWindow;
-		IRenderer* iRenderer;
+		IPlatformWindow *iPlatformWindow;
+		IRenderer *iRenderer;
 		const char *title;
 		int windowKeys[256];
 		int windowButtons[7];
@@ -47,7 +47,7 @@ namespace zg
 		bool isChildWindow = false;
 		Window *parentWindow = 0;
 		Scene *parentScene = 0;
-		std::vector<Window*> childWindows;
+		std::vector<Window *> childWindows;
 		ShaderContext *shaderContext = 0;
 		bool NDCFramebufferPlane;
 		std::shared_ptr<textures::Texture> framebufferTexture;
@@ -59,23 +59,23 @@ namespace zg
 		glm::vec2 oldXY;
 		bool vsync = true;
 		Window(const char *title,
-						 float windowWidth,
-						 float windowHeight,
-						 float windowX,
-						 float windowY,
-						 bool borderless = false,
-						 bool vsync = true,
-						 uint32_t framerate = 60);
+			   float windowWidth,
+			   float windowHeight,
+			   float windowX,
+			   float windowY,
+			   bool borderless = false,
+			   bool vsync = true,
+			   uint32_t framerate = 60);
 		Window(Window &parentWindow,
-						 Scene &parentScene,
-						 const char *childTitle,
-						 float childWindowWidth,
-						 float childWindowHeight,
-						 float childWindowX,
-						 float childWindowY,
-						 bool NDCFramebufferPlane = false,
-						 bool vsync = true,
-						 uint32_t framerate = 60);
+			   Scene &parentScene,
+			   const char *childTitle,
+			   float childWindowWidth,
+			   float childWindowHeight,
+			   float childWindowX,
+			   float childWindowY,
+			   bool NDCFramebufferPlane = false,
+			   bool vsync = true,
+			   uint32_t framerate = 60);
 		void startWindow() override;
 		void renderInit();
 		void updateKeyboard() override;
@@ -89,18 +89,18 @@ namespace zg
 		void drawLine(int x0, int y0, int x1, int y1, uint32_t color) override;
 		void drawRectangle(int x, int y, int w, int h, uint32_t color) override;
 		void drawCircle(int x, int y, int radius, uint32_t color) override;
-		void drawText(int x, int y, const char* text, int scale, uint32_t color) override;
+		void drawText(int x, int y, const char *text, int scale, uint32_t color) override;
 		void warpPointer(glm::vec2 coords) override;
 		void setXY(float x, float y) override;
 		void setWidthHeight(float width, float height) override;
 		void mouseCapture(bool capture);
 		Window &createChildWindow(const char *title,
-															 IScene &scene,
-															 float windowWidth,
-															 float windowHeight,
-															 float windowX,
-															 float windowY,
-															 bool NDCFramebufferPlane) override;
+								  IScene &scene,
+								  float windowWidth,
+								  float windowHeight,
+								  float windowX,
+								  float windowY,
+								  bool NDCFramebufferPlane) override;
 	};
 	void computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals);
 }

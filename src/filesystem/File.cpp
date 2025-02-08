@@ -6,7 +6,7 @@
 #include <regex>
 #include <sstream>
 using namespace zg::filesystem;
-File::File(const std::string& _filePath, enums::EFileLocation _fileLocation, const std::string& mode)
+File::File(const std::string &_filePath, enums::EFileLocation _fileLocation, const std::string &mode)
     : originalFilePath(_filePath), filePath(_filePath), fileLocation(_fileLocation), openMode(std::ios::in | std::ios::out | std::ios::binary)
 {
     if (mode.find('r') != std::string::npos)
@@ -27,7 +27,7 @@ File::File(const std::string& _filePath, enums::EFileLocation _fileLocation, con
     }
     open();
 };
-File& File::operator=(const File& other)
+File &File::operator=(const File &other)
 {
     if (this != &other)
     {
@@ -44,11 +44,11 @@ File& File::operator=(const File& other)
 };
 File::~File()
 {
-	sync();
-  if (!close())
-  {
-	  std::cout << "File '" << filePath << "' failed to close." << std::endl;
-  }
+    sync();
+    if (!close())
+    {
+        std::cout << "File '" << filePath << "' failed to close." << std::endl;
+    }
 };
 bool File::open()
 {
@@ -58,30 +58,30 @@ bool File::open()
 bool File::close()
 {
     if (fileStream.is_open())
-		{
+    {
         fileStream.close();
         return !fileStream.is_open();
     }
     return false;
 };
-bool File::readBytes(size_t index, size_t sizeBytes, void* pointer)
+bool File::readBytes(size_t index, size_t sizeBytes, void *pointer)
 {
     if (!fileStream.is_open())
     {
         return false;
     }
     fileStream.seekg(index, std::ios::beg);
-    fileStream.read(static_cast<char*>(pointer), sizeBytes);
+    fileStream.read(static_cast<char *>(pointer), sizeBytes);
     return fileStream.good();
 };
-bool File::writeBytes(size_t index, size_t sizeBytes, const void* pointer)
+bool File::writeBytes(size_t index, size_t sizeBytes, const void *pointer)
 {
     if (!fileStream.is_open())
-  {
+    {
         return false;
     }
     fileStream.seekp(index, std::ios::beg);
-    fileStream.write(static_cast<const char*>(pointer), sizeBytes);
+    fileStream.write(static_cast<const char *>(pointer), sizeBytes);
     return fileStream.good();
 };
 bool File::truncate(size_t newFileSize)
@@ -109,7 +109,7 @@ size_t File::size()
     {
         return std::filesystem::file_size(filePath);
     }
-    catch (const std::filesystem::filesystem_error&)
+    catch (const std::filesystem::filesystem_error &)
     {
         return 0;
     }
@@ -128,13 +128,13 @@ time_t File::lastModified() const
 bool File::remove()
 {
     if (std::filesystem::exists(filePath))
-  {
+    {
         std::filesystem::remove(filePath);
         return true;
     }
     return false;
 };
-bool File::exists(const std::string& path)
+bool File::exists(const std::string &path)
 {
     return std::filesystem::exists(path);
 };
@@ -156,25 +156,25 @@ std::string File::getExecutableName()
         .filename()
         .string();
 };
-void replaceSubstring(std::string& str, const std::string& from, const std::string& to)
+void replaceSubstring(std::string &str, const std::string &from, const std::string &to)
 {
-	size_t pos = 0;
-	while ((pos = str.find(from, pos)) != std::string::npos)
-	{
-		str.replace(pos, from.length(), to);
-		pos += to.length();
-	}
+    size_t pos = 0;
+    while ((pos = str.find(from, pos)) != std::string::npos)
+    {
+        str.replace(pos, from.length(), to);
+        pos += to.length();
+    }
 }
 std::string File::toPlatformPath(std::string path)
 {
-	std::replace(path.begin(), path.end(), '\\', '/');
-	std::filesystem::path fsPath(path);
+    std::replace(path.begin(), path.end(), '\\', '/');
+    std::filesystem::path fsPath(path);
 #ifdef _WIN32
-	auto nativePath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fsPath.native().c_str());
+    auto nativePath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fsPath.native().c_str());
 #else
     auto nativePath = fsPath.native().c_str();
 #endif
-	return nativePath;
+    return nativePath;
 };
 std::string File::toString()
 {

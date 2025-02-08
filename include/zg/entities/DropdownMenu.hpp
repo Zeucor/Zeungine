@@ -10,21 +10,21 @@ namespace zg::entities
 	struct DropdownMenu : Entity
 	{
 		std::vector<glm::vec4> colors;
-    Scene &scene;
+		Scene &scene;
 		glm::vec2 size;
-    using OptionPressHandler = std::function<void()>;
+		using OptionPressHandler = std::function<void()>;
 		fonts::freetype::FreetypeFont &font;
 		inline static size_t dropdownMenusCount = 0;
 		DropdownMenu(Window &window,
-								 Scene &scene,
-								 glm::vec3 position,
-								 glm::vec3 rotation,
-								 glm::vec3 scale,
-								 glm::vec4 color,
-								 fonts::freetype::FreetypeFont &font,
-								 const shaders::RuntimeConstants &constants = {},
-								 std::string_view name = "");
-    void addOption(std::string_view name, const OptionPressHandler &handler);
+					 Scene &scene,
+					 glm::vec3 position,
+					 glm::vec3 rotation,
+					 glm::vec3 scale,
+					 glm::vec4 color,
+					 fonts::freetype::FreetypeFont &font,
+					 const shaders::RuntimeConstants &constants = {},
+					 std::string_view name = "");
+		void addOption(std::string_view name, const OptionPressHandler &handler);
 		void preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize(glm::vec2 size);
@@ -35,23 +35,23 @@ namespace zg::entities
 		Scene &scene;
 		glm::vec2 size;
 		std::string text;
-    DropdownMenu::OptionPressHandler handler;
-    std::shared_ptr<TextView> textView;
+		DropdownMenu::OptionPressHandler handler;
+		std::shared_ptr<TextView> textView;
 		fonts::freetype::FreetypeFont &font;
 		Window::EventIdentifier mouseHoverID = 0;
 		Window::EventIdentifier mousePressID = 0;
 		inline static size_t dropdownItemsCount = 0;
 		DropdownItem(Window &window,
-								 Scene &scene,
-								 glm::vec3 position,
-								 glm::vec3 rotation,
-								 glm::vec3 scale,
-								 glm::vec4 color,
-								 std::string_view text,
-								 const DropdownMenu::OptionPressHandler &handler,
-								 fonts::freetype::FreetypeFont &font,
-								 const shaders::RuntimeConstants &constants = {},
-								 std::string_view name = "");
+					 Scene &scene,
+					 glm::vec3 position,
+					 glm::vec3 rotation,
+					 glm::vec3 scale,
+					 glm::vec4 color,
+					 std::string_view text,
+					 const DropdownMenu::OptionPressHandler &handler,
+					 fonts::freetype::FreetypeFont &font,
+					 const shaders::RuntimeConstants &constants = {},
+					 std::string_view name = "");
 		~DropdownItem() override;
 		void preRender() override;
 		void setColor(glm::vec4 color);

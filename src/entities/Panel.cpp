@@ -3,42 +3,34 @@
 #include <iostream>
 using namespace zg::entities;
 PanelMenu::PanelMenu(zg::Window &window,
-				             zg::Scene &scene,
-				             glm::vec3 position,
-				             glm::vec3 rotation,
-				             glm::vec3 scale,
-				             glm::vec4 color,
-				             fonts::freetype::FreetypeFont &font,
-										 const std::string_view title,
-										 float width,
-										 float height,
-				             const zg::shaders::RuntimeConstants &constants,
-                     std::string_view name):
-	zg::Entity(
-		window,
-		zg::mergeVectors<std::string_view>({
-			{
-				"Color", "Position",
-				"View", "Projection", "Model", "CameraPosition"
-			}
-		}, constants),
-		6,
-		{0, 1, 2,  2, 3, 0},
-    4,
-		{
-			{ 0, -0, 0 }, { 0, -0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }
-		},
-		position,
-		rotation,
-		scale,
-		name.empty() ? "PanelMenu " + std::to_string(++panelMenusCount) : name
-	),
-	scene(scene),
-  color(color),
-	font(font),
-	title(title),
-	width(width),
-	height(height)
+					 zg::Scene &scene,
+					 glm::vec3 position,
+					 glm::vec3 rotation,
+					 glm::vec3 scale,
+					 glm::vec4 color,
+					 fonts::freetype::FreetypeFont &font,
+					 const std::string_view title,
+					 float width,
+					 float height,
+					 const zg::shaders::RuntimeConstants &constants,
+					 std::string_view name) : zg::Entity(window,
+														 zg::mergeVectors<std::string_view>({{"Color", "Position",
+																							  "View", "Projection", "Model", "CameraPosition"}},
+																							constants),
+														 6,
+														 {0, 1, 2, 2, 3, 0},
+														 4,
+														 {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}},
+														 position,
+														 rotation,
+														 scale,
+														 name.empty() ? "PanelMenu " + std::to_string(++panelMenusCount) : name),
+											  scene(scene),
+											  color(color),
+											  font(font),
+											  title(title),
+											  width(width),
+											  height(height)
 {
 	updateIndices(indices);
 	setColor(color);
@@ -47,7 +39,7 @@ PanelMenu::PanelMenu(zg::Window &window,
 	addToBVH = false;
 	if (title.empty())
 		return;
-  float titleLineHeight = 0;
+	float titleLineHeight = 0;
 	auto titleSize = font.stringSize(title, window.windowHeight / 30.f, titleLineHeight, glm::vec2(0));
 	titleSize.y /= window.windowHeight * 0.5f;
 	titleSize.x /= window.windowWidth * 0.5f;
@@ -73,13 +65,13 @@ PanelMenu::PanelMenu(zg::Window &window,
 		{
 			return this->window.windowHeight / 36.f;
 		});
-  titleTextView->addToBVH = false;
-  addChild(titleTextView);
+	titleTextView->addToBVH = false;
+	addChild(titleTextView);
 };
 void PanelMenu::addPanelEntity(const std::shared_ptr<Entity> &entity, bool alignSizeX)
 {
-  addChild(entity);
-  scene.postAddEntity(entity, {ID, entity->ID});
+	addChild(entity);
+	scene.postAddEntity(entity, {ID, entity->ID});
 	if (alignSizeX)
 	{
 		float sizeXMax = 0;
@@ -94,12 +86,12 @@ void PanelMenu::addPanelEntity(const std::shared_ptr<Entity> &entity, bool align
 		for (auto &child : children)
 		{
 			auto sizablePointer = std::dynamic_pointer_cast<ISizable>(child.second);
-	    if (!sizablePointer)
-	      continue;
-	    auto &childItem = *sizablePointer;
+			if (!sizablePointer)
+				continue;
+			auto &childItem = *sizablePointer;
 			childItem.setSize({sizeXMax, childItem.size.y, childItem.size.z});
 			auto glEntityPointer = std::dynamic_pointer_cast<Entity>(sizablePointer);
-	    scene.bvh->updateEntity(*glEntityPointer);
+			scene.bvh->updateEntity(*glEntityPointer);
 		}
 	}
 	setSize(glm::vec3(0));
@@ -128,7 +120,7 @@ float PanelMenu::getSizeYTotal()
 void PanelMenu::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind();
+	shader.bind(*this);
 	scene.entityPreRender(*this);
 	shader.setBlock("Model", *this, model);
 	shader.setBlock("View", *this, scene.view.matrix);
@@ -145,52 +137,43 @@ void PanelMenu::setSize(glm::vec3 newSize)
 {
 	glm::vec3 actualNewSize(width / window.windowWidth / 0.5, height / window.windowHeight / 0.5, 0);
 	positions = {
-		{ 0, -actualNewSize.y, 0 }, { actualNewSize.x, -actualNewSize.y, 0 }, { actualNewSize.x, 0, 0 }, { 0, 0, 0 }
-	};
+		{0, -actualNewSize.y, 0}, {actualNewSize.x, -actualNewSize.y, 0}, {actualNewSize.x, 0, 0}, {0, 0, 0}};
 	updateElements("Position", positions);
 	size = actualNewSize;
 };
 PanelItem::PanelItem(Window &window,
-										 Scene &scene,
-										 glm::vec3 position,
-										 glm::vec3 rotation,
-										 glm::vec3 scale,
-										 glm::vec4 color,
-										 const std::string_view text,
-										 fonts::freetype::FreetypeFont &font,
-                     Entity &entity,
-                     float panelWidth,
-                     float indent,
-										 const shaders::RuntimeConstants &constants,
-                     std::string_view name):
-	zg::Entity(
-		window,
-		zg::mergeVectors<std::string_view>({
-			{
-				"Color", "Position",
-				"View", "Projection", "Model", "CameraPosition"
-			}
-		}, constants),
-		6,
-		{0, 1, 2,  2, 3, 0},
-		4,
-		{
-			{ 0, -0, 0 }, { 0, -0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }
-		},
-		position,
-		rotation,
-		scale,
-    name.empty() ? "PanelItem " + std::to_string(++panelItemsCount) : name
-	),
-	scene(scene),
-	text(text),
-	font(font),
-	entity(entity),
-  panelWidth(panelWidth),
-  indent(indent)
+					 Scene &scene,
+					 glm::vec3 position,
+					 glm::vec3 rotation,
+					 glm::vec3 scale,
+					 glm::vec4 color,
+					 const std::string_view text,
+					 fonts::freetype::FreetypeFont &font,
+					 Entity &entity,
+					 float panelWidth,
+					 float indent,
+					 const shaders::RuntimeConstants &constants,
+					 std::string_view name) : zg::Entity(window,
+														 zg::mergeVectors<std::string_view>({{"Color", "Position",
+																							  "View", "Projection", "Model", "CameraPosition"}},
+																							constants),
+														 6,
+														 {0, 1, 2, 2, 3, 0},
+														 4,
+														 {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}},
+														 position,
+														 rotation,
+														 scale,
+														 name.empty() ? "PanelItem " + std::to_string(++panelItemsCount) : name),
+											  scene(scene),
+											  text(text),
+											  font(font),
+											  entity(entity),
+											  panelWidth(panelWidth),
+											  indent(indent)
 {
 	updateIndices(indices);
-  colors.resize(4);
+	colors.resize(4);
 	setColor(color);
 	float FontSize = window.windowHeight / 30.f;
 	float LineHeight = 0;
@@ -219,10 +202,10 @@ PanelItem::PanelItem(Window &window,
 			return this->window.windowHeight / 30.f;
 		});
 	textView->addToBVH = false;
-  addChild(textView);
-	PanelItem::setSize({ (panelWidth - indent) / (window.windowWidth / 2), TextSize.y, 0 });
+	addChild(textView);
+	PanelItem::setSize({(panelWidth - indent) / (window.windowWidth / 2), TextSize.y, 0});
 	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
-	{
+										{
 		if (hovered)
 		{
 			setColor({ 0.4, 0.4, 0.4, 1 });
@@ -230,13 +213,11 @@ PanelItem::PanelItem(Window &window,
 		else
 		{
 			setColor(color);
-		}
-	});
+		} });
 	mousePressID = addMousePressHandler(0, [&](auto pressed)
-	{
+										{
 		if (!pressed)
-			return;
-	});
+			return; });
 };
 PanelItem::~PanelItem()
 {
@@ -246,7 +227,7 @@ PanelItem::~PanelItem()
 void PanelItem::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind();
+	shader.bind(*this);
 	scene.entityPreRender(*this);
 	shader.setBlock("Model", *this, model);
 	shader.setBlock("View", *this, scene.view.matrix);
@@ -256,18 +237,17 @@ void PanelItem::preRender()
 };
 void PanelItem::setColor(glm::vec4 color)
 {
-  auto colorsData = colors.data();
+	auto colorsData = colors.data();
 	colorsData[0] = color;
-  colorsData[1] = color;
-  colorsData[2] = color;
-  colorsData[3] = color;
+	colorsData[1] = color;
+	colorsData[2] = color;
+	colorsData[3] = color;
 	updateElements("Color", colors);
 };
 void PanelItem::setSize(glm::vec3 newSize)
 {
 	positions = {
-		{ 0, -newSize.y, 0 }, { newSize.x, -newSize.y, 0 }, { newSize.x, 0, 0 }, { 0, 0, 0 }
-	};
+		{0, -newSize.y, 0}, {newSize.x, -newSize.y, 0}, {newSize.x, 0, 0}, {0, 0, 0}};
 	updateElements("Position", positions);
 	this->size = newSize;
 };

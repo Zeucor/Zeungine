@@ -1,8 +1,7 @@
 #include <zg/vp/VML.hpp>
 #include <zg/interfaces/IWindow.hpp>
 using namespace zg::vp;
-VML::VML(Scene &scene):
-	scene(scene)
+VML::VML(Scene &scene) : scene(scene)
 {
   auto &window = scene.window;
   mouseMoveID = window.addMouseMoveHandler(std::bind(&VML::mouseMoveHandler, this, std::placeholders::_1));
@@ -22,7 +21,7 @@ void VML::mouseMoveHandler(glm::vec2 coords)
   }
   if (!scene.window.focused)
     return;
-  glm::vec2 center = {scene.window.windowWidth/2, scene.window.windowHeight/2};
+  glm::vec2 center = {scene.window.windowWidth / 2, scene.window.windowHeight / 2};
   auto currentWindow = (Window &)scene.window;
   auto diff = coords - center;
   scene.view.addPhiTheta(diff.x * 0.001f, -diff.y * 0.001f);

@@ -1,17 +1,16 @@
 #include <zg/vp/View.hpp>
 using namespace zg::vp;
-View::View(glm::vec3 _position, glm::vec3 _direction):
-	position(_position),
-	direction(glm::normalize(_direction))
+View::View(glm::vec3 _position, glm::vec3 _direction) : position(_position),
+														direction(glm::normalize(_direction))
 {
 	phi = atan2(direction.z, direction.x);
 	theta = acos(glm::clamp(direction.y, -1.0f, 1.0f));
-  update();
-};
+	update();
+}
 void View::update()
 {
 	matrix = glm::lookAt(position, position + direction, glm::vec3{0, 1, 0});
-};
+}
 void View::addPhiTheta(float addPhi, float addTheta)
 {
 	phi += addPhi;
@@ -22,14 +21,14 @@ void View::addPhiTheta(float addPhi, float addTheta)
 	newDirection.y = cos(theta);
 	newDirection.z = sin(theta) * sin(phi);
 	direction = newDirection;
-  update();
-};
+	update();
+}
 zg::IWindow::EventIdentifier View::addResizeHandler(const IWindow::ViewResizeHandler &callback)
 {
 	auto id = ++viewResizeHandlers.first;
 	viewResizeHandlers.second[id] = callback;
 	return id;
-};
+}
 void View::removeResizeHandler(zg::IWindow::EventIdentifier &id)
 {
 	auto &handlers = viewResizeHandlers.second;
@@ -40,15 +39,15 @@ void View::removeResizeHandler(zg::IWindow::EventIdentifier &id)
 	}
 	handlers.erase(handlerIter);
 	id = 0;
-};
+}
 void View::callResizeHandler(glm::vec2 newSize)
 {
-	auto& handlersMap = viewResizeHandlers.second;
+	auto &handlersMap = viewResizeHandlers.second;
 	std::vector<IWindow::ViewResizeHandler> handlersCopy;
-	for (const auto& pair : handlersMap)
+	for (const auto &pair : handlersMap)
 		handlersCopy.push_back(pair.second);
-	for (auto& handler : handlersCopy)
+	for (auto &handler : handlersCopy)
 	{
 		handler(newSize);
 	}
-};
+}

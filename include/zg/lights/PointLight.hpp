@@ -6,15 +6,15 @@
 #include "../Window.hpp"
 namespace zg::lights
 {
-	struct PointLightShadow
+  struct PointLightShadow
   {
-		Window &window;
+    Window &window;
     shaders::Shader &shader;
     PointLight &pointLight;
     textures::Texture texture;
-	textures::Framebuffer framebuffer;
-	glm::mat4 shadowTransforms[6];
+    textures::Framebuffer framebuffer;
+    glm::mat4 shadowTransforms[6];
     PointLightShadow(Window &window, PointLight &pointLight);
-	void updateShadowTransforms();
+    void updateShadowTransforms();
   };
 }

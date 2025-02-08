@@ -21,24 +21,24 @@ namespace zg::fonts::freetype
 		FreetypeCharacter(Window &window, const FreetypeFont &freeTypeFont, float codepoint, float fontSize);
 	};
 	struct FreetypeFont
-  {
+	{
 		static FT_Library freetypeLibrary;
-    static bool freetypeLoaded;
-    std::shared_ptr<FT_Face> facePointer;
+		static bool freetypeLoaded;
+		std::shared_ptr<FT_Face> facePointer;
 		std::shared_ptr<int8_t[]> fontFileBytes;
 		std::unordered_map<float, std::unordered_map<float, FreetypeCharacter>> codepointFontSizeCharacters;
 		Window &window;
-    FreetypeFont(Window &window, filesystem::File &fontFile);
+		FreetypeFont(Window &window, filesystem::File &fontFile);
 		const glm::vec2 stringSize(const std::string_view string, float fontSize, float &lineHeight, glm::vec2 bounds);
 		void stringToTexture(const std::string_view string,
-												 glm::vec4 color,
-												 float fontSize,
-												 float &lineHeight,
-												 glm::vec2 textureSize,
-												 std::shared_ptr<textures::Texture> &texturePointer,
-												 const int64_t &cursorIndex,
-												 glm::vec3 &cursorPosition);
+							 glm::vec4 color,
+							 float fontSize,
+							 float &lineHeight,
+							 glm::vec2 textureSize,
+							 std::shared_ptr<textures::Texture> &texturePointer,
+							 const int64_t &cursorIndex,
+							 glm::vec3 &cursorPosition);
 		FreetypeCharacter &getCharacter(float codepoint, float fontSize);
 		static void FT_PRINT_AND_THROW_ERROR(const FT_Error &error);
-  };
+	};
 }

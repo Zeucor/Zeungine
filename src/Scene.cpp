@@ -20,7 +20,7 @@ Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirectio
 		bvh = std::make_unique<raytracing::BVH>();
 	}
 	hookMouseEvents();
-};
+}
 Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *_framebufferPointer, bool _useBVH):
 	IScene(_window),
 	view(cameraPosition, cameraDirection),
@@ -33,11 +33,11 @@ Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirectio
 		bvh = std::make_unique<raytracing::BVH>();
 	}
 	hookMouseEvents();
-};
+}
 Scene::~Scene()
 {
 	unhookMouseEvents();
-};
+}
 void Scene::update()
 {
 	auto it = entities.begin();
@@ -55,7 +55,6 @@ void Scene::preRender()
 	{
 		directionaLightShadow.framebuffer.bind();
 		iRenderer.clear();
-		directionaLightShadow.shader.bind();
 		for (auto &entityPair : entities)
 		{
 			auto &entityPointer = entityPair.second;
@@ -65,19 +64,19 @@ void Scene::preRender()
 			{
 				continue;
 			}
+			directionaLightShadow.shader.bind(glEntity);
 			directionaLightShadow.shader.setBlock("LightSpaceMatrix", glEntity, directionaLightShadow.lightSpaceMatrix, sizeof(glm::mat4));
 			const auto &model = glEntity.getModelMatrix();
 			directionaLightShadow.shader.setBlock("Model", glEntity, model);
 			vbo.drawVAO();
+			directionaLightShadow.shader.unbind();
 		}
-		directionaLightShadow.shader.unbind();
 		directionaLightShadow.framebuffer.unbind();
 	}
 	for (auto &spotLightShadow : spotLightShadows)
 	{
 		spotLightShadow.framebuffer.bind();
 		iRenderer.clear();
-		spotLightShadow.shader.bind();
 		for (auto &entityPair : entities)
 		{
 			auto &entityPointer = entityPair.second;
@@ -87,19 +86,19 @@ void Scene::preRender()
 			{
 				continue;
 			}
+			spotLightShadow.shader.bind(glEntity);
 			spotLightShadow.shader.setBlock("LightSpaceMatrix", glEntity, spotLightShadow.lightSpaceMatrix, sizeof(glm::mat4));
 			const auto &model = glEntity.getModelMatrix();
 			spotLightShadow.shader.setBlock("Model", glEntity, model);
 			vbo.drawVAO();
+			spotLightShadow.shader.unbind();
 		}
-		spotLightShadow.shader.unbind();
 		spotLightShadow.framebuffer.unbind();
 	}
 	for (auto &pointLightShadow : pointLightShadows)
 	{
 		pointLightShadow.framebuffer.bind();
 		iRenderer.clear();
-		pointLightShadow.shader.bind();
 		for (auto &entityPair : entities)
 		{
 			auto &entityPointer = entityPair.second;
@@ -109,6 +108,7 @@ void Scene::preRender()
 			{
 				continue;
 			}
+			pointLightShadow.shader.bind(glEntity);
 			pointLightShadow.shader.setBlock("PointLightSpaceMatrix", glEntity, pointLightShadow.shadowTransforms, sizeof(glm::mat4) * 6);
 			pointLightShadow.shader.setUniform("nearPlane", glEntity, pointLightShadow.pointLight.nearPlane);
 			pointLightShadow.shader.setUniform("farPlane", glEntity, pointLightShadow.pointLight.farPlane);
@@ -116,8 +116,8 @@ void Scene::preRender()
 			const auto &model = glEntity.getModelMatrix();
 			pointLightShadow.shader.setBlock("Model", glEntity, model);
 			vbo.drawVAO();
+			pointLightShadow.shader.unbind();
 		}
-		pointLightShadow.shader.unbind();
 		pointLightShadow.framebuffer.unbind();
 	}
 #if defined(USE_GL) || defined(USE_EGL)
@@ -131,7 +131,7 @@ void Scene::preRender()
 	iRenderer.clearColor(clearColor);
 	iRenderer.clear();
 #endif
-};
+}
 void Scene::render()
 {
 	if (useBVH)
@@ -148,7 +148,7 @@ void Scene::render()
 	{
 		it->second->render();
 	}
-};
+}
 void Scene::entityPreRender(IEntity &entity)
 {
 	Entity &glEntity = static_cast<Entity&>(entity);
@@ -195,7 +195,7 @@ void Scene::entityPreRender(IEntity &entity)
 		++unit;
 		--unitRemaining;
 	}
-};
+}
 void Scene::resize(glm::vec2 newSize)
 {
 	view.callResizeHandler(newSize);
@@ -209,7 +209,7 @@ void Scene::resize(glm::vec2 newSize)
 		textures::TextureFactory::initTexture(framebufferPointer->texture, 0);
 		textures::FramebufferFactory::initFramebuffer(*framebufferPointer);
 	}
-};
+}
 void Scene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs)
 {
 	auto &glEntity = (Entity &)*entity;
@@ -229,7 +229,7 @@ void Scene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vec
 		entityIDsWithSubID.push_back(childEntityID);
 		postAddEntity(pair.second, entityIDsWithSubID);
 	}
-};
+}
 void Scene::preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs)
 {
 	auto &glEntity = (Entity &)*entity;
@@ -237,7 +237,7 @@ void Scene::preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::v
 	{
 		bvh->removeEntity(*this, glEntity);
 	}
-};
+}
 Entity *Scene::findEntityByPrimID(const size_t &primID)
 {
 	if (!useBVH)
@@ -295,7 +295,7 @@ void Scene::hookMouseEvents()
 		}
 		foundEntity->callMouseMoveHandler(coords);
 	});
-};
+}
 void Scene::unhookMouseEvents()
 {
 	for (unsigned int button = Window::MinMouseButton; button <= Window::MaxMouseButton; ++button)
@@ -303,4 +303,4 @@ void Scene::unhookMouseEvents()
 		window.removeMousePressHandler(button, mousePressIDs[button]);
 	}
 	window.removeMouseMoveHandler(mouseMoveID);
-};
+}

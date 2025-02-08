@@ -2,11 +2,9 @@
 #include <zg/interfaces/IEntity.hpp>
 #include <zg/Window.hpp>
 using namespace zg;
-IScene::IScene(Window& _window):
-	window(_window)
-{
-};
-size_t IScene::addEntity(const std::shared_ptr<IEntity>& entity, bool callOnEntityAdded)
+IScene::IScene(Window &_window) : window(_window) {
+								  };
+size_t IScene::addEntity(const std::shared_ptr<IEntity> &entity, bool callOnEntityAdded)
 {
 	auto id = ++entitiesCount;
 	entity->ID = id;
@@ -16,7 +14,7 @@ size_t IScene::addEntity(const std::shared_ptr<IEntity>& entity, bool callOnEnti
 		window.onEntityAdded(entity);
 	return id;
 };
-void IScene::removeEntity(const size_t& id)
+void IScene::removeEntity(const size_t &id)
 {
 	auto entityIter = entities.find(id);
 	if (entityIter != entities.end())
@@ -45,7 +43,7 @@ void IScene::render()
 		it->second->render();
 	}
 };
-void IScene::entityPreRender(IEntity &entity){};
-void IScene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs){};
-void IScene::preRemoveEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs){};
-void IScene::resize(glm::vec2 newSize){};
+void IScene::entityPreRender(IEntity &entity) {};
+void IScene::postAddEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs) {};
+void IScene::preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs) {};
+void IScene::resize(glm::vec2 newSize) {};

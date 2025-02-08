@@ -3,9 +3,8 @@
 #include <unistd.h>
 #endif
 using namespace zg::strings;
-HookedConsole::HookedConsole(const std::function<void(const std::vector<std::string> &)> &_outputCallback, StdHandleToRedirect handle):
-    outputCallback(_outputCallback),
-	m_handle(handle)
+HookedConsole::HookedConsole(const std::function<void(const std::vector<std::string> &)> &_outputCallback, StdHandleToRedirect handle) : outputCallback(_outputCallback),
+                                                                                                                                         m_handle(handle)
 {
     initializeRedirect();
 }
@@ -69,12 +68,12 @@ void HookedConsole::readFromPipe()
     while (isRunning)
     {
 #ifdef _WIN32
-    		DWORD bytesAvailable = 0;
-    		if (!PeekNamedPipe(readablePipeEnd, nullptr, 0, nullptr, &bytesAvailable, nullptr) || bytesAvailable == 0)
-    		{
-    				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    				continue;
-    		}
+        DWORD bytesAvailable = 0;
+        if (!PeekNamedPipe(readablePipeEnd, nullptr, 0, nullptr, &bytesAvailable, nullptr) || bytesAvailable == 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
         if (ReadFile(readablePipeEnd, buffer, bufferSize, &bytesRead, nullptr) && bytesRead > 0)
         {
             processBuffer(buffer, bytesRead);

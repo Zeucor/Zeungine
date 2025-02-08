@@ -16,7 +16,7 @@
 #include <zg/windows/WaylandWindow.hpp>
 #endif
 using namespace zg;
-IPlatformWindow* zg::createPlatformWindow()
+IPlatformWindow *zg::createPlatformWindow()
 {
     if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_WIN32)
     {
@@ -27,41 +27,41 @@ IPlatformWindow* zg::createPlatformWindow()
     else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_MACOS)
     {
 #ifdef USE_MACOS
-	    return new MacOSWindow();
+        return new MacOSWindow();
 #endif
     }
     else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_IOS)
     {
 #ifdef USE_MACOS
-	    return new iOSWindow();
+        return new iOSWindow();
 #endif
     }
 #ifdef LINUX
     else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_XCB || SELECTED_WINDOW_TYPE == WINDOW_TYPE_X11 || SELECTED_WINDOW_TYPE == WINDOW_TYPE_WAYLAND)
     {
 
-		auto xdgSessionType = getenv("XDG_SESSION_TYPE");
-		if (strcmp(xdgSessionType, "x11") == 0)
-		{
+        auto xdgSessionType = getenv("XDG_SESSION_TYPE");
+        if (strcmp(xdgSessionType, "x11") == 0)
+        {
 #if defined(USE_XCB) || defined(USE_SWIFTSHADER)
             return new XCBWindow();
 #endif
 #ifdef USE_X11
-	        return new X11Window();
+            return new X11Window();
 #endif
-		}
-		else if (strcmp(xdgSessionType, "wayland") == 0)
-		{
+        }
+        else if (strcmp(xdgSessionType, "wayland") == 0)
+        {
 #ifdef USE_WAYLAND
-	        return new WaylandWindow();
+            return new WaylandWindow();
 #endif
-		}
+        }
     }
 #endif
     else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_ANDROID)
     {
 #ifdef USE_ANDROID
-	    return new AndroidWindow();
+        return new AndroidWindow();
 #endif
     }
     throw std::runtime_error("Window type not supported!");

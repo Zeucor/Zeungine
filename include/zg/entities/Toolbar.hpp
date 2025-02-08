@@ -64,7 +64,7 @@ namespace zg::entities
 		size_t helpDropdownID = 0;
 		IWindow::EventIdentifier helpHoverID = 0;
 		inline static size_t toolbarsCount = 0;
-  		Toolbar(Window &window,
+		Toolbar(Window &window,
 				Scene &scene,
 				glm::vec3 position,
 				glm::vec3 rotation,
@@ -74,7 +74,7 @@ namespace zg::entities
 				fonts::freetype::FreetypeFont &font,
 				std::string_view name = "");
 		~Toolbar();
-    void preRender() override;
+		void preRender() override;
 		void setSize(glm::vec2 newSize);
-  };
+	};
 }

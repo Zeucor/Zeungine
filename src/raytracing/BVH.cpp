@@ -9,13 +9,13 @@ BVH::BVH():
   config(getDefaultConfig())
 {
 
-};
+}
 Config BVH::getDefaultConfig()
 {
   Config config;
 	config.quality = bvh::v2::DefaultBuilder<Node>::Quality::High;
   return config;
-};
+}
 void BVH::buildBBoxesAndCenters()
 {
 	bboxes.resize(triangles.size());
@@ -28,7 +28,7 @@ void BVH::buildBBoxesAndCenters()
 			centers[i] = triangles[i].get_center();
 		}
 	});
-};
+}
 void BVH::buildBVH()
 {
 	if (!triangles.size())
@@ -40,7 +40,7 @@ void BVH::buildBVH()
   precomputeTriangles();
   changed = false;
 	built = true;
-};
+}
 void BVH::precomputeTriangles()
 {
   precomputedTriangles.resize(triangles.size());
@@ -52,7 +52,7 @@ void BVH::precomputeTriangles()
 			precomputedTriangles[i] = triangles[j];
 		}
 	});
-};
+}
 glm::vec3 BVH::unProject(glm::vec3 win, const glm::mat4 &inverseProjectionView, glm::vec4 viewport)
 {
 	glm::vec4 tmp = glm::vec4(win, 1.0f);
@@ -64,7 +64,7 @@ glm::vec3 BVH::unProject(glm::vec3 win, const glm::mat4 &inverseProjectionView, 
 	glm::vec4 obj = inverseProjectionView * tmp;  // Transform into world space
 	obj /= obj.w;  // Perform perspective divide
 	return glm::vec3(obj);
-};
+}
 Ray BVH::mouseCoordToRay(uint32_t windowHeight,
                          glm::vec2 screenCoord,
                          glm::vec4 viewport,
@@ -87,7 +87,7 @@ Ray BVH::mouseCoordToRay(uint32_t windowHeight,
 	ray.tmin = nearPlane;
 	ray.tmax = farPlane;
   return ray;
-};
+}
 size_t BVH::trace(Ray &ray)
 {
 	if (!built || changed)
@@ -115,7 +115,7 @@ size_t BVH::trace(Ray &ray)
 		return primID != invalidID;
 	});
   return primID;
-};
+}
 size_t BVH::addTriangle(const Tri &tri)
 {
   auto triangleID = triangles.size();
@@ -123,7 +123,7 @@ size_t BVH::addTriangle(const Tri &tri)
   changed = true;
 	built = false;
   return triangleID;
-};
+}
 void BVH::addEntity(Entity &entity)
 {
   auto &indiceCount = entity.indiceCount;
@@ -148,7 +148,7 @@ void BVH::addEntity(Entity &entity)
 			&entity
 		});
 	}
-};
+}
 void BVH::updateEntity(Entity &entity)
 {
 	std::vector<size_t> indices;
@@ -194,7 +194,7 @@ void BVH::updateEntity(Entity &entity)
 	}
 	built = false;
 	changed = true;
-};
+}
 void BVH::removeEntity(Scene &scene, Entity &entity)
 {
 	// auto start = std::chrono::high_resolution_clock::now();
@@ -221,4 +221,4 @@ void BVH::removeEntity(Scene &scene, Entity &entity)
 	// std::cout << "Remove Entity: " << duration.count() << " microseconds" << std::endl;
 	changed = true;
 	built = false;
-};
+}

@@ -15,27 +15,27 @@ namespace zg::textures
 {
 	struct Texture;
 }
-
 namespace zg::shaders
 {
 	struct Shader
 	{
-		using ShaderHook = std::function<std::string(Shader&, const RuntimeConstants&)>;
-		Window& window;
+		using ShaderHook = std::function<std::string(Shader &, const RuntimeConstants &)>;
+		Window &window;
 		RuntimeConstants constants;
 		size_t hash = 0;
-		void* rendererData = 0;
-		Shader(Window& window, const RuntimeConstants& constants,
-					 const std::vector<ShaderType>& shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
+		void *rendererData = 0;
+		bool compiled = false;
+		Shader(Window &window,
+			   const RuntimeConstants &constants,
+			   const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
 		~Shader();
-		void bind() const;
-		void unbind() const;
+		void bind(Entity &entity);
+		void unbind();
 		void addSSBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex);
 		void addUBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount = 1, bool isArray = false);
 		void addTexture(uint32_t bindingIndex, shaders::ShaderType shaderType, std::string_view textureName, uint32_t descriptorCount = 1);
-
 		template <typename T>
-		void setUniform(const std::string_view name, vaos::VAO& vao, const T& value, uint32_t size = 0)
+		void setUniform(const std::string_view name, vaos::VAO &vao, const T &value, uint32_t size = 0)
 		{
 			auto pointerSize = size ? size : sizeof(value);
 			enums::EUniformType uniformType;
@@ -51,7 +51,7 @@ namespace zg::shaders
 			{
 				uniformType = enums::EUniformType::_1ui;
 			}
-			else if constexpr (std::is_same_v<T, float*>)
+			else if constexpr (std::is_same_v<T, float *>)
 			{
 				uniformType = enums::EUniformType::_1fv;
 			}
@@ -91,13 +91,13 @@ namespace zg::shaders
 		};
 
 		template <typename T>
-		void setBlock(const std::string_view name, vaos::VAO& vao, const T& value, uint32_t size = 0)
+		void setBlock(const std::string_view name, vaos::VAO &vao, const T &value, uint32_t size = 0)
 		{
 			auto pointerSize = size ? size : sizeof(value);
 			window.iRenderer->setBlock(*this, vao, name, &value, pointerSize);
 		};
-		void setSSBO(const std::string_view name, vaos::VAO& vao, const void* pointer, uint32_t size);
-		void setTexture(const std::string_view name, vaos::VAO& vao, const textures::Texture& texture, const int32_t unit);
+		void setSSBO(const std::string_view name, vaos::VAO &vao, const void *pointer, uint32_t size);
+		void setTexture(const std::string_view name, vaos::VAO &vao, const textures::Texture &texture, const int32_t unit);
 	};
 #if defined(USE_GL) || defined(USE_EGL)
 	struct GLShaderImpl

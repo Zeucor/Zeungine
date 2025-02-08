@@ -3,13 +3,13 @@
 #include <zg/filesystem/Directory.hpp>
 #include <zg/filesystem/File.hpp>
 using namespace zg::editor::hs;
-Hotswapper::Hotswapper(std::string_view directory, EditorScene &editorScene):
-		running(true),
-		directory(directory),
-		editorScene(editorScene),
-		swapper(std::make_shared<hscpp::Hotswapper>()),
-		updateThread(std::make_shared<std::thread>(&Hotswapper::update, this))
-{}
+Hotswapper::Hotswapper(std::string_view directory, EditorScene &editorScene) : running(true),
+																			   directory(directory),
+																			   editorScene(editorScene),
+																			   swapper(std::make_shared<hscpp::Hotswapper>()),
+																			   updateThread(std::make_shared<std::thread>(&Hotswapper::update, this))
+{
+}
 Hotswapper::~Hotswapper()
 {
 	running = false;
@@ -80,8 +80,8 @@ void Hotswapper::update()
 					editorScene.OnUnLoad(*editorScene.gameWindowPointer);
 				}
 				editorScene.loaded = false;
-				editorScene.OnHotswapLoad = std::function<void(Window&, hscpp::AllocationResolver &)>();
-				editorScene.OnUnLoad = std::function<void(Window&)>();
+				editorScene.OnHotswapLoad = std::function<void(Window &, hscpp::AllocationResolver &)>();
+				editorScene.OnUnLoad = std::function<void(Window &)>();
 				swapperRef.UnLoadModule();
 			}
 			compiled = false;

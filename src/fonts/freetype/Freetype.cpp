@@ -8,24 +8,23 @@
 using namespace zg::fonts::freetype;
 FT_Library FreetypeFont::freetypeLibrary;
 bool FreetypeFont::freetypeLoaded = ([]()
-{
+									 {
 	if (FT_Init_FreeType(&freetypeLibrary))
   {
     throw std::runtime_error("Failed to initialize freetype library");
   }
-	return true;
-})();
+	return true; })();
 struct ft_error
 {
 	int err;
 	const char *str;
 };
 #undef __FTERRORS_H__
-#define FT_ERRORDEF(e, v, s)	{ (e), (s) },
+#define FT_ERRORDEF(e, v, s) {(e), (s)},
 #define FT_ERROR_START_LIST
-#define FT_ERROR_END_LIST	{ 0, NULL }
+#define FT_ERROR_END_LIST {0, NULL}
 static const struct ft_error ft_errors[] =
-{
+	{
 #include FT_ERRORS_H
 };
 const char *ft_errorstring(int err)
@@ -59,7 +58,7 @@ FreetypeCharacter::FreetypeCharacter(Window &window, const FreetypeFont &freeTyp
 	}
 	size = {face->glyph->bitmap.width, face->glyph->bitmap.rows};
 	bearing = {face->glyph->bitmap_left, face->glyph->bitmap_top};
-	auto& renderer = window.iRenderer->renderer;
+	auto &renderer = window.iRenderer->renderer;
 	if (size.x == 0 || size.y == 0)
 	{
 		goto _setAdvance;
@@ -82,19 +81,17 @@ FreetypeCharacter::FreetypeCharacter(Window &window, const FreetypeFont &freeTyp
 		}
 		texturePointer.reset(new textures::Texture(window, {size.x, size.y, 1, 0}, rgbaImgPointer, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Nearest));
 	}
-	_setAdvance:
-		advance = face->glyph->advance.x;
+_setAdvance:
+	advance = face->glyph->advance.x;
 };
-FreetypeFont::FreetypeFont(Window &window, filesystem::File &fontFile):
-	facePointer(new FT_Face, [](FT_Face *pointer)
-	{
+FreetypeFont::FreetypeFont(Window &window, filesystem::File &fontFile) : facePointer(new FT_Face, [](FT_Face *pointer)
+																					 {
 		FT_Done_Face(*pointer);
-		delete pointer;
-	}),
-	window(window)
+		delete pointer; }),
+																		 window(window)
 {
 	fontFileBytes = fontFile.toBytes();
-  auto fontFileSize = fontFile.size();
+	auto fontFileSize = fontFile.size();
 	auto actualFacePointer = facePointer.get();
 	FT_PRINT_AND_THROW_ERROR(FT_New_Memory_Face(freetypeLibrary, (uint8_t *)fontFileBytes.get(), fontFileSize, 0, actualFacePointer));
 	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(*actualFacePointer, FT_ENCODING_UNICODE));
@@ -165,13 +162,13 @@ const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fo
 	return size;
 };
 void FreetypeFont::stringToTexture(const std::string_view string,
-																   glm::vec4 color,
-																   float fontSize,
-																   float &lineHeight,
-																   glm::vec2 textureSize,
-																   std::shared_ptr<textures::Texture> &texturePointer,
-																   const int64_t &cursorIndex,
-																   glm::vec3 &cursorPosition)
+								   glm::vec4 color,
+								   float fontSize,
+								   float &lineHeight,
+								   glm::vec2 textureSize,
+								   std::shared_ptr<textures::Texture> &texturePointer,
+								   const int64_t &cursorIndex,
+								   glm::vec3 &cursorPosition)
 {
 	glm::ivec2 scaledSize = textureSize * textureScale;
 	if (!texturePointer || texturePointer->size.x != scaledSize.x || texturePointer->size.y != scaledSize.y)

@@ -2,36 +2,28 @@
 #include <zg/utilities.hpp>
 using namespace zg::entities;
 DropdownMenu::DropdownMenu(zg::Window &window,
-							             zg::Scene &scene,
-							             glm::vec3 position,
-							             glm::vec3 rotation,
-							             glm::vec3 scale,
-							             glm::vec4 color,
-                           fonts::freetype::FreetypeFont &font,
-							             const zg::shaders::RuntimeConstants &constants,
-							             std::string_view name):
-	zg::Entity(
-		window,
-		zg::mergeVectors<std::string_view>({
-			{
-				"Color", "Position",
-				"View", "Projection", "Model", "CameraPosition"
-			}
-		}, constants),
-		6,
-		{0, 1, 2,  2, 3, 0},
-    4,
-		{
-			{ 0, -0, 0 }, { 0, -0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }
-		},
-		position,
-		rotation,
-		scale,
-		name.empty() ? "DropdownMenu " + std::to_string(++dropdownMenusCount) : name
-	),
-	scene(scene),
-	size({ 0, 0 }),
-	font(font)
+						   zg::Scene &scene,
+						   glm::vec3 position,
+						   glm::vec3 rotation,
+						   glm::vec3 scale,
+						   glm::vec4 color,
+						   fonts::freetype::FreetypeFont &font,
+						   const zg::shaders::RuntimeConstants &constants,
+						   std::string_view name) : zg::Entity(window,
+															   zg::mergeVectors<std::string_view>({{"Color", "Position",
+																									"View", "Projection", "Model", "CameraPosition"}},
+																								  constants),
+															   6,
+															   {0, 1, 2, 2, 3, 0},
+															   4,
+															   {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}},
+															   position,
+															   rotation,
+															   scale,
+															   name.empty() ? "DropdownMenu " + std::to_string(++dropdownMenusCount) : name),
+													scene(scene),
+													size({0, 0}),
+													font(font)
 {
 	updateIndices(indices);
 	setColor(color);
@@ -46,9 +38,9 @@ void DropdownMenu::addOption(std::string_view name, const OptionPressHandler &ha
 		auto &childItem = *std::dynamic_pointer_cast<DropdownItem>(child.second);
 		sizeYTotal += childItem.size.y;
 	}
-  auto dropdownItem = std::make_shared<DropdownItem>(window, scene, glm::vec3(0, -sizeYTotal, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0.1, 0.1, 0.1, 1), name, handler, font);
-  addChild(dropdownItem);
-  sizeYTotal += dropdownItem->size.y;
+	auto dropdownItem = std::make_shared<DropdownItem>(window, scene, glm::vec3(0, -sizeYTotal, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0.1, 0.1, 0.1, 1), name, handler, font);
+	addChild(dropdownItem);
+	sizeYTotal += dropdownItem->size.y;
 	float sizeXMax = 0;
 	for (auto &child : children)
 	{
@@ -65,7 +57,7 @@ void DropdownMenu::addOption(std::string_view name, const OptionPressHandler &ha
 void DropdownMenu::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind();
+	shader.bind(*this);
 	scene.entityPreRender(*this);
 	shader.setBlock("Model", *this, model);
 	shader.setBlock("View", *this, scene.view.matrix);
@@ -81,46 +73,37 @@ void DropdownMenu::setColor(glm::vec4 color)
 void DropdownMenu::setSize(glm::vec2 size)
 {
 	positions = {
-		{ 0, -size.y, 0 }, { size.x, -size.y, 0 }, { size.x, 0, 0 }, { 0, 0, 0 }
-	};
+		{0, -size.y, 0}, {size.x, -size.y, 0}, {size.x, 0, 0}, {0, 0, 0}};
 	updateElements("Position", positions);
 	this->size = size;
 };
 DropdownItem::DropdownItem(Window &window,
-													 Scene &scene,
-													 glm::vec3 position,
-													 glm::vec3 rotation,
-													 glm::vec3 scale,
-													 glm::vec4 color,
-													 const std::string_view text,
-													 const DropdownMenu::OptionPressHandler &handler,
-													 fonts::freetype::FreetypeFont &font,
-													 const shaders::RuntimeConstants &constants,
-													 std::string_view name):
-	zg::Entity(
-		window,
-		zg::mergeVectors<std::string_view>({
-			{
-				"Color", "Position",
-				"View", "Projection", "Model", "CameraPosition"
-			}
-		}, constants),
-		6,
-		{0, 1, 2,  2, 3, 0},
-		4,
-		{
-			{ 0, -0, 0 }, { 0, -0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }
-		},
-		position,
-		rotation,
-		scale,
-		name.empty() ? "DropdownItem " + std::to_string(++dropdownItemsCount) : name
-	),
-	scene(scene),
-	size({ 0, 0 }),
-	text(text),
-	handler(handler),
-	font(font)
+						   Scene &scene,
+						   glm::vec3 position,
+						   glm::vec3 rotation,
+						   glm::vec3 scale,
+						   glm::vec4 color,
+						   const std::string_view text,
+						   const DropdownMenu::OptionPressHandler &handler,
+						   fonts::freetype::FreetypeFont &font,
+						   const shaders::RuntimeConstants &constants,
+						   std::string_view name) : zg::Entity(window,
+															   zg::mergeVectors<std::string_view>({{"Color", "Position",
+																									"View", "Projection", "Model", "CameraPosition"}},
+																								  constants),
+															   6,
+															   {0, 1, 2, 2, 3, 0},
+															   4,
+															   {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}},
+															   position,
+															   rotation,
+															   scale,
+															   name.empty() ? "DropdownItem " + std::to_string(++dropdownItemsCount) : name),
+													scene(scene),
+													size({0, 0}),
+													text(text),
+													handler(handler),
+													font(font)
 {
 	updateIndices(indices);
 	setColor(color);
@@ -151,10 +134,10 @@ DropdownItem::DropdownItem(Window &window,
 			return this->window.windowHeight / 32.f;
 		});
 	textView->addToBVH = false;
-  addChild(textView);
-  setSize({ TextSize.x, TextSize.y });
+	addChild(textView);
+	setSize({TextSize.x, TextSize.y});
 	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
-	{
+										{
 		if (hovered)
 		{
 			setColor({ 0.5, 0.5, 0.5, 1 });
@@ -162,13 +145,11 @@ DropdownItem::DropdownItem(Window &window,
 		else
 		{
 			setColor(color);
-		}
-	});
+		} });
 	mousePressID = addMousePressHandler(0, [&](auto pressed)
-	{
+										{
 		if (!pressed)
-			this->handler();
-	});
+			this->handler(); });
 };
 DropdownItem::~DropdownItem()
 {
@@ -178,7 +159,7 @@ DropdownItem::~DropdownItem()
 void DropdownItem::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind();
+	shader.bind(*this);
 	scene.entityPreRender(*this);
 	shader.setBlock("Model", *this, model);
 	shader.setBlock("View", *this, scene.view.matrix);
@@ -194,8 +175,7 @@ void DropdownItem::setColor(glm::vec4 color)
 void DropdownItem::setSize(glm::vec2 size)
 {
 	positions = {
-		{ 0, -size.y, 0 }, { size.x, -size.y, 0 }, { size.x, 0, 0 }, { 0, 0, 0 }
-	};
+		{0, -size.y, 0}, {size.x, -size.y, 0}, {size.x, 0, 0}, {0, 0, 0}};
 	updateElements("Position", positions);
 	this->size = size;
 };

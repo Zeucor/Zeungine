@@ -14,8 +14,10 @@ namespace zg::strings
 {
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
-    enum StdHandleToRedirect {
-        STDOUT, STDERR
+    enum StdHandleToRedirect
+    {
+        STDOUT,
+        STDERR
     };
     class HookedConsole
     {
@@ -24,6 +26,7 @@ namespace zg::strings
         ~HookedConsole();
         void stop();
         std::vector<std::string> getAllLines();
+
     private:
         std::function<void(const std::vector<std::string> &)> outputCallback;
         void initializeRedirect();
