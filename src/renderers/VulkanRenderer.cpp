@@ -324,8 +324,8 @@ void VulkanRenderer::pickPhysicalDevice()
 	{
 		physicalDeviceScores[rateDeviceSuitability(device)] = device;
 	}
-	auto end = physicalDeviceScores.end();
-	auto begin = physicalDeviceScores.begin();
+	auto end = physicalDeviceScores.rend();
+	auto begin = physicalDeviceScores.rbegin();
 	uint32_t selectedDeviceScore;
 	for (auto iter = begin; iter != end; ++iter)
 	{
