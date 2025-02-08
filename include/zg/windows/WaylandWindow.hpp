@@ -1,23 +1,29 @@
 #pragma once
 #ifdef LINUX
 #if defined(USE_WAYLAND)
-#include <zg/Window.hpp>
+#include <linux/input.h>
+#include <poll.h>
 #include <wayland-client-protocol.h>
 #include <wayland-client.h>
+#include <wayland-cursor.h>
 #include <wayland-util.h>
 #include <wayland/wayland-xdg-shell-client-protocol.h>
 #include <wayland/xdg-decoration-unstable-v1-client-protocol.h>
-#include <poll.h>
+#include <zg/Window.hpp>
 namespace zg
 {
 	struct WaylandWindow : IPlatformWindow
 	{
 		wl_registry* registry = 0;
+		wl_shm* shm = 0;
 		wl_compositor* compositor = 0;
 		wl_display* display = 0;
 		wl_surface* surface = 0;
 		wl_seat* seat = 0;
 		wl_pointer* seatPointer = 0;
+		uint32_t serial = 0;
+		glm::vec2 pointerCoords = glm::vec2(0);
+		wl_keyboard* seatKeyboard = 0;
 		xdg_wm_base* xdgWm = 0;
 		xdg_surface* xdgSurface = 0;
 		xdg_toplevel* xdgToplevel = 0;

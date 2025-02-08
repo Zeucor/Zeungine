@@ -1,6 +1,9 @@
 #ifdef LINUX
 #if defined(USE_WAYLAND)
+#include <fcntl.h>
 #include <iostream>
+#include <sys/mman.h>
+#include <unistd.h>
 #include <wayland/wayland-xdg-shell-client-protocol.h>
 #include <zg/windows/WaylandWindow.hpp>
 using namespace zg;
@@ -25,11 +28,16 @@ static void registry_handler(void* data, struct wl_registry* registry, uint32_t 
 	{
 		waylandWindow.seat = (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface, 1);
 		waylandWindow.seatPointer = wl_seat_get_pointer(waylandWindow.seat);
+		waylandWindow.seatKeyboard = wl_seat_get_keyboard(waylandWindow.seat);
 	}
 	else if (strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0)
 	{
 		waylandWindow.decorationManager =
 			(zxdg_decoration_manager_v1*)wl_registry_bind(registry, id, &zxdg_decoration_manager_v1_interface, 1);
+	}
+	else if (strcmp(interface, wl_shm_interface.name) == 0)
+	{
+		waylandWindow.shm = (wl_shm*)wl_registry_bind(registry, id, &wl_shm_interface, 1);
 	}
 }
 static void registry_remove_object(void* data, struct wl_registry* registry, uint32_t name) {}
@@ -61,25 +69,52 @@ static void handleToplevelClose(void* data, struct xdg_toplevel* toplevel)
 }
 static const struct xdg_toplevel_listener toplevelListener = {.configure = handleToplevelConfigure,
 																															.close = handleToplevelClose};
-void frame_callback_handler(void* data, struct wl_callback* callback, uint32_t time)
+static void keyboard_handle_enter(void* data, wl_keyboard* keyboard, uint32_t serial, wl_surface* surface,
+																	wl_array* keys)
 {
-	wl_callback_destroy(callback);
-	// request_redraw = true; // Flag the next frame
+	auto& waylandWindow = *static_cast<WaylandWindow*>(data);
+	waylandWindow.renderWindowPointer->callFocusHandler(true);
 }
+static void keyboard_handle_leave(void* data, wl_keyboard* keyboard, uint32_t serial, wl_surface* surface)
+{
+	auto& waylandWindow = *static_cast<WaylandWindow*>(data);
+	waylandWindow.renderWindowPointer->callFocusHandler(false);
+}
+static void keyboard_keymap(void* data, wl_keyboard* wl_keyboard, uint32_t format, int32_t fd, uint32_t size) {}
+static void keyboard_key(void* data, wl_keyboard* wl_keyboard, uint32_t serial, uint32_t time, uint32_t key,
+												 uint32_t state)
+{
+}
+static void keyboard_modifiers(void* data, wl_keyboard* wl_keyboard, uint32_t serial, uint32_t mods_depressed,
+															 uint32_t mods_latched, uint32_t mods_locked, uint32_t group)
+{
+}
+static void keyboard_repeat_info(void* data, wl_keyboard* wl_keyboard, int32_t rate, int32_t delay) {}
+static const wl_keyboard_listener keyboardListener = {.keymap = keyboard_keymap,
+																											.enter = keyboard_handle_enter,
+																											.leave = keyboard_handle_leave,
+																											.key = keyboard_key,
+																											.modifiers = keyboard_modifiers,
+																											.repeat_info = keyboard_repeat_info};
 void pointer_handle_enter(void* data, struct wl_pointer* pointer, uint32_t serial, struct wl_surface* surface,
 													wl_fixed_t sx, wl_fixed_t sy)
 {
-	// Mouse entered the surface
+	auto& waylandWindow = *static_cast<WaylandWindow*>(data);
+	waylandWindow.serial = serial;
 }
 
 void pointer_handle_leave(void* data, struct wl_pointer* pointer, uint32_t serial, struct wl_surface* surface)
 {
-	// Mouse left the surface
+	auto& waylandWindow = *static_cast<WaylandWindow*>(data);
+	waylandWindow.serial = 0;
 }
 
 void pointer_handle_motion(void* data, struct wl_pointer* pointer, uint32_t time, wl_fixed_t sx, wl_fixed_t sy)
 {
-	// Mouse moved
+	auto& waylandWindow = *static_cast<WaylandWindow*>(data);
+	double sx_float = wl_fixed_to_double(sx);
+	double sy_float = wl_fixed_to_double(sy);
+	waylandWindow.renderWindowPointer->handleMouseMove(sx_float, sy_float);
 }
 
 void pointer_handle_button(void* data, struct wl_pointer* pointer, uint32_t serial, uint32_t time, uint32_t button,
@@ -98,7 +133,6 @@ static struct wl_pointer_listener pointer_listener = {.enter = pointer_handle_en
 																											.motion = pointer_handle_motion,
 																											.button = pointer_handle_button,
 																											.axis = pointer_handle_axis};
-static const struct wl_callback_listener frame_listener = {frame_callback_handler};
 void WaylandWindow::init(Window& renderWindow)
 {
 	renderWindowPointer = &renderWindow;
@@ -125,23 +159,15 @@ void WaylandWindow::init(Window& renderWindow)
 	xdg_surface_add_listener(xdgSurface, &shellSurfaceListener, this);
 	xdgToplevel = xdg_surface_get_toplevel(xdgSurface);
 	xdg_toplevel_add_listener(xdgToplevel, &toplevelListener, this);
-	if (decorationManager)
-	{
-		toplevelDecoration = zxdg_decoration_manager_v1_get_toplevel_decoration(decorationManager, xdgToplevel);
-		zxdg_toplevel_decoration_v1_set_mode(toplevelDecoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
-		wl_surface_commit(surface); // <-- Ensure this is done
-	}
-	else
-	{
-		std::cerr << "Server-side decorations not available, using client-side decorations\n";
-	}
 	xdg_toplevel_set_title(xdgToplevel, renderWindowPointer->title);
 	xdg_toplevel_set_app_id(xdgToplevel, renderWindowPointer->title);
-	struct wl_callback* frame_callback = wl_surface_frame(surface);
-	wl_callback_add_listener(frame_callback, &frame_listener, nullptr);
 	if (seatPointer)
 	{
 		wl_pointer_add_listener(seatPointer, &pointer_listener, this);
+	}
+	if (seatKeyboard)
+	{
+		wl_keyboard_add_listener(seatKeyboard, &keyboardListener, this);
 	}
 	wl_surface_commit(surface);
 	wl_display_roundtrip(display);
@@ -178,7 +204,9 @@ void WaylandWindow::close() {}
 void WaylandWindow::minimize() {}
 void WaylandWindow::maximize() {}
 void WaylandWindow::restore() {}
-void WaylandWindow::warpPointer(glm::vec2 coords) {}
+void WaylandWindow::warpPointer(glm::vec2 coords)
+{
+}
 void WaylandWindow::showPointer() {}
 void WaylandWindow::hidePointer() {}
 void WaylandWindow::setXY() {}
