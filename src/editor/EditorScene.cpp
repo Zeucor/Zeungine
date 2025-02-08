@@ -291,8 +291,7 @@ void EditorScene::setupGameWindow()
 		if (!pressed)
 		{
 			gameWindowPointer->focused = false;
-			auto &glWindow = (Window&)window;
-			window.callMouseMoveHandler(glWindow.mouseCoords);
+			window.callMouseMoveHandler(window.mouseCoords);
 		} });
 };
 void EditorScene::setupCodeWindow()
@@ -311,8 +310,7 @@ void EditorScene::setupCodeWindow()
 };
 void EditorScene::minimizeWindows()
 {
-	auto &glWindow = (Window &)window;
-	for (auto &windowPointer : glWindow.childWindows)
+	for (auto &windowPointer : window.childWindows)
 	{
 		if (!windowPointer->minimized)
 		{
