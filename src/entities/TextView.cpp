@@ -83,6 +83,9 @@ void TextView::forceUpdate()
 	if (reFontSizeHandler)
 	{
 		fontSize = reFontSizeHandler();
+#ifdef USE_VULKAN
+		fontSize *= 2.0;
+#endif
 	}
 	float lineHeight = 0;
 	auto TextSize = textSize = font.stringSize(text, fontSize, lineHeight, {0, 0});
@@ -91,8 +94,13 @@ void TextView::forceUpdate()
 	actualSizeBeforeNDC = TextSize;
 	if (textSizeIsNDC)
 	{
+#ifdef USE_VULKAN
+		TextSize.x /= this->window.windowWidth;
+		TextSize.y /= this->window.windowHeight;
+#else
 		TextSize.x /= this->window.windowWidth * 0.5;
 		TextSize.y /= this->window.windowHeight * 0.5;
+#endif
 	}
 	actualSize = TextSize;
 	if (resizeHandler)
