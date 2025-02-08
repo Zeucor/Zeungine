@@ -63,7 +63,6 @@ TextView::TextView(Window &window,
 	updateElements("UV2", uvs);
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
-	// TextView::update();
 	resizeID = window.addResizeHandler([&](auto newSize)
 									   { forceUpdate(); });
 	setTextColor(textColor);
@@ -113,15 +112,15 @@ void TextView::forceUpdate()
 void TextView::preRender()
 {
 	auto &model = getModelMatrix();
-	shader.bind(*this);
-	shader.setBlock("Model", *this, model);
-	shader.setBlock("View", *this, scene.view.matrix);
-	shader.setBlock("Projection", *this, scene.projection.matrix);
-	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->bind(*this);
+	shader->setBlock("Model", *this, model);
+	shader->setBlock("View", *this, scene.view.matrix);
+	shader->setBlock("Projection", *this, scene.projection.matrix);
+	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	if (size.x && size.y)
-		shader.setTexture("Texture2D", *this, *texturePointer, 0);
-	shader.setUniform("TextColor", *this, textColor);
-	shader.unbind();
+		shader->setTexture("Texture2D", *this, *texturePointer, 0);
+	shader->setUniform("TextColor", *this, textColor);
+	shader->unbind();
 }
 void TextView::setSize(glm::vec2 size)
 {

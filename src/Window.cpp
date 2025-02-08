@@ -81,10 +81,10 @@ void Window::startWindow()
 	runRunnables();
 	while (iPlatformWindowRef.pollMessages())
 	{
+		iRendererRef.preBeginRenderPass();
 		runRunnables();
 		updateKeyboard();
 		updateMouse();
-		iRendererRef.preBeginRenderPass();
 		update();
 		for (auto &childWindowPointer : childWindows)
 		{

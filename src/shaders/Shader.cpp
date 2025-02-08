@@ -3,9 +3,12 @@
 #include <zg/textures/Texture.hpp>
 #include <zg/crypto/vector.hpp>
 using namespace zg::shaders;
-Shader::Shader(Window &window, const RuntimeConstants &constants, const std::vector<ShaderType> &shaderTypes) : window(window),
-                                                                                                                constants(constants),
-                                                                                                                hash(crypto::hashVector(constants))
+Shader::Shader(size_t hash,
+               Window &window,
+               const RuntimeConstants &constants,
+               const std::vector<ShaderType> &shaderTypes) : window(window),
+                                                             constants(constants),
+                                                             hash(hash)
 {
   window.iRenderer->initShader(*this, constants, shaderTypes);
 }

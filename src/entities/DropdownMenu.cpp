@@ -57,13 +57,13 @@ void DropdownMenu::addOption(std::string_view name, const OptionPressHandler &ha
 void DropdownMenu::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind(*this);
+	shader->bind(*this);
 	scene.entityPreRender(*this);
-	shader.setBlock("Model", *this, model);
-	shader.setBlock("View", *this, scene.view.matrix);
-	shader.setBlock("Projection", *this, scene.projection.matrix);
-	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
-	shader.unbind();
+	shader->setBlock("Model", *this, model);
+	shader->setBlock("View", *this, scene.view.matrix);
+	shader->setBlock("Projection", *this, scene.projection.matrix);
+	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->unbind();
 };
 void DropdownMenu::setColor(glm::vec4 color)
 {
@@ -159,13 +159,13 @@ DropdownItem::~DropdownItem()
 void DropdownItem::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind(*this);
+	shader->bind(*this);
 	scene.entityPreRender(*this);
-	shader.setBlock("Model", *this, model);
-	shader.setBlock("View", *this, scene.view.matrix);
-	shader.setBlock("Projection", *this, scene.projection.matrix);
-	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
-	shader.unbind();
+	shader->setBlock("Model", *this, model);
+	shader->setBlock("View", *this, scene.view.matrix);
+	shader->setBlock("Projection", *this, scene.projection.matrix);
+	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->unbind();
 };
 void DropdownItem::setColor(glm::vec4 color)
 {

@@ -14,7 +14,7 @@ namespace zg
 		glm::vec3 rotation;
 		glm::vec3 scale;
 		glm::mat4 model;
-		shaders::Shader &shader;
+		shaders::Shader *shader = 0;
 		bool affectedByShadows = true;
 		size_t childrenCount = 0;
 		std::map<size_t, std::shared_ptr<Entity>> children;
@@ -30,11 +30,13 @@ namespace zg
 		using MouseHoverHandler = std::function<void(bool)>;
 		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		std::string name;
+		bool addedShader = false;
 		bool ensured = false;
 		Entity(Window &_window, const shaders::RuntimeConstants &constants, uint32_t indiceCount,
 			   const std::vector<uint32_t> &indices, uint32_t elementCount, const std::vector<glm::vec3> &positions,
 			   glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, std::string_view name);
 		virtual void update() override;
+		void addShader();
 		virtual void preRender();
 		void render() override;
 		virtual void postRender();

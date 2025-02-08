@@ -3,12 +3,14 @@
 #include <zg/shaders/ShaderManager.hpp>
 #include <iostream>
 using namespace zg::lights;
-PointLightShadow::PointLightShadow(Window &window, PointLight &pointLight) : window(window),
-																			 shader(
-																				 *shaders::ShaderManager::getShaderByConstants(window, {"Color", "Position", "Normal", "Model", "PointLightSpaceMatrix"}, {shaders::ShaderType::Vertex, shaders::ShaderType::Geometry, shaders::ShaderType::Fragment}).second),
-																			 pointLight(pointLight),
-																			 texture(window, glm::ivec4(2048, 2048, 1, 1), 0, textures::Texture::Depth, textures::Texture::Float),
-																			 framebuffer(window, texture)
+PointLightShadow::PointLightShadow(
+	Window &window,
+	PointLight &pointLight) : window(window),
+							//   shader(
+							// 	  *shaders::ShaderManager::getShaderByConstants(window, {"Color", "Position", "Normal", "Model", "PointLightSpaceMatrix"}, {shaders::ShaderType::Vertex, shaders::ShaderType::Geometry, shaders::ShaderType::Fragment}).second),
+							  pointLight(pointLight),
+							  texture(window, glm::ivec4(2048, 2048, 1, 1), 0, textures::Texture::Depth, textures::Texture::Float),
+							  framebuffer(window, texture)
 {
 	updateShadowTransforms();
 }

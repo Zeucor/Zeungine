@@ -9,7 +9,7 @@ namespace zg::lights
   struct DirectionalLightShadow
   {
     Window &window;
-    shaders::Shader &shader;
+    shaders::Shader *shader = 0;
     DirectionalLight &directionalLight;
     textures::Texture texture;
     textures::Framebuffer framebuffer;

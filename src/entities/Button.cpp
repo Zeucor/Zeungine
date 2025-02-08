@@ -84,13 +84,13 @@ Button::~Button()
 void Button::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind(*this);
+	shader->bind(*this);
 	scene.entityPreRender(*this);
-	shader.setBlock("Model", *this, model);
-	shader.setBlock("View", *this, scene.view.matrix);
-	shader.setBlock("Projection", *this, scene.projection.matrix);
-	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
-	shader.unbind();
+	shader->setBlock("Model", *this, model);
+	shader->setBlock("View", *this, scene.view.matrix);
+	shader->setBlock("Projection", *this, scene.projection.matrix);
+	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->unbind();
 };
 void Button::setColor(glm::vec4 color)
 {

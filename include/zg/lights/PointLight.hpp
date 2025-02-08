@@ -9,7 +9,7 @@ namespace zg::lights
   struct PointLightShadow
   {
     Window &window;
-    shaders::Shader &shader;
+    shaders::Shader *shader = 0;
     PointLight &pointLight;
     textures::Texture texture;
     textures::Framebuffer framebuffer;

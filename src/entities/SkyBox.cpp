@@ -111,13 +111,13 @@ void SkyBox::preRender()
 	glRenderer.glContext->BlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
 	GLcheck(glRenderer, "glBlendFunc");
 #endif
-	shader.bind(*this);
+	shader->bind(*this);
 	scene.entityPreRender(*this);
 	auto view = glm::mat4(glm::mat3(scene.view.matrix));
-	shader.setBlock("View", *this, view);
-	shader.setBlock("Projection", *this, scene.projection.matrix);
-	shader.setTexture("TextureCube", *this, texture, 0);
-	shader.unbind();
+	shader->setBlock("View", *this, view);
+	shader->setBlock("Projection", *this, scene.projection.matrix);
+	shader->setTexture("TextureCube", *this, texture, 0);
+	shader->unbind();
 };
 void SkyBox::postRender()
 {

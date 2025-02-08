@@ -25,7 +25,8 @@ namespace zg::shaders
 		size_t hash = 0;
 		void *rendererData = 0;
 		bool compiled = false;
-		Shader(Window &window,
+		Shader(size_t hash,
+			   Window &window,
 			   const RuntimeConstants &constants,
 			   const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
 		~Shader();

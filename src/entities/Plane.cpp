@@ -65,15 +65,15 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3
 void Plane::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind(*this);
+	shader->bind(*this);
 	scene.entityPreRender(*this);
-	shader.setBlock("Model", *this, model);
-	shader.setBlock("View", *this, scene.view.matrix);
-	shader.setBlock("Projection", *this, scene.projection.matrix);
-	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->setBlock("Model", *this, model);
+	shader->setBlock("View", *this, scene.view.matrix);
+	shader->setBlock("Projection", *this, scene.projection.matrix);
+	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	if (texturePointer)
-		shader.setTexture("Texture2D", *this, *texturePointer, 0);
-	shader.unbind();
+		shader->setTexture("Texture2D", *this, *texturePointer, 0);
+	shader->unbind();
 };
 void Plane::setColor(glm::vec4 color)
 {

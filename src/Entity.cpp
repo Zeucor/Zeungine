@@ -1,5 +1,8 @@
 #include <zg/Entity.hpp>
 #include <zg/shaders/ShaderManager.hpp>
+#ifdef USE_VULKAN
+#include <zg/renderers/VulkanRenderer.hpp>
+#endif
 using namespace zg;
 Entity::Entity(Window &_window,
 			   const shaders::RuntimeConstants &constants,
@@ -17,11 +20,8 @@ Entity::Entity(Window &_window,
 										 position(_position),
 										 rotation(_rotation),
 										 scale(_scale),
-										 shader(*shaders::ShaderManager::getShaderByConstants(_window, constants).second),
 										 name(_name)
-{
-	window.iRenderer->ensureEntity(shader, *this);
-}
+{}
 void Entity::update()
 {
 	for (auto &childEntity : children)
@@ -29,13 +29,32 @@ void Entity::update()
 		childEntity.second->update();
 	}
 }
+void Entity::addShader()
+{
+	if (shader)
+		return;
+	void* data = 0;
+#ifdef USE_VULKAN
+	auto &vulkanRenderer = *dynamic_cast<VulkanRenderer *>(window.iRenderer);
+	if (vulkanRenderer.currentFramebufferImpl)
+	{
+		data = vulkanRenderer.currentFramebufferImpl->renderPass;
+	}
+	else
+	{
+		data = vulkanRenderer.renderPass;
+	}
+#endif
+	shader = shaders::ShaderManager::getShaderByConstants(window, constants, data).second.get();
+}
 void Entity::preRender() {};
 void Entity::render()
 {
+	addShader();
 	preRender();
-	shader.bind(*this);
+	shader->bind(*this);
 	drawVAO();
-	shader.unbind();
+	shader->unbind();
 	for (auto &childEntity : children)
 	{
 		childEntity.second->render();

@@ -15,7 +15,7 @@ Toolbar::Toolbar(Window &_window,
 												 },
 												 4,
 												 {
-													 {0, (-height / window.windowHeight) * 2, 0}, {2, (-height / window.windowHeight) * 2, 0}, {2, 0, 0}, {0, 0, 0} // Front
+													 {0, (-height / _window.windowHeight) * 2, 0}, {2, (-height / _window.windowHeight) * 2, 0}, {2, 0, 0}, {0, 0, 0} // Front
 												 },
 												 position, rotation, scale,
 												 name.empty() ? "Toolbar " + std::to_string(++toolbarsCount) : name),
@@ -23,7 +23,7 @@ Toolbar::Toolbar(Window &_window,
 										  scene(scene),
 										  font(font),
 										  height(height),
-										  NDCHeight((height / window.windowHeight) * 2)
+										  NDCHeight((height / _window.windowHeight) * 2)
 {
 	updateIndices(indices);
 	updateElements("Color", colors);
@@ -472,13 +472,13 @@ Toolbar::~Toolbar()
 void Toolbar::preRender()
 {
 	const auto &model = getModelMatrix();
-	shader.bind(*this);
+	shader->bind(*this);
 	scene.entityPreRender(*this);
-	shader.setBlock("Model", *this, model);
-	shader.setBlock("View", *this, scene.view.matrix);
-	shader.setBlock("Projection", *this, scene.projection.matrix);
-	shader.setBlock("CameraPosition", *this, scene.view.position, 16);
-	shader.unbind();
+	shader->setBlock("Model", *this, model);
+	shader->setBlock("View", *this, scene.view.matrix);
+	shader->setBlock("Projection", *this, scene.projection.matrix);
+	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->unbind();
 };
 void Toolbar::setSize(glm::vec2 newSize) {
 	// NDCHeight = newSize.y;

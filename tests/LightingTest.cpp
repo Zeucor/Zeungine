@@ -53,13 +53,13 @@ struct TestTriangle : Entity
     GLcheck(glRenderer, "glEnable");
 #endif
     const auto &model = getModelMatrix();
-    shader.bind(*this);
+    shader->bind(*this);
     testScene.entityPreRender(*this);
-    shader.setBlock("Model", *this, model);
-    shader.setBlock("View", *this, testScene.view.matrix);
-    shader.setBlock("Projection", *this, testScene.projection.matrix);
-    shader.setBlock("CameraPosition", *this, testScene.view.position, 16);
-    shader.unbind();
+    shader->setBlock("Model", *this, model);
+    shader->setBlock("View", *this, testScene.view.matrix);
+    shader->setBlock("Projection", *this, testScene.projection.matrix);
+    shader->setBlock("CameraPosition", *this, testScene.view.position, 16);
+    shader->unbind();
   };
   void postRender() override
   {
@@ -81,9 +81,9 @@ void rotateLightPosition(Window &window, Scene &scene, lights::PointLight &light
     glm::vec4 newPosition = rotationMatrix * glm::vec4(light.position, 1.0f);
     light.position = glm::vec3(newPosition);
     pointLightShadow.updateShadowTransforms();
-    // shader.bind(*this);
-    // shader.setSSBO("PointLights", scene.pointLights.data(), scene.pointLights.size() * sizeof(lights::PointLight));
-    // shader.unbind();
+    // shader->bind(*this);
+    // shader->setSSBO("PointLights", scene.pointLights.data(), scene.pointLights.size() * sizeof(lights::PointLight));
+    // shader->unbind();
     window.runOnThread([&, angleSpeed](auto &window)
     {
       rotateLightPosition(window, scene, light, pointLightShadow, angleSpeed, shader);
@@ -141,14 +141,14 @@ TestScene::TestScene(Window &window) : Scene(window, {0, 10, 10}, glm::normalize
                                                                         "LightSpacePosition",
                                                                         "Fog"})));
   auto &shader = cubeEntity->shader;
-  rotateLightPosition(window, *this, pointLights[0], pointLightShadows[0], glm::radians(180.0f), shader);
-  // shader.bind(*this);
-  // shader.setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
-  // shader.setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(lights::DirectionalLight));
-  // shader.setSSBO("SpotLights", spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
-  // shader.setUniform("fogDensity", 0.035f);
-  // shader.setUniform("fogColor", glm::vec4(0, 0, 0, 1));
-  // shader.unbind();
+  rotateLightPosition(window, *this, pointLights[0], pointLightShadows[0], glm::radians(180.0f), *shader);
+  // shader->bind(*this);
+  // shader->setSSBO("PointLights", pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
+  // shader->setSSBO("DirectionalLights", directionalLights.data(), directionalLights.size() * sizeof(lights::DirectionalLight));
+  // shader->setSSBO("SpotLights", spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
+  // shader->setUniform("fogDensity", 0.035f);
+  // shader->setUniform("fogColor", glm::vec4(0, 0, 0, 1));
+  // shader->unbind();
   auto skybox = std::make_shared<entities::SkyBox>(
       (Window &)window,
       *this,
