@@ -1749,8 +1749,25 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 	vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
+	VkFilter filter;
+	VkSamplerMipmapMode mipmapMode;
+	switch (texture.filterType)
+	{
+	case textures::Texture::FilterType::Linear:
+		{
+			filter = VK_FILTER_LINEAR;
+			mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+			break;
+		}
+	case textures::Texture::FilterType::Nearest:
+		{
+			filter = VK_FILTER_NEAREST;
+			mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+			break;
+		}
+	}
+	samplerInfo.magFilter = filter;
+	samplerInfo.minFilter = filter;
 	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -1760,7 +1777,7 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 	samplerInfo.unnormalizedCoordinates = VK_FALSE;
 	samplerInfo.compareEnable = VK_FALSE;
 	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	samplerInfo.mipmapMode = mipmapMode;
 	if (!VKcheck("vkCreateSampler", vkCreateSampler(device, &samplerInfo, nullptr, &textureImpl.textureSampler)))
 	{
 		throw std::runtime_error("failed to create texture sampler!");
