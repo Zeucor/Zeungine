@@ -38,7 +38,7 @@ endif()
 option(BUILD_OPENGL "Whether to build OpenGL module" OFF)
 option(BUILD_EGL "Whether to build EGL module" OFF)
 option(BUILD_VULKAN "Whether to build Vulkan module" ON)
-option(USE_SWIFTSHADER "Use SwiftShader as a software renderer" ON)
+option(USE_SWIFTSHADER "Use SwiftShader as a software renderer" OFF)
 find_package(PkgConfig REQUIRED)
 if(LINUX)
     pkg_check_modules(XCB xcb)
@@ -256,19 +256,28 @@ if(LINUX)
 elseif(MACOS)
     find_package(OpenGL REQUIRED)
     target_link_libraries(zeungine ${OPENGL_LIBRARY} "-framework Cocoa" "-framework QuartzCore" "-framework Metal")
+endif()
+if(BUILD_VULKAN AND NOT USE_SWIFTSHADER)
     find_package(Vulkan REQUIRED)
     include_directories(${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(zeungine ${Vulkan_LIBRARIES})
 endif()
 if(LINUX)
+    if(USE_SWIFTSHADER)
+        target_link_libraries(zeungine
+            ${ZG_LIB_DIR}/vulkan/libvulkan.so.1
+            ${ZG_LIB_DIR}/libvk_swiftshader.so)
+    endif()
     target_link_libraries(zeungine
-        ${ZG_LIB_DIR}/libvulkan.so.1
-        ${ZG_LIB_DIR}/libvk_swiftshader.so
         ${ZG_LIB_DIR}/libshaderc_shared.so)
 elseif(MACOS)
+    if(USE_SWIFTSHADER)
+        target_link_libraries(zeungine
+            ${ZG_LIB_DIR}/vulkan/libvulkan.dylib.1
+            ${ZG_LIB_DIR}/libvk_swiftshader.dylib)
+    endif()
     target_link_libraries(zeungine
-        ${ZG_LIB_DIR}/libvk_swiftshader.dylib
-        ${ZG_LIB_DIR}/libshaderc_shared.dylib
-        ${ZG_LIB_DIR}/libvulkan.dylib.1)
+        ${ZG_LIB_DIR}/libshaderc_shared.dylib)
 endif()
 
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
