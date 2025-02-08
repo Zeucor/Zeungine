@@ -5,14 +5,21 @@ set(CMAKE_CXX_STANDARD 20)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+find_package(PkgConfig REQUIRED)
+
+include(CTest)
+enable_testing()
+
+# Set library directory
 if(("${CMAKE_BUILD_TYPE}" MATCHES "Release") OR ("${CMAKE_BUILD_TYPE}" MATCHES "MinSizeRel"))
     set(RELEASE_OR_DEBUG "Release")
 elseif(("${CMAKE_BUILD_TYPE}" MATCHES "Debug") OR ("${CMAKE_BUILD_TYPE}" MATCHES "RelWithDebInfo"))
     set(RELEASE_OR_DEBUG "Debug")
 endif()
-
 set(ZG_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}/${RELEASE_OR_DEBUG}")
 message(STATUS "ZG_LIB_DIR: ${ZG_LIB_DIR}")
+
+# Determine platform and set defines
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_definitions(-DLINUX)
     set(LINUX ON)
@@ -25,6 +32,7 @@ elseif(WIN32)
 endif()
 set(SWIFTSHADER_INCLUDE_DIR "include/SwiftShader")
 
+# Add build flags
 if(LINUX OR MACOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -fPIC")
     if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
@@ -35,11 +43,14 @@ elseif(WINDOWS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4068")
 endif()
 
+# Build options
 option(BUILD_OPENGL "Whether to build OpenGL module" OFF)
 option(BUILD_EGL "Whether to build EGL module" OFF)
 option(BUILD_VULKAN "Whether to build Vulkan module" ON)
 option(USE_SWIFTSHADER "Use SwiftShader as a software renderer" OFF)
-find_package(PkgConfig REQUIRED)
+option(BUILD_EDITOR "Whether to build the Zeungine editor" ON)
+
+# Determine windower
 if(LINUX)
     pkg_check_modules(XCB xcb)
     find_package(X11)
@@ -55,9 +66,10 @@ endif()
 
 if(USE_SWIFTSHADER)
     message(STATUS "Compiling with SwiftShader backend")
+    add_definitions(-DUSE_SWIFTSHADER)
 endif()
 
-#Dependencies
+# Dependencies
 
 # Freetype
 add_subdirectory(vendor/freetype build/build_freetype)
@@ -89,7 +101,7 @@ set(BuildTests OFF)
 add_subdirectory(vendor/filewatch)
 include_directories(vendor/filewatch)
 
-# windowing USE_Xs
+# Windowing 'USE_X's
 if(LINUX)
     if(USE_XCB)
         message(STATUS "Compiling with XCB windowing backend")
@@ -124,9 +136,11 @@ elseif(MACOS)
     endif()
 endif()
 
+# Includes
 include_directories(include)
 include_directories(${SWIFTSHADER_INCLUDE_DIR})
 
+# Sources
 set(ZG_SOURCES
     src/interfaces/IEntity.cpp
     src/interfaces/IScene.cpp
@@ -141,7 +155,6 @@ set(ZG_SOURCES
     src/strings/HookedConsole.cpp
     src/interfaces/IPlatformWindow.cpp
 )
-
 list(APPEND ZG_SOURCES
     src/Window.cpp
     src/Entity.cpp
@@ -179,7 +192,6 @@ list(APPEND ZG_SOURCES
     src/vp/VML.cpp
     src/fonts/freetype/Freetype.cpp
     src/raytracing/BVH.cpp)
-
 if(WIN32)
     list(APPEND ZG_SOURCES src/windows/WIN32Window.cpp)
 elseif(LINUX)
@@ -198,7 +210,6 @@ elseif(LINUX)
 elseif(MACOS)
     list(APPEND ZG_SOURCES src/windows/MacOSWindow.mm)
 endif()
-
 if(BUILD_OPENGL)
     message(STATUS "Building OpenGL")
     add_definitions(-DUSE_GL)
@@ -220,18 +231,17 @@ elseif(BUILD_VULKAN)
     list(APPEND ZG_SOURCES src/renderers/VulkanRenderer.cpp)
 endif()
 
-if(USE_SWIFTSHADER)
-    add_definitions(-DUSE_SWIFTSHADER)
-endif()
-
+# Library type, Static if Windows, otherwise Shared
 if(WIN32)
     set(ZG_LIBRARY_TYPE STATIC)
 else()
     set(ZG_LIBRARY_TYPE SHARED)
 endif()
 
+# Add Zeungine library
 add_library(zeungine ${ZG_LIBRARY_TYPE} ${ZG_SOURCES})
 
+# Link libraries
 if(BUILD_OPENGL)
     if(WIN32)
         find_package(OpenGL REQUIRED)
@@ -280,6 +290,7 @@ elseif(MACOS)
         ${ZG_LIB_DIR}/libshaderc_shared.dylib)
 endif()
 
+# create_test function
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     if(LIBRARY)
         add_library(${TEST_NAME} SHARED ${TEST_SOURCE})
@@ -295,13 +306,18 @@ function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     endif()
 endfunction()
 
-include(CTest)
-enable_testing()
+# Tests
 create_test(LightingTest tests/LightingTest.cpp "" FALSE)
 create_test(SimpleCubeTest tests/SimpleCubeTest.cpp "" FALSE)
 create_test(SimpleWindowTest tests/SimpleWindowTest.cpp "" FALSE)
-add_executable(Editor src/editor/Editor.cpp src/editor/EditorScene.cpp src/editor/CodeScene.cpp)
-target_link_libraries(Editor zeungine)
+
+# Editor
+if(BUILD_EDITOR)
+    add_executable(Editor src/editor/Editor.cpp src/editor/EditorScene.cpp src/editor/CodeScene.cpp)
+    target_link_libraries(Editor zeungine)
+endif()
+
+# Required test assets
 set(SKYBOX_OUT_DIRECTORY ${CMAKE_BINARY_DIR}/images/skybox)
 file(MAKE_DIRECTORY ${SKYBOX_OUT_DIRECTORY})
 configure_file(${CMAKE_SOURCE_DIR}/images/skybox/back.jpg ${SKYBOX_OUT_DIRECTORY}/back.jpg COPYONLY)
