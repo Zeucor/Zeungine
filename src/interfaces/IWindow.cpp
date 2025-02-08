@@ -22,6 +22,7 @@ void IWindow::update()
 void IWindow::preRender() {};
 void IWindow::render()
 {
+	std::lock_guard lock(renderMutex);
 	preRender();
 	updateDeltaTime();
 	if (scene)

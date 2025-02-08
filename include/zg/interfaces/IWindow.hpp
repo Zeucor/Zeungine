@@ -51,6 +51,7 @@ namespace zg
 		bool focused = false;
 		using OnEntityAddedFunction = std::function<void(const std::shared_ptr<IEntity> &)>;
 		OnEntityAddedFunction onEntityAdded;
+		std::mutex renderMutex;
 		IWindow(float windowWidth, float windowHeight, float windowX, float windowY, bool borderless, uint32_t framerate);
 		virtual ~IWindow() = default;
 		void run();

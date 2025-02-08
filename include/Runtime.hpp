@@ -12,4 +12,3 @@ namespace zg
 using namespace zg;
 ZG_API void OnLoad(Window &window);
 ZG_API void OnHotswapLoad(Window &window, hscpp::AllocationResolver &allocationResolver);
-ZG_API void OnUnLoad(Window &window);

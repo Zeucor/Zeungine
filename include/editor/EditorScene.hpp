@@ -61,15 +61,14 @@ namespace zg::editor
 		float okayDialogButtonHeight;
 		std::shared_ptr<entities::Button> closeDialogButton;
 		std::shared_ptr<entities::Button> okayDialogButton;
-    std::shared_ptr<entities::Input> projectNameInput;
-    std::shared_ptr<entities::Input> projectDirectoryInput;
-    std::shared_ptr<entities::Dialog> newProjectDialog;
+		std::shared_ptr<entities::Input> projectNameInput;
+		std::shared_ptr<entities::Input> projectDirectoryInput;
+		std::shared_ptr<entities::Dialog> newProjectDialog;
 		std::shared_ptr<entities::Dialog> activeDialog;
 		std::shared_ptr<hs::Hotswapper> hotswapper;
 		Project project;
-		std::function<void(Window &)> OnLoad;
-		std::function<void(Window &, hscpp::AllocationResolver &)> OnHotswapLoad;
-		std::function<void(Window &)> OnUnLoad;
+		std::function<void(Window&)> OnLoad;
+		std::function<void(Window&, hscpp::AllocationResolver&)> OnHotswapLoad;
 		bool loaded = false;
 		explicit EditorScene(Window& window);
 		~EditorScene() override;
@@ -82,4 +81,4 @@ namespace zg::editor
 		void newProject(std::string_view projectName, std::string_view projectDirectory);
 		void loadProject(std::string_view projectDirectory);
 	};
-}
+} // namespace zg::editor

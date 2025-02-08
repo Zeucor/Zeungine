@@ -385,8 +385,7 @@ struct MainScene : Scene
 	explicit MainScene(Window &window);
 };
 ZG_API void OnLoad(Window& window);
-ZG_API void OnHotswapLoad(Window& window, hscpp::AllocationResolver &allocationResolver);
-ZG_API void OnUnLoad(Window& window);)");
+ZG_API void OnHotswapLoad(Window& window, hscpp::AllocationResolver &allocationResolver);)");
 		mainIncludeFile.writeBytes(0, mainIncludeFileString.size(), mainIncludeFileString.data());
 		filesystem::File mainSrcFile(filesystem::File::toPlatformPath(std::string(srcPath) + "/main.cpp"), enums::EFileLocation::Relative, "w+");
 		std::string mainSrcFileString(R"(#include <main.hpp>
@@ -394,19 +393,14 @@ MainScene::MainScene(Window& window):
 	Scene(window, {0, 50, 50}, {0, -1, -1}, 80.f)
 {
 	clearColor = {0.5, 0, 0.5, 1};
-};
+}
 ZG_API void OnLoad(Window& window)
 {
 	window.setIScene(std::make_shared<MainScene>(window));
-};
+}
 ZG_API void OnHotswapLoad(Window& window, hscpp::AllocationResolver &allocationResolver)
 {
 	window.setIScene(std::shared_ptr<MainScene>(allocationResolver.Allocate<MainScene>(window)));
-};
-ZG_API void OnUnLoad(Window& window)
-{
-	window.scene.reset();
-	window.close();
 })");
 		mainSrcFile.writeBytes(0, mainSrcFileString.size(), mainSrcFileString.data());
 	}

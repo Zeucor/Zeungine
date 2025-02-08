@@ -84,13 +84,12 @@ void Hotswapper::update()
 		{
 			if (editorScene.loaded)
 			{
-				if (editorScene.OnUnLoad)
 				{
-					editorScene.OnUnLoad(*editorScene.gameWindowPointer);
+					std::lock_guard gameWindowLock(editorScene.gameWindowPointer->renderMutex);
+					editorScene.gameWindowPointer->scene.reset();
 				}
 				editorScene.loaded = false;
 				editorScene.OnHotswapLoad = std::function<void(Window &, hscpp::AllocationResolver &)>();
-				editorScene.OnUnLoad = std::function<void(Window &)>();
 				swapperRef.UnLoadModule();
 			}
 			compiled = false;
@@ -109,7 +108,6 @@ void Hotswapper::update()
 			editorScene.status->setText("Compiled.");
 			editorScene.status->setTextColor({0, 1, 0, 1});
 			editorScene.OnHotswapLoad = swapperRef.GetFunction<void(Window &, hscpp::AllocationResolver &)>("OnHotswapLoad");
-			editorScene.OnUnLoad = swapperRef.GetFunction<void(Window &)>("OnUnLoad");
 			if (editorScene.OnHotswapLoad)
 			{
 				auto &allocationResolver = *swapper->GetAllocationResolver();
