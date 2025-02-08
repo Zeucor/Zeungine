@@ -36,7 +36,7 @@ TabsBar::TabsBar(zg::Window &window,
 	setSize();
 	addToBVH = false;
 };
-void TabsBar::addTab(std::string_view name, const TabClickHandler &handler, bool active)
+size_t TabsBar::addTab(std::string_view name, const TabClickHandler &handler, bool active)
 {
 	auto &vao = (VAO &)*this;
 	float sizeXTotal = 0;
@@ -62,7 +62,12 @@ void TabsBar::addTab(std::string_view name, const TabClickHandler &handler, bool
 	addChild(panelItem);
 	scene.postAddEntity(panelItem, {ID, panelItem->ID});
 	setSize();
+	return panelItem->ID;
 };
+void TabsBar::removeTab(size_t ID)
+{
+	removeChild(ID);
+}
 bool TabsBar::preRender()
 {
 	const auto &model = getModelMatrix();

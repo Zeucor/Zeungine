@@ -420,7 +420,7 @@ void EditorScene::loadProject(std::string_view projectDirectory)
 		window.windowWidth,
 		resourcePanelMenuHeight - bottomTabsHeight,
 		projectDirectory);
-	resourcePanelTabs->addTab("Asset Browser", [&]
+	assetTabID = resourcePanelTabs->addTab("Asset Browser", [&]
 							  {
 		removeActiveResourceEntity();
 		if (resourceAssetBrowser)
@@ -428,6 +428,6 @@ void EditorScene::loadProject(std::string_view projectDirectory)
 			resourcePanelMenu->addPanelEntity(resourceAssetBrowser, false);
 			activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceAssetBrowser);
 		} });
-	resourcePanelTabs->addTab("Performance", [&]
+	performanceTabID = resourcePanelTabs->addTab("Performance", [&]
 							  { removeActiveResourceEntity(); });
 };

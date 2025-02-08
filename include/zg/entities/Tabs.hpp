@@ -32,7 +32,8 @@ namespace zg::entities
 				float height,
 				const shaders::RuntimeConstants &constants = {},
 				std::string_view name = "");
-		void addTab(std::string_view name, const TabClickHandler &handler, bool active = false);
+		size_t addTab(std::string_view name, const TabClickHandler &handler, bool active = false);
+		void removeTab(size_t ID);
 		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize();

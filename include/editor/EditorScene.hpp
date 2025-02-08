@@ -47,7 +47,9 @@ namespace zg::editor
 		std::shared_ptr<entities::PanelMenu> resourcePanelMenu;
 		std::shared_ptr<entities::Console> resourceConsole;
 		std::shared_ptr<entities::AssetBrowser> resourceAssetBrowser;
+		size_t assetTabID = 0;
 		std::shared_ptr<entities::TabsBar> resourcePanelTabs;
+		size_t performanceTabID = 0;
 		std::shared_ptr<Entity> activeResourcePanelEntity;
 		IWindow::EventIdentifier resizeID = 0;
 		IWindow::EventIdentifier gameWindowBorderHoverID = 0;
