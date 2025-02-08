@@ -67,6 +67,7 @@ endif()
 
 if(USE_SWIFTSHADER)
     message(STATUS "Compiling with SwiftShader Vulkan backend")
+    add_definitions(-DUSE_VULKAN)
     add_definitions(-DUSE_SWIFTSHADER)
     set(SWIFTSHADER_INCLUDE_DIR "include/SwiftShader")
 elseif(BUILD_VULKAN)
