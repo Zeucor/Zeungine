@@ -117,7 +117,7 @@ float PanelMenu::getSizeYTotal()
 	}
 	return sizeYTotal;
 }
-void PanelMenu::preRender()
+bool PanelMenu::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -127,6 +127,7 @@ void PanelMenu::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void PanelMenu::setColor(glm::vec4 color)
 {
@@ -224,7 +225,7 @@ PanelItem::~PanelItem()
 	removeMouseHoverHandler(mouseHoverID);
 	removeMousePressHandler(0, mousePressID);
 };
-void PanelItem::preRender()
+bool PanelItem::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -234,6 +235,7 @@ void PanelItem::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void PanelItem::setColor(glm::vec4 color)
 {

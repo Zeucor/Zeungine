@@ -63,7 +63,7 @@ void TabsBar::addTab(std::string_view name, const TabClickHandler &handler, bool
 	scene.postAddEntity(panelItem, {ID, panelItem->ID});
 	setSize();
 };
-void TabsBar::preRender()
+bool TabsBar::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -73,6 +73,7 @@ void TabsBar::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void TabsBar::setColor(glm::vec4 color)
 {
@@ -189,7 +190,7 @@ Tab::~Tab()
 	removeMouseHoverHandler(mouseHoverID);
 	removeMousePressHandler(0, mousePressID);
 };
-void Tab::preRender()
+bool Tab::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -199,6 +200,7 @@ void Tab::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void Tab::setColor(glm::vec4 color)
 {

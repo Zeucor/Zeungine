@@ -25,7 +25,7 @@ namespace zg::entities
 					 const shaders::RuntimeConstants &constants = {},
 					 std::string_view name = "");
 		void addOption(std::string_view name, const OptionPressHandler &handler);
-		void preRender() override;
+		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize(glm::vec2 size);
 	};
@@ -53,7 +53,7 @@ namespace zg::entities
 					 const shaders::RuntimeConstants &constants = {},
 					 std::string_view name = "");
 		~DropdownItem() override;
-		void preRender() override;
+		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize(glm::vec2 size);
 	};

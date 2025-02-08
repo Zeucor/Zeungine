@@ -51,7 +51,7 @@ Console::Console(zg::Window &window,
 			showConsoleLines();
 		} });
 };
-void Console::preRender()
+bool Console::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -61,6 +61,7 @@ void Console::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void Console::setBackgroundColor(glm::vec4 newBackgroundColor)
 {
@@ -108,6 +109,9 @@ void Console::hookedCallback(const std::vector<std::string> &lines)
 				{
 					return this->window.windowHeight / 46.f;
 				});
+			consoleTextView->forceUpdate();
+			if (consoleTextView->texturePointer)
+				consoleTextView->texturePointer->bind();
 			consoleTextViews[index] = consoleTextView;
 			consoleTextView->addToBVH = false;
 		};

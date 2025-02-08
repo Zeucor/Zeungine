@@ -469,7 +469,7 @@ Toolbar::~Toolbar()
 	help->removeMousePressHandler(0, helpPressID);
 	help->removeMouseHoverHandler(helpHoverID);
 }
-void Toolbar::preRender()
+bool Toolbar::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -479,6 +479,7 @@ void Toolbar::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void Toolbar::setSize(glm::vec2 newSize) {
 	// NDCHeight = newSize.y;

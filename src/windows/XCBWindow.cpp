@@ -154,7 +154,10 @@ bool XCBWindow::pollMessages()
 		case XCB_BUTTON_RELEASE:
 		{
 			xcb_button_release_event_t *buttonRelease = (xcb_button_release_event_t *)event;
-			window.handleMousePress(buttonRelease->detail - 1, false);
+			auto button = buttonRelease->detail - 1;
+			if (button == 3 || button == 4)
+				break;
+			window.handleMousePress(button, false);
 			break;
 		}
 		case XCB_FOCUS_IN:

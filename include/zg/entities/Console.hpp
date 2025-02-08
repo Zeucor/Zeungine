@@ -32,7 +32,7 @@ namespace zg::entities
 				float height,
 				const shaders::RuntimeConstants &constants = {},
 				std::string_view name = "");
-		void preRender() override;
+		bool preRender() override;
 		void setBackgroundColor(glm::vec4 newBackgroundColor);
 		void setSize(glm::vec3 newSize) override;
 		void hookedCallback(const std::vector<std::string> &lines);

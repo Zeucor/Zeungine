@@ -81,7 +81,7 @@ Button::~Button()
 	removeMouseHoverHandler(mouseHoverID);
 	removeMousePressHandler(0, mousePressID);
 };
-void Button::preRender()
+bool Button::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -91,6 +91,7 @@ void Button::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void Button::setColor(glm::vec4 color)
 {

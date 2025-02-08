@@ -62,7 +62,7 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 };
-void Plane::preRender()
+bool Plane::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -74,6 +74,7 @@ void Plane::preRender()
 	if (texturePointer)
 		shader->setTexture("Texture2D", *this, *texturePointer, 0);
 	shader->unbind();
+	return true;
 };
 void Plane::setColor(glm::vec4 color)
 {

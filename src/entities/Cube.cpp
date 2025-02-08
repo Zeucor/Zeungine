@@ -80,7 +80,7 @@ Cube::Cube(zg::Window &window,
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 };
-void Cube::preRender()
+bool Cube::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -90,4 +90,5 @@ void Cube::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };

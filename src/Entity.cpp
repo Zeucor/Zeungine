@@ -47,11 +47,15 @@ void Entity::addShader()
 #endif
 	shader = shaders::ShaderManager::getShaderByConstants(window, constants, data).second.get();
 }
-void Entity::preRender() {};
+bool Entity::preRender()
+{
+	return true;
+};
 void Entity::render()
 {
 	addShader();
-	preRender();
+	if (!preRender())
+		return;
 	shader->bind(*this);
 	drawVAO();
 	shader->unbind();

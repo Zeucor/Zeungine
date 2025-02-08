@@ -35,7 +35,7 @@ namespace zg::entities
 				   std::string_view text = "",
 				   const shaders::RuntimeConstants &constants = {},
 				   std::string_view name = "");
-		void preRender() override;
+		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize();
 		void setText(std::string_view text);

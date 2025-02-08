@@ -74,7 +74,7 @@ namespace zg::entities
 				fonts::freetype::FreetypeFont &font,
 				std::string_view name = "");
 		~Toolbar();
-		void preRender() override;
+		bool preRender() override;
 		void setSize(glm::vec2 newSize);
 	};
 }

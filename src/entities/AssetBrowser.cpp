@@ -75,7 +75,7 @@ AssetBrowser::AssetBrowser(zg::Window &window,
 			currentIndex--;
 		} });
 };
-void AssetBrowser::preRender()
+bool AssetBrowser::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -85,6 +85,7 @@ void AssetBrowser::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void AssetBrowser::setBackgroundColor(glm::vec4 newBackgroundColor)
 {

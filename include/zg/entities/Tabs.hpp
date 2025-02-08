@@ -33,7 +33,7 @@ namespace zg::entities
 				const shaders::RuntimeConstants &constants = {},
 				std::string_view name = "");
 		void addTab(std::string_view name, const TabClickHandler &handler, bool active = false);
-		void preRender() override;
+		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize();
 		void markInactive(Tab *activeTab);
@@ -73,7 +73,7 @@ namespace zg::entities
 			const shaders::RuntimeConstants &constants = {},
 			std::string_view name = "");
 		~Tab() override;
-		void preRender() override;
+		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize(glm::vec2 size);
 		void markInactive();

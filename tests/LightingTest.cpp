@@ -45,7 +45,7 @@ struct TestTriangle : Entity
       colors[2] = pressed ? glm::vec4(1, 1, 1, 1) : glm::vec4(0, 0, 1, 1);
       updateElements("Color", colors); });
   };
-  void preRender() override
+  bool preRender() override
   {
 #ifdef USE_GL
     auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iRenderer);

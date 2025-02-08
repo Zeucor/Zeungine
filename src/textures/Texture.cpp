@@ -36,5 +36,5 @@ void Texture::bind() const
 }
 void Texture::unbind() const
 {
-  window.iRenderer->bindTexture(*this);
+  window.iRenderer->unbindTexture(*this);
 }

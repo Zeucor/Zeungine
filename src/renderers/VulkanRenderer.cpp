@@ -67,7 +67,7 @@ static std::unordered_map<textures::Texture::Format, VkImageAspectFlags> texture
 // };
 VulkanRenderer::VulkanRenderer() {}
 VulkanRenderer::~VulkanRenderer() {}
-void VulkanRenderer::createContext(IPlatformWindow *platformWindowPointer)
+void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
 	this->renderer = RENDERER_VULKAN;
 	this->platformWindowPointer = platformWindowPointer;
@@ -100,46 +100,46 @@ void VulkanRenderer::createInstance()
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
 	//
-	std::vector<const char *> extensions;
+	std::vector<const char*> extensions;
 	extensions.push_back("VK_KHR_surface");
-	auto &windowType = platformWindowPointer->windowType;
+	auto& windowType = platformWindowPointer->windowType;
 	switch (windowType)
 	{
 	case WINDOW_TYPE_XCB:
-	{
-		extensions.push_back("VK_KHR_xcb_surface");
-		break;
-	}
+		{
+			extensions.push_back("VK_KHR_xcb_surface");
+			break;
+		}
 	case WINDOW_TYPE_X11:
-	{
-		extensions.push_back("VK_KHR_xlib_surface");
-		break;
-	}
+		{
+			extensions.push_back("VK_KHR_xlib_surface");
+			break;
+		}
 	case WINDOW_TYPE_WAYLAND:
-	{
-		extensions.push_back("VK_KHR_wayland_surface");
-		break;
-	}
+		{
+			extensions.push_back("VK_KHR_wayland_surface");
+			break;
+		}
 	case WINDOW_TYPE_WIN32:
-	{
-		extensions.push_back("VK_KHR_win32_surface");
-		break;
-	}
+		{
+			extensions.push_back("VK_KHR_win32_surface");
+			break;
+		}
 	case WINDOW_TYPE_ANDROID:
-	{
-		extensions.push_back("VK_KHR_android_surface");
-		break;
-	}
+		{
+			extensions.push_back("VK_KHR_android_surface");
+			break;
+		}
 	case WINDOW_TYPE_MACOS:
-	{
-		extensions.push_back("VK_MVK_macos_surface");
-		break;
-	}
+		{
+			extensions.push_back("VK_MVK_macos_surface");
+			break;
+		}
 	case WINDOW_TYPE_IOS:
-	{
-		extensions.push_back("VK_MVK_ios_surface");
-		break;
-	}
+		{
+			extensions.push_back("VK_MVK_ios_surface");
+			break;
+		}
 	}
 #if defined(MACOS)
 	extensions.push_back("VK_KHR_portability_enumeration");
@@ -155,7 +155,7 @@ void VulkanRenderer::createInstance()
 	createInfo.ppEnabledExtensionNames = extensions.data();
 	//
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-	std::vector<const char *> layers;
+	std::vector<const char*> layers;
 #ifndef NDEBUG
 	if (checkValidationLayersSupport())
 	{
@@ -163,7 +163,7 @@ void VulkanRenderer::createInstance()
 		createInfo.enabledLayerCount = layers.size();
 		createInfo.ppEnabledLayerNames = layers.data();
 		populateDebugMessengerCreateInfo(debugCreateInfo);
-		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
+		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
 	}
 	else
 	{
@@ -180,20 +180,20 @@ void VulkanRenderer::createInstance()
 };
 #ifndef NDEBUG
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-											 VkDebugUtilsMessageTypeFlagsEXT messageType,
-											 const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData)
+																						 VkDebugUtilsMessageTypeFlagsEXT messageType,
+																						 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	std::cerr << pCallbackData->pMessage << std::endl;
 	return VK_FALSE;
 }
-void VulkanRenderer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo)
+void VulkanRenderer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
 {
 	createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-								 VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-							 VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	createInfo.pfnUserCallback = debugCallback;
 };
 bool VulkanRenderer::checkValidationLayersSupport()
@@ -202,10 +202,10 @@ bool VulkanRenderer::checkValidationLayersSupport()
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-	for (const char *layerName : validationLayers)
+	for (const char* layerName : validationLayers)
 	{
 		bool layerFound = false;
-		for (const auto &layerProperties : availableLayers)
+		for (const auto& layerProperties : availableLayers)
 		{
 			if (strcmp(layerName, layerProperties.layerName) == 0)
 			{
@@ -221,9 +221,9 @@ bool VulkanRenderer::checkValidationLayersSupport()
 	return true;
 };
 VkResult VulkanRenderer::CreateDebugUtilsMessengerEXT(VkInstance instance,
-													  const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-													  const VkAllocationCallbacks *pAllocator,
-													  VkDebugUtilsMessengerEXT *pDebugMessenger)
+																											const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+																											const VkAllocationCallbacks* pAllocator,
+																											VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr)
@@ -240,7 +240,7 @@ void VulkanRenderer::setupDebugMessenger()
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
 	populateDebugMessengerCreateInfo(createInfo);
 	if (!VKcheck("CreateDebugUtilsMessengerEXT",
-				 CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger)))
+							 CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger)))
 	{
 		throw std::runtime_error("VulkanRenderer-setupDebugMessenger: failed to set up debug messenger!");
 	}
@@ -249,11 +249,11 @@ void VulkanRenderer::setupDebugMessenger()
 #if defined(LINUX) || defined(ANDROID) || defined(WINDOWS)
 void VulkanRenderer::createSurface()
 {
-	auto &windowType = platformWindowPointer->windowType;
+	auto& windowType = platformWindowPointer->windowType;
 #ifdef LINUX
 	if (windowType == WINDOW_TYPE_X11)
 	{
-		auto &x11Window = *dynamic_cast<X11Window *>(platformWindowPointer);
+		auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
 		VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.connection = x11Window.connection;
@@ -265,7 +265,7 @@ void VulkanRenderer::createSurface()
 	}
 	else if (windowType == WINDOW_TYPE_XCB)
 	{
-		auto &xcbWindow = *dynamic_cast<XCBWindow *>(platformWindowPointer);
+		auto& xcbWindow = *dynamic_cast<XCBWindow*>(platformWindowPointer);
 		VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.connection = xcbWindow.connection;
@@ -277,19 +277,20 @@ void VulkanRenderer::createSurface()
 	}
 	else if (windowType == WINDOW_TYPE_WAYLAND)
 	{
-		auto &waylandWindow = *dynamic_cast<WaylandWindow *>(platformWindowPointer);
+		auto& waylandWindow = *dynamic_cast<WaylandWindow*>(platformWindowPointer);
 		VkWaylandSurfaceCreateInfoKHR surfaceCreateInfo{};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.display = waylandWindow.display;
 		surfaceCreateInfo.surface = waylandWindow.surface;
-		if (!VKcheck("vkCreateWaylandSurfaceKHR", vkCreateWaylandSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+		if (!VKcheck("vkCreateWaylandSurfaceKHR",
+								 vkCreateWaylandSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
 		{
 			throw std::runtime_error("VulkanRenderer-createSurface: failed to create XCB surface");
 		}
 	}
 #elif defined(ANDROID)
 #elif defined(WINDOWS)
-	auto &win32Window = *dynamic_cast<WIN32Window *>(platformWindowPointer);
+	auto& win32Window = *dynamic_cast<WIN32Window*>(platformWindowPointer);
 	VkWin32SurfaceCreateFlagsKHR surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	surfaceCreateInfo.dpy = win32Window.hInstance;
@@ -319,7 +320,7 @@ void VulkanRenderer::pickPhysicalDevice()
 		throw std::runtime_error("VulkanRenderer-vkEnumeratePhysicalDevices failed");
 	}
 	std::map<uint32_t, VkPhysicalDevice> physicalDeviceScores;
-	for (auto &device : devices)
+	for (auto& device : devices)
 	{
 		physicalDeviceScores[rateDeviceSuitability(device)] = device;
 	}
@@ -344,7 +345,7 @@ void VulkanRenderer::pickPhysicalDevice()
 	VkPhysicalDeviceProperties physicalDeviceProperties;
 	vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
 	std::cout << "Selected Physical Device: '" << physicalDeviceProperties.deviceName
-			  << "' with score of: " << selectedDeviceScore << std::endl;
+						<< "' with score of: " << selectedDeviceScore << std::endl;
 	return;
 }
 uint32_t VulkanRenderer::rateDeviceSuitability(VkPhysicalDevice device)
@@ -389,7 +390,7 @@ QueueFamilyIndices VulkanRenderer::findQueueFamilies(VkPhysicalDevice device)
 	queueFamilies.resize(queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 	int32_t index = 0;
-	for (auto &queueFamily : queueFamilies)
+	for (auto& queueFamily : queueFamilies)
 	{
 		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
@@ -397,7 +398,7 @@ QueueFamilyIndices VulkanRenderer::findQueueFamilies(VkPhysicalDevice device)
 		}
 		VkBool32 presentSupport = false;
 		if (!VKcheck("vkGetPhysicalDeviceSurfaceSupportKHR",
-					 vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface, &presentSupport)))
+								 vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface, &presentSupport)))
 		{
 			throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceSupportKHR failed");
 		}
@@ -421,7 +422,7 @@ void VulkanRenderer::createLogicalDevice()
 	std::vector<int32_t> uniqueQueueFamilies({indices.graphicsFamily, indices.presentFamily});
 	float queuePriority = 1;
 	int32_t index = 0;
-	for (auto &queueFamily : uniqueQueueFamilies)
+	for (auto& queueFamily : uniqueQueueFamilies)
 	{
 		VkDeviceQueueCreateInfo queueCreateInfo{};
 		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -439,22 +440,22 @@ void VulkanRenderer::createLogicalDevice()
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	createInfo.queueCreateInfoCount = queueCreateInfos.size();
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
-	std::vector<const char *> extensions;
+	std::vector<const char*> extensions;
 	// check extensions
 	uint32_t extensionCount = 0;
 	// Query number of available extensions
 	if (!VKcheck("vkEnumerateDeviceExtensionProperties",
-				 vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr)))
+							 vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkEnumerateDeviceExtensionProperties failed");
 	}
 	std::vector<VkExtensionProperties> deviceExtensions(extensionCount);
 	if (!VKcheck("vkEnumerateDeviceExtensionProperties",
-				 vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, deviceExtensions.data())))
+							 vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, deviceExtensions.data())))
 	{
 		throw std::runtime_error("VulkanRenderer-vkEnumerateDeviceExtensionProperties failed");
 	}
-	for (const auto &ext : deviceExtensions)
+	for (const auto& ext : deviceExtensions)
 	{
 		if (std::strcmp(ext.extensionName, "VK_KHR_portability_subset") == 0)
 		{
@@ -539,7 +540,7 @@ void VulkanRenderer::createSwapChain()
 	createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
 	VkSurfaceCapabilitiesKHR surfaceCapabilities;
 	if (!VKcheck("vkGetPhysicalDeviceSurfaceCapabilitiesKHR",
-				 vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities)))
+							 vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed");
 	}
@@ -568,7 +569,7 @@ void VulkanRenderer::createSwapChain()
 	}
 	swapChainImages.resize(imageCount);
 	if (!VKcheck("vkGetSwapchainImagesKHR",
-				 vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data())))
+							 vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data())))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetSwapchainImagesKHR failed");
 	}
@@ -580,13 +581,13 @@ SwapChainSupportDetails VulkanRenderer::querySwapChainSupport(VkPhysicalDevice d
 {
 	SwapChainSupportDetails details;
 	if (!VKcheck("vkGetPhysicalDeviceSurfaceCapabilitiesKHR",
-				 vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities)))
+							 vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed");
 	}
 	uint32_t formatCount;
 	if (!VKcheck("vkGetPhysicalDeviceSurfaceFormatsKHR",
-				 vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr)))
+							 vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceFormatsKHR failed");
 	}
@@ -594,14 +595,14 @@ SwapChainSupportDetails VulkanRenderer::querySwapChainSupport(VkPhysicalDevice d
 	{
 		details.formats.resize(formatCount);
 		if (!VKcheck("vkGetPhysicalDeviceSurfaceFormatsKHR",
-					 vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data())))
+								 vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data())))
 		{
 			throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfaceFormatsKHR failed");
 		}
 	}
 	uint32_t presentModeCount;
 	if (!VKcheck("vkGetPhysicalDeviceSurfacePresentModesKHR",
-				 vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr)))
+							 vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfacePresentModesKHR failed");
 	}
@@ -609,17 +610,17 @@ SwapChainSupportDetails VulkanRenderer::querySwapChainSupport(VkPhysicalDevice d
 	{
 		details.presentModes.resize(presentModeCount);
 		if (!VKcheck(
-				"vkGetPhysicalDeviceSurfacePresentModesKHR",
-				vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data())))
+					"vkGetPhysicalDeviceSurfacePresentModesKHR",
+					vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data())))
 		{
 			throw std::runtime_error("VulkanRenderer-vkGetPhysicalDeviceSurfacePresentModesKHR failed");
 		}
 	}
 	return details;
 }
-VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
+VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
-	for (auto &availableFormat : availableFormats)
+	for (auto& availableFormat : availableFormats)
 	{
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM)
 		{
@@ -628,10 +629,10 @@ VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkS
 	}
 	return availableFormats[0];
 }
-VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes)
+VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
 {
-	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
-	for (auto &availablePresentMode : availablePresentModes)
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
+	for (auto& availablePresentMode : availablePresentModes)
 	{
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR && !renderWindow.vsync)
 		{
@@ -646,9 +647,9 @@ VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPrese
 }
 VkExtent2D VulkanRenderer::chooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities)
 {
-	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	VkExtent2D actualExtent = {static_cast<uint32_t>(renderWindow.windowWidth),
-							   static_cast<uint32_t>(renderWindow.windowHeight)};
+														 static_cast<uint32_t>(renderWindow.windowHeight)};
 	actualExtent.width =
 		std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
 	actualExtent.height =
@@ -681,10 +682,6 @@ void VulkanRenderer::createImageViews()
 		}
 	}
 	return;
-}
-void printRenderPass(bool isFramebuffer, const VkRenderPass &renderPass, const VkRenderPassCreateInfo &createInfo)
-{
-	std::cout << "IsFramebuffer: " << isFramebuffer << ", RenderPass: " << renderPass << std::endl;
 }
 void VulkanRenderer::createRenderPass()
 {
@@ -723,7 +720,6 @@ void VulkanRenderer::createRenderPass()
 	{
 		throw std::runtime_error("VulkanRenderer-createRenderPass: failed to create render pass!");
 	}
-	printRenderPass(false, renderPass, renderPassInfo);
 	return;
 }
 void VulkanRenderer::createFramebuffers()
@@ -742,7 +738,7 @@ void VulkanRenderer::createFramebuffers()
 		framebufferInfo.height = swapChainExtent.height;
 		framebufferInfo.layers = 1;
 		if (!VKcheck("vkCreateFramebuffer",
-					 vkCreateFramebuffer(device, &framebufferInfo, nullptr, &(swapChainFramebuffers[index]))))
+								 vkCreateFramebuffer(device, &framebufferInfo, nullptr, &(swapChainFramebuffers[index]))))
 		{
 			throw std::runtime_error("VulkanRenderer-createFramebuffers: failed to create framebuffer!");
 		}
@@ -789,10 +785,10 @@ void VulkanRenderer::createSyncObjects()
 	for (size_t j = 0; j < MAX_FRAMES_IN_FLIGHT; j++)
 	{
 		if (!VKcheck("vkCreateSemaphore",
-					 vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[j])) ||
-			!VKcheck("vkCreateSemaphore",
-					 vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[j])) ||
-			!VKcheck("vkCreateFence", vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[j])))
+								 vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[j])) ||
+				!VKcheck("vkCreateSemaphore",
+								 vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[j])) ||
+				!VKcheck("vkCreateFence", vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[j])))
 		{
 			throw std::runtime_error(
 				"VulkanRenderer-createSyncObjects: failed to create synchronization objects for a frame!");
@@ -802,7 +798,7 @@ void VulkanRenderer::createSyncObjects()
 }
 void VulkanRenderer::createImageStagingBuffer()
 {
-	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	VkBufferCreateInfo bufferCreateInfo{};
 	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferCreateInfo.size = renderWindow.windowWidth * renderWindow.windowHeight * 4; // RGBA8
@@ -853,8 +849,8 @@ void VulkanRenderer::preBeginRenderPass()
 		throw std::runtime_error("VulkanRenderer-vkWaitForFences failed");
 	}
 	if (!VKcheck("vkAcquireNextImageKHR",
-				 vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame],
-									   VK_NULL_HANDLE, &imageIndex)))
+							 vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame],
+																		 VK_NULL_HANDLE, &imageIndex)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkAcquireNextImageKHR failed");
 	}
@@ -890,11 +886,11 @@ void VulkanRenderer::beginRenderPass()
 	renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
 	renderPassInfo.renderArea.offset = {0, 0};
 	renderPassInfo.renderArea.extent = swapChainExtent;
-	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	glm::vec4 clearColor(0, 0, 0, 1);
 	if (renderWindow.scene)
 	{
-		clearColor = ((Scene &)*renderWindow.scene).clearColor;
+		clearColor = ((Scene&)*renderWindow.scene).clearColor;
 	}
 	VkClearValue vkClearColor = {{{clearColor.r, clearColor.g, clearColor.b, clearColor.a}}};
 	renderPassInfo.clearValueCount = 1;
@@ -945,7 +941,7 @@ void VulkanRenderer::swapBuffers()
 	}
 }
 #endif
-IRenderer *zg::createRenderer()
+IRenderer* zg::createRenderer()
 {
 #if true
 	return new VulkanRenderer();
@@ -954,33 +950,33 @@ IRenderer *zg::createRenderer()
 void VulkanRenderer::clearColor(glm::vec4 color) {}
 void VulkanRenderer::clear() {}
 void VulkanRenderer::viewport(glm::ivec4 vp) const {}
-void VulkanRenderer::initShader(shaders::Shader &shader, const shaders::RuntimeConstants &constants,
-								const std::vector<shaders::ShaderType> &shaderTypes)
+void VulkanRenderer::initShader(shaders::Shader& shader, const shaders::RuntimeConstants& constants,
+																const std::vector<shaders::ShaderType>& shaderTypes)
 {
 	shader.rendererData = new VulkanShaderImpl();
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
 }
-void VulkanRenderer::setUniform(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name,
-								const void *pointer, uint32_t size, enums::EUniformType uniformType)
+void VulkanRenderer::setUniform(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name,
+																const void* pointer, uint32_t size, enums::EUniformType uniformType)
 {
 	setBlock(shader, vao, name, pointer, size);
 }
-void VulkanRenderer::setBlock(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name, const void *pointer,
-							  size_t size)
+void VulkanRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer,
+															size_t size)
 {
 	int32_t location = getUniformLocation(shader, vao, name);
 	if (location == -1)
 	{
 		return;
 	}
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	memcpy(vaoImpl.uniformBuffersMapped[location], pointer, size);
 }
-int32_t VulkanRenderer::getUniformLocation(shaders::Shader &shader, vaos::VAO &vao, const std::string_view &name)
+int32_t VulkanRenderer::getUniformLocation(shaders::Shader& shader, vaos::VAO& vao, const std::string_view& name)
 {
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
-	auto &table = vaoImpl.uniformLocationTable;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto& table = vaoImpl.uniformLocationTable;
 	std::string stringName(name);
 	auto iter = table.find(stringName);
 	if (iter == table.end())
@@ -990,7 +986,7 @@ int32_t VulkanRenderer::getUniformLocation(shaders::Shader &shader, vaos::VAO &v
 	return iter->second;
 }
 void VulkanRenderer::deleteBuffer(uint32_t id) {}
-void VulkanRenderer::bindShader(shaders::Shader &shader, Entity &entity)
+void VulkanRenderer::bindShader(shaders::Shader& shader, Entity& entity)
 {
 	if (!shader.compiled)
 	{
@@ -1000,11 +996,11 @@ void VulkanRenderer::bindShader(shaders::Shader &shader, Entity &entity)
 	{
 		ensureEntity(shader, entity);
 	}
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.graphicsPipeline);
 	if (currentFramebufferImpl)
 	{
-		auto &framebufferImpl = *currentFramebufferImpl;
+		auto& framebufferImpl = *currentFramebufferImpl;
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = framebufferImpl.height;
@@ -1035,14 +1031,14 @@ void VulkanRenderer::bindShader(shaders::Shader &shader, Entity &entity)
 		vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
 	}
 }
-void VulkanRenderer::unbindShader(shaders::Shader &shader) {}
-void VulkanRenderer::addSSBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name,
-							 uint32_t bindingIndex)
+void VulkanRenderer::unbindShader(shaders::Shader& shader) {}
+void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
+														 uint32_t bindingIndex)
 {
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
 	auto ssboIter = shaderImpl.ssboBindings.find(stringName);
-	std::tuple<uint32_t, uint32_t, uint32_t> *ssboBindingPointer = 0;
+	std::tuple<uint32_t, uint32_t, uint32_t>* ssboBindingPointer = 0;
 	if (ssboIter == shaderImpl.ssboBindings.end())
 	{
 		ssboBindingPointer = &shaderImpl.ssboBindings[stringName];
@@ -1050,7 +1046,7 @@ void VulkanRenderer::addSSBO(shaders::Shader &shader, shaders::ShaderType shader
 		shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
 		int32_t uboLayoutBindingIndex = -1;
 		VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
-													  (VkShaderStageFlags)stageStageFlag[shaderType], 0};
+																									(VkShaderStageFlags)stageStageFlag[shaderType], 0};
 		shaderImpl.uboLayoutBindings[uboLayoutBindingIndex = (shaderImpl.uboLayoutBindings.size() - 1)] = {
 			{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding};
 		std::get<2>(*ssboBindingPointer) = uboLayoutBindingIndex;
@@ -1063,14 +1059,14 @@ void VulkanRenderer::addSSBO(shaders::Shader &shader, shaders::ShaderType shader
 	}
 	std::get<0>(*ssboBindingPointer) |= (uint32_t)shaderType;
 }
-void VulkanRenderer::addUBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name,
-							uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
+void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
+														uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
 {
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
 	shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, (uint32_t)1,
-												  (VkShaderStageFlags)stageStageFlag[shaderType], 0};
+																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
 	shaderImpl.uboLayoutBindings[shaderImpl.uboLayoutBindings.size() - 1] = {
 		{ELayoutBindingType::UniformBuffer, bufferSize, stringName, bindingIndex, isArray}, layoutBinding};
 	shaderImpl.uboStringBindings[stringName] = bindingIndex;
@@ -1079,14 +1075,14 @@ void VulkanRenderer::addUBO(shaders::Shader &shader, shaders::ShaderType shaderT
 		shaderImpl.uboStringBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
 	}
 }
-void VulkanRenderer::addTexture(shaders::Shader &shader, uint32_t bindingIndex, shaders::ShaderType shaderType,
-								std::string_view textureName, uint32_t descriptorCount)
+void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, shaders::ShaderType shaderType,
+																std::string_view textureName, uint32_t descriptorCount)
 {
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-												  (uint32_t)descriptorCount,
-												  (VkShaderStageFlags)stageStageFlag[shaderType], 0};
+																								(uint32_t)descriptorCount,
+																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
 	std::string stringName(textureName);
 	shaderImpl.uboLayoutBindings[shaderImpl.uboLayoutBindings.size() - 1] = {
 		{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding};
@@ -1096,11 +1092,11 @@ void VulkanRenderer::addTexture(shaders::Shader &shader, uint32_t bindingIndex, 
 		shaderImpl.textureArrayBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
 	}
 }
-void VulkanRenderer::setSSBO(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name, const void *pointer,
-							 size_t size)
+void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer,
+														 size_t size)
 {
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	std::string stringName(name);
 	auto ssboIter = shaderImpl.ssboBindings.find(stringName);
 	if (ssboIter == shaderImpl.ssboBindings.end())
@@ -1112,22 +1108,22 @@ void VulkanRenderer::setSSBO(shaders::Shader &shader, vaos::VAO &vao, const std:
 	{
 		return;
 	}
-	auto &buffer = std::get<0>(ssboBufferIter->second);
-	auto &deviceMemory = std::get<1>(ssboBufferIter->second);
-	auto &bindingIndex = std::get<1>(ssboIter->second);
+	auto& buffer = std::get<0>(ssboBufferIter->second);
+	auto& deviceMemory = std::get<1>(ssboBufferIter->second);
+	auto& bindingIndex = std::get<1>(ssboIter->second);
 	if (buffer == VK_NULL_HANDLE)
 	{
 		createBuffer(
 			size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, buffer, deviceMemory);
 	}
-	void *bufferData;
+	void* bufferData;
 	if (!VKcheck("vkMapMemory", vkMapMemory(device, deviceMemory, 0, size, 0, &bufferData)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkMapMemory failed");
 	}
 	uint32_t bufferOffset = 0;
-	memcpy((char *)bufferData, pointer, size);
+	memcpy((char*)bufferData, pointer, size);
 	vkUnmapMemory(device, deviceMemory);
 	VkDescriptorBufferInfo storageBufferInfo{};
 	storageBufferInfo.buffer = buffer;
@@ -1143,18 +1139,18 @@ void VulkanRenderer::setSSBO(shaders::Shader &shader, vaos::VAO &vao, const std:
 	descriptorWrite.pBufferInfo = &storageBufferInfo;
 	vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
 }
-void VulkanRenderer::setTexture(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name,
-								const textures::Texture &texture, const int32_t unit)
+void VulkanRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name,
+																const textures::Texture& texture, const int32_t unit)
 {
 	texture.bind();
 	std::string stringName(name);
-	auto &textureImpl = *(VulkanTextureImpl *)texture.rendererData;
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
+	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	VkWriteDescriptorSet descriptorWrite{};
 	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	descriptorWrite.dstSet = vaoImpl.descriptorSet;
-	auto &bindingIndex = shaderImpl.textureBindings[stringName];
+	auto& bindingIndex = shaderImpl.textureBindings[stringName];
 	descriptorWrite.dstBinding = bindingIndex;
 	descriptorWrite.dstArrayElement = 0;
 	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1167,26 +1163,26 @@ void VulkanRenderer::setTexture(shaders::Shader &shader, vaos::VAO &vao, const s
 	vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
 	texture.unbind();
 }
-bool VulkanRenderer::compileShader(shaders::Shader &shader, shaders::ShaderType shaderType,
-								   shaders::ShaderPair &shaderPair)
+bool VulkanRenderer::compileShader(shaders::Shader& shader, shaders::ShaderType shaderType,
+																	 shaders::ShaderPair& shaderPair)
 {
 	shaderc::Compiler compiler;
 	shaderc::CompileOptions compileOptions;
-	auto &shaderString = shaderPair.first;
-	auto &shaderModule = shaderPair.second;
+	auto& shaderString = shaderPair.first;
+	auto& shaderModule = shaderPair.second;
 	shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(shaderString.c_str(), shaderString.size(),
-																	 stageEShaderc[shaderType], "main", compileOptions);
+																																	 stageEShaderc[shaderType], "main", compileOptions);
 	if (!checkCompileErrors(module, true, shaders::stageShaderNames[shaderType].c_str()))
 	{
 		return false;
 	}
 	std::vector<uint32_t> vertexSpv(module.cbegin(), module.cend());
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	shaderModule = createShaderModule(vertexSpv);
 	shaderImpl.shaders[shaderType] = shaderPair;
 	return true;
 }
-VkShaderModule VulkanRenderer::createShaderModule(const std::vector<uint32_t> &code)
+VkShaderModule VulkanRenderer::createShaderModule(const std::vector<uint32_t>& code)
 {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -1199,13 +1195,13 @@ VkShaderModule VulkanRenderer::createShaderModule(const std::vector<uint32_t> &c
 	}
 	return shaderModule;
 }
-bool VulkanRenderer::compileProgram(shaders::Shader &shader)
+bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 {
 	if (shader.compiled)
 		return true;
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-	for (auto &shaderPair : shaderImpl.shaders)
+	for (auto& shaderPair : shaderImpl.shaders)
 	{
 		VkPipelineShaderStageCreateInfo shaderStageInfo{};
 		shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -1223,11 +1219,11 @@ bool VulkanRenderer::compileProgram(shaders::Shader &shader)
 	std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
 	uint32_t attribIndex = 0;
 	uint32_t offset = 0;
-	for (auto &constant : shader.constants)
+	for (auto& constant : shader.constants)
 	{
 		if (!vaos::VAOFactory::isVAOConstant(constant))
 			continue;
-		auto &constantSize = vaos::VAOFactory::constantSizes[constant];
+		auto& constantSize = vaos::VAOFactory::constantSizes[constant];
 		VkVertexInputAttributeDescription vertexInputAttributeDescription;
 		vertexInputAttributeDescription.location = attribIndex;
 		vertexInputAttributeDescription.binding = 0;
@@ -1295,7 +1291,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader &shader)
 	colorBlending.blendConstants[2] = 0.0f;
 	colorBlending.blendConstants[3] = 0.0f;
 	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
-	for (auto &uboLayoutBinding : shaderImpl.uboLayoutBindings)
+	for (auto& uboLayoutBinding : shaderImpl.uboLayoutBindings)
 	{
 		layoutBindings.push_back(uboLayoutBinding.second);
 	}
@@ -1304,7 +1300,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader &shader)
 	descriptorSetLayoutInfo.bindingCount = layoutBindings.size();
 	descriptorSetLayoutInfo.pBindings = layoutBindings.data();
 	if (!VKcheck("vkCreateDescriptorSetLayout",
-				 vkCreateDescriptorSetLayout(device, &descriptorSetLayoutInfo, nullptr, &shaderImpl.descriptorSetLayout)))
+							 vkCreateDescriptorSetLayout(device, &descriptorSetLayoutInfo, nullptr, &shaderImpl.descriptorSetLayout)))
 	{
 		throw std::runtime_error("Failed to create descriptor set layout");
 	}
@@ -1313,7 +1309,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader &shader)
 	pipelineLayoutInfo.setLayoutCount = 1;
 	pipelineLayoutInfo.pSetLayouts = &shaderImpl.descriptorSetLayout;
 	if (!VKcheck("vkCreatePipelineLayout",
-				 vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &shaderImpl.pipelineLayout)))
+							 vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &shaderImpl.pipelineLayout)))
 	{
 		throw std::runtime_error("failed to create pipeline layout!");
 	}
@@ -1341,16 +1337,16 @@ bool VulkanRenderer::compileProgram(shaders::Shader &shader)
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 	if (!VKcheck(
-			"vkCreateGraphicsPipelines",
-			vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &shaderImpl.graphicsPipeline)))
+				"vkCreateGraphicsPipelines",
+				vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &shaderImpl.graphicsPipeline)))
 	{
 		throw std::runtime_error("failed to create graphics pipeline!");
 	}
 	shader.compiled = true;
 	return true;
 }
-bool VulkanRenderer::checkCompileErrors(const shaderc::SpvCompilationResult &module, bool isShader,
-										const char *shaderType)
+bool VulkanRenderer::checkCompileErrors(const shaderc::SpvCompilationResult& module, bool isShader,
+																				const char* shaderType)
 {
 	if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
@@ -1359,11 +1355,11 @@ bool VulkanRenderer::checkCompileErrors(const shaderc::SpvCompilationResult &mod
 	}
 	return true;
 }
-void VulkanRenderer::deleteShader(shaders::Shader &shader) {}
-void VulkanRenderer::destroyShader(shaders::Shader &shader) {}
-void VulkanRenderer::bindFramebuffer(const textures::Framebuffer &framebuffer)
+void VulkanRenderer::deleteShader(shaders::Shader& shader) {}
+void VulkanRenderer::destroyShader(shaders::Shader& shader) {}
+void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 {
-	auto &framebufferImpl = *(const VulkanFramebufferImpl *)framebuffer.rendererData;
+	auto& framebufferImpl = *(const VulkanFramebufferImpl*)framebuffer.rendererData;
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = framebufferImpl.renderPass;
@@ -1376,10 +1372,10 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer &framebuffer)
 	switch (framebuffer.texture.format)
 	{
 	case textures::Texture::Depth:
-	{
-		clearValue.depthStencil = {0.0f, 0};
-		break;
-	}
+		{
+			clearValue.depthStencil = {0.0f, 0};
+			break;
+		}
 	default:
 		clearValue.color = {
 			{framebuffer.clearColor.r, framebuffer.clearColor.g, framebuffer.clearColor.b, framebuffer.clearColor.a}};
@@ -1391,15 +1387,15 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer &framebuffer)
 	vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	currentFramebufferImpl = &framebufferImpl;
 }
-void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer &framebuffer)
+void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
 {
 	vkCmdEndRenderPass(*commandBuffer);
 	currentFramebufferImpl = 0;
 }
-void VulkanRenderer::initFramebuffer(textures::Framebuffer &framebuffer)
+void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 {
 	framebuffer.rendererData = new VulkanFramebufferImpl();
-	auto &framebufferImpl = *(VulkanFramebufferImpl *)framebuffer.rendererData;
+	auto& framebufferImpl = *(VulkanFramebufferImpl*)framebuffer.rendererData;
 	size_t renderPassHash = 0;
 	uint8_t shift = 0;
 	std::vector<VkAttachmentDescription> attachments;
@@ -1410,27 +1406,23 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer &framebuffer)
 	attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 	attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	renderPassHash ^= attachment.samples ^
-		(attachment.loadOp << ++shift) ^
-		(attachment.storeOp << ++shift) ^
-		(attachment.stencilLoadOp << ++shift) ^
-		(attachment.stencilStoreOp << ++shift) ^
+	renderPassHash ^= attachment.samples ^ (attachment.loadOp << ++shift) ^ (attachment.storeOp << ++shift) ^
+		(attachment.stencilLoadOp << ++shift) ^ (attachment.stencilStoreOp << ++shift) ^
 		(attachment.initialLayout << ++shift);
 	switch (framebuffer.texture.format)
 	{
 	case textures::Texture::Depth:
-	{
-		attachment.format = VK_FORMAT_D32_SFLOAT;
-		attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-		break;
-	}
+		{
+			attachment.format = VK_FORMAT_D32_SFLOAT;
+			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			break;
+		}
 	default:
 		attachment.format = VK_FORMAT_R8G8B8A8_SRGB;
 		attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		break;
 	}
-	renderPassHash ^= (attachment.format << ++shift) ^
-		(attachment.finalLayout << ++shift);
+	renderPassHash ^= (attachment.format << ++shift) ^ (attachment.finalLayout << ++shift);
 	attachments.push_back(attachment);
 	std::vector<VkAttachmentReference> colorAttachmentRefs;
 	std::vector<VkAttachmentReference> depthAttachmentRefs;
@@ -1440,11 +1432,11 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer &framebuffer)
 	switch (framebuffer.texture.format)
 	{
 	case textures::Texture::Depth:
-	{
-		ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depthAttachmentRefs.push_back(ref);
-		break;
-	}
+		{
+			ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			depthAttachmentRefs.push_back(ref);
+			break;
+		}
 	default:
 		ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		colorAttachmentRefs.push_back(ref);
@@ -1466,20 +1458,17 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer &framebuffer)
 	switch (framebuffer.texture.format)
 	{
 	case textures::Texture::Depth:
-	{
-		dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		break;
-	}
+		{
+			dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			break;
+		}
 	default:
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 		break;
 	}
-	renderPassHash ^= (dependency.srcSubpass << ++shift) ^
-		(dependency.dstSubpass << ++shift) ^
-		(dependency.srcStageMask << ++shift) ^
-		(dependency.srcAccessMask << ++shift) ^
-		(dependency.dstStageMask << ++shift) ^
-		(dependency.dstAccessMask << ++shift);
+	renderPassHash ^= (dependency.srcSubpass << ++shift) ^ (dependency.dstSubpass << ++shift) ^
+		(dependency.srcStageMask << ++shift) ^ (dependency.srcAccessMask << ++shift) ^
+		(dependency.dstStageMask << ++shift) ^ (dependency.dstAccessMask << ++shift);
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassInfo.attachmentCount = attachments.size();
@@ -1495,15 +1484,15 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer &framebuffer)
 	}
 	else
 	{
-		if (!VKcheck("vkCreateRenderPass", vkCreateRenderPass(device, &renderPassInfo, nullptr, &framebufferImpl.renderPass)))
+		if (!VKcheck("vkCreateRenderPass",
+								 vkCreateRenderPass(device, &renderPassInfo, nullptr, &framebufferImpl.renderPass)))
 		{
 			throw std::runtime_error("VulkanRenderer-framebufferCreate: failed to create render pass!");
 		}
 		renderPassMap[renderPassHash] = framebufferImpl.renderPass;
 	}
-	printRenderPass(true, framebufferImpl.renderPass, renderPassInfo);
 	std::vector<VkImageView> imageViews;
-	auto &textureImpl = *(VulkanTextureImpl *)framebuffer.texture.rendererData;
+	auto& textureImpl = *(VulkanTextureImpl*)framebuffer.texture.rendererData;
 	framebufferImpl.width = framebuffer.texture.size.x;
 	framebufferImpl.height = framebuffer.texture.size.y;
 	imageViews.push_back(textureImpl.textureImageView);
@@ -1516,15 +1505,15 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer &framebuffer)
 	framebufferInfo.height = framebufferImpl.height;
 	framebufferInfo.layers = 1;
 	if (!VKcheck("vkCreateFramebuffer",
-				 vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebufferImpl.framebuffer)))
+							 vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebufferImpl.framebuffer)))
 	{
 		throw std::runtime_error("VulkanRenderer-framebufferCreate: failed to create framebuffer!");
 	}
 }
-void VulkanRenderer::destroyFramebuffer(textures::Framebuffer &framebuffer) {}
-void VulkanRenderer::bindTexture(const textures::Texture &texture)
+void VulkanRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer) {}
+void VulkanRenderer::bindTexture(const textures::Texture& texture)
 {
-	auto &textureImpl = *(VulkanTextureImpl *)texture.rendererData;
+	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
 	if (textureImpl.layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
 	{
 		VkFormat format;
@@ -1533,19 +1522,21 @@ void VulkanRenderer::bindTexture(const textures::Texture &texture)
 			format = textureFormat_Format[texture.format];
 		}
 		else if (texture.format == textures::Texture::Format::Depth ||
-				 texture.format == textures::Texture::Format::DepthStencil)
+						 texture.format == textures::Texture::Format::DepthStencil)
 		{
 			format = findDepthFormat(texture.format);
 		}
 		auto aspectMask = textureFormat_imageAspect[texture.format];
 		transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-							  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, aspectMask);
+													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, aspectMask);
 	}
 }
-void VulkanRenderer::unbindTexture(const textures::Texture &texture) {}
+void VulkanRenderer::unbindTexture(const textures::Texture& texture)
+{
+}
 void VulkanRenderer::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
-								 VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image,
-								 VkDeviceMemory &imageMemory)
+																 VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image,
+																 VkDeviceMemory& imageMemory)
 {
 	VkImageCreateInfo imageInfo{};
 	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1608,21 +1599,21 @@ VkFormat VulkanRenderer::findDepthFormat(uint32_t _format)
 	switch (format)
 	{
 	case textures::Texture::Format::Depth:
-	{
-		candidates.push_back(VK_FORMAT_D32_SFLOAT);
-		break;
-	};
+		{
+			candidates.push_back(VK_FORMAT_D32_SFLOAT);
+			break;
+		};
 	case textures::Texture::Format::DepthStencil:
-	{
-		candidates.push_back(VK_FORMAT_D32_SFLOAT_S8_UINT);
-		candidates.push_back(VK_FORMAT_D24_UNORM_S8_UINT);
-		break;
-	};
+		{
+			candidates.push_back(VK_FORMAT_D32_SFLOAT_S8_UINT);
+			candidates.push_back(VK_FORMAT_D24_UNORM_S8_UINT);
+			break;
+		};
 	}
 	return findSupportedFormat(candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
-VkFormat VulkanRenderer::findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling,
-											 VkFormatFeatureFlags features)
+VkFormat VulkanRenderer::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+																						 VkFormatFeatureFlags features)
 {
 	for (VkFormat format : candidates)
 	{
@@ -1655,9 +1646,9 @@ void VulkanRenderer::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t 
 	vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 	endSingleTimeCommands(commandBuffer);
 }
-void VulkanRenderer::transitionImageLayout(VulkanTextureImpl &textureImpl, VkImage image, VkFormat format,
-										   VkImageLayout oldLayout, VkImageLayout newLayout,
-										   VkImageAspectFlags aspectMask)
+void VulkanRenderer::transitionImageLayout(VulkanTextureImpl& textureImpl, VkImage image, VkFormat format,
+																					 VkImageLayout oldLayout, VkImageLayout newLayout,
+																					 VkImageAspectFlags aspectMask)
 {
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
@@ -1693,6 +1684,14 @@ void VulkanRenderer::transitionImageLayout(VulkanTextureImpl &textureImpl, VkIma
 		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	{
+		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
 	else
 	{
 		throw std::invalid_argument("unsupported layout transition!");
@@ -1704,17 +1703,17 @@ void VulkanRenderer::transitionImageLayout(VulkanTextureImpl &textureImpl, VkIma
 
 	textureImpl.layout = newLayout;
 }
-void VulkanRenderer::preInitTexture(textures::Texture &texture)
+void VulkanRenderer::preInitTexture(textures::Texture& texture)
 {
 	texture.rendererData = new VulkanTextureImpl();
-	auto &textureImpl = *(VulkanTextureImpl *)texture.rendererData;
+	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
 	VkFormat format;
 	if (texture.format == textures::Texture::Format::RGBA8)
 	{
 		format = textureFormat_Format[texture.format];
 	}
 	else if (texture.format == textures::Texture::Format::Depth ||
-			 texture.format == textures::Texture::Format::DepthStencil)
+					 texture.format == textures::Texture::Format::DepthStencil)
 	{
 		format = findDepthFormat(texture.format);
 	}
@@ -1722,24 +1721,24 @@ void VulkanRenderer::preInitTexture(textures::Texture &texture)
 	switch (texture.format)
 	{
 	case textures::Texture::Format::RGBA8:
-	{
-		usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		break;
-	};
+		{
+			usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			break;
+		};
 	case textures::Texture::Format::Depth:
 	case textures::Texture::Format::DepthStencil:
-	{
-		usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-		break;
-	}
+		{
+			usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			break;
+		}
 	}
 	// TODO: Vulkan: Implement createImage1D && createImage3D
 	createImage(texture.size.x, texture.size.y, format, VK_IMAGE_TILING_OPTIMAL, usage,
-				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImpl.textureImage, textureImpl.textureImageMemory);
+							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImpl.textureImage, textureImpl.textureImageMemory);
 	auto aspectMask = textureFormat_imageAspect[texture.format];
 	textureImpl.textureImageView = createImageView(textureImpl.textureImage, format, aspectMask);
 	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_UNDEFINED,
-						  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, aspectMask);
+												VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, aspectMask);
 	// create sampler
 	VkPhysicalDeviceProperties properties{};
 	vkGetPhysicalDeviceProperties(physicalDevice, &properties);
@@ -1762,10 +1761,10 @@ void VulkanRenderer::preInitTexture(textures::Texture &texture)
 		throw std::runtime_error("failed to create texture sampler!");
 	}
 }
-void VulkanRenderer::midInitTexture(const textures::Texture &texture,
-									const std::vector<images::ImageLoader::ImagePair> &images)
+void VulkanRenderer::midInitTexture(const textures::Texture& texture,
+																		const std::vector<images::ImageLoader::ImagePair>& images)
 {
-	void *bytes = images.size() ? std::get<1>(images[0]).get() : 0;
+	void* bytes = images.size() ? std::get<1>(images[0]).get() : 0;
 	if (!bytes)
 	{
 		return;
@@ -1776,58 +1775,58 @@ void VulkanRenderer::midInitTexture(const textures::Texture &texture,
 		format = textureFormat_Format[texture.format];
 	}
 	else if (texture.format == textures::Texture::Format::Depth ||
-			 texture.format == textures::Texture::Format::DepthStencil)
+					 texture.format == textures::Texture::Format::DepthStencil)
 	{
 		format = findDepthFormat(texture.format);
 	}
-	auto &textureImpl = *(VulkanTextureImpl *)texture.rendererData;
+	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
 	VkDeviceSize imageSize = texture.size.x * texture.size.y * 4;
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
 	createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
-				 stagingBufferMemory);
-	void *data = 0;
+							 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
+							 stagingBufferMemory);
+	void* data = 0;
 	vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
 	memcpy(data, bytes, static_cast<size_t>(imageSize));
 	vkUnmapMemory(device, stagingBufferMemory);
 	copyBufferToImage(stagingBuffer, textureImpl.textureImage, static_cast<uint32_t>(texture.size.x),
-					  static_cast<uint32_t>(texture.size.y));
+										static_cast<uint32_t>(texture.size.y));
 	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-						  textureFormat_descriptor_imageLayout[texture.format],
-						  textureFormat_imageAspect[texture.format]);
+												textureFormat_descriptor_imageLayout[texture.format],
+												textureFormat_imageAspect[texture.format]);
 	vkDestroyBuffer(device, stagingBuffer, nullptr);
 	vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
-void VulkanRenderer::postInitTexture(const textures::Texture &texture) {}
-void VulkanRenderer::destroyTexture(textures::Texture &texture)
+void VulkanRenderer::postInitTexture(const textures::Texture& texture) {}
+void VulkanRenderer::destroyTexture(textures::Texture& texture)
 {
-	auto textureImpl = (VulkanTextureImpl *)texture.rendererData;
+	auto textureImpl = (VulkanTextureImpl*)texture.rendererData;
 	// do vulkan texture destroy
 	delete textureImpl;
 }
-void VulkanRenderer::updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t> &indices)
+void VulkanRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices)
 {
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	memcpy(vaoImpl.indiceData, indices.data(), vaoImpl.indiceBufferSize);
 }
-void VulkanRenderer::updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar)
+void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
-	auto &constantSize = vaos::VAOFactory::constantSizes[constant];
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto& constantSize = vaos::VAOFactory::constantSizes[constant];
 	auto offset = vaos::VAOFactory::getOffset(vao.constants, constant);
 	auto elementStride = std::get<0>(constantSize) * std::get<1>(constantSize);
 	for (size_t index = offset, c = 1, elementIndex = 0; c <= vao.elementCount;
-		 index += vao.stride, c++, elementIndex += elementStride)
+			 index += vao.stride, c++, elementIndex += elementStride)
 	{
-		memcpy((char *)vaoImpl.vertexData + index, &elementsAsChar[elementIndex], elementStride);
+		memcpy((char*)vaoImpl.vertexData + index, &elementsAsChar[elementIndex], elementStride);
 	}
 }
-void VulkanRenderer::drawVAO(const vaos::VAO &vao)
+void VulkanRenderer::drawVAO(const vaos::VAO& vao)
 {
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
-	auto &shader = *(dynamic_cast<const Entity &>(vao)).shader;
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto& shader = *(dynamic_cast<const Entity&>(vao)).shader;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	if (vaoImpl.vertexBuffer == VK_NULL_HANDLE)
 	{
 		return;
@@ -1837,54 +1836,54 @@ void VulkanRenderer::drawVAO(const vaos::VAO &vao)
 	vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
 	vkCmdBindIndexBuffer(*commandBuffer, vaoImpl.indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
 	vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
-							&vaoImpl.descriptorSet, 0, nullptr);
-	auto &indices = vao.indiceCount;
+													&vaoImpl.descriptorSet, 0, nullptr);
+	auto& indices = vao.indiceCount;
 	if (!indices)
 	{
 		return;
 	}
 	vkCmdDrawIndexed(*commandBuffer, indices, 1, 0, 0, 0);
 }
-void VulkanRenderer::generateVAO(vaos::VAO &vao)
+void VulkanRenderer::generateVAO(vaos::VAO& vao)
 {
 	vao.rendererData = new VulkanVAOImpl();
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	auto stride = vaos::VAOFactory::getStride(vao.constants);
 	VkDeviceSize vertexBufferSize = stride * vao.elementCount;
 	if (!vertexBufferSize)
 	{
 		return;
 	}
-	auto &constantSize = vaos::VAOFactory::constantSizes["Indice"];
+	auto& constantSize = vaos::VAOFactory::constantSizes["Indice"];
 	VkDeviceSize indiceBufferSize = vao.indiceCount * std::get<1>(constantSize);
 	if (!indiceBufferSize)
 	{
 		return;
 	}
 	ensureBuffer(vaoImpl.vertexBuffer, vaoImpl.vertexBufferMemory, vaoImpl.vertexData, vaoImpl.vertexBufferSize,
-				 vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+							 vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 	ensureBuffer(vaoImpl.indiceBuffer, vaoImpl.indiceBufferMemory, vaoImpl.indiceData, vaoImpl.indiceBufferSize,
-				 indiceBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+							 indiceBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 	return;
 }
-void VulkanRenderer::destroyVAO(vaos::VAO &vao)
+void VulkanRenderer::destroyVAO(vaos::VAO& vao)
 {
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	delete &vaoImpl;
 }
-void VulkanRenderer::ensureEntity(shaders::Shader &shader, vaos::VAO &vao)
+void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 {
 	if (!shader.compiled)
 		return;
-	auto &entity = dynamic_cast<Entity &>(vao);
+	auto& entity = dynamic_cast<Entity&>(vao);
 	if (entity.ensured)
 		return;
-	auto &shaderImpl = *(VulkanShaderImpl *)shader.rendererData;
-	auto &vaoImpl = *(VulkanVAOImpl *)vao.rendererData;
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	std::vector<VkDescriptorPoolSize> poolSizes;
-	auto getPoolSize = [&](auto type) -> VkDescriptorPoolSize &
+	auto getPoolSize = [&](auto type) -> VkDescriptorPoolSize&
 	{
-		for (auto &poolSize : poolSizes)
+		for (auto& poolSize : poolSizes)
 		{
 			if (poolSize.type == type)
 			{
@@ -1894,10 +1893,10 @@ void VulkanRenderer::ensureEntity(shaders::Shader &shader, vaos::VAO &vao)
 		poolSizes.push_back({type, 0});
 		return poolSizes[poolSizes.size() - 1];
 	};
-	for (auto &uboLayoutBinding : shaderImpl.uboLayoutBindings)
+	for (auto& uboLayoutBinding : shaderImpl.uboLayoutBindings)
 	{
-		auto &layoutBinding = uboLayoutBinding.second;
-		auto &poolSize = getPoolSize(layoutBinding.descriptorType);
+		auto& layoutBinding = uboLayoutBinding.second;
+		auto& poolSize = getPoolSize(layoutBinding.descriptorType);
 		poolSize.descriptorCount++;
 	}
 	if (shaderImpl.ssboBindings.size())
@@ -1912,14 +1911,14 @@ void VulkanRenderer::ensureEntity(shaders::Shader &shader, vaos::VAO &vao)
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = shaderImpl.uboLayoutBindings.size() + shaderImpl.ssboBindings.size();
 
-	auto &descriptorPool = vaoImpl.descriptorPool;
+	auto& descriptorPool = vaoImpl.descriptorPool;
 
 	if (!VKcheck("vkCreateDescriptorPool", vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool)))
 	{
 		throw std::runtime_error("Failed to create descriptor pool!");
 	}
 
-	auto &descriptorSet = vaoImpl.descriptorSet;
+	auto& descriptorSet = vaoImpl.descriptorSet;
 
 	std::vector<VkDescriptorSetLayout> layouts(1, shaderImpl.descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
@@ -1933,31 +1932,31 @@ void VulkanRenderer::ensureEntity(shaders::Shader &shader, vaos::VAO &vao)
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 
-	auto &bufferInfos = vaoImpl.bufferInfos;
+	auto& bufferInfos = vaoImpl.bufferInfos;
 	for (auto uboLayoutBindingPair : shaderImpl.uboLayoutBindings)
 	{
 		if (std::get<0>(uboLayoutBindingPair.first) != ELayoutBindingType::UniformBuffer)
 		{
 			continue;
 		}
-		auto &descriptorSetLayoutBinding = uboLayoutBindingPair.second;
-		auto &uniformBuffers = vaoImpl.uniformBuffers;
-		auto &uniformBuffersMemory = vaoImpl.uniformBuffersMemory;
-		auto &uniformBuffersMapped = vaoImpl.uniformBuffersMapped;
+		auto& descriptorSetLayoutBinding = uboLayoutBindingPair.second;
+		auto& uniformBuffers = vaoImpl.uniformBuffers;
+		auto& uniformBuffersMemory = vaoImpl.uniformBuffersMemory;
+		auto& uniformBuffersMapped = vaoImpl.uniformBuffersMapped;
 		uniformBuffers.resize(uniformBuffers.size() + 1);
 		uniformBuffersMemory.resize(uniformBuffersMemory.size() + 1);
-		const auto &bufferSize = std::get<1>(uboLayoutBindingPair.first);
+		const auto& bufferSize = std::get<1>(uboLayoutBindingPair.first);
 		int32_t uniformBuffersIndex = -1, uniformBuffersMemoryIndex = -1, uniformBuffersMappedIndex = -1;
 		createBuffer(bufferSize * descriptorSetLayoutBinding.descriptorCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-					 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-					 uniformBuffers[uniformBuffersIndex = (uniformBuffers.size() - 1)],
-					 uniformBuffersMemory[uniformBuffersMemoryIndex = (uniformBuffersMemory.size() - 1)]);
-		auto &isArray = std::get<4>(uboLayoutBindingPair.first);
+								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+								 uniformBuffers[uniformBuffersIndex = (uniformBuffers.size() - 1)],
+								 uniformBuffersMemory[uniformBuffersMemoryIndex = (uniformBuffersMemory.size() - 1)]);
+		auto& isArray = std::get<4>(uboLayoutBindingPair.first);
 		if (!isArray)
 		{
 			uniformBuffersMapped.resize(uniformBuffersMapped.size() + 1);
 			vkMapMemory(device, uniformBuffersMemory[uniformBuffersMemoryIndex], 0, bufferSize, 0,
-						&uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
+									&uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = uniformBuffers[uniformBuffersIndex];
 			bufferInfo.offset = 0;
@@ -1972,7 +1971,7 @@ void VulkanRenderer::ensureEntity(shaders::Shader &shader, vaos::VAO &vao)
 			{
 				uniformBuffersMapped.resize(uniformBuffersMapped.size() + 1);
 				vkMapMemory(device, uniformBuffersMemory[uniformBuffersMemoryIndex], index * bufferSize, bufferSize, 0,
-							&uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
+										&uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
 				VkDescriptorBufferInfo bufferInfo{};
 				bufferInfo.buffer = uniformBuffers[uniformBuffersIndex];
 				bufferInfo.offset = index * bufferSize;
@@ -1985,7 +1984,7 @@ void VulkanRenderer::ensureEntity(shaders::Shader &shader, vaos::VAO &vao)
 		}
 	}
 
-	for (auto &bufferInfoPair : bufferInfos)
+	for (auto& bufferInfoPair : bufferInfos)
 	{
 		if (std::get<0>(bufferInfoPair.first) != ELayoutBindingType::UniformBuffer)
 		{
@@ -2056,8 +2055,8 @@ uint32_t VulkanRenderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFla
 	}
 	throw std::runtime_error("VulkanRenderer-findMemoryType: failed to find suitable memory type!");
 }
-void VulkanRenderer::ensureBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory, void *&bufferData,
-								  uint32_t &bufferSize, uint32_t newBufferSize, VkBufferUsageFlagBits extraUsageFlags)
+void VulkanRenderer::ensureBuffer(VkBuffer& buffer, VkDeviceMemory& bufferMemory, void*& bufferData,
+																	uint32_t& bufferSize, uint32_t newBufferSize, VkBufferUsageFlagBits extraUsageFlags)
 {
 	if (buffer == VK_NULL_HANDLE || newBufferSize != bufferSize)
 	{
@@ -2066,11 +2065,11 @@ void VulkanRenderer::ensureBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory
 			// size has changed create new buffer
 			VkBuffer newBuffer;
 			VkDeviceMemory newBufferMemory;
-			void *newBufferData;
+			void* newBufferData;
 			createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | extraUsageFlags,
-						 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, newBuffer,
-						 newBufferMemory);
-			vkMapMemory(device, newBufferMemory, 0, newBufferSize, 0, (void **)&newBufferData);
+									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, newBuffer,
+									 newBufferMemory);
+			vkMapMemory(device, newBufferMemory, 0, newBufferSize, 0, (void**)&newBufferData);
 			memcpy(newBufferData, bufferData, newBufferSize < bufferSize ? newBufferSize : bufferSize);
 			vkDestroyBuffer(device, buffer, nullptr);
 			vkFreeMemory(device, bufferMemory, nullptr);
@@ -2081,14 +2080,14 @@ void VulkanRenderer::ensureBuffer(VkBuffer &buffer, VkDeviceMemory &bufferMemory
 		else
 		{
 			createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | extraUsageFlags,
-						 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
-			vkMapMemory(device, bufferMemory, 0, newBufferSize, 0, (void **)&bufferData);
+									 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
+			vkMapMemory(device, bufferMemory, 0, newBufferSize, 0, (void**)&bufferData);
 		}
 		bufferSize = newBufferSize;
 	}
 }
 void VulkanRenderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-								  VkBuffer &buffer, VkDeviceMemory &bufferMemory)
+																	VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -2118,7 +2117,7 @@ void VulkanRenderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, V
 }
 void VulkanRenderer::getCurrentImageToBitmap()
 {
-	auto &renderWindow = *platformWindowPointer->renderWindowPointer;
+	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 	VkImage image = swapChainImages[currentFrame];
 	VkImageMemoryBarrier barrier{};
@@ -2136,7 +2135,7 @@ void VulkanRenderer::getCurrentImageToBitmap()
 	barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 	barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr,
-						 0, nullptr, 1, &barrier);
+											 0, nullptr, 1, &barrier);
 	endSingleTimeCommands(commandBuffer);
 	commandBuffer = beginSingleTimeCommands();
 	VkMappedMemoryRange range{};
@@ -2164,22 +2163,22 @@ void VulkanRenderer::getCurrentImageToBitmap()
 	barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 	barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
-						 nullptr, 0, nullptr, 1, &barrier);
+											 nullptr, 0, nullptr, 1, &barrier);
 	endSingleTimeCommands(commandBuffer);
 	vkQueueWaitIdle(graphicsQueue);
 }
-bool zg::VKcheck(const char *fn, VkResult result)
+bool zg::VKcheck(const char* fn, VkResult result)
 {
 	switch (result)
 	{
 	case VK_SUCCESS:
-	{
-		return true;
-	};
+		{
+			return true;
+		};
 	default:
-	{
-		return false;
-	}
+		{
+			return false;
+		}
 	}
 }
 #endif

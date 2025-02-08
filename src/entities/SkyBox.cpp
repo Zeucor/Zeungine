@@ -102,7 +102,7 @@ SkyBox::SkyBox(Window &window, Scene &scene, const std::vector<std::string_view>
 	updateElements("UV3", uvs);
 	updateElements("Position", positions);
 };
-void SkyBox::preRender()
+bool SkyBox::preRender()
 {
 #ifdef USE_GL
 	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iRenderer);
@@ -118,6 +118,7 @@ void SkyBox::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setTexture("TextureCube", *this, texture, 0);
 	shader->unbind();
+	return true;
 };
 void SkyBox::postRender()
 {

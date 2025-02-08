@@ -35,7 +35,7 @@ namespace zg::entities
 		void addPanelEntity(const std::shared_ptr<Entity> &entity, bool alignSizeX = true);
 		void removePanelEntity(const std::shared_ptr<Entity> &entity);
 		float getSizeYTotal();
-		void preRender() override;
+		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize(glm::vec3 newSize) override;
 	};
@@ -67,7 +67,7 @@ namespace zg::entities
 				  const shaders::RuntimeConstants &constants = {},
 				  std::string_view name = "");
 		~PanelItem() override;
-		void preRender() override;
+		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize(glm::vec3 newSize) override;
 	};

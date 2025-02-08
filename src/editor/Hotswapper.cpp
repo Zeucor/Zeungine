@@ -56,6 +56,15 @@ void Hotswapper::update()
 	swapperRef.AddCompileOption("-DHSCPP_PLATFORM_UNIX");
 	swapperRef.AddCompileOption("-fPIC");
 #endif
+#ifdef USE_VULKAN
+	swapperRef.AddCompileOption("-DUSE_VULKAN");
+#endif
+#ifdef USE_GL
+	swapperRef.AddCompileOption("-DUSE_GL");
+#endif
+#ifdef USE_EGL
+	swapperRef.AddCompileOption("-DUSE_EGL");
+#endif
 	swapperRef.SetBuildDirectory(directory + "/build");
 	while (!swapperRef.IsCompilerInitialized())
 	{

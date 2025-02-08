@@ -36,7 +36,7 @@ namespace zg::entities
 			  textures::Texture &texture,
 			  const shaders::RuntimeConstants &constants = {},
 			  std::string_view name = "");
-		void preRender() override;
+		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize(glm::vec2 size);
 	};

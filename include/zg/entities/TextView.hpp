@@ -51,7 +51,7 @@ namespace zg::entities
 		~TextView() override;
 		void update() override;
 		void forceUpdate();
-		void preRender() override;
+		bool preRender() override;
 		void setSize(glm::vec2 size);
 		void updateText(const std::string_view text);
 		void setTextColor(glm::vec4 newTextColor);

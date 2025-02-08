@@ -78,7 +78,7 @@ Dialog::Dialog(zg::Window &window,
 	}
 	setSize(dialogSize);
 };
-void Dialog::preRender()
+bool Dialog::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -88,6 +88,7 @@ void Dialog::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void Dialog::setColor(glm::vec4 color)
 {

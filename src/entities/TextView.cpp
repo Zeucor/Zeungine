@@ -109,18 +109,20 @@ void TextView::forceUpdate()
 	}
 	oldText = text;
 }
-void TextView::preRender()
+bool TextView::preRender()
 {
+	if (!size.x || !size.y)
+		return false;
 	auto &model = getModelMatrix();
 	shader->bind(*this);
 	shader->setBlock("Model", *this, model);
 	shader->setBlock("View", *this, scene.view.matrix);
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
-	if (size.x && size.y)
-		shader->setTexture("Texture2D", *this, *texturePointer, 0);
+	shader->setTexture("Texture2D", *this, *texturePointer, 0);
 	shader->setUniform("TextColor", *this, textColor);
 	shader->unbind();
+	return true;
 }
 void TextView::setSize(glm::vec2 size)
 {

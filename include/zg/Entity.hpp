@@ -37,7 +37,7 @@ namespace zg
 			   glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, std::string_view name);
 		virtual void update() override;
 		void addShader();
-		virtual void preRender();
+		virtual bool preRender();
 		void render() override;
 		virtual void postRender();
 		const glm::mat4 &getModelMatrix();

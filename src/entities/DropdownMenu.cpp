@@ -54,7 +54,7 @@ void DropdownMenu::addOption(std::string_view name, const OptionPressHandler &ha
 	}
 	setSize({sizeXMax, sizeYTotal});
 };
-void DropdownMenu::preRender()
+bool DropdownMenu::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -64,6 +64,7 @@ void DropdownMenu::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void DropdownMenu::setColor(glm::vec4 color)
 {
@@ -156,7 +157,7 @@ DropdownItem::~DropdownItem()
 	removeMouseHoverHandler(mouseHoverID);
 	removeMousePressHandler(0, mousePressID);
 };
-void DropdownItem::preRender()
+bool DropdownItem::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -166,6 +167,7 @@ void DropdownItem::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void DropdownItem::setColor(glm::vec4 color)
 {

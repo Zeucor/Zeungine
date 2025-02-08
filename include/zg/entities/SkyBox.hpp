@@ -13,7 +13,7 @@ namespace zg::entities
 		Scene &scene;
 		inline static size_t skyBoxesCount = 0;
 		explicit SkyBox(Window &window, Scene &scene, const std::vector<std::string_view> &texturePaths = {}, std::string_view name = "");
-		void preRender() override;
+		bool preRender() override;
 		void postRender() override;
 	};
 }

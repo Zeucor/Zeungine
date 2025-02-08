@@ -136,7 +136,7 @@ Input::~Input()
 	removeMouseHoverHandler(mouseHoverID);
 	removeMousePressHandler(0, mousePressID);
 };
-void Input::preRender()
+bool Input::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -146,6 +146,7 @@ void Input::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 };
 void Input::setColor(glm::vec4 color)
 {

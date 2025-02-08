@@ -65,7 +65,7 @@ StatusText::StatusText(zg::Window &window,
 	addChild(textView);
 	addToBVH = false;
 }
-void StatusText::preRender()
+bool StatusText::preRender()
 {
 	const auto &model = getModelMatrix();
 	shader->bind(*this);
@@ -75,6 +75,7 @@ void StatusText::preRender()
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
 	shader->unbind();
+	return true;
 }
 void StatusText::setColor(glm::vec4 newColor)
 {

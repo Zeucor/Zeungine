@@ -35,7 +35,7 @@ namespace zg::entities
 			   const std::vector<std::shared_ptr<Entity>> &children = {},
 			   const shaders::RuntimeConstants &constants = {},
 			   std::string_view name = "");
-		void preRender() override;
+		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize(glm::vec2 newSize);
 	};

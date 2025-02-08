@@ -20,6 +20,6 @@ namespace zg::entities
 			 glm::vec3 size,
 			 const shaders::RuntimeConstants &constants = {},
 			 std::string_view name = "");
-		void preRender() override;
+		bool preRender() override;
 	};
 }

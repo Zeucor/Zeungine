@@ -33,7 +33,7 @@ namespace zg::entities
 					 std::string_view projectDirectory,
 					 const shaders::RuntimeConstants &constants = {},
 					 std::string_view name = "");
-		void preRender() override;
+		bool preRender() override;
 		void setBackgroundColor(glm::vec4 newBackgroundColor);
 		void setSize(glm::vec3 newSize) override;
 	};
