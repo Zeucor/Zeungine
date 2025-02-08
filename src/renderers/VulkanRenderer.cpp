@@ -1377,9 +1377,16 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 			break;
 		}
 	default:
-		clearValue.color = {
-			{framebuffer.clearColor.r, framebuffer.clearColor.g, framebuffer.clearColor.b, framebuffer.clearColor.a}};
-		break;
+		{
+			glm::vec4 clearColor = framebuffer.clearColor;
+			if (framebuffer.scenePointer)
+			{
+				clearColor = framebuffer.scenePointer->clearColor;
+			}
+			clearValue.color = {
+				{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
+			break;
+		}
 	}
 	clearValues.push_back(clearValue);
 	renderPassInfo.clearValueCount = clearValues.size();
@@ -1531,9 +1538,7 @@ void VulkanRenderer::bindTexture(const textures::Texture& texture)
 													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, aspectMask);
 	}
 }
-void VulkanRenderer::unbindTexture(const textures::Texture& texture)
-{
-}
+void VulkanRenderer::unbindTexture(const textures::Texture& texture) {}
 void VulkanRenderer::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
 																 VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image,
 																 VkDeviceMemory& imageMemory)

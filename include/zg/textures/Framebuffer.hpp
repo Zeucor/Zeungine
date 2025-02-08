@@ -1,22 +1,24 @@
 #pragma once
-#include "../common.hpp"
 #include <zg/glm.hpp>
+#include "../common.hpp"
 namespace zg
 {
 	struct Window;
+	struct Scene;
 }
 namespace zg::textures
 {
 	struct Texture;
 	struct Framebuffer
 	{
-		Window &window;
-		Texture &texture;
-		Texture *depthTexturePointer = 0;
+		Window& window;
+		Texture& texture;
+		Texture* depthTexturePointer = 0;
 		glm::vec4 clearColor = glm::vec4(0);
-		void *rendererData = 0;
-		Framebuffer(Window &window, Texture &texture);
-		Framebuffer(Window &window, Texture &texture, Texture &depthTexture);
+		Scene* scenePointer = 0;
+		void* rendererData = 0;
+		Framebuffer(Window& window, Texture& texture);
+		Framebuffer(Window& window, Texture& texture, Texture& depthTexture);
 		~Framebuffer();
 		void bind() const;
 		void unbind();

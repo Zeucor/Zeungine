@@ -218,7 +218,9 @@ void Window::preRender()
 	runRunnables();
 	updateKeyboard();
 	updateMouse();
-	framebuffer->bind();
+	auto& framebufferRef = *framebuffer;
+	framebufferRef.scenePointer = (Scene *)scene.get();
+	framebufferRef.bind();
 }
 void Window::postRender()
 {
