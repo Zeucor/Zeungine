@@ -10,6 +10,8 @@ find_package(PkgConfig REQUIRED)
 include(CTest)
 enable_testing()
 
+message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
+
 # Set library directory
 if(("${CMAKE_BUILD_TYPE}" MATCHES "Release") OR ("${CMAKE_BUILD_TYPE}" MATCHES "MinSizeRel"))
     set(RELEASE_OR_DEBUG "Release")
@@ -64,9 +66,11 @@ elseif(MACOS)
 endif()
 
 if(USE_SWIFTSHADER)
-    message(STATUS "Compiling with SwiftShader backend")
+    message(STATUS "Compiling with SwiftShader Vulkan backend")
     add_definitions(-DUSE_SWIFTSHADER)
     set(SWIFTSHADER_INCLUDE_DIR "include/SwiftShader")
+elseif(BUILD_VULKAN)
+    message(STATUS "Compiling with Vulkan backend")
 endif()
 
 # Dependencies
@@ -228,7 +232,6 @@ elseif(BUILD_EGL)
     add_definitions(-DUSE_EGL)
     list(APPEND ZG_SOURCES src/renderers/EGLRenderer.cpp)
 elseif(BUILD_VULKAN)
-    message(STATUS "Building Vulkan")
     add_definitions(-DUSE_VULKAN)
     list(APPEND ZG_SOURCES src/renderers/VulkanRenderer.cpp)
 endif()
