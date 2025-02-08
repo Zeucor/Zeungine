@@ -44,6 +44,7 @@ PanelMenu::PanelMenu(zg::Window &window,
 	titleSize.y /= window.windowHeight * 0.5f;
 	titleSize.x /= window.windowWidth * 0.5f;
 	static auto indent = 8 / window.windowWidth / 0.5;
+	auto titleFontSize = window.windowHeight / 36.f;
 	titleTextView = std::make_shared<TextView>(
 		window,
 		scene,
@@ -54,7 +55,7 @@ PanelMenu::PanelMenu(zg::Window &window,
 		title,
 		titleSize,
 		font,
-		window.windowHeight / 36.f,
+		titleFontSize,
 		true,
 		[](auto titleSize)
 		{
