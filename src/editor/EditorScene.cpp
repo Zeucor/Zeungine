@@ -266,7 +266,6 @@ void EditorScene::setupGameWindow()
 		gameWindowY,
 		true);
 	gameWindowPointer = (Window *)&gameWindow;
-	gameWindow.minimize();
 	std::function<void(const std::shared_ptr<IEntity> &)> entityAddedFunction = std::bind(
 		&EditorScene::onEntityAdded, this, std::placeholders::_1);
 	gameWindow.registerOnEntityAddedFunction(entityAddedFunction);
