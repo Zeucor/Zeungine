@@ -294,7 +294,7 @@ if(LINUX)
 elseif(MACOS)
     if(USE_SWIFTSHADER)
         target_link_libraries(zeungine
-            ${ZG_LIB_DIR}/vulkan/libvulkan.dylib.1
+            ${ZG_LIB_DIR}/vulkan/libvulkan.dylib
             ${ZG_LIB_DIR}/libvk_swiftshader.dylib)
     endif()
     target_link_libraries(zeungine
