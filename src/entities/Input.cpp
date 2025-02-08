@@ -320,7 +320,11 @@ void Input::handleKey(IWindow::Key key, bool pressed)
 		auto cursorPositionXBeforeNDC = cursorPosition.x;
 		auto textViewSizeBeforeNDC = glm::vec2(textViewRef.actualSizeBeforeNDC);
 		float inputWidthNDCMinusPadding = size.x - (NDCPadding);
+#ifdef USE_VULKAN
+		auto inputSizeBeforeNDCMinusPadding = glm::vec2(inputWidthNDCMinusPadding * (vaoWindow.windowWidth), size.y * vaoWindow.windowHeight);
+#else
 		auto inputSizeBeforeNDCMinusPadding = glm::vec2(inputWidthNDCMinusPadding * (vaoWindow.windowWidth / 2), size.y * vaoWindow.windowHeight / 2);
+#endif
 		float textWidthNDC = textViewRef.actualSize.x;
 		float cursorTextCoord = cursorPosition.x;
 		if (textWidthNDC > inputWidthNDCMinusPadding)
