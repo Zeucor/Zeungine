@@ -4,9 +4,9 @@
 #elif defined(LINUX) || defined(MACOS)
 #include <dlfcn.h>
 #endif
-#include <string_view>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 namespace zg
 {
 	struct SharedLibrary
@@ -14,15 +14,24 @@ namespace zg
 #ifdef _WIN32
 		HMODULE libraryPointer = 0;
 #elif defined(LINUX) || defined(MACOS)
-		void *libraryPointer = 0;
+		void* libraryPointer = 0;
 #endif
 		template <typename... Args>
-		SharedLibrary(Args... args)
+		SharedLibrary(const Args&... args)
 		{
+			std::string paths;
+			concatPaths(paths, args...);
 			load(args...);
 		}
 		template <typename... Args>
-		void load(std::string_view path, Args... args)
+		void concatPaths(std::string& paths, const std::string& path, const Args&... args)
+		{
+			paths += std::string(path) + (sizeof...(args) ? ", " : "");
+			concatPaths(paths, args...);
+		}
+		void concatPaths(std::string& paths) {}
+		template <typename... Args>
+		void load(const std::string& paths, const std::string path, const Args&... args)
 		{
 #ifdef _WIN32
 			libraryPointer = LoadLibraryA(path.data());
@@ -31,13 +40,10 @@ namespace zg
 #endif
 			if (!libraryPointer)
 			{
-				load(args...);
+				load(paths, args...);
 			}
 		}
-		void load()
-		{
-			throw std::runtime_error("Failed to load library");
-		}
+		void load(const std::string& paths) { throw std::runtime_error("Failed to load librarys: " + paths); }
 		~SharedLibrary();
 		template <typename T>
 		T getProc(std::string_view procName)
@@ -47,9 +53,9 @@ namespace zg
 				throw std::runtime_error("Library not loaded");
 			}
 #ifdef _WIN32
-			void *procAddress = GetProcAddress(libraryPointer, procName.data());
+			void* procAddress = GetProcAddress(libraryPointer, procName.data());
 #elif defined(LINUX) || defined(MACOS)
-			void *procAddress = dlsym(libraryPointer, procName.data());
+			void* procAddress = dlsym(libraryPointer, procName.data());
 #endif
 			if (!procAddress)
 			{
@@ -57,9 +63,9 @@ namespace zg
 			}
 			return reinterpret_cast<T>(procAddress);
 		};
-		SharedLibrary(const SharedLibrary &) = delete;
-		SharedLibrary &operator=(const SharedLibrary &) = delete;
-		SharedLibrary(SharedLibrary &&other) noexcept;
-		SharedLibrary &operator=(SharedLibrary &&other) noexcept;
+		SharedLibrary(const SharedLibrary&) = delete;
+		SharedLibrary& operator=(const SharedLibrary&) = delete;
+		SharedLibrary(SharedLibrary&& other) noexcept;
+		SharedLibrary& operator=(SharedLibrary&& other) noexcept;
 	};
-}
+} // namespace zg
