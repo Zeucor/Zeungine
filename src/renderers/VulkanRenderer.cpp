@@ -55,7 +55,15 @@ PFN_vkVoidFunction (*zg::VulkanRenderer::getProcAddr)(VkInstance, const char *) 
 })();
 PFN_vkVoidFunction (*zg::VulkanRenderer::getProcAddrCore)(VkInstance, const char *) = ([]
 {
-	return VulkanRenderer::vulkanLibraryCore.getProc<GET_PROC_ADDR>("vkGetInstanceProcAddr");
+#if defined(MACOS) && defined(USE_SWIFTSHADER)
+	try {
+		return VulkanRenderer::vulkanLibrarySS.getProc<GET_PROC_ADDR>("vk_icdGetInstanceProcAddr");
+	} catch (...) {
+#endif
+		return VulkanRenderer::vulkanLibraryCore.getProc<GET_PROC_ADDR>("vkGetInstanceProcAddr");
+#if defined(MACOS) && defined(USE_SWIFTSHADER)
+	}
+#endif
 })();
 VK_GLOBAL_CORE(_vkCreateInstance, PFN_vkCreateInstance, "vkCreateInstance");
 VK_GLOBAL_CORE(_vkGetInstanceProcAddr, PFN_vkGetInstanceProcAddr, "vkGetInstanceProcAddr");
