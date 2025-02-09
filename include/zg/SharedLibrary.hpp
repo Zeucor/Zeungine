@@ -12,11 +12,32 @@ namespace zg
 	struct SharedLibrary
 	{
 #ifdef _WIN32
-		HMODULE libraryPointer;
+		HMODULE libraryPointer = 0;
 #elif defined(LINUX) || defined(MACOS)
-		void *libraryPointer;
+		void *libraryPointer = 0;
 #endif
-		explicit SharedLibrary(std::string_view path);
+		template <typename... Args>
+		SharedLibrary(Args... args)
+		{
+			load(args...);
+		}
+		template <typename... Args>
+		void load(std::string_view path, Args... args)
+		{
+#ifdef _WIN32
+			libraryPointer = LoadLibraryA(path.data());
+#elif defined(LINUX) || defined(MACOS)
+			libraryPointer = dlopen(path.data(), RTLD_NOW | RTLD_GLOBAL);
+#endif
+			if (!libraryPointer)
+			{
+				load(args...);
+			}
+		}
+		void load()
+		{
+			throw std::runtime_error("Failed to load library");
+		}
 		~SharedLibrary();
 		template <typename T>
 		T getProc(std::string_view procName)

@@ -32,7 +32,7 @@ IPlatformWindow *zg::createPlatformWindow()
     }
     else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_IOS)
     {
-#ifdef USE_MACOS
+#ifdef USE_IOS
         return new iOSWindow();
 #endif
     }

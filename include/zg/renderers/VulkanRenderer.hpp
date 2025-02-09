@@ -26,6 +26,7 @@
 #endif
 #include <shaderc/shaderc.hpp>
 #include <vulkan/vulkan.h>
+#include <zg/SharedLibrary.hpp>
 namespace zg
 {
 	namespace textures
@@ -103,8 +104,94 @@ namespace zg
 	};
 	static inline std::unordered_map<size_t, VkRenderPass> renderPassMap = {};
 	constexpr int MAX_FRAMES_IN_FLIGHT = 1;
+	#define GET_PROC_ADDR_MEMBER(NAME) PFN_vkVoidFunction(*NAME)(VkInstance instance, const char *pName)
+	#define GET_PROC_ADDR PFN_vkVoidFunction(*)(VkInstance instance, const char *pName)
+	#define VK_GLOBAL(N, PFN, NAME) static auto N = (PFN)VulkanRenderer::getProcAddr(0, NAME)
+	#define VK_GLOBAL_CORE(N, PFN, NAME) static auto N = (PFN)VulkanRenderer::getProcAddrCore(0, NAME)
+	#define VK_INSTANCE(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(instance, NAME)
+	#define VK_INSTANCE_CORE(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddrCore(instance, NAME)
 	struct VulkanRenderer : IRenderer
 	{
+		static SharedLibrary vulkanLibrarySS;
+		static SharedLibrary vulkanLibraryCore;
+		static GET_PROC_ADDR_MEMBER(getProcAddr);
+		static GET_PROC_ADDR_MEMBER(getProcAddrCore);
+		PFN_vkEnumerateInstanceLayerProperties _vkEnumerateInstanceLayerProperties;
+		PFN_vkCreateDebugUtilsMessengerEXT _vkCreateDebugUtilsMessengerEXT;
+#ifdef LINUX
+		PFN_vkCreateXcbSurfaceKHR _vkCreateXcbSurfaceKHR;
+		PFN_vkCreateWaylandSurfaceKHR _vkCreateWaylandSurfaceKHR;
+#elif defined(MACOS)
+		PFN_vkCreateMacOSSurfaceMVK _vkCreateMacOSSurfaceMVK;
+		PFN_vkCreateHeadlessSurfaceEXT _vkCreateHeadlessSurfaceEXT;
+#elif defined(WINDOWS)
+		PFN_vkCreateWin32SurfaceKHR _vkCreateWin32SurfaceKHR;
+#endif
+		PFN_vkEnumeratePhysicalDevices _vkEnumeratePhysicalDevices;
+		PFN_vkGetPhysicalDeviceProperties _vkGetPhysicalDeviceProperties;
+		PFN_vkGetPhysicalDeviceFeatures _vkGetPhysicalDeviceFeatures;
+		PFN_vkGetPhysicalDeviceQueueFamilyProperties _vkGetPhysicalDeviceQueueFamilyProperties;
+		PFN_vkGetPhysicalDeviceSurfaceSupportKHR _vkGetPhysicalDeviceSurfaceSupportKHR;
+		PFN_vkEnumerateDeviceExtensionProperties _vkEnumerateDeviceExtensionProperties;
+		PFN_vkGetPhysicalDeviceFeatures2 _vkGetPhysicalDeviceFeatures2;
+		PFN_vkCreateDevice _vkCreateDevice;
+		PFN_vkGetDeviceQueue _vkGetDeviceQueue;
+		PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR _vkGetPhysicalDeviceSurfaceCapabilitiesKHR;
+		PFN_vkCreateSwapchainKHR _vkCreateSwapchainKHR;
+		PFN_vkGetSwapchainImagesKHR _vkGetSwapchainImagesKHR;
+		PFN_vkGetPhysicalDeviceSurfaceFormatsKHR _vkGetPhysicalDeviceSurfaceFormatsKHR;
+		PFN_vkGetPhysicalDeviceSurfacePresentModesKHR _vkGetPhysicalDeviceSurfacePresentModesKHR;
+		PFN_vkCreateImageView _vkCreateImageView;
+		PFN_vkCreateRenderPass _vkCreateRenderPass;
+		PFN_vkCreateFramebuffer _vkCreateFramebuffer;
+		PFN_vkCreateCommandPool _vkCreateCommandPool;
+		PFN_vkAllocateCommandBuffers _vkAllocateCommandBuffers;
+		PFN_vkCreateSemaphore _vkCreateSemaphore;
+		PFN_vkGetBufferMemoryRequirements _vkGetBufferMemoryRequirements;
+		PFN_vkAllocateMemory _vkAllocateMemory;
+		PFN_vkBindBufferMemory _vkBindBufferMemory;
+		PFN_vkMapMemory _vkMapMemory;
+		PFN_vkFreeMemory _vkFreeMemory;
+		PFN_vkDestroyBuffer _vkDestroyBuffer;
+		PFN_vkWaitForFences _vkWaitForFences;
+		PFN_vkCreateFence _vkCreateFence;
+		PFN_vkAcquireNextImageKHR _vkAcquireNextImageKHR;
+		PFN_vkResetFences _vkResetFences;
+		PFN_vkResetCommandBuffer _vkResetCommandBuffer;
+		PFN_vkBeginCommandBuffer _vkBeginCommandBuffer;
+		PFN_vkCmdEndRenderPass _vkCmdEndRenderPass;
+		PFN_vkEndCommandBuffer _vkEndCommandBuffer;
+		PFN_vkQueueSubmit _vkQueueSubmit;
+		PFN_vkQueueWaitIdle _vkQueueWaitIdle;
+		PFN_vkQueuePresentKHR _vkQueuePresentKHR;
+		PFN_vkCmdBindPipeline _vkCmdBindPipeline;
+		PFN_vkCmdSetViewport _vkCmdSetViewport;
+		PFN_vkCmdSetScissor _vkCmdSetScissor;
+		PFN_vkUnmapMemory _vkUnmapMemory;
+		PFN_vkUpdateDescriptorSets _vkUpdateDescriptorSets;
+		PFN_vkCreateShaderModule _vkCreateShaderModule;
+		PFN_vkCreateDescriptorSetLayout _vkCreateDescriptorSetLayout;
+		PFN_vkCreatePipelineLayout _vkCreatePipelineLayout;
+		PFN_vkCreateGraphicsPipelines _vkCreateGraphicsPipelines;
+		PFN_vkCmdBeginRenderPass _vkCmdBeginRenderPass;
+		PFN_vkCreateImage _vkCreateImage;
+		PFN_vkGetImageMemoryRequirements _vkGetImageMemoryRequirements;
+		PFN_vkBindImageMemory _vkBindImageMemory;
+		PFN_vkGetPhysicalDeviceFormatProperties _vkGetPhysicalDeviceFormatProperties;
+		PFN_vkCmdCopyBufferToImage _vkCmdCopyBufferToImage;
+		PFN_vkCmdPipelineBarrier _vkCmdPipelineBarrier;
+		PFN_vkCreateSampler _vkCreateSampler;
+		PFN_vkCmdBindVertexBuffers _vkCmdBindVertexBuffers;
+		PFN_vkCmdBindIndexBuffer _vkCmdBindIndexBuffer;
+		PFN_vkCmdBindDescriptorSets _vkCmdBindDescriptorSets;
+		PFN_vkCmdDrawIndexed _vkCmdDrawIndexed;
+		PFN_vkCreateDescriptorPool _vkCreateDescriptorPool;
+		PFN_vkAllocateDescriptorSets _vkAllocateDescriptorSets;
+		PFN_vkFreeCommandBuffers _vkFreeCommandBuffers;
+		PFN_vkGetPhysicalDeviceMemoryProperties _vkGetPhysicalDeviceMemoryProperties;
+		PFN_vkCreateBuffer _vkCreateBuffer;
+		PFN_vkInvalidateMappedMemoryRanges _vkInvalidateMappedMemoryRanges;
+		PFN_vkCmdCopyImageToBuffer _vkCmdCopyImageToBuffer;
 		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 		VkInstance instance;
 		VkDebugUtilsMessengerEXT debugMessenger;
@@ -143,6 +230,7 @@ namespace zg
 		~VulkanRenderer() override;
 		void createContext(IPlatformWindow* platformWindowPointer) override;
 		void createInstance();
+		void setupPFNs();
 #ifndef NDEBUG
 		void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 		bool checkValidationLayersSupport();

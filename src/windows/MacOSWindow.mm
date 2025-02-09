@@ -16,6 +16,7 @@
 #include <Metal/Metal.h>
 #include <ApplicationServices/ApplicationServices.h>
 using namespace zg;
+VK_GLOBAL(_vkCreateMacOSSurfaceMVK, PFN_vkCreateMacOSSurfaceMVK, "vkCreateMacOSSurfaceMVK");
 @interface MacOSWindowDelegate : NSObject <NSWindowDelegate>
 {
     MacOSWindow* macOSWindowPointer;
@@ -135,38 +136,6 @@ void EGLRenderer::createContext(IPlatformWindow* platformWindowPointer)
         throw std::runtime_error("eglMakeCurrent failed!");
     }
 }
-#elif defined(USE_VULKAN)
-void VulkanRenderer::createSurface()
-{
-	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
-	VkHeadlessSurfaceCreateInfoEXT surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
-	if (!VKcheck("vkCreateHeadlessSurfaceEXT", vkCreateHeadlessSurfaceEXT(instance, &surfaceCreateInfo, nullptr, &surface)))
-	{
-		throw std::runtime_error("Failed to create Vulkan headless surface!");
-	}
-    // nsView.wantsLayer = YES;
-    // if (![nsView.layer isKindOfClass:[CAMetalLayer class]])
-    // {
-    //     nsView.layer = [CAMetalLayer layer];
-    // }
-    // CAMetalLayer *metalLayer = (CAMetalLayer *)nsView.layer;
-    // id<MTLDevice> metalDevice = MTLCreateSystemDefaultDevice();
-    // if (!metalDevice)
-    // {
-    //     throw std::runtime_error("VulkanRenderer-createSurface: No available Metal device");
-    // }
-    // metalLayer.device = metalDevice;
-    // metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-    // metalLayer.contentsScale = [NSScreen mainScreen].backingScaleFactor;
-	// VkMacOSSurfaceCreateInfoMVK surfaceCreateInfo{};
-	// surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
-	// surfaceCreateInfo.pView = macWindow.nsView;
-	// if (!VKcheck("vkCreateMacOSSurfaceMVK", vkCreateMacOSSurfaceMVK(instance, &surfaceCreateInfo, nullptr, &surface)))
-	// {
-	// 	throw std::runtime_error("VulkanRenderer-createSurface: failed to create MacOS surface");
-	// }
-}
 #endif
 void MacOSWindow::postInit()
 {
@@ -246,9 +215,23 @@ void GLRenderer::swapBuffers()
 	[(NSOpenGLContext*)macWindow.glContext flushBuffer];
 }
 #endif
-#ifdef USE_VULKAN
+#if defined(USE_VULKAN) && defined(USE_SWIFTSHADER)
+void VulkanRenderer::createSurface()
+{
+	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
+	VkHeadlessSurfaceCreateInfoEXT surfaceCreateInfo{};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
+	if (!VKcheck("vkCreateHeadlessSurfaceEXT", _vkCreateHeadlessSurfaceEXT(instance, &surfaceCreateInfo, nullptr, &surface)))
+	{
+		throw std::runtime_error("Failed to create Vulkan headless surface!");
+	}
+}
 void VulkanRenderer::swapBuffers()
 {
+	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))
+	{
+		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
+	}
 	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(macWindow.renderWindowPointer->iRenderer);
 	vulkanRenderer.getCurrentImageToBitmap();
@@ -309,13 +292,9 @@ void MacOSWindow::destroy()
         }
         eglRenderer.eglContext = EGL_NO_CONTEXT;
     }
-#elif defined(MACOS)
-	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(renderWindowPointer->iRenderer);
-	vkUnmapMemory(vulkanRenderer.device, vulkanRenderer.stagingBufferMemory);
 #endif
 	if (nsWindow)
 		[(NSWindow*)nsWindow release];
-	renderWindowPointer->iRenderer->destroy();
 }
 void MacOSWindow::close()
 {

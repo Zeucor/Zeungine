@@ -1,18 +1,5 @@
 #include <zg/SharedLibrary.hpp>
 using namespace zg;
-SharedLibrary::SharedLibrary(std::string_view path)
-	: libraryPointer(nullptr)
-{
-#ifdef _WIN32
-	libraryPointer = LoadLibraryA(path.data());
-#elif defined(LINUX) || defined(MACOS)
-	libraryPointer = dlopen(path.data(), RTLD_NOW | RTLD_GLOBAL);
-#endif
-	if (!libraryPointer)
-	{
-		throw std::runtime_error("Failed to load library: " + std::string(path));
-	}
-}
 SharedLibrary::~SharedLibrary()
 {
 	if (libraryPointer)
