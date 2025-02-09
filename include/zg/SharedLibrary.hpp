@@ -21,7 +21,7 @@ namespace zg
 		{
 			std::string paths;
 			concatPaths(paths, args...);
-			load(args...);
+			load(paths, args...);
 		}
 		template <typename... Args>
 		void concatPaths(std::string& paths, const std::string& path, const Args&... args)
