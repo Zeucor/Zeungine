@@ -1166,12 +1166,11 @@ void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shader
 	{
 		ssboBindingPointer = &shaderImpl.ssboBindings[stringName];
 		std::get<1>(*ssboBindingPointer) = bindingIndex;
-		shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
-		int32_t uboLayoutBindingIndex = -1;
 		VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
-																									(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-		shaderImpl.uboLayoutBindings[uboLayoutBindingIndex = (shaderImpl.uboLayoutBindings.size() - 1)] = {
-			{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding};
+			(VkShaderStageFlags)stageStageFlag[shaderType], 0};
+		shaderImpl.uboLayoutBindings.push_back({
+				{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding});
+		int32_t uboLayoutBindingIndex = shaderImpl.uboLayoutBindings.size() - 1;
 		std::get<2>(*ssboBindingPointer) = uboLayoutBindingIndex;
 	}
 	else
@@ -1187,11 +1186,9 @@ void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderT
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
-	shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, (uint32_t)1,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	shaderImpl.uboLayoutBindings[shaderImpl.uboLayoutBindings.size() - 1] = {
-		{ELayoutBindingType::UniformBuffer, bufferSize, stringName, bindingIndex, isArray}, layoutBinding};
+	shaderImpl.uboLayoutBindings.push_back({{ELayoutBindingType::UniformBuffer, bufferSize, stringName, bindingIndex, isArray}, layoutBinding});
 	shaderImpl.uboStringBindings[stringName] = bindingIndex;
 	for (uint32_t index = 0; index < 1; index++)
 	{
@@ -1202,13 +1199,12 @@ void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, 
 																std::string_view textureName, uint32_t descriptorCount)
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	shaderImpl.uboLayoutBindings.resize(shaderImpl.uboLayoutBindings.size() + 1);
+	std::string stringName(textureName);
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 																								(uint32_t)descriptorCount,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	std::string stringName(textureName);
-	shaderImpl.uboLayoutBindings[shaderImpl.uboLayoutBindings.size() - 1] = {
-		{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding};
+	shaderImpl.uboLayoutBindings.push_back({
+		{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding});
 	shaderImpl.textureBindings[stringName] = bindingIndex;
 	for (uint32_t index = 0; index < descriptorCount; index++)
 	{
