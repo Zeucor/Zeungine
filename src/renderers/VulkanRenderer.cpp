@@ -37,7 +37,14 @@ static std::string libSuffix(".dll");
 #endif
 static std::string vulkanLibrarySSName(libPrefix + "vk_swiftshader" + libSuffix);
 SharedLibrary zg::VulkanRenderer::vulkanLibrarySS(vulkanLibrarySSName, "../build/" + vulkanLibrarySSName, "build/" + vulkanLibrarySSName);
+#ifdef MACOS
 SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan.1" + libSuffix);
+#elif defined(LINUX)
+static std::string vulkanCorePath(libPrefix + "vulkan" + libSuffix + ".1");
+SharedLibrary zg::VulkanRenderer::vulkanLibraryCore("/usr/lib/x86_64-linux-gnu/" + vulkanCorePath, vulkanCorePath);
+#elif defined(LINUX)
+SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan" + libSuffix);
+#endif
 PFN_vkVoidFunction (*zg::VulkanRenderer::getProcAddr)(VkInstance, const char *) = ([]
 {
 	try {
@@ -48,14 +55,10 @@ PFN_vkVoidFunction (*zg::VulkanRenderer::getProcAddr)(VkInstance, const char *) 
 })();
 PFN_vkVoidFunction (*zg::VulkanRenderer::getProcAddrCore)(VkInstance, const char *) = ([]
 {
-	try {
-		return VulkanRenderer::vulkanLibrarySS.getProc<GET_PROC_ADDR>("vk_icdGetInstanceProcAddr");
-	} catch (...) {
-		return VulkanRenderer::vulkanLibraryCore.getProc<GET_PROC_ADDR>("vkGetInstanceProcAddr");
-	}
+	return VulkanRenderer::vulkanLibraryCore.getProc<GET_PROC_ADDR>("vkGetInstanceProcAddr");
 })();
-VK_GLOBAL(_vkCreateInstance, PFN_vkCreateInstance, "vkCreateInstance");
-VK_GLOBAL(_vkGetInstanceProcAddr, PFN_vkGetInstanceProcAddr, "vkGetInstanceProcAddr");
+VK_GLOBAL_CORE(_vkCreateInstance, PFN_vkCreateInstance, "vkCreateInstance");
+VK_GLOBAL_CORE(_vkGetInstanceProcAddr, PFN_vkGetInstanceProcAddr, "vkGetInstanceProcAddr");
 VK_GLOBAL_CORE(_vkEnumerateInstanceLayerProperties, PFN_vkEnumerateInstanceLayerProperties, "vkEnumerateInstanceLayerProperties");
 static std::unordered_map<shaders::ShaderType, shaderc_shader_kind> stageEShaderc = {
 	{shaders::ShaderType::Vertex, shaderc_vertex_shader},
@@ -218,10 +221,10 @@ void VulkanRenderer::setupPFNs()
 {
 	VK_INSTANCE_CORE(_vkCreateDebugUtilsMessengerEXT, PFN_vkCreateDebugUtilsMessengerEXT, "vkCreateDebugUtilsMessengerEXT");
 #ifdef LINUX
-	VK_INSTANCE(_vkCreateXcbSurfaceKHR, PFN_vkCreateXcbSurfaceKHR, "vkCreateXcbSurfaceKHR");
-	VK_INSTANCE(_vkCreateWaylandSurfaceKHR, PFN_vkCreateWaylandSurfaceKHR, "vkCreateWaylandSurfaceKHR");
+	VK_INSTANCE_CORE(_vkCreateXcbSurfaceKHR, PFN_vkCreateXcbSurfaceKHR, "vkCreateXcbSurfaceKHR");
+	VK_INSTANCE_CORE(_vkCreateWaylandSurfaceKHR, PFN_vkCreateWaylandSurfaceKHR, "vkCreateWaylandSurfaceKHR");
 #elif defined(MACOS)
-	VK_INSTANCE(_vkCreateMacOSSurfaceMVK, PFN_vkCreateMacOSSurfaceMVK, "vkCreateMacOSSurfaceMVK");
+	VK_INSTANCE_CORE(_vkCreateMacOSSurfaceMVK, PFN_vkCreateMacOSSurfaceMVK, "vkCreateMacOSSurfaceMVK");
 	VK_INSTANCE_CORE(_vkCreateHeadlessSurfaceEXT, PFN_vkCreateHeadlessSurfaceEXT, "vkCreateHeadlessSurfaceEXT");
 #elif defined(WINDOWS)
 	VK_INSTANCE(_vkCreateWin32SurfaceKHR, PFN_vkCreateWin32SurfaceKHR, "vkCreateWin32SurfaceKHR");
@@ -359,7 +362,7 @@ void VulkanRenderer::setupDebugMessenger()
 	}
 };
 #endif
-#if !defined(MACOS) && !defined(USE_SWIFTSHADER)
+#if (!defined(MACOS) && !defined(USE_SWIFTSHADER)) || ((defined(LINUX) || defined(WINDOWS)) && defined(USE_SWIFTSHADER))
 void VulkanRenderer::createSurface()
 {
 	auto& windowType = platformWindowPointer->windowType;
@@ -1054,7 +1057,7 @@ void VulkanRenderer::postRenderPass()
 	}
 	return;
 }
-#if !defined(MACOS) && !defined(USE_SWIFTSHADER)
+#if (!defined(MACOS) && !defined(USE_SWIFTSHADER)) || ((defined(LINUX) || defined(WINDOWS)) && defined(USE_SWIFTSHADER))
 void VulkanRenderer::swapBuffers()
 {
 	// std::cout << "swapping buffers: " << ++swapBufferCount << std::endl;
@@ -1931,7 +1934,7 @@ void VulkanRenderer::midInitTexture(const textures::Texture& texture,
 	_vkMapMemory(device, _stagingBufferMemory, 0, imageSize, 0, &data);
 	memcpy(data, bytes, static_cast<size_t>(imageSize));
 	_vkUnmapMemory(device, _stagingBufferMemory);
-	copyBufferToImage(stagingBuffer, textureImpl.textureImage, static_cast<uint32_t>(texture.size.x),
+	copyBufferToImage(_stagingBuffer, textureImpl.textureImage, static_cast<uint32_t>(texture.size.x),
 										static_cast<uint32_t>(texture.size.y));
 	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 												textureFormat_descriptor_imageLayout[texture.format],
