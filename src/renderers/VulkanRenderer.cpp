@@ -412,7 +412,6 @@ void VulkanRenderer::createSurface()
 	}
 #elif defined(MACOS)
 #if defined(USE_SWIFTSHADER)
-	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
 	VkHeadlessSurfaceCreateInfoEXT surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
 	if (!VKcheck("vkCreateHeadlessSurfaceEXT", _vkCreateHeadlessSurfaceEXT(instance, &surfaceCreateInfo, nullptr, &surface)))
