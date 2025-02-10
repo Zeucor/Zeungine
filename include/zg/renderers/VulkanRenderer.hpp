@@ -107,15 +107,12 @@ namespace zg
 	#define GET_PROC_ADDR_MEMBER(NAME) PFN_vkVoidFunction(*NAME)(VkInstance instance, const char *pName)
 	#define GET_PROC_ADDR PFN_vkVoidFunction(*)(VkInstance instance, const char *pName)
 	#define VK_GLOBAL(N, PFN, NAME) static auto N = (PFN)VulkanRenderer::getProcAddr(0, NAME)
-	#define VK_GLOBAL_CORE(N, PFN, NAME) static auto N = (PFN)VulkanRenderer::getProcAddrCore(0, NAME)
 	#define VK_INSTANCE(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(instance, NAME)
-	#define VK_INSTANCE_CORE(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddrCore(instance, NAME)
 	struct VulkanRenderer : IRenderer
 	{
 		static SharedLibrary vulkanLibrarySS;
 		static SharedLibrary vulkanLibraryCore;
 		static GET_PROC_ADDR_MEMBER(getProcAddr);
-		static GET_PROC_ADDR_MEMBER(getProcAddrCore);
 		PFN_vkEnumerateInstanceLayerProperties _vkEnumerateInstanceLayerProperties;
 		PFN_vkCreateDebugUtilsMessengerEXT _vkCreateDebugUtilsMessengerEXT;
 #ifdef LINUX

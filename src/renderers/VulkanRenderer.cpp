@@ -53,21 +53,9 @@ PFN_vkVoidFunction (*zg::VulkanRenderer::getProcAddr)(VkInstance, const char *) 
 		return VulkanRenderer::vulkanLibraryCore.getProc<GET_PROC_ADDR>("vkGetInstanceProcAddr");
 	}
 })();
-PFN_vkVoidFunction (*zg::VulkanRenderer::getProcAddrCore)(VkInstance, const char *) = ([]
-{
-#if defined(MACOS) && defined(USE_SWIFTSHADER)
-	try {
-		return VulkanRenderer::vulkanLibrarySS.getProc<GET_PROC_ADDR>("vk_icdGetInstanceProcAddr");
-	} catch (...) {
-#endif
-		return VulkanRenderer::vulkanLibraryCore.getProc<GET_PROC_ADDR>("vkGetInstanceProcAddr");
-#if defined(MACOS) && defined(USE_SWIFTSHADER)
-	}
-#endif
-})();
-VK_GLOBAL_CORE(_vkCreateInstance, PFN_vkCreateInstance, "vkCreateInstance");
-VK_GLOBAL_CORE(_vkGetInstanceProcAddr, PFN_vkGetInstanceProcAddr, "vkGetInstanceProcAddr");
-VK_GLOBAL_CORE(_vkEnumerateInstanceLayerProperties, PFN_vkEnumerateInstanceLayerProperties, "vkEnumerateInstanceLayerProperties");
+VK_GLOBAL(_vkCreateInstance, PFN_vkCreateInstance, "vkCreateInstance");
+VK_GLOBAL(_vkGetInstanceProcAddr, PFN_vkGetInstanceProcAddr, "vkGetInstanceProcAddr");
+VK_GLOBAL(_vkEnumerateInstanceLayerProperties, PFN_vkEnumerateInstanceLayerProperties, "vkEnumerateInstanceLayerProperties");
 static std::unordered_map<shaders::ShaderType, shaderc_shader_kind> stageEShaderc = {
 	{shaders::ShaderType::Vertex, shaderc_vertex_shader},
 	{shaders::ShaderType::Fragment, shaderc_fragment_shader},
@@ -227,81 +215,81 @@ void VulkanRenderer::createInstance()
 }
 void VulkanRenderer::setupPFNs()
 {
-	VK_INSTANCE_CORE(_vkCreateDebugUtilsMessengerEXT, PFN_vkCreateDebugUtilsMessengerEXT, "vkCreateDebugUtilsMessengerEXT");
+	VK_INSTANCE(_vkCreateDebugUtilsMessengerEXT, PFN_vkCreateDebugUtilsMessengerEXT, "vkCreateDebugUtilsMessengerEXT");
 #ifdef LINUX
-	VK_INSTANCE_CORE(_vkCreateXcbSurfaceKHR, PFN_vkCreateXcbSurfaceKHR, "vkCreateXcbSurfaceKHR");
-	VK_INSTANCE_CORE(_vkCreateWaylandSurfaceKHR, PFN_vkCreateWaylandSurfaceKHR, "vkCreateWaylandSurfaceKHR");
+	VK_INSTANCE(_vkCreateXcbSurfaceKHR, PFN_vkCreateXcbSurfaceKHR, "vkCreateXcbSurfaceKHR");
+	VK_INSTANCE(_vkCreateWaylandSurfaceKHR, PFN_vkCreateWaylandSurfaceKHR, "vkCreateWaylandSurfaceKHR");
 #elif defined(MACOS)
-	VK_INSTANCE_CORE(_vkCreateMacOSSurfaceMVK, PFN_vkCreateMacOSSurfaceMVK, "vkCreateMacOSSurfaceMVK");
-	VK_INSTANCE_CORE(_vkCreateHeadlessSurfaceEXT, PFN_vkCreateHeadlessSurfaceEXT, "vkCreateHeadlessSurfaceEXT");
+	VK_INSTANCE(_vkCreateMacOSSurfaceMVK, PFN_vkCreateMacOSSurfaceMVK, "vkCreateMacOSSurfaceMVK");
+	VK_INSTANCE(_vkCreateHeadlessSurfaceEXT, PFN_vkCreateHeadlessSurfaceEXT, "vkCreateHeadlessSurfaceEXT");
 #elif defined(WINDOWS)
 	VK_INSTANCE(_vkCreateWin32SurfaceKHR, PFN_vkCreateWin32SurfaceKHR, "vkCreateWin32SurfaceKHR");
 #endif
-	VK_INSTANCE_CORE(_vkEnumeratePhysicalDevices, PFN_vkEnumeratePhysicalDevices, "vkEnumeratePhysicalDevices");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceProperties, PFN_vkGetPhysicalDeviceProperties, "vkGetPhysicalDeviceProperties");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceFeatures, PFN_vkGetPhysicalDeviceFeatures, "vkGetPhysicalDeviceFeatures");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceQueueFamilyProperties, PFN_vkGetPhysicalDeviceQueueFamilyProperties, "vkGetPhysicalDeviceQueueFamilyProperties");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceSurfaceSupportKHR, PFN_vkGetPhysicalDeviceSurfaceSupportKHR, "vkGetPhysicalDeviceSurfaceSupportKHR");
-	VK_INSTANCE_CORE(_vkEnumerateDeviceExtensionProperties, PFN_vkEnumerateDeviceExtensionProperties, "vkEnumerateDeviceExtensionProperties");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceFeatures2, PFN_vkGetPhysicalDeviceFeatures2, "vkGetPhysicalDeviceFeatures2");
-	VK_INSTANCE_CORE(_vkCreateDevice, PFN_vkCreateDevice, "vkCreateDevice");
-	VK_INSTANCE_CORE(_vkGetDeviceQueue, PFN_vkGetDeviceQueue, "vkGetDeviceQueue");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceSurfaceCapabilitiesKHR, PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
-	VK_INSTANCE_CORE(_vkCreateSwapchainKHR, PFN_vkCreateSwapchainKHR, "vkCreateSwapchainKHR");
-	VK_INSTANCE_CORE(_vkGetSwapchainImagesKHR, PFN_vkGetSwapchainImagesKHR, "vkGetSwapchainImagesKHR");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceSurfaceFormatsKHR, PFN_vkGetPhysicalDeviceSurfaceFormatsKHR, "vkGetPhysicalDeviceSurfaceFormatsKHR");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceSurfacePresentModesKHR, PFN_vkGetPhysicalDeviceSurfacePresentModesKHR, "vkGetPhysicalDeviceSurfacePresentModesKHR");
-	VK_INSTANCE_CORE(_vkCreateImageView, PFN_vkCreateImageView, "vkCreateImageView");
-	VK_INSTANCE_CORE(_vkCreateRenderPass, PFN_vkCreateRenderPass, "vkCreateRenderPass");
-	VK_INSTANCE_CORE(_vkCreateFramebuffer, PFN_vkCreateFramebuffer, "vkCreateFramebuffer");
-	VK_INSTANCE_CORE(_vkCreateCommandPool, PFN_vkCreateCommandPool, "vkCreateCommandPool");
-	VK_INSTANCE_CORE(_vkAllocateCommandBuffers, PFN_vkAllocateCommandBuffers, "vkAllocateCommandBuffers");
-	VK_INSTANCE_CORE(_vkCreateSemaphore, PFN_vkCreateSemaphore, "vkCreateSemaphore");
-	VK_INSTANCE_CORE(_vkGetBufferMemoryRequirements, PFN_vkGetBufferMemoryRequirements, "vkGetBufferMemoryRequirements");
-	VK_INSTANCE_CORE(_vkAllocateMemory, PFN_vkAllocateMemory, "vkAllocateMemory");
-	VK_INSTANCE_CORE(_vkBindBufferMemory, PFN_vkBindBufferMemory, "vkBindBufferMemory");
-	VK_INSTANCE_CORE(_vkMapMemory, PFN_vkMapMemory, "vkMapMemory");
-	VK_INSTANCE_CORE(_vkFreeMemory, PFN_vkFreeMemory, "vkFreeMemory");
-	VK_INSTANCE_CORE(_vkDestroyBuffer, PFN_vkDestroyBuffer, "vkDestroyBuffer");
-	VK_INSTANCE_CORE(_vkWaitForFences, PFN_vkWaitForFences, "vkWaitForFences");
-	VK_INSTANCE_CORE(_vkCreateFence, PFN_vkCreateFence, "vkCreateFence");
-	VK_INSTANCE_CORE(_vkAcquireNextImageKHR, PFN_vkAcquireNextImageKHR, "vkAcquireNextImageKHR");
-	VK_INSTANCE_CORE(_vkResetFences, PFN_vkResetFences, "vkResetFences");
-	VK_INSTANCE_CORE(_vkResetCommandBuffer, PFN_vkResetCommandBuffer, "vkResetCommandBuffer");
-	VK_INSTANCE_CORE(_vkBeginCommandBuffer, PFN_vkBeginCommandBuffer, "vkBeginCommandBuffer");
-	VK_INSTANCE_CORE(_vkCmdEndRenderPass, PFN_vkCmdEndRenderPass, "vkCmdEndRenderPass");
-	VK_INSTANCE_CORE(_vkEndCommandBuffer, PFN_vkEndCommandBuffer, "vkEndCommandBuffer");
-	VK_INSTANCE_CORE(_vkQueueSubmit, PFN_vkQueueSubmit, "vkQueueSubmit");
-	VK_INSTANCE_CORE(_vkQueueWaitIdle, PFN_vkQueueWaitIdle, "vkQueueWaitIdle");
-	VK_INSTANCE_CORE(_vkQueuePresentKHR, PFN_vkQueuePresentKHR, "vkQueuePresentKHR");
-	VK_INSTANCE_CORE(_vkCmdBindPipeline, PFN_vkCmdBindPipeline, "vkCmdBindPipeline");
-	VK_INSTANCE_CORE(_vkCmdSetViewport, PFN_vkCmdSetViewport, "vkCmdSetViewport");
-	VK_INSTANCE_CORE(_vkCmdSetScissor, PFN_vkCmdSetScissor, "vkCmdSetScissor");
-	VK_INSTANCE_CORE(_vkUnmapMemory, PFN_vkUnmapMemory, "vkUnmapMemory");
-	VK_INSTANCE_CORE(_vkUpdateDescriptorSets, PFN_vkUpdateDescriptorSets, "vkUpdateDescriptorSets");
-	VK_INSTANCE_CORE(_vkCreateShaderModule, PFN_vkCreateShaderModule, "vkCreateShaderModule");
-	VK_INSTANCE_CORE(_vkCreateDescriptorSetLayout, PFN_vkCreateDescriptorSetLayout, "vkCreateDescriptorSetLayout");
-	VK_INSTANCE_CORE(_vkCreatePipelineLayout, PFN_vkCreatePipelineLayout, "vkCreatePipelineLayout");
-	VK_INSTANCE_CORE(_vkCreateGraphicsPipelines, PFN_vkCreateGraphicsPipelines, "vkCreateGraphicsPipelines");
-	VK_INSTANCE_CORE(_vkCmdBeginRenderPass, PFN_vkCmdBeginRenderPass, "vkCmdBeginRenderPass");
-	VK_INSTANCE_CORE(_vkCreateImage, PFN_vkCreateImage, "vkCreateImage");
-	VK_INSTANCE_CORE(_vkGetImageMemoryRequirements, PFN_vkGetImageMemoryRequirements, "vkGetImageMemoryRequirements");
-	VK_INSTANCE_CORE(_vkBindImageMemory, PFN_vkBindImageMemory, "vkBindImageMemory");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceFormatProperties, PFN_vkGetPhysicalDeviceFormatProperties, "vkGetPhysicalDeviceFormatProperties");
-	VK_INSTANCE_CORE(_vkCmdCopyBufferToImage, PFN_vkCmdCopyBufferToImage, "vkCmdCopyBufferToImage");
-	VK_INSTANCE_CORE(_vkCmdPipelineBarrier, PFN_vkCmdPipelineBarrier, "vkCmdPipelineBarrier");
-	VK_INSTANCE_CORE(_vkCreateSampler, PFN_vkCreateSampler, "vkCreateSampler");
-	VK_INSTANCE_CORE(_vkCmdBindVertexBuffers, PFN_vkCmdBindVertexBuffers, "vkCmdBindVertexBuffers");
-	VK_INSTANCE_CORE(_vkCmdBindIndexBuffer, PFN_vkCmdBindIndexBuffer, "vkCmdBindIndexBuffer");
-	VK_INSTANCE_CORE(_vkCmdBindDescriptorSets, PFN_vkCmdBindDescriptorSets, "vkCmdBindDescriptorSets");
-	VK_INSTANCE_CORE(_vkCmdDrawIndexed, PFN_vkCmdDrawIndexed, "vkCmdDrawIndexed");
-	VK_INSTANCE_CORE(_vkCreateDescriptorPool, PFN_vkCreateDescriptorPool, "vkCreateDescriptorPool");
-	VK_INSTANCE_CORE(_vkAllocateDescriptorSets, PFN_vkAllocateDescriptorSets, "vkAllocateDescriptorSets");
-	VK_INSTANCE_CORE(_vkFreeCommandBuffers, PFN_vkFreeCommandBuffers, "vkFreeCommandBuffers");
-	VK_INSTANCE_CORE(_vkGetPhysicalDeviceMemoryProperties, PFN_vkGetPhysicalDeviceMemoryProperties, "vkGetPhysicalDeviceMemoryProperties");
-	VK_INSTANCE_CORE(_vkCreateBuffer, PFN_vkCreateBuffer, "vkCreateBuffer");
-	VK_INSTANCE_CORE(_vkInvalidateMappedMemoryRanges, PFN_vkInvalidateMappedMemoryRanges, "vkInvalidateMappedMemoryRanges");
-	VK_INSTANCE_CORE(_vkCmdCopyImageToBuffer, PFN_vkCmdCopyImageToBuffer, "vkCmdCopyImageToBuffer");
+	VK_INSTANCE(_vkEnumeratePhysicalDevices, PFN_vkEnumeratePhysicalDevices, "vkEnumeratePhysicalDevices");
+	VK_INSTANCE(_vkGetPhysicalDeviceProperties, PFN_vkGetPhysicalDeviceProperties, "vkGetPhysicalDeviceProperties");
+	VK_INSTANCE(_vkGetPhysicalDeviceFeatures, PFN_vkGetPhysicalDeviceFeatures, "vkGetPhysicalDeviceFeatures");
+	VK_INSTANCE(_vkGetPhysicalDeviceQueueFamilyProperties, PFN_vkGetPhysicalDeviceQueueFamilyProperties, "vkGetPhysicalDeviceQueueFamilyProperties");
+	VK_INSTANCE(_vkGetPhysicalDeviceSurfaceSupportKHR, PFN_vkGetPhysicalDeviceSurfaceSupportKHR, "vkGetPhysicalDeviceSurfaceSupportKHR");
+	VK_INSTANCE(_vkEnumerateDeviceExtensionProperties, PFN_vkEnumerateDeviceExtensionProperties, "vkEnumerateDeviceExtensionProperties");
+	VK_INSTANCE(_vkGetPhysicalDeviceFeatures2, PFN_vkGetPhysicalDeviceFeatures2, "vkGetPhysicalDeviceFeatures2");
+	VK_INSTANCE(_vkCreateDevice, PFN_vkCreateDevice, "vkCreateDevice");
+	VK_INSTANCE(_vkGetDeviceQueue, PFN_vkGetDeviceQueue, "vkGetDeviceQueue");
+	VK_INSTANCE(_vkGetPhysicalDeviceSurfaceCapabilitiesKHR, PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
+	VK_INSTANCE(_vkCreateSwapchainKHR, PFN_vkCreateSwapchainKHR, "vkCreateSwapchainKHR");
+	VK_INSTANCE(_vkGetSwapchainImagesKHR, PFN_vkGetSwapchainImagesKHR, "vkGetSwapchainImagesKHR");
+	VK_INSTANCE(_vkGetPhysicalDeviceSurfaceFormatsKHR, PFN_vkGetPhysicalDeviceSurfaceFormatsKHR, "vkGetPhysicalDeviceSurfaceFormatsKHR");
+	VK_INSTANCE(_vkGetPhysicalDeviceSurfacePresentModesKHR, PFN_vkGetPhysicalDeviceSurfacePresentModesKHR, "vkGetPhysicalDeviceSurfacePresentModesKHR");
+	VK_INSTANCE(_vkCreateImageView, PFN_vkCreateImageView, "vkCreateImageView");
+	VK_INSTANCE(_vkCreateRenderPass, PFN_vkCreateRenderPass, "vkCreateRenderPass");
+	VK_INSTANCE(_vkCreateFramebuffer, PFN_vkCreateFramebuffer, "vkCreateFramebuffer");
+	VK_INSTANCE(_vkCreateCommandPool, PFN_vkCreateCommandPool, "vkCreateCommandPool");
+	VK_INSTANCE(_vkAllocateCommandBuffers, PFN_vkAllocateCommandBuffers, "vkAllocateCommandBuffers");
+	VK_INSTANCE(_vkCreateSemaphore, PFN_vkCreateSemaphore, "vkCreateSemaphore");
+	VK_INSTANCE(_vkGetBufferMemoryRequirements, PFN_vkGetBufferMemoryRequirements, "vkGetBufferMemoryRequirements");
+	VK_INSTANCE(_vkAllocateMemory, PFN_vkAllocateMemory, "vkAllocateMemory");
+	VK_INSTANCE(_vkBindBufferMemory, PFN_vkBindBufferMemory, "vkBindBufferMemory");
+	VK_INSTANCE(_vkMapMemory, PFN_vkMapMemory, "vkMapMemory");
+	VK_INSTANCE(_vkFreeMemory, PFN_vkFreeMemory, "vkFreeMemory");
+	VK_INSTANCE(_vkDestroyBuffer, PFN_vkDestroyBuffer, "vkDestroyBuffer");
+	VK_INSTANCE(_vkWaitForFences, PFN_vkWaitForFences, "vkWaitForFences");
+	VK_INSTANCE(_vkCreateFence, PFN_vkCreateFence, "vkCreateFence");
+	VK_INSTANCE(_vkAcquireNextImageKHR, PFN_vkAcquireNextImageKHR, "vkAcquireNextImageKHR");
+	VK_INSTANCE(_vkResetFences, PFN_vkResetFences, "vkResetFences");
+	VK_INSTANCE(_vkResetCommandBuffer, PFN_vkResetCommandBuffer, "vkResetCommandBuffer");
+	VK_INSTANCE(_vkBeginCommandBuffer, PFN_vkBeginCommandBuffer, "vkBeginCommandBuffer");
+	VK_INSTANCE(_vkCmdEndRenderPass, PFN_vkCmdEndRenderPass, "vkCmdEndRenderPass");
+	VK_INSTANCE(_vkEndCommandBuffer, PFN_vkEndCommandBuffer, "vkEndCommandBuffer");
+	VK_INSTANCE(_vkQueueSubmit, PFN_vkQueueSubmit, "vkQueueSubmit");
+	VK_INSTANCE(_vkQueueWaitIdle, PFN_vkQueueWaitIdle, "vkQueueWaitIdle");
+	VK_INSTANCE(_vkQueuePresentKHR, PFN_vkQueuePresentKHR, "vkQueuePresentKHR");
+	VK_INSTANCE(_vkCmdBindPipeline, PFN_vkCmdBindPipeline, "vkCmdBindPipeline");
+	VK_INSTANCE(_vkCmdSetViewport, PFN_vkCmdSetViewport, "vkCmdSetViewport");
+	VK_INSTANCE(_vkCmdSetScissor, PFN_vkCmdSetScissor, "vkCmdSetScissor");
+	VK_INSTANCE(_vkUnmapMemory, PFN_vkUnmapMemory, "vkUnmapMemory");
+	VK_INSTANCE(_vkUpdateDescriptorSets, PFN_vkUpdateDescriptorSets, "vkUpdateDescriptorSets");
+	VK_INSTANCE(_vkCreateShaderModule, PFN_vkCreateShaderModule, "vkCreateShaderModule");
+	VK_INSTANCE(_vkCreateDescriptorSetLayout, PFN_vkCreateDescriptorSetLayout, "vkCreateDescriptorSetLayout");
+	VK_INSTANCE(_vkCreatePipelineLayout, PFN_vkCreatePipelineLayout, "vkCreatePipelineLayout");
+	VK_INSTANCE(_vkCreateGraphicsPipelines, PFN_vkCreateGraphicsPipelines, "vkCreateGraphicsPipelines");
+	VK_INSTANCE(_vkCmdBeginRenderPass, PFN_vkCmdBeginRenderPass, "vkCmdBeginRenderPass");
+	VK_INSTANCE(_vkCreateImage, PFN_vkCreateImage, "vkCreateImage");
+	VK_INSTANCE(_vkGetImageMemoryRequirements, PFN_vkGetImageMemoryRequirements, "vkGetImageMemoryRequirements");
+	VK_INSTANCE(_vkBindImageMemory, PFN_vkBindImageMemory, "vkBindImageMemory");
+	VK_INSTANCE(_vkGetPhysicalDeviceFormatProperties, PFN_vkGetPhysicalDeviceFormatProperties, "vkGetPhysicalDeviceFormatProperties");
+	VK_INSTANCE(_vkCmdCopyBufferToImage, PFN_vkCmdCopyBufferToImage, "vkCmdCopyBufferToImage");
+	VK_INSTANCE(_vkCmdPipelineBarrier, PFN_vkCmdPipelineBarrier, "vkCmdPipelineBarrier");
+	VK_INSTANCE(_vkCreateSampler, PFN_vkCreateSampler, "vkCreateSampler");
+	VK_INSTANCE(_vkCmdBindVertexBuffers, PFN_vkCmdBindVertexBuffers, "vkCmdBindVertexBuffers");
+	VK_INSTANCE(_vkCmdBindIndexBuffer, PFN_vkCmdBindIndexBuffer, "vkCmdBindIndexBuffer");
+	VK_INSTANCE(_vkCmdBindDescriptorSets, PFN_vkCmdBindDescriptorSets, "vkCmdBindDescriptorSets");
+	VK_INSTANCE(_vkCmdDrawIndexed, PFN_vkCmdDrawIndexed, "vkCmdDrawIndexed");
+	VK_INSTANCE(_vkCreateDescriptorPool, PFN_vkCreateDescriptorPool, "vkCreateDescriptorPool");
+	VK_INSTANCE(_vkAllocateDescriptorSets, PFN_vkAllocateDescriptorSets, "vkAllocateDescriptorSets");
+	VK_INSTANCE(_vkFreeCommandBuffers, PFN_vkFreeCommandBuffers, "vkFreeCommandBuffers");
+	VK_INSTANCE(_vkGetPhysicalDeviceMemoryProperties, PFN_vkGetPhysicalDeviceMemoryProperties, "vkGetPhysicalDeviceMemoryProperties");
+	VK_INSTANCE(_vkCreateBuffer, PFN_vkCreateBuffer, "vkCreateBuffer");
+	VK_INSTANCE(_vkInvalidateMappedMemoryRanges, PFN_vkInvalidateMappedMemoryRanges, "vkInvalidateMappedMemoryRanges");
+	VK_INSTANCE(_vkCmdCopyImageToBuffer, PFN_vkCmdCopyImageToBuffer, "vkCmdCopyImageToBuffer");
 }
 #ifndef NDEBUG
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

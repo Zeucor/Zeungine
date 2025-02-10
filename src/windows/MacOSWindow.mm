@@ -16,7 +16,6 @@
 #include <Metal/Metal.h>
 #include <ApplicationServices/ApplicationServices.h>
 using namespace zg;
-VK_GLOBAL(_vkCreateMacOSSurfaceMVK, PFN_vkCreateMacOSSurfaceMVK, "vkCreateMacOSSurfaceMVK");
 @interface MacOSWindowDelegate : NSObject <NSWindowDelegate>
 {
     MacOSWindow* macOSWindowPointer;
