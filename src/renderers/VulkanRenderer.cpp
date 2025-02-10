@@ -358,7 +358,6 @@ void VulkanRenderer::setupDebugMessenger()
 	}
 };
 #endif
-#if (!defined(MACOS) && !defined(USE_SWIFTSHADER)) || ((defined(LINUX) || defined(WINDOWS)) && defined(USE_SWIFTSHADER))
 void VulkanRenderer::createSurface()
 {
 	auto& windowType = platformWindowPointer->windowType;
@@ -412,6 +411,15 @@ void VulkanRenderer::createSurface()
 		throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
 	}
 #elif defined(MACOS)
+#if defined(USE_SWIFTSHADER)
+	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
+	VkHeadlessSurfaceCreateInfoEXT surfaceCreateInfo{};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
+	if (!VKcheck("vkCreateHeadlessSurfaceEXT", _vkCreateHeadlessSurfaceEXT(instance, &surfaceCreateInfo, nullptr, &surface)))
+	{
+		throw std::runtime_error("Failed to create Vulkan headless surface!");
+	}
+#else
 	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
 	VkMacOSSurfaceCreateInfoMVK surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
@@ -421,8 +429,8 @@ void VulkanRenderer::createSurface()
 		throw std::runtime_error("Failed to create MacOS surface!");
 	}
 #endif
-}
 #endif
+}
 void VulkanRenderer::pickPhysicalDevice()
 {
 	uint32_t deviceCount = 0;

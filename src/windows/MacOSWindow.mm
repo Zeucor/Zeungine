@@ -215,16 +215,6 @@ void GLRenderer::swapBuffers()
 }
 #endif
 #if defined(USE_VULKAN) && defined(USE_SWIFTSHADER)
-void VulkanRenderer::createSurface()
-{
-	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
-	VkHeadlessSurfaceCreateInfoEXT surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
-	if (!VKcheck("vkCreateHeadlessSurfaceEXT", _vkCreateHeadlessSurfaceEXT(instance, &surfaceCreateInfo, nullptr, &surface)))
-	{
-		throw std::runtime_error("Failed to create Vulkan headless surface!");
-	}
-}
 void VulkanRenderer::swapBuffers()
 {
 	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))
