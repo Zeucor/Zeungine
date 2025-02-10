@@ -15,8 +15,10 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 # Set library directory
 if(("${CMAKE_BUILD_TYPE}" MATCHES "Release") OR ("${CMAKE_BUILD_TYPE}" MATCHES "MinSizeRel"))
     set(RELEASE_OR_DEBUG "Release")
+    set(BUILD_POSTFIX "")
 elseif(("${CMAKE_BUILD_TYPE}" MATCHES "Debug") OR ("${CMAKE_BUILD_TYPE}" MATCHES "RelWithDebInfo"))
     set(RELEASE_OR_DEBUG "Debug")
+    set(BUILD_POSTFIX "-debug")
 endif()
 set(ZG_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}/${RELEASE_OR_DEBUG}")
 message(STATUS "ZG_LIB_DIR: ${ZG_LIB_DIR}")
@@ -26,6 +28,18 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_definitions(-DLINUX)
     set(LINUX ON)
     set(LIB_SUFFIX ".so")
+    if(ZG_INSTALL)
+        file(READ "/etc/os-release" OS_RELEASE)
+        string(REGEX MATCH "Debian|Ubuntu|Fedora" DIST ${OS_RELEASE})
+        if(DIST STREQUAL "Debian" OR
+            DIST STREQUAL "Ubuntu")
+            set(DEB true)
+        elseif(DIST STREQUAL "Fedora")
+            set(RPM true)
+        else()
+            message(FATAL_ERROR ">>>> Found unknown distribution <<<<")
+        endif()
+    endif()
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     add_definitions(-DMACOS)
     set(MACOS ON)
@@ -47,12 +61,13 @@ elseif(WINDOWS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4068")
 endif()
 
-# Build options
+# Options
 option(BUILD_GL "Whether to build OpenGL module" OFF)
 option(BUILD_EGL "Whether to build EGL module" OFF)
 option(BUILD_VULKAN "Whether to build Vulkan module" ON)
 option(USE_SWIFTSHADER "Use SwiftShader as a software renderer" OFF)
 option(BUILD_EDITOR "Whether to build the Zeungine editor" ON)
+option(ZG_INSTALL "Whether to install Zeungine" ON)
 
 # Determine windower
 if(LINUX)
@@ -87,6 +102,7 @@ endif()
 # Dependencies
 
 # Freetype
+set(SKIP_INSTALL_ALL ON)
 add_subdirectory(vendor/freetype build/build_freetype)
 set_target_properties(freetype PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELEASE_POSTFIX "")
@@ -335,4 +351,90 @@ file(COPY ${CMAKE_SOURCE_DIR}/fonts/Roboto/Roboto-Regular.ttf DESTINATION ${FONT
 file(COPY ${CMAKE_SOURCE_DIR}/images/zeungine-icon.png DESTINATION ${IMAGES_DIRECTORY})
 if(USE_SWIFTSHADER)
     file(COPY ${ZG_LIB_DIR}/libvk_swiftshader${LIB_SUFFIX} DESTINATION ${CMAKE_BINARY_DIR})
+endif()
+
+# Install
+if(ZG_INSTALL)
+    if(LINUX OR MACOS)
+        set(ZG_UNX_INSTALL_PREFIX /usr)
+        set(ZG_SRC_INSTALL_PREFIX ${ZG_UNX_INSTALL_PREFIX}/src/zg)
+        set(ZG_LIB_INSTALL_PREFIX ${ZG_UNX_INSTALL_PREFIX}/lib/zg/${CMAKE_BUILD_TYPE})
+        set(ZG_INC_INSTALL_PREFIX ${ZG_UNX_INSTALL_PREFIX}/include/zg)
+        set(ZG_ASS_INSTALL_PREFIX ${ZG_SRC_INSTALL_PREFIX}/assets)
+    elseif(WINDOWS)
+        set(ZG_WIN_INSTALL_PREFIX "C:/Program Files/Zeungine")
+        set(ZG_SRC_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX})
+        set(ZG_LIB_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX}/${CMAKE_BUILD_TYPE})
+        set(ZG_INC_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX}/include)
+        set(ZG_ASS_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX}/assets)
+    endif()
+
+    install(DIRECTORY include/angle DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY include/editor DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY include/GL DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY include/glad DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY include/shaderc DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY include/SwiftShader DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY include/wayland DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY include/zg DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(TARGETS zeungine
+        ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
+        LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX})
+
+    set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_CURRENT_LIST_DIR}/releases")
+    if(LINUX OR MACOS)
+        set(CPACK_PACKAGE_NAME "libzeungine${BUILD_POSTFIX}")
+    elseif(WINDOWS)
+        set(CPACK_PACKAGE_NAME "zeungine${BUILD_POSTFIX}")
+    endif()
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Zeungine: an engine allowing developers to build cross platform games apps and tools")
+    set(CPACK_PACKAGE_DESCRIPTION "Contains various structs and methods to help build cross platform games apps and tools quickly")
+    set(CPACK_PACKAGE_HOMEPAGE_URL "https://zeungine.dev")
+    if(LINUX OR MACOS)
+        # set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_LIST_DIR}/images/zeungine.dev-app-icon.bmp")
+    elseif(WINDOWS)
+        # set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_LIST_DIR}\\\\images\\\\zeungine.dev-app-icon.bmp")
+    endif()
+    set(CPACK_PACKAGE_VENDOR "zeungine.dev")
+    set(CPACK_PACKAGE_CONTACT "zeun@zeungine.dev")
+
+    if(DEB)
+        set(CPACK_GENERATOR "DEB")
+        set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Zeun")
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgl1-mesa-dri,libx11-6,libvulkan1,libxrandr2,libxfixes3,libxkbcommon-x11-0,ttf-mscorefonts-installer,libcurl4-gnutls-dev,libsecret-1-0,libglib2.0-dev")
+    elseif(WINDOWS)
+        set(CPACK_GENERATOR "NSIS")
+        set(CPACK_CMAKE_GENERATOR "Ninja")
+        set(CPACK_NSIS_MODIFY_PATH ON)
+        set(CPACK_NSIS_MENU_LINKS "https://zeungine.dev" "Zeungine Web Site")
+        set(CPACK_NSIS_DISPLAY_NAME Zeungine)
+        set(CPACK_NSIS_PACKAGE_NAME Zeungine)
+        SET(CPACK_PACKAGE_INSTALL_DIRECTORY "Program Files\\\\Zeungine")
+        SET(CPACK_NSIS_INSTALL_ROOT "C:")
+        set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_LIST_DIR}/LICENSE")
+        # set(CPACK_NSIS_MUI_ICON "${Zeungine_SRC_DIR}\\\\images\\\\zeungine-logo-new.ico")
+        set(CPACK_NSIS_UNINSTALL_NAME "UninstallZeungine")
+        set(CPACK_NSIS_BRANDING_TEXT " ")
+    endif()
+
+    set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+    include(CPack)
 endif()
