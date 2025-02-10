@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <zg/interfaces/IEntity.hpp>
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/vaos/VAOFactory.hpp>
 #ifdef USE_VULKAN

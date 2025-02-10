@@ -181,6 +181,6 @@ int main()
 {
   Window window("Window", 1280, 720, -1, -1);
   window.runOnThread([](auto &window)
-                     { window.setIScene(std::make_shared<TestScene>(window)); });
+                     { window.setScene(std::make_shared<TestScene>(window)); });
   window.run();
 };

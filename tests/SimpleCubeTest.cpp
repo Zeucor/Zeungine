@@ -63,6 +63,6 @@ int main()
 {
 	Window window("Cube Test", 1024, 768, -1, -1, true, false);
 	window.runOnThread([](auto &window)
-					   { window.setIScene(std::make_shared<ExampleScene>(window)); });
+					   { window.setScene(std::make_shared<ExampleScene>(window)); });
 	window.run();
 }

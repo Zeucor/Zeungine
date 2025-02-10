@@ -128,7 +128,7 @@ Input::Input(Window &window,
   		{
 			setActive();
 		} });
-	std::function<void(IWindow::Key, bool)> keypress = std::bind(&Input::handleKey, this, std::placeholders::_1, std::placeholders::_2);
+	std::function<void(Key, bool)> keypress = std::bind(&Input::handleKey, this, std::placeholders::_1, std::placeholders::_2);
 	anyKeyPressID = window.addAnyKeyPressHandler(keypress);
 };
 Input::~Input()
@@ -231,7 +231,7 @@ void Input::clear()
 		setInactive();
 	handleKey(0, true);
 }
-void Input::handleKey(IWindow::Key key, bool pressed)
+void Input::handleKey(Key key, bool pressed)
 {
 	if (!this->active && key != 0)
 		return;

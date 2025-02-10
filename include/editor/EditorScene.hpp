@@ -51,10 +51,10 @@ namespace zg::editor
 		std::shared_ptr<entities::TabsBar> resourcePanelTabs;
 		size_t performanceTabID = 0;
 		std::shared_ptr<Entity> activeResourcePanelEntity;
-		IWindow::EventIdentifier resizeID = 0;
-		IWindow::EventIdentifier gameWindowBorderHoverID = 0;
-		IWindow::EventIdentifier gameWindowBorderPressID = 0;
-		IWindow::EventIdentifier gameWindowESCPressID = 0;
+		EventIdentifier resizeID = 0;
+		EventIdentifier gameWindowBorderHoverID = 0;
+		EventIdentifier gameWindowBorderPressID = 0;
+		EventIdentifier gameWindowESCPressID = 0;
 		float dialogWidth;
 		float dialogHeight;
 		float closeNewDialogButtonWidth;
@@ -82,7 +82,7 @@ namespace zg::editor
 		bool loaded = false;
 		explicit EditorScene(Window& window);
 		~EditorScene() override;
-		void onEntityAdded(const std::shared_ptr<IEntity>& entity);
+		void onEntityAdded(const std::shared_ptr<Entity>& entity);
 		void setupGameWindow();
 		void setupCodeWindow();
 		void minimizeWindows();

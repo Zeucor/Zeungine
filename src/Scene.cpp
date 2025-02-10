@@ -1,4 +1,4 @@
-#include <zg/interfaces/IWindow.hpp>
+#include <zg/Window.hpp>
 #include <zg/crypto/vector.hpp>
 #include <zg/Entity.hpp>
 #include <zg/Scene.hpp>
@@ -9,9 +9,9 @@
 #include <iostream>
 using namespace zg;
 Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *_framebufferPointer, bool _useBVH):
-	IScene(_window),
+	window(_window),
 	view(cameraPosition, cameraDirection),
-	projection((Window &)window, fov),
+	projection(window, fov),
 	framebufferPointer(_framebufferPointer),
 	useBVH(_useBVH)
 {
@@ -22,9 +22,9 @@ Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirectio
 	hookMouseEvents();
 }
 Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *_framebufferPointer, bool _useBVH):
-	IScene(_window),
+	window(_window),
 	view(cameraPosition, cameraDirection),
-	projection((Window &)window, orthoSize),
+	projection(window, orthoSize),
 	framebufferPointer(_framebufferPointer),
 	useBVH(_useBVH)
 {
@@ -37,6 +37,26 @@ Scene::Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirectio
 Scene::~Scene()
 {
 	unhookMouseEvents();
+}
+size_t Scene::addEntity(const std::shared_ptr<Entity> &entity, bool callOnEntityAdded)
+{
+	auto id = ++entitiesCount;
+	entity->ID = id;
+	entities[id] = entity;
+	postAddEntity(entity, {id});
+	if (callOnEntityAdded && window.onEntityAdded)
+		window.onEntityAdded(entity);
+	return id;
+}
+void Scene::removeEntity(const size_t &id)
+{
+	auto entityIter = entities.find(id);
+	if (entityIter != entities.end())
+	{
+		preRemoveEntity(entityIter->second, {id});
+		entityIter->second->ID = 0;
+		entities.erase(entityIter);
+	}
 }
 void Scene::update()
 {
@@ -149,7 +169,7 @@ void Scene::render()
 		it->second->render();
 	}
 }
-void Scene::entityPreRender(IEntity &entity)
+void Scene::entityPreRender(Entity &entity)
 {
 	Entity &glEntity = static_cast<Entity&>(entity);
 	uint32_t index = 0;
@@ -210,7 +230,7 @@ void Scene::resize(glm::vec2 newSize)
 		textures::FramebufferFactory::initFramebuffer(*framebufferPointer);
 	}
 }
-void Scene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vector<size_t> &entityIDs)
+void Scene::postAddEntity(const std::shared_ptr<Entity>& entity, const std::vector<size_t> &entityIDs)
 {
 	auto &glEntity = (Entity &)*entity;
 	if (useBVH && glEntity.addToBVH)
@@ -230,7 +250,7 @@ void Scene::postAddEntity(const std::shared_ptr<IEntity>& entity, const std::vec
 		postAddEntity(pair.second, entityIDsWithSubID);
 	}
 }
-void Scene::preRemoveEntity(const std::shared_ptr<IEntity> &entity, const std::vector<size_t> &entityIDs)
+void Scene::preRemoveEntity(const std::shared_ptr<Entity> &entity, const std::vector<size_t> &entityIDs)
 {
 	auto &glEntity = (Entity &)*entity;
 	if (useBVH && glEntity.addToBVH)
@@ -251,14 +271,14 @@ Entity *Scene::findEntityByPrimID(const size_t &primID)
 }
 void Scene::hookMouseEvents()
 {
-	for (unsigned int button = Window::MinMouseButton; button <= Window::MaxMouseButton; ++button)
+	for (unsigned int button = MinMouseButton; button <= MaxMouseButton; ++button)
 	{
 		mousePressIDs[button] = window.addMousePressHandler(button, [&, button](auto pressed)
 		{
 			if (!useBVH)
 				return;
 			auto& _bvh = *bvh;
-			auto &screenCoord = ((Window &)window).mouseCoords;
+			auto &screenCoord = (window).mouseCoords;
 			auto ray = _bvh.mouseCoordToRay(window.windowHeight, screenCoord, {0, 0, window.windowWidth, window.windowHeight}, projection.matrix, view.matrix, projection.nearPlane, projection.farPlane);
 			auto primID = _bvh.trace(ray);
 			if (primID == raytracing::invalidID)
@@ -298,7 +318,7 @@ void Scene::hookMouseEvents()
 }
 void Scene::unhookMouseEvents()
 {
-	for (unsigned int button = Window::MinMouseButton; button <= Window::MaxMouseButton; ++button)
+	for (unsigned int button = MinMouseButton; button <= MaxMouseButton; ++button)
 	{
 		window.removeMousePressHandler(button, mousePressIDs[button]);
 	}

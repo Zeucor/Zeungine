@@ -1,8 +1,11 @@
 #pragma once
-#include <zg/interfaces/IWindow.hpp>
-#include "./textures/Framebuffer.hpp"
-#include "./interfaces/IPlatformWindow.hpp"
 #include <mutex>
+#include "./interfaces/IPlatformWindow.hpp"
+#include "./textures/Framebuffer.hpp"
+#include "./Events.hpp"
+#include <thread>
+#include <memory>
+#include <queue>
 namespace zg
 {
 	namespace shaders
@@ -34,73 +37,118 @@ namespace zg
 #define KEYCODE_PAUSE 0x87
 #define KEYCODE_SUPER 0x88
 #define LAST_UNDEFINED_ASCII_IN_RANGE 0x9F
-	struct Window : IWindow
+	struct Window
 	{
-		IPlatformWindow *iPlatformWindow;
-		IRenderer *iRenderer;
-		const char *title;
+		IPlatformWindow* iPlatformWindow;
+		IRenderer* iRenderer;
+		float windowWidth;
+		float windowHeight;
+		float windowX;
+		float windowY;
+		uint32_t framerate = 60;
+#if defined(WINDOWS) || defined(LINUX)
+		std::shared_ptr<std::thread> windowThread;
+#endif
+		std::queue<Runnable> runnables;
+		std::unordered_map<Key, int> keys;
+		std::unordered_map<Button, int> buttons;
+		std::unordered_map<Key, std::pair<EventIdentifier, std::map<EventIdentifier, KeyPressHandler>>> keyPressHandlers;
+		std::unordered_map<Key, std::pair<EventIdentifier, std::map<EventIdentifier, KeyUpdateHandler>>> keyUpdateHandlers;
+		std::pair<EventIdentifier, std::map<EventIdentifier, AnyKeyPressHandler>> anyKeyPressHandlers;
+		std::unordered_map<Button, std::pair<EventIdentifier, std::map<EventIdentifier, MousePressHandler>>>
+			mousePressHandlers;
+		std::pair<EventIdentifier, std::map<EventIdentifier, MouseMoveHandler>> mouseMoveHandlers;
+		std::pair<EventIdentifier, std::map<EventIdentifier, ViewResizeHandler>> viewResizeHandlers;
+		std::pair<EventIdentifier, std::map<EventIdentifier, FocusHandler>> focusHandlers;
+		std::shared_ptr<Scene> scene;
+		bool open = true;
+		std::chrono::steady_clock::time_point lastFrameTime;
+		long double deltaTime = 0;
+		bool justWarpedPointer = false;
+		bool borderless = false;
+		bool minimized = false;
+		bool maximized = false;
+		bool focused = false;
+		OnEntityAddedFunction onEntityAdded;
+		std::mutex renderMutex;
+		const char* title;
 		int windowKeys[256];
 		int windowButtons[7];
 		bool mouseMoved = false;
 		glm::vec2 mouseCoords;
 		int mod = 0;
 		bool isChildWindow = false;
-		Window *parentWindow = 0;
-		Scene *parentScene = 0;
-		std::vector<Window *> childWindows;
-		ShaderContext *shaderContext = 0;
+		Window* parentWindow = 0;
+		Scene* parentScene = 0;
+		std::vector<Window*> childWindows;
+		ShaderContext* shaderContext = 0;
 		bool NDCFramebufferPlane;
 		std::shared_ptr<textures::Texture> framebufferTexture;
 		std::shared_ptr<textures::Texture> framebufferDepthTexture;
 		std::shared_ptr<textures::Framebuffer> framebuffer;
 		std::shared_ptr<entities::Plane> framebufferPlane;
-		static constexpr unsigned int MinMouseButton = 0;
-		static constexpr unsigned int MaxMouseButton = 6;
 		glm::vec2 oldXY;
 		bool vsync = true;
-		Window(const char *title,
-			   float windowWidth,
-			   float windowHeight,
-			   float windowX,
-			   float windowY,
-			   bool borderless = false,
-			   bool vsync = true,
-			   uint32_t framerate = 60);
-		Window(Window &parentWindow,
-			   Scene &parentScene,
-			   const char *childTitle,
-			   float childWindowWidth,
-			   float childWindowHeight,
-			   float childWindowX,
-			   float childWindowY,
-			   bool NDCFramebufferPlane = false,
-			   bool vsync = true,
-			   uint32_t framerate = 60);
-		void startWindow() override;
-		void renderInit();
-		void updateKeyboard() override;
-		void updateMouse() override;
-		void close() override;
-		void minimize() override;
-		void maximize() override;
-		void restore() override;
-		void preRender() override;
-		void postRender() override;
-		void drawLine(int x0, int y0, int x1, int y1, uint32_t color) override;
-		void drawRectangle(int x, int y, int w, int h, uint32_t color) override;
-		void drawCircle(int x, int y, int radius, uint32_t color) override;
-		void drawText(int x, int y, const char *text, int scale, uint32_t color) override;
-		void warpPointer(glm::vec2 coords) override;
-		void setXY(float x, float y) override;
-		void setWidthHeight(float width, float height) override;
+		Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY,
+					 bool borderless = false, bool vsync = true, uint32_t framerate = 60);
+		Window(Window& parentWindow, Scene& parentScene, const char* childTitle, float childWindowWidth,
+					 float childWindowHeight, float childWindowX, float childWindowY, bool NDCFramebufferPlane = false,
+					 bool vsync = true, uint32_t framerate = 60);
+		void run();
+		void update();
+		void preRender();
+		void render();
+		void postRender();
+		void startWindow();
+		void updateKeyboard();
+		void updateMouse();
+		void close();
+		void minimize();
+		void maximize();
+		void restore();
+		void warpPointer(glm::vec2 coords);
+		void setXY(float x, float y);
+		void setWidthHeight(float width, float height);
 		void mouseCapture(bool capture);
-		Window &createChildWindow(const char *title,
-								  IScene &scene,
-								  float windowWidth,
-								  float windowHeight,
-								  float windowX,
-								  float windowY,
-								  bool NDCFramebufferPlane) override;
+		Window& createChildWindow(const char* title, Scene& scene, float windowWidth, float windowHeight, float windowX,
+															float windowY, bool NDCFramebufferPlane);
+		// Keyboard
+		EventIdentifier addKeyPressHandler(Key key, const KeyPressHandler& callback);
+		void removeKeyPressHandler(Key key, EventIdentifier& id);
+		EventIdentifier addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback);
+		void removeKeyUpdateHandler(Key key, EventIdentifier& id);
+		EventIdentifier addAnyKeyPressHandler(const AnyKeyPressHandler& callback);
+		void removeAnyKeyPressHandler(EventIdentifier& id);
+		void callKeyPressHandler(Key key, int pressed);
+		void callKeyUpdateHandler(Key key);
+		void callAnyKeyPressHandler(Key key, bool pressed);
+		void handleKey(Key key, int32_t mod, bool pressed);
+		// Mouse
+		EventIdentifier addMousePressHandler(Button button, const MousePressHandler& callback);
+		void removeMousePressHandler(Button button, EventIdentifier& id);
+		EventIdentifier addMouseMoveHandler(const MouseMoveHandler& callback);
+		void removeMouseMoveHandler(EventIdentifier& id);
+		void callMousePressHandler(Button button, int pressed);
+		void callMouseMoveHandler(glm::vec2 coords);
+		void handleMouseMove(uint32_t x, uint32_t y);
+		void handleMousePress(Button button, bool pressed);
+		// resize
+		EventIdentifier addResizeHandler(const ViewResizeHandler& callback);
+		void removeResizeHandler(EventIdentifier& id);
+		void callResizeHandler(glm::vec2 newSize);
+		// focus
+		EventIdentifier addFocusHandler(const FocusHandler& callback);
+		void removeFocusHandler(EventIdentifier& id);
+		void callFocusHandler(bool focused);
+		// scene
+		std::shared_ptr<Scene> setScene(const std::shared_ptr<Scene>& scene);
+		// runnables
+		void runOnThread(const Runnable& runnable);
+		void runRunnables();
+		void updateDeltaTime();
+		void resize(glm::vec2 newSize);
+		void registerOnEntityAddedFunction(const OnEntityAddedFunction& function);
 	};
-	void computeNormals(const std::vector<uint32_t> &indices, const std::vector<glm::vec3> &positions, std::vector<glm::vec3> &normals);
-}
+	void computeNormals(const std::vector<uint32_t>& indices, const std::vector<glm::vec3>& positions,
+											std::vector<glm::vec3>& normals);
+} // namespace zg

@@ -18,8 +18,8 @@ namespace zg::entities
 		fonts::freetype::FreetypeFont &font;
 		using OnClickHandler = std::function<void()>;
 		OnClickHandler handler;
-		Window::EventIdentifier mouseHoverID = 0;
-		Window::EventIdentifier mousePressID = 0;
+		EventIdentifier mouseHoverID = 0;
+		EventIdentifier mousePressID = 0;
 		inline static size_t buttonsCount = 0;
 		Button(Window &window,
 			   Scene &scene,

@@ -202,7 +202,7 @@ EditorScene::~EditorScene()
 	gameWindowBorder->removeMouseHoverHandler(gameWindowBorderHoverID);
 	gameWindowBorder->removeMousePressHandler(0, gameWindowBorderPressID);
 };
-void EditorScene::onEntityAdded(const std::shared_ptr<IEntity>& entity)
+void EditorScene::onEntityAdded(const std::shared_ptr<Entity>& entity)
 {
 	auto& glEntity = *std::dynamic_pointer_cast<Entity>(entity);
 	auto sizeYTotal = sceneGraphPanelMenu->getSizeYTotal();
@@ -217,7 +217,7 @@ void EditorScene::setupGameWindow()
 	auto& gameWindow =
 		window.createChildWindow("EditorChild", *this, gameWindowWidth, gameWindowHeight, gameWindowX, gameWindowY, true);
 	gameWindowPointer = (Window*)&gameWindow;
-	std::function<void(const std::shared_ptr<IEntity>&)> entityAddedFunction =
+	std::function<void(const std::shared_ptr<Entity>&)> entityAddedFunction =
 		std::bind(&EditorScene::onEntityAdded, this, std::placeholders::_1);
 	gameWindow.registerOnEntityAddedFunction(entityAddedFunction);
 	gameWindowBorderHoverID = gameWindowBorder->addMouseHoverHandler(
@@ -258,7 +258,7 @@ void EditorScene::setupCodeWindow()
 		window.createChildWindow("Code Editor", *this, codeWindowWidth, codeWindowHeight, codeWindowX, codeWindowY, true);
 	codeWindowPointer = (Window*)&codeWindow;
 	codeWindow.minimize();
-	codeWindow.setIScene(std::make_shared<CodeScene>((Window&)codeWindow));
+	codeWindow.setScene(std::make_shared<CodeScene>((Window&)codeWindow));
 };
 void EditorScene::minimizeWindows()
 {
@@ -354,11 +354,11 @@ MainScene::MainScene(Window& window):
 }
 ZG_API void OnLoad(Window& window)
 {
-	window.setIScene(std::make_shared<MainScene>(window));
+	window.setScene(std::make_shared<MainScene>(window));
 }
 ZG_API void OnHotswapLoad(Window& window, hscpp::AllocationResolver &allocationResolver)
 {
-	window.setIScene(std::shared_ptr<MainScene>(allocationResolver.Allocate<MainScene>(window)));
+	window.setScene(std::shared_ptr<MainScene>(allocationResolver.Allocate<MainScene>(window)));
 })");
 		mainSrcFile.writeBytes(0, mainSrcFileString.size(), mainSrcFileString.data());
 	}

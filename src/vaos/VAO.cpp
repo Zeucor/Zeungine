@@ -1,7 +1,6 @@
 #include <iostream>
 #include <zg/vaos/VAO.hpp>
 #include <zg/vaos/VAOFactory.hpp>
-#include <zg/interfaces/IEntity.hpp>
 #include <zg/renderers/GLRenderer.hpp>
 using namespace zg::vaos;
 VAO::VAO(Window &_window, const RuntimeConstants &constants, uint32_t indiceCount, uint32_t elementCount):

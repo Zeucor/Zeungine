@@ -1,4 +1,5 @@
 #include <zg/vp/View.hpp>
+using namespace zg;
 using namespace zg::vp;
 View::View(glm::vec3 _position, glm::vec3 _direction) : position(_position),
 														direction(glm::normalize(_direction))
@@ -23,13 +24,13 @@ void View::addPhiTheta(float addPhi, float addTheta)
 	direction = newDirection;
 	update();
 }
-zg::IWindow::EventIdentifier View::addResizeHandler(const IWindow::ViewResizeHandler &callback)
+EventIdentifier View::addResizeHandler(const ViewResizeHandler &callback)
 {
 	auto id = ++viewResizeHandlers.first;
 	viewResizeHandlers.second[id] = callback;
 	return id;
 }
-void View::removeResizeHandler(zg::IWindow::EventIdentifier &id)
+void View::removeResizeHandler(EventIdentifier &id)
 {
 	auto &handlers = viewResizeHandlers.second;
 	auto handlerIter = handlers.find(id);
@@ -43,7 +44,7 @@ void View::removeResizeHandler(zg::IWindow::EventIdentifier &id)
 void View::callResizeHandler(glm::vec2 newSize)
 {
 	auto &handlersMap = viewResizeHandlers.second;
-	std::vector<IWindow::ViewResizeHandler> handlersCopy;
+	std::vector<ViewResizeHandler> handlersCopy;
 	for (const auto &pair : handlersMap)
 		handlersCopy.push_back(pair.second);
 	for (auto &handler : handlersCopy)

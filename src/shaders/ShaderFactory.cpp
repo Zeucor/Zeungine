@@ -1,6 +1,6 @@
 #include <glm/fwd.hpp>
 #include <stdexcept>
-#include <zg/interfaces/IWindow.hpp>
+#include <zg/Window.hpp>
 #include <zg/lights/Lights.hpp>
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/shaders/ShaderFactory.hpp>

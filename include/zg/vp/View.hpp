@@ -1,6 +1,7 @@
 #pragma once
 #include <zg/glm.hpp>
-#include <zg/interfaces/IWindow.hpp>
+#include <zg/Events.hpp>
+#include <map>
 namespace zg::vp
 {
   struct View
@@ -10,12 +11,12 @@ namespace zg::vp
     glm::mat4 matrix;
     float phi;
     float theta;
-    std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, IWindow::ViewResizeHandler>> viewResizeHandlers;
+    std::pair<EventIdentifier, std::map<EventIdentifier, ViewResizeHandler>> viewResizeHandlers;
     View(glm::vec3 position, glm::vec3 direction);
     void update();
     void addPhiTheta(float addPhi, float addTheta);
-    IWindow::EventIdentifier addResizeHandler(const IWindow::ViewResizeHandler &callback);
-    void removeResizeHandler(IWindow::EventIdentifier &id);
+    EventIdentifier addResizeHandler(const ViewResizeHandler &callback);
+    void removeResizeHandler(EventIdentifier &id);
     void callResizeHandler(glm::vec2 newSize);
   };
 }

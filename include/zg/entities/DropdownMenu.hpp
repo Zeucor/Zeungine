@@ -38,8 +38,8 @@ namespace zg::entities
 		DropdownMenu::OptionPressHandler handler;
 		std::shared_ptr<TextView> textView;
 		fonts::freetype::FreetypeFont &font;
-		Window::EventIdentifier mouseHoverID = 0;
-		Window::EventIdentifier mousePressID = 0;
+		EventIdentifier mouseHoverID = 0;
+		EventIdentifier mousePressID = 0;
 		inline static size_t dropdownItemsCount = 0;
 		DropdownItem(Window &window,
 					 Scene &scene,

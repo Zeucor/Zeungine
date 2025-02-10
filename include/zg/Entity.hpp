@@ -1,13 +1,14 @@
 #pragma once
 #include <zg/Window.hpp>
-#include <zg/interfaces/IEntity.hpp>
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/shaders/Shader.hpp>
 #include <zg/vaos/VAO.hpp>
 namespace zg
 {
-	struct Entity : zg::IEntity, vaos::VAO
+	struct Entity : vaos::VAO
 	{
+		Window &window;
+		size_t ID = 0;
 		std::vector<uint32_t> indices;
 		std::vector<glm::vec3> positions;
 		glm::vec3 position;
@@ -20,37 +21,37 @@ namespace zg
 		std::map<size_t, std::shared_ptr<Entity>> children;
 		Entity *parentEntity = 0;
 		bool addToBVH = true;
-		std::unordered_map<IWindow::Button, int> buttons;
+		std::unordered_map<Button, int> buttons;
 		std::unordered_map<
-			IWindow::Button,
-			std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, IWindow::MousePressHandler>>>
+			Button,
+			std::pair<EventIdentifier, std::map<EventIdentifier, MousePressHandler>>>
 			mousePressHandlers;
-		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, IWindow::MouseMoveHandler>>
+		std::pair<EventIdentifier, std::map<EventIdentifier, MouseMoveHandler>>
 			mouseMoveHandlers;
 		using MouseHoverHandler = std::function<void(bool)>;
-		std::pair<IWindow::EventIdentifier, std::map<IWindow::EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
+		std::pair<EventIdentifier, std::map<EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		std::string name;
 		bool addedShader = false;
 		bool ensured = false;
 		Entity(Window &_window, const shaders::RuntimeConstants &constants, uint32_t indiceCount,
 			   const std::vector<uint32_t> &indices, uint32_t elementCount, const std::vector<glm::vec3> &positions,
 			   glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, std::string_view name);
-		virtual void update() override;
+		virtual void update();
 		void addShader();
 		virtual bool preRender();
-		void render() override;
+		void render();
 		virtual void postRender();
 		const glm::mat4 &getModelMatrix();
 		size_t addChild(const std::shared_ptr<Entity> &child);
 		void removeChild(size_t &ID);
-		IWindow::EventIdentifier addMousePressHandler(const IWindow::Button &button,
-													  const IWindow::MousePressHandler &callback);
-		void removeMousePressHandler(const IWindow::Button &button, IWindow::EventIdentifier &id);
-		IWindow::EventIdentifier addMouseMoveHandler(const IWindow::MouseMoveHandler &callback);
-		void removeMouseMoveHandler(IWindow::EventIdentifier &id);
-		IWindow::EventIdentifier addMouseHoverHandler(const MouseHoverHandler &callback);
-		void removeMouseHoverHandler(IWindow::EventIdentifier &id);
-		void callMousePressHandler(const IWindow::Button &button, int pressed);
+		EventIdentifier addMousePressHandler(const Button &button,
+													  const MousePressHandler &callback);
+		void removeMousePressHandler(const Button &button, EventIdentifier &id);
+		EventIdentifier addMouseMoveHandler(const MouseMoveHandler &callback);
+		void removeMouseMoveHandler(EventIdentifier &id);
+		EventIdentifier addMouseHoverHandler(const MouseHoverHandler &callback);
+		void removeMouseHoverHandler(EventIdentifier &id);
+		void callMousePressHandler(const Button &button, int pressed);
 		void callMouseMoveHandler(glm::vec2 coords);
 		void callMouseHoverHandler(bool hovered);
 		template <typename T>

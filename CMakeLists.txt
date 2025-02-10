@@ -161,9 +161,6 @@ endif()
 
 # Sources
 set(ZG_SOURCES
-    src/interfaces/IEntity.cpp
-    src/interfaces/IScene.cpp
-    src/interfaces/IWindow.cpp
     src/Logger.cpp
     src/SharedLibrary.cpp
     src/crypto/vector.cpp

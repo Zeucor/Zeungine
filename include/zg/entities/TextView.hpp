@@ -31,7 +31,7 @@ namespace zg::entities
 		ReFontSizeHandler reFontSizeHandler;
 		int64_t cursorIndex = 0;
 		glm::vec3 cursorPosition = glm::vec3(0);
-		IWindow::EventIdentifier resizeID = 0;
+		EventIdentifier resizeID = 0;
 		inline static size_t textViewsCount = 0;
 		explicit TextView(Window &window,
 						  Scene &scene,

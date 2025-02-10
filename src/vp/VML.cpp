@@ -1,4 +1,4 @@
-#include <zg/interfaces/IWindow.hpp>
+#include <zg/Window.hpp>
 #include <zg/vp/VML.hpp>
 using namespace zg::vp;
 VML::VML(Scene& scene) : scene(scene)
