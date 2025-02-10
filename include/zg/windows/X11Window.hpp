@@ -1,5 +1,5 @@
 #pragma once
-#ifdef LINUX
+#ifdef __linux__
 #ifdef USE_X11
 #include "../Window.hpp"
 #include <X11/Xutil.h>

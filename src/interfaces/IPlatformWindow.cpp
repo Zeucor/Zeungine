@@ -36,7 +36,7 @@ IPlatformWindow *zg::createPlatformWindow()
         return new iOSWindow();
 #endif
     }
-#ifdef LINUX
+#ifdef __linux__
     else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_XCB || SELECTED_WINDOW_TYPE == WINDOW_TYPE_X11 || SELECTED_WINDOW_TYPE == WINDOW_TYPE_WAYLAND)
     {
 

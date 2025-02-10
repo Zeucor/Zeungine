@@ -1,5 +1,5 @@
 #pragma once
-#ifdef LINUX
+#ifdef __linux__
 #if defined(USE_WAYLAND)
 #include <linux/input.h>
 #include <poll.h>

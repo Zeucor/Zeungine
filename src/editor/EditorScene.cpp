@@ -106,10 +106,10 @@ EditorScene::EditorScene(Window& window) :
 			std::vector<std::shared_ptr<Entity>>({closeOpenDialogButton, okayOpenDialogButton, openProjectDirectoryInput})))
 {
 	(*newProjectNameInput->textPointer) = "EditorGame";
-#ifdef WINDOWS
+#ifdef _WIN32
 	(*newProjectDirectoryInput->textPointer) = "C:/Users/Steven/Projects/EditorGame";
 	(*openProjectDirectoryInput->textPointer) = "C:/Users/Steven/Projects/EditorGame";
-#elif defined(LINUX)
+#elif defined(__linux__)
 	(*newProjectDirectoryInput->textPointer) = "/home/zeun/Projects/EditorGame";
 	(*openProjectDirectoryInput->textPointer) = "/home/zeun/Projects/EditorGame";
 #endif

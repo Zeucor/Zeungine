@@ -6,10 +6,10 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/textures/TextureFactory.hpp>
 #include <zg/vaos/VAOFactory.hpp>
-#ifdef WINDOWS
+#ifdef _WIN32
 #include <zg/windows/WIN32Window.hpp>
 #endif
-#ifdef LINUX
+#ifdef __linux__
 #if defined(USE_X11)
 #include <zg/windows/X11Window.hpp>
 #endif
@@ -28,10 +28,10 @@ using namespace zg;
 #ifdef MACOS
 static std::string libPrefix("lib");
 static std::string libSuffix(".dylib");
-#elif defined(LINUX)
+#elif defined(__linux__)
 static std::string libPrefix("lib");
 static std::string libSuffix(".so");
-#elif defined(WINDOWS)
+#elif defined(_WIN32)
 static std::string libPrefix("lib");
 static std::string libSuffix(".dll");
 #endif
@@ -39,10 +39,10 @@ static std::string vulkanLibrarySSName(libPrefix + "vk_swiftshader" + libSuffix)
 SharedLibrary zg::VulkanRenderer::vulkanLibrarySS(vulkanLibrarySSName, "../build/" + vulkanLibrarySSName, "build/" + vulkanLibrarySSName);
 #ifdef MACOS
 SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan.1" + libSuffix);
-#elif defined(LINUX)
+#elif defined(__linux__)
 static std::string vulkanCorePath(libPrefix + "vulkan" + libSuffix + ".1");
 SharedLibrary zg::VulkanRenderer::vulkanLibraryCore("/usr/lib/x86_64-linux-gnu/" + vulkanCorePath, vulkanCorePath);
-#elif defined(LINUX)
+#elif defined(__linux__)
 SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan" + libSuffix);
 #endif
 PFN_vkVoidFunction (*zg::VulkanRenderer::getProcAddr)(VkInstance, const char *) = ([]
@@ -177,7 +177,7 @@ void VulkanRenderer::createInstance()
 			break;
 		}
 	}
-#if defined(MACOS) && !defined(USE_SWIFTSHADER)
+#if defined(__APPLE__) && !defined(USE_SWIFTSHADER)
 	extensions.push_back("VK_KHR_portability_enumeration");
 	createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
@@ -216,13 +216,13 @@ void VulkanRenderer::createInstance()
 void VulkanRenderer::setupPFNs()
 {
 	VK_INSTANCE(_vkCreateDebugUtilsMessengerEXT, PFN_vkCreateDebugUtilsMessengerEXT, "vkCreateDebugUtilsMessengerEXT");
-#ifdef LINUX
+#ifdef __linux__
 	VK_INSTANCE(_vkCreateXcbSurfaceKHR, PFN_vkCreateXcbSurfaceKHR, "vkCreateXcbSurfaceKHR");
 	VK_INSTANCE(_vkCreateWaylandSurfaceKHR, PFN_vkCreateWaylandSurfaceKHR, "vkCreateWaylandSurfaceKHR");
-#elif defined(MACOS)
+#elif defined(__APPLE__)
 	VK_INSTANCE(_vkCreateMacOSSurfaceMVK, PFN_vkCreateMacOSSurfaceMVK, "vkCreateMacOSSurfaceMVK");
 	VK_INSTANCE(_vkCreateHeadlessSurfaceEXT, PFN_vkCreateHeadlessSurfaceEXT, "vkCreateHeadlessSurfaceEXT");
-#elif defined(WINDOWS)
+#elif defined(_WIN32)
 	VK_INSTANCE(_vkCreateWin32SurfaceKHR, PFN_vkCreateWin32SurfaceKHR, "vkCreateWin32SurfaceKHR");
 #endif
 	VK_INSTANCE(_vkEnumeratePhysicalDevices, PFN_vkEnumeratePhysicalDevices, "vkEnumeratePhysicalDevices");
@@ -361,7 +361,7 @@ void VulkanRenderer::setupDebugMessenger()
 void VulkanRenderer::createSurface()
 {
 	auto& windowType = platformWindowPointer->windowType;
-#ifdef LINUX
+#ifdef __linux__
 	if (windowType == WINDOW_TYPE_X11)
 	{
 		auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
@@ -400,7 +400,7 @@ void VulkanRenderer::createSurface()
 		}
 	}
 #elif defined(ANDROID)
-#elif defined(WINDOWS)
+#elif defined(_WIN32)
 	auto& win32Window = *dynamic_cast<WIN32Window*>(platformWindowPointer);
 	VkWin32SurfaceCreateFlagsKHR surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
@@ -410,7 +410,7 @@ void VulkanRenderer::createSurface()
 	{
 		throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
 	}
-#elif defined(MACOS)
+#elif defined(__APPLE__)
 #if defined(USE_SWIFTSHADER)
 	VkHeadlessSurfaceCreateInfoEXT surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
@@ -1060,7 +1060,7 @@ void VulkanRenderer::postRenderPass()
 	}
 	return;
 }
-#if (!defined(MACOS) && !defined(USE_SWIFTSHADER)) || ((defined(LINUX) || defined(WINDOWS)) && defined(USE_SWIFTSHADER))
+#if (!defined(__APPLE__) && !defined(USE_SWIFTSHADER)) || ((defined(__linux__) || defined(_WIN32)) && defined(USE_SWIFTSHADER))
 void VulkanRenderer::swapBuffers()
 {
 	// std::cout << "swapping buffers: " << ++swapBufferCount << std::endl;

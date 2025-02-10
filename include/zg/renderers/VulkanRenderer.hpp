@@ -9,11 +9,11 @@
 #define VK_USE_PLATFORM_ANDROID_KHR
 #elif defined(IOS)
 #define VK_USE_PLATFORM_IOS_MVK
-#elif defined(MACOS)
+#elif defined(__APPLE__)
 #define VK_USE_PLATFORM_MACOS_MVK
-#elif defined(WINDOWS)
+#elif defined(_WIN32)
 #define VK_USE_PLATFORM_WIN32_KHR
-#elif defined(LINUX)
+#elif defined(__linux__)
 #if defined(USE_X11)
 #define VK_USE_PLATFORM_XLIB_KHR
 #endif
@@ -115,13 +115,13 @@ namespace zg
 		static GET_PROC_ADDR_MEMBER(getProcAddr);
 		PFN_vkEnumerateInstanceLayerProperties _vkEnumerateInstanceLayerProperties;
 		PFN_vkCreateDebugUtilsMessengerEXT _vkCreateDebugUtilsMessengerEXT;
-#ifdef LINUX
+#ifdef __linux__
 		PFN_vkCreateXcbSurfaceKHR _vkCreateXcbSurfaceKHR;
 		PFN_vkCreateWaylandSurfaceKHR _vkCreateWaylandSurfaceKHR;
-#elif defined(MACOS)
+#elif defined(__APPLE__)
 		PFN_vkCreateMacOSSurfaceMVK _vkCreateMacOSSurfaceMVK;
 		PFN_vkCreateHeadlessSurfaceEXT _vkCreateHeadlessSurfaceEXT;
-#elif defined(WINDOWS)
+#elif defined(_WIN32)
 		PFN_vkCreateWin32SurfaceKHR _vkCreateWin32SurfaceKHR;
 #endif
 		PFN_vkEnumeratePhysicalDevices _vkEnumeratePhysicalDevices;

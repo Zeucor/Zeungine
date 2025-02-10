@@ -25,7 +25,6 @@ message(STATUS "ZG_LIB_DIR: ${ZG_LIB_DIR}")
 
 # Determine platform and set defines
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    add_definitions(-DLINUX)
     set(LINUX ON)
     set(LIB_SUFFIX ".so")
     if(ZG_INSTALL)
@@ -41,11 +40,9 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         endif()
     endif()
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-    add_definitions(-DMACOS)
     set(MACOS ON)
     set(LIB_SUFFIX ".dylib")
 elseif(WIN32)
-    add_definitions(-DWINDOWS)
     set(WINDOWS ON)
     set(LIB_SUFFIX ".dll")
 endif()
@@ -393,13 +390,62 @@ if(ZG_INSTALL)
     install(DIRECTORY include/zg DESTINATION ${ZG_INC_INSTALL_PREFIX}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
         DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    execute_process(COMMAND whoami
-        OUTPUT_VARIABLE CURRENT_USER
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-    set(INC_CHOWN_COMMAND "sudo chown -R ${CURRENT_USER}:${CURRENT_USER} ${ZG_INC_INSTALL_PREFIX}")
-    install(CODE "
-        execute_process(COMMAND ${INC_CHOWN_COMMAND})
-    ")
+    install(FILES
+        vendor/hscpp/include/hscpp/Callbacks.h
+        vendor/hscpp/include/hscpp/Config.h
+        vendor/hscpp/include/hscpp/Feature.h
+        vendor/hscpp/include/hscpp/FeatureManager.h
+        vendor/hscpp/include/hscpp/Filesystem.h
+        vendor/hscpp/include/hscpp/FsPathHasher.h
+        vendor/hscpp/include/hscpp/Hotswapper.h
+        vendor/hscpp/include/hscpp/Log.h
+        vendor/hscpp/include/hscpp/ModuleManager.h
+        vendor/hscpp/include/hscpp/Platform.h
+        vendor/hscpp/include/hscpp/ProtectedFunction.h
+        vendor/hscpp/include/hscpp/Util.h
+        DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+    install(DIRECTORY vendor/hscpp/include/hscpp/cmd-shell DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY vendor/hscpp/include/hscpp/compiler DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY vendor/hscpp/include/hscpp/file-watcher DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY vendor/hscpp/include/hscpp/module DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY vendor/hscpp/include/hscpp/preprocessor DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY vendor/glm/glm DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(DIRECTORY vendor/freetype/include/freetype DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(FILES
+        vendor/freetype/include/ft2build.h
+        DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+    install(DIRECTORY vendor/bvh/src/bvh DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    install(FILES
+        vendor/filewatch/FileWatch.hpp
+        DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+    if(LINUX)
+        execute_process(COMMAND whoami
+            OUTPUT_VARIABLE CURRENT_USER
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+        set(INC_CHOWN_COMMAND "sudo chown -R ${CURRENT_USER}:${CURRENT_USER} ${ZG_INC_INSTALL_PREFIX}")
+        install(CODE "
+            execute_process(COMMAND ${INC_CHOWN_COMMAND})
+        ")
+    endif()
     install(TARGETS zeungine
         ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
         LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX})

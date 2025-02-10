@@ -1,4 +1,4 @@
-#ifdef LINUX
+#ifdef __linux__
 #if defined(USE_WAYLAND)
 #include <fcntl.h>
 #include <iostream>

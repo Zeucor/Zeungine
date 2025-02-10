@@ -46,7 +46,7 @@ namespace zg
 		float windowX;
 		float windowY;
 		uint32_t framerate = 60;
-#if defined(WINDOWS) || defined(LINUX)
+#if defined(_WIN32) || defined(__linux__)
 		std::shared_ptr<std::thread> windowThread;
 #endif
 		std::queue<Runnable> runnables;

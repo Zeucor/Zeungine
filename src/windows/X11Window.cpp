@@ -1,4 +1,4 @@
-#ifdef LINUX
+#ifdef __linux__
 #ifdef USE_X11
 #include <X11/XKBlib.h>
 #include <X11/Xatom.h>

@@ -1,4 +1,4 @@
-#ifdef LINUX
+#ifdef __linux__
 #if defined(USE_XCB) || defined(USE_SWIFTSHADER)
 #include <X11/XKBlib.h>
 #include <X11/Xlib.h>

@@ -6,13 +6,13 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/textures/TextureFactory.hpp>
 #include <zg/vaos/VAOFactory.hpp>
-#if defined(LINUX) || defined(MACOS)
+#if defined(__linux__) || defined(__APPLE__)
 #include <dlfcn.h>
 #endif
-#ifdef WINDOWS
+#ifdef _WIN32
 #include <zg/windows/WIN32Window.hpp>
 #endif
-#ifdef LINUX
+#ifdef __linux__
 #include <zg/windows/X11Window.hpp>
 #endif
 #ifdef MACOS
@@ -39,15 +39,15 @@ EGLRenderer::EGLRenderer()
 	}
 }
 EGLRenderer::~EGLRenderer() {}
-#if defined(WINDOWS) || defined(LINUX)
+#if defined(_WIN32) || defined(__linux__)
 void EGLRenderer::createContext(IPlatformWindow *platformWindowPointer)
 {
 	this->renderer = RENDERER_EGL;
 	this->platformWindowPointer = platformWindowPointer;
-#ifdef WINDOWS
+#ifdef _WIN32
 	auto window = (*dynamic_cast<WIN32Window *>(platformWindowPointer)).hwnd;
 #endif
-#ifdef LINUX
+#ifdef __linux__
 	auto window = (*dynamic_cast<X11Window *>(platformWindowPointer)).window;
 #endif
 	eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, window, nullptr);

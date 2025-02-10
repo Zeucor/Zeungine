@@ -33,7 +33,7 @@ void HookedConsole::initializeRedirect()
     int writablePipeEndFileStream = _open_osfhandle(reinterpret_cast<intptr_t>(writablePipeEnd), 0);
     FILE *writablePipeEndFile = _fdopen(writablePipeEndFileStream, "wt");
     _dup2(_fileno(writablePipeEndFile), m_handle == STDOUT ? STDOUT_FILENO : STDERR_FILENO);
-#elif defined(LINUX) || defined(MACOS)
+#elif defined(__linux__) || defined(__APPLE__)
     int32_t pipeEnds[2];
     if (pipe(pipeEnds) == -1)
     {
@@ -78,7 +78,7 @@ void HookedConsole::readFromPipe()
         {
             processBuffer(buffer, bytesRead);
         }
-#elif defined(LINUX) || defined(MACOS)
+#elif defined(__linux__) || defined(__APPLE__)
         fd_set readSet;
         FD_ZERO(&readSet);
         FD_SET(readablePipeEnd, &readSet);

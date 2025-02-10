@@ -9,10 +9,10 @@
 #ifdef _WIN32
 #include <zg/SharedLibrary.hpp>
 #endif
-#if defined(LINUX) || defined(MACOS)
+#if defined(__linux__) || defined(__APPLE__)
 #include <dlfcn.h>
 #endif
-#ifdef LINUX
+#ifdef __linux__
 #include <zg/windows/X11Window.hpp>
 #endif
 using namespace zg;
@@ -30,13 +30,13 @@ void *getProc(const char *name)
 		return opengl32Library.getProc<void *>(name);
 	}
 	return p;
-#elif defined(LINUX) || defined(MACOS)
+#elif defined(__linux__) || defined(__APPLE__)
 	return dlsym(RTLD_DEFAULT, name);
 #endif
 }
 GLRenderer::GLRenderer() : glContext(new GladGLContext) {}
 GLRenderer::~GLRenderer() { delete glContext; }
-#ifdef LINUX
+#ifdef __linux__
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
 typedef GLXContext (*glXCreateContextAttribsARBProc)(Display *, GLXFBConfig, GLXContext, Bool, const int *);
@@ -78,12 +78,12 @@ static bool isExtensionSupported(const char *extList, const char *extension)
 	return false;
 }
 #endif
-#if defined(WINDOWS) || defined(LINUX)
+#if defined(_WIN32) || defined(__linux__)
 void GLRenderer::createContext(IPlatformWindow *platformWindowPointer)
 {
 	this->renderer = RENDERER_GL;
 	this->platformWindowPointer = platformWindowPointer;
-#ifdef WINDOWS
+#ifdef _WIN32
 	HGLRC hTempRC = wglCreateContext(hDeviceContext);
 	wglMakeCurrent(hDeviceContext, hTempRC);
 	wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
@@ -95,7 +95,7 @@ void GLRenderer::createContext(IPlatformWindow *platformWindowPointer)
 	wglDeleteContext(hTempRC);
 	wglMakeCurrent(hDeviceContext, hRenderingContext);
 #endif
-#ifdef LINUX
+#ifdef __linux__
 	auto &x11Window = *dynamic_cast<X11Window *>(platformWindowPointer);
 	const char *glxExts = glXQueryExtensionsString(x11Window.display, x11Window.screen);
 	glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
@@ -170,7 +170,7 @@ void GLRenderer::init()
 #ifdef _WIN32
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 	wglSwapIntervalEXT(platformWindowPointer->renderWindowPointer->vsync);
-#elif defined(LINUX)
+#elif defined(__linux__)
 	PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT =
 		(PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalEXT");
 	auto &x11Window = *(X11Window *)platformWindowPointer;
@@ -745,7 +745,7 @@ void GLRenderer::destroyVAO(vaos::VAO &vao)
 }
 void GLRenderer::swapBuffers()
 {
-#ifdef WINDOWS
+#ifdef _WIN32
 	auto &win32Window = *dynamic_cast<WIN32Window *>(platformWindowPointer);
 	SwapBuffers(win32Window.hDeviceContext);
 #endif

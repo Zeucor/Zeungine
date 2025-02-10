@@ -47,7 +47,7 @@ namespace zg
 #ifdef USE_ANDROID
 		selected = WINDOW_TYPE_ANDROID;
 #endif
-#ifdef LINUX
+#ifdef __linux__
 		auto xdgSessionType = getenv("XDG_SESSION_TYPE");
 		if (strcmp(xdgSessionType, "x11") == 0)
 		{

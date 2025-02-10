@@ -6,7 +6,7 @@ SharedLibrary::~SharedLibrary()
 	{
 #ifdef _WIN32
 		FreeLibrary(libraryPointer);
-#elif defined(LINUX) || defined(MACOS)
+#elif defined(__linux__) || defined(__APPLE__)
 		dlclose(libraryPointer);
 #endif
 	}
@@ -24,7 +24,7 @@ SharedLibrary &SharedLibrary::operator=(SharedLibrary &&other) noexcept
 		{
 #ifdef _WIN32
 			FreeLibrary(libraryPointer);
-#elif defined(LINUX) || defined(MACOS)
+#elif defined(__linux__) || defined(__APPLE__)
 			dlclose(libraryPointer);
 #endif
 		}

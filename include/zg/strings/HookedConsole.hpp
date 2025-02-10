@@ -36,7 +36,7 @@ namespace zg::strings
 #ifdef _WIN32
         HANDLE readablePipeEnd = nullptr;
         HANDLE writablePipeEnd = nullptr;
-#elif defined(LINUX) || defined(MACOS)
+#elif defined(__linux__) || defined(__APPLE__)
         int32_t readablePipeEnd = 0;
         int32_t writablePipeEnd = 0;
 #endif

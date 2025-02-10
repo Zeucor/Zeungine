@@ -1,5 +1,5 @@
 #pragma once
-#ifdef LINUX
+#ifdef __linux__
 #if defined(USE_XCB) || defined(USE_SWIFTSHADER)
 #include "../Window.hpp"
 #include <xcb/xcb.h>
