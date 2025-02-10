@@ -216,7 +216,7 @@ void EditorScene::setupGameWindow()
 {
 	auto& gameWindow =
 		window.createChildWindow("EditorChild", *this, gameWindowWidth, gameWindowHeight, gameWindowX, gameWindowY, true);
-	gameWindowPointer = (Window*)&gameWindow;
+	gameWindowPointer = &gameWindow;
 	std::function<void(const std::shared_ptr<Entity>&)> entityAddedFunction =
 		std::bind(&EditorScene::onEntityAdded, this, std::placeholders::_1);
 	gameWindow.registerOnEntityAddedFunction(entityAddedFunction);
@@ -256,9 +256,9 @@ void EditorScene::setupCodeWindow()
 {
 	auto& codeWindow =
 		window.createChildWindow("Code Editor", *this, codeWindowWidth, codeWindowHeight, codeWindowX, codeWindowY, true);
-	codeWindowPointer = (Window*)&codeWindow;
+	codeWindowPointer = &codeWindow;
 	codeWindow.minimize();
-	codeWindow.setScene(std::make_shared<CodeScene>((Window&)codeWindow));
+	codeWindow.setScene(std::make_shared<CodeScene>(codeWindow));
 };
 void EditorScene::minimizeWindows()
 {

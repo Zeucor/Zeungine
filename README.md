@@ -75,7 +75,7 @@ struct ExampleScene : Scene
         vml(*this)
     {
         addEntity(std::make_shared<entities::Cube>(
-            (Window &)window, // reference to window
+            window, // reference to window
             *this, // reference to scene
             glm::vec3(0, 0, 0), // position
             glm::vec3(0, 0, 0), // rotation
