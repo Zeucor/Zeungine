@@ -70,7 +70,7 @@ bool File::close()
 };
 bool File::readBytes(size_t index, size_t sizeBytes, void *pointer)
 {
-    auto& fileStreamRef = (std::fstream&)fileStream;
+    auto& fileStreamRef = fileStream;
     if (!fileStreamRef.is_open())
     {
         return false;
