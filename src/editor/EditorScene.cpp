@@ -219,9 +219,9 @@ void EditorScene::setupGameWindow()
 	auto& gameWindow =
 		window.createChildWindow("EditorChild", *this, gameWindowWidth, gameWindowHeight, gameWindowX, gameWindowY, true);
 	gameWindowPointer = &gameWindow;
-	std::function<void(const std::shared_ptr<Entity>&)> entityAddedFunction =
-		std::bind(&EditorScene::onEntityAdded, this, std::placeholders::_1);
-	gameWindow.registerOnEntityAddedFunction(entityAddedFunction);
+	// std::function<void(const std::shared_ptr<Entity>&)> entityAddedFunction =
+	// 	std::bind(&EditorScene::onEntityAdded, this, std::placeholders::_1);
+	// gameWindow.registerOnEntityAddedFunction(entityAddedFunction);
 	gameWindowBorderHoverID = gameWindowBorder->addMouseHoverHandler(
 		[&](const auto& hovered)
 		{

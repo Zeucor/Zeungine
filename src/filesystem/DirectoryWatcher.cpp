@@ -144,7 +144,6 @@ void DirectoryWatcher::addDirectoryWatch(const std::filesystem::path& path)
             close(fd);
             throw std::runtime_error("Failed to set file descriptor to non-blocking.");
         }
-		std::cout << "Watching directory: " << path << std::endl;
         fdPathMap[fd] = path;
 	}
 #endif

@@ -182,7 +182,7 @@ set(ZG_SOURCES
     src/strings/HookedConsole.cpp
     src/strings/InFileProcessor.cpp
     src/interfaces/IPlatformWindow.cpp
-    src/system/CommandExecutor.cpp
+    src/system/Command.cpp
     src/Window.cpp
     src/Entity.cpp
     src/Scene.cpp

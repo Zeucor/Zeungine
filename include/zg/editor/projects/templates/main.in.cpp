@@ -10,8 +10,7 @@ MainScene::MainScene(Window& window):
 		glm::vec3(0, 0, 0), // position
 		glm::vec3(0, 0, 0), // rotation
 		glm::vec3(1, 1, 1), // scale
-		glm::vec3(5, 5, 5), // cube size
-		shaders::RuntimeConstants() // additional shader constants
+		glm::vec3(5, 5, 5) // cube size
 	));
 }
 ZG_API void OnLoad(Window& window)
