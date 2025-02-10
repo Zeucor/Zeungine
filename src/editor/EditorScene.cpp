@@ -332,7 +332,7 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 		filesystem::File mainIncludeFile(filesystem::File::toPlatformPath(std::string(includePath) + "/main.hpp"),
 																		 enums::EFileLocation::Relative, "w+");
 		std::string mainIncludeFileString(R"(#pragma once
-#include <Runtime.hpp>
+#include <zg/Runtime.hpp>
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 using namespace zg;
