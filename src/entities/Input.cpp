@@ -135,7 +135,15 @@ Input::~Input()
 {
 	removeMouseHoverHandler(mouseHoverID);
 	removeMousePressHandler(0, mousePressID);
-};
+}
+void Input::update()
+{
+	auto& textViewRef = *textView;
+	if (textViewRef.text != textViewRef.oldText)
+	{
+		handleKey(0, true);
+	}
+}
 bool Input::preRender()
 {
 	const auto &model = getModelMatrix();

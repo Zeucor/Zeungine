@@ -12,7 +12,7 @@
 #include <zg/entities/Toolbar.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
 #include "Hotswapper.hpp"
-#include "Project.hpp"
+#include "projects/Project.hpp"
 namespace zg::editor
 {
 	using namespace zg;

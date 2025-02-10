@@ -5,6 +5,7 @@
 #include <iostream>
 #include <regex>
 #include <sstream>
+#include <string.h>
 using namespace zg::filesystem;
 File::File(const std::string &_filePath, enums::EFileLocation _fileLocation, const std::string &mode)
     : originalFilePath(_filePath), filePath(_filePath), fileLocation(_fileLocation), openMode(std::ios::in | std::ios::out | std::ios::binary)
@@ -25,7 +26,10 @@ File::File(const std::string &_filePath, enums::EFileLocation _fileLocation, con
     {
         openMode |= std::ios::in | std::ios::out;
     }
-    open();
+    if (!open())
+    {
+        throw std::runtime_error("Error opening file: " + std::string(strerror(errno)));
+    }
 };
 File &File::operator=(const File &other)
 {
@@ -66,13 +70,14 @@ bool File::close()
 };
 bool File::readBytes(size_t index, size_t sizeBytes, void *pointer)
 {
-    if (!fileStream.is_open())
+    auto& fileStreamRef = (std::fstream&)fileStream;
+    if (!fileStreamRef.is_open())
     {
         return false;
     }
-    fileStream.seekg(index, std::ios::beg);
-    fileStream.read(static_cast<char *>(pointer), sizeBytes);
-    return fileStream.good();
+    fileStreamRef.seekg(index, std::ios::beg);
+    fileStreamRef.read(static_cast<char *>(pointer), sizeBytes);
+    return fileStreamRef.good();
 };
 bool File::writeBytes(size_t index, size_t sizeBytes, const void *pointer)
 {
@@ -103,7 +108,7 @@ bool File::sync()
     }
     return false;
 };
-size_t File::size()
+size_t File::size() const
 {
     try
     {

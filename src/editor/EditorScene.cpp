@@ -1,7 +1,9 @@
-#include <editor/CodeScene.hpp>
-#include <editor/EditorScene.hpp>
+#include <zg/editor/CodeScene.hpp>
+#include <zg/editor/EditorScene.hpp>
 #include <zg/filesystem/Directory.hpp>
+#include <zg/strings/InFileProcessor.hpp>
 using namespace zg::editor;
+using namespace zg::strings;
 EditorScene::EditorScene(Window& window) :
 		Scene(window, {0, 0, 50}, {0, 0, -1}, {2, 2}), toolbarHeight(window.windowHeight / 14),
 		bottomTabsHeight(window.windowHeight / 18),
@@ -329,38 +331,15 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 		filesystem::Directory::ensureExists(includePath);
 		std::string srcPath = filesystem::File::toPlatformPath(std::string(project.directory) + "/src");
 		filesystem::Directory::ensureExists(srcPath);
-		filesystem::File mainIncludeFile(filesystem::File::toPlatformPath(std::string(includePath) + "/main.hpp"),
-																		 enums::EFileLocation::Relative, "w+");
-		std::string mainIncludeFileString(R"(#pragma once
-#include <zg/Runtime.hpp>
-#include <zg/Scene.hpp>
-#include <zg/Window.hpp>
-using namespace zg;
-using namespace zg;
-struct MainScene : Scene
-{
-	explicit MainScene(Window &window);
-};
-ZG_API void OnLoad(Window& window);
-ZG_API void OnHotswapLoad(Window& window, hscpp::AllocationResolver &allocationResolver);)");
-		mainIncludeFile.writeBytes(0, mainIncludeFileString.size(), mainIncludeFileString.data());
-		filesystem::File mainSrcFile(filesystem::File::toPlatformPath(std::string(srcPath) + "/main.cpp"),
-																 enums::EFileLocation::Relative, "w+");
-		std::string mainSrcFileString(R"(#include <main.hpp>
-MainScene::MainScene(Window& window):
-	Scene(window, {0, 50, 50}, {0, -1, -1}, 80.f)
-{
-	clearColor = {0.5, 0, 0.5, 1};
-}
-ZG_API void OnLoad(Window& window)
-{
-	window.setScene(std::make_shared<MainScene>(window));
-}
-ZG_API void OnHotswapLoad(Window& window, hscpp::AllocationResolver &allocationResolver)
-{
-	window.setScene(std::shared_ptr<MainScene>(allocationResolver.Allocate<MainScene>(window)));
-})");
-		mainSrcFile.writeBytes(0, mainSrcFileString.size(), mainSrcFileString.data());
+		std::string zgIncInstallPrefix(TO_STRING(ZG_INC_INSTALL_PREFIX));
+		InFileProcessor processor;
+		std::string stringProjectName(projectName);
+		auto libraryName = InFileProcessor::toKebabCase(stringProjectName);
+		processor.addVariableMapping("PROJECT_NAME", stringProjectName);
+		processor.addVariableMapping("LIBRARY_NAME", libraryName);
+		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.hpp", enums::EFileLocation::Absolute, "r"}, std::string(includePath) + "/main.hpp");
+		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.cpp", enums::EFileLocation::Absolute, "r"}, std::string(srcPath) + "/main.cpp");
+		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/CMakeLists.in.txt", enums::EFileLocation::Absolute, "r"}, std::string(project.directory) + "/CMakeLists.txt");
 	}
 	openProject(projectDirectory);
 };

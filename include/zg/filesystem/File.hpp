@@ -21,7 +21,7 @@ namespace zg::filesystem
 		bool writeBytes(size_t index, size_t sizeBytes, const void *pointer);
 		bool truncate(size_t newFileSize);
 		bool sync();
-		size_t size();
+		size_t size() const;
 		bool exists() const;
 		time_t lastModified() const;
 		bool remove();

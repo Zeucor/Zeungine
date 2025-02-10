@@ -1,5 +1,5 @@
-#include <editor/Hotswapper.hpp>
-#include <editor/EditorScene.hpp>
+#include <zg/editor/Hotswapper.hpp>
+#include <zg/editor/EditorScene.hpp>
 #include <zg/filesystem/Directory.hpp>
 #include <zg/filesystem/File.hpp>
 using namespace zg::editor::hs;

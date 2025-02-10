@@ -1,4 +1,4 @@
-#include <editor/EditorScene.hpp>
+#include <zg/editor/EditorScene.hpp>
 using namespace zg::editor;
 using namespace zg;
 int32_t main()
