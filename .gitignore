@@ -5,3 +5,5 @@ cmake-build*
 .DS_Store
 .cache
 lib/*/*/Debug
+releases
+_CPack_Packages
