@@ -19,7 +19,7 @@ Projection::Projection(Window &window, glm::vec2 orthoSize) : window(window),
 void Projection::update()
 {
   if (!isOrthographic)
-    matrix = glm::perspective(glm::radians(fov), (float)window.windowWidth / window.windowHeight, nearPlane, farPlane);
+    matrix = glm::infinitePerspective(glm::radians(fov), (float)window.windowWidth / window.windowHeight, farPlane);
   else
     matrix = glm::ortho(-orthoSize.x / 2, orthoSize.x / 2, -orthoSize.y / 2, orthoSize.y / 2, nearPlane, farPlane);
 }
