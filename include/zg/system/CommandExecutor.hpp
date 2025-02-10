@@ -16,22 +16,8 @@
 #endif
 namespace zg::system
 {
-	struct CommandProcessor
+	struct CommandExecutor
 	{
-		static void execute(const std::string& command)
-		{
-			std::array<char, 128> buffer;
-			FILE* pipe = POPEN(command.c_str(), "r");
-			if (!pipe)
-			{
-				std::cerr << "Failed to execute command." << std::endl;
-				return;
-			}
-			while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
-			{
-				std::cout << buffer.data();
-			}
-			PCLOSE(pipe);
-		}
+		static int32_t execute(const std::string& command);
 	};
 } // namespace zg::system

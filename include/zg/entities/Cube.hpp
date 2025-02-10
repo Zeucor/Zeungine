@@ -1,9 +1,5 @@
 #pragma once
 #include <zg/Entity.hpp>
-#include <zg/Scene.hpp>
-#include <zg/Window.hpp>
-#include <zg/glm.hpp>
-#include <array>
 namespace zg::entities
 {
 	struct Cube : Entity

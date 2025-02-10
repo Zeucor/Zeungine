@@ -1,6 +1,5 @@
 #pragma once
 #ifdef __linux__
-#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
 #include "../Window.hpp"
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
@@ -42,5 +41,4 @@ namespace zg
 		void mouseCapture(bool capture) override;
 	};
 }
-#endif
 #endif

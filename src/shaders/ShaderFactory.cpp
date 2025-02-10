@@ -1094,37 +1094,37 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	ShaderPair shaderPair;
 	auto& shaderString = shaderPair.first;
 	auto& shaderHooks = hooks[shaderType];
-#if defined(USE_GL) || defined(USE_VULKAN)
+// #if defined(USE_GL) || defined(USE_VULKAN)
 	shaderString += "#version 460 core\n";
   shaderString += "precision highp float;\n";
   shaderString += "precision highp samplerCube;\n";
-#elif defined(USE_EGL)
-  shaderString += "#version 310 es\n";
-  if (shaderType == ShaderType::Geometry)
-  {
-    const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-    if (strstr(extensions, "GL_EXT_geometry_shader") == NULL)
-    {
-      printf("GL_EXT_geometry_shader not supported!\n");
-    }
-    else
-    {
-      shaderString += "#extension GL_EXT_geometry_shader : require\n";
-      printf("GL_EXT_geometry_shader is supported.\n");
-    }
-    if (strstr(extensions, "GL_OES_geometry_shader") == NULL)
-    {
-      printf("GL_OES_geometry_shader not supported!\n");
-    }
-    else
-    {
-      shaderString += "#extension GL_OES_geometry_shader : require\n";
-      printf("GL_OES_geometry_shader is supported.\n");
-    }
-  }
-  shaderString += "precision mediump float;\n";
-  shaderString += "precision mediump samplerCube;\n";
-#endif
+// #elif defined(USE_EGL)
+//   shaderString += "#version 310 es\n";
+//   if (shaderType == ShaderType::Geometry)
+//   {
+//     const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+//     if (strstr(extensions, "GL_EXT_geometry_shader") == NULL)
+//     {
+//       printf("GL_EXT_geometry_shader not supported!\n");
+//     }
+//     else
+//     {
+//       shaderString += "#extension GL_EXT_geometry_shader : require\n";
+//       printf("GL_EXT_geometry_shader is supported.\n");
+//     }
+//     if (strstr(extensions, "GL_OES_geometry_shader") == NULL)
+//     {
+//       printf("GL_OES_geometry_shader not supported!\n");
+//     }
+//     else
+//     {
+//       shaderString += "#extension GL_OES_geometry_shader : require\n";
+//       printf("GL_OES_geometry_shader is supported.\n");
+//     }
+//   }
+//   shaderString += "precision mediump float;\n";
+//   shaderString += "precision mediump samplerCube;\n";
+// #endif
 	currentInLayoutIndex = 0;
 	currentOutLayoutIndex = 0;
 	appendHooks(shaderString, shaderHooks["preLayout"], constants, shader);
@@ -1137,9 +1137,9 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	appendHooks(shaderString, shaderHooks["postMain"], constants, shader);
 	if (!compileShader(shader, shaderType, shaderPair))
 	{
-#ifndef USE_VULKAN
+// #ifndef USE_VULKAN
 		throw std::runtime_error("Failed to compile fragment shader");
-#endif
+// #endif
 	}
 	return shaderPair;
 }

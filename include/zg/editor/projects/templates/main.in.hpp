@@ -9,4 +9,3 @@ struct MainScene : Scene
 	explicit MainScene(Window &window);
 };
 ZG_API void OnLoad(Window& window);
-ZG_API void OnHotswapLoad(Window& window, hscpp::AllocationResolver &allocationResolver);

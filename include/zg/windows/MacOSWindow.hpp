@@ -7,12 +7,12 @@ namespace zg
 	{
 		void *nsWindow = 0;
 		void *nsView;
-#ifdef USE_GL
-		void *glContext = 0;
-#elif defined(USE_VULKAN)
+// #ifdef USE_GL
+// 		void *glContext = 0;
+// #elif defined(USE_VULKAN)
 		void *nsImage = 0;
 		void *nsImageView = 0;
-#endif
+// #endif
 		bool closed = false;
 		void init(Window &window) override;
 		void renderInit();

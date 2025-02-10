@@ -1,5 +1,4 @@
 #ifdef __linux__
-#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
 #include <X11/XKBlib.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
@@ -280,5 +279,4 @@ void XCBWindow::mouseCapture(bool capture)
 		XUngrabPointer(display, CurrentTime);
 	}
 }
-#endif
 #endif

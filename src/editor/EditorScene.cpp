@@ -331,15 +331,18 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 		filesystem::Directory::ensureExists(includePath);
 		std::string srcPath = filesystem::File::toPlatformPath(std::string(project.directory) + "/src");
 		filesystem::Directory::ensureExists(srcPath);
+		std::string cmakePath = filesystem::File::toPlatformPath(std::string(project.directory) + "/cmake");
+		filesystem::Directory::ensureExists(cmakePath);
 		std::string zgIncInstallPrefix(TO_STRING(ZG_INC_INSTALL_PREFIX));
 		InFileProcessor processor;
 		std::string stringProjectName(projectName);
 		auto libraryName = InFileProcessor::toKebabCase(stringProjectName);
 		processor.addVariableMapping("PROJECT_NAME", stringProjectName);
 		processor.addVariableMapping("LIBRARY_NAME", libraryName);
-		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.hpp", enums::EFileLocation::Absolute, "r"}, std::string(includePath) + "/main.hpp");
-		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.cpp", enums::EFileLocation::Absolute, "r"}, std::string(srcPath) + "/main.cpp");
+		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.hpp", enums::EFileLocation::Absolute, "r"}, includePath + "/main.hpp");
+		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.cpp", enums::EFileLocation::Absolute, "r"}, srcPath + "/main.cpp");
 		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/CMakeLists.in.txt", enums::EFileLocation::Absolute, "r"}, std::string(project.directory) + "/CMakeLists.txt");
+		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/Zeungine.in.cmake", enums::EFileLocation::Absolute, "r"}, cmakePath + "/Zeungine.cmake");
 	}
 	openProject(projectDirectory);
 };

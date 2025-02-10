@@ -1,8 +1,8 @@
 #include <zg/Entity.hpp>
 #include <zg/shaders/ShaderManager.hpp>
-#ifdef USE_VULKAN
+// #ifdef USE_VULKAN
 #include <zg/renderers/VulkanRenderer.hpp>
-#endif
+// #endif
 using namespace zg;
 Entity::Entity(Window& _window, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
 							 const std::vector<uint32_t>& _indices, uint32_t elementCount, const std::vector<glm::vec3>& _positions,
@@ -23,7 +23,7 @@ void Entity::addShader()
 	if (shader)
 		return;
 	void* data = 0;
-#ifdef USE_VULKAN
+// #ifdef USE_VULKAN
 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(window.iRenderer);
 	if (vulkanRenderer.currentFramebufferImpl)
 	{
@@ -33,7 +33,7 @@ void Entity::addShader()
 	{
 		data = vulkanRenderer.renderPass;
 	}
-#endif
+// #endif
 	shader = shaders::ShaderManager::getShaderByConstants(window, constants, data).second.get();
 }
 bool Entity::preRender() { return true; };

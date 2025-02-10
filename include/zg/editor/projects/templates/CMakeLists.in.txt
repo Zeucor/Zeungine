@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.22.1)
-project(@PROJECT_NAME@ VERSION 0.1.0)
-
 set(CMAKE_CXX_STANDARD 20)
-
-file(GLOB SOURCES "src/*.cpp" "src/*.h" "src/*.c" "src/*.hpp")
-
+set(PROJECT_NAME @PROJECT_NAME@)
+set(LIBRARY_NAME @LIBRARY_NAME@)
+project(${PROJECT_NAME} VERSION 0.1.0)
+file(GLOB PROJECT_SOURCES "src/*.cpp" "src/*.h" "src/*.c" "src/*.hpp")
 include_directories(include)
-
-add_library(editor-game SHARED ${SOURCES})
+add_library(${LIBRARY_NAME} SHARED ${PROJECT_SOURCES})
+include(cmake/Zeungine.cmake)

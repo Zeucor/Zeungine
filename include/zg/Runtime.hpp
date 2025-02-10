@@ -4,11 +4,9 @@
 #else
 #define ZG_API extern "C" __attribute__((visibility("default")))
 #endif
-#include <hscpp/Hotswapper.h>
 namespace zg
 {
   struct Window;
 };
 using namespace zg;
 ZG_API void OnLoad(Window &window);
-ZG_API void OnHotswapLoad(Window &window, hscpp::AllocationResolver &allocationResolver);

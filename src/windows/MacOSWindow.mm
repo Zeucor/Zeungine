@@ -4,14 +4,14 @@
 #import <zg/entities/Plane.hpp>
 #import <iostream>
 #import <Cocoa/Cocoa.h>
-#ifdef USE_GL
-#import <OpenGL/gl3.h>
-#include <zg/renderers/GLRenderer.hpp>
-#elif defined(USE_EGL)
-#include <zg/renderers/EGLRenderer.hpp>
-#elif defined(USE_VULKAN)
+// #ifdef USE_GL
+// #import <OpenGL/gl3.h>
+// #include <zg/renderers/GLRenderer.hpp>
+// #elif defined(USE_EGL)
+// #include <zg/renderers/EGLRenderer.hpp>
+// #elif defined(USE_VULKAN)
 #include <zg/renderers/VulkanRenderer.hpp>
-#endif
+// #endif
 #import <QuartzCore/CAMetalLayer.h>
 #include <Metal/Metal.h>
 #include <ApplicationServices/ApplicationServices.h>
@@ -214,58 +214,58 @@ void GLRenderer::swapBuffers()
 	[(NSOpenGLContext*)macWindow.glContext flushBuffer];
 }
 #endif
-#if defined(USE_VULKAN) && defined(USE_SWIFTSHADER)
-void VulkanRenderer::swapBuffers()
-{
-	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))
-	{
-		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
-	}
-	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
-	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(macWindow.renderWindowPointer->iRenderer);
-	vulkanRenderer.getCurrentImageToBitmap();
-	@autoreleasepool
-	{
-		unsigned char* bitmapData = (unsigned char*)vulkanRenderer.bitmap;
-		for (int i = 0; i < macWindow.renderWindowPointer->windowWidth * macWindow.renderWindowPointer->windowHeight; ++i)
-		{
-			unsigned char temp = bitmapData[i * 4 + 0];
-			bitmapData[i * 4 + 0] = bitmapData[i * 4 + 2];
-			bitmapData[i * 4 + 2] = temp;
-		}
-		NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:&bitmapData
-																					pixelsWide:macWindow.renderWindowPointer->windowWidth
-																					pixelsHigh:macWindow.renderWindowPointer->windowHeight
-																				bitsPerSample:8
-																				samplesPerPixel:4
-																					hasAlpha:YES
-																					isPlanar:NO
-																				colorSpaceName:NSDeviceRGBColorSpace
-																					bitmapFormat:0
-																					bytesPerRow:macWindow.renderWindowPointer->windowWidth * 4
-																					bitsPerPixel:32];
-		if (bitmapRep == nil)
-		{
-			NSLog(@"Failed to create NSBitmapImageRep");
-			return;
-		}
-		NSImage *image = (NSImage *)macWindow.nsImage;
-		NSArray *reps = [image representations];
-		if ([reps count] > 0)
-		{
-			for (NSImageRep *rep in reps)
-			{
-				[image removeRepresentation:rep];
-			}
-		}
-		[image addRepresentation:bitmapRep];
-		[(NSImageView *)macWindow.nsImageView setImage:nil];
-		[(NSImageView *)macWindow.nsImageView setImage:image]; 
-		[(NSView *)macWindow.nsView displayIfNeeded];
-		[(NSView *)macWindow.nsView setNeedsDisplay:YES];
-	}
-}
-#endif
+// #if defined(USE_VULKAN) && defined(USE_SWIFTSHADER)
+// void VulkanRenderer::swapBuffers()
+// {
+// 	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))
+// 	{
+// 		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
+// 	}
+// 	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
+// 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(macWindow.renderWindowPointer->iRenderer);
+// 	vulkanRenderer.getCurrentImageToBitmap();
+// 	@autoreleasepool
+// 	{
+// 		unsigned char* bitmapData = (unsigned char*)vulkanRenderer.bitmap;
+// 		for (int i = 0; i < macWindow.renderWindowPointer->windowWidth * macWindow.renderWindowPointer->windowHeight; ++i)
+// 		{
+// 			unsigned char temp = bitmapData[i * 4 + 0];
+// 			bitmapData[i * 4 + 0] = bitmapData[i * 4 + 2];
+// 			bitmapData[i * 4 + 2] = temp;
+// 		}
+// 		NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:&bitmapData
+// 																					pixelsWide:macWindow.renderWindowPointer->windowWidth
+// 																					pixelsHigh:macWindow.renderWindowPointer->windowHeight
+// 																				bitsPerSample:8
+// 																				samplesPerPixel:4
+// 																					hasAlpha:YES
+// 																					isPlanar:NO
+// 																				colorSpaceName:NSDeviceRGBColorSpace
+// 																					bitmapFormat:0
+// 																					bytesPerRow:macWindow.renderWindowPointer->windowWidth * 4
+// 																					bitsPerPixel:32];
+// 		if (bitmapRep == nil)
+// 		{
+// 			NSLog(@"Failed to create NSBitmapImageRep");
+// 			return;
+// 		}
+// 		NSImage *image = (NSImage *)macWindow.nsImage;
+// 		NSArray *reps = [image representations];
+// 		if ([reps count] > 0)
+// 		{
+// 			for (NSImageRep *rep in reps)
+// 			{
+// 				[image removeRepresentation:rep];
+// 			}
+// 		}
+// 		[image addRepresentation:bitmapRep];
+// 		[(NSImageView *)macWindow.nsImageView setImage:nil];
+// 		[(NSImageView *)macWindow.nsImageView setImage:image]; 
+// 		[(NSView *)macWindow.nsView displayIfNeeded];
+// 		[(NSView *)macWindow.nsView setNeedsDisplay:YES];
+// 	}
+// }
+// #endif
 void MacOSWindow::destroy()
 {
 #ifdef USE_GL

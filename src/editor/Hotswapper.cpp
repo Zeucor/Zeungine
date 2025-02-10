@@ -2,11 +2,15 @@
 #include <zg/editor/EditorScene.hpp>
 #include <zg/filesystem/Directory.hpp>
 #include <zg/filesystem/File.hpp>
+#include <zg/system/CommandExecutor.hpp>
+#include <zg/system/WorkingDirectory.hpp>
+#include <zg/filesystem/DirectoryWatcher.hpp>
+#include <zg/SharedLibrary.hpp>
 using namespace zg::editor::hs;
-Hotswapper::Hotswapper(std::string_view directory, EditorScene &editorScene) : running(true),
+using namespace zg::system;
+Hotswapper::Hotswapper(const std::filesystem::path& directory, EditorScene &editorScene) : running(true),
 																			   directory(directory),
 																			   editorScene(editorScene),
-																			   swapper(std::make_shared<hscpp::Hotswapper>()),
 																			   updateThread(std::make_shared<std::thread>(&Hotswapper::update, this))
 {
 }
@@ -17,70 +21,30 @@ Hotswapper::~Hotswapper()
 }
 void Hotswapper::update()
 {
-	editorScene.status->setText("Initializing Compiler...");
+	filesystem::DirectoryWatcher directoryWatcher(directory, {
+		directory / "build",
+		directory / "cmake"
+	});
+	editorScene.status->setText("Configuring...");
 	editorScene.status->setTextColor({1, 1, 0, 1});
 	idle = false;
-	auto &swapperRef = *swapper;
-	auto srcDirectory = directory + "/src";
-	filesystem::Directory srcDirectoryActual(srcDirectory);
-	auto files = srcDirectoryActual.getRecursiveFileMap();
-	for (auto &file : files)
-	{
-		swapperRef.AddForceCompiledSourceFile(file.second);
-	}
-	swapperRef.AddSourceDirectory(srcDirectory);
-	swapperRef.AddIncludeDirectory(directory + "/include");
-	auto programDirectoryPath = filesystem::File::getProgramDirectoryPath();
-	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../include");
-	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/glm");
-	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/stb");
-	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/bvh/src");
-	swapperRef.AddIncludeDirectory(programDirectoryPath + "/../vendor/freetype/include");
-#ifdef _WIN32
-	swapperRef.LocateAndAddLibrary(programDirectoryPath, "zeungine.lib");
-#else
-	swapperRef.LocateAndAddLibrary(programDirectoryPath, "libzeungine.so");
-#endif
-#ifdef _WIN32
-	swapperRef.LinkLibrary("opengl32.lib");
-	swapperRef.LinkLibrary("gdi32.lib");
-	swapperRef.LinkLibrary("user32.lib");
-#endif
-	swapperRef.AddCompileOption("-DHSCPP_CXX_STANDARD=" + std::to_string(HSCPP_CXX_STANDARD));
-#ifdef USE_GL
-	swapperRef.AddCompileOption("-DUSE_GL");
-#endif
-#ifdef _WIN32
-	swapperRef.AddCompileOption("-DHSCPP_PLATFORM_WIN32");
-#else
-	swapperRef.AddCompileOption("-DHSCPP_PLATFORM_UNIX");
-	swapperRef.AddCompileOption("-fPIC");
-#endif
-#ifdef USE_VULKAN
-	swapperRef.AddCompileOption("-DUSE_VULKAN");
-#endif
-#ifdef USE_GL
-	swapperRef.AddCompileOption("-DUSE_GL");
-#endif
-#ifdef USE_EGL
-	swapperRef.AddCompileOption("-DUSE_EGL");
-#endif
-	swapperRef.SetBuildDirectory(directory + "/build");
-	while (!swapperRef.IsCompilerInitialized())
-	{
-		swapperRef.Update();
-	}
-	editorScene.status->setText("Compiling...");
-	editorScene.status->setTextColor({1, 1, 0, 1});
-	compiling = true;
-	compiled = false;
-	swapperRef.TriggerManualBuild(false);
+	bool requireConfigure = true,
+		requireBuild = false,
+		requireLoad = false;
+	std::unique_ptr<SharedLibrary> libraryPointer;
 	while (running)
 	{
-		auto updateResult = swapperRef.Update(false);
-		switch (updateResult)
+		if (requireConfigure)
 		{
-		case hscpp::Hotswapper::UpdateResult::BeforeCompile:
+			requireBuild = configure();
+			requireConfigure = false;
+		}
+		if (requireBuild)
+		{
+			requireLoad = build();
+			requireBuild = false;
+		}
+		if (requireLoad)
 		{
 			if (editorScene.loaded)
 			{
@@ -89,53 +53,77 @@ void Hotswapper::update()
 					editorScene.gameWindowPointer->scene.reset();
 				}
 				editorScene.loaded = false;
-				editorScene.OnHotswapLoad = std::function<void(Window &, hscpp::AllocationResolver &)>();
-				swapperRef.UnLoadModule();
+				editorScene.OnLoad = 0;
+				libraryPointer.reset();
 			}
-			compiled = false;
-			idle = false;
-			break;
-		}
-		case hscpp::Hotswapper::UpdateResult::Compiling:
-		{
-			editorScene.status->setText("Compiling...");
-			editorScene.status->setTextColor({1, 1, 0, 1});
-			compiling = true;
-			break;
-		}
-		case hscpp::Hotswapper::UpdateResult::Compiled:
-		{
-			editorScene.status->setText("Compiled.");
-			editorScene.status->setTextColor({0, 1, 0, 1});
-			editorScene.OnHotswapLoad = swapperRef.GetFunction<void(Window &, hscpp::AllocationResolver &)>("OnHotswapLoad");
-			if (editorScene.OnHotswapLoad)
+			libraryPointer = std::make_unique<SharedLibrary>(directory / "build" / "libeditor-game.so");
+			auto& libraryRef = *libraryPointer;
+			try
 			{
-				auto &allocationResolver = *swapper->GetAllocationResolver();
-				editorScene.OnHotswapLoad(*editorScene.gameWindowPointer, allocationResolver);
+				editorScene.OnLoad = libraryRef.getProc<void(*)(Window &)>("OnLoad");
+			}
+			catch(const std::exception& e)
+			{
+				std::cout << e.what() << '\n';
+			}
+			if (editorScene.OnLoad)
+			{
+				editorScene.OnLoad(*editorScene.gameWindowPointer);
 				editorScene.loaded = true;
 				if (editorScene.gameWindowPointer->minimized)
 				{
 					editorScene.gameWindowPointer->restore();
 				}
 			}
-			compiledTime = std::chrono::system_clock::now();
-			compiling = false;
-			compiled = true;
-			break;
+			requireLoad = false;
 		}
+		auto changes = directoryWatcher.update();
+		if (!changes.empty())
+		{
+			for (auto& changePair : changes)
+			{
+				if (strcmp(changePair.second.c_str(), "CMakeLists.txt") == 0)
+					requireConfigure = true;
+			}
+			if (!requireConfigure)
+				requireBuild = true;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		if (compiled && !idle)
-		{
-			auto now = std::chrono::system_clock::now();
-			std::chrono::duration<float> duration = now - compiledTime;
-			auto durationSeconds = duration.count();
-			if (durationSeconds > 3)
-			{
-				editorScene.status->setText("Idle");
-				editorScene.status->setTextColor({1, 1, 1, 1});
-				idle = true;
-			}
-		}
 	}
 }
+bool Hotswapper::configure()
+{
+	auto currentWorkingDirectory = GET_WORKING_DIR();
+	SET_WORKING_DIR(directory.c_str());
+	auto exitStatus = CommandExecutor::execute("cmake -B build .");
+	SET_WORKING_DIR(currentWorkingDirectory.c_str());
+	return !exitStatus;
+};
+bool Hotswapper::build()
+{
+	editorScene.status->setText("Building...");
+	editorScene.status->setTextColor({1, 1, 0, 1});
+	compiling = true;
+	compiled = false;
+	auto currentWorkingDirectory = GET_WORKING_DIR();
+	SET_WORKING_DIR(directory.c_str());
+	auto exitStatus = CommandExecutor::execute("cmake --build build");
+	SET_WORKING_DIR(currentWorkingDirectory.c_str());
+	std::cout << "Compile finished with status: " << exitStatus << std::endl;
+	if (exitStatus)
+	{
+		compiling = false;
+		errored = true;
+		editorScene.status->setText("Build Error");
+		editorScene.status->setTextColor({1, 0, 0, 1});
+	}
+	else
+	{
+		compiling = false;
+		compiled = true;
+		editorScene.status->setText("Idle");
+		editorScene.status->setTextColor({1, 1, 1, 1});
+		idle = true;
+	}
+	return !exitStatus;
+};

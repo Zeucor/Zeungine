@@ -1,9 +1,9 @@
 #include <stdexcept>
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/vaos/VAOFactory.hpp>
-#ifdef USE_VULKAN
+// #ifdef USE_VULKAN
 #include <zg/renderers/VulkanRenderer.hpp>
-#endif
+// #endif
 using namespace zg::vaos;
 VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {{"Indice", {3, sizeof(uint32_t), ZG_UNSIGNED_INT}},
 														 {"Color", {4, sizeof(float), ZG_FLOAT4}},

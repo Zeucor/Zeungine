@@ -82,18 +82,15 @@ endif()
 
 if(USE_SWIFTSHADER)
     message(STATUS "Compiling with SwiftShader Vulkan backend")
-    add_definitions(-DUSE_VULKAN)
-    add_definitions(-DUSE_SWIFTSHADER)
     set(SWIFTSHADER_INCLUDE_DIR "include/SwiftShader")
 elseif(BUILD_VULKAN)
-    add_definitions(-DUSE_VULKAN)
     message(STATUS "Compiling with Vulkan backend")
-elseif(BUILD_GL)
-    message(STATUS "Compiling with OpenGL backend")
-    add_definitions(-DUSE_GL)
-elseif(BUILD_EGL)
-    message(STATUS "Compiling with EGL backend")
-    add_definitions(-DUSE_EGL)
+# elseif(BUILD_GL)
+#     message(STATUS "Compiling with OpenGL backend")
+#     add_definitions(-DUSE_GL)
+# elseif(BUILD_EGL)
+#     message(STATUS "Compiling with EGL backend")
+#     add_definitions(-DUSE_EGL)
 endif()
 
 # Dependencies
@@ -118,11 +115,11 @@ include_directories(vendor/glm)
 include_directories(vendor/stb)
 
 # hscpp
-set(HSCPP_BUILD_EXAMPLES OFF)
-set(HSCPP_BUILD_TESTS OFF)
-set(HSCPP_BUILD_EXTENSION_MEM OFF)
-add_subdirectory(vendor/hscpp)
-include_directories(vendor/hscpp/include)
+# set(HSCPP_BUILD_EXAMPLES OFF)
+# set(HSCPP_BUILD_TESTS OFF)
+# set(HSCPP_BUILD_EXTENSION_MEM OFF)
+# add_subdirectory(vendor/hscpp)
+# include_directories(vendor/hscpp/include)
 
 # filewatch
 set(BuildTests OFF)
@@ -180,10 +177,12 @@ set(ZG_SOURCES
     src/images/ImageLoader.cpp
     src/filesystem/File.cpp
     src/filesystem/Directory.cpp
+    src/filesystem/DirectoryWatcher.cpp
     src/editor/Hotswapper.cpp
     src/strings/HookedConsole.cpp
     src/strings/InFileProcessor.cpp
     src/interfaces/IPlatformWindow.cpp
+    src/system/CommandExecutor.cpp
     src/Window.cpp
     src/Entity.cpp
     src/Scene.cpp
@@ -274,7 +273,7 @@ if(BUILD_GL)
 endif()
 target_link_libraries(zeungine freetype)
 target_link_libraries(zeungine bvh)
-target_link_libraries(zeungine hscpp)
+# target_link_libraries(zeungine hscpp)
 if(LINUX)
     if(USE_X11)
         target_link_libraries(zeungine X11 Xrandr Xext Xfixes xkbcommon Xrender)
@@ -390,36 +389,36 @@ if(ZG_INSTALL)
     install(DIRECTORY include/zg DESTINATION ${ZG_INC_INSTALL_PREFIX}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
         DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    install(FILES
-        vendor/hscpp/include/hscpp/Callbacks.h
-        vendor/hscpp/include/hscpp/Config.h
-        vendor/hscpp/include/hscpp/Feature.h
-        vendor/hscpp/include/hscpp/FeatureManager.h
-        vendor/hscpp/include/hscpp/Filesystem.h
-        vendor/hscpp/include/hscpp/FsPathHasher.h
-        vendor/hscpp/include/hscpp/Hotswapper.h
-        vendor/hscpp/include/hscpp/Log.h
-        vendor/hscpp/include/hscpp/ModuleManager.h
-        vendor/hscpp/include/hscpp/Platform.h
-        vendor/hscpp/include/hscpp/ProtectedFunction.h
-        vendor/hscpp/include/hscpp/Util.h
-        DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-    install(DIRECTORY vendor/hscpp/include/hscpp/cmd-shell DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    install(DIRECTORY vendor/hscpp/include/hscpp/compiler DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    install(DIRECTORY vendor/hscpp/include/hscpp/file-watcher DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    install(DIRECTORY vendor/hscpp/include/hscpp/module DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    install(DIRECTORY vendor/hscpp/include/hscpp/preprocessor DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    # install(FILES
+    #     vendor/hscpp/include/hscpp/Callbacks.h
+    #     vendor/hscpp/include/hscpp/Config.h
+    #     vendor/hscpp/include/hscpp/Feature.h
+    #     vendor/hscpp/include/hscpp/FeatureManager.h
+    #     vendor/hscpp/include/hscpp/Filesystem.h
+    #     vendor/hscpp/include/hscpp/FsPathHasher.h
+    #     vendor/hscpp/include/hscpp/Hotswapper.h
+    #     vendor/hscpp/include/hscpp/Log.h
+    #     vendor/hscpp/include/hscpp/ModuleManager.h
+    #     vendor/hscpp/include/hscpp/Platform.h
+    #     vendor/hscpp/include/hscpp/ProtectedFunction.h
+    #     vendor/hscpp/include/hscpp/Util.h
+    #     DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+    #     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+    # install(DIRECTORY vendor/hscpp/include/hscpp/cmd-shell DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    # install(DIRECTORY vendor/hscpp/include/hscpp/compiler DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    # install(DIRECTORY vendor/hscpp/include/hscpp/file-watcher DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    # install(DIRECTORY vendor/hscpp/include/hscpp/module DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    # install(DIRECTORY vendor/hscpp/include/hscpp/preprocessor DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
+    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
     install(DIRECTORY vendor/glm/glm DESTINATION ${ZG_INC_INSTALL_PREFIX}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
         DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)

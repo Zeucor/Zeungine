@@ -77,8 +77,7 @@ namespace zg::editor
 		std::shared_ptr<entities::Dialog> activeDialog;
 		std::shared_ptr<hs::Hotswapper> hotswapper;
 		Project project;
-		std::function<void(Window&)> OnLoad;
-		std::function<void(Window&, hscpp::AllocationResolver&)> OnHotswapLoad;
+		void(*OnLoad)(Window&) = 0;
 		bool loaded = false;
 		explicit EditorScene(Window& window);
 		~EditorScene() override;

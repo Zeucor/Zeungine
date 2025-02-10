@@ -35,35 +35,27 @@ namespace zg
 	inline static uint8_t SELECTED_WINDOW_TYPE = ([]
 												  {
 		uint8_t selected = 0;
-#ifdef USE_WIN32
+#ifdef _WIN32
 		selected = WINDOW_TYPE_WIN32;
 #endif
-#ifdef USE_MACOS
+#ifdef __APPLE__
 		selected = WINDOW_TYPE_MACOS;
 #endif
-#ifdef USE_IOS
+#if defined(IOS)
 		selected = WINDOW_TYPE_IOS;
 #endif
-#ifdef USE_ANDROID
+#ifdef ANDROID
 		selected = WINDOW_TYPE_ANDROID;
 #endif
 #ifdef __linux__
 		auto xdgSessionType = getenv("XDG_SESSION_TYPE");
 		if (strcmp(xdgSessionType, "x11") == 0)
 		{
-#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
 			selected = WINDOW_TYPE_XCB;
-#elif defined(USE_X11)
-			selected = WINDOW_TYPE_X11;
-#endif
 		}
 		else if (strcmp(xdgSessionType, "wayland") == 0)
 		{
-#ifdef USE_WAYLAND
 			selected = WINDOW_TYPE_WAYLAND;
-#else
-			throw std::runtime_error("XDG_SESSION_TYPE is 'wayland', yet Zeungine not built with Wayland support!")
-#endif
 		}
 #endif
 		return selected; })();

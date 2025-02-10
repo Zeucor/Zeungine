@@ -12,11 +12,11 @@ namespace zg
 	namespace shaders
 	{
 		struct Shader;
-#if defined(USE_GL) || defined(USE_EGL)
-		using PShaderType = uint32_t;
-#elif defined(USE_VULKAN)
+// #if defined(USE_GL) || defined(USE_EGL)
+// 		using PShaderType = uint32_t;
+// #elif defined(USE_VULKAN)
 		typedef void *PShaderType;
-#endif
+// #endif
 		using ShaderPair = std::pair<std::string, PShaderType>;
 		using ShaderMap = std::map<ShaderType, ShaderPair>;
 		inline static std::unordered_map<ShaderType, std::string> stageShaderNames =

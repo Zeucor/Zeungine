@@ -1,5 +1,5 @@
 #pragma once
-#ifdef USE_VULKAN
+// #ifdef USE_VULKAN
 #include <tuple>
 #include "../common.hpp"
 #include "../enums/ELayoutBindingType.hpp"
@@ -105,14 +105,18 @@ namespace zg
 	static inline std::unordered_map<size_t, VkRenderPass> renderPassMap = {};
 	constexpr int MAX_FRAMES_IN_FLIGHT = 1;
 	#define GET_PROC_ADDR_MEMBER(NAME) PFN_vkVoidFunction(*NAME)(VkInstance instance, const char *pName)
-	#define GET_PROC_ADDR PFN_vkVoidFunction(*)(VkInstance instance, const char *pName)
-	#define VK_GLOBAL(N, PFN, NAME) static auto N = (PFN)VulkanRenderer::getProcAddr(0, NAME)
+	#define VK_GLOBAL(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(0, NAME)
 	#define VK_INSTANCE(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(instance, NAME)
+	using GetProcAddrFunc = PFN_vkVoidFunction(*)(VkInstance, const char *);
 	struct VulkanRenderer : IRenderer
 	{
+		static bool fallbackToSwiftshader;
+		static bool attempedCoreVulkan;
 		static SharedLibrary vulkanLibrarySS;
 		static SharedLibrary vulkanLibraryCore;
-		static GET_PROC_ADDR_MEMBER(getProcAddr);
+		GET_PROC_ADDR_MEMBER(getProcAddr);
+		PFN_vkCreateInstance _vkCreateInstance;
+		PFN_vkGetInstanceProcAddr _vkGetInstanceProcAddr;
 		PFN_vkEnumerateInstanceLayerProperties _vkEnumerateInstanceLayerProperties;
 		PFN_vkCreateDebugUtilsMessengerEXT _vkCreateDebugUtilsMessengerEXT;
 #ifdef __linux__
@@ -225,8 +229,10 @@ namespace zg
 		uint32_t swapBufferCount = 0;
 		VulkanRenderer();
 		~VulkanRenderer() override;
+		static GetProcAddrFunc doGetProcAddr();
 		void createContext(IPlatformWindow* platformWindowPointer) override;
 		void createInstance();
+		void setupGlobalPFNs();
 		void setupPFNs();
 #ifndef NDEBUG
 		void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -327,4 +333,4 @@ namespace zg
 	};
 	bool VKcheck(const char* fn, VkResult result);
 } // namespace zg
-#endif
+// #endif

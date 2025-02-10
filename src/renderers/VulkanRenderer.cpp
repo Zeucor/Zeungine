@@ -1,4 +1,4 @@
-#ifdef USE_VULKAN
+// #ifdef USE_VULKAN
 #include <zg/Logger.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
@@ -10,21 +10,16 @@
 #include <zg/windows/WIN32Window.hpp>
 #endif
 #ifdef __linux__
-#if defined(USE_X11)
-#include <zg/windows/X11Window.hpp>
-#endif
-#if defined(USE_XCB) || defined(USE_SWIFTSHADER)
-#include <zg/windows/XCBWindow.hpp>
-#endif
-#if defined(USE_WAYLAND)
 #include <zg/windows/WaylandWindow.hpp>
-#endif
+#include <zg/windows/XCBWindow.hpp>
 #endif
 #ifdef MACOS
 #include <zg/windows/MacOSWindow.hpp>
 #endif
 #include <zg/crypto/vector.hpp>
 using namespace zg;
+bool VulkanRenderer::fallbackToSwiftshader = false;
+bool VulkanRenderer::attempedCoreVulkan = false;
 #ifdef MACOS
 static std::string libPrefix("lib");
 static std::string libSuffix(".dylib");
@@ -36,26 +31,14 @@ static std::string libPrefix("lib");
 static std::string libSuffix(".dll");
 #endif
 static std::string vulkanLibrarySSName(libPrefix + "vk_swiftshader" + libSuffix);
-SharedLibrary zg::VulkanRenderer::vulkanLibrarySS(vulkanLibrarySSName, "../build/" + vulkanLibrarySSName, "build/" + vulkanLibrarySSName);
+SharedLibrary zg::VulkanRenderer::vulkanLibrarySS(vulkanLibrarySSName, "../build/" + vulkanLibrarySSName,
+																									"build/" + vulkanLibrarySSName);
 #ifdef MACOS
 SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan.1" + libSuffix);
 #elif defined(__linux__)
 static std::string vulkanCorePath(libPrefix + "vulkan" + libSuffix + ".1");
 SharedLibrary zg::VulkanRenderer::vulkanLibraryCore("/usr/lib/x86_64-linux-gnu/" + vulkanCorePath, vulkanCorePath);
-#elif defined(__linux__)
-SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan" + libSuffix);
 #endif
-PFN_vkVoidFunction (*zg::VulkanRenderer::getProcAddr)(VkInstance, const char *) = ([]
-{
-	try {
-		return VulkanRenderer::vulkanLibrarySS.getProc<GET_PROC_ADDR>("vk_icdGetInstanceProcAddr");
-	} catch (...) {
-		return VulkanRenderer::vulkanLibraryCore.getProc<GET_PROC_ADDR>("vkGetInstanceProcAddr");
-	}
-})();
-VK_GLOBAL(_vkCreateInstance, PFN_vkCreateInstance, "vkCreateInstance");
-VK_GLOBAL(_vkGetInstanceProcAddr, PFN_vkGetInstanceProcAddr, "vkGetInstanceProcAddr");
-VK_GLOBAL(_vkEnumerateInstanceLayerProperties, PFN_vkEnumerateInstanceLayerProperties, "vkEnumerateInstanceLayerProperties");
 static std::unordered_map<shaders::ShaderType, shaderc_shader_kind> stageEShaderc = {
 	{shaders::ShaderType::Vertex, shaderc_vertex_shader},
 	{shaders::ShaderType::Fragment, shaderc_fragment_shader},
@@ -98,6 +81,26 @@ static std::unordered_map<textures::Texture::Format, VkImageAspectFlags> texture
 // };
 VulkanRenderer::VulkanRenderer() {}
 VulkanRenderer::~VulkanRenderer() {}
+GetProcAddrFunc VulkanRenderer::doGetProcAddr()
+{
+	if (fallbackToSwiftshader)
+	{
+		try {
+			return vulkanLibrarySS.getProc<GetProcAddrFunc>("vk_icdGetInstanceProcAddr");
+		} catch (...) {
+
+		}
+	}
+	if (!attempedCoreVulkan)
+	{
+		attempedCoreVulkan = true;
+		try {
+			return vulkanLibraryCore.getProc<GetProcAddrFunc>("vkGetInstanceProcAddr");
+		} catch (...) {
+		}
+	}
+	return (GetProcAddrFunc)0;
+};
 void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
 	this->renderer = RENDERER_VULKAN;
@@ -121,17 +124,30 @@ void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 }
 void VulkanRenderer::createInstance()
 {
+	if (!attempedCoreVulkan)
+	{
+		getProcAddr = doGetProcAddr();
+		setupGlobalPFNs();
+	}
+	else if (!fallbackToSwiftshader)
+	{
+		getProcAddr = doGetProcAddr();
+		setupGlobalPFNs();
+	}
+	else
+	{
+		throw std::runtime_error("No Vulkan or SwiftShader support found!");
+	}
 	VkApplicationInfo appInfo{};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pApplicationName = platformWindowPointer->renderWindowPointer->title;
 	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	appInfo.pEngineName = "Zeungine";
 	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-#ifdef USE_SWIFTSHADER
-	appInfo.apiVersion = VK_API_VERSION_1_0;
-#else
-	appInfo.apiVersion = VK_API_VERSION_1_2;
-#endif
+	if (fallbackToSwiftshader)
+		appInfo.apiVersion = VK_API_VERSION_1_0;
+	else
+		appInfo.apiVersion = VK_API_VERSION_1_2;
 	VkInstanceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
@@ -177,13 +193,13 @@ void VulkanRenderer::createInstance()
 			break;
 		}
 	}
-#if defined(__APPLE__) && !defined(USE_SWIFTSHADER)
+#if defined(__APPLE__) // && !defined(USE_SWIFTSHADER)
 	extensions.push_back("VK_KHR_portability_enumeration");
 	createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
-#ifdef USE_SWIFTSHADER
+	// #ifdef USE_SWIFTSHADER
 	extensions.push_back("VK_EXT_headless_surface");
-#endif
+// #endif
 #ifndef NDEBUG
 	extensions.push_back("VK_EXT_debug_utils");
 #endif
@@ -192,7 +208,7 @@ void VulkanRenderer::createInstance()
 	//
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	std::vector<const char*> layers;
-#if !defined(NDEBUG) && !defined(USE_SWIFTSHADER)
+#if !defined(NDEBUG)
 	if (checkValidationLayersSupport())
 	{
 		layers.push_back("VK_LAYER_KHRONOS_validation");
@@ -210,8 +226,15 @@ void VulkanRenderer::createInstance()
 	auto createdInstance = VKcheck("vkCreateInstance", _vkCreateInstance(&createInfo, 0, &instance));
 	if (!createdInstance)
 	{
-		throw std::runtime_error("VulkanRenderer-createInstance: failed to create instance!");
+		createInstance();
 	}
+}
+void VulkanRenderer::setupGlobalPFNs()
+{
+	VK_GLOBAL(_vkCreateInstance, PFN_vkCreateInstance, "vkCreateInstance");
+	VK_GLOBAL(_vkGetInstanceProcAddr, PFN_vkGetInstanceProcAddr, "vkGetInstanceProcAddr");
+	VK_GLOBAL(_vkEnumerateInstanceLayerProperties, PFN_vkEnumerateInstanceLayerProperties,
+						"vkEnumerateInstanceLayerProperties");
 }
 void VulkanRenderer::setupPFNs()
 {
@@ -228,17 +251,23 @@ void VulkanRenderer::setupPFNs()
 	VK_INSTANCE(_vkEnumeratePhysicalDevices, PFN_vkEnumeratePhysicalDevices, "vkEnumeratePhysicalDevices");
 	VK_INSTANCE(_vkGetPhysicalDeviceProperties, PFN_vkGetPhysicalDeviceProperties, "vkGetPhysicalDeviceProperties");
 	VK_INSTANCE(_vkGetPhysicalDeviceFeatures, PFN_vkGetPhysicalDeviceFeatures, "vkGetPhysicalDeviceFeatures");
-	VK_INSTANCE(_vkGetPhysicalDeviceQueueFamilyProperties, PFN_vkGetPhysicalDeviceQueueFamilyProperties, "vkGetPhysicalDeviceQueueFamilyProperties");
-	VK_INSTANCE(_vkGetPhysicalDeviceSurfaceSupportKHR, PFN_vkGetPhysicalDeviceSurfaceSupportKHR, "vkGetPhysicalDeviceSurfaceSupportKHR");
-	VK_INSTANCE(_vkEnumerateDeviceExtensionProperties, PFN_vkEnumerateDeviceExtensionProperties, "vkEnumerateDeviceExtensionProperties");
+	VK_INSTANCE(_vkGetPhysicalDeviceQueueFamilyProperties, PFN_vkGetPhysicalDeviceQueueFamilyProperties,
+							"vkGetPhysicalDeviceQueueFamilyProperties");
+	VK_INSTANCE(_vkGetPhysicalDeviceSurfaceSupportKHR, PFN_vkGetPhysicalDeviceSurfaceSupportKHR,
+							"vkGetPhysicalDeviceSurfaceSupportKHR");
+	VK_INSTANCE(_vkEnumerateDeviceExtensionProperties, PFN_vkEnumerateDeviceExtensionProperties,
+							"vkEnumerateDeviceExtensionProperties");
 	VK_INSTANCE(_vkGetPhysicalDeviceFeatures2, PFN_vkGetPhysicalDeviceFeatures2, "vkGetPhysicalDeviceFeatures2");
 	VK_INSTANCE(_vkCreateDevice, PFN_vkCreateDevice, "vkCreateDevice");
 	VK_INSTANCE(_vkGetDeviceQueue, PFN_vkGetDeviceQueue, "vkGetDeviceQueue");
-	VK_INSTANCE(_vkGetPhysicalDeviceSurfaceCapabilitiesKHR, PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
+	VK_INSTANCE(_vkGetPhysicalDeviceSurfaceCapabilitiesKHR, PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR,
+							"vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
 	VK_INSTANCE(_vkCreateSwapchainKHR, PFN_vkCreateSwapchainKHR, "vkCreateSwapchainKHR");
 	VK_INSTANCE(_vkGetSwapchainImagesKHR, PFN_vkGetSwapchainImagesKHR, "vkGetSwapchainImagesKHR");
-	VK_INSTANCE(_vkGetPhysicalDeviceSurfaceFormatsKHR, PFN_vkGetPhysicalDeviceSurfaceFormatsKHR, "vkGetPhysicalDeviceSurfaceFormatsKHR");
-	VK_INSTANCE(_vkGetPhysicalDeviceSurfacePresentModesKHR, PFN_vkGetPhysicalDeviceSurfacePresentModesKHR, "vkGetPhysicalDeviceSurfacePresentModesKHR");
+	VK_INSTANCE(_vkGetPhysicalDeviceSurfaceFormatsKHR, PFN_vkGetPhysicalDeviceSurfaceFormatsKHR,
+							"vkGetPhysicalDeviceSurfaceFormatsKHR");
+	VK_INSTANCE(_vkGetPhysicalDeviceSurfacePresentModesKHR, PFN_vkGetPhysicalDeviceSurfacePresentModesKHR,
+							"vkGetPhysicalDeviceSurfacePresentModesKHR");
 	VK_INSTANCE(_vkCreateImageView, PFN_vkCreateImageView, "vkCreateImageView");
 	VK_INSTANCE(_vkCreateRenderPass, PFN_vkCreateRenderPass, "vkCreateRenderPass");
 	VK_INSTANCE(_vkCreateFramebuffer, PFN_vkCreateFramebuffer, "vkCreateFramebuffer");
@@ -275,7 +304,8 @@ void VulkanRenderer::setupPFNs()
 	VK_INSTANCE(_vkCreateImage, PFN_vkCreateImage, "vkCreateImage");
 	VK_INSTANCE(_vkGetImageMemoryRequirements, PFN_vkGetImageMemoryRequirements, "vkGetImageMemoryRequirements");
 	VK_INSTANCE(_vkBindImageMemory, PFN_vkBindImageMemory, "vkBindImageMemory");
-	VK_INSTANCE(_vkGetPhysicalDeviceFormatProperties, PFN_vkGetPhysicalDeviceFormatProperties, "vkGetPhysicalDeviceFormatProperties");
+	VK_INSTANCE(_vkGetPhysicalDeviceFormatProperties, PFN_vkGetPhysicalDeviceFormatProperties,
+							"vkGetPhysicalDeviceFormatProperties");
 	VK_INSTANCE(_vkCmdCopyBufferToImage, PFN_vkCmdCopyBufferToImage, "vkCmdCopyBufferToImage");
 	VK_INSTANCE(_vkCmdPipelineBarrier, PFN_vkCmdPipelineBarrier, "vkCmdPipelineBarrier");
 	VK_INSTANCE(_vkCreateSampler, PFN_vkCreateSampler, "vkCreateSampler");
@@ -286,7 +316,8 @@ void VulkanRenderer::setupPFNs()
 	VK_INSTANCE(_vkCreateDescriptorPool, PFN_vkCreateDescriptorPool, "vkCreateDescriptorPool");
 	VK_INSTANCE(_vkAllocateDescriptorSets, PFN_vkAllocateDescriptorSets, "vkAllocateDescriptorSets");
 	VK_INSTANCE(_vkFreeCommandBuffers, PFN_vkFreeCommandBuffers, "vkFreeCommandBuffers");
-	VK_INSTANCE(_vkGetPhysicalDeviceMemoryProperties, PFN_vkGetPhysicalDeviceMemoryProperties, "vkGetPhysicalDeviceMemoryProperties");
+	VK_INSTANCE(_vkGetPhysicalDeviceMemoryProperties, PFN_vkGetPhysicalDeviceMemoryProperties,
+							"vkGetPhysicalDeviceMemoryProperties");
 	VK_INSTANCE(_vkCreateBuffer, PFN_vkCreateBuffer, "vkCreateBuffer");
 	VK_INSTANCE(_vkInvalidateMappedMemoryRanges, PFN_vkInvalidateMappedMemoryRanges, "vkInvalidateMappedMemoryRanges");
 	VK_INSTANCE(_vkCmdCopyImageToBuffer, PFN_vkCmdCopyImageToBuffer, "vkCmdCopyImageToBuffer");
@@ -362,19 +393,19 @@ void VulkanRenderer::createSurface()
 {
 	auto& windowType = platformWindowPointer->windowType;
 #ifdef __linux__
-	if (windowType == WINDOW_TYPE_X11)
-	{
-		auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
-		VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
-		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-		surfaceCreateInfo.connection = x11Window.connection;
-		surfaceCreateInfo.window = x11Window.window;
-		if (!VKcheck("vkCreateXcbSurfaceKHR", _vkCreateXcbSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
-		{
-			throw std::runtime_error("VulkanRenderer-createSurface: failed to create XCB surface");
-		}
-	}
-	else if (windowType == WINDOW_TYPE_XCB)
+	// if (windowType == WINDOW_TYPE_X11)
+	// {
+	// 	auto& x11Window = *dynamic_cast<X11Window*>(platformWindowPointer);
+	// 	VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
+	// 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+	// 	surfaceCreateInfo.connection = x11Window.connection;
+	// 	surfaceCreateInfo.window = x11Window.window;
+	// 	if (!VKcheck("vkCreateXcbSurfaceKHR", _vkCreateXcbSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface)))
+	// 	{
+	// 		throw std::runtime_error("VulkanRenderer-createSurface: failed to create XCB surface");
+	// 	}
+	// }
+	/*else*/ if (windowType == WINDOW_TYPE_XCB)
 	{
 		auto& xcbWindow = *dynamic_cast<XCBWindow*>(platformWindowPointer);
 		VkXcbSurfaceCreateInfoKHR surfaceCreateInfo{};
@@ -411,23 +442,24 @@ void VulkanRenderer::createSurface()
 		throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
 	}
 #elif defined(__APPLE__)
-#if defined(USE_SWIFTSHADER)
+	// #if defined(USE_SWIFTSHADER) TODO: Using SwiftShader define
 	VkHeadlessSurfaceCreateInfoEXT surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
-	if (!VKcheck("vkCreateHeadlessSurfaceEXT", _vkCreateHeadlessSurfaceEXT(instance, &surfaceCreateInfo, nullptr, &surface)))
+	if (!VKcheck("vkCreateHeadlessSurfaceEXT",
+							 _vkCreateHeadlessSurfaceEXT(instance, &surfaceCreateInfo, nullptr, &surface)))
 	{
 		throw std::runtime_error("Failed to create Vulkan headless surface!");
 	}
-#else
-	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
-	VkMacOSSurfaceCreateInfoMVK surfaceCreateInfo{};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
-	surfaceCreateInfo.pView = macWindow.nsView;
-	if (!VKcheck("vkCreateMacOSSurfaceMVK", _vkCreateMacOSSurfaceMVK(instance, &surfaceCreateInfo, nullptr, &surface)))
-	{
-		throw std::runtime_error("Failed to create MacOS surface!");
-	}
-#endif
+// #else
+// 	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
+// 	VkMacOSSurfaceCreateInfoMVK surfaceCreateInfo{};
+// 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_HEADLESS_SURFACE_CREATE_INFO_EXT;
+// 	surfaceCreateInfo.pView = macWindow.nsView;
+// 	if (!VKcheck("vkCreateMacOSSurfaceMVK", _vkCreateMacOSSurfaceMVK(instance, &surfaceCreateInfo, nullptr, &surface)))
+// 	{
+// 		throw std::runtime_error("Failed to create MacOS surface!");
+// 	}
+// #endif
 #endif
 }
 void VulkanRenderer::pickPhysicalDevice()
@@ -578,8 +610,9 @@ void VulkanRenderer::createLogicalDevice()
 		throw std::runtime_error("VulkanRenderer-vkEnumerateDeviceExtensionProperties failed");
 	}
 	std::vector<VkExtensionProperties> deviceExtensions(extensionCount);
-	if (!VKcheck("vkEnumerateDeviceExtensionProperties",
-							 _vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, deviceExtensions.data())))
+	if (!VKcheck(
+				"vkEnumerateDeviceExtensionProperties",
+				_vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, deviceExtensions.data())))
 	{
 		throw std::runtime_error("VulkanRenderer-vkEnumerateDeviceExtensionProperties failed");
 	}
@@ -979,7 +1012,7 @@ void VulkanRenderer::preBeginRenderPass()
 	}
 	if (!VKcheck("vkAcquireNextImageKHR",
 							 _vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame],
-																		 VK_NULL_HANDLE, &imageIndex)))
+																			VK_NULL_HANDLE, &imageIndex)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkAcquireNextImageKHR failed");
 	}
@@ -1060,7 +1093,6 @@ void VulkanRenderer::postRenderPass()
 	}
 	return;
 }
-#if (!defined(__APPLE__) && !defined(USE_SWIFTSHADER)) || ((defined(__linux__) || defined(_WIN32)) && defined(USE_SWIFTSHADER))
 void VulkanRenderer::swapBuffers()
 {
 	// std::cout << "swapping buffers: " << ++swapBufferCount << std::endl;
@@ -1069,7 +1101,6 @@ void VulkanRenderer::swapBuffers()
 		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
 	}
 }
-#endif
 IRenderer* zg::createRenderer()
 {
 #if true
@@ -1173,9 +1204,8 @@ void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shader
 		ssboBindingPointer = &shaderImpl.ssboBindings[stringName];
 		std::get<1>(*ssboBindingPointer) = bindingIndex;
 		VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
-			(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-		shaderImpl.uboLayoutBindings.push_back({
-				{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding});
+																									(VkShaderStageFlags)stageStageFlag[shaderType], 0};
+		shaderImpl.uboLayoutBindings.push_back({{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding});
 		int32_t uboLayoutBindingIndex = shaderImpl.uboLayoutBindings.size() - 1;
 		std::get<2>(*ssboBindingPointer) = uboLayoutBindingIndex;
 	}
@@ -1194,7 +1224,8 @@ void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderT
 	std::string stringName(name);
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, (uint32_t)1,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	shaderImpl.uboLayoutBindings.push_back({{ELayoutBindingType::UniformBuffer, bufferSize, stringName, bindingIndex, isArray}, layoutBinding});
+	shaderImpl.uboLayoutBindings.push_back(
+		{{ELayoutBindingType::UniformBuffer, bufferSize, stringName, bindingIndex, isArray}, layoutBinding});
 	shaderImpl.uboStringBindings[stringName] = bindingIndex;
 	for (uint32_t index = 0; index < 1; index++)
 	{
@@ -1209,8 +1240,8 @@ void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, 
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 																								(uint32_t)descriptorCount,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	shaderImpl.uboLayoutBindings.push_back({
-		{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding});
+	shaderImpl.uboLayoutBindings.push_back(
+		{{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding});
 	shaderImpl.textureBindings[stringName] = bindingIndex;
 	for (uint32_t index = 0; index < descriptorCount; index++)
 	{
@@ -1424,8 +1455,9 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	descriptorSetLayoutInfo.bindingCount = layoutBindings.size();
 	descriptorSetLayoutInfo.pBindings = layoutBindings.data();
-	if (!VKcheck("vkCreateDescriptorSetLayout",
-							 _vkCreateDescriptorSetLayout(device, &descriptorSetLayoutInfo, nullptr, &shaderImpl.descriptorSetLayout)))
+	if (!VKcheck(
+				"vkCreateDescriptorSetLayout",
+				_vkCreateDescriptorSetLayout(device, &descriptorSetLayoutInfo, nullptr, &shaderImpl.descriptorSetLayout)))
 	{
 		throw std::runtime_error("Failed to create descriptor set layout");
 	}
@@ -1508,8 +1540,7 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 			{
 				clearColor = framebuffer.scenePointer->clearColor;
 			}
-			clearValue.color = {
-				{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
+			clearValue.color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
 			break;
 		}
 	}
@@ -1983,7 +2014,7 @@ void VulkanRenderer::drawVAO(const vaos::VAO& vao)
 	_vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
 	_vkCmdBindIndexBuffer(*commandBuffer, vaoImpl.indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
 	_vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
-													&vaoImpl.descriptorSet, 0, nullptr);
+													 &vaoImpl.descriptorSet, 0, nullptr);
 	auto& indices = vao.indiceCount;
 	if (!indices)
 	{
@@ -2103,7 +2134,7 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 		{
 			uniformBuffersMapped.resize(uniformBuffersMapped.size() + 1);
 			_vkMapMemory(device, uniformBuffersMemory[uniformBuffersMemoryIndex], 0, bufferSize, 0,
-									&uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
+									 &uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = uniformBuffers[uniformBuffersIndex];
 			bufferInfo.offset = 0;
@@ -2118,7 +2149,7 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 			{
 				uniformBuffersMapped.resize(uniformBuffersMapped.size() + 1);
 				_vkMapMemory(device, uniformBuffersMemory[uniformBuffersMemoryIndex], index * bufferSize, bufferSize, 0,
-										&uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
+										 &uniformBuffersMapped[uniformBuffersMappedIndex = (uniformBuffersMapped.size() - 1)]);
 				VkDescriptorBufferInfo bufferInfo{};
 				bufferInfo.buffer = uniformBuffers[uniformBuffersIndex];
 				bufferInfo.offset = index * bufferSize;
@@ -2282,7 +2313,7 @@ void VulkanRenderer::getCurrentImageToBitmap()
 	barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 	barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 	_vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr,
-											 0, nullptr, 1, &barrier);
+												0, nullptr, 1, &barrier);
 	endSingleTimeCommands(commandBuffer);
 	commandBuffer = beginSingleTimeCommands();
 	VkMappedMemoryRange range{};
@@ -2310,7 +2341,7 @@ void VulkanRenderer::getCurrentImageToBitmap()
 	barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 	barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 	_vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0,
-											 nullptr, 0, nullptr, 1, &barrier);
+												nullptr, 0, nullptr, 1, &barrier);
 	endSingleTimeCommands(commandBuffer);
 	_vkQueueWaitIdle(graphicsQueue);
 }
@@ -2328,4 +2359,4 @@ bool zg::VKcheck(const char* fn, VkResult result)
 		}
 	}
 }
-#endif
+// #endif
