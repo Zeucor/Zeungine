@@ -134,13 +134,13 @@ void Window::startWindow()
 		iRendererRef.swapBuffers();
 	}
 _exit:
-	scene.reset();
 	delete shaderContext;
 	for (auto& childWindowPointer : childWindows)
 	{
 		delete childWindowPointer;
 	}
 	childWindows.clear();
+	scene.reset();
 	iRendererRef.destroy();
 	iPlatformWindowRef.destroy();
 	delete iRenderer;

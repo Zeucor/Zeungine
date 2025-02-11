@@ -214,58 +214,61 @@ void GLRenderer::swapBuffers()
 	[(NSOpenGLContext*)macWindow.glContext flushBuffer];
 }
 #endif
-// #if defined(USE_VULKAN) && defined(USE_SWIFTSHADER)
-// void VulkanRenderer::swapBuffers()
-// {
-// 	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))
-// 	{
-// 		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
-// 	}
-// 	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
-// 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(macWindow.renderWindowPointer->iRenderer);
-// 	vulkanRenderer.getCurrentImageToBitmap();
-// 	@autoreleasepool
-// 	{
-// 		unsigned char* bitmapData = (unsigned char*)vulkanRenderer.bitmap;
-// 		for (int i = 0; i < macWindow.renderWindowPointer->windowWidth * macWindow.renderWindowPointer->windowHeight; ++i)
-// 		{
-// 			unsigned char temp = bitmapData[i * 4 + 0];
-// 			bitmapData[i * 4 + 0] = bitmapData[i * 4 + 2];
-// 			bitmapData[i * 4 + 2] = temp;
-// 		}
-// 		NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:&bitmapData
-// 																					pixelsWide:macWindow.renderWindowPointer->windowWidth
-// 																					pixelsHigh:macWindow.renderWindowPointer->windowHeight
-// 																				bitsPerSample:8
-// 																				samplesPerPixel:4
-// 																					hasAlpha:YES
-// 																					isPlanar:NO
-// 																				colorSpaceName:NSDeviceRGBColorSpace
-// 																					bitmapFormat:0
-// 																					bytesPerRow:macWindow.renderWindowPointer->windowWidth * 4
-// 																					bitsPerPixel:32];
-// 		if (bitmapRep == nil)
-// 		{
-// 			NSLog(@"Failed to create NSBitmapImageRep");
-// 			return;
-// 		}
-// 		NSImage *image = (NSImage *)macWindow.nsImage;
-// 		NSArray *reps = [image representations];
-// 		if ([reps count] > 0)
-// 		{
-// 			for (NSImageRep *rep in reps)
-// 			{
-// 				[image removeRepresentation:rep];
-// 			}
-// 		}
-// 		[image addRepresentation:bitmapRep];
-// 		[(NSImageView *)macWindow.nsImageView setImage:nil];
-// 		[(NSImageView *)macWindow.nsImageView setImage:image]; 
-// 		[(NSView *)macWindow.nsView displayIfNeeded];
-// 		[(NSView *)macWindow.nsView setNeedsDisplay:YES];
-// 	}
-// }
-// #endif
+#if defined(USE_VULKAN)
+void VulkanRenderer::swapBuffers()
+{
+	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))
+	{
+		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
+	}
+	if (fallbackToSwiftshader)
+	{
+		auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
+		auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(macWindow.renderWindowPointer->iRenderer);
+		vulkanRenderer.getCurrentImageToBitmap();
+		@autoreleasepool
+		{
+			unsigned char* bitmapData = (unsigned char*)vulkanRenderer.bitmap;
+			for (int i = 0; i < macWindow.renderWindowPointer->windowWidth * macWindow.renderWindowPointer->windowHeight; ++i)
+			{
+				unsigned char temp = bitmapData[i * 4 + 0];
+				bitmapData[i * 4 + 0] = bitmapData[i * 4 + 2];
+				bitmapData[i * 4 + 2] = temp;
+			}
+			NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:&bitmapData
+																						pixelsWide:macWindow.renderWindowPointer->windowWidth
+																						pixelsHigh:macWindow.renderWindowPointer->windowHeight
+																					bitsPerSample:8
+																					samplesPerPixel:4
+																						hasAlpha:YES
+																						isPlanar:NO
+																					colorSpaceName:NSDeviceRGBColorSpace
+																						bitmapFormat:0
+																						bytesPerRow:macWindow.renderWindowPointer->windowWidth * 4
+																						bitsPerPixel:32];
+			if (bitmapRep == nil)
+			{
+				NSLog(@"Failed to create NSBitmapImageRep");
+				return;
+			}
+			NSImage *image = (NSImage *)macWindow.nsImage;
+			NSArray *reps = [image representations];
+			if ([reps count] > 0)
+			{
+				for (NSImageRep *rep in reps)
+				{
+					[image removeRepresentation:rep];
+				}
+			}
+			[image addRepresentation:bitmapRep];
+			[(NSImageView *)macWindow.nsImageView setImage:nil];
+			[(NSImageView *)macWindow.nsImageView setImage:image]; 
+			[(NSView *)macWindow.nsView displayIfNeeded];
+			[(NSView *)macWindow.nsView setNeedsDisplay:YES];
+		}
+	}
+}
+#endif
 void MacOSWindow::destroy()
 {
 #ifdef USE_GL

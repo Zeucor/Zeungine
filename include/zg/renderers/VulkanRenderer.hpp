@@ -14,15 +14,15 @@
 #elif defined(_WIN32)
 #define VK_USE_PLATFORM_WIN32_KHR
 #elif defined(__linux__)
-#if defined(USE_X11)
-#define VK_USE_PLATFORM_XLIB_KHR
-#endif
-#if defined(USE_XCB) || defined(USE_X11)
+// #if defined(USE_X11)
+// #define VK_USE_PLATFORM_XLIB_KHR
+// #endif
+// #if defined(USE_XCB) || defined(USE_X11)
 #define VK_USE_PLATFORM_XCB_KHR
-#endif
-#if defined(USE_WAYLAND)
+// #endif
+// #if defined(USE_WAYLAND)
 #define VK_USE_PLATFORM_WAYLAND_KHR
-#endif
+// #endif
 #endif
 #include <shaderc/shaderc.hpp>
 #include <vulkan/vulkan.h>
@@ -193,6 +193,22 @@ namespace zg
 		PFN_vkCreateBuffer _vkCreateBuffer;
 		PFN_vkInvalidateMappedMemoryRanges _vkInvalidateMappedMemoryRanges;
 		PFN_vkCmdCopyImageToBuffer _vkCmdCopyImageToBuffer;
+		PFN_vkDestroyFence _vkDestroyFence;
+		PFN_vkDestroyDescriptorPool _vkDestroyDescriptorPool;
+		PFN_vkDestroySampler _vkDestroySampler;
+		PFN_vkDestroyFramebuffer _vkDestroyFramebuffer;
+		PFN_vkDestroyCommandPool _vkDestroyCommandPool;
+		PFN_vkDestroyPipeline _vkDestroyPipeline;
+		PFN_vkDestroyPipelineLayout _vkDestroyPipelineLayout;
+		PFN_vkDestroyImageView _vkDestroyImageView;
+		PFN_vkDestroySwapchainKHR _vkDestroySwapchainKHR;
+		PFN_vkDestroyDescriptorSetLayout _vkDestroyDescriptorSetLayout;
+		PFN_vkDestroySemaphore _vkDestroySemaphore;
+		PFN_vkDestroyImage _vkDestroyImage;
+		PFN_vkDestroyDevice _vkDestroyDevice;
+		PFN_vkDestroyRenderPass _vkDestroyRenderPass;
+		PFN_vkDeviceWaitIdle _vkDeviceWaitIdle;
+		PFN_vkDestroyShaderModule _vkDestroyShaderModule;
 		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 		VkInstance instance;
 		VkDebugUtilsMessengerEXT debugMessenger;
@@ -227,6 +243,7 @@ namespace zg
 		VkSwapchainKHR swapChains[1];
 		void* bitmap = 0;
 		uint32_t swapBufferCount = 0;
+		std::vector<std::function<void()>> destroyAtRenderPassEndOrDestroyVector;
 		VulkanRenderer();
 		~VulkanRenderer() override;
 		static GetProcAddrFunc doGetProcAddr();
@@ -261,7 +278,10 @@ namespace zg
 		void createSyncObjects();
 		void createImageStagingBuffer();
 		void init() override;
+		void destroyAtRenderPassEndOrDestroy(const std::function<void()> &function);
+		void callDestroyAtRenderPassEndOrDestroy();
 		void destroy() override;
+		void destroySwapChain();
 		void preBeginRenderPass() override;
 		void beginRenderPass() override;
 		void postRenderPass() override;

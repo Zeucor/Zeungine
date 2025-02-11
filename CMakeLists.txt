@@ -62,7 +62,6 @@ endif()
 option(BUILD_GL "Whether to build OpenGL module" OFF)
 option(BUILD_EGL "Whether to build EGL module" OFF)
 option(BUILD_VULKAN "Whether to build Vulkan module" ON)
-option(USE_SWIFTSHADER "Use SwiftShader as a software renderer" OFF)
 option(BUILD_EDITOR "Whether to build the Zeungine editor" ON)
 option(ZG_INSTALL "Whether to install Zeungine" ON)
 
@@ -80,10 +79,7 @@ elseif(MACOS)
     option(USE_MACOS "Use Mac as a windower" ON)
 endif()
 
-if(USE_SWIFTSHADER)
-    message(STATUS "Compiling with SwiftShader Vulkan backend")
-    set(SWIFTSHADER_INCLUDE_DIR "include/SwiftShader")
-elseif(BUILD_VULKAN)
+if(BUILD_VULKAN)
     message(STATUS "Compiling with Vulkan backend")
 # elseif(BUILD_GL)
 #     message(STATUS "Compiling with OpenGL backend")
@@ -165,9 +161,6 @@ endif()
 
 # Includes
 include_directories(include)
-if(USE_SWIFTSHADER)
-    include_directories(${SWIFTSHADER_INCLUDE_DIR})
-endif()
 
 # Sources
 set(ZG_SOURCES
@@ -291,10 +284,9 @@ elseif(MACOS)
     endif()
     target_link_libraries(zeungine "-framework Cocoa" "-framework QuartzCore" "-framework Metal")
 endif()
-if(BUILD_VULKAN AND NOT USE_SWIFTSHADER)
+if(BUILD_VULKAN)
     find_package(Vulkan REQUIRED)
     include_directories(${Vulkan_INCLUDE_DIRS})
-    target_link_libraries(zeungine ${Vulkan_LIBRARIES})
 endif()
 if(LINUX)
     target_link_libraries(zeungine
@@ -344,9 +336,7 @@ set(FONTS_DIRECTORY ${CMAKE_BINARY_DIR}/fonts)
 set(IMAGES_DIRECTORY ${CMAKE_BINARY_DIR}/images)
 file(COPY ${CMAKE_SOURCE_DIR}/fonts/Roboto/Roboto-Regular.ttf DESTINATION ${FONTS_DIRECTORY}/Roboto)
 file(COPY ${CMAKE_SOURCE_DIR}/images/zeungine-icon.png DESTINATION ${IMAGES_DIRECTORY})
-if(USE_SWIFTSHADER)
-    file(COPY ${ZG_LIB_DIR}/libvk_swiftshader${LIB_SUFFIX} DESTINATION ${CMAKE_BINARY_DIR})
-endif()
+file(COPY ${ZG_LIB_DIR}/libvk_swiftshader${LIB_SUFFIX} DESTINATION ${CMAKE_BINARY_DIR})
 
 # Install
 if(ZG_INSTALL)
