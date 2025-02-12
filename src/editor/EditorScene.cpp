@@ -26,8 +26,9 @@ EditorScene::EditorScene(Window& window) :
 		status(std::make_shared<entities::StatusText>(
 			window, *this,
 			glm::vec3(-1, ((bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5) - 1, 0.1),
-			glm::vec3(0), glm::vec3(1), toolbarColor, robotoRegularFont, (window.windowWidth - gameWindowWidth - gameWindowBorderWidth) / 2,
-			bottomTabsHeight - gameWindowBorderWidth * 2, "Idle")),
+			glm::vec3(0), glm::vec3(1), toolbarColor, robotoRegularFont,
+			(window.windowWidth - gameWindowWidth - gameWindowBorderWidth) / 2, bottomTabsHeight - gameWindowBorderWidth * 2,
+			"Idle")),
 		gameWindowBorder(std::make_shared<entities::Plane>(
 			window, *this,
 			glm::vec3(-1 + ((gameWindowX + (gameWindowWidth / 2)) / window.windowWidth / 0.5),
@@ -62,15 +63,15 @@ EditorScene::EditorScene(Window& window) :
 		closeOpenDialogButtonWidth(closeNewDialogButtonWidth), closeOpenDialogButtonHeight(closeNewDialogButtonHeight),
 		okayOpenDialogButtonWidth(okayNewDialogButtonWidth), okayOpenDialogButtonHeight(okayNewDialogButtonHeight),
 		closeNewDialogButton(std::make_shared<entities::Button>(
-			window, *this, glm::vec3((dialogWidth - closeNewDialogButtonWidth) / window.windowWidth / 0.5, 0, 0.1), glm::vec3(0),
-			glm::vec3(1), glm::vec4(1, 0, 0, 1), glm::vec2(closeNewDialogButtonWidth, closeNewDialogButtonHeight), "x",
-			robotoRegularFont, []() {})),
+			window, *this, glm::vec3((dialogWidth - closeNewDialogButtonWidth) / window.windowWidth / 0.5, 0, 0.1),
+			glm::vec3(0), glm::vec3(1), glm::vec4(1, 0, 0, 1),
+			glm::vec2(closeNewDialogButtonWidth, closeNewDialogButtonHeight), "x", robotoRegularFont, []() {})),
 		okayNewDialogButton(std::make_shared<entities::Button>(
 			window, *this,
 			glm::vec3((dialogWidth - okayNewDialogButtonWidth) / window.windowWidth / 0.5,
 								(-dialogHeight + okayNewDialogButtonHeight) / window.windowHeight / 0.5, 0.1),
-			glm::vec3(0), glm::vec3(1), glm::vec4(0.2f, 0, 0.8f, 1), glm::vec2(okayNewDialogButtonWidth, okayNewDialogButtonHeight),
-			"Okay", robotoRegularFont, []() {})),
+			glm::vec3(0), glm::vec3(1), glm::vec4(0.2f, 0, 0.8f, 1),
+			glm::vec2(okayNewDialogButtonWidth, okayNewDialogButtonHeight), "Okay", robotoRegularFont, []() {})),
 		newProjectNameInput(std::make_shared<entities::Input>(
 			window, *this, glm::vec3(16 / window.windowWidth / 0.5, -30 / window.windowHeight / 0.5, 0.1), glm::vec3(0),
 			glm::vec3(1), glm::vec4(0.5, 0.5, 0.5, 1), robotoRegularFont, dialogWidth - 32, dialogHeight / 4.5f,
@@ -86,19 +87,18 @@ EditorScene::EditorScene(Window& window) :
 			std::vector<std::shared_ptr<Entity>>(
 				{closeNewDialogButton, okayNewDialogButton, newProjectNameInput, newProjectDirectoryInput}))),
 		closeOpenDialogButton(std::make_shared<entities::Button>(
-			window, *this, glm::vec3((dialogWidth - closeOpenDialogButtonWidth) / window.windowWidth / 0.5, 0, 0.1), glm::vec3(0),
-			glm::vec3(1), glm::vec4(1, 0, 0, 1), glm::vec2(closeOpenDialogButtonWidth, closeOpenDialogButtonHeight), "x",
-			robotoRegularFont, []() {})),
+			window, *this, glm::vec3((dialogWidth - closeOpenDialogButtonWidth) / window.windowWidth / 0.5, 0, 0.1),
+			glm::vec3(0), glm::vec3(1), glm::vec4(1, 0, 0, 1),
+			glm::vec2(closeOpenDialogButtonWidth, closeOpenDialogButtonHeight), "x", robotoRegularFont, []() {})),
 		okayOpenDialogButton(std::make_shared<entities::Button>(
 			window, *this,
 			glm::vec3((dialogWidth - okayOpenDialogButtonWidth) / window.windowWidth / 0.5,
 								(-dialogHeight + okayOpenDialogButtonHeight) / window.windowHeight / 0.5, 0.1),
-			glm::vec3(0), glm::vec3(1), glm::vec4(0.2f, 0, 0.8f, 1), glm::vec2(okayOpenDialogButtonWidth, okayOpenDialogButtonHeight),
-			"Okay", robotoRegularFont, []() {})),
+			glm::vec3(0), glm::vec3(1), glm::vec4(0.2f, 0, 0.8f, 1),
+			glm::vec2(okayOpenDialogButtonWidth, okayOpenDialogButtonHeight), "Okay", robotoRegularFont, []() {})),
 		openProjectDirectoryInput(std::make_shared<entities::Input>(
-			window, *this,
-			glm::vec3(16 / window.windowWidth / 0.5, -30 / window.windowHeight / 0.5, 0.1),
-			glm::vec3(0), glm::vec3(1), glm::vec4(0.5, 0.5, 0.5, 1), robotoRegularFont, dialogWidth - 32, dialogHeight / 4.5f,
+			window, *this, glm::vec3(16 / window.windowWidth / 0.5, -30 / window.windowHeight / 0.5, 0.1), glm::vec3(0),
+			glm::vec3(1), glm::vec4(0.5, 0.5, 0.5, 1), robotoRegularFont, dialogWidth - 32, dialogHeight / 4.5f,
 			"Project Directory", 128.f)),
 		openProjectDialog(std::make_shared<entities::Dialog>(
 			window, *this, glm::vec3(0, 0, 5.0), glm::vec3(0),
@@ -143,7 +143,9 @@ EditorScene::EditorScene(Window& window) :
 	sceneGraphPanelMenu->addToBVH = false;
 	addEntity(sceneGraphPanelMenu);
 	addEntity(resourcePanelMenu);
-	filesystem::File consoleFile((std::filesystem::path(filesystem::File::getProgramDirectoryPath()) / "icons" / "Remix" / "Development" / "terminal-line.svg").string(), enums::EFileLocation::Absolute, "r");
+	filesystem::File consoleFile(
+		(programDirectoryPath / "icons" / "Remix" / "Development" / "terminal-line.svg").string(),
+		enums::EFileLocation::Absolute, "r");
 	resourcePanelTabs->addTab(
 		"Console",
 		[&]
@@ -152,8 +154,7 @@ EditorScene::EditorScene(Window& window) :
 			resourcePanelMenu->addPanelEntity(resourceConsole, false);
 			activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceConsole);
 		},
-		true,
-		consoleFile);
+		true, consoleFile);
 	resourcePanelMenu->addPanelEntity(resourceConsole, false);
 	activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceConsole);
 	resourcePanelMenu->addPanelEntity(resourcePanelTabs, false);
@@ -183,7 +184,8 @@ EditorScene::EditorScene(Window& window) :
 			codeWindowPointer->setWidthHeight(codeWindowWidth, codeWindowHeight);
 			codeWindowPointer->setXY(codeWindowX, codeWindowY);
 		});
-	filesystem::File sceneFile((std::filesystem::path(filesystem::File::getProgramDirectoryPath()) / "icons" / "Remix" / "Design" / "shapes-line.svg").string(), enums::EFileLocation::Absolute, "r");
+	filesystem::File sceneFile((programDirectoryPath / "icons" / "Remix" / "Design" / "shapes-line.svg").string(),
+														 enums::EFileLocation::Absolute, "r");
 	bottomTabsBar->addTab(
 		"Scene",
 		[&]()
@@ -192,15 +194,17 @@ EditorScene::EditorScene(Window& window) :
 			addEntity(gameWindowBorder);
 			gameWindowPointer->restore();
 		},
-		true,
-		sceneFile);
-	filesystem::File codeEditorFile((std::filesystem::path(filesystem::File::getProgramDirectoryPath()) / "icons" / "Remix" / "Development" / "code-line.svg").string(), enums::EFileLocation::Absolute, "r");
-	bottomTabsBar->addTab("Code Editor",
-												[&]()
-												{
-													minimizeWindows();
-													codeWindowPointer->restore();
-												}, false, codeEditorFile);
+		true, sceneFile);
+	filesystem::File codeEditorFile((programDirectoryPath / "icons" / "Remix" / "Development" / "code-line.svg").string(),
+																	enums::EFileLocation::Absolute, "r");
+	bottomTabsBar->addTab(
+		"Code Editor",
+		[&]()
+		{
+			minimizeWindows();
+			codeWindowPointer->restore();
+		},
+		false, codeEditorFile);
 	std::cout << "Opened ZG Editor" << std::endl;
 };
 EditorScene::~EditorScene()
@@ -344,10 +348,18 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 		auto libraryName = InFileProcessor::toKebabCase(stringProjectName);
 		processor.addVariableMapping("PROJECT_NAME", stringProjectName);
 		processor.addVariableMapping("LIBRARY_NAME", libraryName);
-		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.hpp", enums::EFileLocation::Absolute, "r"}, includePath + "/main.hpp");
-		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.cpp", enums::EFileLocation::Absolute, "r"}, srcPath + "/main.cpp");
-		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/CMakeLists.in.txt", enums::EFileLocation::Absolute, "r"}, std::string(project.directory) + "/CMakeLists.txt");
-		processor.processFile({zgIncInstallPrefix + "/zg/editor/projects/templates/Zeungine.in.cmake", enums::EFileLocation::Absolute, "r"}, cmakePath + "/Zeungine.cmake");
+		processor.processFile(
+			{zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.hpp", enums::EFileLocation::Absolute, "r"},
+			includePath + "/main.hpp");
+		processor.processFile(
+			{zgIncInstallPrefix + "/zg/editor/projects/templates/main.in.cpp", enums::EFileLocation::Absolute, "r"},
+			srcPath + "/main.cpp");
+		processor.processFile(
+			{zgIncInstallPrefix + "/zg/editor/projects/templates/CMakeLists.in.txt", enums::EFileLocation::Absolute, "r"},
+			std::string(project.directory) + "/CMakeLists.txt");
+		processor.processFile(
+			{zgIncInstallPrefix + "/zg/editor/projects/templates/Zeungine.in.cmake", enums::EFileLocation::Absolute, "r"},
+			cmakePath + "/Zeungine.cmake");
 	}
 	openProject(projectDirectory);
 };
@@ -357,16 +369,23 @@ void EditorScene::openProject(std::string_view projectDirectory)
 	resourceAssetBrowser = std::make_shared<entities::AssetBrowser>(
 		window, *this, glm::vec3(0, 0, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0.1, 0.1, 0.1, 1), robotoRegularFont,
 		window.windowWidth, resourcePanelMenuHeight - bottomTabsHeight, projectDirectory);
-	assetTabID = resourcePanelTabs->addTab("Asset Browser",
-																				 [&]
-																				 {
-																					 removeActiveResourceEntity();
-																					 if (resourceAssetBrowser)
-																					 {
-																						 resourcePanelMenu->addPanelEntity(resourceAssetBrowser, false);
-																						 activeResourcePanelEntity =
-																							 std::dynamic_pointer_cast<Entity>(resourceAssetBrowser);
-																					 }
-																				 });
-	performanceTabID = resourcePanelTabs->addTab("Performance", [&] { removeActiveResourceEntity(); });
+	filesystem::File browserFile((programDirectoryPath / "icons" / "Remix" / "Document" / "pages-line.svg").string(),
+															 enums::EFileLocation::Absolute, "r");
+	assetTabID = resourcePanelTabs->addTab(
+		"Asset Browser",
+		[&]
+		{
+			removeActiveResourceEntity();
+			if (resourceAssetBrowser)
+			{
+				resourcePanelMenu->addPanelEntity(resourceAssetBrowser, false);
+				activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceAssetBrowser);
+			}
+		},
+		false, browserFile);
+	filesystem::File performanceFile(
+		(programDirectoryPath / "icons" / "Remix" / "Business" / "bar-chart-box-line.svg").string(),
+		enums::EFileLocation::Absolute, "r");
+	performanceTabID =
+		resourcePanelTabs->addTab("Performance", [&] { removeActiveResourceEntity(); }, false, performanceFile);
 };

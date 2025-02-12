@@ -19,7 +19,7 @@ Hotswapper::~Hotswapper()
 }
 void Hotswapper::update()
 {
-	filesystem::DirectoryWatcher directoryWatcher(directory, {directory / "build", directory / "cmake"});
+	filesystem::DirectoryWatcher directoryWatcher(directory, {directory / "build"});
 	bool requireConfigure = true, requireBuild = false, requireLoad = false, currentlyConfiguring = false,
 			 currentlyBuilding = false;
 	std::unique_ptr<SharedLibrary> libraryPointer;
@@ -28,54 +28,55 @@ void Hotswapper::update()
 		auto configureResult = configure(currentlyConfiguring, requireConfigure);
 		if (justRequireConfigure && configureResult.first && configureResult.second)
 		{
-			currentlyConfiguring = false;
 			requireBuild = true;
 		}
 		auto buildResult = build(currentlyBuilding, requireBuild);
 		if (justRequireBuild && buildResult.first && buildResult.second)
 		{
-			currentlyBuilding = false;
 			requireLoad = true;
 		}
 		if (requireLoad)
 		{
-			if (editorScene.loaded)
+			editorScene.gameWindowPointer->runOnThread([&](auto& _window)
 			{
+				if (editorScene.loaded)
 				{
-					std::lock_guard gameWindowLock(editorScene.gameWindowPointer->renderMutex);
-					editorScene.gameWindowPointer->scene.reset();
+					{
+						std::lock_guard gameWindowLock(_window.renderMutex);
+						_window.scene.reset();
+					}
+					editorScene.loaded = false;
+					editorScene.OnLoad = 0;
+					libraryPointer.reset();
 				}
-				editorScene.loaded = false;
-				editorScene.OnLoad = 0;
-				libraryPointer.reset();
-			}
-			libraryPointer = std::make_unique<SharedLibrary>(directory / "build" / "libeditor-game.so");
-			auto& libraryRef = *libraryPointer;
-			try
-			{
-				editorScene.OnLoad = libraryRef.getProc<void (*)(Window&)>("OnLoad");
-			}
-			catch (const std::exception& e)
-			{
-				std::cout << e.what() << '\n';
-			}
-			if (editorScene.OnLoad)
-			{
-				editorScene.OnLoad(*editorScene.gameWindowPointer);
-				editorScene.loaded = true;
-				if (editorScene.gameWindowPointer->minimized)
+				libraryPointer = std::make_unique<SharedLibrary>(directory / "build" / "libeditor-game.so");
+				auto& libraryRef = *libraryPointer;
+				try
 				{
-					editorScene.gameWindowPointer->restore();
+					editorScene.OnLoad = libraryRef.getProc<void (*)(Window&)>("OnLoad");
 				}
-			}
-			requireLoad = false;
+				catch (const std::exception& e)
+				{
+					std::cout << e.what() << '\n';
+				}
+				if (editorScene.OnLoad)
+				{
+					editorScene.OnLoad(_window);
+					editorScene.loaded = true;
+					if (_window.minimized)
+					{
+						_window.restore();
+					}
+				}
+				requireLoad = false;
+			});
 		}
 		auto changes = directoryWatcher.update();
 		if (!changes.empty())
 		{
 			for (auto& changePair : changes)
 			{
-				if (strcmp(changePair.second.c_str(), "CMakeLists.txt") == 0)
+				if (changePair.second.find("CMakeLists.txt") != std::string::npos || changePair.second.find(".cmake") != std::string::npos)
 					requireConfigure = true;
 			}
 			if (!requireConfigure)
@@ -112,7 +113,15 @@ std::pair<bool, bool> Hotswapper::configure(bool& currentlyConfiguring, bool& re
 		return {false, false};
 	auto& currentCommandRef = *currentCommand;
 	currentCommandRef.update();
-	return {currentCommandRef.isComplete(), !currentCommandRef.getExitCode()};
+	auto complete = currentCommandRef.isComplete();
+	auto exitCode = currentCommandRef.getExitCode();
+	if (complete)
+	{
+		currentCommandRef.update();
+		currentCommand.reset();
+		currentlyConfiguring = false;
+	}
+	return {complete, !exitCode};
 };
 std::pair<bool, bool> Hotswapper::build(bool& currentlyBuilding, bool& requireBuild)
 {
@@ -128,6 +137,8 @@ std::pair<bool, bool> Hotswapper::build(bool& currentlyBuilding, bool& requireBu
 		compiled = false;
 		auto currentWorkingDirectory = GET_WORKING_DIR();
 		SET_WORKING_DIR(directory.c_str());
+		if (currentCommand)
+			currentCommand->update();
 		currentCommand = std::make_unique<Command>("cmake --build build");
 		SET_WORKING_DIR(currentWorkingDirectory.c_str());
 		currentlyBuilding = true;
@@ -143,20 +154,26 @@ std::pair<bool, bool> Hotswapper::build(bool& currentlyBuilding, bool& requireBu
 	currentCommandRef.update();
 	auto complete = currentCommandRef.isComplete();
 	auto exitCode = currentCommandRef.getExitCode();
-	if (exitCode)
+	if (complete)
 	{
-		compiling = false;
-		errored = true;
-		editorScene.status->setText("Build Error");
-		editorScene.status->setTextColor({1, 0, 0, 1});
-	}
-	else
-	{
-		compiling = false;
-		compiled = true;
-		editorScene.status->setText("Idle");
-		editorScene.status->setTextColor({1, 1, 1, 1});
-		idle = true;
+		currentCommandRef.update();
+		currentCommand.reset();
+		currentlyBuilding = false;
+		if (exitCode)
+		{
+			compiling = false;
+			errored = true;
+			editorScene.status->setText("Build Error");
+			editorScene.status->setTextColor({1, 0, 0, 1});
+		}
+		else
+		{
+			compiling = false;
+			compiled = true;
+			editorScene.status->setText("Idle");
+			editorScene.status->setTextColor({1, 1, 1, 1});
+			idle = true;
+		}
 	}
 	return {complete, !exitCode};
 };

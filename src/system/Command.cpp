@@ -113,8 +113,8 @@ bool Command::update()
 			if (WIFEXITED(status))
 			{
 				exitCode = WEXITSTATUS(status);
+				complete = true;
 			}
-			complete = true;
 		}
 	}
 #endif

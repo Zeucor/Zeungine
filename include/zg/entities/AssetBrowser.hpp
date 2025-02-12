@@ -6,7 +6,6 @@
 #include <zg/glm.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/interfaces/ISizable.hpp>
-#include <FileWatch.hpp>
 namespace zg::entities
 {
 	struct AssetBrowser : Entity, ISizable
@@ -18,7 +17,6 @@ namespace zg::entities
 		float width;
 		float height;
 		std::string_view projectDirectory;
-		filewatch::FileWatch<std::string> projectDirectoryWatch;
 		size_t currentIndex = 0;
 		inline static size_t assetBrowsersCount = 0;
 		AssetBrowser(Window &window,

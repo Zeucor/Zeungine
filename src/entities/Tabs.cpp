@@ -89,36 +89,42 @@ Tab::Tab(Window& window, Scene& scene, glm::vec3 position, glm::vec3 rotation, g
 	updateIndices(indices);
 	colors.resize(4);
 	setColor(active ? activeColor : inactiveColor);
-	float FontSize = height / 1.5f;
-	float IconSize = height;
-	auto iconBitmap = images::SVGRasterize(iconFile, glm::ivec2(IconSize, IconSize));
+	float fontSize = height / 1.5f;
+	float iconTextureScale = 4;
+	float iconSize = height;
+	float iconTextureSize = height * iconTextureScale;
+	static float padding = 64;
+	auto iconBitmap = images::SVGRasterize(iconFile, glm::ivec2(iconTextureSize, iconTextureSize));
 	iconTexture = std::make_shared<textures::Texture>(
 		window,
-		glm::ivec4(IconSize, IconSize, 1, 1),
-		(void*)iconBitmap.get()
+		glm::ivec4(iconTextureSize, iconTextureSize, 1, 1),
+		(void*)iconBitmap.get(),
+		textures::Texture::Format::RGBA8,
+		textures::Texture::Type::UnsignedByte,
+		textures::Texture::FilterType::Linear
 	);
 	iconPlane = std::make_shared<entities::Plane>(
 		window,
 		scene,
-		glm::vec3(IconSize / window.windowWidth / 2 + 4 / window.windowWidth, -NDCHeight / 2, 0.1),
+		glm::vec3(iconSize / window.windowWidth / 2 + (padding / 4) / window.windowWidth / 2, -NDCHeight / 2, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
-		glm::vec2(IconSize / window.windowWidth, IconSize / window.windowHeight),
+		glm::vec2(iconSize / window.windowWidth, iconSize / window.windowHeight),
 		*iconTexture,
 		shaders::RuntimeConstants()
 	);
 	addChild(iconPlane);
 	float LineHeight = 0;
-	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
+	auto TextSize = font.stringSize(text, fontSize, LineHeight, {0, 0});
 	TextSize.y /= window.windowHeight * 0.5f;
 	TextSize.x /= window.windowWidth * 0.5f;
 	textView = std::make_shared<TextView>(
-		window, scene, glm::vec3(TextSize.x / 2 + 8 / window.windowWidth + iconPlane->size.x, -NDCHeight / 2, 0.1f), glm::vec3(0), glm::vec3(1),
-		glm::vec4(1, 1, 1, 1), text, TextSize, font, FontSize, true, TextView::RepositionHandler(),
+		window, scene, glm::vec3(TextSize.x / 2 + (padding / 2) / window.windowWidth / 2 + iconPlane->size.x, -NDCHeight / 2, 0.1f), glm::vec3(0), glm::vec3(1),
+		glm::vec4(1, 1, 1, 1), text, TextSize, font, fontSize, true, TextView::RepositionHandler(),
 		TextView::RepositionHandler(), [&] { return NDCHeight * this->window.windowHeight * 0.5f / 1.5f; });
 	textView->addToBVH = false;
 	addChild(textView);
-	setSize({TextSize.x + 16 / window.windowWidth + iconPlane->size.x, height / window.windowHeight / 0.5});
+	setSize({TextSize.x + padding / window.windowWidth / 2 + iconPlane->size.x, height / window.windowHeight / 0.5});
 	mouseHoverID = addMouseHoverHandler(
 		[&, color](const auto& hovered)
 		{

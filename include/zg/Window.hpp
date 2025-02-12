@@ -49,9 +49,11 @@ namespace zg
 #if defined(_WIN32) || defined(__linux__)
 		std::shared_ptr<std::thread> windowThread;
 #endif
+		std::mutex runnablesMutex;
 		std::queue<Runnable> runnables;
 		std::unordered_map<Key, int> keys;
 		std::unordered_map<Button, int> buttons;
+		std::mutex handlersMutex;
 		std::unordered_map<Key, std::pair<EventIdentifier, std::map<EventIdentifier, KeyPressHandler>>> keyPressHandlers;
 		std::unordered_map<Key, std::pair<EventIdentifier, std::map<EventIdentifier, KeyUpdateHandler>>> keyUpdateHandlers;
 		std::pair<EventIdentifier, std::map<EventIdentifier, AnyKeyPressHandler>> anyKeyPressHandlers;
@@ -70,7 +72,7 @@ namespace zg
 		bool maximized = false;
 		bool focused = false;
 		OnEntityAddedFunction onEntityAdded;
-		std::mutex renderMutex;
+		std::recursive_mutex renderMutex;
 		const char* title;
 		int windowKeys[256];
 		int windowButtons[7];

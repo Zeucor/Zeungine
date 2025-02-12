@@ -79,6 +79,7 @@ namespace zg::editor
 		Project project;
 		void(*OnLoad)(Window&) = 0;
 		bool loaded = false;
+		inline static std::filesystem::path programDirectoryPath = filesystem::File::getProgramDirectoryPath();
 		explicit EditorScene(Window& window);
 		~EditorScene() override;
 		void onEntityAdded(const std::shared_ptr<Entity>& entity);

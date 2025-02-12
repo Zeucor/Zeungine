@@ -13,6 +13,7 @@ DirectoryWatcher::DirectoryWatcher(const std::filesystem::path& path, const std:
 	}
 	Directory directory(watchPath.c_str());
 	auto recursiveFileMap = directory.getRecursiveFileMap();
+    addDirectoryWatch(path);
 	for (auto& filePair : recursiveFileMap)
 		if (std::filesystem::is_directory(filePair.second))
 			addDirectoryWatch(filePair.second);

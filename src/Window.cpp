@@ -273,6 +273,7 @@ zg::Window& Window::createChildWindow(const char* title, Scene& scene, float win
 // Keyboard
 EventIdentifier Window::addKeyPressHandler(Key key, const KeyPressHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlersPair = keyPressHandlers[key];
 	auto id = ++handlersPair.first;
 	handlersPair.second[id] = callback;
@@ -280,6 +281,7 @@ EventIdentifier Window::addKeyPressHandler(Key key, const KeyPressHandler& callb
 };
 void Window::removeKeyPressHandler(Key key, EventIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlersPair = keyPressHandlers[key];
 	auto handlerIter = handlersPair.second.find(id);
 	if (handlerIter == handlersPair.second.end())
@@ -291,6 +293,7 @@ void Window::removeKeyPressHandler(Key key, EventIdentifier& id)
 };
 EventIdentifier Window::addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlersPair = keyUpdateHandlers[key];
 	auto id = ++handlersPair.first;
 	handlersPair.second[id] = callback;
@@ -298,6 +301,7 @@ EventIdentifier Window::addKeyUpdateHandler(Key key, const KeyUpdateHandler& cal
 };
 void Window::removeKeyUpdateHandler(Key key, EventIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto handlersIter = keyUpdateHandlers.find(key);
 	if (handlersIter == keyUpdateHandlers.end())
 		return;
@@ -314,13 +318,16 @@ void Window::callKeyPressHandler(Key key, int pressed)
 {
 	keys[key] = pressed;
 	{
-		auto handlersIter = keyPressHandlers.find(key);
-		if (handlersIter == keyPressHandlers.end())
-			return;
-		auto& handlersMap = handlersIter->second.second;
 		std::vector<KeyPressHandler> handlersCopy;
-		for (const auto& pair : handlersMap)
-			handlersCopy.push_back(pair.second);
+		{
+			std::lock_guard lock(handlersMutex);
+			auto handlersIter = keyPressHandlers.find(key);
+			if (handlersIter == keyPressHandlers.end())
+				return;
+			auto& handlersMap = handlersIter->second.second;
+			for (const auto& pair : handlersMap)
+				handlersCopy.push_back(pair.second);
+		}
 		for (auto& handler : handlersCopy)
 		{
 			handler(!!pressed);
@@ -329,13 +336,16 @@ void Window::callKeyPressHandler(Key key, int pressed)
 };
 void Window::callKeyUpdateHandler(Key key)
 {
-	auto handlersIter = keyUpdateHandlers.find(key);
-	if (handlersIter == keyUpdateHandlers.end())
-		return;
-	auto& handlersMap = handlersIter->second.second;
 	std::vector<KeyUpdateHandler> handlersCopy;
-	for (const auto& pair : handlersMap)
-		handlersCopy.push_back(pair.second);
+	{
+		std::lock_guard lock(handlersMutex);
+		auto handlersIter = keyUpdateHandlers.find(key);
+		if (handlersIter == keyUpdateHandlers.end())
+			return;
+		auto& handlersMap = handlersIter->second.second;
+		for (const auto& pair : handlersMap)
+			handlersCopy.push_back(pair.second);
+	}
 	for (auto& handler : handlersCopy)
 	{
 		handler();
@@ -343,12 +353,14 @@ void Window::callKeyUpdateHandler(Key key)
 };
 EventIdentifier Window::addAnyKeyPressHandler(const AnyKeyPressHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto id = ++anyKeyPressHandlers.first;
 	anyKeyPressHandlers.second[id] = callback;
 	return id;
 };
 void Window::removeAnyKeyPressHandler(EventIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlers = anyKeyPressHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
@@ -360,10 +372,13 @@ void Window::removeAnyKeyPressHandler(EventIdentifier& id)
 };
 void Window::callAnyKeyPressHandler(Key key, bool pressed)
 {
-	auto& handlersMap = anyKeyPressHandlers.second;
 	std::vector<AnyKeyPressHandler> handlersCopy;
-	for (const auto& pair : handlersMap)
-		handlersCopy.push_back(pair.second);
+	{
+		std::lock_guard lock(handlersMutex);
+		auto& handlersMap = anyKeyPressHandlers.second;
+		for (const auto& pair : handlersMap)
+			handlersCopy.push_back(pair.second);
+	}
 	for (auto& handler : handlersCopy)
 	{
 		handler(key, pressed);
@@ -394,6 +409,7 @@ void Window::handleKey(Key key, int32_t mod, bool pressed)
 // Mouse
 EventIdentifier Window::addMousePressHandler(Button button, const MousePressHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlersPair = mousePressHandlers[button];
 	auto id = ++handlersPair.first;
 	handlersPair.second[id] = callback;
@@ -401,6 +417,7 @@ EventIdentifier Window::addMousePressHandler(Button button, const MousePressHand
 };
 void Window::removeMousePressHandler(Button button, EventIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlersPair = mousePressHandlers[button];
 	auto handlerIter = handlersPair.second.find(id);
 	if (handlerIter == handlersPair.second.end())
@@ -412,12 +429,14 @@ void Window::removeMousePressHandler(Button button, EventIdentifier& id)
 };
 EventIdentifier Window::addMouseMoveHandler(const MouseMoveHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto id = ++mouseMoveHandlers.first;
 	mouseMoveHandlers.second[id] = callback;
 	return id;
 };
 void Window::removeMouseMoveHandler(EventIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlers = mouseMoveHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
@@ -431,13 +450,16 @@ void Window::callMousePressHandler(Button button, int pressed)
 {
 	buttons[button] = pressed;
 	{
-		auto handlersIter = mousePressHandlers.find(button);
-		if (handlersIter == mousePressHandlers.end())
-			return;
-		auto& handlersMap = handlersIter->second.second;
 		std::vector<MousePressHandler> handlersCopy;
-		for (const auto& pair : handlersMap)
-			handlersCopy.push_back(pair.second);
+		{
+			std::lock_guard lock(handlersMutex);
+			auto handlersIter = mousePressHandlers.find(button);
+			if (handlersIter == mousePressHandlers.end())
+				return;
+			auto& handlersMap = handlersIter->second.second;
+			for (const auto& pair : handlersMap)
+				handlersCopy.push_back(pair.second);
+		}
 		for (auto& handler : handlersCopy)
 		{
 			handler(!!pressed);
@@ -446,10 +468,13 @@ void Window::callMousePressHandler(Button button, int pressed)
 }
 void Window::callMouseMoveHandler(glm::vec2 coords)
 {
-	auto& handlersMap = mouseMoveHandlers.second;
 	std::vector<MouseMoveHandler> handlersCopy;
-	for (const auto& pair : handlersMap)
-		handlersCopy.push_back(pair.second);
+	{
+		std::lock_guard lock(handlersMutex);
+		auto& handlersMap = mouseMoveHandlers.second;
+		for (const auto& pair : handlersMap)
+			handlersCopy.push_back(pair.second);
+	}
 	for (auto& handler : handlersCopy)
 	{
 		handler(coords);
@@ -500,12 +525,14 @@ void Window::handleMousePress(Button button, bool pressed)
 // resize
 EventIdentifier Window::addResizeHandler(const ViewResizeHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto id = ++viewResizeHandlers.first;
 	viewResizeHandlers.second[id] = callback;
 	return id;
 };
 void Window::removeResizeHandler(EventIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlers = viewResizeHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
@@ -517,10 +544,13 @@ void Window::removeResizeHandler(EventIdentifier& id)
 };
 void Window::callResizeHandler(glm::vec2 newSize)
 {
-	auto& handlersMap = viewResizeHandlers.second;
 	std::vector<ViewResizeHandler> handlersCopy;
-	for (const auto& pair : handlersMap)
-		handlersCopy.push_back(pair.second);
+	{
+		std::lock_guard lock(handlersMutex);
+		auto& handlersMap = viewResizeHandlers.second;
+		for (const auto& pair : handlersMap)
+			handlersCopy.push_back(pair.second);
+	}
 	for (auto& handler : handlersCopy)
 	{
 		handler(newSize);
@@ -529,12 +559,14 @@ void Window::callResizeHandler(glm::vec2 newSize)
 // focus
 EventIdentifier Window::addFocusHandler(const FocusHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto id = ++focusHandlers.first;
 	focusHandlers.second[id] = callback;
 	return id;
 }
 void Window::removeFocusHandler(EventIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlers = focusHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
@@ -548,10 +580,13 @@ void Window::callFocusHandler(bool focused)
 {
 	if (this->focused == focused)
 		return;
-	auto& handlersMap = focusHandlers.second;
 	std::vector<FocusHandler> handlersCopy;
-	for (const auto& pair : handlersMap)
-		handlersCopy.push_back(pair.second);
+	{
+		std::lock_guard lock(handlersMutex);
+		auto& handlersMap = focusHandlers.second;
+		for (const auto& pair : handlersMap)
+			handlersCopy.push_back(pair.second);
+	}
 	this->focused = focused;
 	for (auto& handler : handlersCopy)
 	{
@@ -563,12 +598,20 @@ std::shared_ptr<Scene> Window::setScene(const std::shared_ptr<Scene>& scene)
 	this->scene = scene;
 	return scene;
 };
-void Window::runOnThread(const Runnable& runnable) { runnables.push(runnable); };
+void Window::runOnThread(const Runnable& runnable)
+{
+	std::lock_guard lock(runnablesMutex);
+	runnables.push(runnable);
+};
 void Window::runRunnables()
 {
-	std::queue<Runnable> runnablesCopy = runnables;
-	while (!runnables.empty())
-		runnables.pop();
+	std::queue<Runnable> runnablesCopy;
+	{
+		std::lock_guard lock(runnablesMutex);
+		runnablesCopy = runnables;
+		while (!runnables.empty())
+			runnables.pop();
+	}
 	while (!runnablesCopy.empty())
 	{
 		auto runnable = runnablesCopy.front();

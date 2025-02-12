@@ -24,9 +24,9 @@ namespace zg::system
     {
     private:
         ProcessHandle handle;
-        int exitCode;
-        bool complete;
-        int pipeRead;
+        int exitCode = 0;
+        bool complete = false;
+        int pipeRead = 0;
     public:
         Command(const std::string &command);
         bool update();    
