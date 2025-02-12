@@ -1,11 +1,11 @@
 #include <fcntl.h>
+#include <string.h>
 #include <zg/filesystem/Directory.hpp>
 #include <zg/filesystem/DirectoryWatcher.hpp>
-#include <string.h>
 using namespace zg::filesystem;
-DirectoryWatcher::DirectoryWatcher(const std::filesystem::path& path, const std::vector<std::filesystem::path>& excludePathsVector) :
-    watchPath(path),
-    excludePathsVector(excludePathsVector)
+DirectoryWatcher::DirectoryWatcher(const std::filesystem::path& path,
+																	 const std::vector<std::filesystem::path>& excludePathsVector) :
+		watchPath(path), excludePathsVector(excludePathsVector)
 {
 	if (!std::filesystem::exists(watchPath) || !std::filesystem::is_directory(watchPath))
 	{
@@ -13,7 +13,7 @@ DirectoryWatcher::DirectoryWatcher(const std::filesystem::path& path, const std:
 	}
 	Directory directory(watchPath.c_str());
 	auto recursiveFileMap = directory.getRecursiveFileMap();
-    addDirectoryWatch(path);
+	addDirectoryWatch(path);
 	for (auto& filePair : recursiveFileMap)
 		if (std::filesystem::is_directory(filePair.second))
 			addDirectoryWatch(filePair.second);
@@ -47,46 +47,46 @@ std::vector<std::pair<DirectoryWatcher::ChangeType, std::string>> DirectoryWatch
 	CloseHandle(dirHandle);
 
 #elif __linux__
-    char buffer[1024];
-    for (auto& fdPathPair : fdPathMap)
-    {
-        auto& fd = fdPathPair.first;
-        while (true)
-        {
-            ssize_t length = read(fd, buffer, sizeof(buffer));
-            if (length == -1)
-            {
-                if (errno == EAGAIN)
-                {
-                    break;
-                }
-                else
-                {
-                    throw std::runtime_error("Failed to read inotify events.");
-                }
-            }
-            for (ssize_t i = 0; i < length;)
-            {
-                struct inotify_event* event = reinterpret_cast<struct inotify_event*>(&buffer[i]);
-                if (event->len)
-                {
-                    ChangeType changeType;
-                    if (event->mask & IN_CREATE)
-                        changeType = ChangeType::Created;
-                    if (event->mask & IN_MODIFY)
-                        changeType = ChangeType::Modified;
-                    if (event->mask & IN_DELETE)
-                        changeType = ChangeType::Deleted;
-                    changes.push_back({changeType, fdPathPair.second / event->name});
-                    if (event->mask & IN_CREATE && std::filesystem::is_directory(watchPath / event->name))
-                    {
-                        addDirectoryWatch(fdPathPair.second / event->name);
-                    }
-                }
-                i += sizeof(struct inotify_event) + event->len;
-            }
-        }
-    }
+	char buffer[1024];
+	for (auto& fdPathPair : fdPathMap)
+	{
+		auto& fd = fdPathPair.first;
+		while (true)
+		{
+			ssize_t length = read(fd, buffer, sizeof(buffer));
+			if (length == -1)
+			{
+				if (errno == EAGAIN)
+				{
+					break;
+				}
+				else
+				{
+					throw std::runtime_error("Failed to read inotify events.");
+				}
+			}
+			for (ssize_t i = 0; i < length;)
+			{
+				struct inotify_event* event = reinterpret_cast<struct inotify_event*>(&buffer[i]);
+				if (event->len)
+				{
+					ChangeType changeType;
+					if (event->mask & IN_CREATE)
+						changeType = ChangeType::Created;
+					if (event->mask & IN_MODIFY)
+						changeType = ChangeType::Modified;
+					if (event->mask & IN_DELETE)
+						changeType = ChangeType::Deleted;
+					changes.push_back({changeType, fdPathPair.second / event->name});
+					if (event->mask & IN_CREATE && std::filesystem::is_directory(watchPath / event->name))
+					{
+						addDirectoryWatch(fdPathPair.second / event->name);
+					}
+				}
+				i += sizeof(struct inotify_event) + event->len;
+			}
+		}
+	}
 #elif __APPLE__
 	int kq = kqueue();
 	if (kq == -1)
@@ -118,34 +118,34 @@ void DirectoryWatcher::addDirectoryWatch(const std::filesystem::path& path)
 {
 	if (std::filesystem::is_directory(path))
 	{
-        for (auto& excludePath : excludePathsVector)
-        {
-            if (strncmp(path.c_str(), excludePath.c_str(), strlen(excludePath.c_str())) == 0)
-                return;
-        }
+		for (auto& excludePath : excludePathsVector)
+		{
+			if (strncmp(path.c_str(), excludePath.c_str(), strlen(excludePath.c_str())) == 0)
+				return;
+		}
 #ifdef __linux__
-        auto fd = inotify_init();
-        if (fd < 0)
-            throw std::runtime_error("Failed to initialize inotify.");
+		auto fd = inotify_init();
+		if (fd < 0)
+			throw std::runtime_error("Failed to initialize inotify.");
 
-        int wd = inotify_add_watch(fd, path.c_str(), IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
-        if (wd < 0)
-        {
-            close(fd);
-            throw std::runtime_error("Failed to add inotify watch.");
-        }
-        int flags = fcntl(fd, F_GETFL, 0);
-        if (flags == -1)
-        {
-            close(fd);
-            throw std::runtime_error("Failed to get file descriptor flags.");
-        }
-        if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
-        {
-            close(fd);
-            throw std::runtime_error("Failed to set file descriptor to non-blocking.");
-        }
-        fdPathMap[fd] = path;
+		int wd = inotify_add_watch(fd, path.c_str(), IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
+		if (wd < 0)
+		{
+			close(fd);
+			throw std::runtime_error("Failed to add inotify watch.");
+		}
+		int flags = fcntl(fd, F_GETFL, 0);
+		if (flags == -1)
+		{
+			close(fd);
+			throw std::runtime_error("Failed to get file descriptor flags.");
+		}
+		if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		{
+			close(fd);
+			throw std::runtime_error("Failed to set file descriptor to non-blocking.");
+		}
+		fdPathMap[fd] = path;
 	}
 #endif
 }
