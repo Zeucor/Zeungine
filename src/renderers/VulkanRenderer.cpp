@@ -1982,7 +1982,7 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 		}
 	}
 	// TODO: Vulkan: Implement createImage1D && createImage3D
-	createImage(texture.size.x, texture.size.y, format, VK_IMAGE_TILING_OPTIMAL, usage,
+	createImage(texture.size.x, texture.size.y, format, VK_IMAGE_TILING_LINEAR, usage,
 							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImpl.textureImage, textureImpl.textureImageMemory);
 	auto aspectMask = textureFormat_imageAspect[texture.format];
 	textureImpl.textureImageView = createImageView(textureImpl.textureImage, format, aspectMask);

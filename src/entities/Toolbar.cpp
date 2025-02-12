@@ -1,4 +1,5 @@
 #include <zg/entities/Toolbar.hpp>
+#include <zg/images/SVGRasterize.hpp>
 #include <iostream>
 using namespace zg::entities;
 Toolbar::Toolbar(Window &_window,
@@ -30,35 +31,34 @@ Toolbar::Toolbar(Window &_window,
 	updateElements("Position", positions);
 	//
 	float toolButtonsX = 2;
-	// X Button
+	float svgScale = 1;
+	auto executableDirectory = filesystem::File::getProgramDirectoryPath();
+	float imageSize = height * svgScale;
+	float imageSizePlane = imageSize / svgScale;
+	// Close Button
 	xButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (NDCHeight / 4)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(1, 0, 0, 1));
 	addChild(xButton);
-	xString = "x";
-	float xFontSize = height / 1.5;
-	float xLineHeight = 0;
-	auto xTextSize = font.stringSize(xString, xFontSize, xLineHeight, {0, 0});
-	xTextSize.y /= window.windowHeight * 0.5f;
-	xTextSize.x /= window.windowWidth * 0.5f;
-	xTextView = std::make_shared<TextView>(
+	auto closeCircleLinePath = (std::filesystem::path(executableDirectory) / "icons" / "Remix" / "System" / "close-circle-line.svg").string();
+	auto closeCircleBitmap = images::SVGRasterize({closeCircleLinePath, enums::EFileLocation::Absolute, "r"}, {imageSize, imageSize});
+	xButtonTexture = std::make_shared<textures::Texture>(
+		window,
+		glm::vec4(imageSize, imageSize, 1, 1),
+		(void*)closeCircleBitmap.get(),
+		textures::Texture::Format::RGBA8,
+		textures::Texture::Type::UnsignedByte,
+		textures::Texture::FilterType::Linear
+	);
+	xButtonImage = std::make_shared<entities::Plane>(
 		window,
 		scene,
-		glm::vec3(0, 0, 0.1f),
+		glm::vec3(0, 0, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
-		glm::vec4(1, 1, 1, 1),
-		xString,
-		xTextSize / 2.f,
-		font,
-		xFontSize,
-		true,
-		TextView::RepositionHandler(),
-		TextView::ResizeHandler(),
-		[&]
-		{
-			return NDCHeight * window.windowHeight * 0.5f / 2.f;
-		});
-	xButton->addChild(xTextView);
-	xTextView->addToBVH = false;
+		glm::vec2(imageSizePlane / window.windowWidth, imageSizePlane / window.windowHeight),
+		*xButtonTexture
+	);
+	xButton->addChild(xButtonImage);
+	xButtonImage->addToBVH = false;
 	xButtonLeftMousePressID = xButton->addMousePressHandler(0, [&](auto pressed)
 															{ window.close(); });
 	xButtonMouseHoverID = xButton->addMouseHoverHandler([&](auto hovered)
@@ -74,32 +74,27 @@ Toolbar::Toolbar(Window &_window,
 	// max Button
 	maxButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (xButton->size.x)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
 	addChild(maxButton);
-	maxString = "+";
-	float maxFontSize = height / 1.5;
-	float maxLineHeight = 0;
-	auto maxTextSize = font.stringSize(maxString, maxFontSize, maxLineHeight, {0, 0});
-	maxTextSize.y /= window.windowHeight * 0.5f;
-	maxTextSize.x /= window.windowWidth * 0.5f;
-	maxTextView = std::make_shared<TextView>(
+	auto fullscreenLinePath = (std::filesystem::path(executableDirectory) / "icons" / "Remix" / "Media" / "fullscreen-line.svg").string();
+	auto fullscreenBitmap = images::SVGRasterize({fullscreenLinePath, enums::EFileLocation::Absolute, "r"}, {imageSize, imageSize});
+	maxButtonTexture = std::make_shared<textures::Texture>(
+		window,
+		glm::vec4(imageSize, imageSize, 1, 1),
+		(void*)fullscreenBitmap.get(),
+		textures::Texture::Format::RGBA8,
+		textures::Texture::Type::UnsignedByte,
+		textures::Texture::FilterType::Linear
+	);
+	maxButtonPlane = std::make_shared<entities::Plane>(
 		window,
 		scene,
-		glm::vec3(0, 0, 0.1f),
+		glm::vec3(0, 0, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
-		glm::vec4(1, 1, 1, 1),
-		maxString,
-		maxTextSize / 2.f,
-		font,
-		maxFontSize,
-		true,
-		TextView::RepositionHandler(),
-		TextView::ResizeHandler(),
-		[&]
-		{
-			return NDCHeight * window.windowHeight * 0.5f / 2.f;
-		});
-	maxButton->addChild(maxTextView);
-	maxTextView->addToBVH = false;
+		glm::vec2(imageSizePlane / window.windowWidth, imageSizePlane / window.windowHeight),
+		*maxButtonTexture
+	);
+	maxButton->addChild(maxButtonPlane);
+	maxButtonPlane->addToBVH = false;
 	maxButtonLeftMousePressID = maxButton->addMousePressHandler(0, [&](auto pressed)
 																{ window.maximize(); });
 	maxButtonMouseHoverID = maxButton->addMouseHoverHandler([&](auto hovered)
@@ -113,45 +108,40 @@ Toolbar::Toolbar(Window &_window,
 			maxButton->setColor({0.4, 0.4, 0.4, 1});
 		} });
 	// _ Button
-	_Button = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (maxButton->size.x)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
-	addChild(_Button);
-	_String = "-";
-	float FontSize_ = height / 1.5;
-	float LineHeight_ = 0;
-	auto TextSize_ = font.stringSize(_String, FontSize_, LineHeight_, {0, 0});
-	TextSize_.y /= window.windowHeight * 0.5f;
-	TextSize_.x /= window.windowWidth * 0.5f;
-	_TextView = std::make_shared<TextView>(
+	minButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (maxButton->size.x)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
+	addChild(minButton);
+	auto skipDownLinePath = (std::filesystem::path(executableDirectory) / "icons" / "Remix" / "Arrows" / "skip-down-line.svg").string();
+	auto skipDownBitmap = images::SVGRasterize({skipDownLinePath, enums::EFileLocation::Absolute, "r"}, {imageSize, imageSize});
+	minButtonTexture = std::make_shared<textures::Texture>(
+		window,
+		glm::vec4(imageSize, imageSize, 1, 1),
+		(void*)skipDownBitmap.get(),
+		textures::Texture::Format::RGBA8,
+		textures::Texture::Type::UnsignedByte,
+		textures::Texture::FilterType::Linear
+	);
+	minButtonPlane = std::make_shared<entities::Plane>(
 		window,
 		scene,
-		glm::vec3(0, 0, 0.1f),
+		glm::vec3(0, 0, 0.1),
 		glm::vec3(0),
 		glm::vec3(1),
-		glm::vec4(1, 1, 1, 1),
-		_String,
-		TextSize_ / 2.f,
-		font,
-		FontSize_,
-		true,
-		TextView::RepositionHandler(),
-		TextView::ResizeHandler(),
-		[&]
-		{
-			return NDCHeight * window.windowHeight * 0.5f / 2.f;
-		});
-	_Button->addChild(_TextView);
-	_TextView->addToBVH = false;
-	_ButtonLeftMousePressID = _Button->addMousePressHandler(0, [&](auto pressed)
+		glm::vec2(imageSizePlane / window.windowWidth, imageSizePlane / window.windowHeight),
+		*minButtonTexture
+	);
+	minButton->addChild(minButtonPlane);
+	minButtonPlane->addToBVH = false;
+	minButtonLeftMousePressID = minButton->addMousePressHandler(0, [&](auto pressed)
 															{ window.minimize(); });
-	_ButtonMouseHoverID = _Button->addMouseHoverHandler([&](auto hovered)
+	minButtonMouseHoverID = minButton->addMouseHoverHandler([&](auto hovered)
 														{
 		if (hovered)
 		{
-			_Button->setColor({0.2, 0.2, 0.2, 1});
+			minButton->setColor({0.2, 0.2, 0.2, 1});
 		}
 		else
 		{
-			_Button->setColor({0.4, 0.4, 0.4, 1});
+			minButton->setColor({0.4, 0.4, 0.4, 1});
 		} });
 	// icon
 	iconTexture.reset(new textures::Texture(window, {128, 128, 1, 0}, std::string_view("images/zeungine-icon.png")));
@@ -457,8 +447,8 @@ Toolbar::~Toolbar()
 	xButton->removeMouseHoverHandler(xButtonMouseHoverID);
 	maxButton->removeMousePressHandler(0, maxButtonLeftMousePressID);
 	maxButton->removeMouseHoverHandler(maxButtonMouseHoverID);
-	_Button->removeMousePressHandler(0, _ButtonLeftMousePressID);
-	_Button->removeMouseHoverHandler(_ButtonMouseHoverID);
+	minButton->removeMousePressHandler(0, minButtonLeftMousePressID);
+	minButton->removeMouseHoverHandler(minButtonMouseHoverID);
 	removeMousePressHandler(0, dragMousePressID);
 	window.removeMousePressHandler(0, globalDragMousePressID);
 	removeMouseMoveHandler(dragMouseMoveID);

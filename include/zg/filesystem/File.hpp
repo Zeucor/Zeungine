@@ -26,7 +26,7 @@ namespace zg::filesystem
 		time_t lastModified() const;
 		bool remove();
 		std::string toString();
-		std::shared_ptr<int8_t[]> toBytes();
+		std::shared_ptr<int8_t> toBytes();
 		static bool exists(const std::string &path);
 		static std::string getUserDirectoryPath();
 		static std::string getProgramDirectoryPath();

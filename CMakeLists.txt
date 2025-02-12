@@ -110,17 +110,19 @@ include_directories(vendor/glm)
 # STB
 include_directories(vendor/stb)
 
-# hscpp
-# set(HSCPP_BUILD_EXAMPLES OFF)
-# set(HSCPP_BUILD_TESTS OFF)
-# set(HSCPP_BUILD_EXTENSION_MEM OFF)
-# add_subdirectory(vendor/hscpp)
-# include_directories(vendor/hscpp/include)
-
 # filewatch
 set(BuildTests OFF)
 add_subdirectory(vendor/filewatch)
 include_directories(vendor/filewatch)
+
+include(FetchContent)
+FetchContent_Declare(
+    lunasvg
+    GIT_REPOSITORY https://github.com/sammycage/lunasvg.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(lunasvg)
+include_directories(${lunasvg_SOURCE_DIR}/include)
 
 # Windowing 'USE_X's
 if(LINUX)
@@ -168,6 +170,7 @@ set(ZG_SOURCES
     src/SharedLibrary.cpp
     src/crypto/vector.cpp
     src/images/ImageLoader.cpp
+    src/images/SVGRasterize.cpp
     src/filesystem/File.cpp
     src/filesystem/Directory.cpp
     src/filesystem/DirectoryWatcher.cpp
@@ -266,7 +269,6 @@ if(BUILD_GL)
 endif()
 target_link_libraries(zeungine freetype)
 target_link_libraries(zeungine bvh)
-# target_link_libraries(zeungine hscpp)
 if(LINUX)
     if(USE_X11)
         target_link_libraries(zeungine X11 Xrandr Xext Xfixes xkbcommon Xrender)
@@ -295,6 +297,8 @@ elseif(MACOS)
     target_link_libraries(zeungine
         ${ZG_LIB_DIR}/libshaderc_shared.dylib)
 endif()
+
+target_link_libraries(zeungine lunasvg::lunasvg)
 
 # create_test function
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
@@ -337,6 +341,7 @@ set(IMAGES_DIRECTORY ${CMAKE_BINARY_DIR}/images)
 file(COPY ${CMAKE_SOURCE_DIR}/fonts/Roboto/Roboto-Regular.ttf DESTINATION ${FONTS_DIRECTORY}/Roboto)
 file(COPY ${CMAKE_SOURCE_DIR}/images/zeungine-icon.png DESTINATION ${IMAGES_DIRECTORY})
 file(COPY ${ZG_LIB_DIR}/libvk_swiftshader${LIB_SUFFIX} DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/icons DESTINATION ${CMAKE_BINARY_DIR})
 
 # Install
 if(ZG_INSTALL)

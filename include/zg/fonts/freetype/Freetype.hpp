@@ -25,7 +25,7 @@ namespace zg::fonts::freetype
 		static FT_Library freetypeLibrary;
 		static bool freetypeLoaded;
 		std::shared_ptr<FT_Face> facePointer;
-		std::shared_ptr<int8_t[]> fontFileBytes;
+		std::shared_ptr<int8_t> fontFileBytes;
 		std::unordered_map<float, std::unordered_map<float, FreetypeCharacter>> codepointFontSizeCharacters;
 		Window &window;
 		FreetypeFont(Window &window, filesystem::File &fontFile);
