@@ -196,7 +196,8 @@ std::string File::toString()
 std::shared_ptr<int8_t> File::toBytes()
 {
 	auto actualSize = size();
-	std::shared_ptr<int8_t> bytes((int8_t*)malloc(actualSize), free);
+	std::shared_ptr<int8_t> bytes((int8_t*)malloc(actualSize + 1), free);
+	memset(bytes.get(), 0, actualSize + 1);
 	readBytes(0, actualSize, bytes.get());
 	return bytes;
 }

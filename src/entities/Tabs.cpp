@@ -1,76 +1,44 @@
+#include <iostream>
 #include <zg/entities/Tabs.hpp>
 #include <zg/utilities.hpp>
-#include <iostream>
+#include <zg/images/SVGRasterize.hpp>
 using namespace zg::entities;
-TabsBar::TabsBar(zg::Window &window,
-				 zg::Scene &scene,
-				 glm::vec3 position,
-				 glm::vec3 rotation,
-				 glm::vec3 scale,
-				 glm::vec4 color,
-				 fonts::freetype::FreetypeFont &font,
-				 float width,
-				 float height,
-				 const zg::shaders::RuntimeConstants &constants,
-				 std::string_view name) : zg::Entity(window,
-													 zg::mergeVectors<std::string_view>({{"Color", "Position",
-																						  "View", "Projection", "Model", "CameraPosition"}},
-																						constants),
-													 6,
-													 {0, 1, 2, 2, 3, 0},
-													 4,
-													 {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}},
-													 position,
-													 rotation,
-													 scale,
-													 name.empty() ? "TabsBar " + std::to_string(++tabBarsCount) : name),
-										  scene(scene),
-										  size({0, 0}),
-										  color(color),
-										  font(font),
-										  width(width),
-										  height(height)
+TabsBar::TabsBar(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+								 glm::vec4 color, fonts::freetype::FreetypeFont& font, float width, float height,
+								 const zg::shaders::RuntimeConstants& constants, std::string_view name) :
+		zg::Entity(window,
+							 zg::mergeVectors<std::string_view>(
+								 {{"Color", "Position", "View", "Projection", "Model", "CameraPosition"}}, constants),
+							 6, {0, 1, 2, 2, 3, 0}, 4, {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}}, position, rotation, scale,
+							 name.empty() ? "TabsBar " + std::to_string(++tabBarsCount) : name),
+		scene(scene), size({0, 0}), color(color), font(font), width(width), height(height)
 {
 	updateIndices(indices);
 	setColor(color);
 	setSize();
 	addToBVH = false;
 };
-size_t TabsBar::addTab(std::string_view name, const TabClickHandler &handler, bool active)
+size_t TabsBar::addTab(std::string_view name, const TabClickHandler& handler, bool active, const filesystem::File& iconFile)
 {
-	auto &vao = (VAO &)*this;
+	auto& vao = (VAO&)*this;
 	float sizeXTotal = 0;
-	for (auto &child : children)
+	for (auto& child : children)
 	{
-		auto &childItem = *std::dynamic_pointer_cast<Tab>(child.second);
+		auto& childItem = *std::dynamic_pointer_cast<Tab>(child.second);
 		sizeXTotal += childItem.size.x;
 	}
 	static const auto indent = 16.f;
-	auto panelItem = std::make_shared<Tab>(
-		window,
-		scene,
-		glm::vec3(sizeXTotal, 0, 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		color,
-		name,
-		font,
-		height,
-		handler,
-		active,
-		*this);
+	auto panelItem = std::make_shared<Tab>(window, scene, glm::vec3(sizeXTotal, 0, 0.1), glm::vec3(0), glm::vec3(1),
+																				 color, name, font, height, handler, active, *this, iconFile);
 	addChild(panelItem);
 	scene.postAddEntity(panelItem, {ID, panelItem->ID});
 	setSize();
 	return panelItem->ID;
 };
-void TabsBar::removeTab(size_t ID)
-{
-	removeChild(ID);
-}
+void TabsBar::removeTab(size_t ID) { removeChild(ID); }
 bool TabsBar::preRender()
 {
-	const auto &model = getModelMatrix();
+	const auto& model = getModelMatrix();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
@@ -88,107 +56,92 @@ void TabsBar::setColor(glm::vec4 color)
 void TabsBar::setSize()
 {
 	glm::vec2 newSize(width / window.windowWidth / 0.5, height / window.windowHeight / 0.5);
-	positions = {
-		{0, -newSize.y, 0}, {newSize.x, -newSize.y, 0}, {newSize.x, 0, 0}, {0, 0, 0}};
+	positions = {{0, -newSize.y, 0}, {newSize.x, -newSize.y, 0}, {newSize.x, 0, 0}, {0, 0, 0}};
 	updateElements("Position", positions);
 	this->size = newSize;
 };
-void TabsBar::markInactive(Tab *activeTab)
+void TabsBar::markInactive(Tab* activeTab)
 {
-	for (auto &child : children)
+	for (auto& child : children)
 	{
-		auto &childItem = *std::dynamic_pointer_cast<Tab>(child.second);
+		auto& childItem = *std::dynamic_pointer_cast<Tab>(child.second);
 		if (&childItem != activeTab && childItem.active)
 		{
 			childItem.markInactive();
 		}
 	}
 };
-Tab::Tab(Window &window,
-		 Scene &scene,
-		 glm::vec3 position,
-		 glm::vec3 rotation,
-		 glm::vec3 scale,
-		 glm::vec4 color,
-		 const std::string_view text,
-		 fonts::freetype::FreetypeFont &font,
-		 float height,
-		 const TabsBar::TabClickHandler &handler,
-		 bool active,
-		 TabsBar &tabsBar,
-		 const shaders::RuntimeConstants &constants,
-		 std::string_view name) : zg::Entity(window,
-											 zg::mergeVectors<std::string_view>({{"Color", "Position",
-																				  "View", "Projection", "Model", "CameraPosition"}},
-																				constants),
-											 6,
-											 {0, 1, 2, 2, 3, 0},
-											 4,
-											 {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}},
-											 position,
-											 rotation,
-											 scale,
-											 name.empty() ? "Tab " + std::to_string(++tabsCount) : name),
-								  scene(scene),
-								  size({0, 0}),
-								  text(text),
-								  font(font),
-								  height(height),
-								  NDCHeight((height / window.windowHeight) * 2),
-								  handler(handler),
-								  active(active),
-								  activeColor(std::clamp(color[0] * 2.f, 0.f, 1.f), std::clamp(color[1] * 2.f, 0.f, 1.f), std::clamp(color[2] * 2.f, 0.f, 1.f), color[3]),
-								  inactiveColor(color),
-								  tabsBar(tabsBar)
+Tab::Tab(Window& window, Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, glm::vec4 color,
+				 const std::string_view text, fonts::freetype::FreetypeFont& font, float height,
+				 const TabsBar::TabClickHandler& handler, bool active, TabsBar& tabsBar, const filesystem::File& iconFile,
+				 const shaders::RuntimeConstants& constants, std::string_view name) :
+		zg::Entity(window,
+							 zg::mergeVectors<std::string_view>(
+								 {{"Color", "Position", "View", "Projection", "Model", "CameraPosition"}}, constants),
+							 6, {0, 1, 2, 2, 3, 0}, 4, {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}}, position, rotation, scale,
+							 name.empty() ? "Tab " + std::to_string(++tabsCount) : name),
+		scene(scene), size({0, 0}), text(text), font(font), height(height), NDCHeight((height / window.windowHeight) * 2),
+		handler(handler), active(active),
+		activeColor(std::clamp(color[0] * 2.f, 0.f, 1.f), std::clamp(color[1] * 2.f, 0.f, 1.f),
+								std::clamp(color[2] * 2.f, 0.f, 1.f), color[3]),
+		inactiveColor(color), tabsBar(tabsBar)
 {
 	updateIndices(indices);
 	colors.resize(4);
 	setColor(active ? activeColor : inactiveColor);
 	float FontSize = height / 1.5f;
+	float IconSize = height;
+	auto iconBitmap = images::SVGRasterize(iconFile, glm::ivec2(IconSize, IconSize));
+	iconTexture = std::make_shared<textures::Texture>(
+		window,
+		glm::ivec4(IconSize, IconSize, 1, 1),
+		(void*)iconBitmap.get()
+	);
+	iconPlane = std::make_shared<entities::Plane>(
+		window,
+		scene,
+		glm::vec3(IconSize / window.windowWidth / 2 + 4 / window.windowWidth, -NDCHeight / 2, 0.1),
+		glm::vec3(0),
+		glm::vec3(1),
+		glm::vec2(IconSize / window.windowWidth, IconSize / window.windowHeight),
+		*iconTexture,
+		shaders::RuntimeConstants()
+	);
+	addChild(iconPlane);
 	float LineHeight = 0;
 	auto TextSize = font.stringSize(text, FontSize, LineHeight, {0, 0});
 	TextSize.y /= window.windowHeight * 0.5f;
 	TextSize.x /= window.windowWidth * 0.5f;
 	textView = std::make_shared<TextView>(
-		window,
-		scene,
-		glm::vec3(TextSize.x / 2 + 8 / window.windowWidth, -NDCHeight / 2, 0.1f),
-		glm::vec3(0),
-		glm::vec3(1),
-		glm::vec4(1, 1, 1, 1),
-		text,
-		TextSize,
-		font,
-		FontSize,
-		true,
-		TextView::RepositionHandler(),
-		TextView::RepositionHandler(),
-		[&]
-		{
-			return NDCHeight * this->window.windowHeight * 0.5f / 1.5f;
-		});
+		window, scene, glm::vec3(TextSize.x / 2 + 8 / window.windowWidth + iconPlane->size.x, -NDCHeight / 2, 0.1f), glm::vec3(0), glm::vec3(1),
+		glm::vec4(1, 1, 1, 1), text, TextSize, font, FontSize, true, TextView::RepositionHandler(),
+		TextView::RepositionHandler(), [&] { return NDCHeight * this->window.windowHeight * 0.5f / 1.5f; });
 	textView->addToBVH = false;
 	addChild(textView);
-	setSize({TextSize.x + 16 / window.windowWidth, height / window.windowHeight / 0.5});
-	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
-										{
-		this->hovered = hovered;
-		if (hovered)
+	setSize({TextSize.x + 16 / window.windowWidth + iconPlane->size.x, height / window.windowHeight / 0.5});
+	mouseHoverID = addMouseHoverHandler(
+		[&, color](const auto& hovered)
 		{
-			setColor(this->active ? this->activeColor : glm::vec4( 0.4, 0.4, 0.4, 1 ));
-		}
-		else
-		{
-			setColor(this->active ? this->activeColor : inactiveColor);
-		} });
-	mousePressID = addMousePressHandler(0, [&](auto pressed) mutable
-										{
-		if (!pressed && !this->active)
-  	{
-			this->active = true;
-			this->handler();
-      tabsBar.markInactive(this);
-		} });
+			this->hovered = hovered;
+			if (hovered)
+			{
+				setColor(this->active ? this->activeColor : glm::vec4(0.4, 0.4, 0.4, 1));
+			}
+			else
+			{
+				setColor(this->active ? this->activeColor : inactiveColor);
+			}
+		});
+	mousePressID = addMousePressHandler(0,
+																			[&](auto pressed) mutable
+																			{
+																				if (!pressed && !this->active)
+																				{
+																					this->active = true;
+																					this->handler();
+																					tabsBar.markInactive(this);
+																				}
+																			});
 };
 Tab::~Tab()
 {
@@ -197,7 +150,7 @@ Tab::~Tab()
 };
 bool Tab::preRender()
 {
-	const auto &model = getModelMatrix();
+	const auto& model = getModelMatrix();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
@@ -218,8 +171,7 @@ void Tab::setColor(glm::vec4 color)
 };
 void Tab::setSize(glm::vec2 newSize)
 {
-	positions = {
-		{0, -newSize.y, 0}, {newSize.x, -newSize.y, 0}, {newSize.x, 0, 0}, {0, 0, 0}};
+	positions = {{0, -newSize.y, 0}, {newSize.x, -newSize.y, 0}, {newSize.x, 0, 0}, {0, 0, 0}};
 	updateElements("Position", positions);
 	this->size = newSize;
 };

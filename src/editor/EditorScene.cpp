@@ -26,7 +26,7 @@ EditorScene::EditorScene(Window& window) :
 		status(std::make_shared<entities::StatusText>(
 			window, *this,
 			glm::vec3(-1, ((bottomTabsHeight - gameWindowBorderWidth * 2) / window.windowHeight / 0.5) - 1, 0.1),
-			glm::vec3(0), glm::vec3(1), toolbarColor, robotoRegularFont, (window.windowWidth - gameWindowWidth) / 2,
+			glm::vec3(0), glm::vec3(1), toolbarColor, robotoRegularFont, (window.windowWidth - gameWindowWidth - gameWindowBorderWidth) / 2,
 			bottomTabsHeight - gameWindowBorderWidth * 2, "Idle")),
 		gameWindowBorder(std::make_shared<entities::Plane>(
 			window, *this,
@@ -143,6 +143,7 @@ EditorScene::EditorScene(Window& window) :
 	sceneGraphPanelMenu->addToBVH = false;
 	addEntity(sceneGraphPanelMenu);
 	addEntity(resourcePanelMenu);
+	filesystem::File consoleFile((std::filesystem::path(filesystem::File::getProgramDirectoryPath()) / "icons" / "Remix" / "Development" / "terminal-line.svg").string(), enums::EFileLocation::Absolute, "r");
 	resourcePanelTabs->addTab(
 		"Console",
 		[&]
@@ -151,7 +152,8 @@ EditorScene::EditorScene(Window& window) :
 			resourcePanelMenu->addPanelEntity(resourceConsole, false);
 			activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceConsole);
 		},
-		true);
+		true,
+		consoleFile);
 	resourcePanelMenu->addPanelEntity(resourceConsole, false);
 	activeResourcePanelEntity = std::dynamic_pointer_cast<Entity>(resourceConsole);
 	resourcePanelMenu->addPanelEntity(resourcePanelTabs, false);
@@ -181,6 +183,7 @@ EditorScene::EditorScene(Window& window) :
 			codeWindowPointer->setWidthHeight(codeWindowWidth, codeWindowHeight);
 			codeWindowPointer->setXY(codeWindowX, codeWindowY);
 		});
+	filesystem::File sceneFile((std::filesystem::path(filesystem::File::getProgramDirectoryPath()) / "icons" / "Remix" / "Design" / "shapes-line.svg").string(), enums::EFileLocation::Absolute, "r");
 	bottomTabsBar->addTab(
 		"Scene",
 		[&]()
@@ -189,13 +192,15 @@ EditorScene::EditorScene(Window& window) :
 			addEntity(gameWindowBorder);
 			gameWindowPointer->restore();
 		},
-		true);
+		true,
+		sceneFile);
+	filesystem::File codeEditorFile((std::filesystem::path(filesystem::File::getProgramDirectoryPath()) / "icons" / "Remix" / "Development" / "code-line.svg").string(), enums::EFileLocation::Absolute, "r");
 	bottomTabsBar->addTab("Code Editor",
 												[&]()
 												{
 													minimizeWindows();
 													codeWindowPointer->restore();
-												});
+												}, false, codeEditorFile);
 	std::cout << "Opened ZG Editor" << std::endl;
 };
 EditorScene::~EditorScene()
