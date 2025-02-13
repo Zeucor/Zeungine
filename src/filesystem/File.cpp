@@ -14,7 +14,7 @@
 #include <unistd.h>
 #endif
 using namespace zg::filesystem;
-File::File(const std::string& _filePath, enums::EFileLocation _fileLocation, const std::string& mode) :
+File::File(const std::filesystem::path& _filePath, enums::EFileLocation _fileLocation, const std::string& mode) :
 		originalFilePath(_filePath), filePath(_filePath), fileLocation(_fileLocation),
 		openMode(std::ios::in | std::ios::out | std::ios::binary)
 {
@@ -145,8 +145,8 @@ bool File::remove()
 	return false;
 }
 bool File::exists(const std::string& path) { return std::filesystem::exists(path); }
-std::string File::getUserDirectoryPath() { return std::filesystem::path(getenv("HOME")).string(); }
-std::string File::getProgramDirectoryPath()
+std::filesystem::path File::getUserDirectoryPath() { return std::filesystem::path(getenv("HOME")); }
+std::filesystem::path File::getProgramDirectoryPath()
 {
 	std::filesystem::path exePath;
 #if defined(_WIN32)
@@ -161,10 +161,10 @@ std::string File::getProgramDirectoryPath()
 #elif defined(__linux__)
 	exePath = std::filesystem::canonical("/proc/self/exe");
 #endif
-	return exePath.parent_path().string();
+	return exePath.parent_path();
 }
-std::string File::getProgramDataPath() { return std::filesystem::temp_directory_path().string(); }
-std::string File::getExecutableName() { return std::filesystem::path(getenv("_")).filename().string(); }
+std::filesystem::path File::getProgramDataPath() { return std::filesystem::temp_directory_path(); }
+std::string File::getExecutableName() { return std::filesystem::path(getenv("_")).filename(); }
 void replaceSubstring(std::string& str, const std::string& from, const std::string& to)
 {
 	size_t pos = 0;

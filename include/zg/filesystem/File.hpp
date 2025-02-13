@@ -12,7 +12,7 @@ namespace zg::filesystem
 	{
 	public:
 		File() = default;
-		File(const std::string &filePath, enums::EFileLocation fileLocation = enums::EFileLocation::Relative, const std::string &mode = "a+");
+		File(const std::filesystem::path &filePath, enums::EFileLocation fileLocation = enums::EFileLocation::Relative, const std::string &mode = "a+");
 		File &operator=(const File &other);
 		~File();
 		bool open();
@@ -28,13 +28,13 @@ namespace zg::filesystem
 		std::string toString();
 		std::shared_ptr<int8_t> toBytes();
 		static bool exists(const std::string &path);
-		static std::string getUserDirectoryPath();
-		static std::string getProgramDirectoryPath();
-		static std::string getProgramDataPath();
+		static std::filesystem::path getUserDirectoryPath();
+		static std::filesystem::path getProgramDirectoryPath();
+		static std::filesystem::path getProgramDataPath();
 		static std::string getExecutableName();
 		static std::string toPlatformPath(std::string path);
-		std::string originalFilePath;
-		std::string filePath;
+		std::filesystem::path originalFilePath;
+		std::filesystem::path filePath;
 		enums::EFileLocation fileLocation;
 		std::fstream fileStream;
 		std::ios_base::openmode openMode;
