@@ -1,6 +1,6 @@
 #include <zg/filesystem/Directory.hpp>
 using namespace zg::filesystem;
-Directory::Directory(std::string_view path) : path(path)
+Directory::Directory(std::filesystem::path path) : path(path)
 {
 	if (!std::filesystem::exists(path))
 	{
@@ -15,16 +15,17 @@ bool Directory::operator()() const
 {
 	return std::filesystem::exists(path);
 }
-std::map<uint64_t, std::string> Directory::getRecursiveFileMap() const
+std::map<uint64_t, std::filesystem::path> Directory::getRecursiveFileMap() const
 {
-	std::map<uint64_t, std::string> fileMap;
+	std::map<uint64_t, std::filesystem::path> fileMap;
+	size_t index = 0;
 	for (const auto &entry : std::filesystem::recursive_directory_iterator(path))
 	{
-		fileMap[std::filesystem::hash_value(entry.path())] = entry.path().string();
+		fileMap[++index] = entry.path();
 	}
 	return fileMap;
 }
-bool Directory::ensureExists(std::string_view path)
+bool Directory::ensureExists(std::filesystem::path path)
 {
 	if (!std::filesystem::exists(path))
 	{
