@@ -118,11 +118,8 @@ void DirectoryWatcher::addDirectoryWatch(const std::filesystem::path& path)
 {
 	if (std::filesystem::is_directory(path))
 	{
-		for (auto& excludePath : excludePathsVector)
-		{
-			if (strncmp(path.c_str(), excludePath.c_str(), strlen(excludePath.c_str())) == 0)
-				return;
-		}
+		if (isExcluded(excludePathsVector, path))
+			return;
 #ifdef __linux__
 		auto fd = inotify_init();
 		if (fd < 0)
@@ -148,4 +145,13 @@ void DirectoryWatcher::addDirectoryWatch(const std::filesystem::path& path)
 		fdPathMap[fd] = path;
 	}
 #endif
+}
+bool DirectoryWatcher::isExcluded(const std::vector<std::filesystem::path>& excludePathsVector, const std::filesystem::path& path)
+{
+	for (auto& excludePath : excludePathsVector)
+	{
+		if (strncmp(path.c_str(), excludePath.c_str(), strlen(excludePath.c_str())) == 0)
+			return true;
+	}
+	return false;
 }
