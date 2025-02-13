@@ -368,7 +368,7 @@ void EditorScene::openProject(std::string_view projectDirectory)
 	hotswapper = std::make_shared<hs::Hotswapper>(projectDirectory, *this);
 	resourceAssetBrowser = std::make_shared<entities::AssetBrowser>(
 		window, *this, glm::vec3(0, 0, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0.1, 0.1, 0.1, 1), robotoRegularFont,
-		window.windowWidth, resourcePanelMenuHeight - bottomTabsHeight, projectDirectory);
+		window.windowWidth, resourcePanelMenuHeight - bottomTabsHeight + gameWindowBorderWidth * 2, projectDirectory);
 	filesystem::File browserFile((programDirectoryPath / "icons" / "Remix" / "Document" / "pages-line.svg").string(),
 															 enums::EFileLocation::Absolute, "r");
 	assetTabID = resourcePanelTabs->addTab(
