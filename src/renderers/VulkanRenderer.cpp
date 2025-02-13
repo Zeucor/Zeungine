@@ -2064,7 +2064,10 @@ void VulkanRenderer::midInitTexture(const textures::Texture& texture,
 	_vkDestroyBuffer(device, _stagingBuffer, 0);
 	_vkFreeMemory(device, _stagingBufferMemory, 0);
 }
-void VulkanRenderer::postInitTexture(const textures::Texture& texture) {}
+void VulkanRenderer::postInitTexture(const textures::Texture& texture)
+{
+	texture.bind();
+}
 void VulkanRenderer::destroyTexture(textures::Texture& texture)
 {
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;

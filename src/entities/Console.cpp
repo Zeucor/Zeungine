@@ -110,8 +110,6 @@ void Console::hookedCallback(const std::vector<std::string> &lines)
 					return this->window.windowHeight / 46.f;
 				});
 			consoleTextView->forceUpdate();
-			if (consoleTextView->texturePointer)
-				consoleTextView->texturePointer->bind();
 			consoleTextViews[index] = consoleTextView;
 			consoleTextView->addToBVH = false;
 		};

@@ -48,7 +48,6 @@ Toolbar::Toolbar(Window &_window,
 		textures::Texture::Type::UnsignedByte,
 		textures::Texture::FilterType::Linear
 	);
-	xButtonTexture->bind();
 	xButtonImage = std::make_shared<entities::Plane>(
 		window,
 		scene,
@@ -85,7 +84,6 @@ Toolbar::Toolbar(Window &_window,
 		textures::Texture::Type::UnsignedByte,
 		textures::Texture::FilterType::Linear
 	);
-	maxButtonTexture->bind();
 	maxButtonPlane = std::make_shared<entities::Plane>(
 		window,
 		scene,
@@ -122,7 +120,6 @@ Toolbar::Toolbar(Window &_window,
 		textures::Texture::Type::UnsignedByte,
 		textures::Texture::FilterType::Linear
 	);
-	minButtonTexture->bind();
 	minButtonPlane = std::make_shared<entities::Plane>(
 		window,
 		scene,

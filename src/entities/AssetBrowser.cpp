@@ -82,7 +82,6 @@ void Breadcrumbs::setCurrentPath(const std::filesystem::path& currentPath)
 			glm::ivec4(arrowSize, arrowSize, 1, 0),
 			(void*)arrowBitmap.get()
 		);
-		arrowTexture->bind();
 		textures.push_back(arrowTexture);
 		auto& arrowTextureSize = arrowTexture->size;
 		currentPosition.x += arrowTextureSize.x / 2 / window.windowWidth / 0.5;
@@ -107,7 +106,6 @@ void Breadcrumbs::setCurrentPath(const std::filesystem::path& currentPath)
 		std::shared_ptr<textures::Texture> partTexture;
 		glm::vec3 cursorPosition;
 		font.stringToTexture(part, glm::vec4(1), fontSize, lineHeight, partTextSize, partTexture, 0, cursorPosition);
-		partTexture->bind();
 		auto& partTextureSize = partTexture->size;
 		textures.push_back(partTexture);
 		currentPosition.x += partTextureSize.x / 2 / window.windowWidth / 0.5;
