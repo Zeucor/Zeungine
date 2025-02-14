@@ -9,14 +9,41 @@
 #include "./TextView.hpp"
 namespace zg::entities
 {
+	inline static glm::ivec2 iconSize(24, 24);
+	inline static int32_t iconScale = 4;
+	inline static auto scaledIconSize = iconSize * iconScale;
+	static std::shared_ptr<textures::Texture> getIconTexture(const std::filesystem::path& path, Window& window);
 	struct Asset : Entity, ISizable
 	{
 		Scene& scene;
 		std::filesystem::path path;
 		fonts::freetype::FreetypeFont& font;
+		std::shared_ptr<textures::Texture> iconTexture;
+		std::shared_ptr<entities::Plane> iconPlane;
+		float nameLineHeight = 0;
+		std::shared_ptr<textures::Texture> nameTexture;
+		std::shared_ptr<entities::Plane> namePlane;
 		inline static size_t assetsCount = 0;
-		Asset(Window& window, Scene& scene, const std::filesystem::path& path, fonts::freetype::FreetypeFont& font);
+		Asset(Window& window, Scene& scene, glm::vec3 position, const std::filesystem::path& path,
+					fonts::freetype::FreetypeFont& font);
 		bool preRender() override;
+		std::filesystem::path determineIconPath(const std::filesystem::path& extension);
+	};
+	struct Folder : Entity, ISizable
+	{
+		Scene& scene;
+		std::filesystem::path path;
+		fonts::freetype::FreetypeFont& font;
+		std::shared_ptr<textures::Texture> iconTexture;
+		std::shared_ptr<entities::Plane> iconPlane;
+		float nameLineHeight = 0;
+		std::shared_ptr<textures::Texture> nameTexture;
+		std::shared_ptr<entities::Plane> namePlane;
+		inline static size_t foldersCount = 0;
+		Folder(Window& window, Scene& scene, glm::vec3 position, const std::filesystem::path& path,
+					fonts::freetype::FreetypeFont& font);
+		bool preRender() override;
+		std::filesystem::path determineIconPath();
 	};
 	struct Breadcrumbs : Entity, ISizable
 	{
@@ -46,10 +73,16 @@ namespace zg::entities
 		glm::vec4 backgroundColor;
 		float width;
 		float height;
+		int32_t assetCount = 0;
+		float itemWidth = scaledIconSize.x;
+		float itemHeight = scaledIconSize.y;
+		int32_t columnCount = 0;
 		inline static size_t assetGridsCount = 0;
 		AssetGrid(Window& window, Scene& scene, float width, float height, glm::vec3 position);
 		bool preRender() override;
-		size_t addAsset(const std::shared_ptr<Asset>& asset);
+		size_t addAsset(const std::filesystem::path& assetPath, fonts::freetype::FreetypeFont& font);
+		size_t addFolder(const std::filesystem::path& folderPath, fonts::freetype::FreetypeFont& font);
+		glm::vec2 getNextPosition();
 		void setSize(glm::vec3 newSize) override;
 	};
 	struct AssetBrowser : Entity, ISizable
