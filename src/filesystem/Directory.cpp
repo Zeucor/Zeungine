@@ -6,18 +6,19 @@ Directory::Directory(std::filesystem::path path) : path(path)
 	{
 		throw std::runtime_error("Directory does not exist: " + std::string(path));
 	}
+	size_t index = 0;
 	for (const auto &entry : std::filesystem::directory_iterator(path))
 	{
-		entries[std::filesystem::hash_value(entry.path())] = entry.path().string();
+		entries[++index] = entry.path();
 	}
 }
 bool Directory::operator()() const
 {
 	return std::filesystem::exists(path);
 }
-std::map<uint64_t, std::filesystem::path> Directory::getRecursiveFileMap() const
+std::map<size_t, std::filesystem::path> Directory::getRecursiveFileMap() const
 {
-	std::map<uint64_t, std::filesystem::path> fileMap;
+	std::map<size_t, std::filesystem::path> fileMap;
 	size_t index = 0;
 	for (const auto &entry : std::filesystem::recursive_directory_iterator(path))
 	{
@@ -33,11 +34,11 @@ bool Directory::ensureExists(std::filesystem::path path)
 	}
 	return true;
 }
-std::string Directory::getCurrentDirectory()
+std::filesystem::path Directory::getCurrentDirectory()
 {
-	return std::filesystem::current_path().string();
+	return std::filesystem::current_path();
 }
-std::string Directory::getCurrentDirectoryName()
+std::filesystem::path Directory::getCurrentDirectoryName()
 {
-	return std::filesystem::current_path().filename().string();
+	return std::filesystem::current_path().filename();
 }

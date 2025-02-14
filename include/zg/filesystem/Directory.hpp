@@ -8,12 +8,12 @@ namespace zg::filesystem
 	struct Directory
 	{
 		const std::filesystem::path path;
-		std::map<uint64_t, std::string> entries;
+		std::map<size_t, std::filesystem::path> entries;
 		Directory(std::filesystem::path path);
 		bool operator()() const;
-		std::map<uint64_t, std::filesystem::path> getRecursiveFileMap() const;
+		std::map<size_t, std::filesystem::path> getRecursiveFileMap() const;
 		static bool ensureExists(std::filesystem::path path);
-		static std::string getCurrentDirectory();
-		static std::string getCurrentDirectoryName();
+		static std::filesystem::path getCurrentDirectory();
+		static std::filesystem::path getCurrentDirectoryName();
 	};
 }
