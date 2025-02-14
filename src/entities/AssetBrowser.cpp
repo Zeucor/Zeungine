@@ -24,26 +24,24 @@ Asset::Asset(Window& window, Scene& scene, glm::vec3 position, const std::filesy
 	auto iconPath = determineIconPath(path.extension());
 	iconTexture = getIconTexture(iconPath, window);
 	glm::vec2 iconPlaneSize(scaledIconSize.x / window.windowWidth / 0.5, scaledIconSize.y / window.windowHeight / 0.5);
-	iconPlane = std::make_shared<entities::Plane>(window, scene, position + glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y / 2.0f, 0.1),
-																								glm::vec3(0), glm::vec3(1), iconPlaneSize, *iconTexture);
+	iconPlane = std::make_shared<entities::Plane>(
+		window, scene, position + glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y / 2.0f, 0.1), glm::vec3(0),
+		glm::vec3(1), iconPlaneSize, *iconTexture);
 	addChild(iconPlane);
 	// name
-	auto name = path.filename().string(); 
+	auto name = path.filename().string();
 	float nameFontSize = window.windowHeight / 50;
 	auto nameSize = font.stringSize(name, nameFontSize, nameLineHeight, glm::vec2(0));
 	int64_t cursorIndex = 0;
 	glm::vec3 cursorPosition(0);
-	font.stringToTexture(name, glm::vec4(1), nameFontSize, nameLineHeight, nameSize, nameTexture, cursorIndex, cursorPosition);
+	font.stringToTexture(name, glm::vec4(1), nameFontSize, nameLineHeight, nameSize, nameTexture, cursorIndex,
+											 cursorPosition);
 	glm::vec2 nameScaledSize(nameSize.x / window.windowWidth / 0.5, nameSize.y / window.windowHeight / 0.5);
 	namePlane = std::make_shared<entities::Plane>(
-		window,
-		scene,
-		position + glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y - (nameLineHeight / 2 / window.windowHeight / 0.5), 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		nameScaledSize,
-		*nameTexture
-	);
+		window, scene,
+		position +
+			glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y - (nameLineHeight / 2 / window.windowHeight / 0.5), 0.1),
+		glm::vec3(0), glm::vec3(1), nameScaledSize, *nameTexture);
 	addChild(namePlane);
 }
 bool Asset::preRender()
@@ -71,7 +69,7 @@ std::filesystem::path Asset::determineIconPath(const std::filesystem::path& exte
 	return extIconIter->second;
 }
 Folder::Folder(Window& window, Scene& scene, glm::vec3 position, const std::filesystem::path& path,
-						 fonts::freetype::FreetypeFont& font) :
+							 fonts::freetype::FreetypeFont& font) :
 		Entity(window, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6, {0, 1, 2, 2, 3, 0}, 4,
 					 {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, glm::vec3(0), glm::vec3(0), glm::vec3(1),
 					 "Folder " + std::to_string(++foldersCount)),
@@ -81,26 +79,24 @@ Folder::Folder(Window& window, Scene& scene, glm::vec3 position, const std::file
 	auto iconPath = determineIconPath();
 	iconTexture = getIconTexture(iconPath, window);
 	glm::vec2 iconPlaneSize(scaledIconSize.x / window.windowWidth / 0.5, scaledIconSize.y / window.windowHeight / 0.5);
-	iconPlane = std::make_shared<entities::Plane>(window, scene, position + glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y / 2.0f, 0.1),
-																								glm::vec3(0), glm::vec3(1), iconPlaneSize, *iconTexture);
+	iconPlane = std::make_shared<entities::Plane>(
+		window, scene, position + glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y / 2.0f, 0.1), glm::vec3(0),
+		glm::vec3(1), iconPlaneSize, *iconTexture);
 	addChild(iconPlane);
 	// name
-	auto name = path.filename().string(); 
+	auto name = path.filename().string();
 	float nameFontSize = window.windowHeight / 50;
 	auto nameSize = font.stringSize(name, nameFontSize, nameLineHeight, glm::vec2(0));
 	int64_t cursorIndex = 0;
 	glm::vec3 cursorPosition(0);
-	font.stringToTexture(name, glm::vec4(1), nameFontSize, nameLineHeight, nameSize, nameTexture, cursorIndex, cursorPosition);
+	font.stringToTexture(name, glm::vec4(1), nameFontSize, nameLineHeight, nameSize, nameTexture, cursorIndex,
+											 cursorPosition);
 	glm::vec2 nameScaledSize(nameSize.x / window.windowWidth / 0.5, nameSize.y / window.windowHeight / 0.5);
 	namePlane = std::make_shared<entities::Plane>(
-		window,
-		scene,
-		position + glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y - (nameLineHeight / 2 / window.windowHeight / 0.5), 0.1),
-		glm::vec3(0),
-		glm::vec3(1),
-		nameScaledSize,
-		*nameTexture
-	);
+		window, scene,
+		position +
+			glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y - (nameLineHeight / 2 / window.windowHeight / 0.5), 0.1),
+		glm::vec3(0), glm::vec3(1), nameScaledSize, *nameTexture);
 	addChild(namePlane);
 }
 bool Folder::preRender()
