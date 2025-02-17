@@ -23,7 +23,7 @@ namespace zg::system
     class Command
     {
     private:
-        ProcessHandle handle;
+        ProcessHandle pid;
         int exitCode = 0;
         bool complete = false;
         int pipeRead = 0;

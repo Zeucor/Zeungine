@@ -1,7 +1,8 @@
 #include <zg/system/Command.hpp>
 using namespace zg::system;
-Command::Command(const std::string& command) : handle(0), exitCode(-1), complete(false), pipeRead(-1)
+Command::Command(const std::string& command) : pid(0), exitCode(0), complete(false), pipeRead(-1)
 {
+	std::cout << "[Executing command]: " << command << std::endl;
 #ifdef _WIN32
 	SECURITY_ATTRIBUTES sa;
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -12,7 +13,7 @@ Command::Command(const std::string& command) : handle(0), exitCode(-1), complete
 	if (!CreatePipe(&hRead, &hWrite, &sa, 0))
 	{
 		std::cerr << "Failed to create pipe." << std::endl;
-		handle = NULL;
+		pid = NULL;
 		return;
 	}
 
@@ -29,23 +30,23 @@ Command::Command(const std::string& command) : handle(0), exitCode(-1), complete
 		std::cerr << "Failed to execute command." << std::endl;
 		CloseHandle(hRead);
 		CloseHandle(hWrite);
-		handle = NULL;
+		pid = NULL;
 		return;
 	}
-	handle = pi.hProcess;
+	pid = pi.hProcess;
 	CloseHandle(pi.hThread);
 	CloseHandle(hWrite);
-	pipeRead = _open_osfhandle(reinterpret_cast<intptr_t>(hRead), _O_RDONLY);
+	pipeRead = _open_osfpid(reinterpret_cast<intptr_t>(hRead), _O_RDONLY);
 #else
 	int pipefd[2];
 	if (pipe(pipefd) == -1)
 	{
 		std::cerr << "Failed to create pipe." << std::endl;
-		handle = -1;
+		pid = -1;
 		return;
 	}
-	handle = fork();
-	if (handle == 0)
+	pid = fork();
+	if (pid == 0)
 	{
 		close(pipefd[0]);
 		dup2(pipefd[1], STDOUT_FILENO);
@@ -54,10 +55,10 @@ Command::Command(const std::string& command) : handle(0), exitCode(-1), complete
 		execl("/bin/sh", "sh", "-c", command.c_str(), (char*)NULL);
 		exit(EXIT_FAILURE);
 	}
-	else if (handle < 0)
+	else if (pid < 0)
 	{
 		std::cerr << "Failed to fork process." << std::endl;
-		handle = -1;
+		pid = -1;
 		return;
 	}
 	close(pipefd[1]);
@@ -72,10 +73,10 @@ bool Command::update()
 		char buffer[128];
 #ifdef _WIN32
 		DWORD bytesRead;
-		if (PeekNamedPipe(reinterpret_cast<HANDLE>(_get_osfhandle(pipeRead)), NULL, 0, NULL, &bytesRead, NULL) &&
+		if (PeekNamedPipe(reinterpret_cast<HANDLE>(_get_osfpid(pipeRead)), NULL, 0, NULL, &bytesRead, NULL) &&
 				bytesRead > 0)
 		{
-			if (ReadFile(reinterpret_cast<HANDLE>(_get_osfhandle(pipeRead)), buffer, sizeof(buffer) - 1, &bytesRead, NULL) &&
+			if (ReadFile(reinterpret_cast<HANDLE>(_get_osfpid(pipeRead)), buffer, sizeof(buffer) - 1, &bytesRead, NULL) &&
 					bytesRead > 0)
 			{
 				buffer[bytesRead] = '\0';
@@ -93,28 +94,28 @@ bool Command::update()
 	}
 
 #ifdef _WIN32
-	if (handle)
+	if (pid)
 	{
 		DWORD status;
-		if (GetExitCodeProcess(handle, &status) && status != STILL_ACTIVE)
+		if (GetExitCodeProcess(pid, &status) && status != STILL_ACTIVE)
 		{
 			exitCode = static_cast<int>(status);
-			CloseHandle(handle);
+			CloseHandle(pid);
 			complete = true;
 		}
 	}
 #else
-	if (handle > 0)
+	if (pid > 0)
 	{
 		int status;
-		pid_t result = waitpid(handle, &status, WNOHANG);
-		if (result == handle)
+		pid_t result = waitpid(pid, &status, WNOHANG);
+		if (result == pid)
 		{
 			if (WIFEXITED(status))
 			{
 				exitCode = WEXITSTATUS(status);
-				complete = true;
 			}
+			complete = true;
 		}
 	}
 #endif
@@ -124,16 +125,16 @@ bool Command::update()
 void Command::kill()
 {
 #ifdef _WIN32
-	if (handle)
+	if (pid)
 	{
-		TerminateProcess(handle, 0);
-		CloseHandle(handle);
+		TerminateProcess(pid, 0);
+		CloseHandle(pid);
 		complete = true;
 	}
 #else
-	if (handle > 0)
+	if (pid > 0)
 	{
-		::kill(handle, SIGKILL);
+		::kill(pid, SIGKILL);
 		complete = true;
 	}
 #endif
