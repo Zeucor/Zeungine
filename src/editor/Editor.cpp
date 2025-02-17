@@ -7,4 +7,5 @@ int32_t main()
 	window.runOnThread([&](auto &runningWindow) mutable
 					   { runningWindow.setScene(std::make_shared<EditorScene>((Window &)runningWindow)); });
 	window.run();
+	return 0;
 };
