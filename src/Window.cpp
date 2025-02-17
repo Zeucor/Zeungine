@@ -600,14 +600,14 @@ std::shared_ptr<Scene> Window::setScene(const std::shared_ptr<Scene>& scene)
 };
 void Window::runOnThread(const Runnable& runnable)
 {
-	std::lock_guard lock(runnablesMutex);
+	// std::lock_guard lock(runnablesMutex);
 	runnables.push(runnable);
 };
 void Window::runRunnables()
 {
 	std::queue<Runnable> runnablesCopy;
 	{
-		std::lock_guard lock(runnablesMutex);
+		// std::lock_guard lock(runnablesMutex);
 		runnablesCopy = runnables;
 		while (!runnables.empty())
 			runnables.pop();
