@@ -5,8 +5,10 @@
 #include <zg/filesystem/DirectoryWatcher.hpp>
 #include <zg/filesystem/File.hpp>
 #include <zg/system/WorkingDirectory.hpp>
+#include <zg/system/Budget.hpp>
 using namespace zg::editor::hs;
 using namespace zg::system;
+DECLARE_NZBUDGET(hotswapperZBudget, 1.0/24.2);
 Hotswapper::Hotswapper(const std::filesystem::path& directory, EditorScene& editorScene) :
 		running(true), directory(directory), editorScene(editorScene),
 		updateThread(std::make_shared<std::thread>(&Hotswapper::update, this))
@@ -25,6 +27,7 @@ void Hotswapper::update()
 	std::unique_ptr<SharedLibrary> libraryPointer;
 	while (running)
 	{
+		hotswapperZBudget.update();
 		auto configureResult = configure(currentlyConfiguring, requireConfigure);
 		if (justRequireConfigure && configureResult.first && configureResult.second)
 		{
@@ -81,10 +84,14 @@ void Hotswapper::update()
 			}
 			if (!requireConfigure)
 				requireBuild = true;
-			if (currentCommand)
-				currentCommand->kill();
+			// if (currentCommand)
+			// 	currentCommand->kill();
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		hotswapperZBudget.update();
+		std::chrono::duration<REAL> sleep_duration = std::chrono::duration<REAL>(hotswapperZBudget / 60.0);
+		auto sleep_for = std::chrono::duration_cast<std::chrono::microseconds>(sleep_duration);
+		std::this_thread::sleep_for(sleep_for);
+		// std::cerr << "Slept for: " << sleep_for << std::endl;
 	}
 }
 std::pair<bool, bool> Hotswapper::configure(bool& currentlyConfiguring, bool& requireConfigure)
