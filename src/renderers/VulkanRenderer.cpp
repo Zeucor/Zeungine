@@ -351,7 +351,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBits
 																						 VkDebugUtilsMessageTypeFlagsEXT messageType,
 																						 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	std::cerr << pCallbackData->pMessage << std::endl;
+	if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+		std::cerr << pCallbackData->pMessage << std::endl;
 	return VK_FALSE;
 }
 void VulkanRenderer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
