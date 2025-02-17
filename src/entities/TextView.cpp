@@ -119,7 +119,7 @@ void TextView::forceUpdate()
 }
 bool TextView::preRender()
 {
-	if (!size.x || !size.y)
+	if (!size.x || !size.y || !texturePointer)
 		return false;
 	auto &model = getModelMatrix();
 	shader->bind(*this);
