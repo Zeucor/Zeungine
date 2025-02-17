@@ -64,6 +64,26 @@ option(BUILD_EGL "Whether to build EGL module" OFF)
 option(BUILD_VULKAN "Whether to build Vulkan module" ON)
 option(BUILD_EDITOR "Whether to build the Zeungine editor" ON)
 option(ZG_INSTALL "Whether to install Zeungine" ON)
+if(ZG_INSTALL)
+    if(LINUX OR MACOS)
+        set(ZG_UNX_INSTALL_PREFIX /usr/local)
+        set(ZG_SRC_INSTALL_PREFIX ${ZG_UNX_INSTALL_PREFIX}/src/zg)
+        set(ZG_LIB_INSTALL_PREFIX ${ZG_UNX_INSTALL_PREFIX}/lib/zg/${CMAKE_BUILD_TYPE})
+        set(ZG_INC_INSTALL_PREFIX ${ZG_UNX_INSTALL_PREFIX}/include/zg)
+        set(ZG_ASS_INSTALL_PREFIX ${ZG_SRC_INSTALL_PREFIX}/assets)
+    elseif(WINDOWS)
+        set(ZG_WIN_INSTALL_PREFIX "C:/Program Files/Zeungine")
+        set(ZG_SRC_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX})
+        set(ZG_LIB_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX}/${CMAKE_BUILD_TYPE})
+        set(ZG_INC_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX}/include)
+        set(LG_INC_INSTALL_PREFIX "/??/lunasvg") # todo fix quest|ion|
+        set(ZG_ASS_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX}/assets)
+    endif()
+    add_definitions(-DZG_SRC_INSTALL_PREFIX="${ZG_SRC_INSTALL_PREFIX}")
+    add_definitions(-DZG_LIB_INSTALL_PREFIX="${ZG_LIB_INSTALL_PREFIX}")
+    add_definitions(-DZG_INC_INSTALL_PREFIX="${ZG_INC_INSTALL_PREFIX}")
+    add_definitions(-DZG_ASS_INSTALL_PREFIX="${ZG_ASS_INSTALL_PREFIX}")
+endif()
 
 # Determine windower
 if(LINUX)
@@ -115,6 +135,7 @@ set(BuildTests OFF)
 add_subdirectory(vendor/filewatch)
 include_directories(vendor/filewatch)
 
+# lunasvg
 include(FetchContent)
 FetchContent_Declare(
     lunasvg
@@ -345,24 +366,6 @@ file(COPY ${CMAKE_SOURCE_DIR}/icons DESTINATION ${CMAKE_BINARY_DIR})
 
 # Install
 if(ZG_INSTALL)
-    if(LINUX OR MACOS)
-        set(ZG_UNX_INSTALL_PREFIX /usr)
-        set(ZG_SRC_INSTALL_PREFIX ${ZG_UNX_INSTALL_PREFIX}/src/zg)
-        set(ZG_LIB_INSTALL_PREFIX ${ZG_UNX_INSTALL_PREFIX}/lib/zg/${CMAKE_BUILD_TYPE})
-        set(ZG_INC_INSTALL_PREFIX ${ZG_UNX_INSTALL_PREFIX}/include/zg)
-        set(ZG_ASS_INSTALL_PREFIX ${ZG_SRC_INSTALL_PREFIX}/assets)
-    elseif(WINDOWS)
-        set(ZG_WIN_INSTALL_PREFIX "C:/Program Files/Zeungine")
-        set(ZG_SRC_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX})
-        set(ZG_LIB_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX}/${CMAKE_BUILD_TYPE})
-        set(ZG_INC_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX}/include)
-        set(ZG_ASS_INSTALL_PREFIX ${ZG_WIN_INSTALL_PREFIX}/assets)
-    endif()
-    add_definitions(-DZG_SRC_INSTALL_PREFIX="${ZG_SRC_INSTALL_PREFIX}")
-    add_definitions(-DZG_LIB_INSTALL_PREFIX="${ZG_LIB_INSTALL_PREFIX}")
-    add_definitions(-DZG_INC_INSTALL_PREFIX="${ZG_INC_INSTALL_PREFIX}")
-    add_definitions(-DZG_ASS_INSTALL_PREFIX="${ZG_ASS_INSTALL_PREFIX}")
-
     install(DIRECTORY include/angle DESTINATION ${ZG_INC_INSTALL_PREFIX}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
         DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
@@ -384,36 +387,6 @@ if(ZG_INSTALL)
     install(DIRECTORY include/zg DESTINATION ${ZG_INC_INSTALL_PREFIX}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
         DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    # install(FILES
-    #     vendor/hscpp/include/hscpp/Callbacks.h
-    #     vendor/hscpp/include/hscpp/Config.h
-    #     vendor/hscpp/include/hscpp/Feature.h
-    #     vendor/hscpp/include/hscpp/FeatureManager.h
-    #     vendor/hscpp/include/hscpp/Filesystem.h
-    #     vendor/hscpp/include/hscpp/FsPathHasher.h
-    #     vendor/hscpp/include/hscpp/Hotswapper.h
-    #     vendor/hscpp/include/hscpp/Log.h
-    #     vendor/hscpp/include/hscpp/ModuleManager.h
-    #     vendor/hscpp/include/hscpp/Platform.h
-    #     vendor/hscpp/include/hscpp/ProtectedFunction.h
-    #     vendor/hscpp/include/hscpp/Util.h
-    #     DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-    #     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-    # install(DIRECTORY vendor/hscpp/include/hscpp/cmd-shell DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    # install(DIRECTORY vendor/hscpp/include/hscpp/compiler DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    # install(DIRECTORY vendor/hscpp/include/hscpp/file-watcher DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    # install(DIRECTORY vendor/hscpp/include/hscpp/module DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    # install(DIRECTORY vendor/hscpp/include/hscpp/preprocessor DESTINATION ${ZG_INC_INSTALL_PREFIX}/hscpp
-    #     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-    #     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
     install(DIRECTORY vendor/glm/glm DESTINATION ${ZG_INC_INSTALL_PREFIX}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
         DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
@@ -427,10 +400,6 @@ if(ZG_INSTALL)
     install(DIRECTORY vendor/bvh/src/bvh DESTINATION ${ZG_INC_INSTALL_PREFIX}
         FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
         DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-    install(FILES
-        vendor/filewatch/FileWatch.hpp
-        DESTINATION ${ZG_INC_INSTALL_PREFIX}
-        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
     if(LINUX)
         execute_process(COMMAND whoami
             OUTPUT_VARIABLE CURRENT_USER
