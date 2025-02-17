@@ -102,8 +102,8 @@ std::pair<bool, bool> Hotswapper::configure(bool& currentlyConfiguring, bool& re
 	}
 	if (requireConfigure)
 	{
-		editorScene.status->setText("Configuring...");
 		editorScene.status->setTextColor({1, 1, 0, 1});
+		editorScene.status->setText("Configuring...");
 		idle = false;
 		auto currentWorkingDirectory = GET_WORKING_DIR();
 		SET_WORKING_DIR(directory.c_str());
@@ -138,8 +138,8 @@ std::pair<bool, bool> Hotswapper::build(bool& currentlyBuilding, bool& requireBu
 	}
 	if (requireBuild)
 	{
-		editorScene.status->setText("Building...");
 		editorScene.status->setTextColor({1, 1, 0, 1});
+		editorScene.status->setText("Building...");
 		compiling = true;
 		compiled = false;
 		auto currentWorkingDirectory = GET_WORKING_DIR();
@@ -170,15 +170,15 @@ std::pair<bool, bool> Hotswapper::build(bool& currentlyBuilding, bool& requireBu
 		{
 			compiling = false;
 			errored = true;
-			editorScene.status->setText("Build Error");
 			editorScene.status->setTextColor({1, 0, 0, 1});
+			editorScene.status->setText("Build Error");
 		}
 		else
 		{
 			compiling = false;
 			compiled = true;
-			editorScene.status->setText("Idle");
 			editorScene.status->setTextColor({1, 1, 1, 1});
+			editorScene.status->setText("Idle");
 			idle = true;
 		}
 	}
