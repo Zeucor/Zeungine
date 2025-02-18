@@ -322,7 +322,7 @@ void XCBWindow::mouseCapture(bool capture)
 															GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
 		if (result != GrabSuccess)
 		{
-			std::cerr << "Failed to GrabPointer" << std::endl;
+			std::cout << "Failed to GrabPointer" << std::endl;
 		}
 	}
 	else

@@ -12,7 +12,7 @@ Command::Command(const std::string& command) : pid(0), exitCode(0), complete(fal
 	HANDLE hRead, hWrite;
 	if (!CreatePipe(&hRead, &hWrite, &sa, 0))
 	{
-		std::cerr << "Failed to create pipe." << std::endl;
+		std::cout << "Failed to create pipe." << std::endl;
 		pid = NULL;
 		return;
 	}
@@ -27,7 +27,7 @@ Command::Command(const std::string& command) : pid(0), exitCode(0), complete(fal
 	if (!CreateProcess(NULL, const_cast<char*>(command.c_str()), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si,
 										 &pi))
 	{
-		std::cerr << "Failed to execute command." << std::endl;
+		std::cout << "Failed to execute command." << std::endl;
 		CloseHandle(hRead);
 		CloseHandle(hWrite);
 		pid = NULL;
@@ -41,7 +41,7 @@ Command::Command(const std::string& command) : pid(0), exitCode(0), complete(fal
 	int pipefd[2];
 	if (pipe(pipefd) == -1)
 	{
-		std::cerr << "Failed to create pipe." << std::endl;
+		std::cout << "Failed to create pipe." << std::endl;
 		pid = -1;
 		return;
 	}
@@ -57,7 +57,7 @@ Command::Command(const std::string& command) : pid(0), exitCode(0), complete(fal
 	}
 	else if (pid < 0)
 	{
-		std::cerr << "Failed to fork process." << std::endl;
+		std::cout << "Failed to fork process." << std::endl;
 		pid = -1;
 		return;
 	}

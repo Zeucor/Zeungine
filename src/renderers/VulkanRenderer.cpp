@@ -352,7 +352,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBits
 																						 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-		std::cerr << pCallbackData->pMessage << std::endl;
+		std::cout << pCallbackData->pMessage << std::endl;
 	return VK_FALSE;
 }
 void VulkanRenderer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
@@ -1577,7 +1577,7 @@ bool VulkanRenderer::checkCompileErrors(const shaderc::SpvCompilationResult& mod
 {
 	if (module.GetCompilationStatus() != shaderc_compilation_status_success)
 	{
-		std::cerr << "SHADER_COMPILATION_ERROR[" << shaderType << "]: " << module.GetErrorMessage().c_str() << std::endl;
+		std::cout << "SHADER_COMPILATION_ERROR[" << shaderType << "]: " << module.GetErrorMessage().c_str() << std::endl;
 		return false;
 	}
 	return true;

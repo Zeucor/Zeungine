@@ -14,9 +14,8 @@
 #include <unistd.h>
 #endif
 using namespace zg::filesystem;
-File::File(const std::filesystem::path& _filePath, enums::EFileLocation _fileLocation, const std::string& mode) :
-		originalFilePath(_filePath), filePath(_filePath), fileLocation(_fileLocation),
-		openMode(std::ios::in | std::ios::out | std::ios::binary)
+using namespace zg::enums;
+std::ios_base::openmode calculateOpenMode(const std::string& mode, std::ios_base::openmode openMode = std::ios::binary)
 {
 	if (mode.find('r') != std::string::npos)
 	{
@@ -34,19 +33,24 @@ File::File(const std::filesystem::path& _filePath, enums::EFileLocation _fileLoc
 	{
 		openMode |= std::ios::in | std::ios::out;
 	}
+	return openMode;
+}
+File::File(const std::filesystem::path& _filePath, EFileLocation _fileLocation, const std::string& mode) :
+		AFile(_filePath, _fileLocation, mode), originalFilePath(_filePath), filePath(_filePath),
+		fileLocation(_fileLocation), openMode(calculateOpenMode(mode))
+{
 	if (!open())
 	{
 		throw std::runtime_error("Error opening file: " + std::string(strerror(errno)));
 	}
 }
-File& File::operator=(const File& other)
+AFile& File::operator=(const AFile& other)
 {
 	if (this != &other)
 	{
-		originalFilePath = other.originalFilePath;
 		filePath = other.filePath;
 		fileLocation = other.fileLocation;
-		openMode = other.openMode;
+		openMode = calculateOpenMode(other.mode);
 		if (fileStream.is_open())
 		{
 			fileStream.close();
@@ -127,7 +131,6 @@ size_t File::size() const
 		return 0;
 	}
 }
-bool File::exists() const { return std::filesystem::exists(filePath); }
 time_t File::lastModified() const
 {
 	auto ftime = std::filesystem::last_write_time(filePath);
@@ -144,7 +147,6 @@ bool File::remove()
 	}
 	return false;
 }
-bool File::exists(const std::string& path) { return std::filesystem::exists(path); }
 std::filesystem::path File::getUserDirectoryPath() { return std::filesystem::path(getenv("HOME")); }
 std::filesystem::path File::getProgramDirectoryPath()
 {

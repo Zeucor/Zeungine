@@ -1,10 +1,10 @@
-#include <zg/fonts/freetype/Freetype.hpp>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 #include <zg/Scene.hpp>
-#include <zg/strings/Utf8Iterator.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
+#include <zg/fonts/freetype/Freetype.hpp>
+#include <zg/strings/Utf8Iterator.hpp>
 using namespace zg::fonts::freetype;
 FT_Library FreetypeFont::freetypeLibrary;
 bool FreetypeFont::freetypeLoaded = ([]()
@@ -17,19 +17,18 @@ bool FreetypeFont::freetypeLoaded = ([]()
 struct ft_error
 {
 	int err;
-	const char *str;
+	const char* str;
 };
 #undef __FTERRORS_H__
 #define FT_ERRORDEF(e, v, s) {(e), (s)},
 #define FT_ERROR_START_LIST
 #define FT_ERROR_END_LIST {0, NULL}
-static const struct ft_error ft_errors[] =
-	{
+static const struct ft_error ft_errors[] = {
 #include FT_ERRORS_H
 };
-const char *ft_errorstring(int err)
+const char* ft_errorstring(int err)
 {
-	const struct ft_error *e;
+	const struct ft_error* e;
 
 	for (e = ft_errors; e->str != NULL; e++)
 		if (e->err == err)
@@ -37,18 +36,18 @@ const char *ft_errorstring(int err)
 
 	return "Unknown error";
 };
-void FreetypeFont::FT_PRINT_AND_THROW_ERROR(const FT_Error &error)
+void FreetypeFont::FT_PRINT_AND_THROW_ERROR(const FT_Error& error, const std::string& fontPath)
 {
 	if (error)
 	{
-		auto errorString = "Error loading font: " + std::string(ft_errorstring(error));
-		std::cerr << errorString << std::endl;
+		auto errorString = "Error loading font[" + fontPath + "]" + std::string(ft_errorstring(error));
+		std::cout << errorString << std::endl;
 		throw std::runtime_error(errorString);
 	}
 };
-FreetypeCharacter::FreetypeCharacter(Window &window, const FreetypeFont &freeTypeFont, float codepoint, float fontSize)
+FreetypeCharacter::FreetypeCharacter(Window& window, const FreetypeFont& freeTypeFont, float codepoint, float fontSize)
 {
-	auto &face = *freeTypeFont.facePointer.get();
+	auto& face = *freeTypeFont.facePointer.get();
 	glyphIndex = FT_Get_Char_Index(face, codepoint);
 	FT_Set_Pixel_Sizes(face, 0, fontSize);
 	auto loadCharCode = FT_Load_Glyph(face, glyphIndex, FT_LOAD_RENDER | FT_RENDER_MODE_NORMAL | FT_LOAD_COLOR);
@@ -58,7 +57,7 @@ FreetypeCharacter::FreetypeCharacter(Window &window, const FreetypeFont &freeTyp
 	}
 	size = {face->glyph->bitmap.width, face->glyph->bitmap.rows};
 	bearing = {face->glyph->bitmap_left, face->glyph->bitmap_top};
-	auto &renderer = window.iRenderer->renderer;
+	auto& renderer = window.iRenderer->renderer;
 	if (size.x == 0 || size.y == 0)
 	{
 		goto _setAdvance;
@@ -68,41 +67,50 @@ FreetypeCharacter::FreetypeCharacter(Window &window, const FreetypeFont &freeTyp
 		uint64_t imgSize = size.x * size.y * 4;
 		std::shared_ptr<uint8_t[]> rgbaImg(new uint8_t[imgSize]);
 		auto rgbaImgPointer = rgbaImg.get();
-		for (int64_t imgY = flipY ? size.y - 1 : 0, rgbaImgY = 0; flipY ? imgY >= 0 : imgY < size.y; flipY ? imgY-- : imgY++, rgbaImgY++)
+		for (int64_t imgY = flipY ? size.y - 1 : 0, rgbaImgY = 0; flipY ? imgY >= 0 : imgY < size.y;
+				 flipY ? imgY-- : imgY++, rgbaImgY++)
 		{
 			for (uint64_t imgX = 0; imgX < size.x; imgX++)
 			{
 				rgbaImgPointer[((rgbaImgY * (uint64_t)size.x + imgX) * 4) + 0] = 255;
 				rgbaImgPointer[((rgbaImgY * (uint64_t)size.x + imgX) * 4) + 1] = 255;
 				rgbaImgPointer[((rgbaImgY * (uint64_t)size.x + imgX) * 4) + 2] = 255;
-				rgbaImgPointer[((rgbaImgY * (uint64_t)size.x + imgX) * 4) + 3] = face->glyph->bitmap.buffer[(imgY * face->glyph->bitmap.pitch + imgX)];
+				rgbaImgPointer[((rgbaImgY * (uint64_t)size.x + imgX) * 4) + 3] =
+					face->glyph->bitmap.buffer[(imgY * face->glyph->bitmap.pitch + imgX)];
 				continue;
 			}
 		}
-		texturePointer.reset(new textures::Texture(window, {size.x, size.y, 1, 0}, rgbaImgPointer, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Nearest));
+		texturePointer.reset(new textures::Texture(window, {size.x, size.y, 1, 0}, rgbaImgPointer,
+																							 textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
+																							 textures::Texture::FilterType::Nearest));
 	}
 _setAdvance:
 	advance = face->glyph->advance.x;
 };
-FreetypeFont::FreetypeFont(Window &window, filesystem::File &fontFile) : facePointer(new FT_Face, [](FT_Face *pointer)
-																					 {
-		FT_Done_Face(*pointer);
-		delete pointer; }),
-																		 window(window)
+FreetypeFont::FreetypeFont(Window& window, interfaces::IFile& fontFile) :
+		facePointer(new FT_Face,
+								[](FT_Face* pointer)
+								{
+									FT_Done_Face(*pointer);
+									delete pointer;
+								}),
+		window(window), fontPath(fontFile.filePath)
 {
 	fontFileBytes = fontFile.toBytes();
 	auto fontFileSize = fontFile.size();
 	auto actualFacePointer = facePointer.get();
-	FT_PRINT_AND_THROW_ERROR(FT_New_Memory_Face(freetypeLibrary, (uint8_t *)fontFileBytes.get(), fontFileSize, 0, actualFacePointer));
-	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(*actualFacePointer, FT_ENCODING_UNICODE));
+	FT_PRINT_AND_THROW_ERROR(
+		FT_New_Memory_Face(freetypeLibrary, (uint8_t*)fontFileBytes.get(), fontFileSize, 0, actualFacePointer), fontPath);
+	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(*actualFacePointer, FT_ENCODING_UNICODE), fontPath);
 };
 float textureScale = 1.f;
-const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fontSize, float &lineHeight, glm::vec2 bounds)
+const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fontSize, float& lineHeight,
+																				 glm::vec2 bounds)
 {
 	strings::Utf8Iterator iterator(string, 0);
-	const unsigned long &stringSize = string.size();
+	const unsigned long& stringSize = string.size();
 	auto scaledBounds = bounds;
-	auto &face = *facePointer.get();
+	auto& face = *facePointer.get();
 	FT_Set_Pixel_Sizes(face, 0, fontSize);
 	if (lineHeight == 0)
 	{
@@ -128,7 +136,7 @@ const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fo
 		}
 		else
 		{
-			auto &character = getCharacter(codepoint, fontSize);
+			auto& character = getCharacter(codepoint, fontSize);
 			advanceX += (character.advance >> 6);
 			if (FT_HAS_KERNING(face) && iterator.hasNextCodepoint())
 			{
@@ -136,7 +144,7 @@ const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fo
 				unsigned long nextCodepoint = *nextIterator;
 				if (nextCodepoint != 10)
 				{
-					auto &nextCharacter = getCharacter(nextCodepoint, fontSize);
+					auto& nextCharacter = getCharacter(nextCodepoint, fontSize);
 					FT_Vector kerning;
 					FT_Get_Kerning(face, character.glyphIndex, nextCharacter.glyphIndex, FT_KERNING_DEFAULT, &kerning);
 					if (!FT_IS_SCALABLE(face))
@@ -161,25 +169,23 @@ const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fo
 	size.y = currentPosition.y;
 	return size;
 };
-void FreetypeFont::stringToTexture(const std::string_view string,
-								   glm::vec4 color,
-								   float fontSize,
-								   float &lineHeight,
-								   glm::vec2 textureSize,
-								   std::shared_ptr<textures::Texture> &texturePointer,
-								   const int64_t &cursorIndex,
-								   glm::vec3 &cursorPosition)
+void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 color, float fontSize, float& lineHeight,
+																	 glm::vec2 textureSize, std::shared_ptr<textures::Texture>& texturePointer,
+																	 const int64_t& cursorIndex, glm::vec3& cursorPosition)
 {
 	glm::ivec2 scaledSize = textureSize * textureScale;
 	if (!texturePointer || texturePointer->size.x != scaledSize.x || texturePointer->size.y != scaledSize.y)
 	{
-		texturePointer.reset(new textures::Texture(window, glm::ivec4(scaledSize.x, scaledSize.y, 1, 0), 0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Nearest));
+		texturePointer.reset(new textures::Texture(window, glm::ivec4(scaledSize.x, scaledSize.y, 1, 0), 0,
+																							 textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
+																							 textures::Texture::FilterType::Nearest));
 	}
 	textures::Framebuffer framebuffer(window, *texturePointer);
-	Scene scene(window, {scaledSize.x / 2.f, scaledSize.y / 2.f, 50}, {0, 0, -1}, glm::vec2(scaledSize), &framebuffer, false);
+	Scene scene(window, {scaledSize.x / 2.f, scaledSize.y / 2.f, 50}, {0, 0, -1}, glm::vec2(scaledSize), &framebuffer,
+							false);
 	strings::Utf8Iterator iterator(string, 0);
-	const uint64_t &stringSize = string.size();
-	auto &face = *facePointer.get();
+	const uint64_t& stringSize = string.size();
+	auto& face = *facePointer.get();
 	FT_Set_Pixel_Sizes(face, 0, fontSize);
 	if (lineHeight == 0)
 	{
@@ -192,7 +198,7 @@ void FreetypeFont::stringToTexture(const std::string_view string,
 		currentPosition.y -= lineHeight;
 		currentPosition.x = 0;
 	};
-	FreetypeCharacter *characterPointer = 0;
+	FreetypeCharacter* characterPointer = 0;
 	float advanceX = 0;
 	uint64_t codepointIndex = 0;
 	if (cursorIndex == 0)
@@ -223,8 +229,12 @@ void FreetypeFont::stringToTexture(const std::string_view string,
 			{
 				glm::vec3 characterPosition = currentPosition;
 				characterPosition.x = currentPosition.x + characterPointer->bearing.x + (characterPointer->size.x / 2.f);
-				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) + (characterPointer->size.y / 2.f);
-				scene.addEntity(std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1), characterPointer->size, *characterPointer->texturePointer), false);
+				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) +
+					(characterPointer->size.y / 2.f);
+				scene.addEntity(std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0),
+																													glm::vec3(1, 1, 1), characterPointer->size,
+																													*characterPointer->texturePointer),
+												false);
 			}
 			if (FT_HAS_KERNING(face) && iterator.hasNextCodepoint())
 			{
@@ -232,7 +242,7 @@ void FreetypeFont::stringToTexture(const std::string_view string,
 				uint64_t nextCodepoint = *nextIterator;
 				if (nextCodepoint != 10)
 				{
-					auto &nextCharacter = getCharacter(nextCodepoint, fontSize * textureScale);
+					auto& nextCharacter = getCharacter(nextCodepoint, fontSize * textureScale);
 					FT_Vector kerning;
 					FT_Get_Kerning(face, characterPointer->glyphIndex, nextCharacter.glyphIndex, FT_KERNING_DEFAULT, &kerning);
 					if (!FT_IS_SCALABLE(face))
@@ -268,7 +278,7 @@ void FreetypeFont::stringToTexture(const std::string_view string,
 	framebuffer.unbind();
 	return;
 };
-FreetypeCharacter &FreetypeFont::getCharacter(float codepoint, float fontSize)
+FreetypeCharacter& FreetypeFont::getCharacter(float codepoint, float fontSize)
 {
 	auto iter = codepointFontSizeCharacters[codepoint].insert({fontSize, {window, *this, codepoint, fontSize}});
 	return iter.first->second;

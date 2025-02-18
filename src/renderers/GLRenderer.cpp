@@ -162,7 +162,7 @@ void GLRenderer::init()
 		{
 			if (type == GL_DEBUG_TYPE_ERROR)
 			{
-				std::cerr << "OpenGL Debug Message: " << message << std::endl;
+				std::cout << "OpenGL Debug Message: " << message << std::endl;
 			}
 		},
 		nullptr);
