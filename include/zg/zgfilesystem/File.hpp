@@ -34,7 +34,7 @@ namespace zgfilesystem
 		template <typename T>
 		constexpr File& operator>>(T &value)
 		{
-			if (!fileStream)
+			if (!fileStream.is_open())
 				throw runtime_error("File " + filePath.string() + "not open on read!");
 			fileStream >> value;
 			return *this;
