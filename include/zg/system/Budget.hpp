@@ -36,9 +36,6 @@ namespace zg::budget
 #define DBudget zg::budget::IBudget<SECONDS_DURATION>
 	struct FBudget;
 /*|phase|*/
-#define BUDGET_SLEPT_FOR_PRINT
-#define BUDGET_CLOCKED_FOR_PRINT
-#define BUDGET_CALCAVG_FOR_PRINT
 	/**
 	 *
 	 * @brief Zeungines' evolving history implementation of DBudget
@@ -59,7 +56,7 @@ namespace zg::budget
 
 	public:
 		ZBudget(const SecondsDuration BudgetTime) : m_BudgetTime(BudgetTime) {};
-		SecondsDuration update(const TimePoint& tp = CLOCK::now())
+		SecondsDuration update(bool print = false)
 		{
 			if (!m_AutoCalculateAverage)
 				goto _g_unjb;
@@ -84,9 +81,8 @@ namespace zg::budget
 				if (beginTSE == 0)
 				{
 					begin = CLOCK::now();
-#ifdef BUDGET_CLOCKED_FOR_PRINT
-					cerr << "zupdate() is at start of 2pass @ " << begin << endl;
-#endif
+					if (print)
+						cerr << "zupdate() is at start of 2pass @ " << begin << endl;
 					return m_IsZgBudgetRealBegin;
 				}
 				else if (m_IsZSle_p && endTSE == 0)
@@ -94,11 +90,10 @@ namespace zg::budget
 					end = CLOCK::now();
 					auto nsduration = end - begin;
 					seconds = end - begin;
-					auto avgBud = CalculateAverageBudget();
+					auto avgBud = CalculateAverageBudget(print);
 					m_HistoryIndex++;
-#ifdef BUDGET_CLOCKED_FOR_PRINT
-					cerr << "zupdate() reached end of 2pass @ " << end << ", nanoseconds(t): " << nsduration << ", zbudget is now: " << avgBud << endl;
-#endif
+					if (print)
+						cerr << "zupdate() reached end of 2pass @ " << end << ", nanoseconds(t): " << nsduration << ", zbudget is now: " << avgBud << endl;
 					m_IsZSle_p = false;
 					return avgBud;
 				}
@@ -107,9 +102,8 @@ namespace zg::budget
 					auto somewhereidekknowinthemiddle = CLOCK::now();
 					auto nsduration = somewhereidekknowinthemiddle - begin;
 					seconds = somewhereidekknowinthemiddle - begin;
-#ifdef BUDGET_CLOCKED_FOR_PRINT
-					cerr << "zupdate() went update in 2pass @ " << somewhereidekknowinthemiddle << ", nanoseconds(@): " << nsduration << endl;
-#endif
+					if (print)
+						cerr << "zupdate() went update in 2pass @ " << somewhereidekknowinthemiddle << ", nanoseconds(@): " << nsduration << endl;
 				}
 			}
 			else
@@ -127,13 +121,12 @@ namespace zg::budget
 			m_IsZgBudgetReal = SecondsDuration(m_IsZgBudgetReal - c);
 			return c;
 		}
-		void zsleep()
+		void zsleep(bool print = false)
 		{
 			m_IsZSle_p = true;
 			update();
-#ifdef BUDGET_SLEPT_FOR_PRINT
-			cerr << "...    ?  zsle_p :&+    Cojpint@ " << m_IsZgBudgetReal << endl;
-#endif
+			if (print)
+				cerr << "...    ?  zsle_p :&+    Cojpint@ " << m_IsZgBudgetReal << endl;
 			this_thread::sleep_for(m_IsZgBudgetReal);
 		}
 
@@ -146,19 +139,17 @@ namespace zg::budget
 		SecondsDuration m_IsZgBudgetRealBegin;
 		array<tuple<TimePoint, TimePoint, SecondsDuration>, HistorySize> m_History;
 		array<size_t, 1> historyEvolvedIndexMap;
-		SecondsDuration CalculateAverageBudget()
+		SecondsDuration CalculateAverageBudget(bool print = false)
 		{
 			chrono::duration<REAL, nano> total_avg_budget = chrono::duration<REAL, nano>((REAL)0.0);
 			auto& history_tuple = m_History[m_HistoryIndex];
 			auto& secondsTakenByCook = get<2>(history_tuple);
-#ifdef BUDGET_CALCAVG_FOR_PRINT
-			cerr << "zCalcAvg(): seconds tkn in loop@ " << secondsTakenByCook << endl;
-#endif
+			if (print)
+				cerr << "zCalcAvg(): seconds tkn in loop@ " << secondsTakenByCook << endl;
 			auto remainingBudget = m_BudgetTime - secondsTakenByCook;
 			auto remainingBudgetCount = remainingBudget.count();
-#ifdef BUDGET_CALCAVG_FOR_PRINT
-			cerr << "zCalcAvg(): remaining budget .:@ " << remainingBudget << endl;
-#endif
+			if (print)
+				cerr << "zCalcAvg(): remaining budget .:@ " << remainingBudget << endl;
 			m_IsZgBudgetReal = m_IsZgBudgetRealBegin = ((remainingBudgetCount >= 0) ? remainingBudget : ZeroSecondsDuration);
 			return m_IsZgBudgetRealBegin;
 		}
