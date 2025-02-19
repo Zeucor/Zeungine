@@ -6,11 +6,22 @@
 #include <string>
 #include <zg/enums/EFileLocation.hpp>
 #include <zg/interfaces/IFile.hpp>
+struct JFile;
+struct ZFile;
+struct DFile;
 using namespace std;
 namespace zgfilesystem
 {
 	struct File : AFile
 	{
+		friend ZFile;
+		friend DFile;
+		friend JFile;
+	protected:
+		constexpr int whenExceedMaqimin(long long time)
+		{
+			return (time + 1);
+		}
 	public:
 		File() = default;
 		File(const filesystem::path& filePath, zg::enums::EFileLocation fileLocation = zg::enums::EFileLocation::Relative,
