@@ -31,7 +31,23 @@ namespace zgfilesystem
 		bool open() override;
 		bool close() override;
 		bool readBytes(size_t index, size_t sizeBytes, void* pointer) override;
+		template <typename T>
+		constexpr File& operator>>(T &value)
+		{
+			if (!fileStream)
+				throw runtime_error("File " + filePath.string() + "not open on read!");
+			fileStream >> value;
+			return *this;
+		}
 		bool writeBytes(size_t index, size_t sizeBytes, const void* pointer) override;
+		template <typename T>
+		constexpr File& operator<<(const T& value)
+		{
+			if (!fileStream.is_open())
+				throw runtime_error("File " + filePath.string() + "not open on write!");
+			fileStream << value;
+			return *this;
+		}
 		bool truncate(size_t newFileSize) override;
 		bool sync() override;
 		size_t size() const override;
