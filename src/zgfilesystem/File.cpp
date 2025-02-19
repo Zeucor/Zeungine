@@ -5,7 +5,7 @@
 #include <regex>
 #include <sstream>
 #include <string.h>
-#include <zg/filesystem/File.hpp>
+#include <zg/zgfilesystem/File.hpp>
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__APPLE__)
@@ -13,35 +13,35 @@
 #elif defined(__linux__)
 #include <unistd.h>
 #endif
-using namespace zg::filesystem;
+using namespace zgfilesystem;
 using namespace zg::enums;
-std::ios_base::openmode calculateOpenMode(const std::string& mode, std::ios_base::openmode openMode = std::ios::binary)
+ios_base::openmode calculateOpenMode(const string& mode, ios_base::openmode openMode = ios::binary)
 {
-	if (mode.find('r') != std::string::npos)
+	if (mode.find('r') != string::npos)
 	{
-		openMode |= std::ios::in;
+		openMode |= ios::in;
 	}
-	if (mode.find('w') != std::string::npos)
+	if (mode.find('w') != string::npos)
 	{
-		openMode |= std::ios::out | std::ios::trunc;
+		openMode |= ios::out | ios::trunc;
 	}
-	if (mode.find('a') != std::string::npos)
+	if (mode.find('a') != string::npos)
 	{
-		openMode |= std::ios::app;
+		openMode |= ios::app;
 	}
-	if (mode.find('+') != std::string::npos)
+	if (mode.find('+') != string::npos)
 	{
-		openMode |= std::ios::in | std::ios::out;
+		openMode |= ios::in | ios::out;
 	}
 	return openMode;
 }
-File::File(const std::filesystem::path& _filePath, EFileLocation _fileLocation, const std::string& mode) :
+File::File(const filesystem::path& _filePath, zg::enums::EFileLocation _fileLocation, const string& mode) :
 		AFile(_filePath, _fileLocation, mode), originalFilePath(_filePath), filePath(_filePath),
 		fileLocation(_fileLocation), openMode(calculateOpenMode(mode))
 {
 	if (!open())
 	{
-		throw std::runtime_error("Error opening file: " + std::string(strerror(errno)));
+		throw runtime_error("Error opening file: " + string(strerror(errno)));
 	}
 }
 AFile& File::operator=(const AFile& other)
@@ -63,7 +63,7 @@ File::~File()
 	sync();
 	if (!close())
 	{
-		std::cout << "File '" << filePath << "' failed to close." << std::endl;
+		cout << "File '" << filePath << "' failed to close." << endl;
 	}
 }
 bool File::open()
@@ -87,7 +87,7 @@ bool File::readBytes(size_t index, size_t sizeBytes, void* pointer)
 	{
 		return false;
 	}
-	fileStreamRef.seekg(index, std::ios::beg);
+	fileStreamRef.seekg(index, ios::beg);
 	fileStreamRef.read(static_cast<char*>(pointer), sizeBytes);
 	return fileStreamRef.good();
 }
@@ -97,7 +97,7 @@ bool File::writeBytes(size_t index, size_t sizeBytes, const void* pointer)
 	{
 		return false;
 	}
-	fileStream.seekp(index, std::ios::beg);
+	fileStream.seekp(index, ios::beg);
 	fileStream.write(static_cast<const char*>(pointer), sizeBytes);
 	return fileStream.good();
 }
@@ -108,7 +108,7 @@ bool File::truncate(size_t newFileSize)
 		return false;
 	}
 	fileStream.close();
-	std::filesystem::resize_file(filePath, newFileSize);
+	filesystem::resize_file(filePath, newFileSize);
 	return open();
 }
 bool File::sync()
@@ -124,33 +124,33 @@ size_t File::size() const
 {
 	try
 	{
-		return std::filesystem::file_size(filePath);
+		return filesystem::file_size(filePath);
 	}
-	catch (const std::filesystem::filesystem_error&)
+	catch (const filesystem::filesystem_error&)
 	{
 		return 0;
 	}
 }
 time_t File::lastModified() const
 {
-	auto ftime = std::filesystem::last_write_time(filePath);
-	auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(ftime - decltype(ftime)::clock::now() +
-																																								std::chrono::system_clock::now());
-	return std::chrono::system_clock::to_time_t(sctp);
+	auto ftime = filesystem::last_write_time(filePath);
+	auto sctp = chrono::time_point_cast<chrono::system_clock::duration>(ftime - decltype(ftime)::clock::now() +
+																																								chrono::system_clock::now());
+	return chrono::system_clock::to_time_t(sctp);
 }
 bool File::remove()
 {
-	if (std::filesystem::exists(filePath))
+	if (filesystem::exists(filePath))
 	{
-		std::filesystem::remove(filePath);
+		filesystem::remove(filePath);
 		return true;
 	}
 	return false;
 }
-std::filesystem::path File::getUserDirectoryPath() { return std::filesystem::path(getenv("HOME")); }
-std::filesystem::path File::getProgramDirectoryPath()
+filesystem::path File::getUserDirectoryPath() { return filesystem::path(getenv("HOME")); }
+filesystem::path File::getProgramDirectoryPath()
 {
-	std::filesystem::path exePath;
+	filesystem::path exePath;
 #if defined(_WIN32)
 	char path[MAX_PATH];
 	GetModuleFileNameA(NULL, path, MAX_PATH);
@@ -161,44 +161,44 @@ std::filesystem::path File::getProgramDirectoryPath()
 	if (_NSGetExecutablePath(path, &size) == 0)
 		exePath = path;
 #elif defined(__linux__)
-	exePath = std::filesystem::canonical("/proc/self/exe");
+	exePath = filesystem::canonical("/proc/self/exe");
 #endif
 	return exePath.parent_path();
 }
-std::filesystem::path File::getProgramDataPath() { return std::filesystem::temp_directory_path(); }
-std::string File::getExecutableName() { return std::filesystem::path(getenv("_")).filename(); }
-void replaceSubstring(std::string& str, const std::string& from, const std::string& to)
+filesystem::path File::getProgramDataPath() { return filesystem::temp_directory_path(); }
+string File::getExecutableName() { return filesystem::path(getenv("_")).filename(); }
+void replaceSubstring(string& str, const string& from, const string& to)
 {
 	size_t pos = 0;
-	while ((pos = str.find(from, pos)) != std::string::npos)
+	while ((pos = str.find(from, pos)) != string::npos)
 	{
 		str.replace(pos, from.length(), to);
 		pos += to.length();
 	}
 }
-std::string File::toPlatformPath(std::string path)
+string File::toPlatformPath(string path)
 {
-	std::replace(path.begin(), path.end(), '\\', '/');
-	std::filesystem::path fsPath(path);
+	replace(path.begin(), path.end(), '\\', '/');
+	filesystem::path fsPath(path);
 #ifdef _WIN32
-	auto nativePath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fsPath.native().c_str());
+	auto nativePath = wstring_convert<codecvt_utf8<wchar_t>>().to_bytes(fsPath.native().c_str());
 #else
 	auto nativePath = fsPath.native().c_str();
 #endif
 	return nativePath;
 }
-std::string File::toString()
+string File::toString()
 {
 	auto actualSize = size();
-	std::string string;
+	string string;
 	string.resize(actualSize);
 	readBytes(0, actualSize, string.data());
 	return string;
 }
-std::shared_ptr<int8_t> File::toBytes()
+shared_ptr<int8_t> File::toBytes()
 {
 	auto actualSize = size();
-	std::shared_ptr<int8_t> bytes((int8_t*)malloc(actualSize + 1), free);
+	shared_ptr<int8_t> bytes((int8_t*)malloc(actualSize + 1), free);
 	memset(bytes.get(), 0, actualSize + 1);
 	readBytes(0, actualSize, bytes.get());
 	return bytes;

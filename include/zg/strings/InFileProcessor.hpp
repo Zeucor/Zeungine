@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <unordered_map>
-#include <zg/filesystem/File.hpp>
+#include <zg/zgfilesystem/File.hpp>
 namespace zg::strings
 {
 #define STRINGIFY(x) #x
@@ -17,7 +17,7 @@ namespace zg::strings
 	{
 		std::unordered_map<std::string, std::string> variableMappings;
 		void addVariableMapping(const std::string& variableName, const std::string& variableValue);
-		void processFile(filesystem::File&& inFile, const std::string& outFilePath);
+		void processFile(zgfilesystem::File&& inFile, const std::string& outFilePath);
 		static std::string toCamelCase(const std::string& input);
 		static std::string toKebabCase(const std::string& input);
 	};

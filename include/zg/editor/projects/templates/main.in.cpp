@@ -3,7 +3,7 @@
 #include <iostream>
 MainScene::MainScene(Window& _window):
 	Scene(_window, {0, 10, 10}, {0, -1, -1}, 80.f),
-	cube(std::make_shared<entities::Cube>(
+	cube(make_shared<entities::Cube>(
 		window, // reference to window
 		*this, // reference to scene
 		glm::vec3(0, 0, 0), // position
@@ -40,5 +40,5 @@ MainScene::~MainScene()
 }
 ZG_API void OnLoad(Window& window)
 {
-	window.setScene(std::make_shared<MainScene>(window));
+	window.setScene(make_shared<MainScene>(window));
 }

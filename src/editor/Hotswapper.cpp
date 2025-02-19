@@ -1,14 +1,16 @@
 #include <zg/SharedLibrary.hpp>
 #include <zg/editor/EditorScene.hpp>
 #include <zg/editor/Hotswapper.hpp>
-#include <zg/filesystem/Directory.hpp>
-#include <zg/filesystem/DirectoryWatcher.hpp>
-#include <zg/filesystem/File.hpp>
+#include <zg/zgfilesystem/Directory.hpp>
+#include <zg/zgfilesystem/DirectoryWatcher.hpp>
+#include <zg/zgfilesystem/File.hpp>
 #include <zg/system/WorkingDirectory.hpp>
 #include <zg/system/Budget.hpp>
+#include <zg/crypto/Random.hpp>
 using namespace zg::editor::hs;
 using namespace zg::system;
-DECLARE_NZBUDGET(hotswapperZBudget, 1.0/24.2);
+SECONDS_DURATION hotswapperBudgetDuration = SECONDS_DURATION(1.0 * nano::den);
+zg::budget::ZBudget hotswapperZBudget(hotswapperBudgetDuration);
 Hotswapper::Hotswapper(const std::filesystem::path& directory, EditorScene& editorScene) :
 		running(true), directory(directory), editorScene(editorScene),
 		updateThread(std::make_shared<std::thread>(&Hotswapper::update, this))
@@ -21,7 +23,7 @@ Hotswapper::~Hotswapper()
 }
 void Hotswapper::update()
 {
-	filesystem::DirectoryWatcher directoryWatcher(directory, {directory / "build"});
+	zgfilesystem::DirectoryWatcher directoryWatcher(directory, {directory / "build"});
 	bool requireConfigure = true, requireBuild = false, requireLoad = false, currentlyConfiguring = false,
 			 currentlyBuilding = false;
 	std::unique_ptr<SharedLibrary> libraryPointer;
@@ -88,10 +90,9 @@ void Hotswapper::update()
 			// 	currentCommand->kill();
 		}
 		hotswapperZBudget.update();
-		std::chrono::duration<REAL> sleep_duration = std::chrono::duration<REAL>(hotswapperZBudget / 60.0);
-		auto sleep_for = std::chrono::duration_cast<std::chrono::microseconds>(sleep_duration);
-		std::this_thread::sleep_for(sleep_for);
-		// std::cerr << "Slept for: " << sleep_for << std::endl;
+		std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::seconds, REAL>(SECONDS_DURATION(zg::crypto::Random::value<REAL>(0.021, 0.042))));
+		hotswapperZBudget.update();
+		hotswapperZBudget.zsleep();
 	}
 }
 std::pair<bool, bool> Hotswapper::configure(bool& currentlyConfiguring, bool& requireConfigure)

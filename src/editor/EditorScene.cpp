@@ -1,6 +1,6 @@
 #include <zg/editor/CodeScene.hpp>
 #include <zg/editor/EditorScene.hpp>
-#include <zg/filesystem/Directory.hpp>
+#include <zg/zgfilesystem/Directory.hpp>
 #include <zg/strings/InFileProcessor.hpp>
 using namespace zg::editor;
 using namespace zg::strings;
@@ -143,7 +143,7 @@ EditorScene::EditorScene(Window& window) :
 	sceneGraphPanelMenu->addToBVH = false;
 	addEntity(sceneGraphPanelMenu);
 	addEntity(resourcePanelMenu);
-	filesystem::File consoleFile(
+	zgfilesystem::File consoleFile(
 		(programDirectoryPath / "icons" / "Remix" / "Development" / "terminal-line.svg").string(),
 		enums::EFileLocation::Absolute, "r");
 	resourcePanelTabs->addTab(
@@ -184,7 +184,7 @@ EditorScene::EditorScene(Window& window) :
 			codeWindowPointer->setWidthHeight(codeWindowWidth, codeWindowHeight);
 			codeWindowPointer->setXY(codeWindowX, codeWindowY);
 		});
-	filesystem::File sceneFile((programDirectoryPath / "icons" / "Remix" / "Design" / "shapes-line.svg").string(),
+	zgfilesystem::File sceneFile((programDirectoryPath / "icons" / "Remix" / "Design" / "shapes-line.svg").string(),
 														 enums::EFileLocation::Absolute, "r");
 	bottomTabsBar->addTab(
 		"Scene",
@@ -195,7 +195,7 @@ EditorScene::EditorScene(Window& window) :
 			gameWindowPointer->restore();
 		},
 		true, sceneFile);
-	filesystem::File codeEditorFile((programDirectoryPath / "icons" / "Remix" / "Development" / "code-line.svg").string(),
+	zgfilesystem::File codeEditorFile((programDirectoryPath / "icons" / "Remix" / "Development" / "code-line.svg").string(),
 																	enums::EFileLocation::Absolute, "r");
 	bottomTabsBar->addTab(
 		"Code Editor",
@@ -335,13 +335,13 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 {
 	{
 		project = {projectName, projectDirectory};
-		filesystem::Directory::ensureExists(project.directory);
-		std::string includePath = filesystem::File::toPlatformPath(std::string(project.directory) + "/include");
-		filesystem::Directory::ensureExists(includePath);
-		std::string srcPath = filesystem::File::toPlatformPath(std::string(project.directory) + "/src");
-		filesystem::Directory::ensureExists(srcPath);
-		std::string cmakePath = filesystem::File::toPlatformPath(std::string(project.directory) + "/cmake");
-		filesystem::Directory::ensureExists(cmakePath);
+		zgfilesystem::Directory::ensureExists(project.directory);
+		std::string includePath = zgfilesystem::File::toPlatformPath(std::string(project.directory) + "/include");
+		zgfilesystem::Directory::ensureExists(includePath);
+		std::string srcPath = zgfilesystem::File::toPlatformPath(std::string(project.directory) + "/src");
+		zgfilesystem::Directory::ensureExists(srcPath);
+		std::string cmakePath = zgfilesystem::File::toPlatformPath(std::string(project.directory) + "/cmake");
+		zgfilesystem::Directory::ensureExists(cmakePath);
 		std::string zgIncInstallPrefix(TO_STRING(ZG_INC_INSTALL_PREFIX));
 		InFileProcessor processor;
 		std::string stringProjectName(projectName);
@@ -369,7 +369,7 @@ void EditorScene::openProject(std::string_view projectDirectory)
 	resourceAssetBrowser = std::make_shared<entities::AssetBrowser>(
 		window, *this, glm::vec3(0, 0, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0.1, 0.1, 0.1, 1), robotoRegularFont,
 		window.windowWidth, resourcePanelMenuHeight - bottomTabsHeight + gameWindowBorderWidth * 2, projectDirectory);
-	filesystem::File browserFile((programDirectoryPath / "icons" / "Remix" / "Document" / "pages-line.svg").string(),
+	zgfilesystem::File browserFile((programDirectoryPath / "icons" / "Remix" / "Document" / "pages-line.svg").string(),
 															 enums::EFileLocation::Absolute, "r");
 	assetTabID = resourcePanelTabs->addTab(
 		"Asset Browser",
@@ -383,7 +383,7 @@ void EditorScene::openProject(std::string_view projectDirectory)
 			}
 		},
 		false, browserFile);
-	filesystem::File performanceFile(
+	zgfilesystem::File performanceFile(
 		(programDirectoryPath / "icons" / "Remix" / "Business" / "bar-chart-box-line.svg").string(),
 		enums::EFileLocation::Absolute, "r");
 	performanceTabID =

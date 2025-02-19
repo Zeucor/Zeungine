@@ -3,7 +3,8 @@
 #include <map>
 #include <filesystem>
 #include <stdexcept>
-namespace zg::filesystem
+using namespace std;
+namespace zgfilesystem
 {
 	struct Directory
 	{

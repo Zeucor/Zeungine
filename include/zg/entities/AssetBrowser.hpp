@@ -2,7 +2,7 @@
 #include <zg/Entity.hpp>
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
-#include <zg/filesystem/DirectoryWatcher.hpp>
+#include <zg/zgfilesystem/DirectoryWatcher.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/glm.hpp>
 #include <zg/interfaces/ISizable.hpp>
@@ -95,7 +95,7 @@ namespace zg::entities
 		float height;
 		std::vector<std::filesystem::path> excludePaths;
 		std::filesystem::path projectDirectory;
-		filesystem::DirectoryWatcher directoryWatcher;
+		zgfilesystem::DirectoryWatcher directoryWatcher;
 		std::filesystem::path currentDirectory;
 		size_t currentIndex = 0;
 		std::shared_ptr<Breadcrumbs> breadcrumbs;

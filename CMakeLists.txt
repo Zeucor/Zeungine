@@ -192,9 +192,9 @@ set(ZG_SOURCES
     src/crypto/vector.cpp
     src/images/ImageLoader.cpp
     src/images/SVGRasterize.cpp
-    src/filesystem/File.cpp
-    src/filesystem/Directory.cpp
-    src/filesystem/DirectoryWatcher.cpp
+    src/zgfilesystem/File.cpp
+    src/zgfilesystem/Directory.cpp
+    src/zgfilesystem/DirectoryWatcher.cpp
     src/editor/Hotswapper.cpp
     src/strings/HookedConsole.cpp
     src/strings/InFileProcessor.cpp

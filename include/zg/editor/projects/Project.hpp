@@ -1,10 +1,11 @@
 #pragma once
 #include <string>
+using namespace std;
 namespace zg::editor
 {
 	struct Project
 	{
-		std::string_view name;
-		std::string_view directory;
+		string_view name;
+		string_view directory;
 	};
 }

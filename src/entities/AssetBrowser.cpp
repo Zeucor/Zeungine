@@ -1,12 +1,12 @@
 #include <iostream>
 #include <zg/entities/AssetBrowser.hpp>
 #include <zg/entities/Plane.hpp>
-#include <zg/filesystem/Directory.hpp>
+#include <zg/zgfilesystem/Directory.hpp>
 #include <zg/images/SVGRasterize.hpp>
 #include <zg/utilities.hpp>
 using namespace zg;
 using namespace zg::entities;
-static std::filesystem::path programDirectoryPath = filesystem::File::getProgramDirectoryPath();
+static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgramDirectoryPath();
 std::shared_ptr<textures::Texture> zg::entities::getIconTexture(const std::filesystem::path& path, Window& window)
 {
 	auto iconBitmap = images::SVGRasterize({path, enums::EFileLocation::Absolute, "r"}, scaledIconSize);
@@ -158,10 +158,10 @@ void Breadcrumbs::setCurrentPath(const std::filesystem::path& currentPath)
 	texturePlanes.clear();
 	auto pathSplitSize = pathSplit.size();
 	glm::vec3 currentPosition(0, (-lineHeight / 2) / window.windowHeight / 0.5, 0.1);
-	auto editorDirectoryPath = filesystem::File::getProgramDirectoryPath();
+	auto editorDirectoryPath = zgfilesystem::File::getProgramDirectoryPath();
 	auto addChevron = [&]
 	{
-		filesystem::File arrowFile(editorDirectoryPath / "icons" / "Remix" / "Arrows" / "arrow-drop-right-line.svg",
+		zgfilesystem::File arrowFile(editorDirectoryPath / "icons" / "Remix" / "Arrows" / "arrow-drop-right-line.svg",
 															 enums::EFileLocation::Absolute, "r");
 		float arrowSize = lineHeight;
 		auto arrowBitmap = images::SVGRasterize(arrowFile, glm::ivec2(arrowSize, arrowSize));
@@ -296,12 +296,12 @@ AssetBrowser::AssetBrowser(zg::Window& window, zg::Scene& scene, glm::vec3 posit
 															 }
 														 });
 	//
-	filesystem::Directory directory(projectDirectory);
+	zgfilesystem::Directory directory(projectDirectory);
 	auto recursiveFileMap = directory.getRecursiveFileMap();
 	for (auto& file : recursiveFileMap)
 	{
 		auto& filePath = file.second;
-		if (!filesystem::DirectoryWatcher::isExcluded(excludePaths, filePath))
+		if (!zgfilesystem::DirectoryWatcher::isExcluded(excludePaths, filePath))
 			if (std::filesystem::is_directory(filePath))
 				std::cout << filePath << std::endl;
 	}

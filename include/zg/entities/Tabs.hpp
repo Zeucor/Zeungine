@@ -2,7 +2,7 @@
 #include <zg/Entity.hpp>
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
-#include <zg/filesystem/File.hpp>
+#include <zg/zgfilesystem/File.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/glm.hpp>
 #include "./TextView.hpp"
@@ -26,7 +26,7 @@ namespace zg::entities
 						fonts::freetype::FreetypeFont& font, float width, float height,
 						const shaders::RuntimeConstants& constants = {}, std::string_view name = "");
 		size_t addTab(std::string_view name, const TabClickHandler& handler, bool active = false,
-									const filesystem::File& iconFile = {});
+									const zgfilesystem::File& iconFile = {});
 		void removeTab(size_t ID);
 		bool preRender() override;
 		void setColor(glm::vec4 color);
@@ -57,7 +57,7 @@ namespace zg::entities
 		inline static size_t tabsCount = 0;
 		Tab(Window& window, Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, glm::vec4 color,
 				std::string_view text, fonts::freetype::FreetypeFont& font, float height,
-				const TabsBar::TabClickHandler& handler, bool active, TabsBar& tabsBar, const filesystem::File& iconFile = {},
+				const TabsBar::TabClickHandler& handler, bool active, TabsBar& tabsBar, const zgfilesystem::File& iconFile = {},
 				const shaders::RuntimeConstants& constants = {}, std::string_view name = "");
 		~Tab() override;
 		bool preRender() override;

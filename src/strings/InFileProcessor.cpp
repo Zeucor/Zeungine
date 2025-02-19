@@ -5,9 +5,9 @@ void InFileProcessor::addVariableMapping(const std::string& variableName, const 
 {
 	variableMappings.emplace(variableName, variableValue);
 }
-void InFileProcessor::processFile(filesystem::File&& inFile, const std::string& outFilePath)
+void InFileProcessor::processFile(zgfilesystem::File&& inFile, const std::string& outFilePath)
 {
-	filesystem::File outFile(outFilePath, enums::EFileLocation::Relative, "w");
+	zgfilesystem::File outFile(outFilePath, enums::EFileLocation::Relative, "w");
 	std::string replacementString;
     replacementString.resize(inFile.size());
     inFile.readBytes(0, replacementString.size(), replacementString.data());

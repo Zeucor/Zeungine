@@ -5,13 +5,14 @@
 #include <zg/entities/Plane.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/strings/Utf8Iterator.hpp>
+using namespace std;
 using namespace zg::fonts::freetype;
 FT_Library FreetypeFont::freetypeLibrary;
 bool FreetypeFont::freetypeLoaded = ([]()
 									 {
 	if (FT_Init_FreeType(&freetypeLibrary))
   {
-    throw std::runtime_error("Failed to initialize freetype library");
+    throw runtime_error("Failed to initialize freetype library");
   }
 	return true; })();
 struct ft_error
@@ -36,13 +37,13 @@ const char* ft_errorstring(int err)
 
 	return "Unknown error";
 };
-void FreetypeFont::FT_PRINT_AND_THROW_ERROR(const FT_Error& error, const std::string& fontPath)
+void FreetypeFont::FT_PRINT_AND_THROW_ERROR(const FT_Error& error, const string& fontPath)
 {
 	if (error)
 	{
-		auto errorString = "Error loading font[" + fontPath + "]" + std::string(ft_errorstring(error));
-		std::cout << errorString << std::endl;
-		throw std::runtime_error(errorString);
+		auto errorString = "Error loading font[" + fontPath + "]" + string(ft_errorstring(error));
+		cout << errorString << endl;
+		throw runtime_error(errorString);
 	}
 };
 FreetypeCharacter::FreetypeCharacter(Window& window, const FreetypeFont& freeTypeFont, float codepoint, float fontSize)
@@ -53,7 +54,7 @@ FreetypeCharacter::FreetypeCharacter(Window& window, const FreetypeFont& freeTyp
 	auto loadCharCode = FT_Load_Glyph(face, glyphIndex, FT_LOAD_RENDER | FT_RENDER_MODE_NORMAL | FT_LOAD_COLOR);
 	if (loadCharCode)
 	{
-		throw std::runtime_error("Failed to load glyph: " + std::to_string(FT_Get_Char_Index(face, glyphIndex)));
+		throw runtime_error("Failed to load glyph: " + to_string(FT_Get_Char_Index(face, glyphIndex)));
 	}
 	size = {face->glyph->bitmap.width, face->glyph->bitmap.rows};
 	bearing = {face->glyph->bitmap_left, face->glyph->bitmap_top};
@@ -65,7 +66,7 @@ FreetypeCharacter::FreetypeCharacter(Window& window, const FreetypeFont& freeTyp
 	{
 		auto flipY = (renderer == RENDERER_GL || renderer == RENDERER_EGL);
 		uint64_t imgSize = size.x * size.y * 4;
-		std::shared_ptr<uint8_t[]> rgbaImg(new uint8_t[imgSize]);
+		shared_ptr<uint8_t[]> rgbaImg(new uint8_t[imgSize]);
 		auto rgbaImgPointer = rgbaImg.get();
 		for (int64_t imgY = flipY ? size.y - 1 : 0, rgbaImgY = 0; flipY ? imgY >= 0 : imgY < size.y;
 				 flipY ? imgY-- : imgY++, rgbaImgY++)
@@ -104,7 +105,7 @@ FreetypeFont::FreetypeFont(Window& window, interfaces::IFile& fontFile) :
 	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(*actualFacePointer, FT_ENCODING_UNICODE), fontPath);
 };
 float textureScale = 1.f;
-const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fontSize, float& lineHeight,
+const glm::vec2 FreetypeFont::stringSize(const string_view string, float fontSize, float& lineHeight,
 																				 glm::vec2 bounds)
 {
 	strings::Utf8Iterator iterator(string, 0);
@@ -169,8 +170,8 @@ const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fo
 	size.y = currentPosition.y;
 	return size;
 };
-void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 color, float fontSize, float& lineHeight,
-																	 glm::vec2 textureSize, std::shared_ptr<textures::Texture>& texturePointer,
+void FreetypeFont::stringToTexture(const string_view string, glm::vec4 color, float fontSize, float& lineHeight,
+																	 glm::vec2 textureSize, shared_ptr<textures::Texture>& texturePointer,
 																	 const int64_t& cursorIndex, glm::vec3& cursorPosition)
 {
 	glm::ivec2 scaledSize = textureSize * textureScale;
@@ -231,7 +232,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 				characterPosition.x = currentPosition.x + characterPointer->bearing.x + (characterPointer->size.x / 2.f);
 				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) +
 					(characterPointer->size.y / 2.f);
-				scene.addEntity(std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0),
+				scene.addEntity(make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0),
 																													glm::vec3(1, 1, 1), characterPointer->size,
 																													*characterPointer->texturePointer),
 												false);

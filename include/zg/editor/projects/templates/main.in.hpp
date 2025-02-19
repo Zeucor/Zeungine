@@ -3,6 +3,7 @@
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Cube.hpp>
+using namespace std;
 using namespace zg;
 struct MainScene : Scene
 {

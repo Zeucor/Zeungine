@@ -34,7 +34,7 @@ std::shared_ptr<int8_t> zg::images::SVGRasterize(const std::shared_ptr<int8_t>& 
 	memcpy(rasterizedPointer.get(), pixels, imageSize);
 	return rasterizedPointer;
 }
-std::shared_ptr<int8_t> zg::images::SVGRasterize(const filesystem::File& svgFile, glm::ivec2 size, glm::vec4 color)
+std::shared_ptr<int8_t> zg::images::SVGRasterize(const zgfilesystem::File& svgFile, glm::ivec2 size, glm::vec4 color)
 {
-	return SVGRasterize(((filesystem::File&)svgFile).toBytes(), size, color);
+	return SVGRasterize(((zgfilesystem::File&)svgFile).toBytes(), size, color);
 }

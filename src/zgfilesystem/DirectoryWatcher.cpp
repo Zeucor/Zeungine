@@ -1,8 +1,8 @@
 #include <fcntl.h>
 #include <string.h>
-#include <zg/filesystem/Directory.hpp>
-#include <zg/filesystem/DirectoryWatcher.hpp>
-using namespace zg::filesystem;
+#include <zg/zgfilesystem/Directory.hpp>
+#include <zg/zgfilesystem/DirectoryWatcher.hpp>
+using namespace zgfilesystem;
 DirectoryWatcher::DirectoryWatcher(const std::filesystem::path& path,
 																	 const std::vector<std::filesystem::path>& excludePathsVector) :
 		watchPath(path), excludePathsVector(excludePathsVector)

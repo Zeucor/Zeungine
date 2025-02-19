@@ -18,7 +18,7 @@ TabsBar::TabsBar(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::
 	setSize();
 	addToBVH = false;
 };
-size_t TabsBar::addTab(std::string_view name, const TabClickHandler& handler, bool active, const filesystem::File& iconFile)
+size_t TabsBar::addTab(std::string_view name, const TabClickHandler& handler, bool active, const zgfilesystem::File& iconFile)
 {
 	auto& vao = (VAO&)*this;
 	float sizeXTotal = 0;
@@ -73,7 +73,7 @@ void TabsBar::markInactive(Tab* activeTab)
 };
 Tab::Tab(Window& window, Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, glm::vec4 color,
 				 const std::string_view text, fonts::freetype::FreetypeFont& font, float height,
-				 const TabsBar::TabClickHandler& handler, bool active, TabsBar& tabsBar, const filesystem::File& iconFile,
+				 const TabsBar::TabClickHandler& handler, bool active, TabsBar& tabsBar, const zgfilesystem::File& iconFile,
 				 const shaders::RuntimeConstants& constants, std::string_view name) :
 		zg::Entity(window,
 							 zg::mergeVectors<std::string_view>(
