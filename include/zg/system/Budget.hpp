@@ -41,63 +41,42 @@ namespace zg::budget
 #define QUEUE queue<QUEUE_VALUE>
 	struct FBudget;
 }
-namespace std
+namespace zgfilesystem
 {
-	ostream& operator<<(ostream& os, const SECONDS_DURATION& value)
+
+template<>	void serialize(Serial<fstream, fstream>& serial, const QUEUE_VALUE& value)
 	{
-		os.write((const char *)&value, sizeof(value));
-		return os;
+		serial.ot.write((const char *)&(value.first), sizeof(value.first));
+		serial.ot.write((const char *)&(value.second), sizeof(value.second));;
 	}
-	ostream& operator<<(ostream& os, const CLOCK::time_point& value)
+	template<>
+	void serialize(Serial<fstream, fstream>& serial, const QUEUE& que)
 	{
-		os.write((const char *)&value, sizeof(value));
-		return os;
-	}
-	ostream& operator<<(ostream& os, const QUEUE_VALUE& value)
-	{
-		os.write((const char *)&(value.first), sizeof(value.first));
-		os.write((const char *)&(value.second), sizeof(value.second));;
-		return os;
-	}
-	ostream& operator<<(ostream& os, const QUEUE& que)
-	{
-		os << que.size() << endl;
+		serial << que.size();
 		QUEUE st = que;
 		while (!st.empty())
 		{
 			auto marker = st.front();
-			os << marker;
+			serial << marker;
 			st.pop();
 		}
-		return os;
 	}
-	istream& operator>>(istream& is, SECONDS_DURATION& value)
+	template<>
+	void deserialize(Serial<fstream, fstream>& serial, QUEUE_VALUE& value)
 	{
-		is.read((char *)&value, sizeof(value));
-		return is;
+		serial >> value.first >> value.second;
 	}
-	istream& operator>>(istream& is, CLOCK::time_point& value)
-	{
-		is.read((char *)&value, sizeof(value));
-		return is;
-	}
-	istream& operator>>(istream& is, QUEUE_VALUE& value)
-	{
-		is.read((char *)&(value.first), sizeof(value.first));
-		is.read((char *)&(value.second), sizeof(value.second));	
-		return is;
-	}
-	istream& operator>>(istream& is, QUEUE& que)
+	template<>
+	void deserialize(Serial<fstream, fstream>& serial, QUEUE& que)
 	{
 		auto size_ = que.size();
-		is >> size_;
+		serial >> size_;
 		for (int count = 1; count <= size_; ++count)
 		{
 			QUEUE_VALUE value;
-			is >> value;
+			serial >> value;
 			que.push(value);
 		}
-		return is;
 	}
 }
 namespace zg::budget

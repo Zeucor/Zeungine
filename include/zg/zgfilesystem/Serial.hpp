@@ -1,10 +1,12 @@
 #pragma once
 namespace zgfilesystem
 {
-    template<typename T>
-    void serialize(ostream& os, const T &value);
-    template<typename T>
-    void deserialize(istream& is, T &value);
+    template<typename O_T, typename I_T>
+    struct Serial;
+    template<typename T, typename O_T, typename I_T>
+    void serialize(Serial<O_T, I_T>& serial, const T &value);
+    template<typename T, typename O_T, typename I_T>
+    void deserialize(Serial<O_T, I_T>& serial, T &value);
     template<typename O_T, typename I_T>
     struct Serial
     {
@@ -17,26 +19,34 @@ namespace zgfilesystem
         template<typename T>
         constexpr Serial& operator << (const T& value)
         {
-            if constexpr (requires { zgfilesystem::serialize(ot); })
+            if constexpr (is_trivially_copyable<T>())
             {
-                zgfilesystem::serialize(ot, value);
+                ot.write((const char *)&value, sizeof(value));
+            }
+            else if constexpr (requires { zgfilesystem::serialize(*this, value); })
+            {
+                zgfilesystem::serialize(*this, value);
             }
             else
             {
-                ot.write((const char *)&value, sizeof(value));
+                static_assert("Unable to serialize T");
             }
             return *this;
         }
         template<typename T>
         constexpr Serial& operator >> (T& value)
         {
-            if constexpr (requires { zgfilesystem::deserialize(it); })
+            if constexpr (is_trivially_copyable<T>())
             {
-                zgfilesystem::deserialize(it, value);
+                it.read((char *)&value, sizeof(value));
+            }
+            else if constexpr (requires { zgfilesystem::deserialize(*this, value); })
+            {
+                zgfilesystem::deserialize(*this, value);
             }
             else
             {
-                it.read((char *)&value, sizeof(value));
+                static_assert("Unable to deserialize T");
             }
             return *this;
         }
