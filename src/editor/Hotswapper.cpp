@@ -9,8 +9,8 @@
 #include <zg/crypto/Random.hpp>
 using namespace zg::editor::hs;
 using namespace zg::system;
-SECONDS_DURATION hotswapperBudgetDuration = SECONDS_DURATION(1.0 * nano::den);
-zg::budget::ZBudget<10> hotswapperZBudget(hotswapperBudgetDuration, "hotswapperBudget", true, zgfilesystem::File::getProgramDirectoryPath() / "budgets" / "hotswapperBudget");
+SECONDS_DURATION hotswapperBudgetDuration = SECONDS_DURATION((1.0 / 10.0) * nano::den);
+zg::budget::ZBudget hotswapperZBudget(10, hotswapperBudgetDuration, false, "hotswapperBudget", true, zgfilesystem::File::getProgramDirectoryPath() / "budgets" / "hotswapperBudget");
 Hotswapper::Hotswapper(const std::filesystem::path& directory, EditorScene& editorScene) :
 		running(true), directory(directory), editorScene(editorScene),
 		updateThread(std::make_shared<std::thread>(&Hotswapper::update, this))
@@ -91,8 +91,7 @@ void Hotswapper::update()
 		}
 		hotswapperZBudget.update();
 		std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::seconds, REAL>(SECONDS_DURATION(zg::crypto::Random::value<REAL>(0.021, 0.042))));
-		hotswapperZBudget.update();
-		hotswapperZBudget.zsleep();
+		hotswapperZBudget.sleep();
 	}
 }
 std::pair<bool, bool> Hotswapper::configure(bool& currentlyConfiguring, bool& requireConfigure)

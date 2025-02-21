@@ -1,12 +1,15 @@
-#include <../include/zg/Logger.hpp>
-#include <../include/zg/Window.hpp>
-#include <../include/zg/entities/Plane.hpp>
-#include <../include/zg/shaders/ShaderFactory.hpp>
-#include <../include/zg/shaders/ShaderManager.hpp>
-#include <../include/zg/textures/Texture.hpp>
+#include <zg/Logger.hpp>
+#include <zg/Window.hpp>
+#include <zg/entities/Plane.hpp>
+#include <zg/shaders/ShaderFactory.hpp>
+#include <zg/shaders/ShaderManager.hpp>
+#include <zg/textures/Texture.hpp>
+#include <zg/system/Budget.hpp>
 #include <iostream>
 #include <stdexcept>
 using namespace zg;
+SECONDS_DURATION windowSD = SECONDS_DURATION((1.0/20)*SECONDS::den);
+budget::ZBudget windowBudget(1, windowSD);
 #ifdef _WIN32
 extern "C" {
 _declspec(dllexport) DWORD NvOptimusEnablement = 1;
@@ -107,31 +110,51 @@ void Window::startWindow()
 	iRendererRef.init();
 	iPlatformWindowRef.postInit();
 	runRunnables();
-	while (iPlatformWindowRef.pollMessages())
+	while (true)
 	{
+		windowBudget.update();
+		if (!iPlatformWindowRef.pollMessages())
+		{
+			windowBudget.sleep();
+			break;
+		}
+		windowBudget.update();
 		iRendererRef.preBeginRenderPass();
+		windowBudget.update();
 		runRunnables();
+		windowBudget.update();
 		updateKeyboard();
+		windowBudget.update();
 		updateMouse();
+		windowBudget.update();
 		update();
+		windowBudget.update();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
+			windowBudget.update();
 			childWindow.render();
 		}
+		windowBudget.update();
 		iRendererRef.beginRenderPass();
+		windowBudget.update();
 		render();
+		windowBudget.update();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
+			windowBudget.update();
 			childWindow.framebufferPlane->render();
 		}
+		windowBudget.update();
 		iRendererRef.postRenderPass();
+		windowBudget.update();
 		iRendererRef.swapBuffers();
+		windowBudget.sleep();
 	}
 _exit:
 	delete shaderContext;

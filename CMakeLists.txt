@@ -187,6 +187,9 @@ include_directories(include)
 
 # Sources
 set(ZG_SOURCES
+    src/system/TabulatedIOLogger.cpp
+    src/system/TerminalIO.cpp
+    src/system/Budget.cpp
     src/Logger.cpp
     src/SharedLibrary.cpp
     src/crypto/vector.cpp
