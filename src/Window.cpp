@@ -1,12 +1,12 @@
+#include <iostream>
+#include <stdexcept>
 #include <zg/Logger.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/shaders/ShaderManager.hpp>
-#include <zg/textures/Texture.hpp>
 #include <zg/system/Budget.hpp>
-#include <iostream>
-#include <stdexcept>
+#include <zg/textures/Texture.hpp>
 using namespace zg;
 SECONDS_DURATION windowSD = SECONDS_DURATION((1.0/60)*SECONDS::den);
 budget::ZBudget windowBudget(1, windowSD);
