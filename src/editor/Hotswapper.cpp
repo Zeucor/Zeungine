@@ -1,16 +1,17 @@
 #include <zg/SharedLibrary.hpp>
+#include <zg/crypto/Random.hpp>
 #include <zg/editor/EditorScene.hpp>
 #include <zg/editor/Hotswapper.hpp>
+#include <zg/system/Budget.hpp>
+#include <zg/system/WorkingDirectory.hpp>
 #include <zg/zgfilesystem/Directory.hpp>
 #include <zg/zgfilesystem/DirectoryWatcher.hpp>
 #include <zg/zgfilesystem/File.hpp>
-#include <zg/system/WorkingDirectory.hpp>
-#include <zg/system/Budget.hpp>
-#include <zg/crypto/Random.hpp>
 using namespace zg::editor::hs;
 using namespace zg::system;
 SECONDS_DURATION hotswapperBudgetDuration = SECONDS_DURATION((1.0) * nano::den);
-zg::budget::ZBudget hotswapperZBudget(10, hotswapperBudgetDuration, false, false, "hotswapperBudget", true, zgfilesystem::File::getProgramDirectoryPath() / "budgets" / "hotswapperBudget");
+zg::budget::ZBudget hotswapperZBudget(10, hotswapperBudgetDuration, false, false, "hotswapperBudget", true,
+																			zgfilesystem::File::getProgramDirectoryPath() / "budgets" / "hotswapperBudget");
 Hotswapper::Hotswapper(const std::filesystem::path& directory, EditorScene& editorScene) :
 		running(true), directory(directory), editorScene(editorScene),
 		updateThread(std::make_shared<std::thread>(&Hotswapper::update, this))
@@ -42,46 +43,48 @@ void Hotswapper::update()
 		}
 		if (requireLoad)
 		{
-			editorScene.gameWindowPointer->runOnThread([&](auto& _window)
-			{
-				if (editorScene.loaded)
+			editorScene.gameWindowPointer->runOnThread(
+				[&](auto& _window)
 				{
+					if (editorScene.loaded)
 					{
-						std::lock_guard gameWindowLock(_window.renderMutex);
-						_window.scene.reset();
+						{
+							std::lock_guard gameWindowLock(_window.renderMutex);
+							_window.scene.reset();
+						}
+						editorScene.loaded = false;
+						editorScene.OnLoad = 0;
+						libraryPointer.reset();
 					}
-					editorScene.loaded = false;
-					editorScene.OnLoad = 0;
-					libraryPointer.reset();
-				}
-				libraryPointer = std::make_unique<SharedLibrary>(directory / "build" / "libeditor-game.so");
-				auto& libraryRef = *libraryPointer;
-				try
-				{
-					editorScene.OnLoad = libraryRef.getProc<void (*)(Window&)>("OnLoad");
-				}
-				catch (const std::exception& e)
-				{
-					std::cout << e.what() << '\n';
-				}
-				if (editorScene.OnLoad)
-				{
-					editorScene.OnLoad(_window);
-					editorScene.loaded = true;
-					if (_window.minimized)
+					libraryPointer = std::make_unique<SharedLibrary>(directory / "build" / "libeditor-game.so");
+					auto& libraryRef = *libraryPointer;
+					try
 					{
-						_window.restore();
+						editorScene.OnLoad = libraryRef.getProc<void (*)(Window&)>("OnLoad");
 					}
-				}
-				requireLoad = false;
-			});
+					catch (const std::exception& e)
+					{
+						std::cout << e.what() << '\n';
+					}
+					if (editorScene.OnLoad)
+					{
+						editorScene.OnLoad(_window);
+						editorScene.loaded = true;
+						if (_window.minimized)
+						{
+							_window.restore();
+						}
+					}
+					requireLoad = false;
+				});
 		}
 		auto changes = directoryWatcher.update();
 		if (!changes.empty())
 		{
 			for (auto& changePair : changes)
 			{
-				if (changePair.second.find("CMakeLists.txt") != std::string::npos || changePair.second.find(".cmake") != std::string::npos)
+				if (changePair.second.find("CMakeLists.txt") != std::string::npos ||
+						changePair.second.find(".cmake") != std::string::npos)
 					requireConfigure = true;
 			}
 			if (!requireConfigure)
@@ -90,7 +93,8 @@ void Hotswapper::update()
 			// 	currentCommand->kill();
 		}
 		hotswapperZBudget.tick();
-		std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::seconds, REAL>(SECONDS_DURATION(zg::crypto::Random::value<REAL>(0.021, 0.042))));
+		std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::seconds, REAL>(
+			SECONDS_DURATION(zg::crypto::Random::value<REAL>(0.021, 0.042))));
 		hotswapperZBudget.end();
 		hotswapperZBudget.sleep();
 	}
