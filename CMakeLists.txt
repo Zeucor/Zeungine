@@ -110,38 +110,62 @@ if(BUILD_VULKAN)
 endif()
 
 # Dependencies
+include(FetchContent)
+set(FETCHCONTENT_QUIET OFF)
 
 # Freetype
-set(SKIP_INSTALL_ALL ON)
-add_subdirectory(vendor/freetype build/build_freetype)
+message(STATUS "FetchContent: freetype")
+set(SKIP_INSTALL_ALL ON CACHE BOOL "Disable installation for fetched content" FORCE)
+FetchContent_Declare(
+    freetype
+    GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(freetype)
 set_target_properties(freetype PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(freetype PROPERTIES MINSIZEREL_POSTFIX "")
-include_directories(vendor/freetype/include)
+include_directories(${freetype_SOURCE_DIR}/include)
 
 # BVH
-add_subdirectory(vendor/bvh build/build_bvh)
-include_directories(vendor/bvh/src)
+message(STATUS "FetchContent: bvh")
+FetchContent_Declare(
+    bvh
+    GIT_REPOSITORY https://github.com/ZeunO8/bvh.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(bvh)
+include_directories(${bvh_SOURCE_DIR}/src)
 
 # GLM
-include_directories(vendor/glm)
+message(STATUS "FetchContent: glm")
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(glm)
+include_directories(${glm_SOURCE_DIR})
 
 # STB
-include_directories(vendor/stb)
-
-# filewatch
-set(BuildTests OFF)
-add_subdirectory(vendor/filewatch)
-include_directories(vendor/filewatch)
+message(STATUS "FetchContent: stb")
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(stb)
+include_directories(${stb_SOURCE_DIR})
 
 # lunasvg
-include(FetchContent)
+message(STATUS "FetchContent: lunasvg")
 FetchContent_Declare(
     lunasvg
     GIT_REPOSITORY https://github.com/sammycage/lunasvg.git
     GIT_TAG master
 )
+message(STATUS "FetchContent_MakeAvailable: lunasvg")
 FetchContent_MakeAvailable(lunasvg)
 include_directories(${lunasvg_SOURCE_DIR}/include)
 
