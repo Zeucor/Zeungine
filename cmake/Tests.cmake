@@ -1,0 +1,20 @@
+# create_test function
+function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
+    if(LIBRARY)
+        add_library(${TEST_NAME} SHARED ${TEST_SOURCE})
+    else()
+        add_executable(${TEST_NAME} ${TEST_SOURCE})
+    endif()
+    target_link_libraries(${TEST_NAME} zeungine)
+    if(LINUX)
+        target_link_libraries(${TEST_NAME} ${X11_LIBRARIES})
+    endif()
+    if(NOT LIBRARY)
+        add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE_DIR:${TEST_NAME}>/${TEST_NAME}${TEST_EXT} ${TEST_ARGS})
+    endif()
+endfunction()
+
+# Tests
+create_test(LightingTest tests/LightingTest.cpp "" FALSE)
+create_test(SimpleCubeTest tests/SimpleCubeTest.cpp "" FALSE)
+create_test(SimpleWindowTest tests/SimpleWindowTest.cpp "" FALSE)
