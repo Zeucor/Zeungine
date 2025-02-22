@@ -259,24 +259,24 @@ namespace zg::budget
 		// 	}
 		// 	return true;
 		// }
-		// bool loadChunk()
-		// {
-		// 	auto historySize = m_History.size();
-		// 	zgfilesystem::File chunkFile(m_serializeDirectory / ("zgb_chunk_" + to_string(m_chunkID)),
-		// 															 enums::EFileLocation::Absolute, "r");
-		// 	zgfilesystem::Serial serial(chunkFile.fileStream, chunkFile.fileStream);
-		// 	serial >> m_HistoryIndex >> m_HistoryTotalLength >> historySize;
-		// 	assert(historySize <= HistorySize);
-		// 	for (size_t count = 1; count <= historySize; count++)
-		// 	{
-		// 		auto& historyRecord = m_History[count - 1];
-		// 		serial >> get<0>(historyRecord) >> get<1>(historyRecord) >> get<2>(historyRecord) >> get<3>(historyRecord);
-		// 	}
-		// 	if (m_HistoryIndex < HistorySize)
-		// 	{
-		// 		--m_chunkID;
-		// 	}
-		// 	return true;
-		// }
+		bool loadChunk()
+		{
+			auto historySize = m_History.size();
+			zgfilesystem::File chunkFile(m_serializeDirectory / ("zgb_chunk_" + to_string(m_chunkID)),
+																	 enums::EFileLocation::Absolute, "r");
+			zgfilesystem::Serial serial(chunkFile.fileStream, chunkFile.fileStream);
+			serial >> m_historySize;
+			// for (size_t count = 1; count <= historySize; count++)
+			// {
+			// 	auto& historyRecord = m_History[count - 1];
+			// 	serial >> get<0>(historyRecord) >> get<1>(historyRecord) >> get<2>(historyRecord) >> get<3>(historyRecord) >>
+			// get<4>(historyRecord);
+			// }
+			// if (m_HistoryIndex < HistorySize)
+			// {
+			// 	--m_chunkID;
+			// }
+			return true;
+		}
 	};
 } // namespace zg::budget
