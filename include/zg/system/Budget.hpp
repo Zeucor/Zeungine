@@ -90,7 +90,7 @@ namespace zg::budget
 						filesystem::path serializeDirectory = {}) :
 				m_BudgetTime(BudgetTime), m_serializeHistory(serializeHistory), m_serializeDirectory(serializeDirectory),
 				m_chunkID(calculateChunkID()), m_historySize(historySize), m_instantStart(instantStart),
-				m_sleeponsleep(sleepAtSleep)
+				m_sleeponsleep(sleepAtSleep), m_budgetCountNs(m_BudgetTime.count())
 		{
 			m_IsBeginningZgBudget = m_BudgetTime;
 			// if (m_serializeHistory && m_chunkID)
@@ -146,8 +146,8 @@ namespace zg::budget
 		{
 			unique_lock lock(mTx);
 			auto now = chrono::duration_cast<CHRONO_SECONDS>(CLOCK::now().time_since_epoch());
-			auto budgetCountNs = chrono::duration_cast<CHRONO_SECONDS>(m_BudgetTime).count();
-			auto nsQuantized = SecondsDuration(m_BudgetTime.count() - (now.count() % budgetCountNs));
+			auto m_budgetCountNs = chrono::duration_cast<CHRONO_SECONDS>(m_BudgetTime).count();
+			auto nsQuantized = SecondsDuration(m_BudgetTime.count() - (now.count() % m_budgetCountNs));
 			return nsQuantized;
 		}
 		SecondsDuration operator/(SecondsDuration a) override
@@ -163,14 +163,12 @@ namespace zg::budget
 			unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
 			auto& end = get<1>(history_tuple);
+			end = CLOCK::now();
 			auto& seconds = get<2>(history_tuple);
 			auto& begin = get<0>(history_tuple);
-			end = CLOCK::now();
-			auto nsduration = end - begin;
 			seconds = end - begin;
-			auto budgetCountNs = chrono::duration_cast<CHRONO_SECONDS>(m_BudgetTime).count();
-			auto nsQuantized = SecondsDuration(m_BudgetTime.count() - (end.time_since_epoch().count() % budgetCountNs));
-			m_IsZgBudget =  nsQuantized;
+			auto nsQuantized = SecondsDuration(m_budgetCountNs - (end.time_since_epoch().count() % m_budgetCountNs));
+			m_IsZgBudget = nsQuantized;
 			m_IsNextBudgetWakeAtTimePoint = chrono::time_point_cast<chrono::nanoseconds>(end + m_IsZgBudget);
 		}
 		void sleep() override
@@ -208,6 +206,7 @@ namespace zg::budget
 		SecondsDuration m_IsZgBudget;
 		SecondsDuration m_IsBeginningZgBudget;
 		TimePoint m_IsNextBudgetWakeAtTimePoint;
+		size_t m_budgetCountNs;
 		bool m_sleeponsleep;
 		using HistoryItem = tuple<TimePoint, TimePoint, SecondsDuration, queue<pair<TimePoint, SecondsDuration>>, bool>;
 		deque<HistoryItem> m_History;
