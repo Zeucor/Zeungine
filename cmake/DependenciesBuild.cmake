@@ -33,7 +33,7 @@ else()
 endif()
 message(STATUS "ffmpeg-configure")
 execute_process(
-    COMMAND ./configure ${ffmpeg_CONFIGURE_OPTIONS}
+    COMMAND ${SHELL} ./configure ${ffmpeg_CONFIGURE_OPTIONS}
     WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR}
     RESULT_VARIABLE ffmpeg_ConfigureResult
 )
