@@ -1,4 +1,3 @@
-find_package(PkgConfig REQUIRED)
 include(CTest)
 enable_testing()
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")

@@ -1,5 +1,6 @@
 # Determine windower
 if(LINUX)
+    find_package(PkgConfig REQUIRED)
     pkg_check_modules(XCB xcb)
     find_package(X11)
     find_package(Wayland)
