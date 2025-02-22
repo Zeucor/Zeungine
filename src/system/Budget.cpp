@@ -3,13 +3,15 @@ using namespace std;
 namespace zgfilesystem
 {
 
-template<>	void serialize(Serial<fstream, fstream>& serial, const QUEUE_VALUE& value)
+	template <>
+	size_t serialize(Serial<fstream, fstream>& serial, const QUEUE_VALUE& value)
 	{
-		serial.ot.write((const char *)&(value.first), sizeof(value.first));
-		serial.ot.write((const char *)&(value.second), sizeof(value.second));;
+		serial.ot.write((const char*)&(value.first), sizeof(value.first));
+		serial.ot.write((const char*)&(value.second), sizeof(value.second));
+		return 1;
 	}
-	template<>
-	void serialize(Serial<fstream, fstream>& serial, const QUEUE& que)
+	template <>
+	size_t serialize(Serial<fstream, fstream>& serial, const QUEUE& que)
 	{
 		serial << que.size();
 		QUEUE st = que;
@@ -19,14 +21,16 @@ template<>	void serialize(Serial<fstream, fstream>& serial, const QUEUE_VALUE& v
 			serial << marker;
 			st.pop();
 		}
+		return 1;
 	}
-	template<>
-	void deserialize(Serial<fstream, fstream>& serial, QUEUE_VALUE& value)
+	template <>
+	size_t deserialize(Serial<fstream, fstream>& serial, QUEUE_VALUE& value)
 	{
 		serial >> value.first >> value.second;
+		return 1;
 	}
-	template<>
-	void deserialize(Serial<fstream, fstream>& serial, QUEUE& que)
+	template <>
+	size_t deserialize(Serial<fstream, fstream>& serial, QUEUE& que)
 	{
 		auto size_ = que.size();
 		serial >> size_;
@@ -36,5 +40,6 @@ template<>	void serialize(Serial<fstream, fstream>& serial, const QUEUE_VALUE& v
 			serial >> value;
 			que.push(value);
 		}
+		return 1;
 	}
-}
+} // namespace zgfilesystem
