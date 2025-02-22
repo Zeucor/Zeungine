@@ -9,7 +9,7 @@ set(FETCHCONTENT_QUIET OFF)
 message(STATUS "FetchContent: ffmpeg")
 FetchContent_Declare(
     ffmpeg
-    GIT_REPOSITORY git@github.com:FFmpeg/FFmpeg.git
+    GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
     GIT_TAG master
 )
 FetchContent_MakeAvailable(ffmpeg)
