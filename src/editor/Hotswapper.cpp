@@ -9,8 +9,8 @@
 #include <zg/crypto/Random.hpp>
 using namespace zg::editor::hs;
 using namespace zg::system;
-SECONDS_DURATION hotswapperBudgetDuration = SECONDS_DURATION((1.0 / 10.0) * nano::den);
-zg::budget::ZBudget hotswapperZBudget(10, hotswapperBudgetDuration, false, "hotswapperBudget", true, zgfilesystem::File::getProgramDirectoryPath() / "budgets" / "hotswapperBudget");
+SECONDS_DURATION hotswapperBudgetDuration = SECONDS_DURATION((1.0) * nano::den);
+zg::budget::ZBudget hotswapperZBudget(10, hotswapperBudgetDuration, false, false, "hotswapperBudget", true, zgfilesystem::File::getProgramDirectoryPath() / "budgets" / "hotswapperBudget");
 Hotswapper::Hotswapper(const std::filesystem::path& directory, EditorScene& editorScene) :
 		running(true), directory(directory), editorScene(editorScene),
 		updateThread(std::make_shared<std::thread>(&Hotswapper::update, this))
@@ -29,7 +29,7 @@ void Hotswapper::update()
 	std::unique_ptr<SharedLibrary> libraryPointer;
 	while (running)
 	{
-		hotswapperZBudget.update();
+		hotswapperZBudget.begin();
 		auto configureResult = configure(currentlyConfiguring, requireConfigure);
 		if (justRequireConfigure && configureResult.first && configureResult.second)
 		{
@@ -89,8 +89,9 @@ void Hotswapper::update()
 			// if (currentCommand)
 			// 	currentCommand->kill();
 		}
-		hotswapperZBudget.update();
+		hotswapperZBudget.tick();
 		std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::seconds, REAL>(SECONDS_DURATION(zg::crypto::Random::value<REAL>(0.021, 0.042))));
+		hotswapperZBudget.end();
 		hotswapperZBudget.sleep();
 	}
 }

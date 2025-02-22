@@ -8,7 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 using namespace zg;
-SECONDS_DURATION windowSD = SECONDS_DURATION((1.0/20)*SECONDS::den);
+SECONDS_DURATION windowSD = SECONDS_DURATION((1.0/60)*SECONDS::den);
 budget::ZBudget windowBudget(1, windowSD);
 #ifdef _WIN32
 extern "C" {
@@ -112,48 +112,49 @@ void Window::startWindow()
 	runRunnables();
 	while (true)
 	{
-		windowBudget.update();
+		windowBudget.begin();
 		if (!iPlatformWindowRef.pollMessages())
 		{
 			windowBudget.sleep();
 			break;
 		}
-		windowBudget.update();
+		windowBudget.tick();
 		iRendererRef.preBeginRenderPass();
-		windowBudget.update();
+		windowBudget.tick();
 		runRunnables();
-		windowBudget.update();
+		windowBudget.tick();
 		updateKeyboard();
-		windowBudget.update();
+		windowBudget.tick();
 		updateMouse();
-		windowBudget.update();
+		windowBudget.tick();
 		update();
-		windowBudget.update();
+		windowBudget.tick();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
-			windowBudget.update();
+			windowBudget.tick();
 			childWindow.render();
 		}
-		windowBudget.update();
+		windowBudget.tick();
 		iRendererRef.beginRenderPass();
-		windowBudget.update();
+		windowBudget.tick();
 		render();
-		windowBudget.update();
+		windowBudget.tick();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
-			windowBudget.update();
+			windowBudget.tick();
 			childWindow.framebufferPlane->render();
 		}
-		windowBudget.update();
+		windowBudget.tick();
 		iRendererRef.postRenderPass();
-		windowBudget.update();
+		windowBudget.tick();
 		iRendererRef.swapBuffers();
+		windowBudget.end();
 		windowBudget.sleep();
 	}
 _exit:
