@@ -8,7 +8,7 @@
 #include <zg/system/Budget.hpp>
 #include <zg/textures/Texture.hpp>
 using namespace zg;
-SECONDS_DURATION windowSD = SECONDS_DURATION((1.0/60)*SECONDS::den);
+SECONDS_DURATION windowSD = SECONDS_DURATION((1.0 / 8.0) * SECONDS::den);
 budget::ZBudget windowBudget(1, windowSD);
 #ifdef _WIN32
 extern "C" {
