@@ -24,7 +24,7 @@ Command::Command(const std::string& command) : pid(0), exitCode(0), complete(fal
 	si.hStdInput = NULL;
 
 	PROCESS_INFORMATION pi;
-	if (!CreateProcess(NULL, const_cast<char*>(command.c_str()), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si,
+	if (!CreateProcessA(NULL, const_cast<char*>(command.c_str()), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si,
 										 &pi))
 	{
 		std::cout << "Failed to execute command." << std::endl;
@@ -36,7 +36,7 @@ Command::Command(const std::string& command) : pid(0), exitCode(0), complete(fal
 	pid = pi.hProcess;
 	CloseHandle(pi.hThread);
 	CloseHandle(hWrite);
-	pipeRead = _open_osfpid(reinterpret_cast<intptr_t>(hRead), _O_RDONLY);
+	pipeRead = _open_osfhandle(reinterpret_cast<intptr_t>(hRead), _O_RDONLY);
 #else
 	int pipefd[2];
 	if (pipe(pipefd) == -1)
@@ -73,10 +73,10 @@ bool Command::update()
 		char buffer[128];
 #ifdef _WIN32
 		DWORD bytesRead;
-		if (PeekNamedPipe(reinterpret_cast<HANDLE>(_get_osfpid(pipeRead)), NULL, 0, NULL, &bytesRead, NULL) &&
+		if (PeekNamedPipe(reinterpret_cast<HANDLE>(_open_osfhandle(pipeRead, _O_RDONLY)), NULL, 0, NULL, &bytesRead, NULL) &&
 				bytesRead > 0)
 		{
-			if (ReadFile(reinterpret_cast<HANDLE>(_get_osfpid(pipeRead)), buffer, sizeof(buffer) - 1, &bytesRead, NULL) &&
+			if (ReadFile(reinterpret_cast<HANDLE>(_open_osfhandle(pipeRead, _O_RDONLY)), buffer, sizeof(buffer) - 1, &bytesRead, NULL) &&
 					bytesRead > 0)
 			{
 				buffer[bytesRead] = '\0';

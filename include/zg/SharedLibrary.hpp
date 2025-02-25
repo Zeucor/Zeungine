@@ -1,56 +1,62 @@
 #pragma once
-#ifdef _WIN32
-#include <windows.h>
-#elif defined(__linux__) || defined(__APPLE__)
-#include <dlfcn.h>
-#endif
-#include <stdexcept>
-#include <string>
-#include <string_view>
+#include <zg/Standard.hpp>
 namespace zg
 {
 	struct SharedLibrary
 	{
+		template <typename T, typename... Args>
+		constexpr void concatPaths(STANDARD::string& paths, const T& path, const Args&... args)
+		{
+			if constexpr (STANDARD::is_same_v<T, STANDARD::string>)
+				paths += path;
+			else if constexpr (std::is_same_v<T, std::filesystem::path>)
+				paths += path.string();
+			else
+				paths += STANDARD::to_string(path);
+			paths += (sizeof...(args) ? ", " : "");
+			concatPaths(paths, args...);
+		}
+		void concatPaths(STANDARD::string& paths) {}
 #ifdef _WIN32
 		HMODULE libraryPointer = 0;
 #elif defined(__linux__) || defined(__APPLE__)
 		void* libraryPointer = 0;
 #endif
+	template <typename T, typename... Args>
+	constexpr void load(const STANDARD::string& paths, const T& path, const Args&... args)
+	{
+		if constexpr (STANDARD::is_same_v<T, STANDARD::string> || STANDARD::is_same_v<T, STANDARD::string_view>)
+		{
+			#ifdef _WIN32
+			libraryPointer = LoadLibraryA(path.data());
+			#elif defined(__linux__) || defined(__APPLE__)
+			libraryPointer = dlopen(path.data(), RTLD_NOW | RTLD_GLOBAL);
+			#endif
+		}
+		else
+		{
+			throw std::runtime_error("unknown load T path");
+		}
+		if (!libraryPointer)
+		{
+			load(paths, args...);
+		}
+	}
+	void load(const STANDARD::string& paths) { throw STANDARD::runtime_error("Failed to load librarys: " + paths); }
 		template <typename... Args>
 		SharedLibrary(const Args&... args)
 		{
-			std::string paths;
+			STANDARD::string paths;
 			concatPaths(paths, args...);
 			load(paths, args...);
 		}
-		template <typename... Args>
-		void concatPaths(std::string& paths, const std::string& path, const Args&... args)
-		{
-			paths += std::string(path) + (sizeof...(args) ? ", " : "");
-			concatPaths(paths, args...);
-		}
-		void concatPaths(std::string& paths) {}
-		template <typename... Args>
-		void load(const std::string& paths, const std::string path, const Args&... args)
-		{
-#ifdef _WIN32
-			libraryPointer = LoadLibraryA(path.data());
-#elif defined(__linux__) || defined(__APPLE__)
-			libraryPointer = dlopen(path.data(), RTLD_NOW | RTLD_GLOBAL);
-#endif
-			if (!libraryPointer)
-			{
-				load(paths, args...);
-			}
-		}
-		void load(const std::string& paths) { throw std::runtime_error("Failed to load librarys: " + paths); }
 		~SharedLibrary();
 		template <typename T>
-		T getProc(std::string_view procName)
+		T getProc(STANDARD::string_view procName)
 		{
 			if (!libraryPointer)
 			{
-				throw std::runtime_error("Library not loaded");
+				throw STANDARD::runtime_error("Library not loaded");
 			}
 #ifdef _WIN32
 			void* procAddress = GetProcAddress(libraryPointer, procName.data());
@@ -59,7 +65,7 @@ namespace zg
 #endif
 			if (!procAddress)
 			{
-				throw std::runtime_error("Failed to retrieve proc: " + std::string(procName));
+				throw STANDARD::runtime_error("Failed to retrieve proc: " + STANDARD::string(procName));
 			}
 			return reinterpret_cast<T>(procAddress);
 		};

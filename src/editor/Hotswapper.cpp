@@ -83,8 +83,9 @@ void Hotswapper::update()
 		{
 			for (auto& changePair : changes)
 			{
-				if (changePair.second.find("CMakeLists.txt") != std::string::npos ||
-						changePair.second.find(".cmake") != std::string::npos)
+				auto changePairString = changePair.second.string();
+				if (changePairString.find("CMakeLists.txt") != std::string::npos ||
+						changePairString.find(".cmake") != std::string::npos)
 					requireConfigure = true;
 			}
 			if (!requireConfigure)
@@ -111,7 +112,7 @@ std::pair<bool, bool> Hotswapper::configure(bool& currentlyConfiguring, bool& re
 		editorScene.status->setText("Configuring...");
 		idle = false;
 		auto currentWorkingDirectory = GET_WORKING_DIR();
-		SET_WORKING_DIR(directory.c_str());
+		SET_WORKING_DIR(zgfilesystem::File::toPlatformPath(directory.string()).c_str());
 		currentCommand = std::make_unique<Command>("cmake -B build .");
 		SET_WORKING_DIR(currentWorkingDirectory.c_str());
 		currentlyConfiguring = true;
@@ -148,7 +149,7 @@ std::pair<bool, bool> Hotswapper::build(bool& currentlyBuilding, bool& requireBu
 		compiling = true;
 		compiled = false;
 		auto currentWorkingDirectory = GET_WORKING_DIR();
-		SET_WORKING_DIR(directory.c_str());
+		SET_WORKING_DIR(zgfilesystem::File::toPlatformPath(directory.string()).c_str());
 		if (currentCommand)
 			currentCommand->update();
 		currentCommand = std::make_unique<Command>("cmake --build build");

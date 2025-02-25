@@ -1,23 +1,5 @@
 #pragma once
-#include <atomic>
-#include <filesystem>
-#include <functional>
-#include <iostream>
-#include <stdexcept>
-#include <thread>
-#include <vector>
-#ifdef _WIN32
-#include <windows.h>
-#elif __linux__
-#include <sys/inotify.h>
-#include <unistd.h>
-#elif __APPLE__
-#include <fcntl.h>
-#include <sys/event.h>
-#include <sys/types.h>
-#include <unistd.h>
-#endif
-using namespace std;
+#include <zg/Standard.hpp>
 namespace zgfilesystem
 {
 	class DirectoryWatcher
@@ -29,18 +11,18 @@ namespace zgfilesystem
 			Modified,
 			Deleted
 		};
-		DirectoryWatcher(const filesystem::path& path, const vector<filesystem::path>& excludePathsVector);
-		vector<pair<ChangeType, string>> update();
+		DirectoryWatcher(const STANDARD::filesystem::path& path, const STANDARD::vector<STANDARD::filesystem::path>& excludePathsVector);
+		STANDARD::vector<STANDARD::pair<ChangeType, STANDARD::filesystem::path>> update();
 
 	private:
-		filesystem::path watchPath;
+		STANDARD::filesystem::path watchPath;
 #ifdef __linux__
-		unordered_map<int32_t, filesystem::path> fdPathMap;
+		STANDARD::unordered_map<int32_t, STANDARD::filesystem::path> fdPathMap;
 #endif
-		vector<filesystem::path> excludePathsVector;
-		void addDirectoryWatch(const filesystem::path& path);
+		STANDARD::vector<STANDARD::filesystem::path> excludePathsVector;
+		void addDirectoryWatch(const STANDARD::filesystem::path& path);
 
 	public:
-		static bool isExcluded(const vector<filesystem::path>& excludePathsVector, const filesystem::path& path);
+		static bool isExcluded(const STANDARD::vector<STANDARD::filesystem::path>& excludePathsVector, const STANDARD::filesystem::path& path);
 	};
 } // namespace zgfilesystem

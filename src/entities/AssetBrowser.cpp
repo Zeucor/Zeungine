@@ -61,7 +61,7 @@ std::filesystem::path Asset::determineIconPath(const std::filesystem::path& exte
 	static std::unordered_map<std::string, std::filesystem::path> extIconMap(
 		{{".txt", programDirectoryPath / "icons" / "Remix" / "Document" / "file-text-line.svg"},
 		 {"*", programDirectoryPath / "icons" / "Remix" / "Document" / "file-3-line.svg"}});
-	auto extIconIter = extIconMap.find(extension);
+	auto extIconIter = extIconMap.find(extension.string());
 	if (extIconIter == extIconMap.end())
 	{
 		return extIconMap["*"];
@@ -145,7 +145,7 @@ bool Breadcrumbs::preRender()
 void Breadcrumbs::setCurrentPath(const std::filesystem::path& currentPath)
 {
 	this->currentPath = currentPath;
-	std::vector<std::string> items;
+	std::vector<STANDARD::string> items;
 	items.push_back(rootPath.filename().string());
 	std::filesystem::path relativePath = std::filesystem::relative(this->currentPath, rootPath);
 	for (const auto& part : relativePath)
@@ -267,7 +267,7 @@ AssetBrowser::AssetBrowser(zg::Window& window, zg::Scene& scene, glm::vec3 posit
 													 float height, std::filesystem::path projectDirectory,
 													 const zg::shaders::RuntimeConstants& constants, std::string_view name) :
 		zg::Entity(window,
-							 zg::mergeVectors<std::string_view>(
+							 zg::mergeVectors<STANDARD::string_view>(
 								 {{"Color", "Position", "View", "Projection", "Model", "CameraPosition"}}, constants),
 							 6, {0, 1, 2, 2, 3, 0}, 4, {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}}, position, rotation, scale,
 							 name.empty() ? "AssetBrowser " + std::to_string(++assetBrowsersCount) : name),
@@ -303,24 +303,24 @@ AssetBrowser::AssetBrowser(zg::Window& window, zg::Scene& scene, glm::vec3 posit
 		auto& filePath = file.second;
 		if (!zgfilesystem::DirectoryWatcher::isExcluded(excludePaths, filePath))
 			if (std::filesystem::is_directory(filePath))
-				std::cout << filePath << std::endl;
+				std::cout << filePath << STANDARD::endl;
 	}
 	// breadcrumbs
 	breadcrumbs = std::make_shared<Breadcrumbs>(window, scene, width, font, glm::vec3(0, 0, 0.1), projectDirectory);
 	addChild(breadcrumbs);
 	// asset grid
-	assetGrid = std::make_shared<AssetGrid>(window, scene, width / window.windowWidth / 0.5,
-																					(height - breadcrumbs->lineHeight) / window.windowHeight / 0.5,
-																					glm::vec3(0, -breadcrumbs->lineHeight / window.windowHeight / 0.5, 0.1));
+	assetGrid = std::make_shared<AssetGrid>(window, scene, width / window.windowWidth / 0.5f,
+																					(height - breadcrumbs->lineHeight) / window.windowHeight / 0.5f,
+																					glm::vec3(0.f, -breadcrumbs->lineHeight / window.windowHeight / 0.5f, 0.1f));
 	addChild(assetGrid);
 	// assets
 	auto& assetGridRef = *assetGrid;
 	for (auto& entry : directory.entries)
 	{
 		auto& path = entry.second;
-		if (std::filesystem::is_directory(path))
+		if (STANDARD::filesystem::is_directory(path))
 			assetGridRef.addFolder(path, font);
-		else if (std::filesystem::is_regular_file(path))
+		else if (STANDARD::filesystem::is_regular_file(path))
 			assetGridRef.addAsset(path, font);
 	}
 };

@@ -456,10 +456,10 @@ void VulkanRenderer::createSurface()
 #elif defined(ANDROID)
 #elif defined(_WIN32)
 	auto& win32Window = *dynamic_cast<WIN32Window*>(platformWindowPointer);
-	VkWin32SurfaceCreateFlagsKHR surfaceCreateInfo{};
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
 	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	surfaceCreateInfo.dpy = win32Window.hInstance;
-	surfaceCreateInfo.window = win32Window.hwnd;
+	surfaceCreateInfo.hinstance = win32Window.hInstance;
+	surfaceCreateInfo.hwnd = win32Window.hwnd;
 	if (!VKcheck("vkCreateWin32SurfaceKHR", _vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, 0, &surface)))
 	{
 		throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");

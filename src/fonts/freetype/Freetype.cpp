@@ -101,8 +101,8 @@ FreetypeFont::FreetypeFont(Window& window, interfaces::IFile& fontFile) :
 	auto fontFileSize = fontFile.size();
 	auto actualFacePointer = facePointer.get();
 	FT_PRINT_AND_THROW_ERROR(
-		FT_New_Memory_Face(freetypeLibrary, (uint8_t*)fontFileBytes.get(), fontFileSize, 0, actualFacePointer), fontPath);
-	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(*actualFacePointer, FT_ENCODING_UNICODE), fontPath);
+		FT_New_Memory_Face(freetypeLibrary, (uint8_t*)fontFileBytes.get(), fontFileSize, 0, actualFacePointer), fontPath.string());
+	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(*actualFacePointer, FT_ENCODING_UNICODE), fontPath.string());
 };
 float textureScale = 1.f;
 const glm::vec2 FreetypeFont::stringSize(const string_view string, float fontSize, float& lineHeight,

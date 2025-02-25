@@ -1,26 +1,24 @@
-#include <fcntl.h>
-#include <string.h>
 #include <zg/zgfilesystem/Directory.hpp>
 #include <zg/zgfilesystem/DirectoryWatcher.hpp>
 using namespace zgfilesystem;
-DirectoryWatcher::DirectoryWatcher(const std::filesystem::path& path,
-																	 const std::vector<std::filesystem::path>& excludePathsVector) :
+DirectoryWatcher::DirectoryWatcher(const STANDARD::filesystem::path& path,
+																	 const STANDARD::vector<STANDARD::filesystem::path>& excludePathsVector) :
 		watchPath(path), excludePathsVector(excludePathsVector)
 {
-	if (!std::filesystem::exists(watchPath) || !std::filesystem::is_directory(watchPath))
+	if (!STANDARD::filesystem::exists(watchPath) || !STANDARD::filesystem::is_directory(watchPath))
 	{
-		throw std::runtime_error("Invalid directory path.");
+		throw STANDARD::runtime_error("Invalid directory path.");
 	}
 	Directory directory(watchPath.c_str());
 	auto recursiveFileMap = directory.getRecursiveFileMap();
 	addDirectoryWatch(path);
 	for (auto& filePair : recursiveFileMap)
-		if (std::filesystem::is_directory(filePair.second))
+		if (STANDARD::filesystem::is_directory(filePair.second))
 			addDirectoryWatch(filePair.second);
 }
-std::vector<std::pair<DirectoryWatcher::ChangeType, std::string>> DirectoryWatcher::update()
+STANDARD::vector<STANDARD::pair<DirectoryWatcher::ChangeType, STANDARD::filesystem::path>> DirectoryWatcher::update()
 {
-	std::vector<std::pair<ChangeType, std::string>> changes;
+	STANDARD::vector<STANDARD::pair<ChangeType, STANDARD::filesystem::path>> changes;
 #ifdef _WIN32
 	HANDLE dirHandle =
 		CreateFileW(watchPath.c_str(), FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
@@ -28,7 +26,7 @@ std::vector<std::pair<DirectoryWatcher::ChangeType, std::string>> DirectoryWatch
 
 	if (dirHandle == INVALID_HANDLE_VALUE)
 	{
-		throw std::runtime_error("Failed to open directory for watching.");
+		throw STANDARD::runtime_error("Failed to open directory for watching.");
 	}
 
 	char buffer[1024];
@@ -40,12 +38,11 @@ std::vector<std::pair<DirectoryWatcher::ChangeType, std::string>> DirectoryWatch
 															 &bytesReturned, nullptr, nullptr))
 	{
 		eventInfo = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(buffer);
-		std::wstring fileName(eventInfo->FileName, eventInfo->FileNameLength / sizeof(WCHAR));
-		callback(watchPath / std::filesystem::path(fileName), Modified);
+		STANDARD::wstring fileName(eventInfo->FileName, eventInfo->FileNameLength / sizeof(WCHAR));
+		ChangeType changeType = ChangeType::Modified;
+		changes.push_back({changeType, watchPath / STANDARD::filesystem::path(fileName)});
 	}
-
 	CloseHandle(dirHandle);
-
 #elif __linux__
 	char buffer[1024];
 	for (auto& fdPathPair : fdPathMap)
@@ -62,7 +59,7 @@ std::vector<std::pair<DirectoryWatcher::ChangeType, std::string>> DirectoryWatch
 				}
 				else
 				{
-					throw std::runtime_error("Failed to read inotify events.");
+					throw STANDARD::runtime_error("Failed to read inotify events.");
 				}
 			}
 			for (ssize_t i = 0; i < length;)
@@ -78,7 +75,7 @@ std::vector<std::pair<DirectoryWatcher::ChangeType, std::string>> DirectoryWatch
 					if (event->mask & IN_DELETE)
 						changeType = ChangeType::Deleted;
 					changes.push_back({changeType, fdPathPair.second / event->name});
-					if (event->mask & IN_CREATE && std::filesystem::is_directory(watchPath / event->name))
+					if (event->mask & IN_CREATE && STANDARD::filesystem::is_directory(watchPath / event->name))
 					{
 						addDirectoryWatch(fdPathPair.second / event->name);
 					}
@@ -90,13 +87,13 @@ std::vector<std::pair<DirectoryWatcher::ChangeType, std::string>> DirectoryWatch
 #elif __APPLE__
 	int kq = kqueue();
 	if (kq == -1)
-		throw std::runtime_error("Failed to create kqueue.");
+		throw STANDARD::runtime_error("Failed to create kqueue.");
 
 	int dirFD = open(watchPath.c_str(), O_RDONLY);
 	if (dirFD == -1)
 	{
 		close(kq);
-		throw std::runtime_error("Failed to open directory.");
+		throw STANDARD::runtime_error("Failed to open directory.");
 	}
 
 	struct kevent change;
@@ -114,43 +111,48 @@ std::vector<std::pair<DirectoryWatcher::ChangeType, std::string>> DirectoryWatch
 #endif
 	return changes;
 }
-void DirectoryWatcher::addDirectoryWatch(const std::filesystem::path& path)
+void DirectoryWatcher::addDirectoryWatch(const STANDARD::filesystem::path& path)
 {
-	if (std::filesystem::is_directory(path))
+	if (STANDARD::filesystem::is_directory(path))
 	{
 		if (isExcluded(excludePathsVector, path))
 			return;
 #ifdef __linux__
 		auto fd = inotify_init();
 		if (fd < 0)
-			throw std::runtime_error("Failed to initialize inotify.");
+			throw STANDARD::runtime_error("Failed to initialize inotify.");
 
 		int wd = inotify_add_watch(fd, path.c_str(), IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
 		if (wd < 0)
 		{
 			close(fd);
-			throw std::runtime_error("Failed to add inotify watch.");
+			throw STANDARD::runtime_error("Failed to add inotify watch.");
 		}
 		int flags = fcntl(fd, F_GETFL, 0);
 		if (flags == -1)
 		{
 			close(fd);
-			throw std::runtime_error("Failed to get file descriptor flags.");
+			throw STANDARD::runtime_error("Failed to get file descriptor flags.");
 		}
 		if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		{
 			close(fd);
-			throw std::runtime_error("Failed to set file descriptor to non-blocking.");
+			throw STANDARD::runtime_error("Failed to set file descriptor to non-blocking.");
 		}
 		fdPathMap[fd] = path;
-	}
 #endif
+	}
 }
-bool DirectoryWatcher::isExcluded(const std::vector<std::filesystem::path>& excludePathsVector, const std::filesystem::path& path)
+bool DirectoryWatcher::isExcluded(const STANDARD::vector<STANDARD::filesystem::path>& excludePathsVector, const STANDARD::filesystem::path& path)
 {
+	auto pathString = path.string();
+	auto pathCStr = pathString.c_str();
 	for (auto& excludePath : excludePathsVector)
 	{
-		if (strncmp(path.c_str(), excludePath.c_str(), strlen(excludePath.c_str())) == 0)
+		auto excludePathString = excludePath.string();
+		auto excludePathSTRLEn = excludePathString.size();
+		auto excludePathCStr = excludePathString.c_str();
+		if (strncmp(pathCStr, excludePathCStr, excludePathSTRLEn) == 0)
 			return true;
 	}
 	return false;

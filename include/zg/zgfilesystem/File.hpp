@@ -1,15 +1,8 @@
 #pragma once
-#include <ctime>
-#include <filesystem>
-#include <fstream>
-#include <optional>
-#include <string>
-#include <zg/enums/EFileLocation.hpp>
-#include <zg/interfaces/IFile.hpp>
+#include <zg/Standard.hpp>
 struct JFile;
 struct ZFile;
 struct DFile;
-using namespace std;
 namespace zgfilesystem
 {
 	struct File : AFile
@@ -24,8 +17,8 @@ namespace zgfilesystem
 		}
 	public:
 		File() = default;
-		File(const filesystem::path& filePath, zg::enums::EFileLocation fileLocation = zg::enums::EFileLocation::Relative,
-				 const string& mode = "a+");
+		File(const STANDARD::filesystem::path& filePath, zg::enums::EFileLocation fileLocation = zg::enums::EFileLocation::Relative,
+				 const STANDARD::string& mode = "a+");
 		AFile& operator=(const AFile& other) override;
 		~File() override;
 		bool open() override;
@@ -35,7 +28,7 @@ namespace zgfilesystem
 		constexpr File& operator>>(T &value)
 		{
 			if (!fileStream.is_open())
-				throw runtime_error("File " + filePath.string() + "not open on read!");
+				throw STANDARD::runtime_error("File " + filePath.string() + "not open on read!");
 			fileStream >> value;
 			return *this;
 		}
@@ -44,7 +37,7 @@ namespace zgfilesystem
 		constexpr File& operator<<(const T& value)
 		{
 			if (!fileStream.is_open())
-				throw runtime_error("File " + filePath.string() + "not open on write!");
+				throw STANDARD::runtime_error("File " + filePath.string() + "not open on write!");
 			fileStream << value;
 			return *this;
 		}
@@ -53,17 +46,17 @@ namespace zgfilesystem
 		size_t size() const override;
 		time_t lastModified() const override;
 		bool remove() override;
-		string toString() override;
-		shared_ptr<int8_t> toBytes() override;
-		static filesystem::path getUserDirectoryPath();
-		static filesystem::path getProgramDirectoryPath();
-		static filesystem::path getProgramDataPath();
-		static string getExecutableName();
-		static string toPlatformPath(string path);
-		filesystem::path originalFilePath;
-		filesystem::path filePath;
+		STANDARD::string toString() override;
+		STANDARD::shared_ptr<int8_t> toBytes() override;
+		static STANDARD::filesystem::path getUserDirectoryPath();
+		static STANDARD::filesystem::path getProgramDirectoryPath();
+		static STANDARD::filesystem::path getProgramDataPath();
+		static STANDARD::filesystem::path getExecutableName();
+		static STANDARD::string toPlatformPath(STANDARD::string path);
+		STANDARD::filesystem::path originalFilePath;
+		STANDARD::filesystem::path filePath;
 		zg::enums::EFileLocation fileLocation;
-		fstream fileStream;
-		ios_base::openmode openMode;
+		STANDARD::fstream fileStream;
+		STANDARD::ios_base::openmode openMode;
 	};
 } // namespace zgfilesystem

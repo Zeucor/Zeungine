@@ -20,15 +20,15 @@ namespace zg::strings
 																						 index(index) {};
 
 	private:
-		static uint8_t getUTF8ByteLength(int8_t byte)
+		static uint8_t getUTF8ByteLength(int8_t _by_te_)
 		{
-			if ((byte & 0x80) == 0x00)
+			if ((_by_te_ & 0x80) == 0x00)
 				return 1;
-			else if ((byte & 0xE0) == 0xC0)
+			else if ((_by_te_ & 0xE0) == 0xC0)
 				return 2;
-			else if ((byte & 0xF0) == 0xE0)
+			else if ((_by_te_ & 0xF0) == 0xE0)
 				return 3;
-			else if ((byte & 0xF8) == 0xF0)
+			else if ((_by_te_ & 0xF8) == 0xF0)
 				return 4;
 			throw std::runtime_error("Invalid UTF-8 leading byte.");
 		}

@@ -12,22 +12,22 @@ namespace zg
 	struct Scene
 	{
 		Window &window;
+		glm::vec4 clearColor = glm::vec4(0);
+		vp::Projection projection;
 		std::map<size_t, std::shared_ptr<Entity>> entities;
 		size_t entitiesCount = 0;
-		vp::View view;
-		vp::Projection projection;
 		std::vector<lights::PointLight> pointLights;
 		std::vector<lights::DirectionalLight> directionalLights;
 		std::vector<lights::SpotLight> spotLights;
+		std::vector<lights::SpotLightShadow> spotLightShadows;
 		std::vector<lights::PointLightShadow> pointLightShadows;
 		std::vector<lights::DirectionalLightShadow> directionalLightShadows;
-		std::vector<lights::SpotLightShadow> spotLightShadows;
-		glm::vec4 clearColor = glm::vec4(0);
 		textures::Framebuffer *framebufferPointer = 0;
 		std::unique_ptr<raytracing::BVH> bvh;
 		std::array<EventIdentifier, 7 - 0 + 1> mousePressIDs;
 		EventIdentifier mouseMoveID;
 		Entity *currentHoveredEntity = 0;
+		vp::View view;
 		bool useBVH;
 		Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, textures::Framebuffer *framebufferPointer = 0, bool useBVH = true);
 		Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, glm::vec2 orthoSize, textures::Framebuffer *framebufferPointer = 0, bool useBVH = true);

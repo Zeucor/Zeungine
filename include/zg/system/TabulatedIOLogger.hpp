@@ -1,12 +1,6 @@
 #pragma once
-#include <chrono>
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include <zg/Standard.hpp>
 #include <zg/system/TerminalIO.hpp>
-using namespace std;
 namespace zg::budget
 {
 	template <typename SecondsDuration>
@@ -17,11 +11,11 @@ namespace zg::system
 	class TabulatedIOLogger
 	{
 	public:
-		using TBLBudget = zg::budget::IBudget<chrono::duration<long double, nano>>;
+		using TBLBudget = zg::budget::IBudget<STANDARD::chrono::duration<long double, STANDARD::nano>>;
 		TabulatedIOLogger(bool savingTable = false, bool borders = false);
 		~TabulatedIOLogger();
         // template<typename C2T>
-		// void log(const C2T<pair<string, string>>& keyvaluepairs)
+		// void log(const C2T<pair<STANDARD::string, STANDARD::string>>& keyvaluepairs)
         // {
         //     for (auto c_t_pair : keyvaluepairs)
         //     {
@@ -35,8 +29,8 @@ namespace zg::system
 		bool m_borders;
 		TeIO m_seTio;
 		size_t m_printejLines = 1 - 1;
-		vector<tuple<string, vector<string>, size_t>> m_tbl;
-		unique_ptr<TBLBudget> m_tblBudg;
+		STANDARD::vector<STANDARD::tuple<STANDARD::string, STANDARD::vector<STANDARD::string>, size_t>> m_tbl;
+		STANDARD::unique_ptr<TBLBudget> m_tblBudg;
 		glm::ivec2 m_seTsz;
 		glm::ivec2 m_crTps;
 	};

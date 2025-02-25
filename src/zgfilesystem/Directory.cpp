@@ -1,44 +1,44 @@
 #include <zg/zgfilesystem/Directory.hpp>
 using namespace zgfilesystem;
-Directory::Directory(filesystem::path path) : path(path)
+Directory::Directory(STANDARD::filesystem::path path) : path(path)
 {
-	if (!filesystem::exists(path))
+	if (!STANDARD::filesystem::exists(path))
 	{
-		throw runtime_error("Directory does not exist: " + string(path));
+		throw STANDARD::runtime_error("Directory does not exist: " + path.string());
 	}
 	size_t index = 0;
-	for (const auto &entry : filesystem::directory_iterator(path))
+	for (const auto &entry : STANDARD::filesystem::directory_iterator(path))
 	{
 		entries[++index] = entry.path();
 	}
 }
 bool Directory::operator()() const
 {
-	return filesystem::exists(path);
+	return STANDARD::filesystem::exists(path);
 }
-map<size_t, filesystem::path> Directory::getRecursiveFileMap() const
+STANDARD::map<size_t, STANDARD::filesystem::path> Directory::getRecursiveFileMap() const
 {
-	map<size_t, filesystem::path> fileMap;
+	STANDARD::map<size_t, STANDARD::filesystem::path> fileMap;
 	size_t index = 0;
-	for (const auto &entry : filesystem::recursive_directory_iterator(path))
+	for (const auto &entry : STANDARD::filesystem::recursive_directory_iterator(path))
 	{
 		fileMap[++index] = entry.path();
 	}
 	return fileMap;
 }
-bool Directory::ensureExists(filesystem::path path)
+bool Directory::ensureExists(STANDARD::filesystem::path path)
 {
-	if (!filesystem::exists(path))
+	if (!STANDARD::filesystem::exists(path))
 	{
-		return filesystem::create_directories(path);
+		return STANDARD::filesystem::create_directories(path);
 	}
 	return true;
 }
-filesystem::path Directory::getCurrentDirectory()
+STANDARD::filesystem::path Directory::getCurrentDirectory()
 {
-	return filesystem::current_path();
+	return STANDARD::filesystem::current_path();
 }
-filesystem::path Directory::getCurrentDirectoryName()
+STANDARD::filesystem::path Directory::getCurrentDirectoryName()
 {
-	return filesystem::current_path().filename();
+	return STANDARD::filesystem::current_path().filename();
 }
