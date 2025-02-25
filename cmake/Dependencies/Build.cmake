@@ -118,9 +118,13 @@ include_directories(${stb_SOURCE_DIR})
 
 # lunasvg
 message(STATUS "FetchContent: lunasvg")
+set(LUNASVG_INSTALL OFF)
+set(LUNASVG_BUILD_EXAMPLES OFF)
+set(PLUTOVG_INSTALL OFF)
+set(PLUTOVG_BUILD_EXAMPLES OFF)
 FetchContent_Declare(
     lunasvg
-    GIT_REPOSITORY https://github.com/sammycage/lunasvg.git
+    GIT_REPOSITORY https://github.com/ZeunO8/lunasvg.git
     GIT_TAG master
 )
 message(STATUS "FetchContent_MakeAvailable: lunasvg")
