@@ -1,3 +1,5 @@
+include(CTest)
+enable_testing()
 # create_test function
 function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     if(LIBRARY)

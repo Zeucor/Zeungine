@@ -1,5 +1,3 @@
-include(CTest)
-enable_testing()
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 # Set library directory
 if(("${CMAKE_BUILD_TYPE}" MATCHES "Release") OR ("${CMAKE_BUILD_TYPE}" MATCHES "MinSizeRel"))
@@ -13,7 +11,7 @@ set(ZG_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROC
 message(STATUS "ZG_LIB_DIR: ${ZG_LIB_DIR}")
 
 # Determine platform and set defines
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
     set(LINUX ON)
     set(LIB_PREFIX "lib")
     set(LIB_SUFFIX ".so")
@@ -29,7 +27,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
             message(FATAL_ERROR ">>>> Found unknown distribution <<<<")
         endif()
     endif()
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
     set(MACOS ON)
     set(LIB_PREFIX "lib")
     set(LIB_SUFFIX ".dylib")
