@@ -32,7 +32,7 @@ elseif(WINDOWS)
     SET(CPACK_NSIS_INSTALL_ROOT "C:")
     set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_LIST_DIR}/LICENSE")
     # set(CPACK_NSIS_MUI_ICON "${Zeungine_SRC_DIR}\\\\images\\\\zeungine-logo-new.ico")
-    set(CPACK_NSIS_UNINSTALL_NAME "UninstallZeungine")
+    set(CPACK_NSIS_UNINSTALL_NAME "lzeungine_Uninstaller")
     set(CPACK_NSIS_BRANDING_TEXT " ")
 endif()
 
