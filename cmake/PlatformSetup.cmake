@@ -55,7 +55,7 @@ if(LINUX OR MACOS)
     endif()
 	set(LD_CONF_FILE "/etc/ld.so.conf.d/zg${CMAKE_BUILD_TYPE}.conf")
 elseif(WINDOWS)
-    set(CMAKE_CXX_FLAGS "/${C_RUNTIME} ${CMAKE_CXX_FLAGS} /wd4068")
+#     set(CMAKE_CXX_FLAGS "/${C_RUNTIME} ${CMAKE_CXX_FLAGS} /wd4068")
 endif()
 
 set(BUILD_SHARED_LIBS ON)
