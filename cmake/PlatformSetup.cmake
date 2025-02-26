@@ -1,14 +1,4 @@
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
-# Set library directory
-if(("${CMAKE_BUILD_TYPE}" MATCHES "Release") OR ("${CMAKE_BUILD_TYPE}" MATCHES "MinSizeRel"))
-    set(RELEASE_OR_DEBUG "Release")
-    set(BUILD_POSTFIX "")
-elseif(("${CMAKE_BUILD_TYPE}" MATCHES "Debug") OR ("${CMAKE_BUILD_TYPE}" MATCHES "RelWithDebInfo"))
-    set(RELEASE_OR_DEBUG "Debug")
-    set(BUILD_POSTFIX "-debug")
-endif()
-set(ZG_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}/${RELEASE_OR_DEBUG}")
-message(STATUS "ZG_LIB_DIR: ${ZG_LIB_DIR}")
 
 # Determine platform and set defines
 if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
@@ -37,13 +27,31 @@ elseif(WIN32)
     set(LIB_SUFFIX ".dll")
 endif()
 
+# Set library directory
+if(("${CMAKE_BUILD_TYPE}" MATCHES "Release") OR ("${CMAKE_BUILD_TYPE}" MATCHES "MinSizeRel"))
+    set(RELEASE_OR_DEBUG "Release")
+    set(BUILD_POSTFIX "")
+    if(WINDOWS)
+        set(C_RUNTIME "MT")
+    endif()
+elseif(("${CMAKE_BUILD_TYPE}" MATCHES "Debug") OR ("${CMAKE_BUILD_TYPE}" MATCHES "RelWithDebInfo"))
+    set(RELEASE_OR_DEBUG "Debug")
+    set(BUILD_POSTFIX "-debug")
+    if(WINDOWS)
+        set(C_RUNTIME "MTd")
+    endif()
+endif()
+set(ZG_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}/${RELEASE_OR_DEBUG}")
+message(STATUS "ZG_LIB_DIR: ${ZG_LIB_DIR}")
+
 # Add build flags
 if(LINUX OR MACOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -fPIC")
     if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
     endif()
-    set(BUILD_SHARED_LIBS ON)
 elseif(WINDOWS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4068")
+    set(CMAKE_CXX_FLAGS "/${C_RUNTIME} ${CMAKE_CXX_FLAGS} /wd4068")
 endif()
+
+set(BUILD_SHARED_LIBS ON)

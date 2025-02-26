@@ -94,6 +94,10 @@ install(FILES ${lunasvg_SOURCE_DIR}/include/lunasvg.h
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
+install(FILES ${stb_SOURCE_DIR}/stb_image.h ${stb_SOURCE_DIR}/stb_image_write.h ${stb_SOURCE_DIR}/stb_image_resize2.h
+    ${stb_SOURCE_DIR}/stb_hexwave.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
 # if linux whoami
 if(LINUX)

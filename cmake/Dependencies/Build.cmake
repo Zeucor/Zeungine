@@ -5,6 +5,51 @@ set(FETCHCONTENT_QUIET OFF)
 
 #New Dependency Declarations to the top!
 
+# shaderc
+message(STATUS "FetchContent: shaderc")
+set(SPIRV_SKIP_TESTS ON)
+set(BUILD_TESTING OFF)
+set(GLSLANG_ENABLE_INSTALL OFF)
+set(SHADERC_SKIP_INSTALL ON)
+set(SHADERC_SKIP_TESTS ON)
+set(SHADERC_SKIP_EXAMPLES ON)
+set(SPIRV_SKIP_EXECUTABLES ON)
+set(SKIP_SPIRV_TOOLS_INSTALL ON)
+# set(SHADERC_ENABLE_SHARED_CRT OFF)
+# SPIRV-Headers
+FetchContent_Declare(
+    SPIRV-Headers
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
+    GIT_TAG vulkan-sdk-1.4.304
+)
+FetchContent_MakeAvailable(SPIRV-Headers)
+# SPIRV-tools
+FetchContent_Declare(
+    SPIRV-Tools
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Tools.git
+    GIT_TAG vulkan-sdk-1.4.304
+)
+FetchContent_MakeAvailable(SPIRV-Tools)
+# glslang
+FetchContent_Declare(
+    glslang
+    GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
+    GIT_TAG vulkan-sdk-1.4.304
+)
+FetchContent_MakeAvailable(glslang)
+# shaderc
+FetchContent_Declare(
+    shaderc
+    GIT_REPOSITORY https://github.com/google/shaderc.git
+    GIT_TAG v2024.4
+    GIT_SUBMODULES "")
+execute_process(
+    COMMAND dir util
+    WORKING_DIRECTORY ${shaderc_SOURCE_DIR}
+    RESULT_VARIABLE SUBMODULE_RESULT)
+message("SUBMODULE_RESULT: ${SUBMODULE_RESULT}")
+FetchContent_MakeAvailable(shaderc)
+
 # FfMpeG
 message(STATUS "FetchContent: ffmpeg")
 FetchContent_Declare(
@@ -130,6 +175,3 @@ FetchContent_Declare(
 message(STATUS "FetchContent_MakeAvailable: lunasvg")
 FetchContent_MakeAvailable(lunasvg)
 include_directories(${lunasvg_SOURCE_DIR}/include)
-
-# Includes
-include_directories(include)
