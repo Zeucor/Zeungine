@@ -129,7 +129,6 @@ set_target_properties(freetype PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(freetype PROPERTIES MINSIZEREL_POSTFIX "")
-include_directories(${freetype_SOURCE_DIR}/include)
 
 # BVH
 message(STATUS "FetchContent: bvh")
@@ -139,7 +138,6 @@ FetchContent_Declare(
     GIT_TAG master
 )
 FetchContent_MakeAvailable(bvh)
-include_directories(${bvh_SOURCE_DIR}/src)
 
 # GLM
 message(STATUS "FetchContent: glm")
@@ -149,7 +147,6 @@ FetchContent_Declare(
     GIT_TAG master
 )
 FetchContent_MakeAvailable(glm)
-include_directories(${glm_SOURCE_DIR})
 
 # STB
 message(STATUS "FetchContent: stb")
@@ -159,7 +156,6 @@ FetchContent_Declare(
     GIT_TAG master
 )
 FetchContent_MakeAvailable(stb)
-include_directories(${stb_SOURCE_DIR})
 
 # lunasvg
 message(STATUS "FetchContent: lunasvg")
@@ -174,4 +170,3 @@ FetchContent_Declare(
 )
 message(STATUS "FetchContent_MakeAvailable: lunasvg")
 FetchContent_MakeAvailable(lunasvg)
-include_directories(${lunasvg_SOURCE_DIR}/include)
