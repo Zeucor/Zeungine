@@ -27,5 +27,6 @@ namespace zg::media
         InputMediaStream(const std::string &uri);
         InputMediaStream(const std::string &uri, const std::shared_ptr<interfaces::IFile>& filePointer);
         size_t open();
+        size_t close();
     };
 }

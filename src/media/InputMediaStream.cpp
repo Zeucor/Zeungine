@@ -15,3 +15,7 @@ size_t InputMediaStream::open()
 {
     return /*s*/ 1;
 }
+size_t InputMediaStream::close()
+{
+    return 0;
+}
