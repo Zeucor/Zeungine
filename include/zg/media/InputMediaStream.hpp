@@ -1,5 +1,6 @@
 #pragma once
 #include <zg/Standard.hpp>
+#include "I1xCoder.hpp"
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -21,14 +22,7 @@ namespace zg::media
         std::shared_ptr<interfaces::IFile> filePointer;
         AVIOContext* ioContext = 0;
         AVFormatContext* formatContext = 0;
-        int32_t videoStreamIndex = -1;
-        AVStream* videoStream = 0;
-        int audioStreamIndex = 0;
-        AVStream* audioStream = 0;
-        std::deque<AVFrame *> audioFrames;
-        std::mutex audioFramesMutex;
-        std::deque<AVFrame *> videoFrames;
-        std::mutex videoFramesMutex;
+        std::vector<std::tuple<int32_t, AVStream*, std::shared_ptr<I1xCoder>, std::deque<AVFrame *>, std::mutex>> coderStreams;
         bool playing = false;
         InputMediaStream(const std::string &uri);
         InputMediaStream(const std::string &uri, const std::shared_ptr<interfaces::IFile>& filePointer);
