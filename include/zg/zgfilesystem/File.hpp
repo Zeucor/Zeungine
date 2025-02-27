@@ -22,6 +22,7 @@ namespace zgfilesystem
 		AFile& operator=(const AFile& other) override;
 		~File() override;
 		bool open() override;
+		bool isOpen() override;
 		bool close() override;
 		bool readBytes(size_t index, size_t sizeBytes, void* pointer) override;
 		template <typename T>

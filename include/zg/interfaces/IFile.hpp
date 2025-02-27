@@ -17,6 +17,7 @@ namespace zg::interfaces
 		virtual ~IFile() = default;
 		virtual IFile& operator=(const IFile& other) { return *this; };
 		virtual bool open() { return true; };
+		virtual bool isOpen() { return true; }
 		virtual bool close() { return true; };
 		virtual bool readBytes(size_t index, size_t sizeBytes, void* pointer) { return true; };
 		virtual bool writeBytes(size_t index, size_t sizeBytes, const void* pointer) { return true; };

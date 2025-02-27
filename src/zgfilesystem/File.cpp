@@ -57,6 +57,10 @@ bool File::open()
 	fileStream.open(filePath, openMode);
 	return fileStream.is_open();
 }
+bool File::isOpen()
+{
+	return fileStream.is_open();
+}
 bool File::close()
 {
 	if (fileStream.is_open())
