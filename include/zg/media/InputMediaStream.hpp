@@ -22,7 +22,7 @@ namespace zg::media
         std::shared_ptr<interfaces::IFile> filePointer;
         AVIOContext* ioContext = 0;
         AVFormatContext* formatContext = 0;
-        std::vector<std::tuple<int32_t, AVStream*, std::shared_ptr<I1xCoder>, std::deque<AVFrame *>, std::mutex>> coderStreams;
+        std::vector<std::tuple<int32_t, AVStream*, std::shared_ptr<I1xCoder>, std::queue<AVFrame *>, std::mutex>> coderStreams;
         bool playing = false;
         InputMediaStream(const std::string &uri);
         InputMediaStream(const std::string &uri, const std::shared_ptr<interfaces::IFile>& filePointer);

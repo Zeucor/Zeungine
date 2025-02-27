@@ -14,6 +14,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <queue>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
