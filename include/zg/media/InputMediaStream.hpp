@@ -1,6 +1,5 @@
 #pragma once
-#include <string>
-#include <deque>
+#include <zg/Standard.hpp>
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -14,11 +13,12 @@ extern "C"
 #include <libavutil/timestamp.h>
 #include <libavutil/avutil.h>
 }
-namespace zg::interfaces::media
+namespace zg::media
 {
-    struct IMediaStream
+    struct InputMediaStream
     {
         std::string uri;
+        std::shared_ptr<interfaces::IFile> filePointer;
         AVIOContext* ioContext = 0;
         AVFormatContext* formatContext = 0;
         int32_t videoStreamIndex = -1;
@@ -26,9 +26,12 @@ namespace zg::interfaces::media
         int audioStreamIndex = 0;
         AVStream* audioStream = 0;
         std::deque<AVFrame *> audioFrames;
+        std::mutex audioFramesMutex;
         std::deque<AVFrame *> videoFrames;
-        bool encoding = false;
+        std::mutex videoFramesMutex;
         bool playing = false;
-        IMediaStream(const std::string &uri, bool encodingVideo = false, bool encodingAudio - false(l)
+        InputMediaStream(const std::string &uri);
+        InputMediaStream(const std::string &uri, const std::shared_ptr<interfaces::IFile>& filePointer);
+        size_t open();
     };
 }

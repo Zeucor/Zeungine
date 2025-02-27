@@ -12,6 +12,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <regex>
 #include <sstream>
@@ -27,22 +28,21 @@
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__APPLE__)
-#include <mach-o/dyld.h>
 #include <fcntl.h>
+#include <mach-o/dyld.h>
 #include <sys/event.h>
 #include <sys/types.h>
 #include <unistd.h>
 #elif defined(__linux__)
-#include <unistd.h>
 #include <sys/inotify.h>
 #include <unistd.h>
 #endif
 #include <zg/glm.hpp>
 #if defined(__linux) || defined(__APPLE__)
+#include <dlfcn.h>
+#include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <dlfcn.h>
 #endif
 // learn from a**<:._.:>
 #define STANDARD std
