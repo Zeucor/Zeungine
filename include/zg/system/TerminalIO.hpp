@@ -14,8 +14,8 @@ namespace zg::system
 	private:
 		IOHandle m_read = -1;
 		IOHandle m_write = -1;
-		IOProfile m_originalProfile = 0;
-		IOProfile m_currentProfile = 0;
+		IOProfile m_originalProfile;
+		IOProfile m_currentProfile;
 
 	public:
 		TeIO(bool outIsErr = false);

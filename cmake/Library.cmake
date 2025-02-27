@@ -40,15 +40,12 @@ if(BUILD_VULKAN)
     find_package(Vulkan REQUIRED)
     include_directories(${Vulkan_INCLUDE_DIRS})
 endif()
-if(LINUX)
-    target_link_libraries(zeungine
-        ${ZG_LIB_DIR}/libshaderc_shared.so)
-elseif(MACOS)
-    target_link_libraries(zeungine
-        ${ZG_LIB_DIR}/libshaderc_shared.dylib)
-elseif(WINDOWS)
-    target_Link_libraries(zeungine
-        ${ZG_LIB_DIR}/shaderc.lib)
-endif()
 
+target_link_libraries(zeungine shaderc glslang SPIRV-Tools-shared)
+
+target_link_libraries(zeungine avcodec avdevice avfilter avformat avutil swresample swscale)
+
+target_link_libraries(zeungine lunasvg)
+
+target_link_libraries(zeungine freetype)
 # target_link_libraries(zeungine lunasvg::lunasvg)

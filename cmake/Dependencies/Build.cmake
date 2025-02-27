@@ -58,7 +58,7 @@ FetchContent_Declare(
     GIT_TAG n7.1
 )
 FetchContent_MakeAvailable(ffmpeg)
-set(ffmpeg_CONFIGURE_OPTIONS --disable-shared --enable-static --disable-programs --disable-doc --prefix=${ffmpeg_BINARY_DIR})
+set(ffmpeg_CONFIGURE_OPTIONS --enable-shared --disable-programs --disable-doc --prefix=${ffmpeg_BINARY_DIR})
 if(RELEASE_OR_DEBUG MATCHES "Release")
     set(ffmpeg_CONFIGURE_OPTIONS ${ffmpeg_CONFIGURE_OPTIONS} --enable-optimizations --disable-debug)
 else()

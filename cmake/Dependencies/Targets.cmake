@@ -1,39 +1,73 @@
 # setup target helper
-function(zg_setup_target LIBRARY_NAME LIBRARY_PATH_NAME IMPLIB_PATH_NAME LIBRARY_TYPE LIB_PREFIX DLL_PREFIX STATIC_LIB_EXT PREPEND_LIB)
-	add_library(${LIBRARY_NAME} ${LIBRARY_TYPE} IMPORTED)
-	IF(PREPEND_LIB)
-		SET(LIBRARY_PREFIX "lib")
-	ELSE()
-		SET(LIBRARY_PREFIX "")
-	ENDIF()
+function(zg_setup_target
+	TARGET_NAME
+	LIBRARY_TYPE
+	LIB_DIR
+	LIBRARY_PREFIX LIBRARY_NAME LIBRARY_SUFFIX
+	IMPLIB_NAME)
+	add_library(${TARGET_NAME} ${LIBRARY_TYPE} IMPORTED)
 	if(WINDOWS)
 		if(${LIBRARY_TYPE} STREQUAL "STATIC")
-			set(LIBRARY_LOCATION "${LIB_PREFIX}/${LIBRARY_PREFIX}${LIBRARY_PATH_NAME}.${STATIC_LIB_EXT}")
+			set(LIBRARY_LOCATION "${LIB_DIR}/${LIBRARY_PREFIX}${LIBRARY_NAME}.${LIBRARY_SUFFIX}")
 		elseif(${LIBRARY_TYPE} STREQUAL "SHARED")
-			set(LIBRARY_LOCATION "${DLL_PREFIX}/${LIBRARY_PATH_NAME}.dll")
-			set(IMPLIB_LOCATION "${LIB_PREFIX}/${IMPLIB_PATH_NAME}.lib")
-			set_target_properties(${LIBRARY_NAME} PROPERTIES IMPORTED_IMPLIB ${IMPLIB_LOCATION})
+			set(LIBRARY_LOCATION "${DLL_DIR}/${LIBRARY_NAME}.dll")
+			set(IMPLIB_LOCATION "${LIB_DIR}/${IMPLIB_NAME}.lib")
+			set_target_properties(${TARGET_NAME} PROPERTIES IMPORTED_IMPLIB ${IMPLIB_LOCATION})
 		endif()
 	else()
-		if(${LIBRARY_TYPE} STREQUAL "STATIC")
-			set(LIBRARY_LOCATION "${LIB_PREFIX}/${LIBRARY_PREFIX}${LIBRARY_PATH_NAME}.${STATIC_LIB_EXT}")
-		elseif(${LIBRARY_TYPE} STREQUAL "SHARED")
-			set(LIBRARY_LOCATION "${LIB_PREFIX}/${LIBRARY_PREFIX}${LIBRARY_PATH_NAME}.so")
-		endif()
+		set(LIBRARY_LOCATION "${LIB_DIR}/${LIBRARY_PREFIX}${LIBRARY_NAME}${LIBRARY_SUFFIX}")
 	endif()
-	set_target_properties(${LIBRARY_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_LOCATION})
+	set_target_properties(${TARGET_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_LOCATION})
 endfunction()
-if(WINDOWS)
-	set(DEFAULT_STATIC_LIB_EXT "lib")
-	set(FFMPEG_STATIC_LIB_EXT "a")
-else()
-	set(DEFAULT_STATIC_LIB_EXT "a")
-	set(FFMPEG_STATIC_LIB_EXT "a")
-endif()
-# zg_setup_target(avcodec avcodec "" STATIC ${ZG_LIB_INSTALL_PREFIX} ${ZG_LIB_INSTALL_PREFIX} ${FFMPEG_STATIC_LIB_EXT} ON)
-# zg_setup_target(avdevice avdevice "" STATIC ${ZG_LIB_INSTALL_PREFIX} ${ZG_LIB_INSTALL_PREFIX} ${FFMPEG_STATIC_LIB_EXT} ON)
-# zg_setup_target(avfilter avfilter "" STATIC ${ZG_LIB_INSTALL_PREFIX} ${ZG_LIB_INSTALL_PREFIX} ${FFMPEG_STATIC_LIB_EXT} ON)
-# zg_setup_target(avformat avformat "" STATIC ${ZG_LIB_INSTALL_PREFIX} ${ZG_LIB_INSTALL_PREFIX} ${FFMPEG_STATIC_LIB_EXT} ON)
-# zg_setup_target(avutil avutil "" STATIC ${ZG_LIB_INSTALL_PREFIX} ${ZG_LIB_INSTALL_PREFIX} ${FFMPEG_STATIC_LIB_EXT} ON)
-# zg_setup_target(swresample swresample "" STATIC ${ZG_LIB_INSTALL_PREFIX} ${ZG_LIB_INSTALL_PREFIX} ${FFMPEG_STATIC_LIB_EXT} ON)
-# zg_setup_target(swscale swscale "" STATIC ${ZG_LIB_INSTALL_PREFIX} ${ZG_LIB_INSTALL_PREFIX} ${FFMPEG_STATIC_LIB_EXT} ON)
+zg_setup_target(avcodec SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} avcodec ${LIB_SUFFIX}
+	"")
+zg_setup_target(avdevice SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} avdevice ${LIB_SUFFIX}
+	"")
+zg_setup_target(avfilter SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} avfilter ${LIB_SUFFIX}
+	"")
+zg_setup_target(avformat SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} avformat ${LIB_SUFFIX}
+	"")
+zg_setup_target(avutil SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} avutil ${LIB_SUFFIX}
+	"")
+zg_setup_target(swresample SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} swresample ${LIB_SUFFIX}
+	"")
+zg_setup_target(swscale SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} swscale ${LIB_SUFFIX}
+	"")
+zg_setup_target(shaderc SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} shaderc_shared ${LIB_SUFFIX}
+	"")
+zg_setup_target(glslang SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} glslang ${LIB_SUFFIX}
+	"")
+zg_setup_target(SPIRV-Tools-shared SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} SPIRV-Tools-shared ${LIB_SUFFIX}
+	"")
+zg_setup_target(lunasvg SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} lunasvg ${LIB_SUFFIX}
+	"")
+zg_setup_target(glm SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} glm ${LIB_SUFFIX}
+	"")
+zg_setup_target(freetype SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} freetype ${LIB_SUFFIX}
+	"")

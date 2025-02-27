@@ -41,6 +41,8 @@
 #if defined(__linux) || defined(__APPLE__)
 #include <termios.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <dlfcn.h>
 #endif
 // learn from a**<:._.:>
 #define STANDARD std

@@ -24,7 +24,7 @@ namespace zgfilesystem
 		constexpr Serial& operator<<(const T& value)
 		{
 			auto sizeofvalue = sizeof(value);
-			if constexpr (is_trivially_copyable<T>())
+			if constexpr (std::is_trivially_copyable_v<T>)
 			{
 				ot.write((const char*)&value, sizeofvalue);
 				if (m_TicThisValue)
@@ -54,7 +54,7 @@ namespace zgfilesystem
 		template <typename T>
 		constexpr Serial& operator>>(T& value)
 		{
-			if constexpr (is_trivially_copyable<T>())
+			if constexpr (std::is_trivially_copyable_v<T>)
 			{
 				auto sizeofvalue = sizeof(value);
 				it.read((char*)&value, sizeofvalue);

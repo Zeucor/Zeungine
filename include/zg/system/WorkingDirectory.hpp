@@ -14,7 +14,7 @@ void SET_WORKING_DIR(LPCSTR path)
 void SET_WORKING_DIR(const char *path)
 {
 	if (chdir(path) != 0)
-    	throw std::runtime_error("Failed to set working directory: " + std::string(path))
+    	throw std::runtime_error("Failed to set working directory: " + std::string(path));
 }
 #endif
 #include <string>

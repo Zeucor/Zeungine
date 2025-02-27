@@ -32,10 +32,10 @@ if(WINDOWS)
     #  for a time:  only tested windows ffmpeg fully
 elseif(MACOS)
     set(ffmpeg_LIB_PREFIX "lib")
-    set(ffmpeg_LIB_SUFFIX "a")
+    set(ffmpeg_LIB_SUFFIX "dylib")
 else()
     set(ffmpeg_LIB_PREFIX "lib")
-    set(ffmpeg_LIB_SUFFIX "a")
+    set(ffmpeg_LIB_SUFFIX "so")
 endif()
 install(FILES
     "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avcodec.${ffmpeg_LIB_SUFFIX}"
@@ -47,6 +47,26 @@ install(FILES
     "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swscale.${ffmpeg_LIB_SUFFIX}"
     DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+IF(MACOS OR LINUX)
+    install(FILES
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avcodec.${ffmpeg_LIB_SUFFIX}.61"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avcodec.${ffmpeg_LIB_SUFFIX}.61.19.100"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avdevice.${ffmpeg_LIB_SUFFIX}.61"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avdevice.${ffmpeg_LIB_SUFFIX}.61.3.100"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avfilter.${ffmpeg_LIB_SUFFIX}.10"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avfilter.${ffmpeg_LIB_SUFFIX}.10.4.100"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avformat.${ffmpeg_LIB_SUFFIX}.61"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avformat.${ffmpeg_LIB_SUFFIX}.61.7.100"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avutil.${ffmpeg_LIB_SUFFIX}.59"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avutil.${ffmpeg_LIB_SUFFIX}.59.39.100"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swresample.${ffmpeg_LIB_SUFFIX}.5"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swresample.${ffmpeg_LIB_SUFFIX}.5.3.100"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swscale.${ffmpeg_LIB_SUFFIX}.8"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swscale.${ffmpeg_LIB_SUFFIX}.8.3.100"
+        DESTINATION ${ZG_LIB_INSTALL_PREFIX}
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+endif()
+message(STATUS "ZG_LIB_INSTALL_PREFIX: ${ZG_LIB_INSTALL_PREFIX}")
 
 # datsit frrom ffmpeg
 
@@ -80,19 +100,16 @@ install(DIRECTORY ${freetype_SOURCE_DIR}/include/freetype DESTINATION ${ZG_INC_I
 install(FILES ${freetype_SOURCE_DIR}/include/ft2build.h
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-install(FILES ${freetype_BINARY_DIR}/Debug/freetype.lib ${freetype_BINARY_DIR}/Debug/freetype.pdb
-    DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 install(DIRECTORY ${bvh_SOURCE_DIR}/src/bvh DESTINATION ${ZG_INC_INSTALL_PREFIX}
     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-# lunasvg
-install(FILES ${lunasvg_BINARY_DIR}/Debug/lunasvg.lib ${lunasvg_BINARY_DIR}/Debug/lunasvg.pdb
-    DESTINATION ${ZG_INC_INSTALL_PREFIX}
-    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+    # lunasvg
 install(FILES ${lunasvg_SOURCE_DIR}/include/lunasvg.h
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(TARGETS freetype lunasvg glm shaderc_shared glslang SPIRV-Tools-shared
+    ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
+    LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX})
 
 install(FILES ${stb_SOURCE_DIR}/stb_image.h ${stb_SOURCE_DIR}/stb_image_write.h ${stb_SOURCE_DIR}/stb_image_resize2.h
     ${stb_SOURCE_DIR}/stb_hexwave.h
@@ -110,3 +127,8 @@ if(LINUX)
 ")
 endif()
 #    |"':{|<["iflinuxwhoami"]>|}.'"|  ??
+
+if(LINUX)
+    install(CODE "execute_process(COMMAND /bin/sh -c \"echo ${ZG_LIB_INSTALL_PREFIX} > ${LD_CONF_FILE}\")")
+    install(CODE "execute_process(COMMAND /bin/sh -c \"ldconfig\")")
+endif()
