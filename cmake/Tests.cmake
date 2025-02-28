@@ -19,4 +19,5 @@ endfunction()
 # Tests
 create_test(LightingTest tests/LightingTest.cpp "" FALSE)
 create_test(SimpleCubeTest tests/SimpleCubeTest.cpp "" FALSE)
+create_test(VideoTest tests/VideoTest.cpp "" FALSE)
 create_test(SimpleWindowTest tests/SimpleWindowTest.cpp "" FALSE)

@@ -1,5 +1,11 @@
 # Sources
 set(ZG_SOURCES
+    src/media/InputMediaStream.cpp
+    src/media/AudioDecoder.cpp
+    src/media/AudioEncoder.cpp
+    src/media/VideoDecoder.cpp
+    src/media/VideoEncoder.cpp
+    src/media/entities/Video.cpp
     src/system/TabulatedIOLogger.cpp
     src/system/TerminalIO.cpp
     src/system/Budget.cpp

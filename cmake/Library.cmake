@@ -48,4 +48,8 @@ target_link_libraries(zeungine avcodec avdevice avfilter avformat avutil swresam
 target_link_libraries(zeungine lunasvg)
 
 target_link_libraries(zeungine freetype)
+
+target_link_libraries(zeungine vk_device vk_wsi vk_system vk_pipeline)
+
+target_link_libraries(zeungine marl)
 # target_link_libraries(zeungine lunasvg::lunasvg)

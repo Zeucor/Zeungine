@@ -23,7 +23,7 @@ namespace zg
 		void* libraryPointer = 0;
 #endif
 	template <typename T, typename... Args>
-	constexpr void load(const STANDARD::string& paths, const T& path, const Args&... args)
+	constexpr void load(const STANDARD::string& paths, std::string &errors, const T& path, const Args&... args)
 	{
 		if constexpr (STANDARD::is_same_v<T, STANDARD::string> || STANDARD::is_same_v<T, STANDARD::string_view>)
 		{
@@ -39,16 +39,18 @@ namespace zg
 		}
 		if (!libraryPointer)
 		{
-			load(paths, args...);
+			errors += dlerror();
+			load(paths, errors, args...);
 		}
 	}
-	void load(const STANDARD::string& paths) { throw STANDARD::runtime_error("Failed to load librarys: " + paths); }
+	void load(const STANDARD::string& paths, STANDARD::string &errors) { throw STANDARD::runtime_error("Failed to load librarys[" + errors + "]: " + paths); }
 		template <typename... Args>
 		SharedLibrary(const Args&... args)
 		{
 			STANDARD::string paths;
+			STANDARD::string errors;
 			concatPaths(paths, args...);
-			load(paths, args...);
+			load(paths, errors, args...);
 		}
 		~SharedLibrary();
 		template <typename T>

@@ -5,58 +5,53 @@ set(FETCHCONTENT_QUIET OFF)
 
 #New Dependency Declarations to the top!
 
-# shaderc
-message(STATUS "FetchContent: shaderc")
+# swiftshader
 set(SPIRV_SKIP_TESTS ON)
 set(BUILD_TESTING OFF)
-set(GLSLANG_ENABLE_INSTALL OFF)
+set(SKIP_GLSLANG_INSTALL ON)
 set(SHADERC_SKIP_INSTALL ON)
 set(SHADERC_SKIP_TESTS ON)
 set(SHADERC_SKIP_EXAMPLES ON)
 set(SPIRV_SKIP_EXECUTABLES ON)
 set(SKIP_SPIRV_TOOLS_INSTALL ON)
+
+FetchContent_Declare(
+    swiftshader
+    GIT_REPOSITORY https://github.com/ZeunO8/swiftshader.git
+    GIT_TAG master)
+FetchContent_MakeAvailable(swiftshader)
+
+# shaderc
+message(STATUS "FetchContent: shaderc")
 # set(SHADERC_ENABLE_SHARED_CRT OFF)
 # SPIRV-Headers
-FetchContent_Declare(
-    SPIRV-Headers
+FetchContent_Declare(SPIRV-Headers
     GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
-    GIT_TAG vulkan-sdk-1.4.304
-)
+    GIT_TAG main)
 FetchContent_MakeAvailable(SPIRV-Headers)
-# SPIRV-tools
-FetchContent_Declare(
-    SPIRV-Tools
-    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Tools.git
-    GIT_TAG vulkan-sdk-1.4.304
-)
-FetchContent_MakeAvailable(SPIRV-Tools)
-# glslang
-FetchContent_Declare(
-    glslang
-    GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
-    GIT_TAG vulkan-sdk-1.4.304
-)
-FetchContent_MakeAvailable(glslang)
+# # SPIRV-tools
+# FetchContent_Declare(SPIRV-Tools
+#     GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Tools.git
+#     GIT_TAG vulkan-sdk-1.4.304)
+# FetchContent_MakeAvailable(SPIRV-Tools)
+# # glslang
+# FetchContent_Declare(
+#     glslang
+#     GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
+#     GIT_TAG vulkan-sdk-1.4.304)
+# FetchContent_MakeAvailable(glslang)
 # shaderc
-FetchContent_Declare(
-    shaderc
-    GIT_REPOSITORY https://github.com/google/shaderc.git
-    GIT_TAG v2024.4
+FetchContent_Declare(shaderc
+    GIT_REPOSITORY https://github.com/ZeunO8/shaderc.git
+    GIT_TAG main
     GIT_SUBMODULES "")
-execute_process(
-    COMMAND dir util
-    WORKING_DIRECTORY ${shaderc_SOURCE_DIR}
-    RESULT_VARIABLE SUBMODULE_RESULT)
-message("SUBMODULE_RESULT: ${SUBMODULE_RESULT}")
 FetchContent_MakeAvailable(shaderc)
 
 # FfMpeG
 message(STATUS "FetchContent: ffmpeg")
-FetchContent_Declare(
-    ffmpeg
+FetchContent_Declare(ffmpeg
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
-    GIT_TAG n7.1
-)
+    GIT_TAG n7.1)
 FetchContent_MakeAvailable(ffmpeg)
 set(ffmpeg_CONFIGURE_OPTIONS --enable-shared --disable-programs --disable-doc --prefix=${ffmpeg_BINARY_DIR})
 if(RELEASE_OR_DEBUG MATCHES "Release")
@@ -117,47 +112,44 @@ endif()
 # end of ffmegp(!)
 
 # Freetype
+set(BFRE_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+set(BUILD_SHARED_LIBS ON)
 message(STATUS "FetchContent: freetype")
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Disable installation for fetched content" FORCE)
-FetchContent_Declare(
-    freetype
+FetchContent_Declare(freetype
     GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
-    GIT_TAG master
-)
+    GIT_TAG master)
 FetchContent_MakeAvailable(freetype)
 set_target_properties(freetype PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(freetype PROPERTIES MINSIZEREL_POSTFIX "")
+set(BUILD_SHARED_LIBS ${BFRE_BUILD_SHARED_LIBS})
 
 # BVH
 message(STATUS "FetchContent: bvh")
-FetchContent_Declare(
-    bvh
+FetchContent_Declare(bvh
     GIT_REPOSITORY https://github.com/ZeunO8/bvh.git
-    GIT_TAG master
-)
+    GIT_TAG master)
 FetchContent_MakeAvailable(bvh)
 
 # GLM
 message(STATUS "FetchContent: glm")
-FetchContent_Declare(
-    glm
+FetchContent_Declare(glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG master
-)
+    GIT_TAG master)
 FetchContent_MakeAvailable(glm)
 
 # STB
 message(STATUS "FetchContent: stb")
-FetchContent_Declare(
-    stb
+FetchContent_Declare(stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
-    GIT_TAG master
-)
+    GIT_TAG master)
 FetchContent_MakeAvailable(stb)
 
 # lunasvg
+set(BFRE_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+set(BUILD_SHARED_LIBS ON)
 message(STATUS "FetchContent: lunasvg")
 set(LUNASVG_INSTALL OFF)
 set(LUNASVG_BUILD_EXAMPLES OFF)
@@ -170,3 +162,4 @@ FetchContent_Declare(
 )
 message(STATUS "FetchContent_MakeAvailable: lunasvg")
 FetchContent_MakeAvailable(lunasvg)
+set(BUILD_SHARED_LIBS ${BFRE_BUILD_SHARED_LIBS})

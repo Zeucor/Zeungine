@@ -1,4 +1,3 @@
-
 # ffmpeg includes
 
 install(DIRECTORY "${ffmpeg_BINARY_DIR}/include/libavcodec" DESTINATION ${ZG_INC_INSTALL_PREFIX}
@@ -107,7 +106,13 @@ install(DIRECTORY ${bvh_SOURCE_DIR}/src/bvh DESTINATION ${ZG_INC_INSTALL_PREFIX}
 install(FILES ${lunasvg_SOURCE_DIR}/include/lunasvg.h
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-install(TARGETS freetype lunasvg glm shaderc_shared glslang SPIRV-Tools-shared
+#add new targets to enj
+install(TARGETS
+    freetype lunasvg glm
+    shaderc_shared
+    glslang SPIRV-Tools-shared
+    vk_swiftshader vk_device vk_wsi vk_system vk_pipeline
+    marl
     ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX})
 
@@ -118,9 +123,7 @@ install(FILES ${stb_SOURCE_DIR}/stb_image.h ${stb_SOURCE_DIR}/stb_image_write.h 
 
 # if linux whoami
 if(LINUX)
-    execute_process(COMMAND whoami
-        OUTPUT_VARIABLE CURRENT_USER
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND whoami OUTPUT_VARIABLE CURRENT_USER OUTPUT_STRIP_TRAILING_WHITESPACE)
     set(INC_CHOWN_COMMAND "sudo chown -R ${CURRENT_USER}:${CURRENT_USER} ${ZG_INC_INSTALL_PREFIX}")
     install(CODE "
     execute_process(COMMAND ${INC_CHOWN_COMMAND})

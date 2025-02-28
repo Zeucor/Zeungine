@@ -26,6 +26,7 @@
 #include <vector>
 #include <zg/enums/EFileLocation.hpp>
 #include <zg/interfaces/IFile.hpp>
+#include <zg/queue.hpp>
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__APPLE__)

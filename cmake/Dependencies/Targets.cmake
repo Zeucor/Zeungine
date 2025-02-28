@@ -21,53 +21,77 @@ function(zg_setup_target
 endfunction()
 zg_setup_target(avcodec SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} avcodec ${LIB_SUFFIX}
+	${LIB_PREFIX} avcodec ${SHARED_LIB_SUFFIX}
 	"")
 zg_setup_target(avdevice SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} avdevice ${LIB_SUFFIX}
+	${LIB_PREFIX} avdevice ${SHARED_LIB_SUFFIX}
 	"")
 zg_setup_target(avfilter SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} avfilter ${LIB_SUFFIX}
+	${LIB_PREFIX} avfilter ${SHARED_LIB_SUFFIX}
 	"")
 zg_setup_target(avformat SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} avformat ${LIB_SUFFIX}
+	${LIB_PREFIX} avformat ${SHARED_LIB_SUFFIX}
 	"")
 zg_setup_target(avutil SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} avutil ${LIB_SUFFIX}
+	${LIB_PREFIX} avutil ${SHARED_LIB_SUFFIX}
 	"")
 zg_setup_target(swresample SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} swresample ${LIB_SUFFIX}
+	${LIB_PREFIX} swresample ${SHARED_LIB_SUFFIX}
 	"")
 zg_setup_target(swscale SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} swscale ${LIB_SUFFIX}
+	${LIB_PREFIX} swscale ${SHARED_LIB_SUFFIX}
 	"")
 zg_setup_target(shaderc SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} shaderc_shared ${LIB_SUFFIX}
+	${LIB_PREFIX} shaderc_shared ${SHARED_LIB_SUFFIX}
 	"")
-zg_setup_target(glslang SHARED
+zg_setup_target(glslang STATIC
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} glslang ${LIB_SUFFIX}
+	${LIB_PREFIX} glslang ${STATIC_LIB_SUFFIX}
 	"")
 zg_setup_target(SPIRV-Tools-shared SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} SPIRV-Tools-shared ${LIB_SUFFIX}
+	${LIB_PREFIX} SPIRV-Tools-shared ${SHARED_LIB_SUFFIX}
 	"")
 zg_setup_target(lunasvg SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} lunasvg ${LIB_SUFFIX}
+	${LIB_PREFIX} lunasvg ${SHARED_LIB_SUFFIX}
 	"")
-zg_setup_target(glm SHARED
+zg_setup_target(glm STATIC
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} glm ${LIB_SUFFIX}
+	${LIB_PREFIX} glm ${STATIC_LIB_SUFFIX}
 	"")
 zg_setup_target(freetype SHARED
 	${ZG_LIB_INSTALL_PREFIX}
-	${LIB_PREFIX} freetype ${LIB_SUFFIX}
+	${LIB_PREFIX} freetype ${SHARED_LIB_SUFFIX}
+	"")
+zg_setup_target(vk_swiftshader SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} vk_swiftshader ${SHARED_LIB_SUFFIX}
+	"")
+zg_setup_target(vk_device STATIC
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} vk_device ${STATIC_LIB_SUFFIX}
+	"")
+zg_setup_target(vk_wsi STATIC
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} vk_wsi ${STATIC_LIB_SUFFIX}
+	"")
+zg_setup_target(vk_system STATIC
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} vk_system ${STATIC_LIB_SUFFIX}
+	"")
+zg_setup_target(vk_pipeline STATIC
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} vk_pipeline ${STATIC_LIB_SUFFIX}
+	"")
+zg_setup_target(marl STATIC
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} marl ${STATIC_LIB_SUFFIX}
 	"")

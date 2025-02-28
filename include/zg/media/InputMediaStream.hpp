@@ -1,24 +1,24 @@
 #pragma once
 #include <zg/Standard.hpp>
 #include "I1xCoder.hpp"
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/avutil.h>
-#include <libavutil/frame.h>
-#include <libavutil/imgutils.h>
-#include <libavutil/opt.h>
-#include <libavutil/time.h>
-#include <libavutil/timestamp.h>
-#include <libswresample/swresample.h>
-#include <libswscale/swscale.h>
-}
+#include <zg/ffmpeg.hpp>
 namespace zg::media
 {
+    #define CODER_STREAM_I_STREAM_INDEX 0
+    #define CODER_STREAM_I_STREAM 1
+    #define CODER_STREAM_I_1XCODER 2
+    #define CODER_STREAM_I_FRAMEQUEUE 3
+    #define CODER_STREAM_I_MUTEX 4
+    #define CODEC_I_VIDEO 0
+    #define CODEC_I_AUDIO 1
+    #define CODEC_I_DATA 2
+    #define CODEC_I_SUBTITLE 3
+    #define CODEC_I_ATTACHMENT 4
+    #define CODEC_I_NB 5
 	struct InputMediaStream
 	{
 		using CoderStreamTuple =
-			std::tuple<int32_t, AVStream*, std::shared_ptr<I1xCoder>, std::queue<AVFrame*>, std::mutex>;
+			std::tuple<int32_t, AVStream*, std::shared_ptr<I1xCoder>, zg::td::queue<AVFrame*>, std::shared_ptr<std::mutex>>;
 		std::string uri;
 		std::shared_ptr<interfaces::IFile> filePointer;
 		unsigned char* streamBytes = 0;

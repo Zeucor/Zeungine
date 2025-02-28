@@ -30,9 +30,8 @@ static std::string libSuffix(".so");
 static std::string libPrefix("lib");
 static std::string libSuffix(".dll");
 #endif
-static std::string vulkanLibrarySSName(libPrefix + "vk_swiftshader" + libSuffix);
-SharedLibrary zg::VulkanRenderer::vulkanLibrarySS(vulkanLibrarySSName, "../build/" + vulkanLibrarySSName,
-																									"build/" + vulkanLibrarySSName);
+static std::filesystem::path vulkanLibrarySSName(libPrefix + "vk_swiftshader" + libSuffix);
+SharedLibrary zg::VulkanRenderer::vulkanLibrarySS((ZG_LIB_INSTALL_PREFIX / vulkanLibrarySSName).string());
 #ifdef MACOS
 SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan.1" + libSuffix);
 #elif defined(__linux__)
