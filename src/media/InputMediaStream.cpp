@@ -69,10 +69,13 @@ size_t InputMediaStream::open()
         std::get<CODER_STREAM_I_STREAM_INDEX>(tuple) = StreamIndex;
         std::get<CODER_STREAM_I_STREAM>(tuple) = avStream;
         std::get<CODER_STREAM_I_1XCODER>(tuple) = i1xCoder;
-        coderStreams.emplace_back(tuple);
+        coderStreams[StreamIndex] = tuple;
         auto &tupleRef = coderStreams[coderStreams.size() - 1];
         std::get<CODER_STREAM_I_MUTEX>(tupleRef) = std::make_shared<std::mutex>();
+        codecIndexToStreamIndex[i] = StreamIndex;
     }
+    demuxing = true;
+    demuxThread = std::make_shared<std::thread>(&InputMediaStream::demuxer, this);
     return /*s*/ 1;
 }
 size_t InputMediaStream::close()
@@ -154,4 +157,100 @@ std::shared_ptr<I1xCoder> InputMediaStream::construct1xCoder(int i, int32_t stre
             break;
     }
     return i1xCoder;
+}
+void InputMediaStream::demuxer()
+{
+    auto& videoStreamIndex = codecIndexToStreamIndex[CODEC_I_VIDEO];
+    auto& audioStreamIndex = codecIndexToStreamIndex[CODEC_I_AUDIO];
+    int32_t ret = 0;
+    bool eof = false;
+    auto& audioStreamTuple = coderStreams[CODEC_I_AUDIO];
+    auto& videoStreamTuple = coderStreams[CODEC_I_VIDEO];
+    auto audio1xCoder = std::get<2>(audioStreamTuple);
+    auto video1xCoder = std::get<2>(videoStreamTuple);
+    auto audioDecoder = dynamic_cast<AudioDecoder *>(audio1xCoder.get());
+    auto videoDecoder = dynamic_cast<VideoDecoder *>(video1xCoder.get());
+    AVChannelLayout AV_CH;
+    AVSampleFormat AV_SAMPLE_FMT;
+    if (audioDecoder)
+    {
+        AV_CH = audioDecoder->MAToAV_ChannelLayout();
+        AV_SAMPLE_FMT = audioDecoder->MAToAV_SampleFormat();
+    }
+    auto& audioFrameQueue = std::get<3>(audioStreamTuple);
+    auto& videoFrameQueue = std::get<3>(videoStreamTuple);
+    while (demuxing && !eof)
+    {
+        AVPacket* packet = av_packet_alloc();
+        if (!packet)
+            continue;
+        ret = av_read_frame(formatContext, packet);
+        if (ret < 0)
+        {
+            if ((ret == AVERROR_EOF || avio_feof(formatContext->pb)))
+            {
+                av_packet_unref(packet);
+                av_packet_free(&packet);
+                eof = true;
+                continue;
+            }
+            else
+            {
+                std::cerr << "Unknown formatContext packet error" << std::endl;
+                break;
+            }
+        }
+        if (packet->stream_index == -1)
+        {
+            av_packet_unref(packet);
+            av_packet_free(&packet);
+            continue;
+        }
+        if (packet->stream_index == audioStreamIndex)
+        {
+            ret = avcodec_send_packet(audioDecoder->codecContext, packet);
+            while (ret >= 0)
+            {
+                ret = avcodec_receive_frame(audioDecoder->codecContext, audioDecoder->audioFrame);
+                if (ret == AVERROR(EAGAIN))
+                    break;
+                else if (ret == AVERROR_EOF)
+                    break;
+                else if (ret < 0)
+                {
+                    std::cerr << "decoding errors" << std::endl;
+                    break;
+                }
+                auto audioSwrFrame = av_frame_alloc();
+                audioSwrFrame->format = AV_SAMPLE_FMT;
+                audioSwrFrame->ch_layout = AV_CH;
+                audioSwrFrame->sample_rate = window.audioEngine.sampleRate;
+                audioSwrFrame->nb_samples = window.audioEngine.frameSize;
+                swr_convert_frame(audioDecoder->swrContext, audioSwrFrame, audioDecoder->audioFrame);
+                audioSwrFrame->pts = audioDecoder->audioFrame->pts;
+                audioFrameQueue.push(audioSwrFrame);
+            }
+        }
+        else if (packet->stream_index == videoStreamIndex)
+        {
+            ret = avcodec_send_packet(videoDecoder->codecContext, packet);
+            AVFrame* videoFrame = av_frame_alloc();
+            while (ret >= 0)
+            {
+                ret = avcodec_receive_frame(videoDecoder->codecContext, videoFrame);
+                if (ret == AVERROR(EAGAIN))
+                    break;
+                else if (ret == AVERROR_EOF)
+                    break;
+                else if (ret < 0)
+                {
+                    std::cerr << "decoding errors" << std::endl;
+                    break;
+                }
+                videoFrameQueue.push(videoFrame);
+            }
+        }
+        av_packet_unref(packet);
+        av_packet_free(&packet);
+    }
 }

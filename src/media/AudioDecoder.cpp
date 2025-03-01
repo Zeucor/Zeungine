@@ -24,6 +24,7 @@ size_t AudioDecoder::open()
 		0, 0);
 	if (!swrContext || swr_init(swrContext) < 0)
 		return 0;
+	audioFrame = av_frame_alloc();
 	return 1;
 }
 size_t AudioDecoder::code() { return 1; }
@@ -41,6 +42,7 @@ size_t AudioDecoder::close()
 		avcodec_free_context(&codecContext);
 		codecContext = 0;
 	}
+	av_frame_free(&audioFrame);
 	return 1;
 }
 AVChannelLayout AudioDecoder::MAToAV_ChannelLayout()

@@ -12,6 +12,7 @@ namespace zg::media
 		AVStream* stream = 0;
 		AVCodecContext* codecContext = 0;
 		SwrContext* swrContext = 0;
+		AVFrame* audioFrame = 0;
 		AudioDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream);
 		size_t open() override;
 		size_t code() override;
