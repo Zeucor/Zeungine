@@ -1,4 +1,5 @@
 #pragma once
+#include <stdexcept>
 namespace zg::td
 {
 	template <typename T>
@@ -9,7 +10,7 @@ namespace zg::td
 		{
 			if (!tail)
 				throw std::runtime_error("queue has no tail");
-			return *tail->value;
+			return tail->value;
 		}
 		void pop()
 		{
@@ -17,6 +18,14 @@ namespace zg::td
 				throw std::runtime_error("queue has no tail");
 			auto _TAIL = tail;
 			tail = _TAIL->left;
+			if (tail)
+			{
+				tail->right = 0;
+			}
+			else
+			{
+				head = 0;
+			}
 			delete _TAIL;
 		}
 		void push(const T& value)
@@ -43,7 +52,7 @@ namespace zg::td
 				delete copied_current;
 			}
 		}
-		bool empty() { return head; }
+		bool empty() { return !head; }
 
 	private:
 		struct queue_item
@@ -55,4 +64,4 @@ namespace zg::td
 		queue_item* head = 0;
 		queue_item* tail = 0;
 	};
-} // namespace zg::std
+} // namespace zg::td
