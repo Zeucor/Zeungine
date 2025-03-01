@@ -1,33 +1,22 @@
 #pragma once
 #include <zg/Standard.hpp>
+#include <zg/Window.hpp>
 #include "I1xCoder.hpp"
-#include <zg/ffmpeg.hpp>
+#include "MediaStream.hpp"
 namespace zg::media
 {
-    #define CODER_STREAM_I_STREAM_INDEX 0
-    #define CODER_STREAM_I_STREAM 1
-    #define CODER_STREAM_I_1XCODER 2
-    #define CODER_STREAM_I_FRAMEQUEUE 3
-    #define CODER_STREAM_I_MUTEX 4
-    #define CODEC_I_VIDEO 0
-    #define CODEC_I_AUDIO 1
-    #define CODEC_I_DATA 2
-    #define CODEC_I_SUBTITLE 3
-    #define CODEC_I_ATTACHMENT 4
-    #define CODEC_I_NB 5
-	struct InputMediaStream
+	struct InputMediaStream : MediaStream
 	{
 		using CoderStreamTuple =
 			std::tuple<int32_t, AVStream*, std::shared_ptr<I1xCoder>, zg::td::queue<AVFrame*>, std::shared_ptr<std::mutex>>;
+		Window& window;
 		std::string uri;
 		std::shared_ptr<interfaces::IFile> filePointer;
 		unsigned char* streamBytes = 0;
-		AVIOContext* ioContext = 0;
-		AVFormatContext* formatContext = 0;
 		std::vector<CoderStreamTuple> coderStreams;
 		bool playing = false;
-		InputMediaStream(const std::string& uri);
-		InputMediaStream(const std::string& uri, const std::shared_ptr<interfaces::IFile>& filePointer);
+		InputMediaStream(Window& _window, const std::string& uri);
+		InputMediaStream(Window& _window, const std::string& uri, const std::shared_ptr<interfaces::IFile>& filePointer);
 		size_t open();
 		size_t close();
 

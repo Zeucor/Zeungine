@@ -1,7 +1,8 @@
 #include <zg/media/VideoEncoder.hpp>
 using namespace zg::media;
-VideoEncoder::VideoEncoder(const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream) :
-		codec(codec), codecParameters(codecParameters), stream(stream)
+VideoEncoder::VideoEncoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters,
+													 AVStream* stream) :
+		mediaStream(mediaStream), codec(codec), codecParameters(codecParameters), stream(stream)
 {
 }
 size_t VideoEncoder::open() { return 1; }

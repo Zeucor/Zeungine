@@ -52,4 +52,5 @@ target_link_libraries(zeungine freetype)
 target_link_libraries(zeungine vk_device vk_wsi vk_system vk_pipeline)
 
 target_link_libraries(zeungine marl)
-# target_link_libraries(zeungine lunasvg::lunasvg)
+
+target_link_libraries(zeungine miniaudio)

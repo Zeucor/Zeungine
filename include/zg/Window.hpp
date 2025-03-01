@@ -1,11 +1,12 @@
 #pragma once
+#include <memory>
 #include <mutex>
+#include <queue>
+#include <thread>
+#include "./Events.hpp"
 #include "./interfaces/IPlatformWindow.hpp"
 #include "./textures/Framebuffer.hpp"
-#include "./Events.hpp"
-#include <thread>
-#include <memory>
-#include <queue>
+#include "audio/AudioEngine.hpp"
 namespace zg
 {
 	namespace shaders
@@ -91,6 +92,7 @@ namespace zg
 		std::shared_ptr<entities::Plane> framebufferPlane;
 		glm::vec2 oldXY;
 		bool vsync = true;
+		audio::AudioEngine audioEngine;
 		Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY,
 					 bool borderless = false, bool vsync = true, uint32_t framerate = 60);
 		Window(Window& parentWindow, Scene& parentScene, const char* childTitle, float childWindowWidth,

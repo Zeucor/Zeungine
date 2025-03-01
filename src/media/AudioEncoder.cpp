@@ -1,7 +1,8 @@
 #include <zg/media/AudioEncoder.hpp>
 using namespace zg::media;
-AudioEncoder::AudioEncoder(const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream) :
-		codec(codec), codecParameters(codecParameters), stream(stream)
+AudioEncoder::AudioEncoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters,
+													 AVStream* stream) :
+		mediaStream(mediaStream), codec(codec), codecParameters(codecParameters), stream(stream)
 {
 }
 size_t AudioEncoder::open() { return 1; }

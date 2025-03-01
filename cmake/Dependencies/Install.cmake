@@ -113,11 +113,16 @@ install(TARGETS
     glslang SPIRV-Tools-shared
     vk_swiftshader vk_device vk_wsi vk_system vk_pipeline
     marl
+    miniaudio
     ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX})
 
 install(FILES ${stb_SOURCE_DIR}/stb_image.h ${stb_SOURCE_DIR}/stb_image_write.h ${stb_SOURCE_DIR}/stb_image_resize2.h
     ${stb_SOURCE_DIR}/stb_hexwave.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+
+install(FILES ${miniaudio_SOURCE_DIR}/miniaudio.h
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 

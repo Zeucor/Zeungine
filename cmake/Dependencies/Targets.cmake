@@ -95,3 +95,7 @@ zg_setup_target(marl STATIC
 	${ZG_LIB_INSTALL_PREFIX}
 	${LIB_PREFIX} marl ${STATIC_LIB_SUFFIX}
 	"")
+zg_setup_target(miniaudio STATIC
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} miniaudio ${STATIC_LIB_SUFFIX}
+	"")

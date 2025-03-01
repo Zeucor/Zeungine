@@ -2,12 +2,14 @@
 #include <zg/media/VideoDecoder.hpp>
 #include <zg/media/AudioDecoder.hpp>
 using namespace zg::media;
-InputMediaStream::InputMediaStream(const std::string& uri):
+InputMediaStream::InputMediaStream(Window& _window, const std::string& uri):
+    window(_window),
     uri(uri)
 {
     open();
 }
-InputMediaStream::InputMediaStream(const std::string &uri, const std::shared_ptr<zg::interfaces::IFile>& filePointer):
+InputMediaStream::InputMediaStream(Window& _window, const std::string &uri, const std::shared_ptr<zg::interfaces::IFile>& filePointer):
+    window(_window),
     uri(uri),
     filePointer(filePointer)
 {
@@ -133,10 +135,10 @@ std::shared_ptr<I1xCoder> InputMediaStream::construct1xCoder(int i, int32_t stre
     switch (i)
     {
         case CODEC_I_VIDEO:
-            i1xCoder = std::make_shared<VideoDecoder>(codec, codecParameters, stream);
+            i1xCoder = std::make_shared<VideoDecoder>(*this, codec, codecParameters, stream);
             break;
         case CODEC_I_AUDIO:
-            i1xCoder = std::make_shared<AudioDecoder>(codec, codecParameters, stream);
+            i1xCoder = std::make_shared<AudioDecoder>(*this, codec, codecParameters, stream);
             break;
         case CODEC_I_DATA:
             // i1xCoder = std::make_shared<DataDecoder>();

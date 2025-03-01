@@ -6,7 +6,7 @@ Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rot
 		Entity(_window, {"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
 					 {0, 1, 2, 2, 3, 0}, 4, {}, position, rotation, scale,
 					 name.empty() ? "Video " + std::to_string(++videosCount) : name),
-		InputMediaStream(uri), scene(_scene)
+		InputMediaStream(_window, uri), scene(_scene)
 {
 	setSize(glm::vec3(_size, 0));
 }
@@ -15,7 +15,7 @@ Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rot
 		Entity(_window, {"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
 					 {0, 1, 2, 2, 3, 0}, 4, {}, position, rotation, scale,
 					 name.empty() ? "Video " + std::to_string(++videosCount) : name),
-		InputMediaStream(uri, _filePointer), scene(_scene)
+		InputMediaStream(_window, uri, _filePointer), scene(_scene)
 {
 	setSize(glm::vec3(_size, 0));
 }

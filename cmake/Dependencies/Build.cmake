@@ -5,6 +5,13 @@ set(FETCHCONTENT_QUIET OFF)
 
 #New Dependency Declarations to the top!
 
+# miniaudio
+FetchContent_Declare(
+    miniaudio
+    GIT_REPOSITORY https://github.com/mackron/miniaudio.git
+    GIT_TAG master)
+FetchContent_MakeAvailable(miniaudio)
+
 # swiftshader
 set(SPIRV_SKIP_TESTS ON)
 set(BUILD_TESTING OFF)
