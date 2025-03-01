@@ -15,12 +15,13 @@ namespace zg::media
 		SwrContext* swrContext = 0;
 		AVFrame* audioFrame = 0;
 		zg::td::queue<float> sampleQueue;
-		AudioDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream);
+		AudioDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream, const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer, const std::shared_ptr<std::mutex>& mutexPointer);
 		size_t open() override;
 		size_t code() override;
 		size_t flush() override;
 		size_t close() override;
 		AVChannelLayout MAToAV_ChannelLayout();
 		AVSampleFormat MAToAV_SampleFormat();
+		void fillFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount);
 	};
 } // namespace zg::media

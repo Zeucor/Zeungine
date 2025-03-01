@@ -4,6 +4,7 @@ set(ZG_SOURCES
     src/audio/AudioPipeline.cpp
     src/audio/AudioStage.cpp
     src/audio/ISoundNode.cpp
+    src/media/I1xCoder.cpp
     src/media/InputMediaStream.cpp
     src/media/MediaStream.cpp
     src/media/AudioDecoder.cpp

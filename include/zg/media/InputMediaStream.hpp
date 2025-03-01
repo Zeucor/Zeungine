@@ -8,7 +8,7 @@ namespace zg::media
 	struct InputMediaStream : MediaStream
 	{
 		using CoderStreamTuple =
-			std::tuple<int32_t, AVStream*, std::shared_ptr<I1xCoder>, zg::td::queue<AVFrame*>, std::shared_ptr<std::mutex>>;
+			std::tuple<int32_t, AVStream*, std::shared_ptr<I1xCoder>, std::shared_ptr<zg::td::queue<AVFrame*>>, std::shared_ptr<std::mutex>>;
 		std::string uri;
 		std::shared_ptr<interfaces::IFile> filePointer;
 		unsigned char* streamBytes = 0;
@@ -27,7 +27,7 @@ namespace zg::media
 	private:
 		int32_t findStreamIndex(int i);
 		AVStream* findAVStream(int i, int32_t streamIndex);
-		std::shared_ptr<I1xCoder> construct1xCoder(int i, int32_t streamIndex, AVStream* stream);
+		std::shared_ptr<I1xCoder> construct1xCoder(int i, int32_t streamIndex, AVStream* stream, const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer, const std::shared_ptr<std::mutex>& mutexPointer);
 		void demuxer();
 	};
 } // namespace zg::media
