@@ -6,11 +6,17 @@ namespace zg::td
 	struct queue
 	{
 	public:
-		T& peek()
+		T& front()
 		{
 			if (!tail)
 				throw std::runtime_error("queue has no tail");
 			return tail->value;
+		}
+		T& back()
+		{
+			if (!head)
+				throw std::runtime_error("queue has no head");
+			return head->value;
 		}
 		void pop()
 		{
