@@ -17,5 +17,7 @@ namespace zg::media
 		size_t code() override;
 		size_t flush() override;
 		size_t close() override;
+		AVChannelLayout MAToAV_ChannelLayout();
+		AVSampleFormat MAToAV_SampleFormat();
 	};
 } // namespace zg::media

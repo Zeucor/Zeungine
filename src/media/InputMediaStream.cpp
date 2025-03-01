@@ -3,13 +3,13 @@
 #include <zg/media/AudioDecoder.hpp>
 using namespace zg::media;
 InputMediaStream::InputMediaStream(Window& _window, const std::string& uri):
-    window(_window),
+    MediaStream(_window),
     uri(uri)
 {
     open();
 }
 InputMediaStream::InputMediaStream(Window& _window, const std::string &uri, const std::shared_ptr<zg::interfaces::IFile>& filePointer):
-    window(_window),
+    MediaStream(_window),
     uri(uri),
     filePointer(filePointer)
 {

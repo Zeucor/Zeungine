@@ -1,5 +1,6 @@
 #pragma once
 #include <zg/ffmpeg.hpp>
+#include <zg/Window.hpp>
 namespace zg::media
 {
 #define CODER_STREAM_I_STREAM_INDEX 0
@@ -15,7 +16,9 @@ namespace zg::media
 #define CODEC_I_NB 5
 	struct MediaStream
 	{
+		Window& window;
 		AVIOContext* ioContext = 0;
 		AVFormatContext* formatContext = 0;
+		MediaStream(Window& _window);
 	};
 } // namespace zg::media

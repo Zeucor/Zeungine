@@ -1,6 +1,5 @@
 #pragma once
 #include <zg/Standard.hpp>
-#include <zg/Window.hpp>
 #include "I1xCoder.hpp"
 #include "MediaStream.hpp"
 namespace zg::media
@@ -9,7 +8,6 @@ namespace zg::media
 	{
 		using CoderStreamTuple =
 			std::tuple<int32_t, AVStream*, std::shared_ptr<I1xCoder>, zg::td::queue<AVFrame*>, std::shared_ptr<std::mutex>>;
-		Window& window;
 		std::string uri;
 		std::shared_ptr<interfaces::IFile> filePointer;
 		unsigned char* streamBytes = 0;
