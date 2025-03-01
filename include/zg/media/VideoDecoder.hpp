@@ -1,5 +1,6 @@
 #pragma once
 #include <zg/ffmpeg.hpp>
+#include <zg/textures/Texture.hpp>
 #include "I1xCoder.hpp"
 namespace zg::media
 {
@@ -13,12 +14,15 @@ namespace zg::media
 		AVCodecContext* codecContext = 0;
 		SwsContext* swsContext = 0;
 		AVFrame* rgbaFrame = 0;
-		uint8_t *rgbaBuffer = 0;
+		uint8_t* rgbaBuffer = 0;
 		uint32_t rgbaBufferSize = 0;
-		VideoDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream, const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer, const std::shared_ptr<std::mutex>& mutexPointer);
+		VideoDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream,
+								 const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer,
+								 const std::shared_ptr<std::mutex>& mutexPointer);
 		size_t open() override;
 		size_t code() override;
 		size_t flush() override;
 		size_t close() override;
+		void fillTexture(textures::Texture& texture);
 	};
 } // namespace zg::media

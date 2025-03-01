@@ -102,6 +102,15 @@ void InputMediaStream::fillAudioFrames(float* frames, const int32_t& channelCoun
 		return;
     audioDecoder->fillFrames(frames, channelCount, frameCount);
 }
+void InputMediaStream::fillTexture(textures::Texture& texture)
+{
+	auto& videoTuple = coderStreams[CODEC_I_VIDEO];
+	auto video1xCoder = std::dynamic_pointer_cast<VideoDecoder>(std::get<2>(videoTuple));
+	auto videoDecoder = video1xCoder.get();
+	if (!videoDecoder)
+		return;
+    videoDecoder->fillTexture(texture);
+}
 int32_t InputMediaStream::findStreamIndex(int i)
 {
 	AVMediaType mediaType;

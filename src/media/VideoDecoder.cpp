@@ -38,3 +38,7 @@ size_t VideoDecoder::close()
 	av_frame_free(&rgbaFrame);
 	return 1;
 }
+void VideoDecoder::fillTexture(textures::Texture& texture)
+{
+	
+}

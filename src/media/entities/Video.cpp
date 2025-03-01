@@ -25,8 +25,7 @@ Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rot
 }
 bool Video::preRender()
 {
-	if (!texturePointer)
-		return false;
+	fillTexture(*texturePointer);
 	const auto& model = getModelMatrix();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
