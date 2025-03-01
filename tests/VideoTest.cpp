@@ -2,20 +2,19 @@
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/media/entities/Video.hpp>
-#include <zg/vp/VML.hpp>
+#include <zg/zgfilesystem/File.hpp>
 using namespace zg;
 struct VideoScene : Scene
 {
-	vp::VML vml; // view mouse look
 	long double deltaTimeCounter = 0;
 	uint32_t qPressID = 0;
 	VideoScene(Window& _window) :
 			Scene(_window, {0, 10, 10}, // camera position
 						glm::normalize(glm::vec3(0, -1, -1)), // camera direction
-						{2, 2}),
-			vml(*this)
+						{2, 2})
 	{
 		clearColor = {1, 0, 1, 1};
+		auto kalimbaPath = zgfilesystem::File::getProgramDirectoryPath() / "music" / "Kalimba.mp3";
 		auto video = std::make_shared<media::entities::Video>(
 			window, // reference to window
 			*this, // reference to scene
@@ -23,7 +22,8 @@ struct VideoScene : Scene
 			glm::vec3(0, 0, 0), // rotation
 			glm::vec3(1, 1, 1), // scale
 			glm::vec2(2, 2), // cube size
-			"http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
+			kalimbaPath.string(),
+			std::make_shared<zgfilesystem::File>(kalimbaPath, enums::EFileLocation::Absolute, "r"));
 		addEntity(video);
 		qPressID = window.addKeyPressHandler('q',
 																				 [&](auto pressed)
