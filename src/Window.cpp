@@ -158,6 +158,7 @@ void Window::startWindow()
 		windowBudget.sleep();
 	}
 _exit:
+	audioEngine.stop();
 	delete shaderContext;
 	for (auto& childWindowPointer : childWindows)
 	{

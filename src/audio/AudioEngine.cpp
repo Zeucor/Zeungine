@@ -4,7 +4,9 @@
 using namespace zg::audio;
 AudioEngine::AudioEngine():
     pipeline(*this)
-{}
+{
+	start();
+}
 AudioEngine::~AudioEngine()
 {
     stop();

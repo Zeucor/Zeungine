@@ -1,6 +1,7 @@
 #pragma once
 #include <zg/ffmpeg.hpp>
 #include "I1xCoder.hpp"
+#include <zg/queue.hpp>
 namespace zg::media
 {
 	struct MediaStream;
@@ -13,6 +14,7 @@ namespace zg::media
 		AVCodecContext* codecContext = 0;
 		SwrContext* swrContext = 0;
 		AVFrame* audioFrame = 0;
+		zg::td::queue<float> sampleQueue;
 		AudioDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream);
 		size_t open() override;
 		size_t code() override;

@@ -100,6 +100,53 @@ size_t InputMediaStream::close()
     avformat_close_input(&formatContext);
     return 0;
 }
+void InputMediaStream::fillAudioFrames(float *frames, const int32_t &channelCount, const unsigned long &frameCount)
+{
+    auto& audioTuple = coderStreams[CODEC_I_AUDIO];
+    auto audio1xCoder = std::dynamic_pointer_cast<AudioDecoder>(std::get<2>(audioTuple));
+    auto audioDecoder = audio1xCoder.get();
+    if (!audioDecoder)
+        return;
+    auto& sampleQueue = audioDecoder->sampleQueue;
+    auto& audioFramesQueue = std::get<3>(audioTuple);
+    auto& audioMutex = *std::get<4>(audioTuple).get();
+    uint32_t outputSamples = 0;
+    uint32_t sampleIndex = 0;
+    auto fccc = frameCount * channelCount;
+    {
+        std::lock_guard lock(audioMutex);
+        while (outputSamples < fccc && !sampleQueue.empty())
+        {
+            frames[sampleIndex++] = sampleQueue.front();
+            outputSamples++;
+            sampleQueue.pop();
+        }    
+    }
+    while (outputSamples < fccc)
+    {
+        std::lock_guard lock(audioMutex);
+        if (audioFramesQueue.empty())
+        {
+            std::fill(frames + outputSamples, frames + fccc, 0.0f);
+            break;
+        }
+        auto audioFrame = audioFramesQueue.front();
+        audioFramesQueue.pop();
+        int32_t numSamples = audioFrame->nb_samples * channelCount;
+        int32_t oNumSamples = numSamples;
+        if (outputSamples + numSamples > fccc)
+        {
+            numSamples = fccc - outputSamples;
+        }
+        for (uint32_t sampleIndex = numSamples; sampleIndex < oNumSamples; ++sampleIndex)
+        {
+            sampleQueue.push(((float*)audioFrame->data[0])[sampleIndex]);
+        }
+        memcpy(frames + outputSamples, audioFrame->data[0], numSamples * sizeof(float));
+        outputSamples += numSamples;
+        av_frame_free(&audioFrame);
+    }
+}
 int32_t InputMediaStream::findStreamIndex(int i)
 {
     AVMediaType mediaType;
@@ -170,21 +217,23 @@ void InputMediaStream::demuxer()
     auto& audioStreamIndex = codecIndexToStreamIndex[CODEC_I_AUDIO];
     int32_t ret = 0;
     bool eof = false;
-    auto& audioStreamTuple = coderStreams[CODEC_I_AUDIO];
-    auto& videoStreamTuple = coderStreams[CODEC_I_VIDEO];
-    auto audio1xCoder = std::dynamic_pointer_cast<AudioDecoder>(std::get<2>(audioStreamTuple));
-    auto video1xCoder = std::dynamic_pointer_cast<VideoDecoder>(std::get<2>(videoStreamTuple));
+    auto& audioTuple = coderStreams[CODEC_I_AUDIO];
+    auto& videoTuple = coderStreams[CODEC_I_VIDEO];
+    auto audio1xCoder = std::dynamic_pointer_cast<AudioDecoder>(std::get<2>(audioTuple));
+    auto video1xCoder = std::dynamic_pointer_cast<VideoDecoder>(std::get<2>(videoTuple));
     auto audioDecoder = audio1xCoder.get();
     auto videoDecoder = video1xCoder.get();
     AVChannelLayout AV_CH;
     AVSampleFormat AV_SAMPLE_FMT;
+    auto audioMutex = std::get<4>(audioTuple).get();
+    auto videoMutex = std::get<4>(videoTuple).get();
     if (audioDecoder)
     {
         AV_CH = audioDecoder->MAToAV_ChannelLayout();
         AV_SAMPLE_FMT = audioDecoder->MAToAV_SampleFormat();
     }
-    auto& audioFrameQueue = std::get<3>(audioStreamTuple);
-    auto& videoFrameQueue = std::get<3>(videoStreamTuple);
+    auto& audioFrameQueue = std::get<3>(audioTuple);
+    auto& videoFrameQueue = std::get<3>(videoTuple);
     while (demuxing && !eof)
     {
         AVPacket* packet = av_packet_alloc();
@@ -234,7 +283,9 @@ void InputMediaStream::demuxer()
                 audioSwrFrame->nb_samples = window.audioEngine.frameSize;
                 swr_convert_frame(audioDecoder->swrContext, audioSwrFrame, audioDecoder->audioFrame);
                 audioSwrFrame->pts = audioDecoder->audioFrame->pts;
+                audioMutex->lock();
                 audioFrameQueue.push(audioSwrFrame);
+                audioMutex->unlock();
             }
         }
         else if (packet->stream_index == videoStreamIndex)
@@ -253,7 +304,9 @@ void InputMediaStream::demuxer()
                     std::cerr << "decoding errors" << std::endl;
                     break;
                 }
+                videoMutex->lock();
                 videoFrameQueue.push(videoFrame);
+                videoMutex->unlock();
             }
         }
         av_packet_unref(packet);

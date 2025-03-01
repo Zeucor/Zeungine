@@ -22,6 +22,7 @@ namespace zg::media
 		~InputMediaStream();
 		size_t open();
 		size_t close();
+		void fillAudioFrames(float *frames, const int32_t &channelCount, const unsigned long &frameCount);
 
 	private:
 		int32_t findStreamIndex(int i);
