@@ -19,6 +19,7 @@ namespace zg::media
 		std::unordered_map<int32_t, int32_t> codecIndexToStreamIndex;
 		InputMediaStream(Window& _window, const std::string& uri);
 		InputMediaStream(Window& _window, const std::string& uri, const std::shared_ptr<interfaces::IFile>& filePointer);
+		~InputMediaStream();
 		size_t open();
 		size_t close();
 

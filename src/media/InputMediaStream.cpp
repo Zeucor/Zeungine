@@ -15,6 +15,10 @@ InputMediaStream::InputMediaStream(Window& _window, const std::string &uri, cons
 {
     open();
 }
+InputMediaStream::~InputMediaStream()
+{
+    close();
+}
 size_t InputMediaStream::open()
 {
     if (filePointer)
@@ -69,7 +73,7 @@ size_t InputMediaStream::open()
         std::get<CODER_STREAM_I_STREAM_INDEX>(tuple) = StreamIndex;
         std::get<CODER_STREAM_I_STREAM>(tuple) = avStream;
         std::get<CODER_STREAM_I_1XCODER>(tuple) = i1xCoder;
-        coderStreams[StreamIndex] = tuple;
+        coderStreams[i] = tuple;
         auto &tupleRef = coderStreams[coderStreams.size() - 1];
         std::get<CODER_STREAM_I_MUTEX>(tupleRef) = std::make_shared<std::mutex>();
         codecIndexToStreamIndex[i] = StreamIndex;
@@ -80,6 +84,8 @@ size_t InputMediaStream::open()
 }
 size_t InputMediaStream::close()
 {
+    demuxing = false;
+    demuxThread->join();
     auto coderStreamsSize = coderStreams.size();
     for (int i = 0; i < coderStreamsSize; ++i)
     {
@@ -166,10 +172,10 @@ void InputMediaStream::demuxer()
     bool eof = false;
     auto& audioStreamTuple = coderStreams[CODEC_I_AUDIO];
     auto& videoStreamTuple = coderStreams[CODEC_I_VIDEO];
-    auto audio1xCoder = std::get<2>(audioStreamTuple);
-    auto video1xCoder = std::get<2>(videoStreamTuple);
-    auto audioDecoder = dynamic_cast<AudioDecoder *>(audio1xCoder.get());
-    auto videoDecoder = dynamic_cast<VideoDecoder *>(video1xCoder.get());
+    auto audio1xCoder = std::dynamic_pointer_cast<AudioDecoder>(std::get<2>(audioStreamTuple));
+    auto video1xCoder = std::dynamic_pointer_cast<VideoDecoder>(std::get<2>(videoStreamTuple));
+    auto audioDecoder = audio1xCoder.get();
+    auto videoDecoder = video1xCoder.get();
     AVChannelLayout AV_CH;
     AVSampleFormat AV_SAMPLE_FMT;
     if (audioDecoder)
