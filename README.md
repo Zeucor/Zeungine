@@ -14,6 +14,7 @@ git clone git@github.com:Zeungine/Zeungine.git
 
 ### Build Dependencies
 
+There are a number of things that must be configured for each platform for dependencies and 'ultimately' zeungine to build. 
 
 ###### All platforms
 
@@ -23,6 +24,7 @@ git clone git@github.com:Zeungine/Zeungine.git
 ###### Windows
 
  - `Visual Studio 2022` or newer for MSVC
+ - `msys64` installed at `C:\msys64` for ffmpeg shell consistency
  - Run all commands inside 'xXX Native Tools Command Prompt for VS20XX'
  - also, required for swiftshader dependency, run once, as admin,
 ```bash
