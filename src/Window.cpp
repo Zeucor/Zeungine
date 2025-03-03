@@ -153,6 +153,7 @@ void Window::startWindow()
 		windowBudget.tick();
 		iRendererRef.postRenderPass();
 		windowBudget.tick();
+		callPreSwapbuffersOnceoff();
 		iRendererRef.swapBuffers();
 		windowBudget.end();
 		windowBudget.sleep();
@@ -617,6 +618,25 @@ void Window::callFocusHandler(bool focused)
 	{
 		handler(focused);
 	}
+}
+// onceoffs
+void Window::addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff)
+{
+	std::lock_guard lock(handlersMutex);
+	preSwapbuffersOnceoffs.push(onceoff);
+}
+void Window::callPreSwapbuffersOnceoff()
+{
+	handlersMutex.lock();
+	if (preSwapbuffersOnceoffs.empty())
+	{
+		handlersMutex.unlock();
+		return;
+	}
+	auto onceoff = preSwapbuffersOnceoffs.front();
+	preSwapbuffersOnceoffs.pop();
+	handlersMutex.unlock();
+	onceoff();
 }
 std::shared_ptr<Scene> Window::setScene(const std::shared_ptr<Scene>& scene)
 {

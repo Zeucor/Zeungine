@@ -7,6 +7,7 @@
 #include "./interfaces/IPlatformWindow.hpp"
 #include "./textures/Framebuffer.hpp"
 #include "audio/AudioEngine.hpp"
+#include <zg/queue.hpp>
 namespace zg
 {
 	namespace shaders
@@ -63,6 +64,7 @@ namespace zg
 		std::pair<EventIdentifier, std::map<EventIdentifier, MouseMoveHandler>> mouseMoveHandlers;
 		std::pair<EventIdentifier, std::map<EventIdentifier, ViewResizeHandler>> viewResizeHandlers;
 		std::pair<EventIdentifier, std::map<EventIdentifier, FocusHandler>> focusHandlers;
+		zg::td::queue<PreSwapbuffersOnceoff> preSwapbuffersOnceoffs;
 		std::shared_ptr<Scene> scene;
 		bool open = true;
 		std::chrono::steady_clock::time_point lastFrameTime;
@@ -144,6 +146,9 @@ namespace zg
 		EventIdentifier addFocusHandler(const FocusHandler& callback);
 		void removeFocusHandler(EventIdentifier& id);
 		void callFocusHandler(bool focused);
+		// preSwapbuffers
+		void addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff);
+		void callPreSwapbuffersOnceoff();
 		// scene
 		std::shared_ptr<Scene> setScene(const std::shared_ptr<Scene>& scene);
 		// runnables

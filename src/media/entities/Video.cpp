@@ -60,7 +60,10 @@ bool Video::preRender()
 	{
 		if (firstFrame)
 		{
-			startAudio();
+			window.addPreSwapbuffersOnceoff([&]()
+			{
+				startAudio();
+			});
 			firstFrame = false;
 		}
 		fillNextVideoFrame(texturePointer);

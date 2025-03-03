@@ -27,7 +27,6 @@ size_t VideoDecoder::open()
 	swsContext = sws_getContext(codecContext->width, codecContext->height, codecContext->pix_fmt, codecContext->width,
 															codecContext->height, AV_PIX_FMT_RGBA, SWS_BILINEAR, 0, 0, 0);
 															rgbaBufferSize = av_image_get_buffer_size(AV_PIX_FMT_RGBA, codecContext->width, codecContext->height, 1);
-	std::cerr << "\trgbaBufferSize: " << rgbaBufferSize << std::endl;
 	rgbaBuffer = (uint8_t*)av_malloc(rgbaBufferSize * sizeof(uint8_t));
 	rgbaFrame = av_frame_alloc();
 	av_image_fill_arrays(rgbaFrame->data, rgbaFrame->linesize, rgbaBuffer, AV_PIX_FMT_RGBA, codecContext->width,

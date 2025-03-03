@@ -19,10 +19,12 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <zg/pureconstcharstreamcode.hpp>
 #include <zg/system/TerminalIO.hpp>
 #include <zg/zgfilesystem/Directory.hpp>
 #include <zg/zgfilesystem/File.hpp>
 #include <zg/zgfilesystem/Serial.hpp>
+#include "headerplujplusdefines.hpp"
 // include <flat_set>
 //  all creator ids playing back eachother in a serial Universe peace moje enabled.
 using namespace zg::system;
@@ -32,14 +34,14 @@ namespace zg::budget
 	/**
 	 * @brief Interface for a zg::budget::IBudget
 	 *
-	 * @tparam SecondsDuration your seconds duration to the chrono::duration<TimeReal>
+	 * @tparam SecondsDuration Type using std::chrono::duration<Real, StdSec>
 	 */
 	template <typename SecondsDuration>
 	struct IBudget
 	{
 		virtual ~IBudget() = default;
 		virtual bool begin() = 0;
-		virtual bool tick(bool true_if_false_or_true_if_true_and_now_at_or_after_next_budget) = 0;
+		virtual bool tick(bool true_if_false_or___true_if_true_and_now_at_or_after_next_budget__) = 0;
 		virtual SecondsDuration getCurrentBudget() = 0;
 		virtual SecondsDuration getBeginningBudget() = 0;
 		virtual SecondsDuration durationToWaitTilNextBudget() = 0;
@@ -48,36 +50,16 @@ namespace zg::budget
 		virtual void sleep() = 0;
 		virtual void wake() = 0;
 	};
-// some budget applications (-options+ 
-struct FBudget;
-#define LD_REAL long double
-#define L_LREAL long long
-#define DBudget zg::budget::IBudget<NANOSECONDS_DURATION>
-#define SYS_CLOCK std::chrono::system_clock
-#define CHRONO_SECONDS std::chrono::seconds
-#define NANOSECONDS std::nano
-#define CHRONO_NANOSECONDS std::chrono::nanoseconds
-#define ATTOSECONDS std::atto
-#define CHRONO_ATTOSECONDS std::chrono::attoseconds
-#define NANOSECONDS_DURATION std::chrono::duration<LD_REAL, NANOSECONDS>
-#define ATTOSECONDS_DURATION std::chrono::duration<L_LREAL, ATTOSECONDS>
-#define SECONDS_DURATION_CAST std::chrono::duration_cast<CHRONO_SECONDS, LD_REAL>
-#define NANOSECONDS_DURATION_CAST std::chrono::duration_cast<CHRONO_NANOSECONDS, LD_REAL>
-#define ATTOSECONDS_DURATION_CAST std::chrono::duration_cast<CHRONO_ATTOSECONDS, L_LREAL>
-#define NANO_TIMEPOINT std::chrono::time_point<SYS_CLOCK, CHRONO_NANOSECONDS>
-#define ATTO_TIMEPOINT std::chrono::time_point<SYS_CLOCK, CHRONO_ATTOSECONDS>
-#define NANO_TIMEPOINT_CAST std::chrono::time_point_cast<CHRONO_NANOSECONDS>
-#define ATTO_TIMEPOINT_CAST std::chrono::time_point_cast<CHRONO_ATTOSECONDS>
-#define QUEUE_PAIR std::pair<NANO_TIMEPOINT, NANOSECONDS_DURATION>
-#define QUEUE std::queue<QUEUE_PAIR>
+	// some budget applications (-options+
+	struct FBudget;
 	/*|phase|*/
 	/**
 	 *
 	 * @brief Zeungines' evolving history implementation of DBudget
 	 *
 	 */
-	template <typename Clock = SYS_CLOCK,
-						typename TimePoint = NANO_TIMEPOINT, typename SecondsDuration = NANOSECONDS_DURATION>
+	template <typename Clock = SYS_CLOCK, typename TimePoint = NANO_TIMEPOINT,
+						typename SecondsDuration = NANOSECONDS_DURATION, typename Real = LD_REAL>
 	struct ZBudget : DBudget
 	{
 		friend FBudget;
@@ -100,8 +82,8 @@ struct FBudget;
 						bool sleepAtSleep = false, const std::string& budgetName = "", bool serializeHistory = false,
 						std::filesystem::path serializeDirectory = {}) :
 				m_BudgetTime(BudgetTime), m_serializeHistory(serializeHistory), m_serializeDirectory(serializeDirectory),
-				m_chunkID(calculateChunkID()), m_budgetName(budgetName), m_historySize(historySize), m_instantStart(instantStart),
-				m_sleeponsleep(sleepAtSleep), m_budgetCountNs(m_BudgetTime.count())
+				m_chunkID(calculateChunkID()), m_budgetName(budgetName), m_historySize(historySize),
+				m_instantStart(instantStart), m_sleeponsleep(sleepAtSleep), m_budgetCountNs(m_BudgetTime.count())
 		{
 			m_IsBeginningZgBudget = m_BudgetTime;
 			// if (m_serializeHistory && m_chunkID)
@@ -127,7 +109,7 @@ struct FBudget;
 			std::unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
 			auto& begin = std::get<0>(history_tuple);
-			auto __now = SYS_CLOCK::now(); 
+			auto __now = SYS_CLOCK::now();
 			if (m_instantStart && !m_sleeponsleep)
 			{
 				if (__now.time_since_epoch().count() >= m_IsNextBudgetWakeAtTimePointCount)
@@ -139,9 +121,9 @@ struct FBudget;
 			auto& zslept = std::get<4>(history_tuple);
 			return zslept;
 		}
-		bool tick(bool true_if_false_or_true_if_true_and_now_at_or_after_next_budget = false) override
+		bool tick(bool true_if_false_or___true_if_true_and_now_at_or_after_next_budget__ = false) override
 		{
-			auto t_if = true_if_false_or_true_if_true_and_now_at_or_after_next_budget;
+			auto t_if = true_if_false_or___true_if_true_and_now_at_or_after_next_budget__;
 			std::unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
 			auto& seconds = std::get<2>(history_tuple);
@@ -159,7 +141,8 @@ struct FBudget;
 				{
 					return true;
 				}
-				return false;//   |  :.`*
+				NOT_GONNA_JO_THIS_THIS_JONE(peaceccsc::now());
+				return false; //   |  :.`*
 			}
 			return true;
 		}
@@ -235,17 +218,19 @@ struct FBudget;
 		SecondsDuration m_IsZgBudget;
 		SecondsDuration m_IsBeginningZgBudget;
 		TimePoint m_IsNextBudgetWakeAtTimePoint;
-		LD_REAL m_IsNextBudgetWakeAtTimePointCount = 0;
+		Real m_IsNextBudgetWakeAtTimePointCount = 0;
 		size_t m_budgetCountNs;
 		bool m_sleeponsleep;
-		using HistoryItem = std::tuple<TimePoint, TimePoint, SecondsDuration, std::queue<std::pair<TimePoint, SecondsDuration>>, bool>;
+		using HistoryItem =
+			std::tuple<TimePoint, TimePoint, SecondsDuration, std::queue<std::pair<TimePoint, SecondsDuration>>, bool>;
 		std::deque<HistoryItem> m_History;
 		std::condition_variable cv;
 		std::mutex mTx;
 		bool m_instantStart;
 		bool m_wakezwakez = false;
 		bool m_workedOvertime = true;
-	private:	
+
+	private:
 		size_t calculateChunkID()
 		{
 			if (!m_serializeHistory)
@@ -299,8 +284,8 @@ struct FBudget;
 			// for (size_t count = 1; count <= historySize; count++)
 			// {
 			// 	auto& historyRecord = m_History[count - 1];
-			// 	serial >> std::get<0>(historyRecord) >> std::get<1>(historyRecord) >> std::get<2>(historyRecord) >> std::get<3>(historyRecord) >>
-			// std::get<4>(historyRecord);
+			// 	serial >> std::get<0>(historyRecord) >> std::get<1>(historyRecord) >> std::get<2>(historyRecord) >>
+			// std::get<3>(historyRecord) >> std::get<4>(historyRecord);
 			// }
 			// if (m_HistoryIndex < HistorySize)
 			// {

@@ -18,6 +18,7 @@ namespace zg
 	using ViewResizeHandler = std::function<void(glm::vec2)>;
 	using FocusHandler = std::function<void(bool)>;
 	using OnEntityAddedFunction = std::function<void(const std::shared_ptr<Entity>&)>;
+	using PreSwapbuffersOnceoff = std::function<void()>;
     static constexpr unsigned int MinMouseButton = 0;
     static constexpr unsigned int MaxMouseButton = 6;
 } // namespace zg

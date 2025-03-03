@@ -15,7 +15,11 @@ struct VideoScene : Scene
 	{
 		clearColor = {1, 0, 1, 1};
 		// auto mediaPath = zgfilesystem::File::getProgramDirectoryPath() / "music" / "Kalimba.mp3";
-		auto mediaPath = zgfilesystem::File::getProgramDirectoryPath() / "videos" / "ForBiggerJoyrides.mp4";
+		// auto mediaPath = zgfilesystem::File::getProgramDirectoryPath() / "videos" / "ForBiggerJoyrides.mp4";
+		// auto mediaPath = zgfilesystem::File::getProgramDirectoryPath() / "videos" / "WeAreGoingOnBullrun.mp4";
+		// auto mediaPath = zgfilesystem::File::getProgramDirectoryPath() / "videos" / "ForBiggerFun.mp4";
+		// auto mediaPath = zgfilesystem::File::getProgramDirectoryPath() / "videos" / "ForBiggerBlazes.mp4";
+		auto mediaPath = zgfilesystem::File::getProgramDirectoryPath() / "videos" / "VolkswagenGTIReview.mp4";
 		auto video = std::make_shared<media::entities::Video>(
 			window, // reference to window
 			*this, // reference to scene

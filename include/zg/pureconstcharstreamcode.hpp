@@ -1,5 +1,6 @@
 #pragma once
-#include <zg/system/Budget.hpp>
+#include <zg/system/headerplujplusdefines.hpp>
+#include <chrono>
 /*keys pressed and for a peaceful const purpose
 
 */
@@ -9,6 +10,7 @@ struct peaceccsc
                                 virtual ~peaceccsc() = default;
     // template<T>
     // virtual T now();
-    LD_REAL now() { return NANO_TIMEPOINT_CAST(SYS_CLOCK::now()).time_since_epoch().count(); };
-    L_LREAL now() { return NANO_TIMEPOINT_CAST(SYS_CLOCK::now()).time_since_epoch().count(); };
+
+    static LD_REAL now() { return NANO_TIMEPOINT_CAST(SYS_CLOCK::now()).time_since_epoch().count(); }
 };
+#define NOT_GONNA_JO_THIS_THIS_JONE(thingypeacemode) (void*)1;
