@@ -9,18 +9,25 @@ Uses CMake for it's build system and comes with some included tests
 ### Cloning
 
 ```bash
-git clone git@github.com:Zeungine/Zeungine.git --recursive
+git clone git@github.com:Zeungine/Zeungine.git
 ```
 
-### Dependencies
+### Build Dependencies
+
 
 ###### All platforms
 
-`cmake`
+ - `cmake` and `ninja` are required in your path
+ - run configure and build, as user s, and, install as an admin
 
 ###### Windows
 
-`Visual Studio 2022` or newer for MSVC
+ - `Visual Studio 2022` or newer for MSVC
+ - Run all commands inside 'xXX Native Tools Command Prompt for VS20XX'
+ - also, required for swiftshader dependency, run once, as admin,
+```bash
+powershell -Command Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem -Name LongPathsEnabled -Value 1
+```
 
 ###### Linux
 
@@ -28,24 +35,24 @@ git clone git@github.com:Zeungine/Zeungine.git --recursive
 apt install libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev
 ```
 
-also, you may need these libs to build some of the vendor examples
-
-```bash
-apt install libxinerama-dev libxcursor-dev libxi-dev
-```
-
 ###### MacOS
 
-`XCode` for `clang` compiler
-`cmake`: `brew install cmake`
+ - *XCode* for `clang` compiler
+ - `brew install cmake`
 
-
-### Building
-
-Either use your preferred IDE of choice, or run the following commands to build
+#### Compiling, Linking, Installing Dependencies (only need to do this as often as deps are updated)
 
 ```bash
-cmake -B build .
+cd Zeungine/cmake/Dependencies
+cmake -B build -GNinja
+cmake --build build
+```
+
+### Compiling Zeungine (library, tests and editor)
+
+```bash
+cd Zeungine
+cmake -B build -GNinja
 cmake --build build
 ```
 
@@ -56,6 +63,12 @@ ctest --test-dir build --rerun-failed -VV -C Debug
 ```
 
 ### Usage
+
+###### zedit
+
+Create and load projects using `zedit` (scene, hotreloader) (should be in path)
+
+###### some sample codes
 
 Cube Demo
 ```cpp
@@ -97,7 +110,7 @@ int main()
 }
 ```
 
-event on update (whilepressed@winloop) window keypresses and move an entity
+###### event on update (whilepressed@winloop) window keypresses and move an entity
 
 ```cpp
 zg::EventIdentifier leftKeyPressID = window.addKeyUpdateHandler(20, [&]{
