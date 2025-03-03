@@ -63,6 +63,10 @@ zg_setup_target(lunasvg SHARED
 	${ZG_LIB_INSTALL_PREFIX}
 	${LIB_PREFIX} lunasvg ${SHARED_LIB_SUFFIX}
 	"")
+zg_setup_target(plutovg SHARED
+	${ZG_LIB_INSTALL_PREFIX}
+	${LIB_PREFIX} plutovg ${SHARED_LIB_SUFFIX}
+	"")
 zg_setup_target(glm STATIC
 	${ZG_LIB_INSTALL_PREFIX}
 	${LIB_PREFIX} glm ${STATIC_LIB_SUFFIX}

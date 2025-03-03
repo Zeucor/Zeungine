@@ -126,7 +126,8 @@ install(FILES ${lunasvg_SOURCE_DIR}/include/lunasvg.h
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 #add new targets to enj
 install(TARGETS
-    freetype lunasvg glm
+    freetype lunasvg plutovg
+    glm
     shaderc_shared
     glslang SPIRV-Tools-shared
     vk_swiftshader vk_device vk_wsi vk_system vk_pipeline

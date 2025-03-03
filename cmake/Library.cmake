@@ -45,7 +45,7 @@ target_link_libraries(zeungine shaderc glslang SPIRV-Tools-shared)
 
 target_link_libraries(zeungine avcodec avdevice avfilter avformat avutil swresample swscale)
 
-target_link_libraries(zeungine lunasvg)
+target_link_libraries(zeungine lunasvg plutovg)
 
 target_link_libraries(zeungine freetype)
 
