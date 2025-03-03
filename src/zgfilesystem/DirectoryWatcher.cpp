@@ -85,29 +85,29 @@ STANDARD::vector<STANDARD::pair<DirectoryWatcher::ChangeType, STANDARD::filesyst
 		}
 	}
 #elif MACOS
-	int kq = kqueue();
-	if (kq == -1)
-		throw STANDARD::runtime_error("Failed to create kqueue.");
+	// int kq = kqueue();
+	// if (kq == -1)
+	// 	throw STANDARD::runtime_error("Failed to create kqueue.");
 
-	int dirFD = open(watchPath.c_str(), O_RDONLY);
-	if (dirFD == -1)
-	{
-		close(kq);
-		throw STANDARD::runtime_error("Failed to open directory.");
-	}
+	// int dirFD = open(watchPath.c_str(), O_RDONLY);
+	// if (dirFD == -1)
+	// {
+	// 	close(kq);
+	// 	throw STANDARD::runtime_error("Failed to open directory.");
+	// }
 
-	struct kevent change;
-	EV_SET(&change, dirFD, EVFILT_VNODE, EV_ADD | EV_ENABLE | EV_CLEAR,
-				 NOTE_WRITE | NOTE_EXTEND | NOTE_ATTRIB | NOTE_DELETE | NOTE_RENAME, 0, nullptr);
+	// struct kevent change;
+	// EV_SET(&change, dirFD, EVFILT_VNODE, EV_ADD | EV_ENABLE | EV_CLEAR,
+	// 			 NOTE_WRITE | NOTE_EXTEND | NOTE_ATTRIB | NOTE_DELETE | NOTE_RENAME, 0, nullptr);
 
-	struct kevent event;
-	while (kevent(kq, &change, 1, &event, 1, nullptr) > 0)
-	{
-		changed(ChangeType::Modified, watchPath);
-	}
+	// struct kevent event;
+	// while (kevent(kq, &change, 1, &event, 1, nullptr) > 0)
+	// {
+	// 	changes.push_back({ChangeType::Modified, watchPath});
+	// }
 
-	close(dirFD);
-	close(kq);
+	// close(dirFD);
+	// close(kq);
 #endif
 	return changes;
 }
