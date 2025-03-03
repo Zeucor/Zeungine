@@ -214,7 +214,7 @@ void GLRenderer::swapBuffers()
 	[(NSOpenGLContext*)macWindow.glContext flushBuffer];
 }
 #endif
-#if defined(USE_VULKAN)
+// #if defined(USE_VULKAN)
 void VulkanRenderer::swapBuffers()
 {
 	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))
@@ -268,7 +268,7 @@ void VulkanRenderer::swapBuffers()
 		}
 	}
 }
-#endif
+// #endif
 void MacOSWindow::destroy()
 {
 #ifdef USE_GL
