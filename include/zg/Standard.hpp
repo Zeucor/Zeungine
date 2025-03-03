@@ -34,6 +34,7 @@
 #include <mach-o/dyld.h>
 #include <sys/event.h>
 #include <sys/types.h>
+#elif defined(__linux__)
 #include <sys/inotify.h>
 #endif
 #include <zg/glm.hpp>
