@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 include(cmake/InstallPrefix.cmake)
-project(Zeungine VERSION 0.2.1)
+project(Zeungine VERSION 0.2.2)
 set(CMAKE_CXX_STANDARD 20)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(cmake/PlatformSetup.cmake)
