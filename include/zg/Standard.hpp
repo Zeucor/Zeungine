@@ -34,10 +34,6 @@
 #include <mach-o/dyld.h>
 #include <sys/event.h>
 #include <sys/types.h>
-#include <unistd.h>
-#elif defined(__linux__)
-#include <sys/inotify.h>
-#include <unistd.h>
 #endif
 #include <zg/glm.hpp>
 #if defined(__linux) || defined(__APPLE__)
@@ -45,6 +41,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/inotify.h>
 #endif
 // learn from a**<:._.:>
 #define STANDARD std
