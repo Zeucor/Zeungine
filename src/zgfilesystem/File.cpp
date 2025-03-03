@@ -145,7 +145,7 @@ STANDARD::filesystem::path File::getProgramDirectoryPath()
 	char path[MAX_PATH];
 	GetModuleFileNameA(NULL, path, MAX_PATH);
 	exePath = path;
-#elif defined(__APPLE__)
+#elif defined(MACOS)
 	char path[1024];
 	uint32_t size = sizeof(path);
 	if (_NSGetExecutablePath(path, &size) == 0)

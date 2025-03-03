@@ -2,7 +2,7 @@
 #include <zg/Standard.hpp>
 namespace zg::system
 {
-#if defined(__linux) || defined(__APPLE__)
+#if defined(__linux) || defined(MACOS)
 #define IOHandle int
 #define IOProfile termios
 #elif defined(_WIN32)

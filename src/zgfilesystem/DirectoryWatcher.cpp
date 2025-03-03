@@ -84,7 +84,7 @@ STANDARD::vector<STANDARD::pair<DirectoryWatcher::ChangeType, STANDARD::filesyst
 			}
 		}
 	}
-#elif __APPLE__
+#elif MACOS
 	int kq = kqueue();
 	if (kq == -1)
 		throw STANDARD::runtime_error("Failed to create kqueue.");

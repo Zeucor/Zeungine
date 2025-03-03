@@ -9,7 +9,7 @@
 #ifdef _WIN32
 #include <zg/SharedLibrary.hpp>
 #endif
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(MACOS)
 #include <dlfcn.h>
 #endif
 #ifdef __linux__
@@ -30,7 +30,7 @@ void *getProc(const char *name)
 		return opengl32Library.getProc<void *>(name);
 	}
 	return p;
-#elif defined(__linux__) || defined(__APPLE__)
+#elif defined(__linux__) || defined(MACOS)
 	return dlsym(RTLD_DEFAULT, name);
 #endif
 }

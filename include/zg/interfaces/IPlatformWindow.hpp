@@ -38,7 +38,7 @@ namespace zg
 #ifdef _WIN32
 		selected = WINDOW_TYPE_WIN32;
 #endif
-#ifdef __APPLE__
+#ifdef MACOS
 		selected = WINDOW_TYPE_MACOS;
 #endif
 #if defined(IOS)

@@ -198,7 +198,7 @@ void VulkanRenderer::createInstance()
 			break;
 		}
 	}
-#if defined(__APPLE__)
+#if defined(MACOS)
 	if (!fallbackToSwiftshader)
 	{
 		extensions.push_back("VK_KHR_portability_enumeration");
@@ -249,7 +249,7 @@ void VulkanRenderer::setupPFNs()
 #ifdef __linux__
 	VK_INSTANCE(_vkCreateXcbSurfaceKHR, PFN_vkCreateXcbSurfaceKHR, "vkCreateXcbSurfaceKHR");
 	VK_INSTANCE(_vkCreateWaylandSurfaceKHR, PFN_vkCreateWaylandSurfaceKHR, "vkCreateWaylandSurfaceKHR");
-#elif defined(__APPLE__)
+#elif defined(MACOS)
 	VK_INSTANCE(_vkCreateMacOSSurfaceMVK, PFN_vkCreateMacOSSurfaceMVK, "vkCreateMacOSSurfaceMVK");
 	VK_INSTANCE(_vkCreateHeadlessSurfaceEXT, PFN_vkCreateHeadlessSurfaceEXT, "vkCreateHeadlessSurfaceEXT");
 #elif defined(_WIN32)
@@ -463,7 +463,7 @@ void VulkanRenderer::createSurface()
 	{
 		throw std::runtime_error("VulkanRenderer-createSurface: failed to create Xlib surface");
 	}
-#elif defined(__APPLE__)
+#elif defined(MACOS)
 	if (fallbackToSwiftshader)
 	{
 		VkHeadlessSurfaceCreateInfoEXT surfaceCreateInfo{};
@@ -1163,7 +1163,7 @@ void VulkanRenderer::postRenderPass()
 	callDestroyAtRenderPassEndOrDestroy();
 	return;
 }
-#ifndef __APPLE__
+#ifndef MACOS
 void VulkanRenderer::swapBuffers()
 {
 	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))

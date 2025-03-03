@@ -59,7 +59,7 @@ void Window::run()
 #if defined(_WIN32) || defined(__linux__)
 	windowThread = std::make_shared<std::thread>(&Window::startWindow, this);
 	windowThread->join();
-#elif defined(__APPLE__)
+#elif defined(MACOS)
 	startWindow();
 #endif
 }

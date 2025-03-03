@@ -6,7 +6,7 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/textures/TextureFactory.hpp>
 #include <zg/vaos/VAOFactory.hpp>
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(MACOS)
 #include <dlfcn.h>
 #endif
 #ifdef _WIN32

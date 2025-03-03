@@ -9,7 +9,7 @@
 #define VK_USE_PLATFORM_ANDROID_KHR
 #elif defined(IOS)
 #define VK_USE_PLATFORM_IOS_MVK
-#elif defined(__APPLE__)
+#elif defined(MACOS)
 #define VK_USE_PLATFORM_MACOS_MVK
 #elif defined(_WIN32)
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -122,7 +122,7 @@ namespace zg
 #ifdef __linux__
 		PFN_vkCreateXcbSurfaceKHR _vkCreateXcbSurfaceKHR;
 		PFN_vkCreateWaylandSurfaceKHR _vkCreateWaylandSurfaceKHR;
-#elif defined(__APPLE__)
+#elif defined(MACOS)
 		PFN_vkCreateMacOSSurfaceMVK _vkCreateMacOSSurfaceMVK;
 		PFN_vkCreateHeadlessSurfaceEXT _vkCreateHeadlessSurfaceEXT;
 #elif defined(_WIN32)

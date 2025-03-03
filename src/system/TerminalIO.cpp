@@ -3,14 +3,14 @@
 #include <zg/system/TerminalIO.hpp>
 using namespace zg::system;
 TeIO::TeIO(bool outIsErr)
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(MACOS)
 		:
 		m_read(STDIN_FILENO), m_write(outIsErr ? STDERR_FILENO : STDOUT_FILENO)
 #elif defined(_WIN32)
 		// m_read(stdin), m_write(outIsErr ? stderr : stdout)
 #endif
 {
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(MACOS)
 	tcgetattr(m_read, &m_originalProfile);
 #elif defined(_WIN32)
 #endif
@@ -18,7 +18,7 @@ TeIO::TeIO(bool outIsErr)
 }
 TeIO::~TeIO()
 {
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(MACOS)
 	tcsetattr(m_read, TCSANOW, &m_originalProfile);
 #elif defined(_WIN32)
 #endif

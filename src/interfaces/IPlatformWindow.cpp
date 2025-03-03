@@ -3,7 +3,7 @@
 #ifdef _WIN32
 #include <zg/windows/WIN32Window.hpp>
 #endif
-#ifdef __APPLE__
+#ifdef MACOS
 #include <zg/windows/MacOSWindow.hpp>
 #endif
 #ifdef __linux__
@@ -23,7 +23,7 @@ IPlatformWindow *zg::createPlatformWindow()
     }
     else if (SELECTED_WINDOW_TYPE == WINDOW_TYPE_MACOS)
     {
-#ifdef __APPLE__
+#ifdef MACOS
         return new MacOSWindow();
 #endif
     }
