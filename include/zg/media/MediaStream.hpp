@@ -18,7 +18,7 @@ namespace zg::media
 #define CODEC_INDEX_NB 5
 	struct MediaStream
 	{
-		Window& window;
+		Window& streamWindow;
 		AVIOContext* ioContext = 0;
 		AVFormatContext* formatContext = 0;
 		MediaStream(Window& _window);

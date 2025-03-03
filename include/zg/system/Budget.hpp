@@ -39,7 +39,7 @@ namespace zg::budget
 	{
 		virtual ~IBudget() = default;
 		virtual bool begin() = 0;
-		virtual bool tick(uint32_t tickID) = 0;
+		virtual bool tick(bool true_if_false_or_true_if_true_and_now_at_or_after_next_budget) = 0;
 		virtual SecondsDuration getCurrentBudget() = 0;
 		virtual SecondsDuration getBeginningBudget() = 0;
 		virtual SecondsDuration durationToWaitTilNextBudget() = 0;
@@ -97,10 +97,10 @@ struct FBudget;
 
 	public:
 		ZBudget(const SecondsDuration BudgetTime, const size_t historySize = 1, bool instantStart = false,
-						bool sleepAtSleep = false, std::string_view budgetName = "", bool serializeHistory = false,
+						bool sleepAtSleep = false, const std::string& budgetName = "", bool serializeHistory = false,
 						std::filesystem::path serializeDirectory = {}) :
 				m_BudgetTime(BudgetTime), m_serializeHistory(serializeHistory), m_serializeDirectory(serializeDirectory),
-				m_chunkID(calculateChunkID()), m_historySize(historySize), m_instantStart(instantStart),
+				m_chunkID(calculateChunkID()), m_budgetName(budgetName), m_historySize(historySize), m_instantStart(instantStart),
 				m_sleeponsleep(sleepAtSleep), m_budgetCountNs(m_BudgetTime.count())
 		{
 			m_IsBeginningZgBudget = m_BudgetTime;
@@ -128,15 +128,20 @@ struct FBudget;
 			auto& history_tuple = m_History.front();
 			auto& begin = std::get<0>(history_tuple);
 			auto __now = SYS_CLOCK::now(); 
-			if (__now.time_since_epoch().count() >= m_IsNextBudgetWakeAtTimePoint.time_since_epoch().count())
+			if (m_instantStart && !m_sleeponsleep)
 			{
-				begin = __now;
-				return true;
+				if (__now.time_since_epoch().count() >= m_IsNextBudgetWakeAtTimePointCount)
+				{
+					begin = __now;
+					return true;
+				}
 			}
-			return false;
+			auto& zslept = std::get<4>(history_tuple);
+			return zslept;
 		}
-		bool tick(uint32_t tickID = 0) override
+		bool tick(bool true_if_false_or_true_if_true_and_now_at_or_after_next_budget = false) override
 		{
+			auto t_if = true_if_false_or_true_if_true_and_now_at_or_after_next_budget;
 			std::unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
 			auto& seconds = std::get<2>(history_tuple);
@@ -148,9 +153,14 @@ struct FBudget;
 			{
 				get<3>(history_tuple).push({mid, seconds});
 			}
-			if (tickID)
-				auto& __bool__ = m_tickIDbools[tickID];
-				// pol.ing.dis.
+			if (t_if)
+			{
+				if (mid.time_since_epoch().count() >= m_IsNextBudgetWakeAtTimePointCount)
+				{
+					return true;
+				}
+				return false;//   |  :.`*
+			}
 			return true;
 		}
 		SecondsDuration getCurrentBudget() override
@@ -218,12 +228,14 @@ struct FBudget;
 		bool m_serializeHistory = false;
 		std::filesystem::path m_serializeDirectory;
 		size_t m_chunkID = 0;
+		std::string m_budgetName;
 		size_t m_historySize = 38;
 		// map<CreatorID, unique_ptr<deque<pair<CreatorID, glm::vec4>>>> creatorSpaceTimeDoubleEndejQueue;
 		// unordered_2multiset8<CreatorID> realCreatorIDSet
 		SecondsDuration m_IsZgBudget;
 		SecondsDuration m_IsBeginningZgBudget;
 		TimePoint m_IsNextBudgetWakeAtTimePoint;
+		LD_REAL m_IsNextBudgetWakeAtTimePointCount = 0;
 		size_t m_budgetCountNs;
 		bool m_sleeponsleep;
 		using HistoryItem = std::tuple<TimePoint, TimePoint, SecondsDuration, std::queue<std::pair<TimePoint, SecondsDuration>>, bool>;
@@ -232,9 +244,8 @@ struct FBudget;
 		std::mutex mTx;
 		bool m_instantStart;
 		bool m_wakezwakez = false;
-		std::unordered_map<uint32_t, bool> m_tickIDbools;
-		bool m_workedOvertime = false;
-	private:
+		bool m_workedOvertime = true;
+	private:	
 		size_t calculateChunkID()
 		{
 			if (!m_serializeHistory)
@@ -304,6 +315,7 @@ struct FBudget;
 			auto nsQuantized = SecondsDuration(m_budgetCountNs - (__now.time_since_epoch().count() % m_budgetCountNs));
 			m_IsZgBudget = nsQuantized;
 			m_IsNextBudgetWakeAtTimePoint = NANO_TIMEPOINT_CAST(__now + m_IsZgBudget);
+			m_IsNextBudgetWakeAtTimePointCount = m_IsNextBudgetWakeAtTimePoint.time_since_epoch().count();
 			return __now;
 		}
 	};

@@ -22,6 +22,7 @@ namespace zg::media
 		SwrContext* swrContext = 0;
 		AVFrame* audioFrame = 0;
 		zg::td::queue<float> sampleQueue;
+		bool started = false;
 
 	public:
 		AudioDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream,

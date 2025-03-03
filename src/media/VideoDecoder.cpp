@@ -1,5 +1,5 @@
-#include <zg/media/VideoDecoder.hpp>
 #include <zg/media/MediaStream.hpp>
+#include <zg/media/VideoDecoder.hpp>
 using namespace zg::media;
 VideoDecoder::VideoDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters,
 													 AVStream* stream, const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer,
@@ -26,7 +26,8 @@ size_t VideoDecoder::open()
 	}
 	swsContext = sws_getContext(codecContext->width, codecContext->height, codecContext->pix_fmt, codecContext->width,
 															codecContext->height, AV_PIX_FMT_RGBA, SWS_BILINEAR, 0, 0, 0);
-	rgbaBufferSize = av_image_get_buffer_size(AV_PIX_FMT_RGBA, codecContext->width, codecContext->height, 1);
+															rgbaBufferSize = av_image_get_buffer_size(AV_PIX_FMT_RGBA, codecContext->width, codecContext->height, 1);
+	std::cerr << "\trgbaBufferSize: " << rgbaBufferSize << std::endl;
 	rgbaBuffer = (uint8_t*)av_malloc(rgbaBufferSize * sizeof(uint8_t));
 	rgbaFrame = av_frame_alloc();
 	av_image_fill_arrays(rgbaFrame->data, rgbaFrame->linesize, rgbaBuffer, AV_PIX_FMT_RGBA, codecContext->width,
@@ -51,6 +52,17 @@ size_t VideoDecoder::close()
 }
 bool VideoDecoder::fillNextFrame(std::shared_ptr<textures::Texture>& texturePointer)
 {
+	auto& frameQueueRef = *frameQueuePointer;
+	AVFrame* currentAVFrame = 0;
+	{
+		std::lock_guard lock(*mutexPointer);
+		if (frameQueueRef.empty())
+			return false;
+		currentAVFrame = frameQueueRef.front();
+		frameQueueRef.pop();
+	}
+	sws_scale(swsContext, (uint8_t const* const*)currentAVFrame->data, currentAVFrame->linesize, 0, codecContext->height,
+						rgbaFrame->data, rgbaFrame->linesize);
 	for (int i = 0; i < codecContext->height / 2; ++i)
 	{
 		uint8_t* rowTop = rgbaBuffer + i * rowBytes;
@@ -61,7 +73,8 @@ bool VideoDecoder::fillNextFrame(std::shared_ptr<textures::Texture>& texturePoin
 	}
 	if (!texturePointer)
 	{
-		texturePointer = std::make_shared<textures::Texture>(mediaStream.window, glm::ivec4(codecContext->width, codecContext->height, 1, 0), (void*)rgbaBuffer);
+		texturePointer = std::make_shared<textures::Texture>(
+			mediaStream.streamWindow, glm::ivec4(codecContext->width, codecContext->height, 1, 0), (void*)rgbaBuffer);
 	}
 	else
 	{

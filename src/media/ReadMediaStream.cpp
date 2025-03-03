@@ -5,7 +5,7 @@
 using namespace zg::media;
 ReadMediaStream::ReadMediaStream(Window& _window, const std::string& uri) : MediaStream(_window), uri(uri) { open(); }
 ReadMediaStream::ReadMediaStream(Window& _window, const std::string& uri,
-																	 const std::shared_ptr<zg::interfaces::IFile>& filePointer) :
+																 const std::shared_ptr<zg::interfaces::IFile>& filePointer) :
 		MediaStream(_window), uri(uri), filePointer(filePointer)
 {
 	open();
@@ -83,6 +83,15 @@ size_t ReadMediaStream::close()
 	avformat_close_input(&formatContext);
 	return 0;
 }
+void ReadMediaStream::startAudio()
+{
+	auto& audioTuple = coderStreams[CODEC_INDEX_AUDIO];
+	auto audio1xCoder = std::dynamic_pointer_cast<AudioDecoder>(std::get<2>(audioTuple));
+	auto audioDecoder = audio1xCoder.get();
+	if (!audioDecoder)
+		return;
+	audioDecoder->started = true;
+}
 void ReadMediaStream::fillNextAudioFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount)
 {
 	auto& audioTuple = coderStreams[CODEC_INDEX_AUDIO];
@@ -90,7 +99,7 @@ void ReadMediaStream::fillNextAudioFrames(float* frames, const int32_t& channelC
 	auto audioDecoder = audio1xCoder.get();
 	if (!audioDecoder)
 		return;
-    audioDecoder->fillNextFrames(frames, channelCount, frameCount);
+	audioDecoder->fillNextFrames(frames, channelCount, frameCount);
 }
 void ReadMediaStream::fillNextVideoFrame(std::shared_ptr<textures::Texture>& texturePointer)
 {
@@ -99,7 +108,7 @@ void ReadMediaStream::fillNextVideoFrame(std::shared_ptr<textures::Texture>& tex
 	auto videoDecoder = video1xCoder.get();
 	if (!videoDecoder)
 		return;
-    videoDecoder->fillNextFrame(texturePointer);
+	videoDecoder->fillNextFrame(texturePointer);
 }
 NANOSECONDS_DURATION ReadMediaStream::getVideoFrameDuration()
 {
@@ -144,7 +153,10 @@ AVStream* ReadMediaStream::findAVStream(int i, int32_t streamIndex)
 	}
 	return formatContext->streams[streamIndex];
 }
-std::shared_ptr<I1xCoder> ReadMediaStream::construct1xCoder(int i, int32_t streamIndex, AVStream* stream, const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer, const std::shared_ptr<std::mutex>& mutexPointer)
+std::shared_ptr<I1xCoder>
+ReadMediaStream::construct1xCoder(int i, int32_t streamIndex, AVStream* stream,
+																	const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer,
+																	const std::shared_ptr<std::mutex>& mutexPointer)
 {
 	const AVCodec* codec = 0;
 	AVCodecParameters* codecParameters = 0;
@@ -242,8 +254,8 @@ void ReadMediaStream::demuxer()
 				auto audioSwrFrame = av_frame_alloc();
 				audioSwrFrame->format = AV_SAMPLE_FMT;
 				audioSwrFrame->ch_layout = AV_CH;
-				audioSwrFrame->sample_rate = window.audioEngine.sampleRate;
-				audioSwrFrame->nb_samples = window.audioEngine.frameSize;
+				audioSwrFrame->sample_rate = streamWindow.audioEngine.sampleRate;
+				audioSwrFrame->nb_samples = streamWindow.audioEngine.frameSize;
 				swr_convert_frame(audioDecoder->swrContext, audioSwrFrame, audioDecoder->audioFrame);
 				audioSwrFrame->pts = audioDecoder->audioFrame->pts;
 				audioMutex->lock();
@@ -254,10 +266,11 @@ void ReadMediaStream::demuxer()
 		else if (packet->stream_index == videoStreamIndex)
 		{
 			ret = avcodec_send_packet(videoDecoder->codecContext, packet);
-			AVFrame* videoFrame = av_frame_alloc();
+			if (!videoDecoder->videoFrame)
+				videoDecoder->videoFrame = av_frame_alloc();
 			while (ret >= 0)
 			{
-				ret = avcodec_receive_frame(videoDecoder->codecContext, videoFrame);
+				ret = avcodec_receive_frame(videoDecoder->codecContext, videoDecoder->videoFrame);
 				if (ret == AVERROR(EAGAIN))
 					break;
 				else if (ret == AVERROR_EOF)
@@ -268,8 +281,10 @@ void ReadMediaStream::demuxer()
 					break;
 				}
 				videoMutex->lock();
-				videoFrameQueue->push(videoFrame);
+				videoFrameQueue->push(videoDecoder->videoFrame);
+				videoDecoder->videoFrame = 0;
 				videoMutex->unlock();
+				break;
 			}
 		}
 		av_packet_unref(packet);

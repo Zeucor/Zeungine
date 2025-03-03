@@ -17,7 +17,7 @@ size_t AudioDecoder::open()
 		return 0;
 	auto AV_CH = MAToAV_ChannelLayout();
 	auto AV_SAMPLE_FMT = MAToAV_SampleFormat();
-	auto& sampleRate = mediaStream.window.audioEngine.sampleRate;
+	auto& sampleRate = mediaStream.streamWindow.audioEngine.sampleRate;
 	swr_alloc_set_opts2(&swrContext, &AV_CH, AV_SAMPLE_FMT, sampleRate, &codecContext->ch_layout,
 											codecContext->sample_fmt, codecContext->sample_rate, 0, 0);
 	if (!swrContext || swr_init(swrContext) < 0)
@@ -45,7 +45,7 @@ size_t AudioDecoder::close()
 }
 AVChannelLayout AudioDecoder::MAToAV_ChannelLayout()
 {
-	switch (mediaStream.window.audioEngine.outputChannels)
+	switch (mediaStream.streamWindow.audioEngine.outputChannels)
 	{
 	case 1:
 		return AV_CHANNEL_LAYOUT_MONO;
@@ -63,7 +63,7 @@ AVChannelLayout AudioDecoder::MAToAV_ChannelLayout()
 }
 AVSampleFormat AudioDecoder::MAToAV_SampleFormat()
 {
-	switch (mediaStream.window.audioEngine.format)
+	switch (mediaStream.streamWindow.audioEngine.format)
 	{
 	case ma_format_f32:
 		return AV_SAMPLE_FMT_FLT;
@@ -77,6 +77,8 @@ AVSampleFormat AudioDecoder::MAToAV_SampleFormat()
 }
 void AudioDecoder::fillNextFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount)
 {
+	if (!started)
+		return;
 	auto& framesQueue = *frameQueuePointer;
 	auto& audioMutex = *mutexPointer;
 	uint32_t outputSamples = 0;

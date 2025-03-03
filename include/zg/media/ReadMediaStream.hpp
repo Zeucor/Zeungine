@@ -15,6 +15,7 @@ namespace zg::media
 		ReadMediaStream(Window& _window, const std::string& uri);
 		ReadMediaStream(Window& _window, const std::string& uri, const std::shared_ptr<interfaces::IFile>& filePointer);
 		~ReadMediaStream();
+		void startAudio();
 		void fillNextAudioFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount);
 		void fillNextVideoFrame(std::shared_ptr<textures::Texture>& texture);
 		NANOSECONDS_DURATION getVideoFrameDuration() override;

@@ -20,6 +20,7 @@ namespace zg::media
 		AVStream* stream = 0;
 		AVCodecContext* codecContext = 0;
 		SwsContext* swsContext = 0;
+		AVFrame* videoFrame = 0;
 		AVFrame* rgbaFrame = 0;
 		uint8_t* rgbaBuffer = 0;
 		uint32_t rgbaBufferSize = 0;

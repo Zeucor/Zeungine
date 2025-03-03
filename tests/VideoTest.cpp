@@ -9,12 +9,13 @@ struct VideoScene : Scene
 	long double deltaTimeCounter = 0;
 	zg::EventIdentifier qPressID = 0;
 	VideoScene(Window& _window) :
-			Scene(_window, {0, 10, 10}, // camera position
-						glm::normalize(glm::vec3(0, -1, -1)), // camera direction
+			Scene(_window, {0, 0, 1}, // camera position
+						glm::normalize(glm::vec3(0, 0, -1)), // camera direction
 						{2, 2}) // using NDC
 	{
 		clearColor = {1, 0, 1, 1};
-		auto kalimbaPath = zgfilesystem::File::getProgramDirectoryPath() / "music" / "Kalimba.mp3";
+		// auto mediaPath = zgfilesystem::File::getProgramDirectoryPath() / "music" / "Kalimba.mp3";
+		auto mediaPath = zgfilesystem::File::getProgramDirectoryPath() / "videos" / "ForBiggerJoyrides.mp4";
 		auto video = std::make_shared<media::entities::Video>(
 			window, // reference to window
 			*this, // reference to scene
@@ -22,8 +23,8 @@ struct VideoScene : Scene
 			glm::vec3(0, 0, 0), // rotation
 			glm::vec3(1, 1, 1), // scale
 			glm::vec2(2, 2), // cube size
-			kalimbaPath.string(),
-			std::make_shared<zgfilesystem::File>(kalimbaPath, enums::EFileLocation::Absolute, "r"));
+			mediaPath.string(),
+			std::make_shared<zgfilesystem::File>(mediaPath, enums::EFileLocation::Absolute, "r"));
 		addEntity(video);
 		qPressID = window.addKeyPressHandler('q',
 																				 [&](auto pressed)
@@ -40,7 +41,7 @@ struct VideoScene : Scene
 };
 int main()
 {
-	Window window("Cube Test", 1024, 768, -1, -1, true, false);
+	Window window("Video Test", 1024, 768, -1, -1, true, false);
 	window.runOnThread([](auto& window) { window.setScene(std::make_shared<VideoScene>(window)); });
 	window.run();
 }
