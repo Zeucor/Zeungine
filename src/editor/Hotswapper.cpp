@@ -10,8 +10,7 @@
 using namespace zg::editor::hs;
 using namespace zg::system;
 NANOSECONDS_DURATION hotswapperBudgetDuration = NANOSECONDS_DURATION((1.0) * nano::den);
-zg::budget::ZBudget hotswapperZBudget(hotswapperBudgetDuration, 10, false, false, "hotswapperBudget", true,
-																			zgfilesystem::File::getProgramDirectoryPath() / "budgets" / "hotswapperBudget");
+zg::budget::ZBudget hotswapperZBudget(hotswapperBudgetDuration, 10, false, false, "hotswapperBudget");
 Hotswapper::Hotswapper(const std::filesystem::path& directory, EditorScene& editorScene) :
 		running(true), directory(directory), editorScene(editorScene),
 		updateThread(std::make_shared<std::thread>(&Hotswapper::update, this))
