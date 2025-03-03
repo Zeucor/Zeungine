@@ -45,13 +45,13 @@ struct ExampleScene : Scene
 											 {
 			if (pressed)
 				window.close(); });
-		window.setXY(320, 320);
 	}
 	~ExampleScene()
 	{
 		window.removeKeyPressHandler('m', mPressID);
 		window.removeKeyPressHandler('n', nPressID);
 		window.removeKeyPressHandler('r', rPressID);
+		window.removeKeyPressHandler('q', qPressID);
 	}
 	void update() override
 	{

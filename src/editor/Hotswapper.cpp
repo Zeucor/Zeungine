@@ -9,8 +9,8 @@
 #include <zg/zgfilesystem/File.hpp>
 using namespace zg::editor::hs;
 using namespace zg::system;
-SECONDS_DURATION hotswapperBudgetDuration = SECONDS_DURATION((1.0) * nano::den);
-zg::budget::ZBudget hotswapperZBudget(10, hotswapperBudgetDuration, false, false, "hotswapperBudget", true,
+NANOSECONDS_DURATION hotswapperBudgetDuration = NANOSECONDS_DURATION((1.0) * nano::den);
+zg::budget::ZBudget hotswapperZBudget(hotswapperBudgetDuration, 10, false, false, "hotswapperBudget", true,
 																			zgfilesystem::File::getProgramDirectoryPath() / "budgets" / "hotswapperBudget");
 Hotswapper::Hotswapper(const std::filesystem::path& directory, EditorScene& editorScene) :
 		running(true), directory(directory), editorScene(editorScene),
@@ -93,9 +93,6 @@ void Hotswapper::update()
 			// if (currentCommand)
 			// 	currentCommand->kill();
 		}
-		hotswapperZBudget.tick();
-		std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::seconds, REAL>(
-			SECONDS_DURATION(zg::crypto::Random::value<REAL>(0.021, 0.042))));
 		hotswapperZBudget.end();
 		hotswapperZBudget.sleep();
 	}

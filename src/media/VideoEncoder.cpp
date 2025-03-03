@@ -6,6 +6,7 @@ VideoEncoder::VideoEncoder(MediaStream& mediaStream, const AVCodec* codec, AVCod
 		I1xCoder(frameQueuePointer, mutexPointer), mediaStream(mediaStream), codec(codec), codecParameters(codecParameters),
 		stream(stream)
 {
+	open();
 }
 size_t VideoEncoder::open() { return 1; }
 size_t VideoEncoder::code() { return 1; }

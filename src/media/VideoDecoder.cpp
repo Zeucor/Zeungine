@@ -1,4 +1,5 @@
 #include <zg/media/VideoDecoder.hpp>
+#include <zg/media/MediaStream.hpp>
 using namespace zg::media;
 VideoDecoder::VideoDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters,
 													 AVStream* stream, const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer,
@@ -6,6 +7,7 @@ VideoDecoder::VideoDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCod
 		I1xCoder(frameQueuePointer, mutexPointer), mediaStream(mediaStream), codec(codec), codecParameters(codecParameters),
 		stream(stream)
 {
+	open();
 }
 size_t VideoDecoder::open()
 {
@@ -29,6 +31,14 @@ size_t VideoDecoder::open()
 	rgbaFrame = av_frame_alloc();
 	av_image_fill_arrays(rgbaFrame->data, rgbaFrame->linesize, rgbaBuffer, AV_PIX_FMT_RGBA, codecContext->width,
 											 codecContext->height, 1);
+	static constexpr int bytesPerPixel = 4;
+	rowBytes = codecContext->width * bytesPerPixel;
+	tempRow = new uint8_t[rowBytes];
+	AVRational frameRate = av_guess_frame_rate(mediaStream.formatContext, stream, 0);
+	framesPerSecond = frameRate.num / static_cast<double>(frameRate.den);
+	int64_t duration = mediaStream.formatContext->duration;
+	totalTimeSeconds = (double)duration / AV_TIME_BASE;
+	frameCount = totalTimeSeconds * framesPerSecond;
 	return 1;
 }
 size_t VideoDecoder::code() { return 1; }
@@ -36,9 +46,26 @@ size_t VideoDecoder::flush() { return 0; }
 size_t VideoDecoder::close()
 {
 	av_frame_free(&rgbaFrame);
+	delete[] tempRow;
 	return 1;
 }
-void VideoDecoder::fillTexture(textures::Texture& texture)
+bool VideoDecoder::fillNextFrame(std::shared_ptr<textures::Texture>& texturePointer)
 {
-	
+	for (int i = 0; i < codecContext->height / 2; ++i)
+	{
+		uint8_t* rowTop = rgbaBuffer + i * rowBytes;
+		uint8_t* rowBottom = rgbaBuffer + (codecContext->height - i - 1) * rowBytes;
+		memcpy(tempRow, rowTop, rowBytes);
+		memcpy(rowTop, rowBottom, rowBytes);
+		memcpy(rowBottom, tempRow, rowBytes);
+	}
+	if (!texturePointer)
+	{
+		texturePointer = std::make_shared<textures::Texture>(mediaStream.window, glm::ivec4(codecContext->width, codecContext->height, 1, 0), (void*)rgbaBuffer);
+	}
+	else
+	{
+		texturePointer->update((void*)rgbaBuffer);
+	}
+	return true;
 }

@@ -1,12 +1,19 @@
 #pragma once
 #include <zg/ffmpeg.hpp>
-#include "I1xCoder.hpp"
 #include <zg/queue.hpp>
+#include "I1xCoder.hpp"
 namespace zg::media
 {
 	struct MediaStream;
+	struct ReadMediaStream;
+	struct WriteMediaStream;
 	struct AudioDecoder : I1xCoder
 	{
+		friend MediaStream;
+		friend ReadMediaStream;
+		friend WriteMediaStream;
+
+	protected:
 		MediaStream& mediaStream;
 		const AVCodec* codec = 0;
 		AVCodecParameters* codecParameters = 0;
@@ -15,13 +22,21 @@ namespace zg::media
 		SwrContext* swrContext = 0;
 		AVFrame* audioFrame = 0;
 		zg::td::queue<float> sampleQueue;
-		AudioDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream, const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer, const std::shared_ptr<std::mutex>& mutexPointer);
+
+	public:
+		AudioDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCodecParameters* codecParameters, AVStream* stream,
+								 const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer,
+								 const std::shared_ptr<std::mutex>& mutexPointer);
+
+	private:
 		size_t open() override;
 		size_t code() override;
 		size_t flush() override;
 		size_t close() override;
+
+	protected:
 		AVChannelLayout MAToAV_ChannelLayout();
 		AVSampleFormat MAToAV_SampleFormat();
-		void fillFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount);
+		void fillNextFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount);
 	};
 } // namespace zg::media

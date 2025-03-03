@@ -4,7 +4,7 @@ namespace zgfilesystem
 {
 
 	template <>
-	size_t serialize(Serial<STANDARD::fstream, STANDARD::fstream>& serial, const QUEUE_VALUE& value)
+	size_t serialize(Serial<STANDARD::fstream, STANDARD::fstream>& serial, const QUEUE_PAIR& value)
 	{
 		serial.ot.write((const char*)&(value.first), sizeof(value.first));
 		serial.ot.write((const char*)&(value.second), sizeof(value.second));
@@ -24,7 +24,7 @@ namespace zgfilesystem
 		return 1;
 	}
 	template <>
-	size_t deserialize(Serial<STANDARD::fstream, STANDARD::fstream>& serial, QUEUE_VALUE& value)
+	size_t deserialize(Serial<STANDARD::fstream, STANDARD::fstream>& serial, QUEUE_PAIR& value)
 	{
 		serial >> value.first >> value.second;
 		return 1;
@@ -36,7 +36,7 @@ namespace zgfilesystem
 		serial >> size_;
 		for (int count = 1; count <= size_; ++count)
 		{
-			QUEUE_VALUE value;
+			QUEUE_PAIR value;
 			serial >> value;
 			que.push(value);
 		}

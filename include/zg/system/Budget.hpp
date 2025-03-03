@@ -38,8 +38,8 @@ namespace zg::budget
 	struct IBudget
 	{
 		virtual ~IBudget() = default;
-		virtual void begin() = 0;
-		virtual void tick() = 0;
+		virtual bool begin() = 0;
+		virtual bool tick(uint32_t tickID) = 0;
 		virtual SecondsDuration getCurrentBudget() = 0;
 		virtual SecondsDuration getBeginningBudget() = 0;
 		virtual SecondsDuration durationToWaitTilNextBudget() = 0;
@@ -48,25 +48,36 @@ namespace zg::budget
 		virtual void sleep() = 0;
 		virtual void wake() = 0;
 	};
-// some bbudget considerations (^options+)
-#define REAL long double
-#define CLOCK STANDARD::chrono::system_clock
-#define SECONDS STANDARD::nano
-#define CHRONO_SECONDS STANDARD::chrono::nanoseconds
-#define HISTORY_SIZE 38
-#define SECONDS_DURATION STANDARD::chrono::duration<REAL, SECONDS>
-#define DBudget zg::budget::IBudget<SECONDS_DURATION>
-#define QUEUE_VALUE STANDARD::pair<CLOCK::time_point, SECONDS_DURATION>
-#define QUEUE STANDARD::queue<QUEUE_VALUE>
-	struct FBudget;
+// some budget applications (-options+ 
+struct FBudget;
+#define LD_REAL long double
+#define L_LREAL long long
+#define DBudget zg::budget::IBudget<NANOSECONDS_DURATION>
+#define SYS_CLOCK std::chrono::system_clock
+#define CHRONO_SECONDS std::chrono::seconds
+#define NANOSECONDS std::nano
+#define CHRONO_NANOSECONDS std::chrono::nanoseconds
+#define ATTOSECONDS std::atto
+#define CHRONO_ATTOSECONDS std::chrono::attoseconds
+#define NANOSECONDS_DURATION std::chrono::duration<LD_REAL, NANOSECONDS>
+#define ATTOSECONDS_DURATION std::chrono::duration<L_LREAL, ATTOSECONDS>
+#define SECONDS_DURATION_CAST std::chrono::duration_cast<CHRONO_SECONDS, LD_REAL>
+#define NANOSECONDS_DURATION_CAST std::chrono::duration_cast<CHRONO_NANOSECONDS, LD_REAL>
+#define ATTOSECONDS_DURATION_CAST std::chrono::duration_cast<CHRONO_ATTOSECONDS, L_LREAL>
+#define NANO_TIMEPOINT std::chrono::time_point<SYS_CLOCK, CHRONO_NANOSECONDS>
+#define ATTO_TIMEPOINT std::chrono::time_point<SYS_CLOCK, CHRONO_ATTOSECONDS>
+#define NANO_TIMEPOINT_CAST std::chrono::time_point_cast<CHRONO_NANOSECONDS>
+#define ATTO_TIMEPOINT_CAST std::chrono::time_point_cast<CHRONO_ATTOSECONDS>
+#define QUEUE_PAIR std::pair<NANO_TIMEPOINT, NANOSECONDS_DURATION>
+#define QUEUE std::queue<QUEUE_PAIR>
 	/*|phase|*/
 	/**
 	 *
 	 * @brief Zeungines' evolving history implementation of DBudget
 	 *
 	 */
-	template <typename Clock = CLOCK, typename Real = REAL,
-						typename TimePoint = STANDARD::chrono::time_point<CLOCK, CHRONO_SECONDS>, typename SecondsDuration = SECONDS_DURATION>
+	template <typename Clock = SYS_CLOCK,
+						typename TimePoint = NANO_TIMEPOINT, typename SecondsDuration = NANOSECONDS_DURATION>
 	struct ZBudget : DBudget
 	{
 		friend FBudget;
@@ -75,19 +86,19 @@ namespace zg::budget
 		void zsleep()
 		{
 			auto& history_tuple = m_History.front();
-			auto& zslept = STANDARD::get<4>(history_tuple);
+			auto& zslept = std::get<4>(history_tuple);
 			if (zslept)
 				return;
-			STANDARD::unique_lock lock(mTx);
-			cv.wait_until(lock, m_IsNextBudgetWakeAtTimePoint, [&] { return wakezwakez; });
-			wakezwakez = false;
+			std::unique_lock lock(mTx);
+			cv.wait_until(lock, m_IsNextBudgetWakeAtTimePoint, [&] { return m_wakezwakez; });
+			m_wakezwakez = false;
 			zslept = true; // this only gets set once forever(y) HistoryItem
 		}
 
 	public:
-		ZBudget(const size_t historySize, const SecondsDuration BudgetTime, bool instantStart = false,
-						bool sleepAtSleep = false, STANDARD::string_view budgetName = "", bool serializeHistory = false,
-						STANDARD::filesystem::path serializeDirectory = {}) :
+		ZBudget(const SecondsDuration BudgetTime, const size_t historySize = 1, bool instantStart = false,
+						bool sleepAtSleep = false, std::string_view budgetName = "", bool serializeHistory = false,
+						std::filesystem::path serializeDirectory = {}) :
 				m_BudgetTime(BudgetTime), m_serializeHistory(serializeHistory), m_serializeDirectory(serializeDirectory),
 				m_chunkID(calculateChunkID()), m_historySize(historySize), m_instantStart(instantStart),
 				m_sleeponsleep(sleepAtSleep), m_budgetCountNs(m_BudgetTime.count())
@@ -97,6 +108,7 @@ namespace zg::budget
 			// {
 			// 	// loadChunk();
 			// }
+			setNextBudgetWakeAtTimePoint();
 			pushFrontHistory();
 		};
 		~ZBudget()
@@ -106,53 +118,62 @@ namespace zg::budget
 				// saveChunk();
 			}
 		}
-		void begin() override
+		bool begin() override
 		{
 			if (!m_instantStart && !m_sleeponsleep)
 			{
 				zsleep();
 			}
-			STANDARD::unique_lock lock(mTx);
+			std::unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
-			auto& begin = STANDARD::get<0>(history_tuple);
-			begin = CLOCK::now();
+			auto& begin = std::get<0>(history_tuple);
+			auto __now = SYS_CLOCK::now(); 
+			if (__now.time_since_epoch().count() >= m_IsNextBudgetWakeAtTimePoint.time_since_epoch().count())
+			{
+				begin = __now;
+				return true;
+			}
+			return false;
 		}
-		void tick() override
+		bool tick(uint32_t tickID = 0) override
 		{
-			STANDARD::unique_lock lock(mTx);
+			std::unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
-			auto& seconds = STANDARD::get<2>(history_tuple);
-			auto& begin = STANDARD::get<0>(history_tuple);
-			auto mid = CLOCK::now();
+			auto& seconds = std::get<2>(history_tuple);
+			auto& begin = std::get<0>(history_tuple);
+			auto mid = SYS_CLOCK::now();
 			auto nsduration = mid - begin;
 			seconds = mid - begin;
 			if (m_serializeHistory)
 			{
 				get<3>(history_tuple).push({mid, seconds});
 			}
-			return;
+			if (tickID)
+				auto& __bool__ = m_tickIDbools[tickID];
+				// pol.ing.dis.
+			return true;
 		}
 		SecondsDuration getCurrentBudget() override
 		{
-			STANDARD::unique_lock lock(mTx);
+			std::unique_lock lock(mTx);
 			return m_IsZgBudget;
 		}
 		SecondsDuration getBeginningBudget() override
 		{
-			STANDARD::unique_lock lock(mTx);
+			std::unique_lock lock(mTx);
 			return m_IsBeginningZgBudget;
 		}
 		SecondsDuration durationToWaitTilNextBudget() override
 		{
-			STANDARD::unique_lock lock(mTx);
-			auto now = STANDARD::chrono::duration_cast<CHRONO_SECONDS>(CLOCK::now().time_since_epoch());
-			auto m_budgetCountNs = STANDARD::chrono::duration_cast<CHRONO_SECONDS>(m_BudgetTime).count();
+			std::unique_lock lock(mTx);
+			auto now = std::chrono::duration_cast<CHRONO_NANOSECONDS>(SYS_CLOCK::now().time_since_epoch());
+			auto m_budgetCountNs = std::chrono::duration_cast<CHRONO_NANOSECONDS>(m_BudgetTime).count();
 			auto nsQuantized = SecondsDuration(m_BudgetTime.count() - (now.count() % m_budgetCountNs));
 			return nsQuantized;
 		}
 		SecondsDuration operator/(SecondsDuration a) override
 		{
-			STANDARD::unique_lock lock(mTx);
+			std::unique_lock lock(mTx);
 			auto b = m_IsZgBudget / a;
 			SecondsDuration c = SecondsDuration(b);
 			m_IsZgBudget = SecondsDuration(m_IsZgBudget - c);
@@ -162,35 +183,32 @@ namespace zg::budget
 		{
 			unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
-			auto& end = STANDARD::get<1>(history_tuple);
-			end = CLOCK::now();
-			auto& seconds = STANDARD::get<2>(history_tuple);
-			auto& begin = STANDARD::get<0>(history_tuple);
+			auto& end = std::get<1>(history_tuple);
+			end = setNextBudgetWakeAtTimePoint();
+			auto& seconds = std::get<2>(history_tuple);
+			auto& begin = std::get<0>(history_tuple);
 			seconds = end - begin;
-			auto nsQuantized = SecondsDuration(m_budgetCountNs - (end.time_since_epoch().count() % m_budgetCountNs));
-			m_IsZgBudget = nsQuantized;
-			m_IsNextBudgetWakeAtTimePoint = STANDARD::chrono::time_point_cast<STANDARD::chrono::nanoseconds>(end + m_IsZgBudget);
 		}
 		void sleep() override
 		{
+			if (m_sleeponsleep)
 			{
-				STANDARD::unique_lock lock(mTx);
+				zsleep();
+			}
+			{
+				std::unique_lock lock(mTx);
 				pushFrontHistory();
 				if (!m_serializeHistory)
 				{
 					m_History.pop_back();
 				}
 			}
-			if (m_sleeponsleep)
-			{
-				zsleep();
-			}
 		}
 		void wake() override
 		{
 			{
-				STANDARD::unique_lock lock(mTx);
-				wakezwakez = true;
+				std::unique_lock lock(mTx);
+				m_wakezwakez = true;
 			}
 			cv.notify_one();
 		}
@@ -198,9 +216,9 @@ namespace zg::budget
 	private:
 		SecondsDuration m_BudgetTime;
 		bool m_serializeHistory = false;
-		STANDARD::filesystem::path m_serializeDirectory;
+		std::filesystem::path m_serializeDirectory;
 		size_t m_chunkID = 0;
-		size_t m_historySize = HISTORY_SIZE;
+		size_t m_historySize = 38;
 		// map<CreatorID, unique_ptr<deque<pair<CreatorID, glm::vec4>>>> creatorSpaceTimeDoubleEndejQueue;
 		// unordered_2multiset8<CreatorID> realCreatorIDSet
 		SecondsDuration m_IsZgBudget;
@@ -208,13 +226,14 @@ namespace zg::budget
 		TimePoint m_IsNextBudgetWakeAtTimePoint;
 		size_t m_budgetCountNs;
 		bool m_sleeponsleep;
-		using HistoryItem = STANDARD::tuple<TimePoint, TimePoint, SecondsDuration, STANDARD::queue<STANDARD::pair<TimePoint, SecondsDuration>>, bool>;
-		STANDARD::deque<HistoryItem> m_History;
-		STANDARD::condition_variable cv;
-		STANDARD::mutex mTx;
+		using HistoryItem = std::tuple<TimePoint, TimePoint, SecondsDuration, std::queue<std::pair<TimePoint, SecondsDuration>>, bool>;
+		std::deque<HistoryItem> m_History;
+		std::condition_variable cv;
+		std::mutex mTx;
 		bool m_instantStart;
-		bool wakezwakez = false;
-
+		bool m_wakezwakez = false;
+		std::unordered_map<uint32_t, bool> m_tickIDbools;
+		bool m_workedOvertime = false;
 	private:
 		size_t calculateChunkID()
 		{
@@ -236,9 +255,9 @@ namespace zg::budget
 		void pushFrontHistory()
 		{
 			HistoryItem historyItem{{}, {}, {}, {}, false};
-			auto& _1 = STANDARD::get<0>(historyItem);
-			auto& _2 = STANDARD::get<1>(historyItem);
-			auto& _3 = STANDARD::get<2>(historyItem);
+			auto& _1 = std::get<0>(historyItem);
+			auto& _2 = std::get<1>(historyItem);
+			auto& _3 = std::get<2>(historyItem);
 			memset(&_1, 0, sizeof(_1));
 			memset(&_2, 0, sizeof(_2));
 			memset(&_3, 0, sizeof(_3));
@@ -252,8 +271,8 @@ namespace zg::budget
 		// 	serial << m_HistoryIndex << m_HistoryTotalLength << m_History.size();
 		// 	for (auto& historyRecord : m_History)
 		// 	{
-		// 		auto& que = STANDARD::get<3>(historyRecord);
-		// 		serial << STANDARD::get<0>(historyRecord) << STANDARD::get<1>(historyRecord) << STANDARD::get<2>(historyRecord) << que;
+		// 		auto& que = std::get<3>(historyRecord);
+		// 		serial << std::get<0>(historyRecord) << std::get<1>(historyRecord) << std::get<2>(historyRecord) << que;
 		// 		while (!que.empty())
 		// 			que.pop();
 		// 	}
@@ -269,14 +288,23 @@ namespace zg::budget
 			// for (size_t count = 1; count <= historySize; count++)
 			// {
 			// 	auto& historyRecord = m_History[count - 1];
-			// 	serial >> STANDARD::get<0>(historyRecord) >> STANDARD::get<1>(historyRecord) >> STANDARD::get<2>(historyRecord) >> STANDARD::get<3>(historyRecord) >>
-			// STANDARD::get<4>(historyRecord);
+			// 	serial >> std::get<0>(historyRecord) >> std::get<1>(historyRecord) >> std::get<2>(historyRecord) >> std::get<3>(historyRecord) >>
+			// std::get<4>(historyRecord);
 			// }
 			// if (m_HistoryIndex < HistorySize)
 			// {
 			// 	--m_chunkID;
 			// }
 			return true;
+		}
+
+		TimePoint setNextBudgetWakeAtTimePoint()
+		{
+			auto __now = SYS_CLOCK::now();
+			auto nsQuantized = SecondsDuration(m_budgetCountNs - (__now.time_since_epoch().count() % m_budgetCountNs));
+			m_IsZgBudget = nsQuantized;
+			m_IsNextBudgetWakeAtTimePoint = NANO_TIMEPOINT_CAST(__now + m_IsZgBudget);
+			return __now;
 		}
 	};
 } // namespace zg::budget

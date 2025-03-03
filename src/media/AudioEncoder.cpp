@@ -6,6 +6,7 @@ AudioEncoder::AudioEncoder(MediaStream& mediaStream, const AVCodec* codec, AVCod
 		I1xCoder(frameQueuePointer, mutexPointer), mediaStream(mediaStream), codec(codec), codecParameters(codecParameters),
 		stream(stream)
 {
+	open();
 }
 size_t AudioEncoder::open() { return 1; }
 size_t AudioEncoder::code() { return 1; }

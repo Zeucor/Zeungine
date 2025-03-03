@@ -8,57 +8,70 @@ namespace zg::td
 	public:
 		T& front()
 		{
-			if (!tail)
-				throw std::runtime_error("queue has no tail");
-			return tail->value;
+			if (!m_right)
+				throw std::runtime_error("queue has no right");
+			return m_right->value;
 		}
 		T& back()
 		{
-			if (!head)
-				throw std::runtime_error("queue has no head");
-			return head->value;
+			if (!m_left)
+				throw std::runtime_error("queue has no left");
+			return m_left->value;
 		}
 		void pop()
 		{
-			if (!tail)
-				throw std::runtime_error("queue has no tail");
-			auto _TAIL = tail;
-			tail = _TAIL->left;
-			if (tail)
+			if (!m_right)
+				throw std::runtime_error("queue has no right");
+			auto M_RIGHT = m_right;
+			m_right = M_RIGHT->left;
+			if (m_right)
 			{
-				tail->right = 0;
+				m_right->right = 0;
 			}
 			else
 			{
-				head = 0;
+				m_left = 0;
 			}
-			delete _TAIL;
+			/*
+			!@  */
+			delete M_RIGHT;
+			m_size--;
 		}
 		void push(const T& value)
 		{
-			auto _HEAD = head;
-			head = new queue_item{value, 0, _HEAD};
-			if (!_HEAD)
+			auto M_LEFT = m_left;
+			m_left = new queue_item{value, 0, M_LEFT};
+			/*
+			      !@  */
+			m_size++;
+			if (!M_LEFT)
 			{
-				tail = head;
+				m_right = m_left;
 			}
 			else
 			{
-				_HEAD->left = head;
+				M_LEFT->left = m_left;
 			}
 		}
 		void clear()
 		{
-			head = 0;
-			auto& current = tail;
+			auto current = m_right;
+			auto next = current;
 			while (current)
 			{
-				auto copied_current = current;
-				current->copied_current->left;
-				delete copied_current;
+				current = next;
+				next = current->left;
+				delete current;
 			}
+			m_right = 0;
+			m_left = 0;
+			m_size = 0;
 		}
-		bool empty() { return !head; }
+        size_t size()
+        {
+            return m_size;
+        }
+		bool empty() { return !m_size; }
 
 	private:
 		struct queue_item
@@ -67,7 +80,8 @@ namespace zg::td
 			queue_item* left = 0;
 			queue_item* right = 0;
 		};
-		queue_item* head = 0;
-		queue_item* tail = 0;
+		queue_item* m_left = 0;
+		queue_item* m_right = 0;
+        size_t m_size = 0;
 	};
 } // namespace zg::td

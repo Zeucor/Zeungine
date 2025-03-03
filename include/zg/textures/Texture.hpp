@@ -34,17 +34,20 @@ namespace zg::textures
 		Type type;
 		FilterType filterType;
 		void *rendererData = 0;
-		explicit Texture(Window &window, const glm::ivec4 &size, const void *data = 0, const Format &format = RGBA8,
+		explicit Texture(Window &window, const glm::ivec4 &size, const void *data, const Format &format = RGBA8,
 						 const Type &type = UnsignedByte, const FilterType &filterType = Linear);
-		explicit Texture(Window &window, const glm::ivec4 &size, const std::string_view path = "",
+		explicit Texture(Window &window, const glm::ivec4 &size, const std::string_view path,
 						 const Format &format = RGBA8, const Type &type = UnsignedByte,
 						 const FilterType &filterType = Linear);
-		explicit Texture(Window &window, const glm::ivec4 &size, const std::vector<std::string_view> &paths = {},
+		explicit Texture(Window &window, const glm::ivec4 &size, const std::vector<std::string_view> &paths,
 						 const Format &format = RGBA8, const Type &type = UnsignedByte,
 						 const FilterType &filterType = Linear);
 		~Texture();
 		void bind() const;
 		void unbind() const;
+		void update(const void *data);
+		void update(const std::string_view path);
+		void update(const std::vector<std::string_view> &paths);
 	};
 #if defined(USE_GL) || defined(USE_EGL)
 	struct GLTextureImpl

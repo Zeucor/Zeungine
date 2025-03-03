@@ -6,10 +6,12 @@ Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rot
 		Entity(_window, {"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
 					 {0, 1, 2, 2, 3, 0}, 4, {}, position, rotation, scale,
 					 name.empty() ? "Video " + std::to_string(++videosCount) : name),
-		InputMediaStream(_window, uri),
+		ReadMediaStream(_window, uri),
 		ISoundNode(_window.audioEngine, true, false),
 		scene(_scene)
 {
+	NANOSECONDS_DURATION videoFrameDuration = getVideoFrameDuration();
+	budget = std::make_shared<ZBudget<>>(videoFrameDuration);
 	setSize(glm::vec3(_size, 0));
 }
 Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale,
@@ -17,7 +19,7 @@ Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rot
 		Entity(_window, {"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
 					 {0, 1, 2, 2, 3, 0}, 4, {}, position, rotation, scale,
 					 name.empty() ? "Video " + std::to_string(++videosCount) : name),
-		InputMediaStream(_window, uri, _filePointer),
+		ReadMediaStream(_window, uri, _filePointer),
 		ISoundNode(_window.audioEngine, true, false),
 		scene(_scene)
 {
@@ -25,7 +27,14 @@ Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rot
 }
 bool Video::preRender()
 {
-	fillTexture(*texturePointer);
+	if (sweetFrameTime)
+		budget->begin();
+	sweetFrameTime = budget->tick(1);
+	if (sweetFrameTime)
+	{
+		fillNextVideoFrame(texturePointer);
+		budget->end();
+	}
 	const auto& model = getModelMatrix();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
@@ -48,5 +57,5 @@ std::vector<float> Video::inputFrames(const float *frames, const int32_t &channe
 }
 void Video::outputFrames(float *frames, const int32_t &channelCount, const unsigned long &frameCount, const zg::audio::audio_time_t &time)
 {
-	fillAudioFrames(frames, channelCount, frameCount);
+	fillNextAudioFrames(frames, channelCount, frameCount);
 }

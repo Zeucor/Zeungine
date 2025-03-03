@@ -5,3 +5,7 @@ I1xCoder::I1xCoder(const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePoi
 		frameQueuePointer(frameQueuePointer), mutexPointer(mutexPointer)
 {
 }
+I1xCoder::~I1xCoder()
+{
+	close();
+}

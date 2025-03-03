@@ -8,8 +8,8 @@
 #include <zg/system/Budget.hpp>
 #include <zg/textures/Texture.hpp>
 using namespace zg;
-SECONDS_DURATION windowSD = SECONDS_DURATION((1.0 / 8.0) * SECONDS::den);
-budget::ZBudget windowBudget(1, windowSD);
+NANOSECONDS_DURATION windowSD = NANOSECONDS_DURATION((1.0 / 8.0) * NANOSECONDS::den);
+budget::ZBudget windowBudget(windowSD);
 #ifdef _WIN32
 extern "C" {
 _declspec(dllexport) DWORD NvOptimusEnablement = 1;

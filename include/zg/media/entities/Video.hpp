@@ -1,15 +1,18 @@
 #pragma once
 #include <zg/Entity.hpp>
 #include <zg/media/AudioDecoder.hpp>
-#include <zg/media/InputMediaStream.hpp>
+#include <zg/media/ReadMediaStream.hpp>
 #include <zg/media/VideoDecoder.hpp>
 #include <zg/interfaces/ISizable.hpp>
+#include <zg/system/Budget.hpp>
 namespace zg::media::entities
 {
-	struct Video : Entity, ISizable, zg::media::InputMediaStream, zg::audio::ISoundNode
+	struct Video : Entity, ISizable, zg::media::ReadMediaStream, zg::audio::ISoundNode
 	{
 		Scene& scene;
 		std::shared_ptr<textures::Texture> texturePointer;
+		std::shared_ptr<budget::ZBudget<>> budget;
+		bool sweetFrameTime = true;
 		inline static size_t videosCount = 0;
 		Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale, glm::vec2 _size,
 					const std::string& uri);

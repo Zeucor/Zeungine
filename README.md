@@ -57,6 +57,7 @@ ctest --test-dir build --rerun-failed -VV -C Debug
 
 ### Usage
 
+Cube Demo
 ```cpp
 #include <zg/Window.hpp>
 #include <zg/Scene.hpp>
@@ -94,6 +95,31 @@ int main()
     });
     window.run();
 }
+```
+
+event on update (whilepressed@winloop) window keypresses and move an entity
+
+```cpp
+window.addKeyPressHandler([&](auto& ))
+zg::EventIdentifier leftKeyPressID = window.addKeyUpdateHandler(20, [&]()
+                             {
+    view.position.x -= 1.f * window.deltaTime;
+    view.update(); });
+zg::EventIdentifier rightKeyPressID = window.addKeyUpdateHandler(19, [&]()
+                             {
+    view.position.x += 1.f * window.deltaTime;
+    view.update(); });
+zg::EventIdentifier upKeyPressID = window.addKeyUpdateHandler(17, [&]()
+                             {
+    view.position.y += 1.f * window.deltaTime;
+    view.update(); });
+zg::EventIdentifier downKeyPressID = window.addKeyUpdateHandler(18, [&]()
+                             {
+    view.position.y -= 1.f * window.deltaTime;
+    view.update(); });
+// store IDs
+// later ...
+window.remote
 ```
 
 See [tests](/tests) for more usage examples

@@ -7,6 +7,7 @@ AudioDecoder::AudioDecoder(MediaStream& mediaStream, const AVCodec* codec, AVCod
 		I1xCoder(frameQueuePointer, mutexPointer), mediaStream(mediaStream), codec(codec), codecParameters(codecParameters),
 		stream(stream)
 {
+	open();
 }
 size_t AudioDecoder::open()
 {
@@ -74,7 +75,7 @@ AVSampleFormat AudioDecoder::MAToAV_SampleFormat()
 		throw std::runtime_error("Unsupported SampleFormat");
 	}
 }
-void AudioDecoder::fillFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount)
+void AudioDecoder::fillNextFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount)
 {
 	auto& framesQueue = *frameQueuePointer;
 	auto& audioMutex = *mutexPointer;

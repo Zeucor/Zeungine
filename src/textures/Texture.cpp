@@ -38,3 +38,12 @@ void Texture::unbind() const
 {
   window.iRenderer->unbindTexture(*this);
 }
+void Texture::update(const void *data)
+{
+}
+void Texture::update(const std::string_view path)
+{
+}
+void Texture::update(const std::vector<std::string_view> &paths)
+{
+}

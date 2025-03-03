@@ -1,16 +1,17 @@
 #include <zg/media/AudioDecoder.hpp>
-#include <zg/media/InputMediaStream.hpp>
+#include <zg/media/ReadMediaStream.hpp>
 #include <zg/media/VideoDecoder.hpp>
+#include <zg/system/Budget.hpp>
 using namespace zg::media;
-InputMediaStream::InputMediaStream(Window& _window, const std::string& uri) : MediaStream(_window), uri(uri) { open(); }
-InputMediaStream::InputMediaStream(Window& _window, const std::string& uri,
+ReadMediaStream::ReadMediaStream(Window& _window, const std::string& uri) : MediaStream(_window), uri(uri) { open(); }
+ReadMediaStream::ReadMediaStream(Window& _window, const std::string& uri,
 																	 const std::shared_ptr<zg::interfaces::IFile>& filePointer) :
 		MediaStream(_window), uri(uri), filePointer(filePointer)
 {
 	open();
 }
-InputMediaStream::~InputMediaStream() { close(); }
-size_t InputMediaStream::open()
+ReadMediaStream::~ReadMediaStream() { close(); }
+size_t ReadMediaStream::open()
 {
 	if (filePointer)
 	{
@@ -59,85 +60,83 @@ size_t InputMediaStream::open()
 		}
 		auto avStream = findAVStream(i, StreamIndex);
 		CoderStreamTuple tuple;
-		std::get<CODER_STREAM_I_STREAM_INDEX>(tuple) = StreamIndex;
-		std::get<CODER_STREAM_I_STREAM>(tuple) = avStream;
-		std::get<CODER_STREAM_I_FRAMEQUEUE>(tuple) = std::make_shared<zg::td::queue<AVFrame*>>();
-		std::get<CODER_STREAM_I_MUTEX>(tuple) = std::make_shared<std::mutex>();
-		auto i1xCoder = construct1xCoder(i, StreamIndex, avStream, std::get<CODER_STREAM_I_FRAMEQUEUE>(tuple),
-																		 std::get<CODER_STREAM_I_MUTEX>(tuple));
-		std::get<CODER_STREAM_I_1XCODER>(tuple) = i1xCoder;
-		i1xCoder->open();
+		std::get<CODER_STREAM_INDEX_STREAM_INDEX>(tuple) = StreamIndex;
+		std::get<CODER_STREAM_INDEX_STREAM>(tuple) = avStream;
+		std::get<CODER_STREAM_INDEX_FRAMEQUEUE>(tuple) = std::make_shared<zg::td::queue<AVFrame*>>();
+		std::get<CODER_STREAM_INDEX_MUTEX>(tuple) = std::make_shared<std::mutex>();
+		auto i1xCoder = construct1xCoder(i, StreamIndex, avStream, std::get<CODER_STREAM_INDEX_FRAMEQUEUE>(tuple),
+																		 std::get<CODER_STREAM_INDEX_MUTEX>(tuple));
+		std::get<CODER_STREAM_INDEX_1XCODER>(tuple) = i1xCoder;
 		coderStreams[i] = tuple;
 		auto& tupleRef = coderStreams[coderStreams.size() - 1];
 		codecIndexToStreamIndex[i] = StreamIndex;
 	}
 	demuxing = true;
-	demuxThread = std::make_shared<std::thread>(&InputMediaStream::demuxer, this);
+	demuxThread = std::make_shared<std::thread>(&ReadMediaStream::demuxer, this);
 	return /*s*/ 1;
 }
-size_t InputMediaStream::close()
+size_t ReadMediaStream::close()
 {
 	demuxing = false;
 	demuxThread->join();
-	auto coderStreamsSize = coderStreams.size();
-	for (int i = 0; i < coderStreamsSize; ++i)
-	{
-		auto& tuple = coderStreams[i];
-		std::get<CODER_STREAM_I_1XCODER>(tuple)->flush();
-	}
-	for (int i = 0; i < coderStreamsSize; ++i)
-	{
-		auto& tuple = coderStreams[i];
-		std::get<CODER_STREAM_I_1XCODER>(tuple)->close();
-	}
+	coderStreams.clear();
 	avformat_close_input(&formatContext);
 	return 0;
 }
-void InputMediaStream::fillAudioFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount)
+void ReadMediaStream::fillNextAudioFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount)
 {
-	auto& audioTuple = coderStreams[CODEC_I_AUDIO];
+	auto& audioTuple = coderStreams[CODEC_INDEX_AUDIO];
 	auto audio1xCoder = std::dynamic_pointer_cast<AudioDecoder>(std::get<2>(audioTuple));
 	auto audioDecoder = audio1xCoder.get();
 	if (!audioDecoder)
 		return;
-    audioDecoder->fillFrames(frames, channelCount, frameCount);
+    audioDecoder->fillNextFrames(frames, channelCount, frameCount);
 }
-void InputMediaStream::fillTexture(textures::Texture& texture)
+void ReadMediaStream::fillNextVideoFrame(std::shared_ptr<textures::Texture>& texturePointer)
 {
-	auto& videoTuple = coderStreams[CODEC_I_VIDEO];
+	auto& videoTuple = coderStreams[CODEC_INDEX_VIDEO];
 	auto video1xCoder = std::dynamic_pointer_cast<VideoDecoder>(std::get<2>(videoTuple));
 	auto videoDecoder = video1xCoder.get();
 	if (!videoDecoder)
 		return;
-    videoDecoder->fillTexture(texture);
+    videoDecoder->fillNextFrame(texturePointer);
 }
-int32_t InputMediaStream::findStreamIndex(int i)
+NANOSECONDS_DURATION ReadMediaStream::getVideoFrameDuration()
+{
+	auto& videoTuple = coderStreams[CODEC_INDEX_VIDEO];
+	auto video1xCoder = std::dynamic_pointer_cast<VideoDecoder>(std::get<2>(videoTuple));
+	auto videoDecoder = video1xCoder.get();
+	if (!videoDecoder)
+		return NANOSECONDS_DURATION{0};
+	return NANOSECONDS_DURATION((LD_REAL)1.0 / (LD_REAL)videoDecoder->framesPerSecond * NANOSECONDS::den);
+}
+int32_t ReadMediaStream::findStreamIndex(int i)
 {
 	AVMediaType mediaType;
 	switch (i)
 	{
-	case CODEC_I_VIDEO:
+	case CODEC_INDEX_VIDEO:
 		mediaType = AVMEDIA_TYPE_VIDEO;
 		break;
-	case CODEC_I_AUDIO:
+	case CODEC_INDEX_AUDIO:
 		mediaType = AVMEDIA_TYPE_AUDIO;
 		break;
-	case CODEC_I_DATA:
+	case CODEC_INDEX_DATA:
 		mediaType = AVMEDIA_TYPE_DATA;
 		break;
-	case CODEC_I_SUBTITLE:
+	case CODEC_INDEX_SUBTITLE:
 		mediaType = AVMEDIA_TYPE_SUBTITLE;
 		break;
-	case CODEC_I_ATTACHMENT:
+	case CODEC_INDEX_ATTACHMENT:
 		mediaType = AVMEDIA_TYPE_ATTACHMENT;
 		break;
-	case CODEC_I_NB:
+	case CODEC_INDEX_NB:
 		mediaType = AVMEDIA_TYPE_NB;
 		break;
 	}
 	return av_find_best_stream(formatContext, mediaType, -1, -1, nullptr, 0);
 }
-AVStream* InputMediaStream::findAVStream(int i, int32_t streamIndex)
+AVStream* ReadMediaStream::findAVStream(int i, int32_t streamIndex)
 {
 	if (streamIndex < 0)
 	{
@@ -145,7 +144,7 @@ AVStream* InputMediaStream::findAVStream(int i, int32_t streamIndex)
 	}
 	return formatContext->streams[streamIndex];
 }
-std::shared_ptr<I1xCoder> InputMediaStream::construct1xCoder(int i, int32_t streamIndex, AVStream* stream, const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer, const std::shared_ptr<std::mutex>& mutexPointer)
+std::shared_ptr<I1xCoder> ReadMediaStream::construct1xCoder(int i, int32_t streamIndex, AVStream* stream, const std::shared_ptr<zg::td::queue<AVFrame*>>& frameQueuePointer, const std::shared_ptr<std::mutex>& mutexPointer)
 {
 	const AVCodec* codec = 0;
 	AVCodecParameters* codecParameters = 0;
@@ -154,35 +153,35 @@ std::shared_ptr<I1xCoder> InputMediaStream::construct1xCoder(int i, int32_t stre
 	std::shared_ptr<I1xCoder> i1xCoder;
 	switch (i)
 	{
-	case CODEC_I_VIDEO:
+	case CODEC_INDEX_VIDEO:
 		i1xCoder = std::make_shared<VideoDecoder>(*this, codec, codecParameters, stream, frameQueuePointer, mutexPointer);
 		break;
-	case CODEC_I_AUDIO:
+	case CODEC_INDEX_AUDIO:
 		i1xCoder = std::make_shared<AudioDecoder>(*this, codec, codecParameters, stream, frameQueuePointer, mutexPointer);
 		break;
-	case CODEC_I_DATA:
+	case CODEC_INDEX_DATA:
 		// i1xCoder = std::make_shared<DataDecoder>();
 		break;
-	case CODEC_I_SUBTITLE:
+	case CODEC_INDEX_SUBTITLE:
 		// i1xCoder = std::make_shared<SubtitleDecoder>();
 		break;
-	case CODEC_I_ATTACHMENT:
+	case CODEC_INDEX_ATTACHMENT:
 		// i1xCoder = std::make_shared<AttachmentDecoder>();
 		break;
-	case CODEC_I_NB:
+	case CODEC_INDEX_NB:
 		// i1xCoder = std::make_shared<NBDecoder>();
 		break;
 	}
 	return i1xCoder;
 }
-void InputMediaStream::demuxer()
+void ReadMediaStream::demuxer()
 {
-	auto& videoStreamIndex = codecIndexToStreamIndex[CODEC_I_VIDEO];
-	auto& audioStreamIndex = codecIndexToStreamIndex[CODEC_I_AUDIO];
+	auto& videoStreamIndex = codecIndexToStreamIndex[CODEC_INDEX_VIDEO];
+	auto& audioStreamIndex = codecIndexToStreamIndex[CODEC_INDEX_AUDIO];
 	int32_t ret = 0;
 	bool eof = false;
-	auto& audioTuple = coderStreams[CODEC_I_AUDIO];
-	auto& videoTuple = coderStreams[CODEC_I_VIDEO];
+	auto& audioTuple = coderStreams[CODEC_INDEX_AUDIO];
+	auto& videoTuple = coderStreams[CODEC_INDEX_VIDEO];
 	auto audio1xCoder = std::dynamic_pointer_cast<AudioDecoder>(std::get<2>(audioTuple));
 	auto video1xCoder = std::dynamic_pointer_cast<VideoDecoder>(std::get<2>(videoTuple));
 	auto audioDecoder = audio1xCoder.get();

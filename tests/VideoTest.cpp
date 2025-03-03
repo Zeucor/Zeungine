@@ -7,11 +7,11 @@ using namespace zg;
 struct VideoScene : Scene
 {
 	long double deltaTimeCounter = 0;
-	uint32_t qPressID = 0;
+	zg::EventIdentifier qPressID = 0;
 	VideoScene(Window& _window) :
 			Scene(_window, {0, 10, 10}, // camera position
 						glm::normalize(glm::vec3(0, -1, -1)), // camera direction
-						{2, 2})
+						{2, 2}) // using NDC
 	{
 		clearColor = {1, 0, 1, 1};
 		auto kalimbaPath = zgfilesystem::File::getProgramDirectoryPath() / "music" / "Kalimba.mp3";
@@ -31,7 +31,6 @@ struct VideoScene : Scene
 																					 if (pressed)
 																						 window.close();
 																				 });
-		window.setXY(320, 320);
 		auto videoStage = std::make_shared<zg::audio::AudioStage>(window.audioEngine);
 		videoStage->addSoundNode(video);
 		window.audioEngine.pipeline.addStage(videoStage);
