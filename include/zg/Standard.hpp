@@ -29,7 +29,7 @@
 #include <zg/queue.hpp>
 #if defined(_WIN32)
 #include <windows.h>
-#elif defined(__APPLE__)
+#elif defined(MACOS)
 #include <fcntl.h>
 #include <mach-o/dyld.h>
 #include <sys/event.h>
@@ -38,7 +38,7 @@
 #include <sys/inotify.h>
 #endif
 #include <zg/glm.hpp>
-#if defined(__linux) || defined(__APPLE__)
+#if defined(__linux) || defined(MACOS)
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <termios.h>
