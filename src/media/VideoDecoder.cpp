@@ -34,7 +34,7 @@ size_t VideoDecoder::open()
 											 codecContext->height, 1);
 	static constexpr int bytesPerPixel = 4;
 	rowBytes = codecContext->width * bytesPerPixel;
-	tempRow = new uint8_t[rowBytes];
+	// tempRow = new uint8_t[rowBytes];
 	AVRational frameRate = av_guess_frame_rate(mediaStream.formatContext, stream, 0);
 	framesPerSecond = frameRate.num / static_cast<double>(frameRate.den);
 	int64_t duration = mediaStream.formatContext->duration;
@@ -47,7 +47,7 @@ size_t VideoDecoder::flush() { return 0; }
 size_t VideoDecoder::close()
 {
 	av_frame_free(&rgbaFrame);
-	delete[] tempRow;
+	// delete[] tempRow;
 	return 1;
 }
 bool VideoDecoder::fillNextFrame(std::shared_ptr<textures::Texture>& texturePointer)
@@ -63,22 +63,15 @@ bool VideoDecoder::fillNextFrame(std::shared_ptr<textures::Texture>& texturePoin
 	}
 	sws_scale(swsContext, (uint8_t const* const*)currentAVFrame->data, currentAVFrame->linesize, 0, codecContext->height,
 						rgbaFrame->data, rgbaFrame->linesize);
-	for (int i = 0; i < codecContext->height / 2; ++i)
-	{
-		uint8_t* rowTop = rgbaBuffer + i * rowBytes;
-		uint8_t* rowBottom = rgbaBuffer + (codecContext->height - i - 1) * rowBytes;
-		memcpy(tempRow, rowTop, rowBytes);
-		memcpy(rowTop, rowBottom, rowBytes);
-		memcpy(rowBottom, tempRow, rowBytes);
-	}
-	if (!texturePointer)
-	{
-		texturePointer = std::make_shared<textures::Texture>(
-			mediaStream.streamWindow, glm::ivec4(codecContext->width, codecContext->height, 1, 0), (void*)rgbaBuffer);
-	}
-	else
-	{
-		texturePointer->update((void*)rgbaBuffer);
-	}
+	// for (int i = 0; i < codecContext->height / 2; ++i)
+	// {
+	// 	uint8_t* rowTop = rgbaBuffer + i * rowBytes;
+	// 	uint8_t* rowBottom = rgbaBuffer + (codecContext->height - i - 1) * rowBytes;
+	// 	memcpy(tempRow, rowTop, rowBytes);
+	// 	memcpy(rowTop, rowBottom, rowBytes);
+	// 	memcpy(rowBottom, tempRow, rowBytes);
+	// }
+	texturePointer = std::make_shared<textures::Texture>(
+		mediaStream.streamWindow, glm::ivec4(codecContext->width, codecContext->height, 1, 0), (void*)rgbaBuffer);
 	return true;
 }
