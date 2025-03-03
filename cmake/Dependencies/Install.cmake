@@ -46,7 +46,25 @@ install(FILES
     "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swscale.${ffmpeg_LIB_SUFFIX}"
     DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-IF(MACOS OR LINUX)
+IF(MACOS)
+    install(FILES
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avcodec.61.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avcodec.61.19.100.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avdevice.61.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avdevice.61.3.100.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avfilter.10.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avfilter.10.4.100.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avformat.61.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avformat.61.7.100.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avutil.59.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avutil.59.39.100.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swresample.5.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swresample.5.3.100.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swscale.8.${ffmpeg_LIB_SUFFIX}"
+        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}swscale.8.3.100.${ffmpeg_LIB_SUFFIX}"
+        DESTINATION ${ZG_LIB_INSTALL_PREFIX}
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+elseif(LINUX)
     install(FILES
         "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avcodec.${ffmpeg_LIB_SUFFIX}.61"
         "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_LIB_PREFIX}avcodec.${ffmpeg_LIB_SUFFIX}.61.19.100"
