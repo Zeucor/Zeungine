@@ -1,4 +1,5 @@
 # Options
+#  these objects work because their source is pure absolute just include readpath from build include
 option(BUILD_GL "Whether to build OpenGL module" OFF)
 option(BUILD_EGL "Whether to build EGL module" OFF)
 option(BUILD_VULKAN "Whether to build Vulkan module" ON)
@@ -9,6 +10,7 @@ option(ZG_PACKAGE "Whether 3o package Zeungine" OFF)
 set(ZG_SRC_INCLUDE ${CMAKE_CURRENT_LIST_DIR}/../include)
 message(STATUS "ZG_SRC_INCLUDE: ${ZG_SRC_INCLUDE}")
 get_filename_component(ZG_SRC_INCLUDE "${ZG_SRC_INCLUDE}" ABSOLUTE)
+message(STATUS "i.e..:|ZG_SRC_INCLUDE| ${ZG_SRC_INCLUDE}")
 if(ZG_INSTALL)
     include(GNUInstallDirs)
     if(LINUX OR MACOS)

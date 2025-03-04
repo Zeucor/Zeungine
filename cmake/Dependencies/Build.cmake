@@ -6,6 +6,7 @@ set(FETCHCONTENT_QUIET OFF)
 #New Dependency Declarations to the top!
 
 # miniaudio
+message(STATUS "FetchContent_Declare: miniaudio")
 FetchContent_Declare(
     miniaudio
     GIT_REPOSITORY https://github.com/mackron/miniaudio.git
@@ -21,32 +22,19 @@ set(SHADERC_SKIP_TESTS ON)
 set(SHADERC_SKIP_EXAMPLES ON)
 set(SPIRV_SKIP_EXECUTABLES ON)
 set(SKIP_SPIRV_TOOLS_INSTALL ON)
-
+cmake_policy(SET CMP0097 NEW)
+include(ExternalProject)
+message(STATUS "FetchContent_Declare: swiftshader")
 FetchContent_Declare(
     swiftshader
     GIT_REPOSITORY https://github.com/ZeunO8/swiftshader.git
     GIT_TAG master)
 FetchContent_MakeAvailable(swiftshader)
-
-# shaderc
-message(STATUS "FetchContent: shaderc")
-# set(SHADERC_ENABLE_SHARED_CRT OFF)
 # SPIRV-Headers
 FetchContent_Declare(SPIRV-Headers
     GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
     GIT_TAG main)
 FetchContent_MakeAvailable(SPIRV-Headers)
-# # SPIRV-tools
-# FetchContent_Declare(SPIRV-Tools
-#     GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Tools.git
-#     GIT_TAG vulkan-sdk-1.4.304)
-# FetchContent_MakeAvailable(SPIRV-Tools)
-# # glslang
-# FetchContent_Declare(
-#     glslang
-#     GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
-#     GIT_TAG vulkan-sdk-1.4.304)
-# FetchContent_MakeAvailable(glslang)
 # shaderc
 FetchContent_Declare(shaderc
     GIT_REPOSITORY https://github.com/ZeunO8/shaderc.git
@@ -55,7 +43,7 @@ FetchContent_Declare(shaderc
 FetchContent_MakeAvailable(shaderc)
 
 # FfMpeG
-message(STATUS "FetchContent: ffmpeg")
+message(STATUS "|FetchContent&Build&buildInstall|OneTime: ffmpeg")
 FetchContent_Declare(ffmpeg
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
     GIT_TAG n7.1)
