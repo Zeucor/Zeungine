@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 :: Define version and targets
-set VERSION=0.2.3
+set VERSION=0.2.3.5
 set TARGETS=ZeungineDependencies ZeungineDependencies-debug ZeungineHeaders Zeungine Zeungine-debug
 :: Iterate over targets and run them
 for %%T in (%TARGETS%) do (

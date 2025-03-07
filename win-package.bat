@@ -37,7 +37,7 @@ exit /b 0
 
 :: Function to build dependencies
 :build_dependencies
-cd /d cmake\Dependencies || exit /b 1
+cd cmake\Dependencies
 
 echo -- Starting zegndeps Debug Configure
 cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
