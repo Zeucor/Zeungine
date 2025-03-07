@@ -27,7 +27,7 @@ static std::string libSuffix(".dylib");
 static std::string libPrefix("lib");
 static std::string libSuffix(".so");
 #elif defined(_WIN32)
-static std::string libPrefix("lib");
+static std::string libPrefix("");
 static std::string libSuffix(".dll");
 #endif
 static std::filesystem::path vulkanLibrarySSName(libPrefix + "vk_swiftshader" + libSuffix);
@@ -1014,10 +1014,14 @@ void VulkanRenderer::init()
 {
 	waitStages[0] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.pNext = 0;
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.commandBufferCount = 1;
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.pNext = 0;
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.swapchainCount = 1;
+	presentInfo.pResults = 0;
 	if (fallbackToSwiftshader)
 		_vkMapMemory(device, stagingBufferMemory, 0, VK_WHOLE_SIZE, 0, &bitmap);
 }
@@ -1155,7 +1159,6 @@ void VulkanRenderer::postRenderPass()
 	{
 		throw std::runtime_error("VulkanRenderer-vkQueueWaitIdle failed");
 	}
-	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pWaitSemaphores = signalSemaphores;
 	swapChains[0] = {swapChain};
 	presentInfo.pSwapchains = swapChains;

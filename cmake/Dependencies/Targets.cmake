@@ -20,27 +20,44 @@ function(zg_setup_target
 	message(STATUS "TARGET_NAME: ${TARGET_NAME}")
 	set_target_properties(${TARGET_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_LOCATION})
 endfunction()
+if(WIN32)
+	set(avcodec_NAME avcodec-61)
+	set(avdevice_NAME avdevice-61)
+	set(avfilter_NAME avfilter-10)
+	set(avformat_NAME avformat-61)
+	set(avutil_NAME avutil-59)
+	set(swresample_NAME swresample-5)
+	set(swscale_NAME swscale-8)
+else()
+	set(avcodec_NAME avcodec)
+	set(avdevice_NAME avdevice)
+	set(avfilter_NAME avfilter)
+	set(avformat_NAME avformat)
+	set(avutil_NAME avutil)
+	set(swresample_NAME swresample)
+	set(swscale_NAME swscale)
+endif()
 zg_setup_target(avcodec SHARED
 	"${ZG_ABS_LIB_INSTALL_PREFIX}"
-	"${ZG_LIB_PREFIX}" avcodec avcodec "${SHARED_ZG_LIB_SUFFIX}")
+	"${ZG_LIB_PREFIX}" ${avcodec_NAME} avcodec "${SHARED_ZG_LIB_SUFFIX}")
 zg_setup_target(avdevice SHARED
 	"${ZG_ABS_LIB_INSTALL_PREFIX}"
-	"${ZG_LIB_PREFIX}" avdevice avdevice "${SHARED_ZG_LIB_SUFFIX}")
+	"${ZG_LIB_PREFIX}" ${avdevice_NAME} avdevice "${SHARED_ZG_LIB_SUFFIX}")
 zg_setup_target(avfilter SHARED
 	"${ZG_ABS_LIB_INSTALL_PREFIX}"
-	"${ZG_LIB_PREFIX}" avfilter avfilter "${SHARED_ZG_LIB_SUFFIX}")
+	"${ZG_LIB_PREFIX}" ${avfilter_NAME} avfilter "${SHARED_ZG_LIB_SUFFIX}")
 zg_setup_target(avformat SHARED
 	"${ZG_ABS_LIB_INSTALL_PREFIX}"
-	"${ZG_LIB_PREFIX}" avformat avformat "${SHARED_ZG_LIB_SUFFIX}")
+	"${ZG_LIB_PREFIX}" ${avformat_NAME} avformat "${SHARED_ZG_LIB_SUFFIX}")
 zg_setup_target(avutil SHARED
 	"${ZG_ABS_LIB_INSTALL_PREFIX}"
-	"${ZG_LIB_PREFIX}" avutil avutil "${SHARED_ZG_LIB_SUFFIX}")
+	"${ZG_LIB_PREFIX}" ${avutil_NAME} avutil "${SHARED_ZG_LIB_SUFFIX}")
 zg_setup_target(swresample SHARED
 	"${ZG_ABS_LIB_INSTALL_PREFIX}"
-	"${ZG_LIB_PREFIX}" swresample swresample "${SHARED_ZG_LIB_SUFFIX}")
+	"${ZG_LIB_PREFIX}" ${swresample_NAME} swresample "${SHARED_ZG_LIB_SUFFIX}")
 zg_setup_target(swscale SHARED
 	"${ZG_ABS_LIB_INSTALL_PREFIX}"
-	"${ZG_LIB_PREFIX}" swscale swscale "${SHARED_ZG_LIB_SUFFIX}")
+	"${ZG_LIB_PREFIX}" ${swscale_NAME} swscale "${SHARED_ZG_LIB_SUFFIX}")
 zg_setup_target(shaderc SHARED
 	"${ZG_ABS_LIB_INSTALL_PREFIX}"
 	"${ZG_LIB_PREFIX}" shaderc_shared shaderc_shared "${SHARED_ZG_LIB_SUFFIX}")

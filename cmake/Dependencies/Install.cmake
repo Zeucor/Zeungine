@@ -156,6 +156,13 @@ install(TARGETS
     ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX})
 
+if(WIN32)
+    install(FILES
+        ${CMAKE_BINARY_DIR}/vk_swiftshader.dll
+        DESTINATION ${ZG_LIB_INSTALL_PREFIX}
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+endif()
+
 install(FILES ${stb_SOURCE_DIR}/stb_image.h ${stb_SOURCE_DIR}/stb_image_write.h ${stb_SOURCE_DIR}/stb_image_resize2.h
     ${stb_SOURCE_DIR}/stb_hexwave.h
     DESTINATION ${ZG_INC_INSTALL_PREFIX}

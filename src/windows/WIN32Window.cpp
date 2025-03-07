@@ -235,7 +235,6 @@ bool WIN32Window::pollMessages()
 }
 void WIN32Window::destroy()
 {
-	renderWindowPointer->iRenderer->destroy();
 	wglMakeCurrent(NULL, NULL);
 	wglDeleteContext(hRenderingContext);
 }

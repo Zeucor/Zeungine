@@ -41,21 +41,16 @@ namespace zg
 #elif defined(__linux__) || defined(MACOS)
 		void* libraryPointer = 0;
 #endif
-		template <typename T, typename... Args>
-		constexpr void load(const STANDARD::string& paths, std::string& errors, const T& path, const Args&... args)
+		template <typename... Args>
+		constexpr void load(const STANDARD::string& paths, std::string& errors, const std::filesystem::path& path, const Args&... args)
 		{
-			if constexpr (STANDARD::is_same_v<T, STANDARD::string> || STANDARD::is_same_v<T, STANDARD::string_view>)
-			{
 #ifdef _WIN32
-				libraryPointer = LoadLibraryA(path.data());
+			auto _strn__ = STANDARD::wstring_convert<STANDARD::codecvt_utf8<wchar_t>>().to_bytes(path.native().c_str());
+			libraryPointer = LoadLibraryA(_strn__.c_str());
 #elif defined(__linux__) || defined(MACOS)
-				libraryPointer = dlopen(path.data(), RTLD_NOW | RTLD_GLOBAL);
+			auto _strn__ = path.string();
+			libraryPointer = dlopen(_strn__.c_str(), RTLD_NOW | RTLD_GLOBAL);
 #endif
-			}
-			else
-			{
-				throw std::runtime_error("unknown load T path");
-			}
 			if (!libraryPointer)
 			{
 				errors += getLastErrorAsString();
