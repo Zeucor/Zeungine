@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 include(../InstallPrefix.cmake)
-project(zegnheaders VERSION 0.2.3)
+project(zegnheaders VERSION ${ZG_VERSION_MAJOR}.${ZG_VERSION_MINOR}.${ZG_VERSION_PATCH})
 include(../PlatformSetup.cmake)
 include(../Options.cmake)
 include(../Windower.cmake)

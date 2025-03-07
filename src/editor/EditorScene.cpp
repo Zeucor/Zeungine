@@ -357,9 +357,6 @@ void EditorScene::newProject(std::string_view projectName, std::string_view proj
 		processor.processFile(
 			{zgIncInstallPrefix + "/zg/editor/projects/templates/CMakeLists.in.txt", enums::EFileLocation::Absolute, "r"},
 			std::string(project.directory) + "/CMakeLists.txt");
-		processor.processFile(
-			{zgIncInstallPrefix + "/zg/editor/projects/templates/Zeungine.in.cmake", enums::EFileLocation::Absolute, "r"},
-			cmakePath + "/Zeungine.cmake");
 	}
 	openProject(projectDirectory);
 };

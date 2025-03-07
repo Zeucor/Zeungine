@@ -1,13 +1,7 @@
 # Add Zeungine library
 add_library(zeungine ${ZG_LIBRARY_TYPE} ${ZG_SOURCES})
 include_directories(${ZG_SRC_INCLUDE})
-if(WIN32)
-set(ZG_ACTUAL_INC_INSTALL_PREFIX "${ZG_WIN_INSTALL_PREFIX}/${ZG_INC_INSTALL_PREFIX}")
-else()
-set(ZG_ACTUAL_INC_INSTALL_PREFIX "${ZG_INC_INSTALL_PREFIX}")
-endif()
-message(STATUS "ZG_ACTUAL_INC_INSTALL_PREFIX: ${ZG_ACTUAL_INC_INSTALL_PREFIX}")
-include_directories(${ZG_ACTUAL_INC_INSTALL_PREFIX})
+include_directories(${ZG_INC_INSTALL_PREFIX_ABS})
 # Link libraries
 if(BUILD_GL)
     if(WIN32)

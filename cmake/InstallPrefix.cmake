@@ -1,3 +1,6 @@
 if(WIN32)
     set(CMAKE_INSTALL_PREFIX "C:/Program Files/Zeungine")
 endif()
+set(ZG_VERSION_MAJOR 0)
+set(ZG_VERSION_MINOR 2)
+set(ZG_VERSION_PATCH 3)

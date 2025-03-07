@@ -96,10 +96,3 @@ elseif(LINUX)
 elseif(MACOS)
     list(APPEND ZG_SOURCES src/windows/MacOSWindow.mm)
 endif()
-
-# Library type, Static if Windows, otherwise Shared
-if(WIN32)
-    set(ZG_LIBRARY_TYPE STATIC)
-else()
-    set(ZG_LIBRARY_TYPE SHARED)
-endif()
