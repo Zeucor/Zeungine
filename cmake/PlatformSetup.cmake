@@ -53,7 +53,6 @@ message(STATUS "ZG_LIB_DIR: ${ZG_LIB_DIR}")
 
 # Add build flags
 if(LINUX OR MACOS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -fPIC")
     if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
     endif()
