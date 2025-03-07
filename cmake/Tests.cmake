@@ -16,8 +16,7 @@ function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     endif()
     if(ZG_INSTALL_TESTS)
         install(TARGETS ${TEST_NAME}
-            ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-            LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX})
+            DESTINATION ${ZG_BIN_INSTALL_PREFIX})
     endif()
 endfunction()
 
