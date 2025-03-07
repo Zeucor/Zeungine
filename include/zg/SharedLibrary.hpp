@@ -4,6 +4,25 @@ namespace zg
 {
 	struct SharedLibrary
 	{
+		std::string getLastErrorAsString()
+		{
+#if defined(_WIN32)
+			DWORD errorMessageID = GetLastError();
+			if (errorMessageID == 0)
+				return "No error"; // No error
+
+			LPSTR messageBuffer = nullptr;
+			size_t size =
+				FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+											 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+			std::string message(messageBuffer, size);
+			LocalFree(messageBuffer);
+			return message;
+#else
+			return dlerror();
+#endif
+		}
 		template <typename T, typename... Args>
 		constexpr void concatPaths(STANDARD::string& paths, const T& path, const Args&... args)
 		{
@@ -22,28 +41,32 @@ namespace zg
 #elif defined(__linux__) || defined(MACOS)
 		void* libraryPointer = 0;
 #endif
-	template <typename T, typename... Args>
-	constexpr void load(const STANDARD::string& paths, std::string &errors, const T& path, const Args&... args)
-	{
-		if constexpr (STANDARD::is_same_v<T, STANDARD::string> || STANDARD::is_same_v<T, STANDARD::string_view>)
+		template <typename T, typename... Args>
+		constexpr void load(const STANDARD::string& paths, std::string& errors, const T& path, const Args&... args)
 		{
-			#ifdef _WIN32
-			libraryPointer = LoadLibraryA(path.data());
-			#elif defined(__linux__) || defined(MACOS)
-			libraryPointer = dlopen(path.data(), RTLD_NOW | RTLD_GLOBAL);
-			#endif
+			if constexpr (STANDARD::is_same_v<T, STANDARD::string> || STANDARD::is_same_v<T, STANDARD::string_view>)
+			{
+#ifdef _WIN32
+				libraryPointer = LoadLibraryA(path.data());
+#elif defined(__linux__) || defined(MACOS)
+				libraryPointer = dlopen(path.data(), RTLD_NOW | RTLD_GLOBAL);
+#endif
+			}
+			else
+			{
+				throw std::runtime_error("unknown load T path");
+			}
+			if (!libraryPointer)
+			{
+				errors += getLastErrorAsString();
+				errors += sizeof...(args) ? ", " : "";
+				load(paths, errors, args...);
+			}
 		}
-		else
+		void load(const STANDARD::string& paths, STANDARD::string& errors)
 		{
-			throw std::runtime_error("unknown load T path");
+			throw STANDARD::runtime_error("Failed to load librarys[" + errors + "]: " + paths);
 		}
-		if (!libraryPointer)
-		{
-			errors += dlerror();
-			load(paths, errors, args...);
-		}
-	}
-	void load(const STANDARD::string& paths, STANDARD::string &errors) { throw STANDARD::runtime_error("Failed to load librarys[" + errors + "]: " + paths); }
 		template <typename... Args>
 		SharedLibrary(const Args&... args)
 		{

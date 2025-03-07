@@ -73,10 +73,10 @@ bool Command::update()
 		char buffer[128];
 #ifdef _WIN32
 		DWORD bytesRead;
-		if (PeekNamedPipe(reinterpret_cast<HANDLE>(_open_osfhandle(pipeRead, _O_RDONLY)), NULL, 0, NULL, &bytesRead, NULL) &&
+		if (PeekNamedPipe((HANDLE)(_open_osfhandle(pipeRead, _O_RDONLY)), NULL, 0, NULL, &bytesRead, NULL) &&
 				bytesRead > 0)
 		{
-			if (ReadFile(reinterpret_cast<HANDLE>(_open_osfhandle(pipeRead, _O_RDONLY)), buffer, sizeof(buffer) - 1, &bytesRead, NULL) &&
+			if (ReadFile((HANDLE)(_open_osfhandle(pipeRead, _O_RDONLY)), buffer, sizeof(buffer) - 1, &bytesRead, NULL) &&
 					bytesRead > 0)
 			{
 				buffer[bytesRead] = '\0';

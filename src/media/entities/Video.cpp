@@ -89,6 +89,7 @@ void Video::setSize(glm::vec3 newSize)
 std::vector<float> Video::inputFrames(const float* frames, const int32_t& channelCount, const unsigned long& frameCount,
 																			const zg::audio::audio_time_t& time)
 {
+	return {};
 }
 void Video::outputFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount,
 												 const zg::audio::audio_time_t& time)

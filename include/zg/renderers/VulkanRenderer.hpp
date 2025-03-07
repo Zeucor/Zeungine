@@ -113,7 +113,9 @@ namespace zg
 		static bool fallbackToSwiftshader;
 		static bool attempedCoreVulkan;
 		static SharedLibrary vulkanLibrarySS;
+#if defined(__linux__) || defined(MACOS)
 		static SharedLibrary vulkanLibraryCore;
+#endif
 		GET_PROC_ADDR_MEMBER(getProcAddr);
 		PFN_vkCreateInstance _vkCreateInstance;
 		PFN_vkGetInstanceProcAddr _vkGetInstanceProcAddr;

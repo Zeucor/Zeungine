@@ -97,7 +97,11 @@ GetProcAddrFunc VulkanRenderer::doGetProcAddr()
 		attempedCoreVulkan = true;
 		try
 		{
+#if defined(__linux__) || defined(MACOS)
 			return vulkanLibraryCore.getProc<GetProcAddrFunc>("vkGetInstanceProcAddr");
+#elif defined(_WIN32)
+			return vkGetInstanceProcAddr;
+#endif
 		}
 		catch (...)
 		{

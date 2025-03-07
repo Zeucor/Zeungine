@@ -20,15 +20,18 @@ set(SKIP_GLSLANG_INSTALL ON)
 set(SHADERC_SKIP_INSTALL ON)
 set(SHADERC_SKIP_TESTS ON)
 set(SHADERC_SKIP_EXAMPLES ON)
+set(SHADERC_COMPILE_GLSLC OFF)
 set(SPIRV_SKIP_EXECUTABLES ON)
 set(SKIP_SPIRV_TOOLS_INSTALL ON)
+set(SWIFTSHADER_BUILD_TESTS OFF)
+set(GLSLANG_ENABLE_INSTALL OFF)
+set(ENABLE_GLSLANG_BINARIES OFF)
 cmake_policy(SET CMP0097 NEW)
 include(ExternalProject)
 message(STATUS "FetchContent_Declare: swiftshader")
-FetchContent_Declare(
-    swiftshader
+FetchContent_Declare(swiftshader
     GIT_REPOSITORY https://github.com/ZeunO8/swiftshader.git
-    GIT_TAG master)
+    GIT_TAG win_x86_64)
 FetchContent_MakeAvailable(swiftshader)
 # SPIRV-Headers
 FetchContent_Declare(SPIRV-Headers
@@ -38,9 +41,13 @@ FetchContent_MakeAvailable(SPIRV-Headers)
 # shaderc
 FetchContent_Declare(shaderc
     GIT_REPOSITORY https://github.com/ZeunO8/shaderc.git
-    GIT_TAG main
+    GIT_TAG win_x86_64
     GIT_SUBMODULES "")
 FetchContent_MakeAvailable(shaderc)
+set_target_properties(glslang PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(glslang PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(glslang PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(glslang PROPERTIES MINSIZEREL_POSTFIX "")
 
 # FfMpeG
 message(STATUS "|FetchContent&Build&buildInstall|OneTime: ffmpeg")
@@ -60,14 +67,14 @@ if(ANDROID)
     set(FFMPEG_STRIP ${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip)
     set(ffmpeg_CONFIGURE_OPTIONS ${ffmpeg_CONFIGURE_OPTIONS} --target-os=android --arch=${CMAKE_ANDROID_ARCH} --cross-prefix=${CROSS_PREFIX} --sysroot=${CMAKE_SYSROOT} --cpu=${CPU} --ar=${FFMPEG_AR} --strip=${FFMPEG_STRIP} --ranlib=${FFMPEG_RANLIB} --enable-cross-compile)
     set(SHELL bash)
-elseif(WINDOWS)
+elseif(WIN32)
     set(ffmpeg_CONFIGURE_OPTIONS ${ffmpeg_CONFIGURE_OPTIONS} --disable-asm --disable-mmx --disable-mmxext --disable-sse2 --disable-x86asm --toolchain=msvc)
     set(SHELL sh)
 else()
     set(SHELL bash)
 endif()
 set(ffmpeg_CONFIG_COMMAND ${SHELL} "./configure")
-if(WINDOWS)
+if(WIN32)
     set(ffmpeg_BUILD_COMMAND "C:\\msys64\\msys2_shell.cmd" "-defterm" "-no-start" "-mingw64" "-here" "-use-full-path" "-c" "make")
     set(ffmpeg_INSTALL_COMMAND "C:\\msys64\\msys2_shell.cmd" "-defterm" "-no-start" "-mingw64" "-here" "-use-full-path" "-c" "make install")
 else()

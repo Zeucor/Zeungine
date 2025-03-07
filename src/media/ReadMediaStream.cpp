@@ -42,7 +42,7 @@ size_t ReadMediaStream::open()
 		formatContext = avformat_alloc_context();
 		if (avformat_open_input(&formatContext, uri.c_str(), 0, 0))
 		{
-			std::cerr << "Error opening '" << uri << ' formatContext' << std::endl;
+			std::cerr << "Error opening '" << uri << "' formatContext" << std::endl;
 			return 0;
 		}
 	}
