@@ -28,6 +28,7 @@ namespace zg::audio
 		int32_t start();
 		ma_device_config getDefaultDeviceConfig(ma_device_info *playbackDeviceInfos, const ma_uint32 &playbackDeviceCount, int32_t &selectedDeviceIndex);
 		int32_t stop();
+		bool clearPipeline();
 		bool await();
 		audio_time_t getEngineTime();
         audio_time_t getTimeNanoSeconds();

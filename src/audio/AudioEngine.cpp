@@ -138,6 +138,12 @@ int32_t AudioEngine::stop()
 	running = false;
 	return 0;
 }
+bool AudioEngine::clearPipeline()
+{
+	pipeline.stages.clear();
+	pipeline.stagesCount = 0;
+	return false;
+}
 audio_time_t AudioEngine::getEngineTime()
 {
 	return getTimeNanoSeconds() - startTimeNs;
