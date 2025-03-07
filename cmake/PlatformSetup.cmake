@@ -93,9 +93,9 @@ function(zg_setup_target
     message(STATUS "Setting^up ${LIBRARY_TYPE} target ${LIBRARY_NAME} located at \"${LIBRARY_LOCATION}\" which ${LIBRARY_EXISTS}")
 	set_target_properties(${TARGET_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_LOCATION})
 endfunction()
-# # Library type, Static if Windows, otherwise Shared
-# if(WIN32)
-#     set(ZG_LIBRARY_TYPE STATIC)
-# else()
+# Library type, Static if Windows, otherwise Shared
+if(WIN32)
+    set(ZG_LIBRARY_TYPE STATIC)
+else()
     set(ZG_LIBRARY_TYPE SHARED)
-# endif()
+endif()
