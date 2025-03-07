@@ -26,3 +26,19 @@ install(DIRECTORY music DESTINATION ${ZG_BIN_INSTALL_PREFIX}
 install(DIRECTORY videos DESTINATION ${ZG_BIN_INSTALL_PREFIX}
     FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+
+if(WINDOWS)
+    set(PATH_TO_ADD "C:\\\\Program Files\\\\Zeungine\\\\${CMAKE_BUILD_TYPE}")
+    install(CODE "
+        execute_process(
+            COMMAND powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"
+                \$dirToAdd='${PATH_TO_ADD}';
+                \$envPath=[System.Environment]::GetEnvironmentVariable('Path', [System.EnvironmentVariableTarget]::User);
+                if (-not \$envPath -or \$envPath.Split(';') -notcontains \$dirToAdd) {
+                    \$newPath = (\$envPath + ';' + \$dirToAdd).Trim(';');
+                    [System.Environment]::SetEnvironmentVariable('Path', \$newPath, [System.EnvironmentVariableTarget]::User);
+                }
+            \"
+        )
+    ")
+endif()

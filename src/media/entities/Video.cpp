@@ -3,7 +3,7 @@
 #include <zg/media/entities/Video.hpp>
 using namespace zg::media::entities;
 Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale,
-						 glm::vec2 _size, const std::string& uri) :
+						 glm::vec2 _size, const std::string& uri, std::string_view name) :
 		Entity(_window, {"UV2", "Texture2D", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
 					 {0, 1, 2, 2, 3, 0}, 4, {}, _position, _rotation, _scale,
 					 name.empty() ? "Video " + std::to_string(++videosCount) : name),
@@ -18,7 +18,8 @@ Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rot
 	init(_size);
 }
 Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale,
-						 glm::vec2 _size, const std::string& uri, const std::shared_ptr<interfaces::IFile>& _filePointer) :
+						 glm::vec2 _size, const std::string& uri, const std::shared_ptr<interfaces::IFile>& _filePointer,
+						 std::string_view name) :
 		Entity(_window, {"UV2", "Texture2D", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
 					 {0, 1, 2, 2, 3, 0}, 4, {}, _position, _rotation, _scale,
 					 name.empty() ? "Video " + std::to_string(++videosCount) : name),
@@ -60,14 +61,15 @@ bool Video::preRender()
 	{
 		if (firstFrame)
 		{
-			window.addPreSwapbuffersOnceoff([&]()
-			{
-				startAudio();
-			});
+			window.addPreSwapbuffersOnceoff([&]() { startAudio(); });
 			firstFrame = false;
 		}
 		fillNextVideoFrame(texturePointer);
 		budget->end();
+	}
+	if (firstFrame)
+	{
+		return false;
 	}
 	const auto& model = getModelMatrix();
 	shader->bind(*this);
@@ -83,7 +85,10 @@ bool Video::preRender()
 void Video::setSize(glm::vec3 newSize)
 {
 	size = newSize;
-	positions = {{-size.x / 2, -size.y / 2, 0}, {size.x / 2, -size.y / 2, 0}, {size.x / 2, size.y / 2, 0}, {-size.x / 2, size.y / 2, 0}};
+	positions = {{-size.x / 2, -size.y / 2, 0},
+							 {size.x / 2, -size.y / 2, 0},
+							 {size.x / 2, size.y / 2, 0},
+							 {-size.x / 2, size.y / 2, 0}};
 	updateElements("Position", positions);
 }
 std::vector<float> Video::inputFrames(const float* frames, const int32_t& channelCount, const unsigned long& frameCount,

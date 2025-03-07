@@ -109,10 +109,10 @@ namespace zg::budget
 			std::unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
 			auto& begin = std::get<0>(history_tuple);
-			auto __now = SYS_CLOCK::now();
+			auto __now = NANO_TIMEPOINT_CAST(SYS_CLOCK::now());
 			if (m_instantStart && !m_sleeponsleep)
 			{
-				if (__now.time_since_epoch().count() >= m_IsNextBudgetWakeAtTimePointCount)
+				if (__now >= m_IsNextBudgetWakeAtTimePoint)
 				{
 					begin = __now;
 					return true;
@@ -137,7 +137,7 @@ namespace zg::budget
 			}
 			if (t_if)
 			{
-				if (mid.time_since_epoch().count() >= m_IsNextBudgetWakeAtTimePointCount)
+				if (mid >= m_IsNextBudgetWakeAtTimePoint)
 				{
 					return true;
 				}
@@ -218,7 +218,6 @@ namespace zg::budget
 		SecondsDuration m_IsZgBudget;
 		SecondsDuration m_IsBeginningZgBudget;
 		TimePoint m_IsNextBudgetWakeAtTimePoint;
-		Real m_IsNextBudgetWakeAtTimePointCount = 0;
 		size_t m_budgetCountNs;
 		bool m_sleeponsleep;
 		using HistoryItem =
@@ -296,11 +295,10 @@ namespace zg::budget
 
 		TimePoint setNextBudgetWakeAtTimePoint()
 		{
-			auto __now = SYS_CLOCK::now();
+			auto __now = NANO_TIMEPOINT_CAST(SYS_CLOCK::now());
 			auto nsQuantized = SecondsDuration(m_budgetCountNs - (__now.time_since_epoch().count() % m_budgetCountNs));
 			m_IsZgBudget = nsQuantized;
 			m_IsNextBudgetWakeAtTimePoint = NANO_TIMEPOINT_CAST(__now + m_IsZgBudget);
-			m_IsNextBudgetWakeAtTimePointCount = m_IsNextBudgetWakeAtTimePoint.time_since_epoch().count();
 			return __now;
 		}
 	};

@@ -17,9 +17,9 @@ namespace zg::media::entities
 		bool sweetFrameTime = true;
 		inline static size_t videosCount = 0;
 		Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale, glm::vec2 _size,
-					const std::string& uri);
+					const std::string& uri, std::string_view name = "");
 		Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale, glm::vec2 _size,
-					const std::string& uri, const std::shared_ptr<interfaces::IFile>& filePointer);
+					const std::string& uri, const std::shared_ptr<interfaces::IFile>& filePointer, std::string_view name = "");
 
 	private:
 		bool firstFrame = true;
