@@ -12,8 +12,8 @@ NANOSECONDS_DURATION windowSD = NANOSECONDS_DURATION((1.0 / 144.0) * NANOSECONDS
 budget::ZBudget windowBudget(windowSD);
 #ifdef _WIN32
 extern "C" {
-_declspec(dllexport) DWORD NvOptimusEnablement = 1;
-_declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+__declspec(dllexport) DWORD NvOptimusEnablement = 1;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
 Window::Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY, bool borderless,

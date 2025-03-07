@@ -156,7 +156,7 @@ void WIN32Window::init(Window &renderWindow)
 	windowType = WINDOW_TYPE_WIN32;
 	if (!setDPIAware)
 	{
-		HRESULT hr = SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+		HRESULT hr = SetProcessDPIAware();
 		if (FAILED(hr))
 		{
 			throw std::runtime_error("SetProcessDpiAwareness failed");

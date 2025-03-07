@@ -84,7 +84,7 @@ namespace zg
 				throw STANDARD::runtime_error("Library not loaded");
 			}
 #ifdef _WIN32
-			void* procAddress = GetProcAddress(libraryPointer, procName.data());
+			void* procAddress = (void*)GetProcAddress(libraryPointer, procName.data());
 #elif defined(__linux__) || defined(MACOS)
 			void* procAddress = dlsym(libraryPointer, procName.data());
 #endif
