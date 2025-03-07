@@ -13,64 +13,6 @@ if "%~1"=="" (
 
 set MODE=%1
 
-:: Function to build dependencies
-:build_dependencies
-cd /d cmake\Dependencies || exit /b 1
-
-echo -- Starting zegndeps Debug Configure
-cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
-echo -- Starting zegndeps Debug Build
-cmake --build build
-echo -- Starting zegndeps Debug Package
-cpack --config build\CPackConfig.cmake -C Debug
-
-echo -- Starting zegndeps Release Configure
-cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
-echo -- Starting zegndeps Release Build
-cmake --build build
-echo -- Starting zegndeps Release Package
-cpack --config build\CPackConfig.cmake -C Release
-
-cd ..\..
-if not "%MODE%"=="0" exit /b 0
-
-:: Function to build headers
-:build_headers
-cd /d cmake\Headers || exit /b 1
-
-echo -- Starting zeungine Headers Configure
-cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
-echo -- Starting zeungine Headers Package
-cpack --config build\CPackConfig.cmake -C Release
-
-cd ..\..
-if not "%MODE%"=="0" exit /b 0
-
-:: Function to build zeungine
-:build_zeungine
-echo -- Starting zeungine Debug Configure
-cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
-echo -- Starting zeungine Debug Build
-cmake --build build
-echo -- Starting zeungine Debug Package
-cpack --config build\CPackConfig.cmake -C Debug
-
-echo -- Starting zeungine Release Configure
-cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
-echo -- Starting zeungine Release Build
-cmake --build build
-echo -- Starting zeungine Release Package
-cpack --config build\CPackConfig.cmake -C Release
-
-:: List releases if built
-if "%MODE%"=="0" (
-    dir /a /o-s releases
-) else if "%MODE%"=="3" (
-    dir /a /o-s releases
-)
-
-exit /b 0
-
 :: Execute based on mode
 if "%MODE%"=="0" (
     call :build_dependencies
@@ -90,3 +32,73 @@ if "%MODE%"=="0" (
     echo   3 - Build zeungine only
     exit /b 1
 )
+
+exit /b 0
+
+:: Function to build dependencies
+:build_dependencies
+cd /d cmake\Dependencies || exit /b 1
+
+echo -- Starting zegndeps Debug Configure
+cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
+echo -- Starting zegndeps Debug Build
+cmake --build build
+echo -- Starting zegndeps Debug Install
+cmake --install build
+echo -- Starting zegndeps Debug Package
+cpack --config build\CPackConfig.cmake -C Debug
+
+echo -- Starting zegndeps Release Configure
+cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
+echo -- Starting zegndeps Release Build
+cmake --build build
+echo -- Starting zegndeps Release Install
+cmake --install build
+echo -- Starting zegndeps Release Package
+cpack --config build\CPackConfig.cmake -C Release
+
+cd ..\..
+goto :EOF
+
+:: Function to build headers
+:build_headers
+cd /d cmake\Headers || exit /b 1
+
+echo -- Starting zeungine Headers Configure
+cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
+echo -- Starting zeungine Headers Install
+cmake --install build
+echo -- Starting zeungine Headers Package
+cpack --config build\CPackConfig.cmake -C Release
+
+cd ..\..
+goto :EOF
+
+:: Function to build zeungine
+:build_zeungine
+echo -- Starting zeungine Debug Configure
+cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
+echo -- Starting zeungine Debug Build
+cmake --build build
+echo -- Starting zeungine Debug Install
+cmake --install build
+echo -- Starting zeungine Debug Package
+cpack --config build\CPackConfig.cmake -C Debug
+
+echo -- Starting zeungine Release Configure
+cmake -G "Ninja" -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
+echo -- Starting zeungine Release Build
+cmake --build build
+echo -- Starting zeungine Release Install
+cmake --install build
+echo -- Starting zeungine Release Package
+cpack --config build\CPackConfig.cmake -C Release
+
+:: List releases if built
+if "%MODE%"=="0" (
+    dir /a /o-s releases
+) else if "%MODE%"=="3" (
+    dir /a /o-s releases
+)
+
+goto :EOF
