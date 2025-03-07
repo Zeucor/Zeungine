@@ -81,7 +81,7 @@ else()
     set(ffmpeg_BUILD_COMMAND make)
     set(ffmpeg_INSTALL_COMMAND make install)
 endif()
-message(STATUS "ffmpeg-configure")
+message(STATUS "ffmpeg-configure: ${ffmpeg_SOURCE_DIR} ${ffmpeg_CONFIG_COMMAND}")
 execute_process(
     COMMAND ${ffmpeg_CONFIG_COMMAND} ${ffmpeg_CONFIGURE_OPTIONS}
     WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR}

@@ -14,6 +14,11 @@ function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     if(NOT LIBRARY)
         add_test(NAME ${TEST_NAME} COMMAND $<TARGET_FILE_DIR:${TEST_NAME}>/${TEST_NAME}${TEST_EXT} ${TEST_ARGS})
     endif()
+    if(ZG_INSTALL_TESTS)
+        install(TARGETS ${TEST_NAME}
+            ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
+            LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX})
+    endif()
 endfunction()
 
 # Tests
