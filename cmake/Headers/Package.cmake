@@ -1,7 +1,11 @@
 # todo make function
 
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_SOURCE_DIR}/../../releases")
-set(CPACK_PACKAGE_NAME "zeungine-headers")
+if(UNIX)
+    set(CPACK_PACKAGE_NAME "zeungine-headers${BUILD_POSTFIX}")
+elseif(WIN32)
+    set(CPACK_PACKAGE_NAME "ZeungineHeaders${BUILD_POSTFIX}")
+endif()
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Dependency headers for Zeungine")
 set(CPACK_PACKAGE_DESCRIPTION "")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://**.**.**.*e*")
