@@ -12,24 +12,23 @@ Uses CMake for it's build system and comes with some included tests
 git clone git@github.com:Zeungine/Zeungine.git
 ```
 
-### Build Dependencies
+### Builing
 
-There are a number of things that must be configured for each platform for dependencies and 'ultimately' zeungine to build. 
+If ultimately you want a installed copy of Zeungine and dependencies then you'll be best off using...
+
+`win-package.bat` or `unx-package.sh`
+
+You can analyze these files for their configure, compile, install and package commands
 
 ###### All platforms
 
  - `cmake` and `ninja` are required in your path
- - run configure and build, as user s, and, install as an admin
 
 ###### Windows
 
  - `Visual Studio 2022` or newer for MSVC
  - `msys64` installed at `C:\msys64` for ffmpeg shell consistency
- - Run all commands inside 'xXX Native Tools Command Prompt for VS20XX'
- - also, required for swiftshader dependency, run once, as admin,
-```bash
-powershell -Command Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem -Name LongPathsEnabled -Value 1
-```
+ - Run all commands inside 'xXX Native Tools Command Prompt for VS20XX' as admin
 
 ###### Linux
 
@@ -41,22 +40,6 @@ apt install libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxran
 
  - *XCode* for `clang` compiler
  - `brew install cmake`
-
-#### Compiling, Linking, Installing Dependencies (only need to do this as often as deps are updated)
-
-```bash
-cd Zeungine/cmake/Dependencies
-cmake -B build -GNinja
-cmake --build build
-```
-
-### Compiling Zeungine (library, tests and editor)
-
-```bash
-cd Zeungine
-cmake -B build -GNinja
-cmake --build build
-```
 
 ### Testing
 
