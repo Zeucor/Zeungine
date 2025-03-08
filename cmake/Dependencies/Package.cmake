@@ -2,9 +2,9 @@
 
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_SOURCE_DIR}/../../releases")
 if(UNIX)
-    set(CPACK_PACKAGE_NAME "libzegndeps${BUILD_POSTFIX}")
+    set(CPACK_PACKAGE_NAME "zeungine-dependencies${BUILD_POSTFIX}")
 elseif(WIN32)
-    set(CPACK_PACKAGE_NAME "zegndeps${BUILD_POSTFIX}")
+    set(CPACK_PACKAGE_NAME "ZeungineDependencies${BUILD_POSTFIX}")
 endif()
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Zeungine: an engine allowing developers to build cross platform games apps and tools")
 set(CPACK_PACKAGE_DESCRIPTION "Contains various structs and methods to help build cross platform games apps and tools quickly")
