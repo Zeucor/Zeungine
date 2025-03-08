@@ -48,8 +48,6 @@ elseif(("${CMAKE_BUILD_TYPE}" MATCHES "Debug") OR ("${CMAKE_BUILD_TYPE}" MATCHES
         set(C_RUNTIME "MTd")
     endif()
 endif()
-set(ZG_LIB_DIR "${CMAKE_SOURCE_DIR}/lib/${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}/${RELEASE_OR_DEBUG}")
-message(STATUS "ZG_LIB_DIR: ${ZG_LIB_DIR}")
 
 # Add build flags
 if(LINUX OR MACOS)
