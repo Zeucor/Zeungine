@@ -14,7 +14,7 @@ git clone git@github.com:Zeungine/Zeungine.git
 
 ### Releases
 
-Releases are available on GitHub, see [here](https://github.com/Zeucor/Zeungine/releases), ideally you'll need all **5** packages `(2*(debug&release)+headers)`
+Releases are available on GitHub, see [here](https://github.com/Zeucor/Zeungine/releases), ideally for development you'll need all **5** packages `(2*(debug&release)+headers)`, when shipping production packages built using Zeungine you _can_ ship with just **2** (release(zeungine+dependencies)) installers
 
 ### Builing from Source
 
@@ -39,6 +39,8 @@ You can analyze these files for their configure, compile, install and package co
 ```bash
 apt install libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev
 ```
+
+apt packages for zeungine coming soon
 
 ###### MacOS
 
