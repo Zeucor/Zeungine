@@ -12,7 +12,11 @@ Uses CMake for it's build system and comes with some included tests
 git clone git@github.com:Zeungine/Zeungine.git
 ```
 
-### Builing
+### Releases
+
+Releases are available on GitHub, see [here](https://github.com/Zeucor/Zeungine/releases), ideally you'll need all **5** packages `(2*(debug&release)+headers)`
+
+### Builing from Source
 
 If ultimately you want a installed copy of Zeungine and dependencies then you'll be best off using...
 
