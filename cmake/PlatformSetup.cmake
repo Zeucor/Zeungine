@@ -82,8 +82,6 @@ function(zg_setup_target
 	else()
 		set(LIBRARY_LOCATION "${LIBRARY_DIR}/${LIBRARY_PREFIX}${LIBRARY_NAME}${LIBRARY_SUFFIX}")
 	endif()
-    message(STATUS "LIBRARY_LOCATION: ${LIBRARY_LOCATION}")
-    message(STATUS "IMPLIB_LOCATION: ${IMPLIB_LOCATION}")
     set(LAST_LIBRARY_LOCATION ${LIBRARY_LOCATION} PARENT_SCOPE)
     set(LAST_TARGET_NAME ${TARGET_NAME} PARENT_SCOPE)
     set(ZG_LIBRARIES ${ZG_LIBRARIES} ${TARGET_NAME} PARENT_SCOPE)
@@ -93,7 +91,6 @@ function(zg_setup_target
     else()
         set(LIBRARY_EXISTS "does not exist")
     endif()
-    message(STATUS "Setting^up ${LIBRARY_TYPE} target ${LIBRARY_NAME} located at \"${LIBRARY_LOCATION}\" which ${LIBRARY_EXISTS}")
 	set_target_properties(${TARGET_NAME} PROPERTIES IMPORTED_LOCATION ${LIBRARY_LOCATION})
 endfunction()
 # Library type, Static if Windows, otherwise Shared
