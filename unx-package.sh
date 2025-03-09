@@ -17,14 +17,14 @@ build_dependencies() {
     cd cmake/Dependencies || exit
 
     echo " -- Starting zegndeps Debug Configure"
-    cmake -GNinja -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
+    cmake -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
     echo " -- Starting zegndeps Debug Build"
     cmake --build build
     echo " -- Starting zegndeps Debug Package"
     sudo cpack --config build/CPackConfig.cmake -C Debug
 
     echo " -- Starting zegndeps Release Configure"
-    cmake -GNinja -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
+    cmake -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
     echo " -- Starting zegndeps Release Build"
     cmake --build build
     echo " -- Starting zegndeps Release Package"
@@ -38,7 +38,7 @@ build_headers() {
     cd cmake/Headers || exit
 
     echo " -- Starting zeungine Headers Configure"
-    cmake -GNinja -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
+    cmake -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
     echo " -- Starting zeungine Headers Package"
     sudo cpack --config build/CPackConfig.cmake -C Release
 
@@ -48,14 +48,14 @@ build_headers() {
 # Function to build zeungine
 build_zeungine() {
     echo " -- Starting zeungine Debug Configure"
-    cmake -GNinja -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
+    cmake -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
     echo " -- Starting zeungine Debug Build"
     cmake --build build
     echo " -- Starting zeungine Debug Package"
     sudo cpack --config build/CPackConfig.cmake -C Debug
 
     echo " -- Starting zeungine Release Configure"
-    cmake -GNinja -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
+    cmake -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
     echo " -- Starting zeungine Release Build"
     cmake --build build
     echo " -- Starting zeungine Release Package"

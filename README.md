@@ -26,7 +26,7 @@ You can analyze these files for their configure, compile, install and package co
 
 ###### All platforms
 
- - `cmake` and `ninja` are required in your path
+ - `cmake` is required in your path
 
 ###### Windows
 
