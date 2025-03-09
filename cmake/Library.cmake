@@ -38,16 +38,5 @@ if(BUILD_VULKAN)
     endif()
 endif()
 
-target_link_libraries(zeungine shaderc glslang SPIRV-Tools-shared)
-
-target_link_libraries(zeungine avcodec avdevice avfilter avformat avutil swresample swscale)
-
-target_link_libraries(zeungine lunasvg plutovg)
-
-target_link_libraries(zeungine freetype)
-
-target_link_libraries(zeungine vk_device vk_wsi vk_system vk_pipeline)
-
-target_link_libraries(zeungine marl)
-
-target_link_libraries(zeungine miniaudio)
+message(STATUS "ZG_LIBRARIES: ${ZG_LIBRARIES}")
+target_link_libraries(zeungine ${ZG_LIBRARIES})
