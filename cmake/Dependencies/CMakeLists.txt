@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 include(../InstallPrefix.cmake)
-project(zegndeps VERSION ${ZG_VERSION_MAJOR}.${ZG_VERSION_MINOR}.${ZG_VERSION_PATCH})
+project(zegndeps VERSION ${ZG_VERSION_MAJOR}.${ZG_VERSION_MINOR}.${ZG_VERSION_PATCH}.${ZG_VERSION_TWEAK})
 set(CMAKE_CXX_STANDARD 20)
 if(LINUX OR MACOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -fPIC")
