@@ -52,6 +52,7 @@ StatusText::StatusText(zg::Window &window,
 		font,
 		FontSize,
 		true,
+		glm::vec2(0, 0),
 		[&](auto textSize)
 		{
 			return glm::vec3(textSize.x / 2 + 8 / this->window.windowWidth / 0.5, -NDCHeight / 2, 0.1);

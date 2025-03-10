@@ -59,6 +59,7 @@ Dialog::Dialog(zg::Window &window,
 		font,
 		fontSize,
 		true,
+		glm::vec2(0, 0),
 		[dialogSize](auto titleSize)
 		{
 			return glm::vec3(titleSize.x / 2 - dialogSize.x / 2, -titleSize.y / 2 + dialogSize.y / 2, 0.1);

@@ -120,7 +120,7 @@ Tab::Tab(Window& window, Scene& scene, glm::vec3 position, glm::vec3 rotation, g
 	TextSize.x /= window.windowWidth * 0.5f;
 	textView = std::make_shared<TextView>(
 		window, scene, glm::vec3(TextSize.x / 2 + (padding / 2) / window.windowWidth / 2 + iconPlane->size.x, -NDCHeight / 2, 0.1f), glm::vec3(0), glm::vec3(1),
-		glm::vec4(1, 1, 1, 1), text, TextSize, font, fontSize, true, TextView::RepositionHandler(),
+		glm::vec4(1, 1, 1, 1), text, TextSize, font, fontSize, true, glm::vec2(0, 0), TextView::RepositionHandler(),
 		TextView::RepositionHandler(), [&] { return NDCHeight * this->window.windowHeight * 0.5f / 1.5f; });
 	textView->addToBVH = false;
 	addChild(textView);

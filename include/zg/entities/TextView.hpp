@@ -23,6 +23,7 @@ namespace zg::entities
 		fonts::freetype::FreetypeFont &font;
 		float fontSize;
 		bool textSizeIsNDC;
+		glm::vec2 bounds;
 		using RepositionHandler = std::function<glm::vec3(glm::vec2)>;
 		RepositionHandler repositionHandler;
 		using ResizeHandler = std::function<glm::vec2(glm::vec2)>;
@@ -44,6 +45,7 @@ namespace zg::entities
 						  fonts::freetype::FreetypeFont &font,
 						  float fontSize,
 						  bool textSizeIsNDC = true,
+						  glm::vec2 bounds = {0, 0},
 						  const RepositionHandler &repositionHandler = {},
 						  const ResizeHandler &resizeHandler = {},
 						  const ReFontSizeHandler &reFontSizeHandler = {},

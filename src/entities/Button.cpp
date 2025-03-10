@@ -51,6 +51,7 @@ Button::Button(Window &window,
 		font,
 		FontSize,
 		true,
+		glm::vec2(0, 0),
 		TextView::RepositionHandler(),
 		TextView::ResizeHandler(),
 		[&]
