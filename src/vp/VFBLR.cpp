@@ -30,12 +30,14 @@ void VFBLR::onFrontTick()
     scene.view.position.x += scene.view.direction.x * force * scene.window.deltaTime;
     scene.view.position.y += scene.view.direction.y * force * scene.window.deltaTime;
     scene.view.position.z += scene.view.direction.z * force * scene.window.deltaTime;
+    scene.view.update();
 }
 void VFBLR::onBackTick()
 {
     scene.view.position.x -= scene.view.direction.x * force * scene.window.deltaTime;
     scene.view.position.y -= scene.view.direction.y * force * scene.window.deltaTime;
     scene.view.position.z -= scene.view.direction.z * force * scene.window.deltaTime;
+    scene.view.update();
 }
 void VFBLR::onLeftTick()
 {
@@ -45,6 +47,7 @@ void VFBLR::onLeftTick()
     scene.view.position.x -= right.x * force * scene.window.deltaTime;
     scene.view.position.y -= right.y * force * scene.window.deltaTime;
     scene.view.position.z -= right.z * force * scene.window.deltaTime;
+    scene.view.update();
 }
 void VFBLR::onRightTick()
 {
@@ -54,4 +57,5 @@ void VFBLR::onRightTick()
     scene.view.position.x += right.x * force * scene.window.deltaTime;
     scene.view.position.y += right.y * force * scene.window.deltaTime;
     scene.view.position.z += right.z * force * scene.window.deltaTime;
+    scene.view.update();
 }
