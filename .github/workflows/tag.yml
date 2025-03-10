@@ -17,7 +17,7 @@ jobs:
 
       - name: Install Dependencies on Linux
         if: runner.os == 'Linux'
-        run: sudo apt install nasm libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev
+        run: sudo apt install nasm libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev ninja-build
         shell: bash
 
       - name: Build Package on Linux
