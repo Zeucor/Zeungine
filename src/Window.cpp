@@ -160,6 +160,7 @@ void Window::startWindow()
 		windowBudget.sleep();
 	}
 _exit:
+	iPlatformWindowRef.enableKeyAutoRepeat();
 	audioEngine.stop();
 	audioEngine.clearPipeline();
 	delete shaderContext;
