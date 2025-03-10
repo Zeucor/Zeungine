@@ -68,7 +68,7 @@ void XCBWindow::init(Window& renderWindow)
 	XSync(display, False);
 	screenNumber = DefaultScreen(display);
 	initAtoms();
-	XkbGetAutoRepeatRate(display, 0, originalDelay, originalInterval);
+	XkbGetAutoRepeatRate(display, 0, &originalDelay, &originalInterval);
 }
 void XCBWindow::initAtoms()
 {
