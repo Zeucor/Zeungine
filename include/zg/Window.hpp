@@ -8,6 +8,7 @@
 #include "./textures/Framebuffer.hpp"
 #include "audio/AudioEngine.hpp"
 #include <zg/queue.hpp>
+#include <zg/system/Budget.hpp>
 namespace zg
 {
 	namespace shaders
@@ -68,7 +69,7 @@ namespace zg
 		std::shared_ptr<Scene> scene;
 		bool open = true;
 		std::chrono::steady_clock::time_point lastFrameTime;
-		long double deltaTime = 0;
+		long double deltaTime;
 		bool justWarpedPointer = false;
 		bool borderless = false;
 		bool minimized = false;
@@ -95,6 +96,8 @@ namespace zg
 		glm::vec2 oldXY;
 		bool vsync = true;
 		audio::AudioEngine audioEngine;
+		NANOSECONDS_DURATION frameduration;
+		budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL> framebudget;
 		Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY,
 					 bool borderless = false, bool vsync = true, uint32_t framerate = 60);
 		Window(Window& parentWindow, Scene& parentScene, const char* childTitle, float childWindowWidth,

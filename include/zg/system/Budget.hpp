@@ -24,7 +24,6 @@
 #include <zg/zgfilesystem/Directory.hpp>
 #include <zg/zgfilesystem/File.hpp>
 #include <zg/zgfilesystem/Serial.hpp>
-#include "headerplujplusdefines.hpp"
 // include <flat_set>
 //  all creator ids playing back eachother in a serial Universe peace moje enabled.
 using namespace zg::system;

@@ -5,11 +5,8 @@
 #include <zg/entities/Plane.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/shaders/ShaderManager.hpp>
-#include <zg/system/Budget.hpp>
 #include <zg/textures/Texture.hpp>
 using namespace zg;
-NANOSECONDS_DURATION windowSD = NANOSECONDS_DURATION((1.0 / 144.0) * NANOSECONDS::den);
-budget::ZBudget windowBudget(windowSD);
 #ifdef _WIN32
 extern "C" {
 __declspec(dllexport) DWORD NvOptimusEnablement = 1;
@@ -18,8 +15,8 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #endif
 Window::Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY, bool borderless,
 							 bool _vsync, uint32_t framerate) :
-		windowWidth(windowWidth), windowHeight(windowHeight), windowX(windowX), windowY(windowY), borderless(borderless),
-		framerate(framerate), title(title), shaderContext(new ShaderContext), vsync(_vsync)
+		windowWidth(windowWidth), windowHeight(windowHeight), windowX(windowX), windowY(windowY), deltaTime(1.0 / 144.0), borderless(borderless),
+		framerate(framerate), title(title), shaderContext(new ShaderContext), vsync(_vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -28,7 +25,7 @@ Window::Window(Window& _parentWindow, Scene& _parentScene, const char* _childTit
 							 float childWindowHeight, float childWindowX, float childWindowY, bool _NDCFramebufferPlane, bool _vsync,
 							 uint32_t framerate) :
 		iRenderer(_parentWindow.iRenderer), windowWidth(childWindowWidth), windowHeight(childWindowHeight),
-		windowX(childWindowX), windowY(childWindowY), framerate(framerate), borderless(false), title(_childTitle),
+		windowX(childWindowX), windowY(childWindowY), framerate(framerate), deltaTime(1.0 / 144.0), borderless(false), title(_childTitle),
 		isChildWindow(true), parentWindow(&_parentWindow), parentScene(&_parentScene),
 		shaderContext(_parentWindow.shaderContext), NDCFramebufferPlane(_NDCFramebufferPlane),
 		framebufferTexture(std::make_shared<textures::Texture>(
@@ -48,7 +45,7 @@ Window::Window(Window& _parentWindow, Scene& _parentScene, const char* _childTit
 			glm::vec2(childWindowWidth / (NDCFramebufferPlane ? (_parentWindow.windowWidth / 2) : 1),
 								childWindowHeight / (NDCFramebufferPlane ? (_parentWindow.windowHeight / 2) : 1)),
 			*framebufferTexture)),
-		vsync(_vsync)
+		vsync(_vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -113,51 +110,51 @@ void Window::startWindow()
 	runRunnables();
 	while (true)
 	{
-		windowBudget.begin();
+		framebudget.begin();
 		if (!iPlatformWindowRef.pollMessages())
 		{
-			windowBudget.sleep();
+			framebudget.sleep();
 			break;
 		}
-		windowBudget.tick();
+		framebudget.tick();
 		iRendererRef.preBeginRenderPass();
-		windowBudget.tick();
+		framebudget.tick();
 		runRunnables();
-		windowBudget.tick();
+		framebudget.tick();
 		updateKeyboard();
-		windowBudget.tick();
+		framebudget.tick();
 		updateMouse();
-		windowBudget.tick();
+		framebudget.tick();
 		update();
-		windowBudget.tick();
+		framebudget.tick();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
-			windowBudget.tick();
+			framebudget.tick();
 			childWindow.render();
 		}
-		windowBudget.tick();
+		framebudget.tick();
 		iRendererRef.beginRenderPass();
-		windowBudget.tick();
+		framebudget.tick();
 		render();
-		windowBudget.tick();
+		framebudget.tick();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
-			windowBudget.tick();
+			framebudget.tick();
 			childWindow.framebufferPlane->render();
 		}
-		windowBudget.tick();
+		framebudget.tick();
 		iRendererRef.postRenderPass();
-		windowBudget.tick();
+		framebudget.tick();
 		callPreSwapbuffersOnceoff();
 		iRendererRef.swapBuffers();
-		windowBudget.end();
-		windowBudget.sleep();
+		framebudget.end();
+		framebudget.sleep();
 	}
 _exit:
 	iPlatformWindowRef.enableKeyAutoRepeat();
@@ -670,8 +667,8 @@ void Window::runRunnables()
 void Window::updateDeltaTime()
 {
 	auto currentTime = std::chrono::steady_clock::now();
-	std::chrono::duration<long double> duration = currentTime - lastFrameTime;
-	deltaTime = duration.count();
+	// std::chrono::duration<long double> duration = currentTime - lastFrameTime;
+	// deltaTime = duration.count();
 	lastFrameTime = currentTime;
 };
 void Window::resize(glm::vec2 newSize)
