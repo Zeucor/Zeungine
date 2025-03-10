@@ -52,6 +52,7 @@ Button::Button(Window &window,
 		FontSize,
 		true,
 		glm::vec2(0, 0),
+		enums::EBreakStyle::None,
 		TextView::RepositionHandler(),
 		TextView::ResizeHandler(),
 		[&]

@@ -101,12 +101,14 @@ FreetypeFont::FreetypeFont(Window& window, interfaces::IFile& fontFile) :
 	auto fontFileSize = fontFile.size();
 	auto actualFacePointer = facePointer.get();
 	FT_PRINT_AND_THROW_ERROR(
-		FT_New_Memory_Face(freetypeLibrary, (uint8_t*)fontFileBytes.get(), fontFileSize, 0, actualFacePointer), fontPath.string());
+		FT_New_Memory_Face(freetypeLibrary, (uint8_t*)fontFileBytes.get(), fontFileSize, 0, actualFacePointer),
+		fontPath.string());
 	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(*actualFacePointer, FT_ENCODING_UNICODE), fontPath.string());
+	hasKerning = FT_HAS_KERNING(*actualFacePointer);
 };
 float textureScale = 1.f;
-const glm::vec2 FreetypeFont::stringSize(const string_view string, float fontSize, float& lineHeight,
-																				 glm::vec2 bounds)
+const glm::vec2 FreetypeFont::stringSize(const string_view string, float fontSize, float& lineHeight, glm::vec2 bounds,
+																				 enums::EBreakStyle breakStyle)
 {
 	strings::Utf8Iterator iterator(string, 0);
 	const unsigned long& stringSize = string.size();
@@ -119,6 +121,10 @@ const glm::vec2 FreetypeFont::stringSize(const string_view string, float fontSiz
 	}
 	glm::vec2 currentPosition = {0, lineHeight};
 	glm::vec2 size = {0, 0};
+	if (bounds.x)
+	{
+		size.x = bounds.x;
+	}
 	float advanceX = 0;
 	auto advanceLine = [&]()
 	{
@@ -138,33 +144,19 @@ const glm::vec2 FreetypeFont::stringSize(const string_view string, float fontSiz
 		else
 		{
 			auto& character = getCharacter(codepoint, fontSize);
-			advanceX += (character.advance >> 6);
-			if (FT_HAS_KERNING(face) && iterator.hasNextCodepoint())
-			{
-				auto nextIterator = iterator + 1;
-				unsigned long nextCodepoint = *nextIterator;
-				if (nextCodepoint != 10)
-				{
-					auto& nextCharacter = getCharacter(nextCodepoint, fontSize);
-					FT_Vector kerning;
-					FT_Get_Kerning(face, character.glyphIndex, nextCharacter.glyphIndex, FT_KERNING_DEFAULT, &kerning);
-					if (!FT_IS_SCALABLE(face))
-					{
-						advanceX += (kerning.x);
-					}
-					else
-					{
-						advanceX += ((float)(kerning.x) / (float)(1 << 6));
-					}
-				}
-			}
+			advanceX = (character.advance >> 6);
+			addNextKerning(fontSize, character.glyphIndex, iterator, advanceX);
 		}
-		if (scaledBounds.x > 0 && currentPosition.x + advanceX > scaledBounds.x)
+		if (scaledBounds.x > 0 &&
+				shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, scaledBounds.x, fontSize))
 		{
 			advanceLine();
 		}
 		currentPosition.x += advanceX;
-		size.x = (glm::max)(size.x, currentPosition.x);
+		if (!bounds.x)
+		{
+			size.x = (glm::max)(size.x, currentPosition.x);
+		}
 		++iterator;
 	}
 	size.y = currentPosition.y;
@@ -172,7 +164,7 @@ const glm::vec2 FreetypeFont::stringSize(const string_view string, float fontSiz
 };
 void FreetypeFont::stringToTexture(const string_view string, glm::vec4 color, float fontSize, float& lineHeight,
 																	 glm::vec2 textureSize, shared_ptr<textures::Texture>& texturePointer,
-																	 const int64_t& cursorIndex, glm::vec3& cursorPosition)
+																	 const int64_t& cursorIndex, glm::vec3& cursorPosition, enums::EBreakStyle breakStyle)
 {
 	glm::ivec2 scaledSize = textureSize * textureScale;
 	if (!texturePointer || texturePointer->size.x != scaledSize.x || texturePointer->size.y != scaledSize.y)
@@ -214,13 +206,12 @@ void FreetypeFont::stringToTexture(const string_view string, glm::vec4 color, fl
 		if (codepoint == 10)
 		{
 			advanceLine();
+			++iterator;
+			continue;
 		}
-		else
-		{
-			characterPointer = &getCharacter(codepoint, fontSize * textureScale);
-			advanceX = (characterPointer->advance >> 6);
-		}
-		if (currentPosition.x + advanceX > scaledSize.x)
+		characterPointer = &getCharacter(codepoint, fontSize * textureScale);
+		advanceX = (characterPointer->advance >> 6);
+		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, scaledSize.x, fontSize))
 		{
 			advanceLine();
 		}
@@ -233,29 +224,11 @@ void FreetypeFont::stringToTexture(const string_view string, glm::vec4 color, fl
 				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) +
 					(characterPointer->size.y / 2.f);
 				scene.addEntity(make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0),
-																													glm::vec3(1, 1, 1), characterPointer->size,
-																													*characterPointer->texturePointer),
+																										 glm::vec3(1, 1, 1), characterPointer->size,
+																										 *characterPointer->texturePointer),
 												false);
 			}
-			if (FT_HAS_KERNING(face) && iterator.hasNextCodepoint())
-			{
-				auto nextIterator = iterator + 1;
-				uint64_t nextCodepoint = *nextIterator;
-				if (nextCodepoint != 10)
-				{
-					auto& nextCharacter = getCharacter(nextCodepoint, fontSize * textureScale);
-					FT_Vector kerning;
-					FT_Get_Kerning(face, characterPointer->glyphIndex, nextCharacter.glyphIndex, FT_KERNING_DEFAULT, &kerning);
-					if (!FT_IS_SCALABLE(face))
-					{
-						advanceX += (kerning.x);
-					}
-					else
-					{
-						advanceX += ((float)(kerning.x) / (float)(1 << 6));
-					}
-				}
-			}
+			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX);
 		}
 	_advance:
 		currentPosition.x += advanceX;
@@ -284,3 +257,84 @@ FreetypeCharacter& FreetypeFont::getCharacter(float codepoint, float fontSize)
 	auto iter = codepointFontSizeCharacters[codepoint].insert({fontSize, {window, *this, codepoint, fontSize}});
 	return iter.first->second;
 };
+
+void FreetypeFont::addNextKerning(float fontSize, FT_UInt currentGlyphIndex, zg::strings::Utf8Iterator iterator,
+																	float& advanceX)
+{
+	if (hasKerning && iterator.hasNextCodepoint())
+	{
+		auto& face = *facePointer.get();
+		auto nextIterator = iterator + 1;
+		uint64_t nextCodepoint = *nextIterator;
+		if (nextCodepoint != 10)
+		{
+			auto& nextCharacter = getCharacter(nextCodepoint, fontSize * textureScale);
+			FT_Vector kerning;
+			FT_Get_Kerning(face, currentGlyphIndex, nextCharacter.glyphIndex, FT_KERNING_DEFAULT, &kerning);
+			if (!FT_IS_SCALABLE(face))
+			{
+				advanceX += (kerning.x);
+			}
+			else
+			{
+				advanceX += ((float)(kerning.x) / (float)(1 << 6));
+			}
+		}
+	}
+}
+float FreetypeFont::shouldAdvanceLine(zg::strings::Utf8Iterator iterator, glm::vec2 currentPosition, float advanceX,
+																			enums::EBreakStyle breakStyle, float boundsX, float fontSize)
+{
+	if (currentPosition.x + advanceX > boundsX)
+		return true;
+	switch (breakStyle)
+	{
+	case enums::EBreakStyle::None:
+		return false;
+	case enums::EBreakStyle::Word:
+		{
+			bool breakAt = false;
+			while (true)
+			{
+				++iterator;
+				auto codepoint = *iterator;
+				if (codepoint == 0 || codepoint == 32 || codepoint == 10 || codepoint == 13 || codepoint == 9)
+					break;
+				auto& character = getCharacter(codepoint, fontSize);
+				advanceX += (character.advance >> 6);
+				if (currentPosition.x + advanceX > boundsX)
+				{
+					breakAt = true;
+				}
+			}
+			if (breakAt)
+			{
+				return true;
+			}
+			return false;
+		}
+	case enums::EBreakStyle::WordHyphen:
+		{
+			bool breakAt = false;
+			while (true)
+			{
+				++iterator;
+				auto codepoint = *iterator;
+				if (codepoint == 0 || codepoint == 32 || codepoint == 10 || codepoint == 13 || codepoint == 9 || codepoint == 45)
+					break;
+				auto& character = getCharacter(codepoint, fontSize);
+				advanceX += (character.advance >> 6);
+				if (currentPosition.x + advanceX > boundsX)
+				{
+					breakAt = true;
+				}
+			}
+			if (breakAt)
+			{
+				return true;
+			}
+			return false;
+		}
+	}
+	throw std::runtime_error("unsupported breakStyle");
+}

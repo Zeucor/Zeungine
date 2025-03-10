@@ -13,6 +13,7 @@ TextView::TextView(Window &window,
 				   float fontSize,
 				   bool textSizeIsNDC,
 				   glm::vec2 bounds,
+				   enums::EBreakStyle breakStyle,
 				   const RepositionHandler &repositionHandler,
 				   const ResizeHandler &resizeHandler,
 				   const ReFontSizeHandler &reFontSizeHandler,
@@ -47,6 +48,7 @@ TextView::TextView(Window &window,
 											fontSize(fontSize),
 											textSizeIsNDC(textSizeIsNDC),
 											bounds(bounds),
+											breakStyle(breakStyle),
 											repositionHandler(repositionHandler),
 											resizeHandler(resizeHandler),
 											reFontSizeHandler(reFontSizeHandler)
@@ -90,9 +92,9 @@ void TextView::forceUpdate()
 // #endif
 	}
 	float lineHeight = 0;
-	auto TextSize = textSize = font.stringSize(text, fontSize, lineHeight, bounds);
+	auto TextSize = textSize = font.stringSize(text, fontSize, lineHeight, bounds, breakStyle);
 	if (TextSize.x && TextSize.y)
-		font.stringToTexture(text, {1, 1, 1, 1}, fontSize, lineHeight, TextSize, texturePointer, cursorIndex, cursorPosition);
+		font.stringToTexture(text, {1, 1, 1, 1}, fontSize, lineHeight, TextSize, texturePointer, cursorIndex, cursorPosition, breakStyle);
 	actualSizeBeforeNDC = TextSize;
 	if (textSizeIsNDC)
 	{

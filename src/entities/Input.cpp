@@ -60,6 +60,7 @@ Input::Input(Window &window,
 		fontSize,
 		true,
 		glm::vec2(0, 0),
+		enums::EBreakStyle::None,
 		[&](auto textSize)
 		{
 			return glm::vec3(textSize.x / 2 + NDCPadding / 2, -NDCHeight / 2, 0.1f);
@@ -87,6 +88,7 @@ Input::Input(Window &window,
 		fontSize,
 		true,
 		glm::vec2(0, 0),
+		enums::EBreakStyle::None,
 		[&](auto textSize)
 		{
 			return glm::vec3(textSize.x / 2 + NDCPadding / 2, -NDCHeight / 2, 0.1f);

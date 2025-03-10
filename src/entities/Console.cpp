@@ -99,6 +99,7 @@ void Console::hookedCallback(const std::vector<std::string> &lines)
 				0.f,
 				true,
 				glm::vec2(0, 0),
+				enums::EBreakStyle::None,
 				[&, index](auto titleSize)
 				{
 					auto offsetIndex = consoleTextViews.size() - index - 1 - currentIndex;

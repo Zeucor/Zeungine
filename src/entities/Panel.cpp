@@ -58,6 +58,7 @@ PanelMenu::PanelMenu(zg::Window &window,
 		titleFontSize,
 		true,
 		glm::vec2(0, 0),
+		enums::EBreakStyle::None,
 		[](auto titleSize)
 		{
 			return glm::vec3(titleSize.x / 2 + indent, -titleSize.y / 2, 0.1);
@@ -196,6 +197,7 @@ PanelItem::PanelItem(Window &window,
 		FontSize,
 		true,
 		glm::vec2(0, 0),
+		enums::EBreakStyle::None,
 		[](auto TextSize)
 		{
 			return glm::vec3(TextSize.x / 2, -TextSize.y / 2, 0.1f);

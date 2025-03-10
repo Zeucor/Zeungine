@@ -24,6 +24,7 @@ namespace zg::entities
 		float fontSize;
 		bool textSizeIsNDC;
 		glm::vec2 bounds;
+		enums::EBreakStyle breakStyle;
 		using RepositionHandler = std::function<glm::vec3(glm::vec2)>;
 		RepositionHandler repositionHandler;
 		using ResizeHandler = std::function<glm::vec2(glm::vec2)>;
@@ -46,6 +47,7 @@ namespace zg::entities
 						  float fontSize,
 						  bool textSizeIsNDC = true,
 						  glm::vec2 bounds = {0, 0},
+						  enums::EBreakStyle breakStyle = enums::EBreakStyle::Word,
 						  const RepositionHandler &repositionHandler = {},
 						  const ResizeHandler &resizeHandler = {},
 						  const ReFontSizeHandler &reFontSizeHandler = {},
