@@ -60,6 +60,7 @@ struct TestTriangle : Entity
     shader->setBlock("Projection", *this, testScene.projection.matrix);
     shader->setBlock("CameraPosition", *this, testScene.view.position, 16);
     shader->unbind();
+    return true;
   };
   void postRender() override
   {
