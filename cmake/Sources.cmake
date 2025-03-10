@@ -62,6 +62,7 @@ set(ZG_SOURCES
     src/vp/View.cpp
     src/vp/Projection.cpp
     src/vp/VML.cpp
+    src/vp/VFBLR.cpp
     src/fonts/freetype/Freetype.cpp
     src/raytracing/BVH.cpp)
 if(BUILD_GL)
