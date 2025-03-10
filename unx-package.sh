@@ -20,6 +20,8 @@ build_dependencies() {
     cmake -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
     echo " -- Starting zegndeps Debug Build"
     cmake --build build
+    echo " -- Starting zegndeps Debug Install"
+    sudo cmake --install build
     echo " -- Starting zegndeps Debug Package"
     sudo cpack --config build/CPackConfig.cmake -C Debug
 
@@ -27,6 +29,8 @@ build_dependencies() {
     cmake -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
     echo " -- Starting zegndeps Release Build"
     cmake --build build
+    echo " -- Starting zegndeps Release Install"
+    sudo cmake --install build
     echo " -- Starting zegndeps Release Package"
     sudo cpack --config build/CPackConfig.cmake -C Release
 
@@ -39,6 +43,8 @@ build_headers() {
 
     echo " -- Starting zeungine Headers Configure"
     cmake -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
+    echo " -- Starting zeungine Headers Install"
+    sudo cmake --install build
     echo " -- Starting zeungine Headers Package"
     sudo cpack --config build/CPackConfig.cmake -C Release
 
@@ -51,6 +57,8 @@ build_zeungine() {
     cmake -B build -DCMAKE_BUILD_TYPE=Debug -DZG_PACKAGE=ON
     echo " -- Starting zeungine Debug Build"
     cmake --build build
+    echo " -- Starting zeungine Debug Install"
+    sudo cmake --install build
     echo " -- Starting zeungine Debug Package"
     sudo cpack --config build/CPackConfig.cmake -C Debug
 
@@ -58,6 +66,8 @@ build_zeungine() {
     cmake -B build -DCMAKE_BUILD_TYPE=Release -DZG_PACKAGE=ON
     echo " -- Starting zeungine Release Build"
     cmake --build build
+    echo " -- Starting zeungine Release Install"
+    sudo cmake --install build
     echo " -- Starting zeungine Release Package"
     sudo cpack --config build/CPackConfig.cmake -C Release
 }
