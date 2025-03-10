@@ -24,6 +24,8 @@ namespace zg
 		virtual void setXY() = 0;
 		virtual void setWidthHeight() = 0;
 		virtual void mouseCapture(bool capture) = 0;
+		virtual void enableKeyAutoRepeat() = 0;
+		virtual void disableKeyAutoRepeat() = 0;
 	};
 	inline static constexpr uint8_t WINDOW_TYPE_WIN32 = 1;
 	inline static constexpr uint8_t WINDOW_TYPE_MACOS = 2;

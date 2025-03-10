@@ -102,6 +102,7 @@ void Window::startWindow()
 {
 	iPlatformWindow = createPlatformWindow();
 	auto& iPlatformWindowRef = *iPlatformWindow;
+	iPlatformWindowRef.disableKeyAutoRepeat();
 	iRenderer = createRenderer();
 	auto& iRendererRef = *iRenderer;
 	iPlatformWindowRef.init(*this);

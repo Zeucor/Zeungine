@@ -23,6 +23,8 @@ namespace zg
 		xcb_key_symbols_t *keysyms;
 		Display *display = 0;
 		int32_t screenNumber = 0;
+		uint32_t originalDelay = 0;
+		uint32_t originalInterval = 0;
 		void init(Window &window) override;
 		void initAtoms();
 		void renderInit();
@@ -39,6 +41,8 @@ namespace zg
 		void setXY() override;
 		void setWidthHeight() override;
 		void mouseCapture(bool capture) override;
+		void enableKeyAutoRepeat() override;
+		void disableKeyAutoRepeat() override;
 	};
 }
 #endif

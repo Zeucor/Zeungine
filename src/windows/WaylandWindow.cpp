@@ -213,5 +213,7 @@ void WaylandWindow::hidePointer() {}
 void WaylandWindow::setXY() {}
 void WaylandWindow::setWidthHeight() {}
 void WaylandWindow::mouseCapture(bool capture) {}
+void WaylandWindow::enableKeyAutoRepeat() {}
+void WaylandWindow::disableKeyAutoRepeat() {}
 #endif
 #endif

@@ -343,4 +343,6 @@ void MacOSWindow::mouseCapture(bool capture)
 	else
 	{}
 }
+void MacOSWindow::enableKeyAutoRepeat() {}
+void MacOSWindow::disableKeyAutoRepeat() {}
 #endif

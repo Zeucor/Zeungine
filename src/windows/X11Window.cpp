@@ -471,5 +471,13 @@ void X11Window::mouseCapture(bool capture)
 		XUngrabPointer(display, CurrentTime);
 	}
 }
+void X11Window::enableKeyAutoRepeat()
+{
+	XAutoRepeatOn(display);
+}
+void X11Window::disableKeyAutoRepeat()
+{
+	XAutoRepeatOff(display);
+}
 #endif
 #endif

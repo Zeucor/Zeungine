@@ -326,4 +326,6 @@ void WIN32Window::mouseCapture(bool capture)
 	else
 		ReleaseCapture();
 }
+void WIN32Window::enableKeyAutoRepeat() {}
+void WIN32Window::disableKeyAutoRepeat() {}
 #endif

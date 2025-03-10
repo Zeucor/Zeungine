@@ -68,6 +68,7 @@ void XCBWindow::init(Window& renderWindow)
 	XSync(display, False);
 	screenNumber = DefaultScreen(display);
 	initAtoms();
+	XkbGetAutoRepeatRate(display, 0, originalDelay, originalInterval);
 }
 void XCBWindow::initAtoms()
 {
@@ -230,6 +231,7 @@ bool XCBWindow::pollMessages()
 }
 void XCBWindow::destroy()
 {
+	XkbSetAutoRepeatRate(display, 0, originalDelay, originalInterval);
 	XCloseDisplay(display);
 	xcb_destroy_window(connection, window);
 	xcb_disconnect(connection);
@@ -329,5 +331,13 @@ void XCBWindow::mouseCapture(bool capture)
 	{
 		XUngrabPointer(display, CurrentTime);
 	}
+}
+void XCBWindow::enableKeyAutoRepeat()
+{
+	XAutoRepeatOn(display);
+}
+void XCBWindow::disableKeyAutoRepeat()
+{
+	XAutoRepeatOff(display);
 }
 #endif

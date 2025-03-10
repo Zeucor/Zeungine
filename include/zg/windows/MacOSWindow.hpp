@@ -29,6 +29,8 @@ namespace zg
 		void setXY() override;
 		void setWidthHeight() override;
 		void mouseCapture(bool capture) override;
+		void enableKeyAutoRepeat() override;
+		void disableKeyAutoRepeat() override;
 	};
 }
 #endif
