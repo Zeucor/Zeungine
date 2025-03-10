@@ -10,19 +10,19 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Build Package on Linux
         if: runner.os == 'Linux'
-        run: ./unx-package.sh
+        run: ./unx-package.sh 0
         shell: bash
 
       - name: Build Package on Windows
         if: runner.os == 'Windows'
-        run: win-package.bat
+        run: win-package.bat 0
 
       - name: Get Commit Messages
         id: commit_messages
@@ -67,29 +67,29 @@ jobs:
           done
         shell: bash
 
-      - name: Upload Artifacts for Windows
-        if: runner.os == 'Windows'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $ErrorActionPreference = "Stop"
-          # Query the release by tag to get the upload URL
-          $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
-          $uploadUrl = $release.upload_url.Split("{")[0]
-          $artifacts = @{
-            "Zeungine" = "application/octet-stream"
-            "Zeungine-debug" = "application/octet-stream"
-            "ZeungineDependencies" = "application/octet-stream"
-            "ZeungineDependencies-debug" = "application/octet-stream"
-            "ZeungineHeaders" = "application/octet-stream"
-          }
-          foreach ($key in $artifacts.Keys)
-          {
-            $file = "releases/$key.exe"
-            Write-Output "Uploading $file"
-            Invoke-RestMethod -Method Post -Uri "$uploadUrl?name=$([System.IO.Path]::GetFileName($file))" -Headers @{
-              Authorization = "token $env:GITHUB_TOKEN"
-              "Content-Type" = $artifacts[$key]
-            } -InFile $file -ContentType $artifacts[$key]
-          }
-        shell: pwsh
+      # - name: Upload Artifacts for Windows
+      #   if: runner.os == 'Windows'
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     $ErrorActionPreference = "Stop"
+      #     # Query the release by tag to get the upload URL
+      #     $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
+      #     $uploadUrl = $release.upload_url.Split("{")[0]
+      #     $artifacts = @{
+      #       "Zeungine" = "application/octet-stream"
+      #       "Zeungine-debug" = "application/octet-stream"
+      #       "ZeungineDependencies" = "application/octet-stream"
+      #       "ZeungineDependencies-debug" = "application/octet-stream"
+      #       "ZeungineHeaders" = "application/octet-stream"
+      #     }
+      #     foreach ($key in $artifacts.Keys)
+      #     {
+      #       $file = "releases/$key.exe"
+      #       Write-Output "Uploading $file"
+      #       Invoke-RestMethod -Method Post -Uri "$uploadUrl?name=$([System.IO.Path]::GetFileName($file))" -Headers @{
+      #         Authorization = "token $env:GITHUB_TOKEN"
+      #         "Content-Type" = $artifacts[$key]
+      #       } -InFile $file -ContentType $artifacts[$key]
+      #     }
+      #   shell: pwsh
