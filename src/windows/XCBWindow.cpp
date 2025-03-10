@@ -304,13 +304,13 @@ void XCBWindow::hidePointer()
 }
 void XCBWindow::setXY()
 {
-	uint32_t values[] = {renderWindowPointer->windowX, renderWindowPointer->windowY};
+	uint32_t values[] = {uint32_t(renderWindowPointer->windowX), uint32_t(renderWindowPointer->windowY)};
 	xcb_configure_window(connection, window, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
 	xcb_flush(connection);
 }
 void XCBWindow::setWidthHeight()
 {
-	uint32_t values[] = {renderWindowPointer->windowWidth, renderWindowPointer->windowHeight};
+	uint32_t values[] = {uint32_t(renderWindowPointer->windowWidth), uint32_t(renderWindowPointer->windowHeight)};
 	xcb_configure_window(connection, window, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
 	xcb_flush(connection);
 }
