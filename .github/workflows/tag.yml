@@ -1,0 +1,95 @@
+name: Release on Tag
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Build Package on Linux
+        if: runner.os == 'Linux'
+        run: ./unx-package.sh
+        shell: bash
+
+      - name: Build Package on Windows
+        if: runner.os == 'Windows'
+        run: win-package.bat
+
+      - name: Get Commit Messages
+        id: commit_messages
+        run: |
+          PREV_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) || echo "")
+          if [ -z "$PREV_TAG" ]
+          then
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+          COMMITS=$(git log $PREV_TAG..$GITHUB_SHA --oneline)
+          echo "::set-output name=commits::$COMMITS"
+        shell: bash
+
+      - name: Create GitHub Release (Linux Only)
+        if: runner.os == 'Linux'
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: "Release ${{ github.ref_name }}"
+          body: ${{ steps.commit_messages.outputs.commits }}
+
+      - name: Upload Artifacts for Linux
+        if: runner.os == 'Linux'
+        run: |
+          declare -A artifacts
+          artifacts["zeungine"]="application/vnd.debian.binary-package"
+          artifacts["zeungine-debug"]="application/vnd.debian.binary-package"
+          artifacts["zeungine-dependencies"]="application/vnd.debian.binary-package"
+          artifacts["zeungine-dependencies-debug"]="application/vnd.debian.binary-package"
+          artifacts["zeungine-headers"]="application/vnd.debian.binary-package"
+          for key in "${!artifacts[@]}"
+          do
+            file="releases/${key}.deb"
+            echo "Uploading $file"
+            curl --data-binary @"$file" \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: ${artifacts[$key]}" \
+              "${{ steps.create_release.outputs.upload_url }}?name=$(basename $file)"
+          done
+        shell: bash
+
+      - name: Upload Artifacts for Windows
+        if: runner.os == 'Windows'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          # Query the release by tag to get the upload URL
+          $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
+          $uploadUrl = $release.upload_url.Split("{")[0]
+          $artifacts = @{
+            "Zeungine" = "application/octet-stream"
+            "Zeungine-debug" = "application/octet-stream"
+            "ZeungineDependencies" = "application/octet-stream"
+            "ZeungineDependencies-debug" = "application/octet-stream"
+            "ZeungineHeaders" = "application/octet-stream"
+          }
+          foreach ($key in $artifacts.Keys)
+          {
+            $file = "releases/$key.exe"
+            Write-Output "Uploading $file"
+            Invoke-RestMethod -Method Post -Uri "$uploadUrl?name=$([System.IO.Path]::GetFileName($file))" -Headers @{
+              Authorization = "token $env:GITHUB_TOKEN"
+              "Content-Type" = $artifacts[$key]
+            } -InFile $file -ContentType $artifacts[$key]
+          }
+        shell: pwsh
