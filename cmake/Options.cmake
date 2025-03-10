@@ -1,5 +1,5 @@
 # Options
-#  these objects work because their source is pure absolute just include readpath from build include
+#
 option(BUILD_GL             "Whether to build OpenGL module" OFF)
 option(BUILD_EGL            "Whether to build EGL module" OFF)
 option(BUILD_VULKAN         "Whether to build Vulkan module" ON)
