@@ -95,7 +95,7 @@ void TextView::forceUpdate()
 	if (textSizeIsNDC)
 	{
 // #ifdef USE_VULKAN
-		TextSize.x /= this->window.windowWidth;
+		TextSize.x /= this->window.windowWidth * 0.5;
 		TextSize.y /= this->window.windowHeight;
 // #else
 // 		TextSize.x /= this->window.windowWidth * 0.5;
