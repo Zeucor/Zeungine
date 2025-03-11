@@ -109,7 +109,7 @@ namespace zg::budget
 			auto& history_tuple = m_History.front();
 			auto& begin = std::get<0>(history_tuple);
 			auto __now = NANO_TIMEPOINT_CAST(SYS_CLOCK::now());
-			if (m_instantStart && !m_sleeponsleep)
+			if ((m_instantStart && !m_sleeponsleep) || !m_instantStart)
 			{
 				if (__now >= m_IsNextBudgetWakeAtTimePoint)
 				{
@@ -180,6 +180,7 @@ namespace zg::budget
 			auto& seconds = std::get<2>(history_tuple);
 			auto& begin = std::get<0>(history_tuple);
 			seconds = end - begin;
+			m_BudgetUsed = (seconds.count() / m_BudgetTime.count()) * 100.0;
 		}
 		void sleep() override
 		{
@@ -227,6 +228,7 @@ namespace zg::budget
 		bool m_instantStart;
 		bool m_wakezwakez = false;
 		bool m_workedOvertime = true;
+		Real m_BudgetUsed = 0;
 
 	private:
 		size_t calculateChunkID()

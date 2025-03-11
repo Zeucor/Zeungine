@@ -8,6 +8,7 @@
 #define CHRONO_NANOSECONDS std::chrono::nanoseconds
 #define ATTOSECONDS std::atto
 #define CHRONO_ATTOSECONDS std::chrono::attoseconds
+#define SECONDS_DURATION std::chrono::duration<LD_REAL>
 #define NANOSECONDS_DURATION std::chrono::duration<LD_REAL, NANOSECONDS>
 #define ATTOSECONDS_DURATION std::chrono::duration<L_LREAL, ATTOSECONDS>
 #define SECONDS_DURATION_CAST std::chrono::duration_cast<CHRONO_SECONDS, LD_REAL>
