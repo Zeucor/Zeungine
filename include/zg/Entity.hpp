@@ -9,6 +9,7 @@ namespace zg
 	{
 		Window &window;
 		size_t ID = 0;
+		size_t VALUE = 0;
 		std::vector<uint32_t> indices;
 		std::vector<glm::vec3> positions;
 		glm::vec3 position;
