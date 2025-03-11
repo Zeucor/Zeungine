@@ -1,4 +1,4 @@
-if(WIN32)
+if(WIN32 AND ZG_TYPE STREQUAL SHARED)
 	set(avcodec_NAME avcodec-61)
 	set(avdevice_NAME avdevice-61)
 	set(avfilter_NAME avfilter-10)
