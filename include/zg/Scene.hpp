@@ -34,7 +34,8 @@ namespace zg
 		virtual ~Scene();
 		size_t addEntity(const std::shared_ptr<Entity> &entity, bool callOnEntityAdded = true);
 		void removeEntity(const size_t &id);
-		virtual void update();
+		virtual void preUpdate();
+		void update();
 		void preRender();
 		void render();
 		void entityPreRender(Entity &entity);

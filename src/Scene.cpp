@@ -58,8 +58,10 @@ void Scene::removeEntity(const size_t &id)
 		entities.erase(entityIter);
 	}
 }
+void Scene::preUpdate() {}
 void Scene::update()
 {
+	preUpdate();
 	auto it = entities.begin();
 	auto end = entities.end();
 	for (; it != end; it++)

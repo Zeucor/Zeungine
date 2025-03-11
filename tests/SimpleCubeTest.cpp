@@ -53,7 +53,7 @@ struct ExampleScene : Scene
 		window.removeKeyPressHandler('r', rPressID);
 		window.removeKeyPressHandler('q', qPressID);
 	}
-	void update() override
+	void preUpdate() override
 	{
 		deltaTimeCounter += window.deltaTime;
 		clearColor = {std::sin(deltaTimeCounter), std::cos(deltaTimeCounter), std::tan(deltaTimeCounter), 1};

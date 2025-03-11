@@ -41,7 +41,6 @@ struct VideoScene : Scene
 		window.audioEngine.pipeline.addStage(videoStage);
 	}
 	~VideoScene() { window.removeKeyPressHandler('q', qPressID); }
-	void update() override {}
 };
 int main()
 {
