@@ -1,7 +1,6 @@
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 
 # Determine platform and set defines
-message(STATUS "CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}")
 if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
     set(LINUX ON)
     set(ZG_LIB_PREFIX "lib")
@@ -10,7 +9,6 @@ if("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
     if(ZG_INSTALL)
         file(READ "/etc/os-release" OS_RELEASE)
         string(REGEX MATCH "Debian|Ubuntu|Fedora" DIST ${OS_RELEASE})
-        message(STATUS "DIST: ${DIST}")
         if(DIST STREQUAL "Debian" OR
             DIST STREQUAL "Ubuntu")
             set(DEB true)
