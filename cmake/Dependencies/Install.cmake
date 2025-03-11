@@ -1,11 +1,12 @@
 # ffmpeg includes
 
 if(WIN32)
-    set(ffmpeg_ZG_LIB_PREFIX "")
     if(ZG_TYPE STREQUAL SHARED)
+        set(ffmpeg_ZG_LIB_PREFIX "")
         set(ffmpeg_ZG_LIB_SUFFIX "dll")
     elseif(ZG_TYPE STREQUAL STATIC)
-        set(ffmpeg_ZG_LIB_SUFFIX "lib")
+        set(ffmpeg_ZG_LIB_PREFIX "lib")
+        set(ffmpeg_ZG_LIB_SUFFIX "a")
     endif()
 elseif(APPLE)
     set(ffmpeg_ZG_LIB_PREFIX "lib")
