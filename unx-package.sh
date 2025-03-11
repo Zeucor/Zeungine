@@ -2,9 +2,9 @@
 
 usage() {
     echo "  0 - Build all"
-    echo "  1 - Build dependencies (shared&static) only"
+    echo "  1 - Build dependencies (shared and static) only"
     echo "  2 - Build headers only"
-    echo "  3 - Build zeungine (shared&static) only"
+    echo "  3 - Build zeungine (shared and static) only"
     echo "  4 - Build dependencies static only"
     echo "  5 - Build dependencies shared only"
     echo "  4 - Build zeungine static only"

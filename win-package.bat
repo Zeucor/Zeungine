@@ -4,10 +4,7 @@ setlocal enabledelayedexpansion
 :: Check if an argument is provided
 if "%~1"=="" (
     echo Usage: %~nx0 ^<mode^>
-    echo   0 - Build all
-    echo   1 - Build dependencies only
-    echo   2 - Build headers only
-    echo   3 - Build zeungine only
+    call :usage
     exit /b 1
 )
 
@@ -24,16 +21,32 @@ if "%MODE%"=="0" (
     call :build_headers
 ) else if "%MODE%"=="3" (
     call :build_zeungine
+) else if "%MODE%"=="4" (
+    call :build_dependencies_static
+) else if "%MODE%"=="5" (
+    call :build_dependencies_shared
+) else if "%MODE%"=="6" (
+    call :build_zeungine_static
+) else if "%MODE%"=="7" (
+    call :build_zeungine_shared
 ) else (
     echo Invalid mode: %MODE%
-    echo   0 - Build all
-    echo   1 - Build dependencies only
-    echo   2 - Build headers only
-    echo   3 - Build zeungine only
+    call :usage
     exit /b 1
 )
 
 exit /b 0
+
+:usage
+echo   0 - Build all
+echo   1 - Build dependencies (shared and static) only
+echo   2 - Build headers only
+echo   3 - Build zeungine (shared and static) only
+echo   4 - Build dependencies static only
+echo   5 - Build dependencies shared only
+echo   6 - Build zeungine static only
+echo   7 - Build zeungine shared only
+goto :EOF
 
 :: Function to build dependencies
 :build_dependencies
@@ -87,7 +100,7 @@ goto :EOF
 :build_headers
 cd cmake\Headers
 echo -- Starting zeungine Headers Configure
-cmake -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON
+cmake -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
 echo -- Starting zeungine Headers Install
 cmake --install build
 echo -- Starting zeungine Headers Package
