@@ -17,6 +17,7 @@ endif()
 set(CPACK_PACKAGE_VENDOR "**.**.**.*e*")
 set(CPACK_PACKAGE_CONTACT "zeun@**.**.**.*e*")
 
+message(STATUS "DEB: ${DEB}")
 if(DEB)
     set(CPACK_GENERATOR "DEB")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Zeun")
