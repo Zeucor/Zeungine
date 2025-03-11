@@ -164,7 +164,9 @@ const glm::vec2 FreetypeFont::stringSize(const string_view string, float fontSiz
 };
 void FreetypeFont::stringToTexture(const string_view string, glm::vec4 color, float fontSize, float& lineHeight,
 																	 glm::vec2 textureSize, shared_ptr<textures::Texture>& texturePointer,
-																	 const int64_t& cursorIndex, glm::vec3& cursorPosition, enums::EBreakStyle breakStyle)
+																	 const int64_t& cursorIndex, glm::vec3& cursorPosition, enums::EBreakStyle breakStyle,
+																	 const std::shared_ptr<textures::Framebuffer>& framebufferPointer,
+																	 const std::shared_ptr<Scene>& scenePointer)
 {
 	glm::ivec2 scaledSize = textureSize * textureScale;
 	if (!texturePointer || texturePointer->size.x != scaledSize.x || texturePointer->size.y != scaledSize.y)
@@ -173,9 +175,19 @@ void FreetypeFont::stringToTexture(const string_view string, glm::vec4 color, fl
 																							 textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
 																							 textures::Texture::FilterType::Nearest));
 	}
-	textures::Framebuffer framebuffer(window, *texturePointer);
-	Scene scene(window, {scaledSize.x / 2.f, scaledSize.y / 2.f, 50}, {0, 0, -1}, glm::vec2(scaledSize), &framebuffer,
-							false);
+	if (!framebufferPointer)
+	{
+		((std::shared_ptr<textures::Framebuffer>&)framebufferPointer) =
+			std::make_shared<textures::Framebuffer>(window, *texturePointer);
+	}
+	auto& framebuffer = *framebufferPointer;
+	if (!scenePointer)
+	{
+		((std::shared_ptr<Scene>&)scenePointer) =
+			std::make_shared<Scene>(window, glm::vec3(scaledSize.x / 2.f, scaledSize.y / 2.f, 50), glm::vec3(0, 0, -1),
+															glm::vec2(scaledSize), &framebuffer, false);
+	}
+	auto& scene = *scenePointer;
 	strings::Utf8Iterator iterator(string, 0);
 	const uint64_t& stringSize = string.size();
 	auto& face = *facePointer.get();
@@ -251,11 +263,275 @@ void FreetypeFont::stringToTexture(const string_view string, glm::vec4 color, fl
 	scene.render();
 	framebuffer.unbind();
 	return;
-};
+}
+void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 position, glm::vec4 color, float fontSize,
+																 float& lineHeight, glm::vec2 bounds, enums::EBreakStyle breakStyle, Scene& scene,
+																 std::vector<std::shared_ptr<entities::Plane>>& existingAndUpdatedGlyphs,
+																 int64_t cursorIndex, std::shared_ptr<entities::Plane>& cursor)
+{
+	strings::Utf8Iterator iterator(string, 0);
+	const uint64_t& stringSize = string.size();
+	auto& face = *facePointer.get();
+	FT_Set_Pixel_Sizes(face, 0, fontSize);
+	if (lineHeight == 0)
+	{
+		lineHeight = face->size->metrics.height / 64.f;
+	}
+	float descender = face->size->metrics.descender / 64.f;
+	auto currentPosition = position;
+	auto advanceLine = [&]()
+	{
+		currentPosition.y -= lineHeight;
+		currentPosition.x = position.x;
+	};
+	FreetypeCharacter* characterPointer = 0;
+	float advanceX = 0;
+	uint64_t codepointIndex = 0;
+	if (!cursor)
+	{
+		cursor = std::make_shared<entities::Plane>(window, scene, glm::vec3(0), glm::vec3(0), glm::vec3(1),
+																							 glm::vec2(3, lineHeight), color);
+	}
+	auto& cursorRef = *cursor;
+	if (cursorIndex == 0)
+	{
+		cursorRef.position = currentPosition;
+	}
+	for (; iterator.index < stringSize;)
+	{
+		advanceX = 0;
+		characterPointer = 0;
+		uint64_t codepoint = *iterator;
+		if (codepoint == 10)
+		{
+			advanceLine();
+			++iterator;
+			continue;
+		}
+		characterPointer = &getCharacter(codepoint, fontSize * textureScale);
+		advanceX = (characterPointer->advance >> 6);
+		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, bounds.x, fontSize))
+		{
+			advanceLine();
+		}
+		if (characterPointer)
+		{
+			if (characterPointer->size.x != 0 && characterPointer->size.y != 0)
+			{
+				glm::vec3 characterPosition = currentPosition;
+				characterPosition.x = currentPosition.x + characterPointer->bearing.x + (characterPointer->size.x / 2.f);
+				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) +
+					(characterPointer->size.y / 2.f);
+				if (iterator.index < existingAndUpdatedGlyphs.size())
+				{
+					auto& glyph = existingAndUpdatedGlyphs[iterator.index];
+					if (!glyph)
+					{
+						glyph =
+							std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1),
+																								characterPointer->size, *characterPointer->texturePointer);
+						scene.addEntity(glyph);
+						glyph->VALUE = codepoint;
+					}
+					else if (glyph->VALUE != codepoint)
+					{
+						glyph->position = characterPosition;
+						glyph->setSize(characterPointer->size);;
+						glyph->texturePointer = characterPointer->texturePointer.get();
+						glyph->VALUE = codepoint;
+					}
+				}
+				else
+				{
+					auto glyph =
+						std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1),
+																							characterPointer->size, *characterPointer->texturePointer);
+					scene.addEntity(glyph);
+					existingAndUpdatedGlyphs.push_back(glyph);
+					glyph->VALUE = codepoint;
+				}
+			}
+			else if (iterator.index >= existingAndUpdatedGlyphs.size())
+			{
+				existingAndUpdatedGlyphs.push_back({});
+			}
+			else
+			{
+				auto& glyph = existingAndUpdatedGlyphs[iterator.index];
+				if (glyph)
+				{
+					scene.removeEntity(glyph->ID);
+					glyph = {};
+				}
+			}
+			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX);
+		}
+		else if (iterator.index >= existingAndUpdatedGlyphs.size())
+		{
+			existingAndUpdatedGlyphs.push_back({});
+		}
+	_advance:
+		currentPosition.x += advanceX;
+		codepointIndex = iterator.getCurrentCodepointIndex();
+		if (cursorIndex == codepointIndex + 1)
+		{
+			cursorRef.position = currentPosition;
+			cursorRef.position /= textureScale;
+		}
+		++iterator;
+	}
+	codepointIndex = iterator.getCurrentCodepointIndex();
+	for (auto i = existingAndUpdatedGlyphs.size() - 1; i > codepointIndex; i--)
+	{
+		scene.removeEntity(existingAndUpdatedGlyphs.back()->ID);
+		existingAndUpdatedGlyphs.erase(existingAndUpdatedGlyphs.end());
+	}
+	if (cursorIndex == codepointIndex + 1)
+	{
+		cursorRef.position = currentPosition;
+		cursorRef.position /= textureScale;
+	}
+	return;
+}
+void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 position, glm::vec4 color, float fontSize,
+																 float& lineHeight, glm::vec2 bounds, enums::EBreakStyle breakStyle, Scene &scene, Entity& entity,
+																 std::vector<std::shared_ptr<entities::Plane>>& existingAndUpdatedGlyphs,
+																 int64_t cursorIndex, std::shared_ptr<entities::Plane>& cursor)
+{
+	strings::Utf8Iterator iterator(string, 0);
+	const uint64_t& stringSize = string.size();
+	auto& face = *facePointer.get();
+	FT_Set_Pixel_Sizes(face, 0, fontSize);
+	if (lineHeight == 0)
+	{
+		lineHeight = face->size->metrics.height / 64.f;
+	}
+	float descender = face->size->metrics.descender / 64.f;
+	auto currentPosition = position;
+	auto advanceLine = [&]()
+	{
+		currentPosition.y -= lineHeight;
+		currentPosition.x = position.x;
+	};
+	FreetypeCharacter* characterPointer = 0;
+	float advanceX = 0;
+	uint64_t codepointIndex = 0;
+	if (!cursor)
+	{
+		cursor = std::make_shared<entities::Plane>(window, scene, glm::vec3(0), glm::vec3(0), glm::vec3(1),
+																							 glm::vec2(3, lineHeight), color);
+	}
+	auto& cursorRef = *cursor;
+	if (cursorIndex == 0)
+	{
+		cursorRef.position = currentPosition;
+	}
+	for (; iterator.index < stringSize;)
+	{
+		advanceX = 0;
+		characterPointer = 0;
+		uint64_t codepoint = *iterator;
+		if (codepoint == 10)
+		{
+			advanceLine();
+			++iterator;
+			continue;
+		}
+		characterPointer = &getCharacter(codepoint, fontSize * textureScale);
+		advanceX = (characterPointer->advance >> 6);
+		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, bounds.x, fontSize))
+		{
+			advanceLine();
+		}
+		if (characterPointer)
+		{
+			if (characterPointer->size.x != 0 && characterPointer->size.y != 0)
+			{
+				glm::vec3 characterPosition = currentPosition;
+				characterPosition.x = currentPosition.x + characterPointer->bearing.x + (characterPointer->size.x / 2.f);
+				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) +
+					(characterPointer->size.y / 2.f);
+				if (iterator.index < existingAndUpdatedGlyphs.size())
+				{
+					auto& glyph = existingAndUpdatedGlyphs[iterator.index];
+					if (!glyph)
+					{
+						glyph =
+							std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1),
+																								characterPointer->size, *characterPointer->texturePointer);
+						entity.addChild(glyph);
+						glyph->VALUE = codepoint;
+					}
+					else if (glyph->VALUE != codepoint)
+					{
+						glyph->position = characterPosition;
+						glyph->setSize(characterPointer->size);;
+						glyph->texturePointer = characterPointer->texturePointer.get();
+						glyph->VALUE = codepoint;
+					}
+				}
+				else
+				{
+					auto glyph =
+						std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1),
+																							characterPointer->size, *characterPointer->texturePointer);
+					entity.addChild(glyph);
+					existingAndUpdatedGlyphs.push_back(glyph);
+					glyph->VALUE = codepoint;
+				}
+			}
+			else if (iterator.index >= existingAndUpdatedGlyphs.size())
+			{
+				existingAndUpdatedGlyphs.push_back({});
+			}
+			else
+			{
+				auto& glyph = existingAndUpdatedGlyphs[iterator.index];
+				if (glyph)
+				{
+					entity.removeChild(glyph->ID);
+					glyph = {};
+				}
+			}
+			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX);
+		}
+		else if (iterator.index >= existingAndUpdatedGlyphs.size())
+		{
+			existingAndUpdatedGlyphs.push_back({});
+		}
+	_advance:
+		currentPosition.x += advanceX;
+		codepointIndex = iterator.getCurrentCodepointIndex();
+		if (cursorIndex == codepointIndex + 1)
+		{
+			cursorRef.position = currentPosition;
+			cursorRef.position /= textureScale;
+		}
+		++iterator;
+	}
+	codepointIndex = iterator.getCurrentCodepointIndex();
+	for (auto i = existingAndUpdatedGlyphs.size() - 1; i > codepointIndex; i--)
+	{
+		entity.removeChild(existingAndUpdatedGlyphs.back()->ID);
+		existingAndUpdatedGlyphs.erase(existingAndUpdatedGlyphs.end());
+	}
+	if (cursorIndex == codepointIndex + 1)
+	{
+		cursorRef.position = currentPosition;
+		cursorRef.position /= textureScale;
+	}
+	return;
+}
 FreetypeCharacter& FreetypeFont::getCharacter(float codepoint, float fontSize)
 {
-	auto iter = codepointFontSizeCharacters[codepoint].insert({fontSize, {window, *this, codepoint, fontSize}});
-	return iter.first->second;
+	auto& fontSizes = codepointFontSizeCharacters[codepoint];
+	auto iter = fontSizes.find(fontSize);
+	if (iter == fontSizes.end())
+	{
+		auto iter2 = fontSizes.insert({fontSize, {window, *this, codepoint, fontSize}});
+		return iter2.first->second;
+	}
+	return iter->second;
 };
 
 void FreetypeFont::addNextKerning(float fontSize, FT_UInt currentGlyphIndex, zg::strings::Utf8Iterator iterator,
@@ -320,7 +596,8 @@ float FreetypeFont::shouldAdvanceLine(zg::strings::Utf8Iterator iterator, glm::v
 			{
 				++iterator;
 				auto codepoint = *iterator;
-				if (codepoint == 0 || codepoint == 32 || codepoint == 10 || codepoint == 13 || codepoint == 9 || codepoint == 45)
+				if (codepoint == 0 || codepoint == 32 || codepoint == 10 || codepoint == 13 || codepoint == 9 ||
+						codepoint == 45)
 					break;
 				auto& character = getCharacter(codepoint, fontSize);
 				advanceX += (character.advance >> 6);

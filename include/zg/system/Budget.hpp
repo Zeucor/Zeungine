@@ -205,6 +205,10 @@ namespace zg::budget
 			}
 			cv.notify_one();
 		}
+		Real getBudgetUsed()
+		{
+			return m_BudgetUsed;
+		}
 
 	private:
 		SecondsDuration m_BudgetTime;

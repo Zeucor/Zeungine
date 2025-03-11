@@ -361,32 +361,32 @@ void Input::handleKey(Key key, bool pressed)
 		{
 			addChild(cursorPlane);
 		}
-		auto &uvs = textViewRef.uvs;
-		if (textViewSizeBeforeNDC.x <= inputSizeBeforeNDCMinusPadding.x)
-		{
-			uvs[0].x = 0.0f;
-			uvs[1].x = 1.0f;
-			uvs[2].x = 1.0f;
-			uvs[3].x = 0.0f;
-		}
-		else
-		{
-			auto halfVisibleWidth = static_cast<float>(static_cast<int32_t>(inputSizeBeforeNDCMinusPadding.x / 2.0f));
-			auto visibleRegionStartNDC = glm::clamp(
-				cursorPositionXBeforeNDC - halfVisibleWidth,
-				0.0f,
-				textViewSizeBeforeNDC.x - inputSizeBeforeNDCMinusPadding.x);
-			auto visibleRegionEndNDC = visibleRegionStartNDC + inputSizeBeforeNDCMinusPadding.x;
-			auto startNormalized = visibleRegionStartNDC / textViewSizeBeforeNDC.x;
-			auto endNormalized = visibleRegionEndNDC / textViewSizeBeforeNDC.x;
-			startNormalized = glm::clamp(startNormalized, 0.0f, 1.0f);
-			endNormalized = glm::clamp(endNormalized, 0.0f, 1.0f);
-			uvs[0].x = startNormalized;
-			uvs[1].x = endNormalized;
-			uvs[2].x = endNormalized;
-			uvs[3].x = startNormalized;
-		}
-		textViewRef.updateElements("UV2", uvs);
+		// auto &uvs = textViewRef.uvs;
+		// if (textViewSizeBeforeNDC.x <= inputSizeBeforeNDCMinusPadding.x)
+		// {
+		// 	uvs[0].x = 0.0f;
+		// 	uvs[1].x = 1.0f;
+		// 	uvs[2].x = 1.0f;
+		// 	uvs[3].x = 0.0f;
+		// }
+		// else
+		// {
+		// 	auto halfVisibleWidth = static_cast<float>(static_cast<int32_t>(inputSizeBeforeNDCMinusPadding.x / 2.0f));
+		// 	auto visibleRegionStartNDC = glm::clamp(
+		// 		cursorPositionXBeforeNDC - halfVisibleWidth,
+		// 		0.0f,
+		// 		textViewSizeBeforeNDC.x - inputSizeBeforeNDCMinusPadding.x);
+		// 	auto visibleRegionEndNDC = visibleRegionStartNDC + inputSizeBeforeNDCMinusPadding.x;
+		// 	auto startNormalized = visibleRegionStartNDC / textViewSizeBeforeNDC.x;
+		// 	auto endNormalized = visibleRegionEndNDC / textViewSizeBeforeNDC.x;
+		// 	startNormalized = glm::clamp(startNormalized, 0.0f, 1.0f);
+		// 	endNormalized = glm::clamp(endNormalized, 0.0f, 1.0f);
+		// 	uvs[0].x = startNormalized;
+		// 	uvs[1].x = endNormalized;
+		// 	uvs[2].x = endNormalized;
+		// 	uvs[3].x = startNormalized;
+		// }
+		// textViewRef.updateElements("UV2", uvs);
 		if (textPointer->empty())
 		{
 			goto _showPlaceholder;

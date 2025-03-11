@@ -18,7 +18,7 @@ TextView::TextView(Window &window,
 				   const ResizeHandler &resizeHandler,
 				   const ReFontSizeHandler &reFontSizeHandler,
 				   std::string_view name) : Entity(window,
-												   {{"UV2", "Position", "Normal", "Texture2D",
+												   {{"Position", "Normal",
 													 "View", "Projection", "Model", "CameraPosition",
 													 "TextColor"}},
 												   6,
@@ -33,13 +33,6 @@ TextView::TextView(Window &window,
 												   rotation,
 												   scale,
 												   name.empty() ? "TextView " + std::to_string(++textViewsCount) : name),
-											uvs({
-												// Front face
-												{0, 0}, // 0
-												{1, 0}, // 1
-												{1, 1}, // 2
-												{0, 1}	// 3
-											}),
 											scene(scene),
 											textColor(textColor),
 											text(text),
@@ -53,18 +46,9 @@ TextView::TextView(Window &window,
 											resizeHandler(resizeHandler),
 											reFontSizeHandler(reFontSizeHandler)
 {
-	switch (window.iRenderer->renderer)
-	{
-	default:
-		break;
-	case RENDERER_VULKAN:
-	case RENDERER_METAL:
-		flipUVsY(uvs);
-		break;
-	}
 	computeNormals(indices, positions, normals);
 	updateIndices(indices);
-	updateElements("UV2", uvs);
+	// updateElements("UV2", uvs);
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 	resizeID = window.addResizeHandler([&](auto newSize)
@@ -94,7 +78,7 @@ void TextView::forceUpdate()
 	float lineHeight = 0;
 	auto TextSize = textSize = font.stringSize(text, fontSize, lineHeight, bounds, breakStyle);
 	if (TextSize.x && TextSize.y)
-		font.stringToTexture(text, {1, 1, 1, 1}, fontSize, lineHeight, TextSize, texturePointer, cursorIndex, cursorPosition, breakStyle);
+		font.stringToEntity(text, {0, 0, 0}, {1, 1, 1, 1}, fontSize, lineHeight, TextSize, breakStyle, scene, *this, existingAndUpdatedGlyphs, cursorIndex, cursor);
 	actualSizeBeforeNDC = TextSize;
 	if (textSizeIsNDC)
 	{
@@ -123,15 +107,12 @@ void TextView::forceUpdate()
 }
 bool TextView::preRender()
 {
-	if (!size.x || !size.y || !texturePointer)
-		return false;
 	auto &model = getModelMatrix();
 	shader->bind(*this);
 	shader->setBlock("Model", *this, model);
 	shader->setBlock("View", *this, scene.view.matrix);
 	shader->setBlock("Projection", *this, scene.projection.matrix);
 	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
-	shader->setTexture("Texture2D", *this, *texturePointer, 0);
 	shader->setUniform("TextColor", *this, textColor);
 	shader->unbind();
 	return true;

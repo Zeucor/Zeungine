@@ -9,7 +9,6 @@ namespace zg::entities
 {
 	struct TextView : Entity
 	{
-		std::vector<glm::vec2> uvs;
 		std::vector<glm::vec3> normals = {};
 		std::shared_ptr<textures::Texture> texturePointer;
 		Scene &scene;
@@ -34,6 +33,8 @@ namespace zg::entities
 		int64_t cursorIndex = 0;
 		glm::vec3 cursorPosition = glm::vec3(0);
 		EventIdentifier resizeID = 0;
+		std::vector<std::shared_ptr<entities::Plane>> existingAndUpdatedGlyphs;
+		std::shared_ptr<entities::Plane> cursor;
 		inline static size_t textViewsCount = 0;
 		explicit TextView(Window &window,
 						  Scene &scene,
