@@ -1,5 +1,6 @@
 # Sources
 set(ZG_SOURCES
+    src/fonts/SystemFonts.cpp
     src/audio/AudioEngine.cpp
     src/audio/AudioPipeline.cpp
     src/audio/AudioStage.cpp

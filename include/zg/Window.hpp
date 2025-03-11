@@ -9,6 +9,7 @@
 #include "audio/AudioEngine.hpp"
 #include <zg/queue.hpp>
 #include <zg/system/Budget.hpp>
+#include <zg/fonts/SystemFonts.hpp>
 namespace zg
 {
 	namespace shaders
@@ -98,6 +99,7 @@ namespace zg
 		audio::AudioEngine audioEngine;
 		NANOSECONDS_DURATION frameduration;
 		budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL> framebudget;
+		fonts::SystemFonts systemFonts;
 		Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY,
 					 bool borderless = false, bool vsync = true, uint32_t framerate = 60);
 		Window(Window& parentWindow, Scene& parentScene, const char* childTitle, float childWindowWidth,
