@@ -1,28 +1,5 @@
 # ffmpeg includes
 
-if(WIN32)
-    if(ZG_TYPE STREQUAL SHARED)
-        set(ffmpeg_ZG_LIB_PREFIX "")
-        set(ffmpeg_ZG_LIB_SUFFIX "dll")
-    elseif(ZG_TYPE STREQUAL STATIC)
-        set(ffmpeg_ZG_LIB_PREFIX "lib")
-        set(ffmpeg_ZG_LIB_SUFFIX "a")
-    endif()
-elseif(APPLE)
-    set(ffmpeg_ZG_LIB_PREFIX "lib")
-    if(ZG_TYPE STREQUAL SHARED)
-        set(ffmpeg_ZG_LIB_SUFFIX "dylib")
-    elseif(ZG_TYPE STREQUAL STATIC)
-        set(ffmpeg_ZG_LIB_SUFFIX "a")
-    endif()
-else()
-    set(ffmpeg_ZG_LIB_PREFIX "lib")
-    if(ZG_TYPE STREQUAL SHARED)
-        set(ffmpeg_ZG_LIB_SUFFIX "so")
-    elseif(ZG_TYPE STREQUAL STATIC)
-        set(ffmpeg_ZG_LIB_SUFFIX "a")
-    endif()
-endif()
 if(ZG_TYPE STREQUAL STATIC)
     install(FILES
         "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avcodec.${ffmpeg_ZG_LIB_SUFFIX}"

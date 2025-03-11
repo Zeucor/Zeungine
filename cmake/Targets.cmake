@@ -1,4 +1,4 @@
-if(WIN32 AND ZG_TYPE STREQUAL SHARED)
+if(WIN32 AND ZG_TYPE STREQUAL BUILD_SHARED_LIBS)
 	set(avcodec_NAME avcodec-61)
 	set(avdevice_NAME avdevice-61)
 	set(avfilter_NAME avfilter-10)
@@ -22,25 +22,25 @@ elseif(ZG_TYPE STREQUAL SHARED)
 endif()
 zg_setup_target(avformat ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" ${avformat_NAME} avformat "${TYPE_ZG_LIB_SUFFIX}" ON)
+	"${ffmpeg_ZG_LIB_PREFIX}" ${avformat_NAME} avformat ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(avdevice ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" ${avdevice_NAME} avdevice "${TYPE_ZG_LIB_SUFFIX}" ON)
+	"${ffmpeg_ZG_LIB_PREFIX}" ${avdevice_NAME} avdevice ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(avcodec ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" ${avcodec_NAME} avcodec "${TYPE_ZG_LIB_SUFFIX}" ON)
+	"${ffmpeg_ZG_LIB_PREFIX}" ${avcodec_NAME} avcodec ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(avfilter ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" ${avfilter_NAME} avfilter "${TYPE_ZG_LIB_SUFFIX}" ON)
+	"${ffmpeg_ZG_LIB_PREFIX}" ${avfilter_NAME} avfilter ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(avutil ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" ${avutil_NAME} avutil "${TYPE_ZG_LIB_SUFFIX}" ON)
+	"${ffmpeg_ZG_LIB_PREFIX}" ${avutil_NAME} avutil ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(swresample ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" ${swresample_NAME} swresample "${TYPE_ZG_LIB_SUFFIX}" ON)
+	"${ffmpeg_ZG_LIB_PREFIX}" ${swresample_NAME} swresample ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(swscale ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" ${swscale_NAME} swscale "${TYPE_ZG_LIB_SUFFIX}" ON)
+	"${ffmpeg_ZG_LIB_PREFIX}" ${swscale_NAME} swscale ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 if(ZG_TYPE STREQUAL SHARED)
 	zg_setup_target(shaderc SHARED
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
