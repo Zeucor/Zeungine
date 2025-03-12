@@ -34,7 +34,8 @@ jobs:
       - name: Get Commit Messages
         id: commit_messages
         run: |
-          PREV_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) || echo "")
+          PREV_HASH=$(git rev-list --tags --skip 1 --max-count 1)
+          PREV_TAG=$(git describe --abbrev=0 --tags $PREV_HASH || echo "")
           if [ -z "$PREV_TAG" ]
           then
             PREV_TAG=$(git rev-list --max-parents=0 HEAD)
