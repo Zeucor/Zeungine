@@ -58,8 +58,10 @@ jobs:
           declare -A artifacts
           artifacts["zeungine"]="application/vnd.debian.binary-package"
           artifacts["zeungine-debug"]="application/vnd.debian.binary-package"
+          artifacts["zeungine-debug-static"]="application/vnd.debian.binary-package"
           artifacts["zeungine-dependencies"]="application/vnd.debian.binary-package"
           artifacts["zeungine-dependencies-debug"]="application/vnd.debian.binary-package"
+          artifacts["zeungine-dependencies-debug-static"]="application/vnd.debian.binary-package"
           artifacts["zeungine-headers"]="application/vnd.debian.binary-package"
           for key in "${!artifacts[@]}"
           do
@@ -84,8 +86,10 @@ jobs:
       #     $artifacts = @{
       #       "Zeungine" = "application/octet-stream"
       #       "Zeungine-debug" = "application/octet-stream"
+      #       "Zeungine-debug-static" = "application/octet-stream"
       #       "ZeungineDependencies" = "application/octet-stream"
       #       "ZeungineDependencies-debug" = "application/octet-stream"
+      #       "ZeungineDependencies-debug-static" = "application/octet-stream"
       #       "ZeungineHeaders" = "application/octet-stream"
       #     }
       #     foreach ($key in $artifacts.Keys)
