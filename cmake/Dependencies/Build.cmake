@@ -99,7 +99,7 @@ FetchContent_MakeAvailable(swiftshader)
 message(STATUS "|FetchContent&Build&buildInstall|OneTime: ffmpeg")
 FetchContent_Declare(ffmpeg
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
-    GIT_TAG master)
+    GIT_TAG n7.1)
 FetchContent_MakeAvailable(ffmpeg)
 set(ffmpeg_CONFIGURE_OPTIONS --disable-programs --disable-doc --prefix=${ffmpeg_BINARY_DIR})
 if(ZG_TYPE STREQUAL STATIC)
