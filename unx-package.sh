@@ -80,7 +80,7 @@ build_headers() {
     cd cmake/Headers
 
     echo " -- Starting zeungine Headers Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON
+    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
     echo " -- Starting zeungine Headers Install"
     sudo cmake --install build
     echo " -- Starting zeungine Headers Package"
