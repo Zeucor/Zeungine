@@ -131,8 +131,8 @@ endif()
 
 # spriv-tools
 FetchContent_Declare(spirvtools
-    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Tools.git
-    GIT_TAG 9e470ef0f95d6923fa19dc5c5dc48c1442eb5a8b)
+    GIT_REPOSITORY https://github.com/ZeunO8/SPIRV-Tools.git
+    GIT_TAG fixes)
 FetchContent_GetProperties(spirvtools)
 if(NOT spirvtools_POPULATED)
     FetchContent_Populate(spirvtools)
