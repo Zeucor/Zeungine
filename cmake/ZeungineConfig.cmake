@@ -9,7 +9,7 @@ else()
 endif()
 zg_setup_target(zeungine "${ZG_LIBRARY_TYPE}"
     "${ZG_LIB_INSTALL_PREFIX_ABS}"
-    "${ZG_LIB_PREFIX}" zeungine zeungine "${zeungine_LIB_SUFFIX}")
+    "${ZG_LIB_PREFIX}" zeungine zeungine "${zeungine_LIB_SUFFIX}" OFF)
 include(${CMAKE_CURRENT_LIST_DIR}/Targets.cmake)
 set(Zeungine_LIBRARIES "${ZG_LIBRARIES}")
 find_package_handle_standard_args(Zeungine

@@ -4,6 +4,63 @@ include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 
 #New Dependency Declarations to the top!
+# zlib
+FetchContent_Declare(zlib
+    GIT_REPOSITORY https://github.com/madler/zlib.git
+    GIT_TAG 0f51fb4933fc9ce18199cb2554dacea8033e7fd3)
+FetchContent_GetProperties(zlib)
+if(NOT zlib_POPULATED)
+    FetchContent_Populate(zlib)
+endif()
+
+set(ZLIB_SOURCES
+    "${zlib_SOURCE_DIR}/zutil.c"
+    "${zlib_SOURCE_DIR}/uncompr.c"
+    "${zlib_SOURCE_DIR}/trees.c"
+    "${zlib_SOURCE_DIR}/inftrees.c"
+    "${zlib_SOURCE_DIR}/inflate.c"
+    "${zlib_SOURCE_DIR}/inffast.c"
+    "${zlib_SOURCE_DIR}/infback.c"
+    "${zlib_SOURCE_DIR}/gzwrite.c"
+    "${zlib_SOURCE_DIR}/gzread.c"
+    "${zlib_SOURCE_DIR}/gzlib.c"
+    "${zlib_SOURCE_DIR}/gzclose.c"
+    "${zlib_SOURCE_DIR}/deflate.c"
+    "${zlib_SOURCE_DIR}/crc32.c"
+    "${zlib_SOURCE_DIR}/compress.c"
+    "${zlib_SOURCE_DIR}/adler32.c"
+)
+
+add_library(zlib STATIC ${ZLIB_SOURCES})
+target_include_directories(zlib PRIVATE ${zlib_SOURCE_DIR})
+
+# bzip2
+FetchContent_Declare(bzip2
+    GIT_REPOSITORY https://github.com/centricular/bzip2.git
+    GIT_TAG 928fd716ecffa87f47d47585a9e09ff364c7689a)
+FetchContent_MakeAvailable(bzip2)
+FetchContent_GetProperties(bzip2)
+if(NOT bzip2_POPULATED)
+    FetchContent_Populate(bzip2)
+endif()
+
+set(BZIP2_SOURCES
+    "${bzip2_SOURCE_DIR}/blocksort.c"
+    "${bzip2_SOURCE_DIR}/bzip2.c"
+    "${bzip2_SOURCE_DIR}/bzlib.c"
+    "${bzip2_SOURCE_DIR}/compress.c"
+    "${bzip2_SOURCE_DIR}/crctable.c"
+    "${bzip2_SOURCE_DIR}/decompress.c"
+    "${bzip2_SOURCE_DIR}/dlltest.c"
+    "${bzip2_SOURCE_DIR}/huffman.c"
+    "${bzip2_SOURCE_DIR}/mk251.c"
+    "${bzip2_SOURCE_DIR}/randtable.c"
+    "${bzip2_SOURCE_DIR}/spewG.c"
+    "${bzip2_SOURCE_DIR}/unzcrash.c"
+)
+
+add_library(bzip2 STATIC ${BZIP2_SOURCES})
+target_include_directories(bzip2 PRIVATE ${bzip2_SOURCE_DIR})
 
 # miniaudio
 message(STATUS "FetchContent_Declare: miniaudio")
@@ -14,8 +71,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(miniaudio)
 
 # swiftshader
-set(SPIRV_SKIP_TESTS ON)
+set(SWIFTSHADER_BUILD_TESTS OFF)
 set(BUILD_TESTING OFF)
+
+##
+set(SPIRV_SKIP_TESTS ON)
 set(SKIP_GLSLANG_INSTALL ON)
 set(SHADERC_SKIP_INSTALL ON)
 set(SHADERC_SKIP_TESTS ON)
@@ -23,9 +83,10 @@ set(SHADERC_SKIP_EXAMPLES ON)
 set(SHADERC_COMPILE_GLSLC OFF)
 set(SPIRV_SKIP_EXECUTABLES ON)
 set(SKIP_SPIRV_TOOLS_INSTALL ON)
-set(SWIFTSHADER_BUILD_TESTS OFF)
 set(GLSLANG_ENABLE_INSTALL OFF)
 set(ENABLE_GLSLANG_BINARIES OFF)
+##
+
 cmake_policy(SET CMP0097 NEW)
 include(ExternalProject)
 message(STATUS "FetchContent_Declare: swiftshader")
@@ -33,30 +94,21 @@ FetchContent_Declare(swiftshader
     GIT_REPOSITORY https://github.com/ZeunO8/swiftshader.git
     GIT_TAG win_x86_64)
 FetchContent_MakeAvailable(swiftshader)
-# SPIRV-Headers
-FetchContent_Declare(SPIRV-Headers
-    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
-    GIT_TAG main)
-FetchContent_MakeAvailable(SPIRV-Headers)
-# shaderc
-FetchContent_Declare(shaderc
-    GIT_REPOSITORY https://github.com/ZeunO8/shaderc.git
-    GIT_TAG win_x86_64
-    GIT_SUBMODULES "")
-FetchContent_MakeAvailable(shaderc)
-set_target_properties(glslang PROPERTIES DEBUG_POSTFIX "")
-set_target_properties(glslang PROPERTIES RELEASE_POSTFIX "")
-set_target_properties(glslang PROPERTIES RELWITHDEBINFO_POSTFIX "")
-set_target_properties(glslang PROPERTIES MINSIZEREL_POSTFIX "")
 
 # FfMpeG
 message(STATUS "|FetchContent&Build&buildInstall|OneTime: ffmpeg")
 FetchContent_Declare(ffmpeg
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
-    GIT_TAG n7.1)
+    GIT_TAG master)
 FetchContent_MakeAvailable(ffmpeg)
-set(ffmpeg_CONFIGURE_OPTIONS --enable-shared --disable-programs --disable-doc --prefix=${ffmpeg_BINARY_DIR})
-if(RELEASE_OR_DEBUG MATCHES "Release")
+set(ffmpeg_CONFIGURE_OPTIONS --disable-programs --disable-doc --prefix=${ffmpeg_BINARY_DIR})
+if(ZG_TYPE STREQUAL STATIC)
+    set(ffmpeg_CONFIGURE_OPTIONS ${ffmpeg_CONFIGURE_OPTIONS} --enable-static --disable-shared)
+    set(ffmpeg_CONFIGURE_OPTIONS ${ffmpeg_CONFIGURE_OPTIONS} --enable-decoder=aac --enable-parser=aac)
+elseif(ZG_TYPE STREQUAL SHARED)
+    set(ffmpeg_CONFIGURE_OPTIONS ${ffmpeg_CONFIGURE_OPTIONS} --enable-shared --disable-static)
+endif()
+if(RELEASE_OR_DEBUG STREQUAL Release)
     set(ffmpeg_CONFIGURE_OPTIONS ${ffmpeg_CONFIGURE_OPTIONS} --enable-optimizations --disable-debug)
 else()
     set(ffmpeg_CONFIGURE_OPTIONS ${ffmpeg_CONFIGURE_OPTIONS} --disable-optimizations)
@@ -103,7 +155,7 @@ else()
 endif()
 message(STATUS "ffmpeg-install: ${ffmpeg_INSTALL_COMMAND}")
 execute_process(
-	COMMAND ${ffmpeg_INSTALL_COMMAND}
+    COMMAND ${ffmpeg_INSTALL_COMMAND}
     RESULT_VARIABLE ffmpeg_InstallResult
     WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR})
 if(ffmpeg_InstallResult)
@@ -114,9 +166,12 @@ endif()
 # end of ffmegp(!)
 
 # Freetype
-set(BFRE_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
-set(BUILD_SHARED_LIBS ON)
 message(STATUS "FetchContent: freetype")
+set(FT_DISABLE_ZLIB ON)
+set(FT_DISABLE_BZIP2 ON)
+set(FT_DISABLE_PNG ON)
+set(FT_DISABLE_HARFBUZZ ON)
+set(FT_DISABLE_BROTLI ON)
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Disable installation for fetched content" FORCE)
 FetchContent_Declare(freetype
     GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
@@ -126,7 +181,6 @@ set_target_properties(freetype PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(freetype PROPERTIES MINSIZEREL_POSTFIX "")
-set(BUILD_SHARED_LIBS ${BFRE_BUILD_SHARED_LIBS})
 
 # BVH
 message(STATUS "FetchContent: bvh")
@@ -150,8 +204,6 @@ FetchContent_Declare(stb
 FetchContent_MakeAvailable(stb)
 
 # lunasvg
-set(BFRE_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
-set(BUILD_SHARED_LIBS ON)
 message(STATUS "FetchContent: lunasvg")
 set(LUNASVG_INSTALL OFF)
 set(LUNASVG_BUILD_EXAMPLES OFF)
@@ -164,4 +216,3 @@ FetchContent_Declare(
 )
 message(STATUS "FetchContent_MakeAvailable: lunasvg")
 FetchContent_MakeAvailable(lunasvg)
-set(BUILD_SHARED_LIBS ${BFRE_BUILD_SHARED_LIBS})

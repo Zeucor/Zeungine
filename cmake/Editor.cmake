@@ -1,7 +1,9 @@
 # Editor
 if(BUILD_EDITOR)
     add_executable(zedit src/editor/Editor.cpp src/editor/EditorScene.cpp src/editor/CodeScene.cpp)
-    target_link_libraries(zedit zeungine)
+    target_link_libraries(zedit ${ZG_LIBRARIES})
+    target_include_directories(zedit PRIVATE include)
+    target_include_directories(zedit PRIVATE ${ZG_INC_INSTALL_PREFIX_ABS})
 endif()
 
 # Required test assets
