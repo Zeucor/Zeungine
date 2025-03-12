@@ -29,6 +29,11 @@ zg_setup_target(avdevice ${ZG_TYPE}
 zg_setup_target(avcodec ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${avcodec_NAME} avcodec ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+if(WIN32)
+	if(ZG_TYPE STREQUAL STATIC)
+		set(ZG_LIBRARIES ${ZG_LIBRARIES} ws2_32 secur32 bcrypt mfplat mf mfuuid strmiids)
+	endif()
+endif()
 zg_setup_target(avfilter ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${avfilter_NAME} avfilter ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
@@ -56,12 +61,12 @@ elseif(ZG_TYPE STREQUAL STATIC)
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
 		"${ZG_LIB_PREFIX}" bzip2 bzip2 "${STATIC_ZG_LIB_SUFFIX}" ON)
 endif()
-zg_setup_target(lunasvg ${ZG_TYPE}
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" lunasvg lunasvg "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(plutovg ${ZG_TYPE}
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" plutovg plutovg "${TYPE_ZG_LIB_SUFFIX}" ON)
+# zg_setup_target(lunasvg ${ZG_TYPE}
+# 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+# 	"${ZG_LIB_PREFIX}" lunasvg lunasvg "${TYPE_ZG_LIB_SUFFIX}" ON)
+# zg_setup_target(plutovg ${ZG_TYPE}
+# 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+# 	"${ZG_LIB_PREFIX}" plutovg plutovg "${TYPE_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(glm ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" glm glm "${TYPE_ZG_LIB_SUFFIX}" ON)
@@ -109,7 +114,6 @@ elseif(MACOS)
 	set(ZG_LIBRARIES ${ZG_LIBRARIES} "-framework Cocoa" "-framework QuartzCore" "-framework Metal")
 endif()
 find_package(Vulkan REQUIRED)
-include_directories(${Vulkan_INCLUDE_DIRS})
 if(WIN32)
 	set(ZG_LIBRARIES ${ZG_LIBRARIES} ${Vulkan_LIBRARIES})
 endif()

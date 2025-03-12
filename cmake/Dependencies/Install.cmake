@@ -85,7 +85,8 @@ endif()
 
 #add new targets to enj
 install(TARGETS
-    freetype lunasvg plutovg
+    freetype 
+    # lunasvg plutovg
     glm
     glslang
     vk_swiftshader vk_device vk_wsi vk_system vk_pipeline

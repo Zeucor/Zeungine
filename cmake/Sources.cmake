@@ -202,9 +202,31 @@ list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src
 list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/string_piece_test.cc")
 list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/version_profile_test.cc")
 
-set(ZG_SOURCES ${SPIRV_TOOLS_SOURCES} ${SHADERC_SOURCES} ${SHADERC_UTIL_SOURCES} ${GLSLANG_SOURCES} ${ZG_SOURCES})
+# lunasvg
+FetchContent_Declare(lunasvg
+    GIT_REPOSITORY https://github.com/ZeunO8/lunasvg.git
+    GIT_TAG master)
+FetchContent_GetProperties(lunasvg)
+if(NOT lunasvg_POPULATED)
+    FetchContent_Populate(lunasvg)
+endif()
 
-option(PRINT_PYTHON_SPIRV_COMMANDS "Whether to print python3 spirv commands" ON)
+file(GLOB LUNASVG_SOURCES ${lunasvg_SOURCE_DIR}/source/*.cpp)
+
+# plutovg
+FetchContent_Declare(plutovg
+    GIT_REPOSITORY https://github.com/ZeunO8/plutovg.git
+    GIT_TAG main)
+FetchContent_GetProperties(plutovg)
+if(NOT plutovg_POPULATED)
+    FetchContent_Populate(plutovg)
+endif()
+
+file(GLOB PLUTOVG_SOURCES ${plutovg_SOURCE_DIR}/source/*.c)
+
+set(ZG_SOURCES ${LUNASVG_SOURCES} ${PLUTOVG_SOURCES} ${SPIRV_TOOLS_SOURCES} ${SHADERC_SOURCES} ${SHADERC_UTIL_SOURCES} ${GLSLANG_SOURCES} ${ZG_SOURCES})
+
+option(PRINT_PYTHON_SPIRV_COMMANDS "Whether to print python3 spirv commands" OFF)
 if(PRINT_PYTHON_SPIRV_COMMANDS)
     set(GRAMMAR_PROCESSING_SCRIPT "${spirvtools_SOURCE_DIR}/utils/generate_grammar_tables.py")
     set(VIMSYNTAX_PROCESSING_SCRIPT "${spirvtools_SOURCE_DIR}/utils/vim/generate_syntax.py")
@@ -290,4 +312,7 @@ if(PRINT_PYTHON_SPIRV_COMMANDS)
     spvtools_extinst_lang_headers("DebugInfo" ${DEBUGINFO_GRAMMAR_JSON_FILE})
     spvtools_extinst_lang_headers("OpenCLDebugInfo100" ${CLDEBUGINFO100_GRAMMAR_JSON_FILE})
     spvtools_extinst_lang_headers("NonSemanticShaderDebugInfo100" ${VKDEBUGINFO100_GRAMMAR_JSON_FILE})
+
+    set(GLSLANG_BUILD_INFO_H ${glslang_SOURCE_DIR}/glslang/build_info.h)
+	message(STATUS "python ${glslang_SOURCE_DIR}/build_info.py ${glslang_SOURCE_DIR} -i ${glslang_SOURCE_DIR}/build_info.h.tmpl -o ${GLSLANG_BUILD_INFO_H}")
 endif()
