@@ -31,7 +31,17 @@ static std::string libPrefix("");
 static std::string libSuffix(".dll");
 #endif
 static std::filesystem::path vulkanLibrarySSName(libPrefix + "vk_swiftshader" + libSuffix);
-SharedLibrary zg::VulkanRenderer::vulkanLibrarySS((ZG_LIB_INSTALL_PREFIX / vulkanLibrarySSName).string());
+std::shared_ptr<SharedLibrary> zg::VulkanRenderer::vulkanLibrarySS = ([]()->std::shared_ptr<SharedLibrary>
+{
+	try
+	{
+		return std::make_shared<SharedLibrary>(ZG_LIB_INSTALL_PREFIX / vulkanLibrarySSName, vulkanLibrarySSName);
+	}
+	catch (...)
+	{
+		return {};
+	}
+})();
 #ifdef MACOS
 SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan.1" + libSuffix);
 #elif defined(__linux__)
@@ -82,11 +92,11 @@ VulkanRenderer::VulkanRenderer() {}
 VulkanRenderer::~VulkanRenderer() {}
 GetProcAddrFunc VulkanRenderer::doGetProcAddr()
 {
-	if (fallbackToSwiftshader)
+	if (fallbackToSwiftshader && vulkanLibrarySS)
 	{
 		try
 		{
-			return vulkanLibrarySS.getProc<GetProcAddrFunc>("vk_icdGetInstanceProcAddr");
+			return vulkanLibrarySS->getProc<GetProcAddrFunc>("vk_icdGetInstanceProcAddr");
 		}
 		catch (...)
 		{

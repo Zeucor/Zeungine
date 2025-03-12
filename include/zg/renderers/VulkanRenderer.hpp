@@ -112,7 +112,7 @@ namespace zg
 	{
 		static bool fallbackToSwiftshader;
 		static bool attempedCoreVulkan;
-		static SharedLibrary vulkanLibrarySS;
+		static std::shared_ptr<SharedLibrary> vulkanLibrarySS;
 #if defined(__linux__) || defined(MACOS)
 		static SharedLibrary vulkanLibraryCore;
 #endif
