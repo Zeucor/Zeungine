@@ -2,7 +2,7 @@
 
 # Define version and targets
 TARGETS=(
-    "ZeunDependencies-debug-static"
+    "ZeungineDependencies-debug-static"
     "ZeungineDependencies-static"
     "ZeungineDependencies-debug"
     "ZeungineDependencies"
