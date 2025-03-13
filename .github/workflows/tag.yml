@@ -59,16 +59,18 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           declare -A artifacts
-          artifacts["zeungine"]="application/vnd.debian.binary-package"
-          artifacts["zeungine-debug"]="application/vnd.debian.binary-package"
-          artifacts["zeungine-debug-static"]="application/vnd.debian.binary-package"
-          artifacts["zeungine-dependencies"]="application/vnd.debian.binary-package"
-          artifacts["zeungine-dependencies-debug"]="application/vnd.debian.binary-package"
-          artifacts["zeungine-dependencies-debug-static"]="application/vnd.debian.binary-package"
-          artifacts["zeungine-headers"]="application/vnd.debian.binary-package"
+          artifacts["releases/zeungine.deb"]="application/vnd.debian.binary-package"
+          artifacts["releases/zeungine-debug.deb"]="application/vnd.debian.binary-package"
+          artifacts["releases/zeungine-static.deb"]="application/vnd.debian.binary-package"
+          artifacts["releases/zeungine-debug-static.deb"]="application/vnd.debian.binary-package"
+          artifacts["releases/zeungine-dependencies.deb"]="application/vnd.debian.binary-package"
+          artifacts["releases/zeungine-dependencies-debug.deb"]="application/vnd.debian.binary-package"
+          artifacts["releases/zeungine-dependencies-debug-static.deb"]="application/vnd.debian.binary-package"
+          artifacts["releases/zeungine-headers.deb"]="application/vnd.debian.binary-package"
+          artifacts["deb-auto-install.sh"]="application/octet-stream"
           for key in "${!artifacts[@]}"
           do
-            file="releases/${key}.deb"
+            file="${key}"
             echo "Uploading $file"
             curl --data-binary @"$file" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -77,31 +79,32 @@ jobs:
           done
         shell: bash
 
-      # - name: Upload Artifacts for Windows
-      #   if: runner.os == 'Windows'
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     $ErrorActionPreference = "Stop"
-      #     # Query the release by tag to get the upload URL
-      #     $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
-      #     $uploadUrl = $release.upload_url.Split("{")[0]
-      #     $artifacts = @{
-      #       "Zeungine" = "application/octet-stream"
-      #       "Zeungine-debug" = "application/octet-stream"
-      #       "Zeungine-debug-static" = "application/octet-stream"
-      #       "ZeungineDependencies" = "application/octet-stream"
-      #       "ZeungineDependencies-debug" = "application/octet-stream"
-      #       "ZeungineDependencies-debug-static" = "application/octet-stream"
-      #       "ZeungineHeaders" = "application/octet-stream"
-      #     }
-      #     foreach ($key in $artifacts.Keys)
-      #     {
-      #       $file = "releases/$key.exe"
-      #       Write-Output "Uploading $file"
-      #       Invoke-RestMethod -Method Post -Uri "$uploadUrl?name=$([System.IO.Path]::GetFileName($file))" -Headers @{
-      #         Authorization = "token $env:GITHUB_TOKEN"
-      #         "Content-Type" = $artifacts[$key]
-      #       } -InFile $file -ContentType $artifacts[$key]
-      #     }
-      #   shell: pwsh
+      - name: Upload Artifacts for Windows
+        if: runner.os == 'Windows'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          # Query the release by tag to get the upload URL
+          $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
+          $uploadUrl = $release.upload_url.Split("{")[0]
+          $artifacts = @{
+            "releases/Zeungine" = "application/octet-stream"
+            "releases/Zeungine-debug" = "application/octet-stream"
+            "releases/Zeungine-debug-static" = "application/octet-stream"
+            "releases/ZeungineDependencies" = "application/octet-stream"
+            "releases/ZeungineDependencies-debug" = "application/octet-stream"
+            "releases/ZeungineDependencies-debug-static" = "application/octet-stream"
+            "releases/ZeungineHeaders" = "application/octet-stream"
+            "auto-install.bat" = "application/octet-stream"
+          }
+          foreach ($key in $artifacts.Keys)
+          {
+            $file = "$key.exe"
+            Write-Output "Uploading $file"
+            Invoke-RestMethod -Method Post -Uri "$uploadUrl?name=$([System.IO.Path]::GetFileName($file))" -Headers @{
+              Authorization = "token $env:GITHUB_TOKEN"
+              "Content-Type" = $artifacts[$key]
+            } -InFile $file -ContentType $artifacts[$key]
+          }
+        shell: pwsh

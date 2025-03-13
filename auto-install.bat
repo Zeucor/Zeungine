@@ -1,13 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
 :: Define version and targets
-set VERSION=0.2.3.5
-set TARGETS=ZeungineDependencies-debug ZeungineDependencies ZeungineHeaders Zeungine Zeungine-debug
+set TARGETS=ZeunDependencies-debug-static  ZeungineDependencies-static ZeungineDependencies-debug ZeungineDependencies ZeungineHeaders Zeungine Zeungine-debug Zeungine-static Zeungine-debug-static
 :: Iterate over targets and run them
 for %%T in (%TARGETS%) do (
-    set EXECUTABLE=%%T-%VERSION%.exe
+    set EXECUTABLE=%%T.exe
     if exist !EXECUTABLE! (
-        echo Quietly installing !EXECUTABLE! /S
+        echo Installing !EXECUTABLE! /S
         !EXECUTABLE! /S
     ) else (
         echo Installer !EXECUTABLE! not found.
