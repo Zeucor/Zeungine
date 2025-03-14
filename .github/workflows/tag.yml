@@ -49,7 +49,8 @@ jobs:
           then
             PREV_TAG=$(git rev-list --max-parents=0 HEAD)
           fi
-          COMMITS=$(git log $PREV_TAG..$GITHUB_SHA --oneline)
+          COMMITS=$(git log $PREV_TAG..$GITHUB_SHA --pretty=format:"%h %s")
+          echo "Captured commits: $COMMITS"
           echo "::set-output name=commits::$COMMITS"
         shell: bash
 
@@ -98,18 +99,18 @@ jobs:
           $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
           $uploadUrl = $release.upload_url.Split("{")[0]
           $artifacts = @{
-            # "releases/Zeungine" = "application/octet-stream"
-            # "releases/Zeungine-debug" = "application/octet-stream"
-            # "releases/Zeungine-debug-static" = "application/octet-stream"
-            # "releases/ZeungineDependencies" = "application/octet-stream"
-            # "releases/ZeungineDependencies-debug" = "application/octet-stream"
-            # "releases/ZeungineDependencies-debug-static" = "application/octet-stream"
-            # "releases/ZeungineHeaders" = "application/octet-stream"
+            # "releases/Zeungine.exe" = "application/octet-stream"
+            # "releases/Zeungine-debug.exe" = "application/octet-stream"
+            # "releases/Zeungine-debug-static.exe" = "application/octet-stream"
+            # "releases/ZeungineDependencies.exe" = "application/octet-stream"
+            # "releases/ZeungineDependencies-debug.exe" = "application/octet-stream"
+            # "releases/ZeungineDependencies-debug-static.exe" = "application/octet-stream"
+            # "releases/ZeungineHeaders.exe" = "application/octet-stream"
             "auto-install.bat" = "application/octet-stream"
           }
           foreach ($key in $artifacts.Keys)
           {
-            $file = "$key.exe"
+            $file = "$key"
             Write-Output "Uploading $file"
             Invoke-RestMethod -Method Post -Uri "$uploadUrl?name=$([System.IO.Path]::GetFileName($file))" -Headers @{
               Authorization = "token $env:GITHUB_TOKEN"
