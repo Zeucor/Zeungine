@@ -43,17 +43,22 @@ jobs:
         if: runner.os == 'Linux'
         id: commit_messages
         run: |
+          # Get the previous tag commit hash
           PREV_HASH=$(git rev-list --tags --skip 1 --max-count 1)
+          echo "Previous Hash: $PREV_HASH"
           PREV_TAG=$(git describe --abbrev=0 --tags $PREV_HASH || echo "")
+          echo "Previous Tag: $PREV_TAG"
           if [ -z "$PREV_TAG" ]
           then
             PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+            echo "Using first commit as previous tag: $PREV_TAG"
           fi
-          COMMITS=$(git log $PREV_TAG..$GITHUB_SHA --pretty=format:"%h %s")
-          echo "Captured commits: $COMMITS"
-          echo "::set-output name=commits::$COMMITS"
+          GITHUB_SHA=${GITHUB_SHA:-$(git rev-parse HEAD)}  # Ensure GITHUB_SHA is set if missing
+          echo "GitHub SHA: $GITHUB_SHA"
+          git log $PREV_TAG..$GITHUB_SHA --pretty=format:"%h %s" > commit_messages.txt
+          cat commit_messages.txt
         shell: bash
-
+    
       - name: Create GitHub Release (Linux Only)
         if: runner.os == 'Linux'
         id: create_release
@@ -63,7 +68,8 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           release_name: "Release ${{ github.ref_name }}"
-          body: ${{ steps.commit_messages.outputs.commits }}
+          body: |
+            $(cat commit_messages.txt)
 
       - name: Upload Artifacts for Linux
         if: runner.os == 'Linux'
