@@ -29,17 +29,18 @@ jobs:
           C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -S --noconfirm make diffutils"
         shell: bash
 
-      - name: Build Package on Linux
-        if: runner.os == 'Linux'
-        run: ./unx-package.sh 0
-        shell: bash
+      # - name: Build Package on Linux
+      #   if: runner.os == 'Linux'
+      #   run: ./unx-package.sh 0
+      #   shell: bash
 
-      - name: Build Package on Windows
-        if: runner.os == 'Windows'
-        run: .\win-package.bat 8
-        shell: cmd
+      # - name: Build Package on Windows
+      #   if: runner.os == 'Windows'
+      #   run: .\win-package.bat 8
+      #   shell: cmd
 
       - name: Get Commit Messages
+        if: runner.os == 'Linux'
         id: commit_messages
         run: |
           PREV_HASH=$(git rev-list --tags --skip 1 --max-count 1)
@@ -67,14 +68,14 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           declare -A artifacts
-          artifacts["releases/zeungine.deb"]="application/vnd.debian.binary-package"
-          artifacts["releases/zeungine-debug.deb"]="application/vnd.debian.binary-package"
-          artifacts["releases/zeungine-static.deb"]="application/vnd.debian.binary-package"
-          artifacts["releases/zeungine-debug-static.deb"]="application/vnd.debian.binary-package"
-          artifacts["releases/zeungine-dependencies.deb"]="application/vnd.debian.binary-package"
-          artifacts["releases/zeungine-dependencies-debug.deb"]="application/vnd.debian.binary-package"
-          artifacts["releases/zeungine-dependencies-debug-static.deb"]="application/vnd.debian.binary-package"
-          artifacts["releases/zeungine-headers.deb"]="application/vnd.debian.binary-package"
+          # artifacts["releases/zeungine.deb"]="application/vnd.debian.binary-package"
+          # artifacts["releases/zeungine-debug.deb"]="application/vnd.debian.binary-package"
+          # artifacts["releases/zeungine-static.deb"]="application/vnd.debian.binary-package"
+          # artifacts["releases/zeungine-debug-static.deb"]="application/vnd.debian.binary-package"
+          # artifacts["releases/zeungine-dependencies.deb"]="application/vnd.debian.binary-package"
+          # artifacts["releases/zeungine-dependencies-debug.deb"]="application/vnd.debian.binary-package"
+          # artifacts["releases/zeungine-dependencies-debug-static.deb"]="application/vnd.debian.binary-package"
+          # artifacts["releases/zeungine-headers.deb"]="application/vnd.debian.binary-package"
           artifacts["deb-auto-install.sh"]="application/octet-stream"
           for key in "${!artifacts[@]}"
           do
@@ -97,13 +98,13 @@ jobs:
           $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
           $uploadUrl = $release.upload_url.Split("{")[0]
           $artifacts = @{
-            "releases/Zeungine" = "application/octet-stream"
-            "releases/Zeungine-debug" = "application/octet-stream"
-            "releases/Zeungine-debug-static" = "application/octet-stream"
-            "releases/ZeungineDependencies" = "application/octet-stream"
-            "releases/ZeungineDependencies-debug" = "application/octet-stream"
-            "releases/ZeungineDependencies-debug-static" = "application/octet-stream"
-            "releases/ZeungineHeaders" = "application/octet-stream"
+            # "releases/Zeungine" = "application/octet-stream"
+            # "releases/Zeungine-debug" = "application/octet-stream"
+            # "releases/Zeungine-debug-static" = "application/octet-stream"
+            # "releases/ZeungineDependencies" = "application/octet-stream"
+            # "releases/ZeungineDependencies-debug" = "application/octet-stream"
+            # "releases/ZeungineDependencies-debug-static" = "application/octet-stream"
+            # "releases/ZeungineHeaders" = "application/octet-stream"
             "auto-install.bat" = "application/octet-stream"
           }
           foreach ($key in $artifacts.Keys)
