@@ -26,7 +26,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           choco install ninja dos2unix
-          C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -Syu make diffutils"
+          C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -Syu --noconfirm make diffutils"
         shell: bash
 
       - name: Build Package on Linux
