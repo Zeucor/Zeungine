@@ -97,30 +97,18 @@ jobs:
 
       - name: Upload Artifacts for Windows
         if: runner.os == 'Windows'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # env:
+        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $ErrorActionPreference = "Stop"
-          # Query the release by tag to get the upload URL
-          $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
-          $uploadUrl = $release.upload_url.Split("{")[0]
-          $artifacts = @{
-            # "releases/Zeungine.exe" = "application/octet-stream"
-            # "releases/Zeungine-debug.exe" = "application/octet-stream"
-            # "releases/Zeungine-debug-static.exe" = "application/octet-stream"
-            # "releases/ZeungineDependencies.exe" = "application/octet-stream"
-            # "releases/ZeungineDependencies-debug.exe" = "application/octet-stream"
-            # "releases/ZeungineDependencies-debug-static.exe" = "application/octet-stream"
-            # "releases/ZeungineHeaders.exe" = "application/octet-stream"
-            "auto-install.bat" = "application/octet-stream"
-          }
-          foreach ($key in $artifacts.Keys)
-          {
-            $file = "$key"
-            Write-Output "Uploading $file"
-            Invoke-RestMethod -Method Post -Uri "$uploadUrl?name=$([System.IO.Path]::GetFileName($file))" -Headers @{
-              Authorization = "token $env:GITHUB_TOKEN"
-              "Content-Type" = $artifacts[$key]
-            } -InFile $file -ContentType $artifacts[$key]
-          }
-        shell: pwsh
+          declare -A artifacts
+          artifacts["auto-install.bat"]="application/octet-stream"
+          for key in "${!artifacts[@]}"
+          do
+            file="${key}"
+            echo "Uploading $file"
+            curl --data-binary @"$file" \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: ${artifacts[$key]}" \
+              "${{ steps.create_release.outputs.upload_url }}?name=$(basename $file)"
+          done
+        shell: bash
