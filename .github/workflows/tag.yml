@@ -44,7 +44,7 @@ jobs:
         id: notes
         run: |
           PREV_HASH=$(git rev-list --tags --skip 1 --max-count 1)
-          CURR_HASH=${git rev-parse HEAD)
+          CURR_HASH=$(git rev-parse HEAD)
           export CHANGELOG="$(git log $PREV_HASH..$CURR_HASH --pretty=format:'%h %s')"
           CHANGELOG="${CHANGELOG//'%'/'%25'}"
           CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
