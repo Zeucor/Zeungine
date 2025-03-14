@@ -44,14 +44,8 @@ jobs:
         id: notes
         run: |
           PREV_HASH=$(git rev-list --tags --skip 1 --max-count 1)
-          PREV_TAG=$(git describe --abbrev=0 --tags $PREV_HASH || echo "")
-          if [ -z "$PREV_TAG" ]
-          then
-            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
-            echo "Using first commit as previous tag: $PREV_TAG"
-          fi
-          GITHUB_SHA=${GITHUB_SHA:-$(git rev-parse HEAD)}  # Ensure GITHUB_SHA is set if missing
-          export CHANGELOG="$(git log $PREV_TAG..$GITHUB_SHA --pretty=format:'%h %s')"
+          CURR_HASH=${git rev-parse HEAD)
+          export CHANGELOG="$(git log $PREV_HASH..$CURR_HASH --pretty=format:'%h %s')"
           CHANGELOG="${CHANGELOG//'%'/'%25'}"
           CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
           CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
