@@ -3,6 +3,10 @@
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 
+if(WIN32)
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} /EHsc)
+endif()
+
 #New Dependency Declarations to the top!
 # zlib
 FetchContent_Declare(zlib
