@@ -29,6 +29,11 @@ if "%MODE%"=="0" (
     call :build_zeungine_static
 ) else if "%MODE%"=="7" (
     call :build_zeungine_shared
+) else if "%MODE%"=="8" (
+    call "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat" x64
+    call :build_dependencies
+    call :build_headers
+    call :build_zeungine
 ) else (
     echo Invalid mode: %MODE%
     call :usage
@@ -46,6 +51,7 @@ echo   4 - Build dependencies static only
 echo   5 - Build dependencies shared only
 echo   6 - Build zeungine static only
 echo   7 - Build zeungine shared only
+echo   8 - Build all (enterprise vcvars64.bat)
 goto :EOF
 
 :: Function to build dependencies
