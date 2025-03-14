@@ -39,11 +39,9 @@ jobs:
       #   run: .\win-package.bat 8
       #   shell: cmd
 
-      - name: Get Commit Messages
-        if: runner.os == 'Linux'
-        id: commit_messages
+      - name: Compile Release Notes
+        id: notes
         run: |
-          # Get the previous tag commit hash
           PREV_HASH=$(git rev-list --tags --skip 1 --max-count 1)
           echo "Previous Hash: $PREV_HASH"
           PREV_TAG=$(git describe --abbrev=0 --tags $PREV_HASH || echo "")
@@ -55,28 +53,18 @@ jobs:
           fi
           GITHUB_SHA=${GITHUB_SHA:-$(git rev-parse HEAD)}  # Ensure GITHUB_SHA is set if missing
           echo "GitHub SHA: $GITHUB_SHA"
-          git log $PREV_TAG..$GITHUB_SHA --pretty=format:"%h %s" > commit_messages.txt
-          cat commit_messages.txt
-          cat commit_messages.txt
+          COMMITS=$(git log $PREV_TAG..$GITHUB_SHA --pretty=format:"%h %s")
+          echo "::set-output name=body::$COMMITS"
         shell: bash
-
-      - name: Set Release Body
-        id: release_body
-        run: |
-          COMMIT_BODY=$(cat commit_messages.txt)
-          echo "commit_body<<EOF" >> $GITHUB_ENV
-          echo "$COMMIT_BODY" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Create GitHub Release
+      
+      - name: Create Release
         uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{ steps.notes.outputs.body }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: "Release ${{ github.ref_name }}"
-          body: ${{ env.commit_body }}
 
       - name: Upload Artifacts for Linux
         if: runner.os == 'Linux'
