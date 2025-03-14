@@ -40,6 +40,7 @@ jobs:
       #   shell: cmd
 
       - name: Compile Release Notes
+        if: runner.os == 'Linux'
         id: notes
         run: |
           PREV_HASH=$(git rev-list --tags --skip 1 --max-count 1)
@@ -54,6 +55,7 @@ jobs:
         shell: bash
       
       - name: Create Release
+        if: runner.os == 'Linux'
         id: create_release
         uses: actions/create-release@v1
         with:
@@ -63,10 +65,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Artifacts for Linux
-        if: runner.os == 'Linux'
-        run: |
-          declare -A artifacts
           # artifacts["releases/zeungine.deb"]="application/vnd.debian.binary-package"
           # artifacts["releases/zeungine-debug.deb"]="application/vnd.debian.binary-package"
           # artifacts["releases/zeungine-static.deb"]="application/vnd.debian.binary-package"
@@ -75,29 +73,31 @@ jobs:
           # artifacts["releases/zeungine-dependencies-debug.deb"]="application/vnd.debian.binary-package"
           # artifacts["releases/zeungine-dependencies-debug-static.deb"]="application/vnd.debian.binary-package"
           # artifacts["releases/zeungine-headers.deb"]="application/vnd.debian.binary-package"
-          artifacts["deb-auto-install.sh"]="application/octet-stream"
-          for key in "${!artifacts[@]}"
-          do
-            file="${key}"
-            echo "Uploading $file"
-            curl --data-binary @"$file" \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: ${artifacts[$key]}" \
-              "${{ steps.create_release.outputs.upload_url }}?name=$(basename $file)"
-          done
-        shell: bash
+      - name: Upload Assets Linux
+        if: runner.os == 'Linux'
+        id: upload_linux_assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./deb-auto-install.sh
+          asset_name: deb-auto-install.sh
+          asset_content_type: application/octet-stream
 
-      - name: Upload Artifacts for Windows
+      - name: Get uploadUrl for Windows
         if: runner.os == 'Windows'
+        id: get_upload_url_windows
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $ErrorActionPreference = "Stop"
-          # Query the release by tag to get the upload URL
           $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
           Write-Output "Release Object: $($release | ConvertTo-Json -Depth 3)"
           $uploadUrl = $release.upload_url
-          $artifacts = @{
+          echo "::set-output name=url::$uploadUrl"
+        shell: pwsh
+
             # "releases/Zeungine.exe" = "application/octet-stream"
             # "releases/Zeungine-debug.exe" = "application/octet-stream"
             # "releases/Zeungine-debug-static.exe" = "application/octet-stream"
@@ -105,15 +105,16 @@ jobs:
             # "releases/ZeungineDependencies-debug.exe" = "application/octet-stream"
             # "releases/ZeungineDependencies-debug-static.exe" = "application/octet-stream"
             # "releases/ZeungineHeaders.exe" = "application/octet-stream"
-            "auto-install.bat" = "application/octet-stream"
-          }
-          foreach ($key in $artifacts.Keys)
-          {
-            $file = "$key"
-            Write-Output "Uploading $file"
-            Invoke-RestMethod -Method Post -Uri "$uploadUrl?name=$([System.IO.Path]::GetFileName($file))" -Headers @{
-              Authorization = "token $env:GITHUB_TOKEN"
-              "Content-Type" = $artifacts[$key]
-            } -InFile $file -ContentType $artifacts[$key]
-          }
-        shell: pwsh
+            # "auto-install.bat" = "application/octet-stream"
+            # get_upload_url_windows
+      - name: Upload Release Asset
+        if: runner.os == 'Windows'
+        id: upload_windows_assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_upload_url_windows.outputs.url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./auto-install.bat
+          asset_name: auto-install.bat
+          asset_content_type: application/octet-stream
