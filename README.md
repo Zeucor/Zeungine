@@ -36,7 +36,6 @@ The following programs must be available in your PATH
 
  - `Visual Studio 2022` or newer for MSVC
   (for ffmpeg)
- - `choco install mingw`
  - `choco install make`
  - `choco install nasm` (add `C:\Program Files\NASM` to your PATH)
 
