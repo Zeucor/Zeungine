@@ -22,6 +22,11 @@ jobs:
         run: sudo apt install nasm libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev libdrm-dev ninja-build
         shell: bash
 
+      - name: Install Dependencies on Windows
+        if: runner.os == 'Windows'
+        run: choco install ninja mingw nasm dos2unix
+        shell: pwsh
+
       - name: Build Package on Linux
         if: runner.os == 'Linux'
         run: ./unx-package.sh 0

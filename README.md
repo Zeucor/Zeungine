@@ -26,18 +26,24 @@ You can analyze these files for their configure, compile, install and package co
 
 ###### All platforms
 
- - `cmake` is required in your path
+The following programs must be available in your PATH 
+ - `cmake`
+ - `make`
+ - `bash` (on windows you can add `C:\Program Files\Git\bin` to your PATH)
+ - `nasm`
 
 ###### Windows
 
  - `Visual Studio 2022` or newer for MSVC
- - `msys64` installed at `C:\msys64` for ffmpeg shell consistency
- - Run all commands inside 'xXX Native Tools Command Prompt for VS20XX' as admin
+  (for ffmpeg)
+ - `choco install mingw`
+ - `choco install make`
+ - `choco install nasm` (add `C:\Program Files\NASM` to your PATH)
 
 ###### Linux
 
 ```bash
-apt install libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev
+apt install libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev  libdrm-dev ninja-build nasm
 ```
 
 apt packages for zeungine coming soon
