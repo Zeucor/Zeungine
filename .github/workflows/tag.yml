@@ -24,8 +24,10 @@ jobs:
 
       - name: Install Dependencies on Windows
         if: runner.os == 'Windows'
-        run: choco install ninja dos2unix
-        shell: pwsh
+        run: |
+          choco install ninja dos2unix nsis
+          pacman -Syu make diffutils
+        shell: bash
 
       - name: Build Package on Linux
         if: runner.os == 'Linux'
