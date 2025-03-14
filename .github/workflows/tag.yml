@@ -24,7 +24,7 @@ jobs:
 
       - name: Install Dependencies on Windows
         if: runner.os == 'Windows'
-        run: choco install ninja mingw nasm dos2unix
+        run: choco install ninja dos2unix
         shell: pwsh
 
       - name: Build Package on Linux
@@ -34,7 +34,10 @@ jobs:
 
       - name: Build Package on Windows
         if: runner.os == 'Windows'
-        run: .\win-package.bat 0
+        run: |
+          "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
+          .\win-package.bat 0
+        shell: cmd
 
       - name: Get Commit Messages
         id: commit_messages
