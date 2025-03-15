@@ -45,7 +45,7 @@ jobs:
         run: |
           PREV_HASH=$(git rev-list --tags --skip 1 --max-count 1)
           CURR_HASH=$(git rev-parse HEAD)
-          export CHANGELOG="$(git log $PREV_HASH..$CURR_HASH --pretty=format:'%h %s')"
+          export CHANGELOG="$(git log $PREV_HASH..$CURR_HASH --oneline)"
           CHANGELOG="${CHANGELOG//'%'/'%25'}"
           CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
           CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
