@@ -107,9 +107,9 @@ FetchContent_Declare(ffmpeg
 FetchContent_MakeAvailable(ffmpeg)
 function(add_ffmpeg_config VARI)
     if(WIN32)
-        set(ffmpeg_CONFIGURE_OPTIONS "${ffmpeg_CONFIGURE_OPTIONS} ${VARI}" PARENT_SCOPE)
+        set(ffmpeg_CONFIGURE "${ffmpeg_CONFIGURE} ${VARI}" PARENT_SCOPE)
     else()
-        set(ffmpeg_CONFIGURE_OPTIONS ${ffmpeg_CONFIGURE_OPTIONS} ${VARI} PARENT_SCOPE)
+        set(ffmpeg_CONFIGURE ${ffmpeg_CONFIGURE} ${VARI} PARENT_SCOPE)
     endif()
 endfunction()
 add_ffmpeg_config(--disable-programs)
@@ -158,17 +158,21 @@ endif()
 if(WIN32)
     set(ffmpeg_BUILD_COMMAND "make")
     set(ffmpeg_INSTALL_COMMAND "make install")
-    # set(ffmpeg_BUILD_COMMAND make)
-    # set(ffmpeg_INSTALL_COMMAND make install)
+    set(ffmpeg_CONFIGURE "./configure ${ffmpeg_CONFIGURE}")
+    set(ffmpeg_BUILD_COMMAND ${SHELL} ${ffmpeg_BUILD_COMMAND})
+    set(ffmpeg_INSTALL_COMMAND ${SHELL} ${ffmpeg_BUILD_COMMAND})
 else()
     set(ffmpeg_BUILD_COMMAND make)
     set(ffmpeg_INSTALL_COMMAND make install)
+    set(ffmpeg_CONFIGURE "./configure" ${ffmpeg_CONFIGURE})
+    set(ffmpeg_BUILD_COMMAND ${ffmpeg_BUILD_COMMAND})
+    set(ffmpeg_INSTALL_COMMAND ${ffmpeg_BUILD_COMMAND})
 endif()
 message(STATUS "ffmpeg-dos2unix")
 execute_process(COMMAND dos2unix configure WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR})
-message(STATUS "ffmpeg-configure: ${SHELL} \"./configure ${ffmpeg_CONFIGURE_OPTIONS}\"")
+message(STATUS "ffmpeg-configure: ${SHELL} \"./configure ${ffmpeg_CONFIGURE}\"")
 execute_process(
-    COMMAND ${SHELL} "./configure ${ffmpeg_CONFIGURE_OPTIONS}"
+    COMMAND ${SHELL} ${ffmpeg_CONFIGURE}
     WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR}
     RESULT_VARIABLE ffmpeg_ConfigureResult)
 if(ffmpeg_ConfigureResult)
@@ -178,7 +182,7 @@ else()
 endif()
 message(STATUS "ffmpeg-build")
 execute_process(
-    COMMAND ${SHELL} ${ffmpeg_BUILD_COMMAND}
+    COMMAND ${ffmpeg_BUILD_COMMAND}
     RESULT_VARIABLE ffmpeg_BuildResult
     WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR})
 if(ffmpeg_BuildResult)
@@ -188,7 +192,7 @@ else()
 endif()
 message(STATUS "ffmpeg-install: ${ffmpeg_INSTALL_COMMAND}")
 execute_process(
-    COMMAND ${SHELL} ${ffmpeg_INSTALL_COMMAND}
+    COMMAND ${ffmpeg_INSTALL_COMMAND}
     RESULT_VARIABLE ffmpeg_InstallResult
     WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR})
 if(ffmpeg_InstallResult)
