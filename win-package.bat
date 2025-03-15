@@ -67,7 +67,7 @@ cmake -B build -D CMAKE_BUILD_TYPE=Debug -G Ninja -D ZG_TYPE=STATIC
 echo -- Starting zegndeps Debug/STATIC Build
 cmake --build build
 echo -- Starting zegndeps Debug/STATIC Install
-cmake --install build
+cmake --install build -C Debug
 echo -- Starting zegndeps Debug/STATIC Package
 cpack --config build\CPackConfig.cmake -C Debug
 echo -- Starting zegndeps Release/STATIC Configure
@@ -75,7 +75,7 @@ cmake -B build -D CMAKE_BUILD_TYPE=Release -G Ninja -D ZG_TYPE=STATIC
 echo -- Starting zegndeps Release/STATIC Build
 cmake --build build
 echo -- Starting zegndeps Release/STATIC Install
-cmake --install build
+cmake --install build -C Release
 echo -- Starting zegndeps Release/STATIC Package
 cpack --config build\CPackConfig.cmake -C Release
 cd ..\..
@@ -88,7 +88,7 @@ cmake -B build -D CMAKE_BUILD_TYPE=Debug -G Ninja -D ZG_TYPE=SHARED
 echo -- Starting zegndeps Debug/SHARED Build
 cmake --build build
 echo -- Starting zegndeps Debug/SHARED Install
-cmake --install build
+cmake --install build -C Debug
 echo -- Starting zegndeps Debug/SHARED Package
 cpack --config build\CPackConfig.cmake -C Debug
 echo -- Starting zegndeps Release/SHARED Configure
@@ -96,7 +96,7 @@ cmake -B build -D CMAKE_BUILD_TYPE=Release -G Ninja -D ZG_TYPE=SHARED
 echo -- Starting zegndeps Release/SHARED Build
 cmake --build build
 echo -- Starting zegndeps Release/SHARED Install
-cmake --install build
+cmake --install build -C Release
 echo -- Starting zegndeps Release/SHARED Package
 cpack --config build\CPackConfig.cmake -C Release
 cd ..\..
@@ -108,7 +108,7 @@ cd cmake\Headers
 echo -- Starting zeungine Headers Configure
 cmake -B build -D CMAKE_BUILD_TYPE=Release -G Ninja -D ZG_TYPE=SHARED
 echo -- Starting zeungine Headers Install
-cmake --install build
+cmake --install build -C Release
 echo -- Starting zeungine Headers Package
 cpack --config build\CPackConfig.cmake -C Release
 cd ..\..
@@ -132,7 +132,7 @@ cmake -B build -D CMAKE_BUILD_TYPE=Debug -G Ninja -D ZG_TYPE=STATIC
 echo -- Starting zeungine Debug/STATIC Build
 cmake --build build
 echo -- Starting zeungine Debug/STATIC Install
-cmake --install build
+cmake --install build -C Debug
 echo -- Starting zeungine Debug/STATIC Package
 cpack --config build\CPackConfig.cmake -C Debug
 echo -- Starting zeungine Release/STATIC Configure
@@ -140,7 +140,7 @@ cmake -B build -D CMAKE_BUILD_TYPE=Release -G Ninja -D ZG_TYPE=STATIC
 echo -- Starting zeungine Release/STATIC Build
 cmake --build build
 echo -- Starting zeungine Release/STATIC Install
-cmake --install build
+cmake --install build -C Release
 echo -- Starting zeungine Release/STATIC Package
 cpack --config build\CPackConfig.cmake -C Release
 goto :EOF
@@ -151,7 +151,7 @@ cmake -B build -D CMAKE_BUILD_TYPE=Debug -G Ninja -D ZG_TYPE=SHARED
 echo -- Starting zeungine Debug/SHARED Build
 cmake --build build
 echo -- Starting zeungine Debug/SHARED Install
-cmake --install build
+cmake --install build -C Debug
 echo -- Starting zeungine Debug/SHARED Package
 cpack --config build\CPackConfig.cmake -C Debug
 echo -- Starting zeungine Release/SHARED Configure
@@ -159,7 +159,7 @@ cmake -B build -D CMAKE_BUILD_TYPE=Release -G Ninja -D ZG_TYPE=SHARED
 echo -- Starting zeungine Release/SHARED Build
 cmake --build build
 echo -- Starting zeungine Release/SHARED Install
-cmake --install build
+cmake --install build -C Release
 echo -- Starting zeungine Release/SHARED Package
 cpack --config build\CPackConfig.cmake -C Release
 goto :EOF
