@@ -47,6 +47,12 @@ jobs:
           CURR_HASH=$(git rev-parse HEAD)
           git log $PREV_HASH..$CURR_HASH --oneline >> changelog
         shell: bash
+
+      - name: Print Changelog
+        if: runner.os == 'Linux'
+        run: |
+          cat changelog
+        shell: bash
       
       - name: Create Release
         if: runner.os == 'Linux'
