@@ -45,15 +45,7 @@ jobs:
         run: |
           PREV_HASH=$(git for-each-ref --sort=-creatordate --format '%(objectname)' refs/tags | sed -n 2p)
           CURR_HASH=$(git rev-parse HEAD)
-          export CHANGELOG="$(git log $PREV_HASH..$CURR_HASH --oneline)"
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          {
-            echo "CHANGELOG<<EOF"
-            echo "$CHANGELOG"
-            echo "EOF"
-          } >> "$GITHUB_ENV"
+          git log $PREV_HASH..$CURR_HASH --oneline >> changelog
         shell: bash
       
       - name: Create Release
@@ -63,9 +55,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          body: |
-            changes since the previous tag that are included in this release:
-            ${{ env.CHANGELOG }}
+          body_path: changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
