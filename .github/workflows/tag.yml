@@ -19,7 +19,7 @@ jobs:
 
       - name: Install Dependencies on Linux
         if: runner.os == 'Linux'
-        run: sudo apt install nasm libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev libdrm-dev ninja-build
+        run: sudo apt install nasm libvulkan-dev libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev libdrm-dev ninja-build
         shell: bash
 
       - name: Install Dependencies on Windows
