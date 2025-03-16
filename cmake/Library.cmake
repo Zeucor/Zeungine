@@ -11,6 +11,7 @@ target_include_directories(zeungine PRIVATE ${glslang_SOURCE_DIR}/OGLCompilersDL
 target_include_directories(zeungine PRIVATE spirv)
 target_include_directories(zeungine PRIVATE ${lunasvg_SOURCE_DIR}/include)
 target_include_directories(zeungine PRIVATE ${plutovg_SOURCE_DIR}/include)
+target_include_directories(zeungine PRIVATE ${miniaudio_SOURCE_DIR})
 # target_include_directories(zeungine PRIVATE ${protobuf_SOURCE_DIR}/src)
 # target_include_directories(zeungine PRIVATE ${absl_SOURCE_DIR})
 target_include_directories(zeungine PRIVATE include)

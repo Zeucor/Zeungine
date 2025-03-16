@@ -224,7 +224,31 @@ endif()
 
 file(GLOB PLUTOVG_SOURCES ${plutovg_SOURCE_DIR}/source/*.c)
 
-set(ZG_SOURCES ${LUNASVG_SOURCES} ${PLUTOVG_SOURCES} ${SPIRV_TOOLS_SOURCES} ${SHADERC_SOURCES} ${SHADERC_UTIL_SOURCES} ${GLSLANG_SOURCES} ${ZG_SOURCES})
+# freetype
+FetchContent_Declare(freetype
+    GIT_REPOSITORY https://github.com/freetype/freetype.git
+    GIT_TAG 42608f77f20749dd6ddc9e0536788eaad70ea4b5)
+FetchContent_GetProperties(freetype)
+if(NOT freetype_POPULATED)
+    FetchContent_Populate(freetype)
+endif()
+
+set(FT_SOURCES 
+    ${freetype_SOURCE_DIR}/src/gzip/inflate.c
+)
+
+# miniaudio
+FetchContent_Declare(
+    miniaudio
+    GIT_REPOSITORY https://github.com/mackron/miniaudio.git
+    GIT_TAG master)
+FetchContent_GetProperties(miniaudio)
+if(NOT miniaudio_POPULATED)
+    FetchContent_Populate(miniaudio)
+endif()
+set(MINIAUDIO_SOURCES ${miniaudio_SOURCE_DIR}/miniaudio.c)
+
+set(ZG_SOURCES ${MINIAUDIO_SOURCES} ${FT_SOURCES} ${LUNASVG_SOURCES} ${PLUTOVG_SOURCES} ${SPIRV_TOOLS_SOURCES} ${SHADERC_SOURCES} ${SHADERC_UTIL_SOURCES} ${GLSLANG_SOURCES} ${ZG_SOURCES})
 
 option(PRINT_PYTHON_SPIRV_COMMANDS "Whether to print python3 spirv commands" OFF)
 if(PRINT_PYTHON_SPIRV_COMMANDS)

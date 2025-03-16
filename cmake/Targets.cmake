@@ -61,9 +61,9 @@ endif()
 # zg_setup_target(plutovg ${ZG_TYPE}
 # 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 # 	"${ZG_LIB_PREFIX}" plutovg plutovg "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(glm STATIC
+zg_setup_target(glm ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" glm glm "${STATIC_ZG_LIB_SUFFIX}" ON)
+	"${ZG_LIB_PREFIX}" glm glm "${TYPE_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(freetype ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)
@@ -82,9 +82,9 @@ zg_setup_target(freetype ${ZG_TYPE}
 # zg_setup_target(marl ${ZG_TYPE}
 # 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 # 	"${ZG_LIB_PREFIX}" marl marl "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(miniaudio ${ZG_TYPE}
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" miniaudio miniaudio "${TYPE_ZG_LIB_SUFFIX}" ON)
+# zg_setup_target(miniaudio ${ZG_TYPE}
+# 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+# 	"${ZG_LIB_PREFIX}" miniaudio miniaudio "${TYPE_ZG_LIB_SUFFIX}" ON)
 if(WIN32)
 	find_package(OpenGL REQUIRED)
 	set(ZG_LIBRARIES ${ZG_LIBRARIES} OpenGL::GL)
@@ -94,12 +94,7 @@ endif()
 # set(ZG_LIBRARIES ${ZG_LIBRARIES} freetype)
 # set(ZG_LIBRARIES ${ZG_LIBRARIES} bvh)
 if(LINUX)
-	if(USE_X11)
-		set(ZG_LIBRARIES ${ZG_LIBRARIES} X11 Xrandr Xext Xfixes xkbcommon Xrender)
-	endif()
-	if(USE_XCB OR USE_X11)
-		set(ZG_LIBRARIES ${ZG_LIBRARIES} xcb xkbcommon xcb-util xcb-keysyms xcb-xfixes X11 Xrandr Xext Xfixes xkbcommon Xrender)
-	endif()
+	set(ZG_LIBRARIES ${ZG_LIBRARIES} xcb xkbcommon xcb-util xcb-keysyms xcb-xfixes X11 Xrandr Xext Xfixes xkbcommon Xrender)
 	if(USE_WAYLAND)
 		set(ZG_LIBRARIES ${ZG_LIBRARIES} wayland-client)
 	endif()

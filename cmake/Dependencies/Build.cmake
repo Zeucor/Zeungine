@@ -66,14 +66,6 @@ set(BZIP2_SOURCES
 add_library(bzip2 STATIC ${BZIP2_SOURCES})
 target_include_directories(bzip2 PRIVATE ${bzip2_SOURCE_DIR})
 
-# miniaudio
-message(STATUS "FetchContent_Declare: miniaudio")
-FetchContent_Declare(
-    miniaudio
-    GIT_REPOSITORY https://github.com/mackron/miniaudio.git
-    GIT_TAG master)
-FetchContent_MakeAvailable(miniaudio)
-
 # # swiftshader
 # set(SWIFTSHADER_BUILD_TESTS OFF)
 # set(BUILD_TESTING OFF)
@@ -211,8 +203,8 @@ set(FT_DISABLE_HARFBUZZ ON)
 set(FT_DISABLE_BROTLI ON)
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Disable installation for fetched content" FORCE)
 FetchContent_Declare(freetype
-    GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
-    GIT_TAG master)
+    GIT_REPOSITORY https://github.com/freetype/freetype.git
+    GIT_TAG 42608f77f20749dd6ddc9e0536788eaad70ea4b5)
 FetchContent_MakeAvailable(freetype)
 set_target_properties(freetype PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELEASE_POSTFIX "")

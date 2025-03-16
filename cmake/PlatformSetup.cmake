@@ -63,11 +63,6 @@ elseif(WINDOWS)
 #     set(CMAKE_CXX_FLAGS "/${C_RUNTIME} ${CMAKE_CXX_FLAGS} /wd4068")
 endif()
 
-if(LINUX OR MACOS)
-    set(BUILD_SHARED_LIBS OFF)
-else()
-endif()
-
 # setup target helper
 function(zg_setup_target
 	TARGET_NAME
@@ -125,8 +120,10 @@ set(ZG_LIBRARY_TYPE STATIC)
 # endif()
 if(ZG_TYPE STREQUAL STATIC)
     set(BUILD_SHARED_LIBS OFF)
+    message(STATUS "ZG_TYPE=STATIC")
 elseif(ZG_TYPE STREQUAL SHARED)
     set(BUILD_SHARED_LIBS ON)
+    message(STATUS "ZG_TYPE=SHARED")
 else()
     set(ZG_TYPE STATIC)
     set(BUILD_SHARED_LIBS OFF)
