@@ -66,6 +66,16 @@ set(BZIP2_SOURCES
 add_library(bzip2 STATIC ${BZIP2_SOURCES})
 target_include_directories(bzip2 PRIVATE ${bzip2_SOURCE_DIR})
 
+# miniaudio
+FetchContent_Declare(
+    miniaudio
+    GIT_REPOSITORY https://github.com/mackron/miniaudio.git
+    GIT_TAG master)
+FetchContent_GetProperties(miniaudio)
+if(NOT miniaudio_POPULATED)
+    FetchContent_Populate(miniaudio)
+endif()
+
 # # swiftshader
 # set(SWIFTSHADER_BUILD_TESTS OFF)
 # set(BUILD_TESTING OFF)
