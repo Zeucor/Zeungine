@@ -8,8 +8,6 @@
 #endif
 #ifdef __linux__
 #include <zg/windows/XCBWindow.hpp>
-#endif
-#ifdef USE_WAYLAND
 #include <zg/windows/WaylandWindow.hpp>
 #endif
 using namespace zg;
