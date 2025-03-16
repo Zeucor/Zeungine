@@ -44,7 +44,11 @@ IPlatformWindow *zg::createPlatformWindow()
         }
         else if (strcmp(xdgSessionType, "wayland") == 0)
         {
+#ifdef USE_WAYLAND
             return new WaylandWindow();
+#else
+            return new XCBWindow();
+#endif
         }
     }
 #endif
