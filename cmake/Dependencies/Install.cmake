@@ -83,14 +83,9 @@ endif()
 
 # datsit frrom ffmpeg
 
-#add new targets to enj
 install(TARGETS
-    freetype 
-    # lunasvg plutovg
+    freetype
     glm
-    glslang
-    vk_swiftshader vk_device vk_wsi vk_system vk_pipeline
-    marl
     miniaudio
     ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX}
@@ -101,13 +96,6 @@ if(ZG_TYPE STREQUAL STATIC)
         ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
         LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX}
         RUNTIME DESTINATION ${ZG_LIB_INSTALL_PREFIX})
-endif()
-
-if(WIN32)
-    install(FILES
-        ${CMAKE_BINARY_DIR}/vk_swiftshader.dll
-        DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 endif()
 
 if(UNIX AND NOT APPLE)

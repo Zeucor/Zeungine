@@ -74,30 +74,30 @@ FetchContent_Declare(
     GIT_TAG master)
 FetchContent_MakeAvailable(miniaudio)
 
-# swiftshader
-set(SWIFTSHADER_BUILD_TESTS OFF)
-set(BUILD_TESTING OFF)
+# # swiftshader
+# set(SWIFTSHADER_BUILD_TESTS OFF)
+# set(BUILD_TESTING OFF)
 
-##
-set(SPIRV_SKIP_TESTS ON)
-set(SKIP_GLSLANG_INSTALL ON)
-set(SHADERC_SKIP_INSTALL ON)
-set(SHADERC_SKIP_TESTS ON)
-set(SHADERC_SKIP_EXAMPLES ON)
-set(SHADERC_COMPILE_GLSLC OFF)
-set(SPIRV_SKIP_EXECUTABLES ON)
-set(SKIP_SPIRV_TOOLS_INSTALL ON)
-set(GLSLANG_ENABLE_INSTALL OFF)
-set(ENABLE_GLSLANG_BINARIES OFF)
-##
+# ##
+# set(SPIRV_SKIP_TESTS ON)
+# set(SKIP_GLSLANG_INSTALL ON)
+# set(SHADERC_SKIP_INSTALL ON)
+# set(SHADERC_SKIP_TESTS ON)
+# set(SHADERC_SKIP_EXAMPLES ON)
+# set(SHADERC_COMPILE_GLSLC OFF)
+# set(SPIRV_SKIP_EXECUTABLES ON)
+# set(SKIP_SPIRV_TOOLS_INSTALL ON)
+# set(GLSLANG_ENABLE_INSTALL OFF)
+# set(ENABLE_GLSLANG_BINARIES OFF)
+# ##
 
-cmake_policy(SET CMP0097 NEW)
-include(ExternalProject)
-message(STATUS "FetchContent_Declare: swiftshader")
-FetchContent_Declare(swiftshader
-    GIT_REPOSITORY https://github.com/ZeunO8/swiftshader.git
-    GIT_TAG win_x86_64)
-FetchContent_MakeAvailable(swiftshader)
+# cmake_policy(SET CMP0097 NEW)
+# include(ExternalProject)
+# message(STATUS "FetchContent_Declare: swiftshader")
+# FetchContent_Declare(swiftshader
+#     GIT_REPOSITORY https://github.com/ZeunO8/swiftshader.git
+#     GIT_TAG win_x86_64)
+# FetchContent_MakeAvailable(swiftshader)
 
 # FfMpeG
 message(STATUS "|FetchContent&Build&buildInstall|OneTime: ffmpeg")

@@ -47,12 +47,6 @@ zg_setup_target(swscale ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${swscale_NAME} swscale ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 if(ZG_TYPE STREQUAL SHARED)
-	zg_setup_target(shaderc SHARED
-		"${ZG_LIB_INSTALL_PREFIX_ABS}"
-		"${ZG_LIB_PREFIX}" shaderc_shared shaderc_shared "${SHARED_ZG_LIB_SUFFIX}" ON)
-	zg_setup_target(SPIRV-Tools SHARED
-		"${ZG_LIB_INSTALL_PREFIX_ABS}"
-		"${ZG_LIB_PREFIX}" SPIRV-Tools-shared SPIRV-Tools-shared "${SHARED_ZG_LIB_SUFFIX}" ON)
 elseif(ZG_TYPE STREQUAL STATIC)
 	zg_setup_target(zlib STATIC
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
@@ -73,21 +67,21 @@ zg_setup_target(glm ${ZG_TYPE}
 zg_setup_target(freetype ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(vk_device ${ZG_TYPE}
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" vk_device vk_device "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(vk_wsi ${ZG_TYPE}
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" vk_wsi vk_wsi "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(vk_system ${ZG_TYPE}
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" vk_system vk_system "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(vk_pipeline ${ZG_TYPE}
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" vk_pipeline vk_pipeline "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(marl ${ZG_TYPE}
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" marl marl "${TYPE_ZG_LIB_SUFFIX}" ON)
+# zg_setup_target(vk_device ${ZG_TYPE}
+# 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+# 	"${ZG_LIB_PREFIX}" vk_device vk_device "${TYPE_ZG_LIB_SUFFIX}" ON)
+# zg_setup_target(vk_wsi ${ZG_TYPE}
+# 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+# 	"${ZG_LIB_PREFIX}" vk_wsi vk_wsi "${TYPE_ZG_LIB_SUFFIX}" ON)
+# zg_setup_target(vk_system ${ZG_TYPE}
+# 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+# 	"${ZG_LIB_PREFIX}" vk_system vk_system "${TYPE_ZG_LIB_SUFFIX}" ON)
+# zg_setup_target(vk_pipeline ${ZG_TYPE}
+# 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+# 	"${ZG_LIB_PREFIX}" vk_pipeline vk_pipeline "${TYPE_ZG_LIB_SUFFIX}" ON)
+# zg_setup_target(marl ${ZG_TYPE}
+# 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+# 	"${ZG_LIB_PREFIX}" marl marl "${TYPE_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(miniaudio ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" miniaudio miniaudio "${TYPE_ZG_LIB_SUFFIX}" ON)
