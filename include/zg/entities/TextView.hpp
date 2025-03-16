@@ -4,10 +4,11 @@
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
+#include <zg/interfaces/ISizable.hpp>
 #include <array>
 namespace zg::entities
 {
-	struct TextView : Entity
+	struct TextView : Entity, ISizable
 	{
 		std::vector<glm::vec3> normals = {};
 		std::shared_ptr<textures::Texture> texturePointer;
@@ -15,7 +16,6 @@ namespace zg::entities
 		glm::vec4 textColor;
 		std::string oldText;
 		std::string text;
-		glm::vec2 size;
 		glm::vec2 textSize;
 		glm::vec2 actualSizeBeforeNDC;
 		glm::vec2 actualSize;
@@ -57,7 +57,7 @@ namespace zg::entities
 		void update() override;
 		void forceUpdate();
 		bool preRender() override;
-		void setSize(glm::vec2 size);
+		void setSize(glm::vec3 size) override;
 		void updateText(const std::string_view text);
 		void setTextColor(glm::vec4 newTextColor);
 		void forceReposition();

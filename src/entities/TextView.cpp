@@ -36,7 +36,6 @@ TextView::TextView(Window &window,
 											scene(scene),
 											textColor(textColor),
 											text(text),
-											size(size),
 											font(font),
 											fontSize(fontSize),
 											textSizeIsNDC(textSizeIsNDC),
@@ -93,11 +92,11 @@ void TextView::forceUpdate()
 	actualSize = TextSize;
 	if (resizeHandler)
 	{
-		setSize(resizeHandler(TextSize));
+		setSize(glm::vec3(resizeHandler(TextSize), 0));
 	}
 	else
 	{
-		setSize(TextSize);
+		setSize(glm::vec3(TextSize, 0));
 	}
 	if (repositionHandler)
 	{
@@ -117,7 +116,7 @@ bool TextView::preRender()
 	shader->unbind();
 	return true;
 }
-void TextView::setSize(glm::vec2 size)
+void TextView::setSize(glm::vec3 size)
 {
 	this->size = size;
 	positions = {
