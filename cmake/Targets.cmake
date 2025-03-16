@@ -61,9 +61,9 @@ endif()
 # zg_setup_target(plutovg ${ZG_TYPE}
 # 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 # 	"${ZG_LIB_PREFIX}" plutovg plutovg "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(glm ${ZG_TYPE}
+zg_setup_target(glm STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" glm glm "${TYPE_ZG_LIB_SUFFIX}" ON)
+	"${ZG_LIB_PREFIX}" glm glm "${STATIC_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(freetype ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)
