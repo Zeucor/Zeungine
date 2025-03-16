@@ -29,6 +29,12 @@ jobs:
           C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -S --noconfirm make diffutils"
         shell: bash
 
+      - name: Install Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.2
+        with:
+          version: 1.4.309.0
+          cache: true
+
       - name: Build Package on Linux
         if: runner.os == 'Linux'
         run: ./unx-package.sh 0
