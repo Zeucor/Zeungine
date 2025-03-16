@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 :: Define version and targets
-set TARGETS=ZeunDependencies-debug-static  ZeungineDependencies-static ZeungineDependencies-debug ZeungineDependencies ZeungineHeaders Zeungine Zeungine-debug Zeungine-static Zeungine-debug-static
+set TARGETS=ZeungineDependencies-debug-static ZeungineDependencies-static ZeungineDependencies-debug ZeungineDependencies ZeungineHeaders Zeungine Zeungine-debug Zeungine-static Zeungine-debug-static
 :: Iterate over targets and run them
 for %%T in (%TARGETS%) do (
     set EXECUTABLE=%%T.exe
