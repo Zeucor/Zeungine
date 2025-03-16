@@ -84,6 +84,17 @@ jobs:
           asset_name: zeungine.deb
           asset_content_type: application/octet-stream
 
+      - name: Upload releases/zeungine-static.deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: ./releases/zeungine-static.deb
+          asset_name: zeungine-static.deb
+          asset_content_type: application/octet-stream
+
       - name: Upload releases/zeungine-debug.deb
         if: runner.os == 'Linux'
         uses: actions/upload-release-asset@v1
@@ -115,6 +126,17 @@ jobs:
           upload_url: ${{steps.create_release.outputs.upload_url}}
           asset_path: ./releases/zeungine-dependencies.deb
           asset_name: zeungine-dependencies.deb
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/zeungine-dependencies-static.deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: ./releases/zeungine-dependencies-static.deb
+          asset_name: zeungine-dependencies-static.deb
           asset_content_type: application/octet-stream
 
       - name: Upload releases/zeungine-dependencies-debug.deb
