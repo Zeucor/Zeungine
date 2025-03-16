@@ -25,19 +25,19 @@ jobs:
       - name: Install Dependencies on Windows
         if: runner.os == 'Windows'
         run: |
-          choco install dos2unix
+          choco install dos2unix ninja
           C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -S --noconfirm make diffutils"
         shell: bash
 
-      # - name: Build Package on Linux
-      #   if: runner.os == 'Linux'
-      #   run: ./unx-package.sh 0
-      #   shell: bash
+      - name: Build Package on Linux
+        if: runner.os == 'Linux'
+        run: ./unx-package.sh 0
+        shell: bash
 
-      # - name: Build Package on Windows
-      #   if: runner.os == 'Windows'
-      #   run: .\win-package.bat 8
-      #   shell: cmd
+      - name: Build Package on Windows
+        if: runner.os == 'Windows'
+        run: .\win-package.bat 8
+        shell: cmd
 
       - name: Compile Release Notes
         if: runner.os == 'Linux'
@@ -66,76 +66,84 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Linux Upload
-      # - name: Upload releases/zeungine.deb
-      #   if: runner.os == 'Linux'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.create_release.outputs.upload_url}}
-      #     asset_path: ./releases/zeungine.deb
-      #     asset_name: zeungine.deb
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/zeungine-debug.deb
-      #   if: runner.os == 'Linux'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.create_release.outputs.upload_url}}
-      #     asset_path: ./releases/zeungine-debug.deb
-      #     asset_name: zeungine-debug.deb
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/zeungine-debug-static.deb
-      #   if: runner.os == 'Linux'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.create_release.outputs.upload_url}}
-      #     asset_path: ./releases/zeungine-debug-static.deb
-      #     asset_name: zeungine-debug-static.deb
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/zeungine-dependencies.deb
-      #   if: runner.os == 'Linux'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.create_release.outputs.upload_url}}
-      #     asset_path: ./releases/zeungine-dependencies.deb
-      #     asset_name: zeungine-dependencies.deb
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/zeungine-dependencies-debug.deb
-      #   if: runner.os == 'Linux'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.create_release.outputs.upload_url}}
-      #     asset_path: ./releases/zeungine-dependencies-debug.deb
-      #     asset_name: zeungine-dependencies-debug.deb
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/zeungine-dependencies-debug-static.deb
-      #   if: runner.os == 'Linux'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.create_release.outputs.upload_url}}
-      #     asset_path: ./releases/zeungine-dependencies-debug-static.deb
-      #     asset_name: zeungine-dependencies-debug-static.deb
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/zeungine-headers.deb
-      #   if: runner.os == 'Linux'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.create_release.outputs.upload_url}}
-      #     asset_path: ./releases/zeungine-headers.deb
-      #     asset_name: zeungine-headers.deb
-      #     asset_content_type: application/octet-stream
+
+      - name: Upload releases/zeungine.deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: ./releases/zeungine.deb
+          asset_name: zeungine.deb
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/zeungine-debug.deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: ./releases/zeungine-debug.deb
+          asset_name: zeungine-debug.deb
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/zeungine-debug-static.deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: ./releases/zeungine-debug-static.deb
+          asset_name: zeungine-debug-static.deb
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/zeungine-dependencies.deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: ./releases/zeungine-dependencies.deb
+          asset_name: zeungine-dependencies.deb
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/zeungine-dependencies-debug.deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: ./releases/zeungine-dependencies-debug.deb
+          asset_name: zeungine-dependencies-debug.deb
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/zeungine-dependencies-debug-static.deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: ./releases/zeungine-dependencies-debug-static.deb
+          asset_name: zeungine-dependencies-debug-static.deb
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/zeungine-headers.deb
+        if: runner.os == 'Linux'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_release.outputs.upload_url}}
+          asset_path: ./releases/zeungine-headers.deb
+          asset_name: zeungine-headers.deb
+          asset_content_type: application/octet-stream
+
       - name: Upload deb-auto-install.sh
         if: runner.os == 'Linux'
         uses: actions/upload-release-asset@v1
@@ -160,76 +168,106 @@ jobs:
           $uploadUrl = $release.upload_url
           echo "::set-output name=url::$uploadUrl"
         shell: pwsh
-      # - name: Upload releases/Zeungine.exe
-      #   if: runner.os == 'Windows'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.get_upload_url_windows.outputs.url}}
-      #     asset_path: ./releases/Zeungine.exe
-      #     asset_name: Zeungine.exe
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/Zeungine-debug.exe
-      #   if: runner.os == 'Windows'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.get_upload_url_windows.outputs.url}}
-      #     asset_path: ./releases/Zeungine-debug.exe
-      #     asset_name: Zeungine-debug.exe
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/Zeungine-debug-static.exe
-      #   if: runner.os == 'Windows'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.get_upload_url_windows.outputs.url}}
-      #     asset_path: ./releases/Zeungine-debug-static.exe
-      #     asset_name: Zeungine-debug-static.exe
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/ZeungineDependencies.exe
-      #   if: runner.os == 'Windows'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.get_upload_url_windows.outputs.url}}
-      #     asset_path: ./releases/ZeungineDependencies.exe
-      #     asset_name: ZeungineDependencies.exe
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/ZeungineDependencies-debug.exe
-      #   if: runner.os == 'Windows'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.get_upload_url_windows.outputs.url}}
-      #     asset_path: ./releases/ZeungineDependencies-debug.exe
-      #     asset_name: ZeungineDependencies-debug.exe
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/ZeungineDependencies-debug-static.exe
-      #   if: runner.os == 'Windows'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.get_upload_url_windows.outputs.url}}
-      #     asset_path: ./releases/ZeungineDependencies-debug-static.exe
-      #     asset_name: ZeungineDependencies-debug-static.exe
-      #     asset_content_type: application/octet-stream
-      # - name: Upload releases/ZeungineHeaders.exe
-      #   if: runner.os == 'Windows'
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   with:
-      #     upload_url: ${{steps.get_upload_url_windows.outputs.url}}
-      #     asset_path: ./releases/ZeungineHeaders.exe
-      #     asset_name: ZeungineHeaders.exe
-      #     asset_content_type: application/octet-stream
+
+      - name: Upload releases/Zeungine.exe
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          asset_path: ./releases/Zeungine.exe
+          asset_name: Zeungine.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/Zeungine-debug.exe
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          asset_path: ./releases/Zeungine-debug.exe
+          asset_name: Zeungine-debug.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/Zeungine-debug-static.exe
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          asset_path: ./releases/Zeungine-debug-static.exe
+          asset_name: Zeungine-debug-static.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/Zeungine-static.exe
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          asset_path: ./releases/Zeungine-static.exe
+          asset_name: Zeungine-static.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/ZeungineDependencies.exe
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          asset_path: ./releases/ZeungineDependencies.exe
+          asset_name: ZeungineDependencies.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/ZeungineDependencies-static.exe
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          asset_path: ./releases/ZeungineDependencies-static.exe
+          asset_name: ZeungineDependencies-static.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/ZeungineDependencies-debug.exe
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          asset_path: ./releases/ZeungineDependencies-debug.exe
+          asset_name: ZeungineDependencies-debug.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/ZeungineDependencies-debug-static.exe
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          asset_path: ./releases/ZeungineDependencies-debug-static.exe
+          asset_name: ZeungineDependencies-debug-static.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload releases/ZeungineHeaders.exe
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          asset_path: ./releases/ZeungineHeaders.exe
+          asset_name: ZeungineHeaders.exe
+          asset_content_type: application/octet-stream
+
       - name: Upload auto-install.bat
         if: runner.os == 'Windows'
         id: upload_windows_assets
