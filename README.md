@@ -14,7 +14,7 @@ git clone git@github.com:Zeungine/Zeungine.git
 
 ### Releases
 
-Releases are available on GitHub, see [here](https://github.com/Zeucor/Zeungine/releases), ideally for development you'll need all **5** packages `(2*(debug&release)+headers)`, when shipping production packages built using Zeungine you _can_ ship with just **2** (release(zeungine+dependencies)) installers
+Releases are available on GitHub, see [here](https://github.com/Zeucor/Zeungine/releases), for development you'll need either static or shared dependencies and zeungine library, as well as headers. I recommend static builds for shipping production binaries as all dependencies will be bundled into your final game executable. 
 
 ### Builing from Source
 
@@ -35,9 +35,10 @@ The following programs must be available in your PATH
 ###### Windows
 
  - `Visual Studio 2022` or newer for MSVC
-  (for ffmpeg)
- - `choco install make`
- - `choco install nasm` (add `C:\Program Files\NASM` to your PATH)
+ - [msys2](https://www.msys2.org/)
+ - `C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -S --noconfirm make diffutils"`
+ - `choco install dos2unix ninja`
+ - run all commands from Command Prompt (cmd.exe) as Administrator (for install/package)
 
 ###### Linux
 
