@@ -20,6 +20,9 @@ if(ZG_TYPE STREQUAL STATIC)
 elseif(ZG_TYPE STREQUAL SHARED)
 	set(TYPE_ZG_LIB_SUFFIX ${SHARED_ZG_LIB_SUFFIX})
 endif()
+zg_setup_target(freetype ${ZG_TYPE}
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(avformat ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${avformat_NAME} avformat ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
@@ -64,9 +67,6 @@ endif()
 zg_setup_target(glm ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" glm glm "${TYPE_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(freetype ${ZG_TYPE}
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)
 # zg_setup_target(vk_device ${ZG_TYPE}
 # 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 # 	"${ZG_LIB_PREFIX}" vk_device vk_device "${TYPE_ZG_LIB_SUFFIX}" ON)
