@@ -6,6 +6,8 @@ A library that simplifies 3D Game abstraction written in C++. Supports on Window
 
 Uses CMake for it's build system and comes with some included tests
 
+![Build Status](https://github.com/Zeucor/Zeungine/actions/workflows/tag.yml/badge.svg)
+
 ### Cloning
 
 ```bash
