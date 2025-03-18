@@ -49,10 +49,6 @@ elseif(("${CMAKE_BUILD_TYPE}" MATCHES "Debug") OR ("${CMAKE_BUILD_TYPE}" MATCHES
     endif()
 endif()
 
-if(ZG_TYPE STREQUAL STATIC)
-    set(BUILD_POSTFIX ${BUILD_POSTFIX}-static)
-endif()
-
 # Add build flags
 if(LINUX OR MACOS)
     if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
