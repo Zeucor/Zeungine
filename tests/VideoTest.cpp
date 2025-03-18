@@ -7,7 +7,7 @@ using namespace zg;
 struct VideoScene : Scene
 {
 	long double deltaTimeCounter = 0;
-	zg::EventIdentifier qPressID = 0;
+	zg::UniqueIdentifier qPressID = 0;
 	VideoScene(Window& _window) :
 			Scene(_window, {0, 0, 1}, // camera position
 						glm::normalize(glm::vec3(0, 0, -1)), // camera direction

@@ -25,9 +25,9 @@ namespace zg::entities
 		std::shared_ptr<TextView> placeholderTextView;
 		std::shared_ptr<TextView> activeTextView;
 		float fontSize;
-		EventIdentifier mouseHoverID = 0;
-		EventIdentifier mousePressID = 0;
-		EventIdentifier anyKeyPressID = 0;
+		UniqueIdentifier mouseHoverID = 0;
+		UniqueIdentifier mousePressID = 0;
+		UniqueIdentifier anyKeyPressID = 0;
 		bool active = false;
 		bool hovered = false;
 		glm::vec4 activeColor;

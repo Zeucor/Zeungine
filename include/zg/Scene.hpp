@@ -24,8 +24,8 @@ namespace zg
 		std::vector<lights::DirectionalLightShadow> directionalLightShadows;
 		textures::Framebuffer *framebufferPointer = 0;
 		std::unique_ptr<raytracing::BVH> bvh;
-		std::array<EventIdentifier, 7 - 0 + 1> mousePressIDs;
-		EventIdentifier mouseMoveID;
+		std::array<UniqueIdentifier, 7 - 0 + 1> mousePressIDs;
+		UniqueIdentifier mouseMoveID;
 		Entity *currentHoveredEntity = 0;
 		vp::View view;
 		bool useBVH;

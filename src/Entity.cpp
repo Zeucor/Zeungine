@@ -84,14 +84,14 @@ void Entity::removeChild(size_t& ID)
 	ID = 0;
 }
 // Mouse
-EventIdentifier Entity::addMousePressHandler(const Button& button, const MousePressHandler& callback)
+UniqueIdentifier Entity::addMousePressHandler(const Button& button, const MousePressHandler& callback)
 {
 	auto& handlersPair = mousePressHandlers[button];
 	auto id = ++handlersPair.first;
 	handlersPair.second[id] = callback;
 	return id;
 }
-void Entity::removeMousePressHandler(const Button& button, EventIdentifier& id)
+void Entity::removeMousePressHandler(const Button& button, UniqueIdentifier& id)
 {
 	auto& handlersPair = mousePressHandlers[button];
 	auto handlerIter = handlersPair.second.find(id);
@@ -102,13 +102,13 @@ void Entity::removeMousePressHandler(const Button& button, EventIdentifier& id)
 	handlersPair.second.erase(handlerIter);
 	id = 0;
 }
-EventIdentifier Entity::addMouseMoveHandler(const MouseMoveHandler& callback)
+UniqueIdentifier Entity::addMouseMoveHandler(const MouseMoveHandler& callback)
 {
 	auto id = ++mouseMoveHandlers.first;
 	mouseMoveHandlers.second[id] = callback;
 	return id;
 }
-void Entity::removeMouseMoveHandler(EventIdentifier& id)
+void Entity::removeMouseMoveHandler(UniqueIdentifier& id)
 {
 	auto& handlers = mouseMoveHandlers.second;
 	auto handlerIter = handlers.find(id);
@@ -119,13 +119,13 @@ void Entity::removeMouseMoveHandler(EventIdentifier& id)
 	handlers.erase(handlerIter);
 	id = 0;
 }
-EventIdentifier Entity::addMouseHoverHandler(const MouseHoverHandler& callback)
+UniqueIdentifier Entity::addMouseHoverHandler(const MouseHoverHandler& callback)
 {
 	auto id = ++mouseHoverHandlers.first;
 	mouseHoverHandlers.second[id] = callback;
 	return id;
 }
-void Entity::removeMouseHoverHandler(EventIdentifier& id)
+void Entity::removeMouseHoverHandler(UniqueIdentifier& id)
 {
 	auto& handlers = mouseHoverHandlers.second;
 	auto handlerIter = handlers.find(id);

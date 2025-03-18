@@ -45,8 +45,8 @@ namespace zg::entities
 		float height;
 		float NDCHeight;
 		TabsBar::TabClickHandler handler;
-		EventIdentifier mouseHoverID = 0;
-		EventIdentifier mousePressID = 0;
+		UniqueIdentifier mouseHoverID = 0;
+		UniqueIdentifier mousePressID = 0;
 		bool active;
 		bool hovered = false;
 		glm::vec4 activeColor;

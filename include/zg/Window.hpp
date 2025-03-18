@@ -58,14 +58,14 @@ namespace zg
 		std::unordered_map<Key, int> keys;
 		std::unordered_map<Button, int> buttons;
 		std::mutex handlersMutex;
-		std::unordered_map<Key, std::pair<EventIdentifier, std::map<EventIdentifier, KeyPressHandler>>> keyPressHandlers;
-		std::unordered_map<Key, std::pair<EventIdentifier, std::map<EventIdentifier, KeyUpdateHandler>>> keyUpdateHandlers;
-		std::pair<EventIdentifier, std::map<EventIdentifier, AnyKeyPressHandler>> anyKeyPressHandlers;
-		std::unordered_map<Button, std::pair<EventIdentifier, std::map<EventIdentifier, MousePressHandler>>>
+		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyPressHandler>>> keyPressHandlers;
+		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyUpdateHandler>>> keyUpdateHandlers;
+		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, AnyKeyPressHandler>> anyKeyPressHandlers;
+		std::unordered_map<Button, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MousePressHandler>>>
 			mousePressHandlers;
-		std::pair<EventIdentifier, std::map<EventIdentifier, MouseMoveHandler>> mouseMoveHandlers;
-		std::pair<EventIdentifier, std::map<EventIdentifier, ViewResizeHandler>> viewResizeHandlers;
-		std::pair<EventIdentifier, std::map<EventIdentifier, FocusHandler>> focusHandlers;
+		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseMoveHandler>> mouseMoveHandlers;
+		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, ViewResizeHandler>> viewResizeHandlers;
+		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, FocusHandler>> focusHandlers;
 		zg::td::queue<PreSwapbuffersOnceoff> preSwapbuffersOnceoffs;
 		std::shared_ptr<Scene> scene;
 		bool open = true;
@@ -124,32 +124,32 @@ namespace zg
 		Window& createChildWindow(const char* title, Scene& scene, float windowWidth, float windowHeight, float windowX,
 															float windowY, bool NDCFramebufferPlane);
 		// Keyboard
-		EventIdentifier addKeyPressHandler(Key key, const KeyPressHandler& callback);
-		void removeKeyPressHandler(Key key, EventIdentifier& id);
-		EventIdentifier addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback);
-		void removeKeyUpdateHandler(Key key, EventIdentifier& id);
-		EventIdentifier addAnyKeyPressHandler(const AnyKeyPressHandler& callback);
-		void removeAnyKeyPressHandler(EventIdentifier& id);
+		UniqueIdentifier addKeyPressHandler(Key key, const KeyPressHandler& callback);
+		void removeKeyPressHandler(Key key, UniqueIdentifier& id);
+		UniqueIdentifier addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback);
+		void removeKeyUpdateHandler(Key key, UniqueIdentifier& id);
+		UniqueIdentifier addAnyKeyPressHandler(const AnyKeyPressHandler& callback);
+		void removeAnyKeyPressHandler(UniqueIdentifier& id);
 		void callKeyPressHandler(Key key, int pressed);
 		void callKeyUpdateHandler(Key key);
 		void callAnyKeyPressHandler(Key key, bool pressed);
 		void handleKey(Key key, int32_t mod, bool pressed);
 		// Mouse
-		EventIdentifier addMousePressHandler(Button button, const MousePressHandler& callback);
-		void removeMousePressHandler(Button button, EventIdentifier& id);
-		EventIdentifier addMouseMoveHandler(const MouseMoveHandler& callback);
-		void removeMouseMoveHandler(EventIdentifier& id);
+		UniqueIdentifier addMousePressHandler(Button button, const MousePressHandler& callback);
+		void removeMousePressHandler(Button button, UniqueIdentifier& id);
+		UniqueIdentifier addMouseMoveHandler(const MouseMoveHandler& callback);
+		void removeMouseMoveHandler(UniqueIdentifier& id);
 		void callMousePressHandler(Button button, int pressed);
 		void callMouseMoveHandler(glm::vec2 coords);
 		void handleMouseMove(uint32_t x, uint32_t y);
 		void handleMousePress(Button button, bool pressed);
 		// resize
-		EventIdentifier addResizeHandler(const ViewResizeHandler& callback);
-		void removeResizeHandler(EventIdentifier& id);
+		UniqueIdentifier addResizeHandler(const ViewResizeHandler& callback);
+		void removeResizeHandler(UniqueIdentifier& id);
 		void callResizeHandler(glm::vec2 newSize);
 		// focus
-		EventIdentifier addFocusHandler(const FocusHandler& callback);
-		void removeFocusHandler(EventIdentifier& id);
+		UniqueIdentifier addFocusHandler(const FocusHandler& callback);
+		void removeFocusHandler(UniqueIdentifier& id);
 		void callFocusHandler(bool focused);
 		// preSwapbuffers
 		void addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff);

@@ -112,16 +112,16 @@ int main()
 ###### event on update (whilepressed@winloop) window keypresses and move an entity
 
 ```cpp
-zg::EventIdentifier leftKeyPressID = window.addKeyUpdateHandler(20, [&]{
+zg::UniqueIdentifier leftKeyPressID = window.addKeyUpdateHandler(20, [&]{
     view.position.x -= 1.f * window.deltaTime;
     view.update(); });
-zg::EventIdentifier rightKeyPressID = window.addKeyUpdateHandler(19, [&]{
+zg::UniqueIdentifier rightKeyPressID = window.addKeyUpdateHandler(19, [&]{
     view.position.x += 1.f * window.deltaTime;
     view.update(); });
-zg::EventIdentifier downKeyPressID = window.addKeyUpdateHandler(18, [&](){
+zg::UniqueIdentifier downKeyPressID = window.addKeyUpdateHandler(18, [&](){
     view.position.y -= 1.f * window.deltaTime;
     view.update(); });
-zg::EventIdentifier upKeyPressID = window.addKeyUpdateHandler(17, [&](){
+zg::UniqueIdentifier upKeyPressID = window.addKeyUpdateHandler(17, [&](){
     view.position.y += 1.f * window.deltaTime;
     view.update(); });
 // store IDs

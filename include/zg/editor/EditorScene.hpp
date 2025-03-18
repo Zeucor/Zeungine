@@ -52,10 +52,10 @@ namespace zg::editor
 		shared_ptr<entities::TabsBar> resourcePanelTabs;
 		size_t performanceTabID = 0;
 		shared_ptr<Entity> activeResourcePanelEntity;
-		EventIdentifier resizeID = 0;
-		EventIdentifier gameWindowBorderHoverID = 0;
-		EventIdentifier gameWindowBorderPressID = 0;
-		EventIdentifier gameWindowESCPressID = 0;
+		UniqueIdentifier resizeID = 0;
+		UniqueIdentifier gameWindowBorderHoverID = 0;
+		UniqueIdentifier gameWindowBorderPressID = 0;
+		UniqueIdentifier gameWindowESCPressID = 0;
 		float dialogWidth;
 		float dialogHeight;
 		float closeNewDialogButtonWidth;

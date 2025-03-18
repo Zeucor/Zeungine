@@ -8,10 +8,10 @@ using namespace zg;
 struct MainScene : Scene
 {
 	std::shared_ptr<entities::Cube> cube;
-	EventIdentifier leftKeyID;
-	EventIdentifier rightKeyID;
-	EventIdentifier upKeyID;
-	EventIdentifier downKeyID;
+	UniqueIdentifier leftKeyID;
+	UniqueIdentifier rightKeyID;
+	UniqueIdentifier upKeyID;
+	UniqueIdentifier downKeyID;
 	explicit MainScene(Window &window);
 	~MainScene();
 };

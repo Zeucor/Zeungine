@@ -25,12 +25,12 @@ namespace zg
 		std::unordered_map<Button, int> buttons;
 		std::unordered_map<
 			Button,
-			std::pair<EventIdentifier, std::map<EventIdentifier, MousePressHandler>>>
+			std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MousePressHandler>>>
 			mousePressHandlers;
-		std::pair<EventIdentifier, std::map<EventIdentifier, MouseMoveHandler>>
+		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseMoveHandler>>
 			mouseMoveHandlers;
 		using MouseHoverHandler = std::function<void(bool)>;
-		std::pair<EventIdentifier, std::map<EventIdentifier, MouseHoverHandler>> mouseHoverHandlers;
+		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		std::string name;
 		bool addedShader = false;
 		bool ensured = false;
@@ -45,13 +45,13 @@ namespace zg
 		const glm::mat4 &getModelMatrix();
 		size_t addChild(const std::shared_ptr<Entity> &child);
 		void removeChild(size_t &ID);
-		EventIdentifier addMousePressHandler(const Button &button,
+		UniqueIdentifier addMousePressHandler(const Button &button,
 													  const MousePressHandler &callback);
-		void removeMousePressHandler(const Button &button, EventIdentifier &id);
-		EventIdentifier addMouseMoveHandler(const MouseMoveHandler &callback);
-		void removeMouseMoveHandler(EventIdentifier &id);
-		EventIdentifier addMouseHoverHandler(const MouseHoverHandler &callback);
-		void removeMouseHoverHandler(EventIdentifier &id);
+		void removeMousePressHandler(const Button &button, UniqueIdentifier &id);
+		UniqueIdentifier addMouseMoveHandler(const MouseMoveHandler &callback);
+		void removeMouseMoveHandler(UniqueIdentifier &id);
+		UniqueIdentifier addMouseHoverHandler(const MouseHoverHandler &callback);
+		void removeMouseHoverHandler(UniqueIdentifier &id);
 		void callMousePressHandler(const Button &button, int pressed);
 		void callMouseMoveHandler(glm::vec2 coords);
 		void callMouseHoverHandler(bool hovered);

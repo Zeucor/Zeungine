@@ -50,8 +50,8 @@ namespace zg::entities
 		Entity &entity;
 		float panelWidth;
 		float indent;
-		EventIdentifier mouseHoverID = 0;
-		EventIdentifier mousePressID = 0;
+		UniqueIdentifier mouseHoverID = 0;
+		UniqueIdentifier mousePressID = 0;
 		inline static size_t panelItemsCount = 0;
 		PanelItem(Window &window,
 				  Scene &scene,

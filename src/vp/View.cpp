@@ -24,13 +24,13 @@ void View::addPhiTheta(float addPhi, float addTheta)
 	direction = newDirection;
 	update();
 }
-EventIdentifier View::addResizeHandler(const ViewResizeHandler &callback)
+UniqueIdentifier View::addResizeHandler(const ViewResizeHandler &callback)
 {
 	auto id = ++viewResizeHandlers.first;
 	viewResizeHandlers.second[id] = callback;
 	return id;
 }
-void View::removeResizeHandler(EventIdentifier &id)
+void View::removeResizeHandler(UniqueIdentifier &id)
 {
 	auto &handlers = viewResizeHandlers.second;
 	auto handlerIter = handlers.find(id);

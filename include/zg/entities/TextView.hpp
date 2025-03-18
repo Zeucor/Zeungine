@@ -32,7 +32,7 @@ namespace zg::entities
 		ReFontSizeHandler reFontSizeHandler;
 		int64_t cursorIndex = 0;
 		glm::vec3 cursorPosition = glm::vec3(0);
-		EventIdentifier resizeID = 0;
+		UniqueIdentifier resizeID = 0;
 		std::vector<std::shared_ptr<entities::Plane>> existingAndUpdatedGlyphs;
 		std::shared_ptr<entities::Plane> cursor;
 		inline static size_t textViewsCount = 0;

@@ -20,10 +20,10 @@ namespace zg::vp
         Key b = 0;
         Key l = 0;
         Key r = 0;
-        EventIdentifier fID = 0;
-        EventIdentifier bID = 0;
-        EventIdentifier lID = 0;
-        EventIdentifier rID = 0;
+        UniqueIdentifier fID = 0;
+        UniqueIdentifier bID = 0;
+        UniqueIdentifier lID = 0;
+        UniqueIdentifier rID = 0;
         float force;
         VFBLR(Scene& scene, KeyScheme keyScheme, float force);
         ~VFBLR();

@@ -11,12 +11,12 @@ namespace zg::vp
     glm::mat4 matrix;
     float phi;
     float theta;
-    std::pair<EventIdentifier, std::map<EventIdentifier, ViewResizeHandler>> viewResizeHandlers;
+    std::pair<UniqueIdentifier, std::map<UniqueIdentifier, ViewResizeHandler>> viewResizeHandlers;
     View(glm::vec3 position, glm::vec3 direction);
     void update();
     void addPhiTheta(float addPhi, float addTheta);
-    EventIdentifier addResizeHandler(const ViewResizeHandler &callback);
-    void removeResizeHandler(EventIdentifier &id);
+    UniqueIdentifier addResizeHandler(const ViewResizeHandler &callback);
+    void removeResizeHandler(UniqueIdentifier &id);
     void callResizeHandler(glm::vec2 newSize);
   };
 }

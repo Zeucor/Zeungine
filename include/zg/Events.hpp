@@ -9,7 +9,7 @@ namespace zg
 	using Runnable = std::function<void(Window&)>;
 	using Key = uint32_t;
 	using Button = uint32_t;
-	using EventIdentifier = uint32_t;
+	using UniqueIdentifier = size_t;
 	using KeyPressHandler = std::function<void(bool)>;
 	using KeyUpdateHandler = std::function<void()>;
 	using AnyKeyPressHandler = std::function<void(const Key&, bool)>;
