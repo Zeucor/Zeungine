@@ -1,6 +1,6 @@
 .idea
 build
-build-headers
+build-*
 cmake-build*
 .vscode
 .DS_Store
