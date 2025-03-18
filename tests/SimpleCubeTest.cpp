@@ -8,10 +8,10 @@ struct ExampleScene : Scene
 {
 	vp::VML vml; // view mouse look
 	long double deltaTimeCounter = 0;
-	uint32_t mPressID = 0;
-	uint32_t nPressID = 0;
-	uint32_t rPressID = 0;
-	uint32_t qPressID = 0;
+	UniqueIdentifier mPressID = 0;
+	UniqueIdentifier nPressID = 0;
+	UniqueIdentifier rPressID = 0;
+	UniqueIdentifier qPressID = 0;
 	ExampleScene(Window &_window) : Scene(_window,
 										  {0, 10, 10},							// camera position
 										  glm::normalize(glm::vec3(0, -1, -1)), // camera direction
