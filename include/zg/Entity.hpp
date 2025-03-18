@@ -3,9 +3,11 @@
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/shaders/Shader.hpp>
 #include <zg/vaos/VAO.hpp>
+#include <zg/interfaces/IEntityComponent.hpp>
+#include "./ComponentHolder.hpp"
 namespace zg
 {
-	struct Entity : vaos::VAO
+	struct Entity : vaos::VAO, ComponentHolder<zg::interfaces::IEntityComponent>
 	{
 		Window &window;
 		size_t ID = 0;

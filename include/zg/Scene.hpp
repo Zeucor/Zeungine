@@ -7,9 +7,11 @@
 #include "./vp/Projection.hpp"
 #include "./textures/Framebuffer.hpp"
 #include "./raytracing/BVH.hpp"
+#include "./ComponentHolder.hpp"
+#include "./interfaces/ISceneComponent.hpp"
 namespace zg
 {
-	struct Scene
+	struct Scene : ComponentHolder<interfaces::ISceneComponent>
 	{
 		Window &window;
 		glm::vec4 clearColor = glm::vec4(0);
