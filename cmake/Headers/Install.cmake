@@ -1,10 +1,10 @@
-set(ffmpeg_BINARY_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build/_deps/ffmpeg-build")
-set(glm_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build/_deps/glm-src")
-set(freetype_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build/_deps/freetype-src")
-set(bvh_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build/_deps/bvh-src")
-set(lunasvg_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build/_deps/lunasvg-src")
-set(stb_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build/_deps/stb-src")
-set(miniaudio_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build/_deps/miniaudio-src")
+set(ffmpeg_BINARY_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/ffmpeg-build")
+set(glm_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/glm-src")
+set(freetype_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/freetype-src")
+set(bvh_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/bvh-src")
+set(lunasvg_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/lunasvg-src")
+set(stb_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/stb-src")
+set(miniaudio_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/miniaudio-src")
 
 # ffmpeg includes
 

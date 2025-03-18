@@ -1,10 +1,10 @@
 #!/bin/bash
 
 usage() {
-    echo "  0 - Build all"
-    echo "  1 - Build dependencies (shared and static) only"
+    echo "  0 - Build 1,2,3 and bundle"
+    echo "  1 - Build dependencies static only"
     echo "  2 - Build headers only"
-    echo "  3 - Build zeungine (shared and static) only"
+    echo "  3 - Build zeungine static only"
     echo "  4 - Build dependencies static only"
     echo "  5 - Build dependencies shared only"
     echo "  6 - Build zeungine static only"
@@ -20,32 +20,23 @@ fi
 
 MODE=$1
 
-build_dependencies() {
-    build_dependencies_static
-    build_dependencies_shared
-}
-
 # Function to build static dependencies
 build_dependencies_static() {
     cd cmake/Dependencies
 
     echo " -- Starting Zeungine Dependencies Debug/STATIC Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
+    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
     echo " -- Starting Zeungine Dependencies Debug/STATIC Build"
-    cmake --build build --config Dependencies
+    cmake --build build-debug --config Debug
     echo " -- Starting Zeungine Dependencies Debug/STATIC Install"
-    sudo cmake --install build --config Dependencies
-    echo " -- Starting Zeungine Dependencies Debug/STATIC Package"
-    sudo cpack --config build/CPackConfig.cmake -C Debug
+    sudo cmake --install build-debug --config Debug
 
     echo " -- Starting Zeungine Dependencies Release/STATIC Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
+    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
     echo " -- Starting Zeungine Dependencies Release/STATIC Build"
-    cmake --build build --config Dependencies
+    cmake --build build-release --config Release
     echo " -- Starting Zeungine Dependencies Release/STATIC Install"
-    sudo cmake --install build --config Dependencies
-    echo " -- Starting Zeungine Dependencies Release/STATIC Package"
-    sudo cpack --config build/CPackConfig.cmake -C Release
+    sudo cmake --install build-release --config Release
 
     cd ../..
 }
@@ -55,27 +46,22 @@ build_dependencies_shared() {
     cd cmake/Dependencies
 
     echo " -- Starting Zeungine Dependencies Debug/SHARED Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
+    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
     echo " -- Starting Zeungine Dependencies Debug/SHARED Build"
-    cmake --build build --config Dependencies
+    cmake --build build-debug --config Debug
     echo " -- Starting Zeungine Dependencies Debug/SHARED Install"
-    sudo cmake --install build --config Dependencies
-    echo " -- Starting Zeungine Dependencies Debug/SHARED Package"
-    sudo cpack --config build/CPackConfig.cmake -C Debug
+    sudo cmake --install build-debug --config Debug
 
     echo " -- Starting Zeungine Dependencies Release/SHARED Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
+    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
     echo " -- Starting Zeungine Dependencies Release/SHARED Build"
-    cmake --build build --config Dependencies
+    cmake --build build-release --config Release
     echo " -- Starting Zeungine Dependencies Release/SHARED Install"
-    sudo cmake --install build --config Dependencies
-    echo " -- Starting Zeungine Dependencies Release/SHARED Package"
-    sudo cpack --config build/CPackConfig.cmake -C Release
+    sudo cmake --install build-release --config Release
 
     cd ../..
 }
 
-# Function to build headers
 build_headers() {
     cd cmake/Headers
 
@@ -83,73 +69,63 @@ build_headers() {
     cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
     echo " -- Starting zeungine Headers Install"
     sudo cmake --install build
-    echo " -- Starting zeungine Headers Package"
-    sudo cpack --config build/CPackConfig.cmake -C Release
 
     cd ../..
 }
 
-# Function to build zeungine
-build_zeungine() {
-    build_zeungine_static
-    build_zeungine_shared
-}
-
 build_zeungine_static() {
     echo " -- Starting zeungine Debug/STATIC Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
+    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
     echo " -- Starting zeungine Debug/STATIC Build"
-    cmake --build build --config Debug
+    cmake --build build-debug --config Debug
     echo " -- Starting zeungine Debug/STATIC Install"
-    sudo cmake --install build --config Debug
-    echo " -- Starting zeungine Debug/STATIC Package"
-    sudo cpack --config build/CPackConfig.cmake -C Debug
+    sudo cmake --install build-debug --config Debug
 
     echo " -- Starting zeungine Release/STATIC Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
+    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
     echo " -- Starting zeungine Release/STATIC Build"
-    cmake --build build --config Release
+    cmake --build build-release --config Release
     echo " -- Starting zeungine Release/STATIC Install"
-    sudo cmake --install build --config Release
-    echo " -- Starting zeungine Release/STATIC Package"
-    sudo cpack --config build/CPackConfig.cmake -C Release
+    sudo cmake --install build-release --config Release
 }
 
 build_zeungine_shared() {
     echo " -- Starting zeungine Debug/SHARED Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
+    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
     echo " -- Starting zeungine Debug/SHARED Build"
-    cmake --build build --config Debug
+    cmake --build build-debug --config Debug
     echo " -- Starting zeungine Debug/SHARED Install"
-    sudo cmake --install build --config Debug
-    echo " -- Starting zeungine Debug/SHARED Package"
-    sudo cpack --config build/CPackConfig.cmake -C Debug
+    sudo cmake --install build-debug --config Debug
 
     echo " -- Starting zeungine Release/SHARED Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
+    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
     echo " -- Starting zeungine Release/SHARED Build"
-    cmake --build build --config Release
+    cmake --build build-release --config Release
     echo " -- Starting zeungine Release/SHARED Install"
-    sudo cmake --install build --config Release
-    echo " -- Starting zeungine Release/SHARED Package"
-    sudo cpack --config build/CPackConfig.cmake -C Release
+    sudo cmake --install build-release --config Release
+}
+
+bundle() {
+    echo " -- Starting zeungine MultiCPack"
+    sudo cpack --config MultiCPackConfig.cmake
 }
 
 # Execute based on the mode argument
 case "$MODE" in
     0)
-        build_dependencies
+        build_dependencies_static
         build_headers
-        build_zeungine
+        build_zeungine_static
+        bundle
         ;;
     1)
-        build_dependencies
+        build_dependencies_static
         ;;
     2)
         build_headers
         ;;
     3)
-        build_zeungine
+        build_zeungine_static
         ;;
     4)
         build_dependencies_static
