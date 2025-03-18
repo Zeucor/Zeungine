@@ -15,7 +15,9 @@ jobs:
           - windows-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Dependencies on Linux
         if: runner.os == 'Linux'
@@ -44,21 +46,6 @@ jobs:
         if: runner.os == 'Windows'
         run: .\win-package.bat 8
         shell: cmd
-
-      - name: Compile Release Notes
-        if: runner.os == 'Linux'
-        id: notes
-        run: |
-          PREV_HASH=$(git for-each-ref --sort=-creatordate --format '%(objectname)' refs/tags | sed -n 2p)
-          CURR_HASH=$(git rev-parse HEAD)
-          git log $PREV_HASH..$CURR_HASH --oneline >> changelog
-        shell: bash
-
-      - name: Print Changelog
-        if: runner.os == 'Linux'
-        run: |
-          cat changelog
-        shell: bash
       
       - name: Create Release
         if: runner.os == 'Linux'
@@ -67,7 +54,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          body_path: changelog
+          body_path: CURVER_CHANGELOG.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
