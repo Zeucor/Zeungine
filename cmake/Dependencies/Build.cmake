@@ -206,11 +206,6 @@ endif()
 
 # Freetype
 message(STATUS "FetchContent: freetype")
-set(FT_DISABLE_ZLIB ON)
-set(FT_DISABLE_BZIP2 ON)
-set(FT_DISABLE_PNG ON)
-set(FT_DISABLE_HARFBUZZ ON)
-set(FT_DISABLE_BROTLI ON)
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Disable installation for fetched content" FORCE)
 FetchContent_Declare(freetype
     GIT_REPOSITORY https://github.com/freetype/freetype.git
