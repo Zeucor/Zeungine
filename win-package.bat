@@ -62,7 +62,7 @@ echo   8 - Build all (enterprise vcvars64.bat) and bundle
 goto :EOF
 
 :bundle
-cpack --config MultiCPackConfig.cmake -C Release
+cpack --config cmake/MultiCPackConfig.cmake -C Release
 goto :EOF
 
 :build_dependencies_static

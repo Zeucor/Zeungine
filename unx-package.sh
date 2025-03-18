@@ -107,7 +107,7 @@ build_zeungine_shared() {
 
 bundle() {
     echo " -- Starting zeungine MultiCPack"
-    sudo cpack --config MultiCPackConfig.cmake
+    sudo cpack --config cmake/MultiCPackConfig.cmake
 }
 
 # Execute based on the mode argument
