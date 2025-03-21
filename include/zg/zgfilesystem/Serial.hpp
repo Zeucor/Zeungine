@@ -11,10 +11,48 @@ namespace zgfilesystem
 	template <typename T>
 	extern Serial& deserialize(Serial& serial, T& value);
 	/**
-	 * @brief Provides a Serial Write Read typename interface
+	 * @brief Provides custom << or >> operators wrapping std::i/o/streams        .             
+	 * 	throws exceptions on fail, you must catch these, otherwise use canRead() /|\ canWrite( )
 	 *
-	 * 	You can read bytes to a buffer, then create a Serial with 'bitStream = true', to read individual bits from it,
-	 * otherwise zg will throw a runtime_error
+	 * For types that are not trivially copyable you must provide serialize()    /|\    deserialize() implementations
+	 * 
+	 * e.g.SirThisSerial.cpp
+	 * ```
+	 * struct SirThis
+	 * {
+	 * 	long double is_going_for = 8;
+	 *  std::string yummy_viibez = "tocontinueandimproveanddoitthreemoretimesover...<ADD MORE VIA i>";
+	 *        float array_of_support[128] = { 218, 412, 314, 719, 999, 311, 001, 412, 412, 312 };
+	 * }
+	 * #include <zg/zgfilesystem/Serial.hpp>
+	 * template <>
+	 * zgfilesystem::Serial& zgfilesystem::deserialize(Serial& serial, SirThis& thanq_uquiras)
+	 * {
+	 * 	serial >> thanq_uquiras.is_going_for >> yummy_viibez;
+	 * 	return serial.readBytes(array_of_support, sizeof(array_of_support) * sizeof(array_of_support[0]);
+	 * }
+	 * template <>
+	 * zgfilesystem::Serial& zgfilesystem::serialize(Serial& serial, const SirThis& thanq_uquiras)
+	 * {
+	 * 	serial << thanq_uquiras.is_going_for << yummy_viibez;
+	 * 	return serial.writeBytes(array_of_support, sizeof(array_of_support) * sizeof(array_of_support[0]);
+	 * }
+	 * int main()
+	 * {
+	 *  {
+	 * 		std::ofstream ofs("serialdata", std::ios::binary);
+	 * 			Serial seri(ofs);
+	 * 		seri << 1 << 42 << 113 << 888 << 1111 << std::string("andstring");
+	 * 	}
+	 *  {
+	 * 		std::istream ifs("serialdata", std::ios::binary);
+	 * 			Serial seri(ifs);
+	 * 		int x, y, z, o, m;
+	 * 		std::string zdata;
+	 * 		seri >> x >> y >> z >> o >> m >> zdata;
+	 *  }
+	 * }
+	 * ```
 	 */
 	struct Serial
 	{
@@ -30,14 +68,25 @@ namespace zgfilesystem
 		bool bitStream = false;
 
 	public:
-		std::basic_ostream<char>& writeStream;
-		std::basic_istream<char>& readStream;
-		Serial(std::basic_iostream<char>& _bothStream, bool _bitStream = false) :
-				writeStream(_bothStream), readStream(_bothStream), bitStream(_bitStream) {};
-		Serial(std::basic_ostream<char>& _writeStream, std::basic_istream<char>& _readStream, bool _bitStream = false) :
-				writeStream(_writeStream), readStream(_readStream), bitStream(_bitStream) {};
+		std::ostream* writeStreamPointer = 0;
+		std::istream* readStreamPointer = 0;
+		Serial(std::iostream& bothStream, bool _bitStream = false) :
+				writeStreamPointer(&bothStream), readStreamPointer(&bothStream), bitStream(_bitStream) {};
+		Serial(std::ostream& writeStream, std::istream& readStream, bool _bitStream = false) :
+				writeStreamPointer(&writeStream), readStreamPointer(&readStream), bitStream(_bitStream) {};
+		Serial(std::istream& readStream, bool _bitStream = false): readStreamPointer(&readStream), bitStream(_bitStream) {};
+		Serial(std::ostream& writeStream, bool _bitStream = false): writeStreamPointer(&writeStream), bitStream(_bitStream) {};
 		~Serial() { synchronize(); }
-		template <typename T>
+		bool canRead()
+		{
+			return (readStreamPointer && readStreamPointer->tellg() >= 0);
+		}
+		bool canWrite()
+		{
+			return (writeStreamPointer && writeStreamPointer->tellp() >= 0);
+			//                       4     9   12
+		}                    //      5     10  3.
+		template <typename T>//|+++++|+++++|+++||
 		Serial& operator<<(const T& value)
 		{
 			if constexpr (std::is_trivially_copyable_v<T>)
@@ -77,9 +126,9 @@ namespace zgfilesystem
 					dest[i] = readByte();
 				}
 			}
-			else
+			else if (readStreamPointer)
 			{
-				readStream.read((char*)&dest, size);
+				readStreamPointer->read(dest, size);
 			}
 			if (m_TicThisValue)
 			{
@@ -103,9 +152,9 @@ namespace zgfilesystem
 					writeByte(src[i]);
 				}
 			}
-			else
+			else if (writeStreamPointer)
 			{
-				writeStream.write(src, size);
+				writeStreamPointer->write(src, size);
 			}
 			if (m_TicThisValue)
 			{
@@ -174,10 +223,10 @@ namespace zgfilesystem
 			{
 				return currentReadByte;
 			}
-			else
+			else if (readStreamPointer)
 			{
 				char byte = 0;
-				readStream.read(&byte, 1);
+				readStreamPointer->read(&byte, 1);
 				currentReadByte = byte;
 				bitsReadReadByte = 0;
 				return currentReadByte;
@@ -194,9 +243,9 @@ namespace zgfilesystem
 				currentWriteByte = byte;
 				// bitsWrittenWriteByte = j;
 			}
-			else
+			else if (writeStreamPointer)
 			{
-				writeStream.write(&byte, 1);
+				writeStreamPointer->write(&byte, 1);
 				currentWriteByte = 0;
 				bitsWrittenWriteByte = 0;
 			}
@@ -207,13 +256,31 @@ namespace zgfilesystem
 			if (bitsWrittenWriteByte > 0 && bitsWrittenWriteByte < 8)
 			{
 				writeByte(currentWriteByte);
-				writeStream.flush();
 			}
-			readStream.sync();
+			if (writeStreamPointer)
+				writeStreamPointer->flush();
+			if (readStreamPointer)
+				readStreamPointer->sync();
 		}
-		size_t getWritePosition() { return writeStream.tellp(); }
-		size_t getReadPosition() { return readStream.tellg(); }
-		void setWritePosition(size_t index) { writeStream.seekp(index); }
-		void setReadPosition(size_t index) { readStream.seekg(index); }
+		size_t getWritePosition()
+		{
+			if (writeStreamPointer)
+				return writeStreamPointer->tellp();
+		}
+		size_t getReadPosition()
+		{
+			if (readStreamPointer)
+				return readStreamPointer->tellg();
+		}
+		void setWritePosition(size_t index)
+		{
+			if (writeStreamPointer)
+				writeStreamPointer->seekp(index);
+		}
+		void setReadPosition(size_t index)
+		{
+			if (readStreamPointer)
+				readStreamPointer->seekg(index);
+		}
 	};
 } // namespace zgfilesystem
