@@ -2,16 +2,22 @@
 using namespace std;
 namespace zgfilesystem
 {
-
-	template <>
-	size_t serialize(Serial<STANDARD::fstream, STANDARD::fstream>& serial, const QUEUE_PAIR& value)
+	// QUEUE_PAIR Serial IO
+	template<typename WriteStreamT, typename ReadStreamT>
+	Serial<WriteStreamT, ReadStreamT>& serialize(Serial<WriteStreamT, ReadStreamT>& serial, const QUEUE_PAIR &value)
 	{
-		serial.ot.write((const char*)&(value.first), sizeof(value.first));
-		serial.ot.write((const char*)&(value.second), sizeof(value.second));
-		return 1;
+		return serial << value.first << value.second;
 	}
-	template <>
-	size_t serialize(Serial<STANDARD::fstream, STANDARD::fstream>& serial, const QUEUE& que)
+	template Serial<std::fstream, std::fstream>& zgfilesystem::serialize(Serial<std::fstream, std::fstream>&, const QUEUE_PAIR &);
+	template <typename WriteStreamT, typename ReadStreamT>
+	Serial<WriteStreamT, ReadStreamT>& deserialize(Serial<WriteStreamT, ReadStreamT>& serial, QUEUE_PAIR& value)
+	{
+		return serial >> value.first >> value.second;
+	}
+	template Serial<std::fstream, std::fstream>& zgfilesystem::deserialize(Serial<std::fstream, std::fstream>&, QUEUE_PAIR &);
+	// QUEUE Serial IO
+	template <typename WriteStreamT, typename ReadStreamT>
+	Serial<WriteStreamT, ReadStreamT>& serialize(Serial<WriteStreamT, ReadStreamT>& serial, const QUEUE& que)
 	{
 		serial << que.size();
 		QUEUE st = que;
@@ -21,16 +27,11 @@ namespace zgfilesystem
 			serial << marker;
 			st.pop();
 		}
-		return 1;
+		return serial;
 	}
-	template <>
-	size_t deserialize(Serial<STANDARD::fstream, STANDARD::fstream>& serial, QUEUE_PAIR& value)
-	{
-		serial >> value.first >> value.second;
-		return 1;
-	}
-	template <>
-	size_t deserialize(Serial<STANDARD::fstream, STANDARD::fstream>& serial, QUEUE& que)
+	template Serial<std::fstream, std::fstream>& zgfilesystem::serialize(Serial<std::fstream, std::fstream>&, const QUEUE &);
+	template <typename WriteStreamT, typename ReadStreamT>
+	Serial<WriteStreamT, ReadStreamT>& deserialize(Serial<WriteStreamT, ReadStreamT>& serial, QUEUE& que)
 	{
 		auto size_ = que.size();
 		serial >> size_;
@@ -40,6 +41,7 @@ namespace zgfilesystem
 			serial >> value;
 			que.push(value);
 		}
-		return 1;
+		return serial;
 	}
+	template Serial<std::fstream, std::fstream>& zgfilesystem::deserialize(Serial<std::fstream, std::fstream>&, QUEUE &);
 } // namespace zgfilesystem

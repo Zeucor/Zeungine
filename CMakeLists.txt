@@ -16,4 +16,28 @@ if(ZG_INSTALL)
 endif()
 if(ZG_PACKAGE)
     include(cmake/Package.cmake)
+    set(WINDOWS_START_MENU_LINKS "Release/STATIC/zedit.exe" "ZEdit")
+    package_all_in_one(
+        ${CMAKE_SOURCE_DIR}/releases
+        Zeungine
+        zeungine
+        ${ZG_VERSION_MAJOR}
+        ${ZG_VERSION_MINOR}
+        ${ZG_VERSION_PATCH}
+        ${ZG_VERSION_TWEAK}
+        ${CMAKE_SOURCE_DIR}/LICENSE
+        "Zeungine: an engine allowing developers to build cross platform games apps and tools"
+        "Contains various structs and methods to help build cross platform games apps and tools quickly"
+        ""
+        ""
+        "Zeucor"
+        "Zeun"
+        "Zeun"
+        "libgl1-mesa-dri,libx11-6,libvulkan1,libxrandr2,libxfixes3,libxkbcommon-x11-0,libsecret-1-0,libglib2.0-dev,libdrm-dev,libpng-dev,libharfbuzz-dev,libbrotli-dev"
+        ""
+        "Development/Tools"
+        "Program Files\\\\Zeungine"
+        "C:"
+        "zeungine-uninstaller"
+        "dev.zeucor.zeungine")
 endif()

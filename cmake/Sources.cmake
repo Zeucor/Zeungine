@@ -1,106 +1,30 @@
-# Sources
-set(ZG_SOURCES
-    src/fonts/SystemFonts.cpp
-    src/audio/AudioEngine.cpp
-    src/audio/AudioPipeline.cpp
-    src/audio/AudioStage.cpp
-    src/audio/ISoundNode.cpp
-    src/media/I1xCoder.cpp
-    src/media/ReadMediaStream.cpp
-    src/media/MediaStream.cpp
-    src/media/AudioDecoder.cpp
-    src/media/AudioEncoder.cpp
-    src/media/VideoDecoder.cpp
-    src/media/VideoEncoder.cpp
-    src/media/entities/Video.cpp
-    src/system/TabulatedIOLogger.cpp
-    src/system/TerminalIO.cpp
-    src/system/Budget.cpp
-    src/Logger.cpp
-    src/SharedLibrary.cpp
-    src/crypto/vector.cpp
-    src/images/ImageLoader.cpp
-    src/images/SVGRasterize.cpp
-    src/zgfilesystem/File.cpp
-    src/zgfilesystem/Directory.cpp
-    src/zgfilesystem/DirectoryWatcher.cpp
-    src/editor/Hotswapper.cpp
-    src/strings/HookedConsole.cpp
-    src/strings/InFileProcessor.cpp
-    src/interfaces/IPlatformWindow.cpp
-    src/system/Command.cpp
-    src/Window.cpp
-    src/Entity.cpp
-    src/Scene.cpp
-    src/interfaces/ISizable.cpp
-    src/entities/AssetBrowser.cpp
-    src/entities/Button.cpp
-    src/entities/Console.cpp
-    src/entities/Cube.cpp
-    src/entities/Dialog.cpp
-    src/entities/DropdownMenu.cpp
-    src/entities/Input.cpp
-    src/entities/Panel.cpp
-    src/entities/Plane.cpp
-    src/entities/SkyBox.cpp
-    src/entities/StatusText.cpp
-    src/entities/Tabs.cpp
-    src/entities/TextView.cpp
-    src/entities/Toolbar.cpp
-    src/lights/DirectionalLight.cpp
-    src/lights/PointLight.cpp
-    src/lights/SpotLight.cpp
-    src/shaders/Shader.cpp
-    src/shaders/ShaderFactory.cpp
-    src/shaders/ShaderManager.cpp
-    src/textures/Texture.cpp
-    src/textures/TextureFactory.cpp
-    src/textures/TextureLoader.cpp
-    src/textures/Framebuffer.cpp
-    src/textures/FramebufferFactory.cpp
-    src/vaos/VAO.cpp
-    src/vaos/VAOFactory.cpp
-    src/vp/View.cpp
-    src/vp/Projection.cpp
-    src/vp/VML.cpp
-    src/vp/VFBLR.cpp
-    src/fonts/freetype/Freetype.cpp
-    src/raytracing/BVH.cpp)
-if(BUILD_GL)
-    list(APPEND ZG_SOURCES src/renderers/GLRenderer.cpp src/gl.c)
-    if(WIN32)
-        list(APPEND ZG_SOURCES src/wgl.c)
-    elseif(LINUX)
-        list(APPEND ZG_SOURCES src/glx.c)
-    elseif(ANDROID OR IOS)
-        list(APPEND ZG_SOURCES src/egl.c)
-    endif()
-elseif(BUILD_EGL)
-    list(APPEND ZG_SOURCES src/renderers/EGLRenderer.cpp)
-elseif(BUILD_VULKAN)
-    list(APPEND ZG_SOURCES src/renderers/VulkanRenderer.cpp)
-endif()
-if(WIN32)
-    list(APPEND ZG_SOURCES src/windows/WIN32Window.cpp)
+# OS Sources
+
+if(MACOS)
+    file(GLOB_RECURSE ZG_MAC_SOURCES "linsrc/macos/*.c" "linsrc/macos/*.cpp" "linsrc/macos/*.mm")
+    set(ZG_SOURCES ${ZG_MAC_SOURCES})
 elseif(LINUX)
-    if(USE_X11)
-        list(APPEND ZG_SOURCES src/windows/X11Window.cpp)
-    endif()
-    if(USE_XCB OR USE_X11)
-        list(APPEND ZG_SOURCES src/windows/XCBWindow.cpp)
-    endif()
-    if(USE_WAYLAND)
-        list(APPEND ZG_SOURCES
-            src/windows/WaylandWindow.cpp
-            src/wayland/wayland-xdg-shell-client-protocol.c
-            src/wayland/xdg-decoration-unstable-v1-client-protocol.c)
-    endif()
-elseif(MACOS)
-    list(APPEND ZG_SOURCES src/windows/MacOSWindow.mm)
+    file(GLOB_RECURSE ZG_LNX_SOURCES "linsrc/linux/*.c" "linsrc/linux/*.cpp" "linsrc/linux/*.lx")
+    set(ZG_SOURCES ${ZG_LNX_SOURCES})
+elseif(ANDROID OR IOS)
+    file(GLOB_RECURSE ZG_EGL_SOURCES "linsrc/egl/*.c" "linsrc/egl/*.cpp" "linsrc/egl/*.eg")
+    set(ZG_SOURCES ${ZG_EGL_SOURCES})
+elseif(WIN32)
+    file(GLOB_RECURSE ZG_WIN_SOURCES "linsrc/windows/*.c" "linsrc/windows/*.cpp" "linsrc/windows/*.ww")
+    set(ZG_SOURCES ${ZG_WIN_SOURCES})
+elseif(ZUG)
+    file(GLOB_RECURSE ZG_ZUG_SOURCES linsrc/coj/*.cpp linsrc/coj/*.c)
+    set(ZG_SOURCES ${ZG_ZUG_SOURCES})
 endif()
 
+# ZG Sources
+
+file(GLOB_RECURSE ZG_C_SOURCES "src/*.c")
+file(GLOB_RECURSE ZG_CXX_SOURCES "src/*.cpp")
+set(ZG_SOURCES ${ZG_SOURCES} ${ZG_C_SOURCES} ${ZG_CXX_SOURCES})
+
 include(FetchContent)
-set(FETCHCONTENT_QUIET OFF)
+#set(FETCHCONTENT_QUIET OFF)
 
 # # protobuf
 # FetchContent_Declare(protobuf
@@ -188,6 +112,7 @@ endif()
 
 file(GLOB SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/*.c" "${shaderc_SOURCE_DIR}/libshaderc/src/*.cc")
 list(REMOVE_ITEM SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/shaderc_test.cc")
+list(REMOVE_ITEM SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/shaderc_c_smoke_test.c")
 list(REMOVE_ITEM SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/shaderc_cpp_test.cc")
 list(REMOVE_ITEM SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/shaderc_private_test.cc")
 

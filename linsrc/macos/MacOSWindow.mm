@@ -1,5 +1,5 @@
-#include <AppKit/AppKit.h>
 #ifdef MACOS
+#include <AppKit/AppKit.h>
 #import <zg/windows/MacOSWindow.hpp>
 #import <zg/entities/Plane.hpp>
 #import <iostream>
@@ -87,7 +87,7 @@ void MacOSWindow::init(Window &renderWindow)
 	nsImageView = [[NSImageView alloc] initWithFrame:rect];
 	[(NSView*)nsView addSubview:(NSImageView *)nsImageView];
 }
-#ifdef USE_GL
+#if defined(USE_GL)
 void GLRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
 	this->platformWindowPointer = platformWindowPointer;
@@ -140,7 +140,7 @@ void MacOSWindow::postInit()
 {
 	@autoreleasepool
 	{
-#ifdef USE_GL
+#if defined(USE_GL)
 		[(NSOpenGLContext*)glContext makeCurrentContext];
 		GLint swapInterval = renderWindowPointer->vsync ? 1 : 0;
 		[(NSOpenGLContext*)glContext setValues:&swapInterval forParameter:NSOpenGLContextParameterSwapInterval];
@@ -207,14 +207,14 @@ bool MacOSWindow::pollMessages()
 	}
 	return true;
 }
-#ifdef USE_GL
+#if defined(USE_GL)
 void GLRenderer::swapBuffers()
 {
 	auto& macWindow = *dynamic_cast<MacOSWindow*>(platformWindowPointer);
 	[(NSOpenGLContext*)macWindow.glContext flushBuffer];
 }
 #endif
-// #if defined(USE_VULKAN)
+
 void VulkanRenderer::swapBuffers()
 {
 	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))
@@ -268,10 +268,10 @@ void VulkanRenderer::swapBuffers()
 		}
 	}
 }
-// #endif
+
 void MacOSWindow::destroy()
 {
-#ifdef USE_GL
+#if defined(USE_GL)
 	if (glContext)
 		[(NSOpenGLContext*)glContext release];
 #elif defined(USE_EGL)

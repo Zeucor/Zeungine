@@ -1,5 +1,5 @@
-include(${CMAKE_CURRENT_LIST_DIR}/PlatformSetup.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/Options.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/PlatformSetup.cmake)
 include(FindPackageHandleStandardArgs)
 set(Zeungine_INCLUDE_DIR ${ZG_INC_INSTALL_PREFIX_ABS})
 if("${ZG_LIBRARY_TYPE}" MATCHES "SHARED")

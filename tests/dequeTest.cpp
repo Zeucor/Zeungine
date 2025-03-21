@@ -5,7 +5,7 @@ int main()
 {
     // base 8 dq likes!!
     deque<unsigned int> qd;
-    qd.push_back( 1);//=2 in decimal100%
+    qd.push_back( 1);//=2 in binaryl100%
     qd.push_back(42);//=(|1|∞=8*2=18)+2=41..42,/
      qd.push_back(111);      
      qd.push_back(342);      
