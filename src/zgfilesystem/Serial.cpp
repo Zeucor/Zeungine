@@ -1,24 +1,20 @@
 #include <zg/zgfilesystem/Serial.hpp>
 #include <fstream>
-namespace zgfilesystem
+#include <string>
+template<>
+zgfilesystem::Serial& zgfilesystem::deserialize(Serial& serial, std::string& str)
 {
-    template <typename WriteStreamT, typename ReadStreamT>
-    Serial<WriteStreamT, ReadStreamT>& deserialize(Serial<WriteStreamT, ReadStreamT>& serial, std::string& str)
-    {
-        auto size = str.size();
-        serial >> size;
-        str.resize(size);
-        serial.readBytes(str.data(), size);
-        return serial;
-    }
-    template <typename WriteStreamT, typename ReadStreamT>
-    Serial<WriteStreamT, ReadStreamT>& serialize(Serial<WriteStreamT, ReadStreamT>& serial, const std::string& str)
-    {
-        auto size = str.size();
-        serial << size;
-        serial.writeBytes(str.c_str(), size);
-        return serial;
-    }
+    auto size = str.size();
+    serial >> size;
+    str.resize(size);
+    serial.readBytes(str.data(), size);
+    return serial;
 }
-template zgfilesystem::Serial<std::fstream, std::fstream>& zgfilesystem::deserialize(Serial<std::fstream, std::fstream>&, std::string &);
-template zgfilesystem::Serial<std::fstream, std::fstream>& zgfilesystem::serialize(Serial<std::fstream, std::fstream>&, const std::string &);
+template<>
+zgfilesystem::Serial& zgfilesystem::serialize(Serial& serial, const std::string& str)
+{
+    auto size = str.size();
+    serial << size;
+    serial.writeBytes(str.c_str(), size);
+    return serial;
+}

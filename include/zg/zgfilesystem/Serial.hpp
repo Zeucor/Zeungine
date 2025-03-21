@@ -1,21 +1,21 @@
 #pragma once
 #include <cstdint>
 #include <stdexcept>
+#include <istream>
+#include <ostream>
 namespace zgfilesystem
 {
-	template <typename WriteStreamT, typename ReadStreamT>
 	struct Serial;
-	template <typename WriteStreamT, typename ReadStreamT, typename T>
-	Serial<WriteStreamT, ReadStreamT>& serialize(Serial<WriteStreamT, ReadStreamT>& serial, const T& value);
-	template <typename WriteStreamT, typename ReadStreamT, typename T>
-	Serial<WriteStreamT, ReadStreamT>& deserialize(Serial<WriteStreamT, ReadStreamT>& serial, T& value);
+	template <typename T>
+	extern Serial& serialize(Serial& serial, const T& value);
+	template <typename T>
+	extern Serial& deserialize(Serial& serial, T& value);
 	/**
 	 * @brief Provides a Serial Write Read typename interface
 	 *
 	 * 	You can read bytes to a buffer, then create a Serial with 'bitStream = true', to read individual bits from it,
 	 * otherwise zg will throw a runtime_error
 	 */
-	template <typename WriteStreamT, typename ReadStreamT>
 	struct Serial
 	{
 	private:
@@ -30,15 +30,15 @@ namespace zgfilesystem
 		bool bitStream = false;
 
 	public:
-		WriteStreamT& writeStream;
-		ReadStreamT& readStream;
-		Serial(WriteStreamT& _bothStream, bool _bitStream = false) :
+		std::basic_ostream<char>& writeStream;
+		std::basic_istream<char>& readStream;
+		Serial(std::basic_iostream<char>& _bothStream, bool _bitStream = false) :
 				writeStream(_bothStream), readStream(_bothStream), bitStream(_bitStream) {};
-		Serial(WriteStreamT& _writeStream, ReadStreamT& _readStream, bool _bitStream = false) :
+		Serial(std::basic_ostream<char>& _writeStream, std::basic_istream<char>& _readStream, bool _bitStream = false) :
 				writeStream(_writeStream), readStream(_readStream), bitStream(_bitStream) {};
 		~Serial() { synchronize(); }
 		template <typename T>
-		constexpr Serial& operator<<(const T& value)
+		Serial& operator<<(const T& value)
 		{
 			if constexpr (std::is_trivially_copyable_v<T>)
 			{
@@ -52,7 +52,7 @@ namespace zgfilesystem
 			throw std::runtime_error("Unable to serialize T");
 		}
 		template <typename T>
-		constexpr Serial& operator>>(T& value)
+		Serial& operator>>(T& value)
 		{
 			if constexpr (std::is_trivially_copyable_v<T>)
 			{
@@ -68,7 +68,7 @@ namespace zgfilesystem
 		/**
 		 * @brief Reads a fixed byte size into a destination buffer from the Serial
 		 */
-		constexpr Serial& readBytes(char* dest, size_t size)
+		Serial& readBytes(char* dest, size_t size)
 		{
 			if (bitStream)
 			{
@@ -94,7 +94,7 @@ namespace zgfilesystem
 		/**
 		 * @brief Writes a fixed byte size from a src buffer into the Serial
 		 */
-		constexpr Serial& writeBytes(const char* src, size_t size)
+		Serial& writeBytes(const char* src, size_t size)
 		{
 			if (bitStream)
 			{
@@ -122,7 +122,7 @@ namespace zgfilesystem
 		 * size
 		 */
 		template <typename BitContainerT>
-		constexpr Serial& readBits(BitContainerT& bitContainer, size_t index, size_t size)
+		Serial& readBits(BitContainerT& bitContainer, size_t index, size_t size)
 		{
 			if (!bitStream)
 				throw std::runtime_error("readBits called and Serial is not a bitStream");
@@ -144,7 +144,7 @@ namespace zgfilesystem
 		 * at least index + size
 		 */
 		template <typename BitContainerT>
-		constexpr Serial& writeBits(const BitContainerT& bitContainer, size_t index, size_t size)
+		Serial& writeBits(const BitContainerT& bitContainer, size_t index, size_t size)
 		{
 			if (!bitStream)
 				throw std::runtime_error("writeBits called and Serial is not a bitStream");
@@ -168,7 +168,7 @@ namespace zgfilesystem
 		/**
 		 * reads a single byte from the Serial
 		 */
-		constexpr char readByte()
+		char readByte()
 		{
 			if (bitStream && (bitsReadReadByte > 0 && bitsReadReadByte < 8))
 			{
@@ -186,7 +186,7 @@ namespace zgfilesystem
 		/**
 		 * writes a single byte to the Serial
 		 */
-		constexpr void writeByte(char byte)
+		void writeByte(char byte)
 		{
 			if (bitStream && bitsWrittenWriteByte > 0 && bitsWrittenWriteByte < 8)
 			{
@@ -202,16 +202,14 @@ namespace zgfilesystem
 			}
 		}
 
-		constexpr void synchronize()
+		void synchronize()
 		{
 			if (bitsWrittenWriteByte > 0 && bitsWrittenWriteByte < 8)
 			{
 				writeByte(currentWriteByte);
-				if constexpr (requires { writeStream.flush(); })
-					writeStream.flush();
+				writeStream.flush();
 			}
-			if constexpr (requires { readStream.sync(); })
-				readStream.sync();
+			readStream.sync();
 		}
 		size_t getWritePosition() { return writeStream.tellp(); }
 		size_t getReadPosition() { return readStream.tellg(); }
