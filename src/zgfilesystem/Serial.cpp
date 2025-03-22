@@ -1,8 +1,8 @@
-#include <zg/zgfilesystem/Serial.hpp>
-#include <fstream>
+#include <zg/Serial.hpp>
 #include <string>
-template<>
-zgfilesystem::Serial& zgfilesystem::deserialize(Serial& serial, std::string& str)
+
+template <>
+Serial& deserialize(Serial& serial, std::string& str)
 {
     auto size = str.size();
     serial >> size;
@@ -11,7 +11,7 @@ zgfilesystem::Serial& zgfilesystem::deserialize(Serial& serial, std::string& str
     return serial;
 }
 template<>
-zgfilesystem::Serial& zgfilesystem::serialize(Serial& serial, const std::string& str)
+Serial& serialize(Serial& serial, const std::string& str)
 {
     auto size = str.size();
     serial << size;

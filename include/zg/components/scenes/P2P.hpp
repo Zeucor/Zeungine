@@ -11,7 +11,7 @@ namespace zg::components::scenes
         std::string castaddr;
 
 	public:
-		P2P(std::string_view key, const std::string castaddr);
+		P2P(std::string_view key, const std::string &castaddr);
 
 	protected:
 		void onUpdate(Scene& scene) override;

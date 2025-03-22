@@ -31,7 +31,7 @@ namespace zg::fonts::freetype
 		std::shared_ptr<int8_t> fontFileBytes;
 		std::unordered_map<float, std::unordered_map<float, FreetypeCharacter>> codepointFontSizeCharacters;
 		Window& window;
-		filesystem::path fontPath;
+		std::filesystem::path fontPath;
 		bool hasKerning;
 		/*add member variables in serial order*/
 		FreetypeFont(Window& window, interfaces::IFile& fontFile);
@@ -52,7 +52,7 @@ namespace zg::fonts::freetype
 											std::vector<std::shared_ptr<entities::Plane>>& existingAndUpdatedGlyphs, int64_t cursorIndex,
 											std::shared_ptr<entities::Plane>& cursor);
 		FreetypeCharacter& getCharacter(float codepoint, float fontSize);
-		static void FT_PRINT_AND_THROW_ERROR(const FT_Error& error, const string& fontPath);
+		static void FT_PRINT_AND_THROW_ERROR(const FT_Error& error, const std::string& fontPath);
 		void addNextKerning(float fontSize, FT_UInt currentGlyphIndex, zg::strings::Utf8Iterator iterator, float& advanceX);
 		float shouldAdvanceLine(zg::strings::Utf8Iterator iterator, glm::vec2 currentPosition, float advanceX,
 														enums::EBreakStyle breakStyle, float boundsX, float fontSize);

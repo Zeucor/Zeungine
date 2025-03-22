@@ -1,5 +1,5 @@
 # call this function once per project
-function(package_all_in_one
+function(crossplatform_cpack_helper
     OUTPUT_DIRECTORY                    # i.e. ${CMAKE_SOURCE_DIR}/releases
     DISPLAY_NAME                        # installer display name
     TARGET_NAME                         # package target name

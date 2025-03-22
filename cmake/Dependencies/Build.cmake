@@ -223,10 +223,10 @@ FetchContent_Declare(bvh
     GIT_TAG master)
 FetchContent_MakeAvailable(bvh)
 
-# GLM
+# glm
 message(STATUS "FetchContent: glm")
 FetchContent_Declare(glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_REPOSITORY https://github.com/icaven/glm.git
     GIT_TAG master)
 FetchContent_MakeAvailable(glm)
 

@@ -3,7 +3,7 @@
  * @author ZeunO8 (mr.steven.french@gmail.com)
  * @brief  Declare a program budget, use (begin(), tick(), end(), sleep()) to keep track of your timepoints
  * [zeungine attempt at tracking & pacing algorithms all while getting the correct amount of loop sleep]
- * @version 0.421
+ * @version 1.421
  * @date 2025-02-17
  *
  * @copyright Copyright (c) 2025
@@ -19,15 +19,13 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <zg/Serial.hpp>
 #include <zg/pureconstcharstreamcode.hpp>
 #include <zg/system/TerminalIO.hpp>
 #include <zg/zgfilesystem/Directory.hpp>
 #include <zg/zgfilesystem/File.hpp>
-#include <zg/zgfilesystem/Serial.hpp>
 // include <flat_set>
 //  all creator ids playing back eachother in a serial Universe peace moje enabled.
-using namespace zg::system;
-using namespace std;
 namespace zg::budget
 {
 	/**
@@ -173,7 +171,7 @@ namespace zg::budget
 		}
 		void end() override
 		{
-			unique_lock lock(mTx);
+			std::unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
 			auto& end = std::get<1>(history_tuple);
 			end = setNextBudgetWakeAtTimePoint();
@@ -205,10 +203,7 @@ namespace zg::budget
 			}
 			cv.notify_one();
 		}
-		Real getBudgetUsed()
-		{
-			return m_BudgetUsed;
-		}
+		Real getBudgetUsed() { return m_BudgetUsed; }
 
 	private:
 		SecondsDuration m_BudgetTime;
@@ -217,9 +212,13 @@ namespace zg::budget
 		size_t m_chunkID = 0;
 		std::string m_budgetName;
 		size_t m_historySize = 38;
+
+	protected:
 		// map<CreatorID, unique_ptr<deque<pair<CreatorID, glm::vec4>>>> creatorSpaceTimeDoubleEndejQueue;
 		// unordered_2multiset8<CreatorID> realCreatorIDSet
 		SecondsDuration m_IsZgBudget;
+
+	private:
 		SecondsDuration m_IsBeginningZgBudget;
 		TimePoint m_IsNextBudgetWakeAtTimePoint;
 		size_t m_budgetCountNs;
@@ -267,7 +266,7 @@ namespace zg::budget
 		// {
 		// 	zgfilesystem::File chunkFile(m_serializeDirectory / ("zgb_chunk_" + to_string(++m_chunkID)),
 		// 															 enums::EFileLocation::Absolute, "w");
-		// 	zgfilesystem::Serial serial(chunkFile.fileStream, chunkFile.fileStream);
+		// 	Serial serial(chunkFile.fileStream, chunkFile.fileStream);
 		// 	serial << m_HistoryIndex << m_HistoryTotalLength << m_History.size();
 		// 	for (auto& historyRecord : m_History)
 		// 	{
@@ -280,11 +279,11 @@ namespace zg::budget
 		// }
 		bool loadChunk()
 		{
-			auto historySize = m_History.size();
-			zgfilesystem::File chunkFile(m_serializeDirectory / ("zgb_chunk_" + to_string(m_chunkID)),
-																	 enums::EFileLocation::Absolute, "r");
-			zgfilesystem::Serial serial(chunkFile.fileStream, chunkFile.fileStream);
-			serial >> m_historySize;
+			// auto historySize = m_History.size();
+			// zgfilesystem::File chunkFile(m_serializeDirectory / ("zgb_chunk_" + to_string(m_chunkID)),
+			// 														 enums::EFileLocation::Absolute, "r");
+			// Serial serial(chunkFile.fileStream, chunkFile.fileStream);
+			// serial >> m_historySize;
 			// for (size_t count = 1; count <= historySize; count++)
 			// {
 			// 	auto& historyRecord = m_History[count - 1];

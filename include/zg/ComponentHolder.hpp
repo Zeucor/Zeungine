@@ -7,29 +7,37 @@ namespace zg
     template <typename T>
     struct ComponentHolder
     {
-		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, std::shared_ptr<T>>> components;
+        std::pair<UniqueIdentifier, std::map<UniqueIdentifier, std::shared_ptr<T>>> m_components;
+        /**
+         * @brief adds a component to m_components and returns it's unique id
+         */
         UniqueIdentifier addComponent(const std::shared_ptr<T> &component)
         {
-            auto id = ++std::get<0>(components);
-            std::get<1>(components)[id] = component;
+            auto id = ++std::get<0>(m_components);
+            std::get<1>(m_components)[id] = component;
             return id;
         }
-        void removeComponent(UniqueIdentifier& id)
+        /**
+         * @brief removes a component by id, returns false if the component does not exist, sets componentID to zero on success
+         */
+        bool removeComponent(UniqueIdentifier& id)
         {
-            auto& map = std::get<1>(components);
+            auto& map = std::get<1>(m_components);
             auto iter = map.find(id);
             if (iter == map.end())
-                return;
+                return false;
             map.erase(iter);
             id = 0;
+            return true;
         }
-        void updateComponent(UniqueIdentifier id, const std::shared_ptr<T>& component)
+        bool updateComponent(UniqueIdentifier id, const std::shared_ptr<T>& component)
         {
-            auto& map = std::get<1>(components);
+            auto& map = std::get<1>(m_components);
             auto iter = map.find(id);
             if (iter == map.end())
-                return;
+                return false;
             iter->second = component;
+            return true;
         }
     };
 }

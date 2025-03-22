@@ -1,41 +1,24 @@
-# todo make function
-
-set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_SOURCE_DIR}/../../releases")
-set(CPACK_PACKAGE_NAME "zeungine-dependencies${BUILD_POSTFIX}")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Zeungine: an engine allowing developers to build cross platform games apps and tools")
-set(CPACK_PACKAGE_DESCRIPTION "Contains various structs and methods to help build cross platform games apps and tools quickly")
-set(CPACK_PACKAGE_HOMEPAGE_URL "https://**.**.**.*e*")
-if(UNIX)
-    # set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/../..//images/**.**.**.*e*-app-icon.bmp")
-elseif(WIN32)
-    # set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/../../\\\\images\\\\**.**.**.*e*-app-icon.bmp")
-endif()
-set(CPACK_PACKAGE_VENDOR "**.**.**.*e*")
-set(CPACK_PACKAGE_CONTACT "zeun@**.**.**.*e*")
-
-if(DEB)
-    set(CPACK_GENERATOR "DEB")
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Zeun")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "")
-elseif(WIN32)
-    set(CPACK_GENERATOR "NSIS")
-    set(CPACK_CMAKE_GENERATOR "Ninja")
-    set(CPACK_NSIS_MODIFY_PATH ON)
-    set(CPACK_NSIS_MENU_LINKS "https://**.**.**.*e*" "Zeungine Web Site")
-    set(CPACK_NSIS_DISPLAY_NAME zeungine-dependencies)
-    set(CPACK_NSIS_PACKAGE_NAME zeungine-dependencies)
-    SET(CPACK_PACKAGE_INSTALL_DIRECTORY "Program Files\\\\Zeungine")
-    SET(CPACK_NSIS_INSTALL_ROOT "C:")
-    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/../../LICENSE")
-    # set(CPACK_NSIS_MUI_ICON "${Zeungine_SRC_DIR}\\\\images\\\\zeungine-logo-new.ico")
-    set(CPACK_NSIS_UNINSTALL_NAME "zeungine-dependencies-uninstaller")
-    set(CPACK_NSIS_BRANDING_TEXT " ")
-endif()
-
-set(CPACK_PACKAGE_VERSION_MAJOR ${ZG_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${ZG_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${ZG_VERSION_PATCH})
-set(CPACK_PACKAGE_VERSION_TWEAK ${ZG_VERSION_TWEAK})
-set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}.${CPACK_PACKAGE_VERSION_TWEAK}")
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-v${CPACK_PACKAGE_VERSION}")
-include(CPack)
+crossplatform_cpack_helper(
+    ${CMAKE_SOURCE_DIR}/../../releases        # OUTPUT_DIRECTORY
+    "zeungine-dependencies"                   # DISPLAY_NAME
+    "zeungine-dependencies"                   # TARGET_NAME
+    ${ZG_VERSION_MAJOR}                       # M
+    ${ZG_VERSION_MINOR}                       # m
+    ${ZG_VERSION_PATCH}                       # p
+    ${ZG_VERSION_TWEAK}                       # t
+    ${CMAKE_SOURCE_DIR}/DEPS_LICENSE          # LICENSE
+    ""                                        # SUMMARY
+    ""                                        # DESCRIPTION
+    ""                                        # HOMEPAGE_URL
+    ""                                        # PACKAGE_ICON
+    "Zeucor"                                  # VENDOR
+    "Zeun"                                    # CONTACT
+    "Zeun"                                    # MAINTAINER
+    ""                                        # DEB_DEPENDS
+    ""                                        # RPM_DEPENDS
+    "Development/Libraries"                   # RPM_GROUP                           # fedora group (Development/Debug, Development/Languages, Development/Libraries, Development/System, Development/Tools, System Environment/Base, System Environment/Daemons, System Environment/Kernel, System Environment/Libraries, System Environment/Shells, Networking/Daemons, Networking/Utilities, Networking/Clients, Networking/Servers, User Interface/Desktops, User Interface/X, User Interface/Printing, Applications/Multimedia, Applications/Graphics, Games/Action, Games/Strategy, Games/Tools, Security/Authentication, Security/Encryption, Scientific/Mathematics, Scientific/Engineering)
+    "Program Files\\\\Zeungine"               # WINDOWS_PREFERRED_INSTALL_DIRECTORY
+    "C:"                                      # WINDOWS_PREFERRED_INSTALL_ROOT
+    ""                                        # WINDOWS_UNINSTALL_NAME
+    ""                                        # MACOS_BUNDLE_ID
+)

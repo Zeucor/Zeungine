@@ -15,7 +15,7 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #endif
 Window::Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY, bool borderless,
 							 bool _vsync, uint32_t framerate) :
-		windowWidth(windowWidth), windowHeight(windowHeight), windowX(windowX), windowY(windowY), deltaTime(1.0 / 60.0), borderless(borderless),
+		windowWidth(windowWidth), windowHeight(windowHeight), windowX(windowX), windowY(windowY), deltaTime(1.0 / framerate), borderless(borderless),
 		framerate(framerate), title(title), shaderContext(new ShaderContext), vsync(_vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration),
 		systemFonts(*this)
 {
@@ -26,7 +26,7 @@ Window::Window(Window& _parentWindow, Scene& _parentScene, const char* _childTit
 							 float childWindowHeight, float childWindowX, float childWindowY, bool _NDCFramebufferPlane, bool _vsync,
 							 uint32_t framerate) :
 		iRenderer(_parentWindow.iRenderer), windowWidth(childWindowWidth), windowHeight(childWindowHeight),
-		windowX(childWindowX), windowY(childWindowY), framerate(framerate), deltaTime(1.0 / 60.0), borderless(false), title(_childTitle),
+		windowX(childWindowX), windowY(childWindowY), framerate(framerate), deltaTime(1.0 / framerate), borderless(false), title(_childTitle),
 		isChildWindow(true), parentWindow(&_parentWindow), parentScene(&_parentScene),
 		shaderContext(_parentWindow.shaderContext), NDCFramebufferPlane(_NDCFramebufferPlane),
 		framebufferTexture(std::make_shared<textures::Texture>(

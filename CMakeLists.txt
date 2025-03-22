@@ -17,7 +17,7 @@ endif()
 if(ZG_PACKAGE)
     include(cmake/Package.cmake)
     set(WINDOWS_START_MENU_LINKS "Release/STATIC/zedit.exe" "ZEdit")
-    package_all_in_one(
+    crossplatform_cpack_helper(
         ${CMAKE_SOURCE_DIR}/releases
         Zeungine
         zeungine

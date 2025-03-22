@@ -1,16 +1,15 @@
 #include <zg/system/Budget.hpp>
-using namespace std;
 // QUEUE_PAIR Serial IO
-zgfilesystem::Serial& zgfilesystem::serialize(Serial& serial, const QUEUE_PAIR &value)
+Serial& serialize(Serial& serial, const QUEUE_PAIR &value)
 {
 	return serial << value.first << value.second;
 }
-zgfilesystem::Serial& zgfilesystem::deserialize(Serial& serial, QUEUE_PAIR& value)
+Serial& deserialize(Serial& serial, QUEUE_PAIR& value)
 {
 	return serial >> value.first >> value.second;
 }
 // QUEUE Serial IO
-zgfilesystem::Serial& zgfilesystem::serialize(Serial& serial, const QUEUE& que)
+Serial& serialize(Serial& serial, const QUEUE& que)
 {
 	serial << que.size();
 	QUEUE st = que;
@@ -22,7 +21,7 @@ zgfilesystem::Serial& zgfilesystem::serialize(Serial& serial, const QUEUE& que)
 	}
 	return serial;
 }
-zgfilesystem::Serial& zgfilesystem::deserialize(Serial& serial, QUEUE& que)
+Serial& deserialize(Serial& serial, QUEUE& que)
 {
 	auto size_ = que.size();
 	serial >> size_;
