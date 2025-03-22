@@ -100,6 +100,8 @@ public:
 	}
 	bool readBit()
 	{
+		if (!readStreamPointer)
+			return false;
 		if (bitsReadReadByte == 0 || bitsReadReadByte == 8)
 		{
 			readStreamPointer->read(&currentReadByte, 1);
@@ -110,6 +112,8 @@ public:
 
 	void writeBit(bool bit)
 	{
+		if (!writeStreamPointer)
+			return;
 		currentWriteByte |= bit << (bitsWrittenWriteByte++);
 		if (bitsWrittenWriteByte == 8)
 		{
@@ -120,6 +124,8 @@ public:
 	template <typename T>
 	Serial& operator<<(const T& value)
 	{
+		if (!writeStreamPointer)
+			return *this;
 		if constexpr (std::is_same_v<T, bool>)
 		{
 			if (bitStream)
@@ -146,6 +152,8 @@ public:
 	template <typename T>
 	Serial& operator>>(T& value)
 	{
+		if (!readStreamPointer)
+			return *this;
 		if (std::is_same<T, bool>())
 		{
 			if (bitStream)
@@ -174,6 +182,8 @@ public:
 	 */
 	Serial& readBytes(char* dest, size_t size)
 	{
+		if (!readStreamPointer)
+			return *this;
 		if (bitStream)
 		{
 			for (int i = 0; i < size; i++)
@@ -181,7 +191,7 @@ public:
 				dest[i] = readByte();
 			}
 		}
-		else if (readStreamPointer)
+		else
 		{
 			readStreamPointer->read(dest, size);
 		}
@@ -200,6 +210,8 @@ public:
 	 */
 	Serial& writeBytes(const char* src, size_t size)
 	{
+		if (!writeStreamPointer)
+			return *this;
 		if (bitStream)
 		{
 			for (int i = 0; i < size; i++)
@@ -207,7 +219,7 @@ public:
 				writeByte(src[i]);
 			}
 		}
-		else if (writeStreamPointer)
+		else
 		{
 			writeStreamPointer->write(src, size);
 		}
@@ -278,11 +290,18 @@ public:
 	 */
 	char readByte()
 	{
+		if (!readStreamPointer)
+			return 0;
 		if (bitStream && (bitsReadReadByte > 0 && bitsReadReadByte < 8))
 		{
-			return currentReadByte;
+			char byte = 0;
+			for (auto e = 0 ; e < 8; e++)
+			{
+				byte |= (readBit() << e);
+			}
+			return byte;
 		}
-		else if (readStreamPointer)
+		else
 		{
 			readStreamPointer->read(&currentReadByte, 1);
 			bitsReadReadByte = 0;
@@ -303,9 +322,6 @@ public:
 			{
 				writeBit(byte & (1 << e));
 			}
-			// write
-			currentWriteByte = byte;
-			// bitsWrittenWriteByte = j;
 		}
 		else 
 		{
@@ -319,6 +335,7 @@ public:
 	{
 		if (bitsWrittenWriteByte > 0 && bitsWrittenWriteByte < 8)
 		{
+			bitsWrittenWriteByte = 8;
 			writeByte(currentWriteByte);
 		}
 		if (writeStreamPointer)
