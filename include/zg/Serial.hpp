@@ -154,7 +154,7 @@ public:
 	{
 		if (!readStreamPointer)
 			return *this;
-		if (std::is_same<T, bool>())
+		if constexpr (std::is_same_v<T, bool>)
 		{
 			if (bitStream)
 			{
