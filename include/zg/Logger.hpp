@@ -1,8 +1,8 @@
 #pragma once
+#include <iostream>
 #include <mutex>
 #include <string>
 #include <unordered_map>
-#include <iostream>
 namespace zg
 {
 	class Logger
@@ -17,26 +17,35 @@ namespace zg
 		template <typename... Args>
 		static void print(LogType logType, Args... args)
 		{
+			std::lock_guard<std::mutex> lock(m_mutex);
 			auto logTypeIter = logTypeMap.find(logType);
 			if (logTypeIter == logTypeMap.end())
 			{
 				throw std::runtime_error("Invalid log type");
 			}
-			std::lock_guard<std::mutex> lock(m_mutex);
-			std::cout << logTypeIter->second;
-			logArgs(args...);
-			std::cout << std::endl;
+			if (logType == LogType::Blank || logType == LogType::Info)
+				std::cout << logTypeIter->second;
+			else if (logType == LogType::Error)
+				std::cerr << logTypeIter->second;
+			logArgs(logType, args...);
+			if (logType == LogType::Blank || logType == LogType::Info)
+				std::cout << std::endl;
+			else if (logType == LogType::Error)
+				std::cerr << std::endl;
 		};
 
 	private:
 		static std::mutex m_mutex;
 		static std::unordered_map<LogType, std::string> logTypeMap;
-		static void logArgs() {};
+		static void logArgs(LogType logType) {};
 		template <typename T, typename... Args>
-		static void logArgs(T value, Args... args)
+		static void logArgs(LogType logType, T value, Args... args)
 		{
-			std::cout << value;
-			return logArgs(args...);
+			if (logType == LogType::Blank || logType == LogType::Info)
+				std::cout << value;
+			else if (logType == LogType::Error)
+				std::cerr << value;
+			return logArgs(logType, args...);
 		};
 	};
-}
+} // namespace zg
