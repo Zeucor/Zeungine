@@ -2,14 +2,13 @@
 #include <map>
 #include <zg/Events.hpp>
 #include <zg/Serial.hpp>
-#include "streams/tcp_iostream.hpp"
+#include "streams/udp_iostream.hpp"
 namespace zg::net
 {
-	struct tcp_server
+	struct udp_server
 	{
 	public:
-		using ClientTuple =
-			std::tuple<int, std::shared_ptr<Serial>, std::shared_ptr<zg::net::streams::tcp_iostream>>;
+		using IOStream = std::shared_ptr<zg::net::streams::udp_iostream>;
 #if defined(_WIN32)
 		using SockLength = int;
 #elif defined(__linux__) || defined(MACOS)
@@ -19,12 +18,11 @@ namespace zg::net
 		int port;
 		bool bitStream;
 		int server_fd = 0;
-		UniqueIdentifier totalClients;
-		std::map<UniqueIdentifier, ClientTuple> clientStreamMap;
+		std::map<std::pair<uint32_t, uint16_t>, IOStream> clientStreams;
 
 	public:
-		tcp_server(int port, bool bitStream = false);
+		udp_server(int port, bool bitStream = false);
 		void close();
-		ClientTuple& acceptOne();
+		IOStream receiveOne();
 	};
 } // namespace zg::net

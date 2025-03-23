@@ -20,8 +20,7 @@ void socket_init::initialize()
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
-		zg::Logger::print(zg::Logger::Error, "WSAStartup failed\n");
-		return;
+		throw std::runtime_error("WSAStartup failed");
 	}
 #endif
 	initialized = true;
