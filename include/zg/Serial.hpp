@@ -252,7 +252,7 @@ public:
 			}
 			for (size_t k = 0 + bitsReadReadByte; k < 8 && i < size; ++k, ++i, bitsReadReadByte++)
 			{
-				bitContainer[i + index] = (currentReadByte >> (7 - k)) & 1;
+				bitContainer[i + index] = (currentReadByte >> k) & 1;
 			}
 		}
 		return *this;
