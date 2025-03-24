@@ -30,15 +30,26 @@ function(add_openssl_config VARI)
         set(openssl_CONFIGURE ${openssl_CONFIGURE} ${VARI} PARENT_SCOPE)
     endif()
 endfunction()
-add_openssl_config("perl Configure")
 if(ANDROID)
     set(openssl_BUILD_TYPE ${ANDROID_MARCH})
+    add_openssl_config(perl)
+    add_openssl_config(Configure)
+    set(openssl_MAKE make)
+    set(openssl_MAKE_INSTALL make install_sw install_ssldirs)
 elseif(WINDOWS)
+    add_openssl_config("perl Configure")
+    set(openssl_MAKE "make")
+    set(openssl_MAKE_INSTALL "make install_sw install_ssldirs")
     if(${RELEASE_OR_DEBUG} STREQUAL "Debug")
         set(openssl_BUILD_TYPE debug-VC-WIN64A)
     else()
         set(openssl_BUILD_TYPE VC-WIN64A)
     endif()
+else()
+    add_openssl_config(perl)
+    add_openssl_config(Configure)
+    set(openssl_MAKE make)
+    set(openssl_MAKE_INSTALL make install_sw install_ssldirs)
 endif()
 add_openssl_config(no-shared)
 add_openssl_config(--prefix=${openssl_BINARY_DIR})
@@ -65,8 +76,8 @@ else()
     message(STATUS "openssl-configure: success")
 endif()
 add_custom_target(openssl ALL
-    COMMAND ${SHELL} "make"
-    COMMAND ${SHELL} "make install_sw install_ssldirs"
+    COMMAND ${SHELL} ${openssl_MAKE}
+    COMMAND ${SHELL} ${openssl_MAKE_INSTALL}
     WORKING_DIRECTORY ${openssl_SOURCE_DIR}
     COMMENT "Building OpenSSL"
 )
