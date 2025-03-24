@@ -1,87 +1,35 @@
 # ffmpeg includes
+zg_setup_target(avcodec ${ZG_TYPE}
+    "${ffmpeg_BINARY_DIR}/lib"
+    "${ffmpeg_ZG_LIB_PREFIX}" avcodec avcodec ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(avdevice ${ZG_TYPE}
+    "${ffmpeg_BINARY_DIR}/lib"
+    "${ffmpeg_ZG_LIB_PREFIX}" avdevice avdevice ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(avfilter ${ZG_TYPE}
+    "${ffmpeg_BINARY_DIR}/lib"
+    "${ffmpeg_ZG_LIB_PREFIX}" avfilter avfilter ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(avformat ${ZG_TYPE}
+    "${ffmpeg_BINARY_DIR}/lib"  
+    "${ffmpeg_ZG_LIB_PREFIX}" avformat avformat ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(avutil ${ZG_TYPE}
+    "${ffmpeg_BINARY_DIR}/lib"
+    "${ffmpeg_ZG_LIB_PREFIX}" avutil avutil ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(swresample ${ZG_TYPE}
+    "${ffmpeg_BINARY_DIR}/lib"
+    "${ffmpeg_ZG_LIB_PREFIX}" swresample swresample ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(swscale ${ZG_TYPE}
+    "${ffmpeg_BINARY_DIR}/lib"
+    "${ffmpeg_ZG_LIB_PREFIX}" swscale swscale ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(ssl STATIC
+    "${openssl_BINARY_DIR}/lib64"
+    "${ffmpeg_ZG_LIB_PREFIX}" ssl ssl ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(crypto STATIC
+    "${openssl_BINARY_DIR}/lib64"
+    "${ffmpeg_ZG_LIB_PREFIX}" crypto crypto ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 
-if(ZG_TYPE STREQUAL STATIC)
-    install(FILES
-        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avcodec.${ffmpeg_ZG_LIB_SUFFIX}"
-        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avdevice.${ffmpeg_ZG_LIB_SUFFIX}"
-        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avfilter.${ffmpeg_ZG_LIB_SUFFIX}"
-        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avformat.${ffmpeg_ZG_LIB_SUFFIX}"
-        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avutil.${ffmpeg_ZG_LIB_SUFFIX}"
-        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swresample.${ffmpeg_ZG_LIB_SUFFIX}"
-        "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swscale.${ffmpeg_ZG_LIB_SUFFIX}"
-        DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-elseif(ZG_TYPE STREQUAL SHARED)
-    if(UNIX)
-        install(FILES
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avcodec.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avdevice.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avfilter.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avformat.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avutil.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swresample.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swscale.${ffmpeg_ZG_LIB_SUFFIX}"
-            DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-            PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-    elseif(WIN32)
-        install(FILES
-            "${ffmpeg_BINARY_DIR}/bin/${ffmpeg_ZG_LIB_PREFIX}avcodec-61.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/bin/${ffmpeg_ZG_LIB_PREFIX}avdevice-61.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/bin/${ffmpeg_ZG_LIB_PREFIX}avfilter-10.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/bin/${ffmpeg_ZG_LIB_PREFIX}avformat-61.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/bin/${ffmpeg_ZG_LIB_PREFIX}avutil-59.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/bin/${ffmpeg_ZG_LIB_PREFIX}swresample-5.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/bin/${ffmpeg_ZG_LIB_PREFIX}swscale-8.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/bin/avcodec.lib"
-            "${ffmpeg_BINARY_DIR}/bin/avdevice.lib"
-            "${ffmpeg_BINARY_DIR}/bin/avfilter.lib"
-            "${ffmpeg_BINARY_DIR}/bin/avformat.lib"
-            "${ffmpeg_BINARY_DIR}/bin/avutil.lib"
-            "${ffmpeg_BINARY_DIR}/bin/swresample.lib"
-            "${ffmpeg_BINARY_DIR}/bin/swscale.lib"
-            DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-            PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-    endif()
-    IF(APPLE)
-        install(FILES
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avcodec.61.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avcodec.61.19.100.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avdevice.61.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avdevice.61.3.100.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avfilter.10.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avfilter.10.4.100.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avformat.61.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avformat.61.7.100.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avutil.59.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avutil.59.39.100.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swresample.5.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swresample.5.3.100.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swscale.8.${ffmpeg_ZG_LIB_SUFFIX}"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swscale.8.3.100.${ffmpeg_ZG_LIB_SUFFIX}"
-            DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-            PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-    elseif(UNIX AND NOT APPLE)
-        install(FILES
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avcodec.${ffmpeg_ZG_LIB_SUFFIX}.61"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avcodec.${ffmpeg_ZG_LIB_SUFFIX}.61.19.100"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avdevice.${ffmpeg_ZG_LIB_SUFFIX}.61"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avdevice.${ffmpeg_ZG_LIB_SUFFIX}.61.3.100"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avfilter.${ffmpeg_ZG_LIB_SUFFIX}.10"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avfilter.${ffmpeg_ZG_LIB_SUFFIX}.10.4.100"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avformat.${ffmpeg_ZG_LIB_SUFFIX}.61"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avformat.${ffmpeg_ZG_LIB_SUFFIX}.61.7.100"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avutil.${ffmpeg_ZG_LIB_SUFFIX}.59"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}avutil.${ffmpeg_ZG_LIB_SUFFIX}.59.39.100"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swresample.${ffmpeg_ZG_LIB_SUFFIX}.5"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swresample.${ffmpeg_ZG_LIB_SUFFIX}.5.3.100"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swscale.${ffmpeg_ZG_LIB_SUFFIX}.8"
-            "${ffmpeg_BINARY_DIR}/lib/${ffmpeg_ZG_LIB_PREFIX}swscale.${ffmpeg_ZG_LIB_SUFFIX}.8.3.100"
-            DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-            PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-    endif()
-endif()
-
-# datsit frrom ffmpeg
+install(FILES ${ZG_LIBRARIES_TO_INSTALL}
+    DESTINATION ${ZG_LIB_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
 install(TARGETS
     freetype

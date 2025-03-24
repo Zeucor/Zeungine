@@ -1,12 +1,7 @@
 #pragma once
 #include <streambuf>
 #include <vector>
-#if defined(__linux__) || defined(MACOS)
-#include <sys/socket.h>
-#include <unistd.h>
-#elif defined(_WIN32)
-#include <windows.h>
-#endif
+#include <zg/Standard.hpp>
 namespace zg::net::streams
 {
 	class tcp_streambuf : public std::streambuf

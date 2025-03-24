@@ -8,7 +8,7 @@ namespace zg::net::streams
 	class udp_istream : public std::istream
 	{
 	public:
-		explicit udp_istream(int server_fd, sockaddr_in addr);
+		explicit udp_istream(const udp_streambuf::SocketPair& fd_addr_pair);
 
 	private:
 		udp_streambuf buf;
@@ -17,7 +17,7 @@ namespace zg::net::streams
 	class udp_ostream : public std::ostream
 	{
 	public:
-		explicit udp_ostream(int server_fd, sockaddr_in addr);
+		explicit udp_ostream(const udp_streambuf::SocketPair& fd_addr_pair);
 
 		void pushData(const char* data, size_t length);
 
@@ -28,7 +28,7 @@ namespace zg::net::streams
 	class udp_iostream : public std::iostream
 	{
 	public:
-		explicit udp_iostream(int server_fd, sockaddr_in addr);
+		explicit udp_iostream(const udp_streambuf::SocketPair& fd_addr_pair);
 
 		void pushData(const char* data, size_t length);
 

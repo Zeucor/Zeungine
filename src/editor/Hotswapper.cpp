@@ -7,9 +7,10 @@
 #include <zg/zgfilesystem/Directory.hpp>
 #include <zg/zgfilesystem/DirectoryWatcher.hpp>
 #include <zg/zgfilesystem/File.hpp>
+#include <zg/Logger.hpp>
 using namespace zg::editor::hs;
 using namespace zg::system;
-NANOSECONDS_DURATION hotswapperBudgetDuration = NANOSECONDS_DURATION((1.0) * nano::den);
+NANOSECONDS_DURATION hotswapperBudgetDuration = NANOSECONDS_DURATION((1.0/4.0) * NANOSECONDS::den);
 zg::budget::ZBudget hotswapperZBudget(hotswapperBudgetDuration, 10, false, false, "hotswapperBudget");
 Hotswapper::Hotswapper(const std::filesystem::path& directory, EditorScene& editorScene) :
 		running(true), directory(directory), editorScene(editorScene),
@@ -63,7 +64,7 @@ void Hotswapper::update()
 					}
 					catch (const std::exception& e)
 					{
-						std::cout << e.what() << '\n';
+						zg::Logger::print(zg::Logger::Error, e.what());
 					}
 					if (editorScene.OnLoad)
 					{

@@ -1,20 +1,3 @@
-if(WIN32 AND ZG_TYPE STREQUAL BUILD_SHARED_LIBS)
-	set(avcodec_NAME avcodec-61)
-	set(avdevice_NAME avdevice-61)
-	set(avfilter_NAME avfilter-10)
-	set(avformat_NAME avformat-61)
-	set(avutil_NAME avutil-59)
-	set(swresample_NAME swresample-5)
-	set(swscale_NAME swscale-8)
-else()
-	set(avcodec_NAME avcodec)
-	set(avdevice_NAME avdevice)
-	set(avfilter_NAME avfilter)
-	set(avformat_NAME avformat)
-	set(avutil_NAME avutil)
-	set(swresample_NAME swresample)
-	set(swscale_NAME swscale)
-endif()
 if(ZG_TYPE STREQUAL STATIC)
 	set(TYPE_ZG_LIB_SUFFIX ${STATIC_ZG_LIB_SUFFIX})
 elseif(ZG_TYPE STREQUAL SHARED)
@@ -52,6 +35,12 @@ zg_setup_target(swresample ${ZG_TYPE}
 zg_setup_target(swscale ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${swscale_NAME} swscale ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(ssl STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ffmpeg_ZG_LIB_PREFIX}" ssl ssl ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(crypto STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ffmpeg_ZG_LIB_PREFIX}" crypto crypto ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
 if(ZG_TYPE STREQUAL SHARED)
 elseif(ZG_TYPE STREQUAL STATIC)
 	zg_setup_target(zlib STATIC

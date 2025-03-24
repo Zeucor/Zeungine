@@ -1,7 +1,7 @@
 #include <zg/net/streams/udp_streambuf.hpp>
 using namespace zg::net::streams;
-udp_streambuf::udp_streambuf(SocketIdentifier server_fd, sockaddr_in client_addr) :
-		server_fd(server_fd), client_addr(client_addr)
+udp_streambuf::udp_streambuf(const SocketPair& fd_addr_pair) :
+		fd(std::get<0>(fd_addr_pair)), addr(std::get<1>(fd_addr_pair)), buffer(4196)
 {
 	setg(buffer.data(), buffer.data(), buffer.data());
 	setp(buffer.data(), buffer.data() + buffer.size());
@@ -16,10 +16,19 @@ void udp_streambuf::setReceivedData(const char* data, size_t length)
 }
 int udp_streambuf::underflow()
 {
-	if (gptr() < egptr()) // Data is still available
-		return traits_type::to_int_type(*gptr());
+	// if (gptr() < egptr()) // Data is still available
+	// 	return traits_type::to_int_type(*gptr());
 
-	return traits_type::eof();
+	// return traits_type::eof();
+    if (gptr() < egptr())
+        return traits_type::to_int_type(*gptr());
+
+    size_t n = recvfrom(fd, buffer.data(), buffer.size(), 0, (sockaddr*)&addr, &addr_len);
+    if (n <= 0)
+        return traits_type::eof();
+
+    setg(buffer.data(), buffer.data(), buffer.data() + n);
+    return traits_type::to_int_type(*gptr());
 }
 int udp_streambuf::overflow(int c)
 {
@@ -35,7 +44,7 @@ int udp_streambuf::overflow(int c)
 }
 int udp_streambuf::sync()
 {
-	size_t sent = sendto(server_fd, pbase(), pptr() - pbase(), 0, (struct sockaddr*)&client_addr, sizeof(client_addr));
+	size_t sent = sendto(fd, pbase(), pptr() - pbase(), 0, (struct sockaddr*)&addr, sizeof(addr));
 	if (sent == -1)
 		return -1;
 

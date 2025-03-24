@@ -13,10 +13,8 @@
 #include <zg/fonts/freetype/Freetype.hpp>
 #include "Hotswapper.hpp"
 #include "projects/Project.hpp"
-using namespace std;
 namespace zg::editor
 {
-	using namespace zg;
 	struct EditorScene : Scene
 	{
 		glm::vec4 editorClearColor = {0.2, 0.2, 0.2, 1};
@@ -36,22 +34,22 @@ namespace zg::editor
 		float codeWindowX;
 		float codeWindowY;
 		glm::vec4 toolbarColor;
-		shared_ptr<entities::Toolbar> toolbar;
-		shared_ptr<entities::TabsBar> bottomTabsBar;
-		shared_ptr<entities::StatusText> status;
+		std::shared_ptr<entities::Toolbar> toolbar;
+		std::shared_ptr<entities::TabsBar> bottomTabsBar;
+		std::shared_ptr<entities::StatusText> status;
 		glm::vec4 gameWindowBorderColor = {0.4, 0.4, 0.7, 1};
 		glm::vec4 gameWindowHoveredBorderColor = {0.7, 0.4, 0.4, 1};
 		glm::vec4 gameWindowActiveBorderColor = {1, 0, 0, 1};
-		shared_ptr<entities::Plane> gameWindowBorder;
-		shared_ptr<entities::PanelMenu> sceneGraphPanelMenu;
+		std::shared_ptr<entities::Plane> gameWindowBorder;
+		std::shared_ptr<entities::PanelMenu> sceneGraphPanelMenu;
 		float resourcePanelMenuHeight;
-		shared_ptr<entities::PanelMenu> resourcePanelMenu;
-		shared_ptr<entities::Console> resourceConsole;
-		shared_ptr<entities::AssetBrowser> resourceAssetBrowser;
+		std::shared_ptr<entities::PanelMenu> resourcePanelMenu;
+		std::shared_ptr<entities::Console> resourceConsole;
+		std::shared_ptr<entities::AssetBrowser> resourceAssetBrowser;
 		size_t assetTabID = 0;
-		shared_ptr<entities::TabsBar> resourcePanelTabs;
+		std::shared_ptr<entities::TabsBar> resourcePanelTabs;
 		size_t performanceTabID = 0;
-		shared_ptr<Entity> activeResourcePanelEntity;
+		std::shared_ptr<Entity> activeResourcePanelEntity;
 		UniqueIdentifier resizeID = 0;
 		UniqueIdentifier gameWindowBorderHoverID = 0;
 		UniqueIdentifier gameWindowBorderPressID = 0;
@@ -66,30 +64,30 @@ namespace zg::editor
 		float closeOpenDialogButtonHeight;
 		float okayOpenDialogButtonWidth;
 		float okayOpenDialogButtonHeight;
-		shared_ptr<entities::Button> closeNewDialogButton;
-		shared_ptr<entities::Button> okayNewDialogButton;
-		shared_ptr<entities::Input> newProjectNameInput;
-		shared_ptr<entities::Input> newProjectDirectoryInput;
-		shared_ptr<entities::Dialog> newProjectDialog;
-		shared_ptr<entities::Button> closeOpenDialogButton;
-		shared_ptr<entities::Button> okayOpenDialogButton;
-		shared_ptr<entities::Input> openProjectDirectoryInput;
-		shared_ptr<entities::Dialog> openProjectDialog;
-		shared_ptr<entities::Dialog> activeDialog;
-		shared_ptr<hs::Hotswapper> hotswapper;
+		std::shared_ptr<entities::Button> closeNewDialogButton;
+		std::shared_ptr<entities::Button> okayNewDialogButton;
+		std::shared_ptr<entities::Input> newProjectNameInput;
+		std::shared_ptr<entities::Input> newProjectDirectoryInput;
+		std::shared_ptr<entities::Dialog> newProjectDialog;
+		std::shared_ptr<entities::Button> closeOpenDialogButton;
+		std::shared_ptr<entities::Button> okayOpenDialogButton;
+		std::shared_ptr<entities::Input> openProjectDirectoryInput;
+		std::shared_ptr<entities::Dialog> openProjectDialog;
+		std::shared_ptr<entities::Dialog> activeDialog;
+		std::shared_ptr<hs::Hotswapper> hotswapper;
 		Project project;
 		void(*OnLoad)(Window&) = 0;
 		bool loaded = false;
-		inline static filesystem::path programDirectoryPath = zgfilesystem::File::getProgramDirectoryPath();
+		inline static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgramDirectoryPath();
 		explicit EditorScene(Window& window);
 		~EditorScene() override;
-		void onEntityAdded(const shared_ptr<Entity>& entity);
+		void onEntityAdded(const std::shared_ptr<Entity>& entity);
 		void setupGameWindow();
 		void setupCodeWindow();
 		void minimizeWindows();
 		void removeActiveResourceEntity() const;
 		void setupToolbarOptions();
-		void newProject(string_view projectName, string_view projectDirectory);
-		void openProject(string_view projectDirectory);
+		void newProject(std::string_view projectName, std::string_view projectDirectory);
+		void openProject(std::string_view projectDirectory);
 	};
-} // namespace zg::editor
+} // namespace editor

@@ -37,6 +37,7 @@ void tcp_server::close()
 tcp_server::ClientTuple& tcp_server::acceptOne()
 {
 	sockaddr_in client_addr;
+	memset(&client_addr, 0, sizeof(sockaddr_in));
 	SockLength client_len = sizeof(client_addr);
 	int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
 	if (client_fd == -1)

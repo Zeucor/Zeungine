@@ -3,16 +3,14 @@
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Cube.hpp>
-using namespace std;
-using namespace zg;
-struct MainScene : Scene
+struct MainScene : zg::Scene
 {
-	std::shared_ptr<entities::Cube> cube;
+	std::shared_ptr<zg::entities::Cube> cube;
 	UniqueIdentifier leftKeyID;
 	UniqueIdentifier rightKeyID;
 	UniqueIdentifier upKeyID;
 	UniqueIdentifier downKeyID;
-	explicit MainScene(Window &window);
+	explicit MainScene(zg::Window &window);
 	~MainScene();
 };
-ZG_API void OnLoad(Window& window);
+ZG_API void OnLoad(zg::Window& window);

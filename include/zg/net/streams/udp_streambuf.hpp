@@ -1,12 +1,7 @@
 #pragma once
 #include <streambuf>
 #include <vector>
-#if defined(__linux__) || defined(MACOS)
-#include <sys/socket.h>
-#include <unistd.h>
-#elif defined(_WIN32)
-#include <windows.h>
-#endif
+#include <zg/Standard.hpp>
 namespace zg::net::streams
 {
 	class udp_streambuf : public std::streambuf
@@ -17,7 +12,8 @@ namespace zg::net::streams
 #elif defined(__linux__) || defined(MACOS)
 		using SocketIdentifier = int;
 #endif
-		explicit udp_streambuf(SocketIdentifier server_fd, sockaddr_in client_addr);
+		using SocketPair = std::pair<SocketIdentifier, sockaddr_in>;
+		explicit udp_streambuf(const SocketPair& fd_addr_pair);
 
 		~udp_streambuf();
 
@@ -31,8 +27,9 @@ namespace zg::net::streams
 		int sync() override;
 
 	private:
-		SocketIdentifier server_fd;
-		sockaddr_in client_addr;
+		SocketIdentifier fd;
+		sockaddr_in addr;
 		std::vector<char> buffer;
+		inline static int addr_len = sizeof(sockaddr_in);
 	};
 } // namespace zg::net::streams

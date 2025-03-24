@@ -9,8 +9,7 @@ udp_server::udp_server(int port, bool bitStream) : port(port), bitStream(bitStre
 	server_fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (server_fd == -1)
 	{
-		zg::Logger::print(zg::Logger::Error, "Socket creation failed\n");
-		return;
+		throw std::runtime_error("Socket creation failed");
 	}
 	sockaddr_in server_addr{};
 	server_addr.sin_family = AF_INET;
@@ -30,14 +29,27 @@ void udp_server::close()
 	::close(server_fd);
 #endif
 }
-udp_server::IOStream udp_server::receiveOne()
+udp_server::IOStreamPointer udp_server::receiveOne(bool nonBlock, unsigned int nonBlockMicroSecTimeout)
 {
 	sockaddr_in client_addr;
 	SockLength client_len = sizeof(client_addr);
 	char buffer[4096];
 	memset(buffer, 0, sizeof(buffer));
-	size_t recv_len = recvfrom(server_fd, buffer, sizeof(buffer), 0,
-								(struct sockaddr*)&client_addr, &client_len);
+	if (nonBlock && nonBlockMicroSecTimeout != m_nonBlockMicroSecTimeout)
+	{
+#if defined(__linux__) || defined(MACOS)
+		struct timeval read_timeout;
+		read_timeout.tv_sec = 0;
+		read_timeout.tv_usec = nonBlockMicroSecTimeout;
+#elif defined(_WIN32)
+		DWORD read_timeout = nonBlockMicroSecTimeout / 1000;
+#endif
+		setsockopt(server_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&read_timeout, sizeof(read_timeout));
+		m_nonBlockMicroSecTimeout = nonBlockMicroSecTimeout;
+	}
+	//
+	//
+	size_t recv_len = recvfrom(server_fd, buffer, sizeof(buffer), 0, (struct sockaddr*)&client_addr, &client_len);
 	if (recv_len == -1)
 	{
 		throw std::runtime_error("recvfrom failed");
@@ -46,7 +58,7 @@ udp_server::IOStream udp_server::receiveOne()
 	auto& clientStream = clientStreams[key];
 	if (!clientStream)
 	{
-		clientStream = std::make_shared<zg::net::streams::udp_iostream>(server_fd, client_addr);
+		clientStream = std::make_shared<zg::net::streams::udp_iostream>(zg::net::streams::udp_streambuf::SocketPair(server_fd, client_addr));
 	}
 	clientStream->pushData(buffer, recv_len);
 	return clientStream;

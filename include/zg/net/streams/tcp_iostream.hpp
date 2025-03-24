@@ -2,7 +2,6 @@
 #include <istream>
 #include <ostream>
 #include "tcp_streambuf.hpp"
-
 namespace zg::net::streams
 {
 	class tcp_istream : public std::istream

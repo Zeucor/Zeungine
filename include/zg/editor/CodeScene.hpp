@@ -1,12 +1,10 @@
 #pragma once
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
-using namespace std;
 namespace zg::editor
 {
-	using namespace zg;
-	struct CodeScene : Scene
+	struct CodeScene : zg::Scene
 	{
-		explicit CodeScene(Window &window);
+		explicit CodeScene(zg::Window &window);
 	};
 }

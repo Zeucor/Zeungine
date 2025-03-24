@@ -3,11 +3,74 @@
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 
-if(WIN32)
+if(ANDROID)
+    set(SHELL bash)
+elseif(WIN32)
+    set(SHELL "C:\\msys64\\msys2_shell.cmd" "-defterm" "-no-start" "-mingw64" "-here" "-use-full-path" "-c")
     set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} /EHsc)
+else()
+    set(SHELL bash)
 endif()
 
 #New Dependency Declarations to the top!
+
+# OpenSSL
+FetchContent_Declare(openssl
+    GIT_REPOSITORY https://github.com/openssl/openssl.git
+    GIT_TAG openssl-3.5)
+FetchContent_GetProperties(openssl)
+if(NOT openssl_POPULATED)
+    FetchContent_Populate(openssl)
+endif()
+
+function(add_openssl_config VARI)
+    if(WIN32)
+        set(openssl_CONFIGURE "${openssl_CONFIGURE} ${VARI}" PARENT_SCOPE)
+    else()
+        set(openssl_CONFIGURE ${openssl_CONFIGURE} ${VARI} PARENT_SCOPE)
+    endif()
+endfunction()
+add_openssl_config("perl Configure")
+if(ANDROID)
+    set(openssl_BUILD_TYPE ${ANDROID_MARCH})
+elseif(WINDOWS)
+    if(${RELEASE_OR_DEBUG} STREQUAL "Debug")
+        set(openssl_BUILD_TYPE debug-VC-WIN64A)
+    else()
+        set(openssl_BUILD_TYPE VC-WIN64A)
+    endif()
+endif()
+add_openssl_config(no-shared)
+add_openssl_config(--prefix=${openssl_BINARY_DIR})
+add_openssl_config(--openssldir=${openssl_BINARY_DIR})
+if(ANDROID)
+    set(openssl_CONFIGURE
+        env
+        CC=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang
+        CXX=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang++
+        AR=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        LD=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/ld.lld
+        ${openssl_CONFIGURE}
+        --sysroot=${CMAKE_SYSROOT}
+    )
+endif()
+message(STATUS "openssl-configure: \"${openssl_CONFIGURE}\"")
+execute_process(
+    COMMAND ${SHELL} ${openssl_CONFIGURE}
+    WORKING_DIRECTORY ${openssl_SOURCE_DIR}
+    RESULT_VARIABLE openssl_ConfigureResult)
+if(openssl_ConfigureResult)
+    message(FATAL_ERROR "openssl-configure: ${openssl_ConfigureResult}")
+else()
+    message(STATUS "openssl-configure: success")
+endif()
+add_custom_target(openssl ALL
+    COMMAND ${SHELL} "make"
+    COMMAND ${SHELL} "make install_sw install_ssldirs"
+    WORKING_DIRECTORY ${openssl_SOURCE_DIR}
+    COMMENT "Building OpenSSL"
+)
+
 # zlib
 FetchContent_Declare(zlib
     GIT_REPOSITORY https://github.com/madler/zlib.git
@@ -145,7 +208,6 @@ if(ANDROID)
     add_ffmpeg_config(--strip=${FFMPEG_STRIP})
     add_ffmpeg_config(--ranlib=${FFMPEG_RANLIB})
     add_ffmpeg_config(--enable-cross-compile)
-    set(SHELL bash)
 elseif(WIN32)
     add_ffmpeg_config(--disable-asm)
     add_ffmpeg_config(--disable-mmx)
@@ -153,9 +215,6 @@ elseif(WIN32)
     add_ffmpeg_config(--disable-sse2)
     add_ffmpeg_config(--disable-x86asm)
     add_ffmpeg_config(--toolchain=msvc)
-    set(SHELL "C:\\msys64\\msys2_shell.cmd" "-defterm" "-no-start" "-mingw64" "-here" "-use-full-path" "-c")
-else()
-    set(SHELL bash)
 endif()
 if(WIN32)
     set(ffmpeg_BUILD_COMMAND "make")

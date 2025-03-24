@@ -43,6 +43,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #endif
 // learn from a**<:._.:>
 #define STANDARD std

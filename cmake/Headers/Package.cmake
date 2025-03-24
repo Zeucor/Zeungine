@@ -1,3 +1,4 @@
+include(../Package.cmake)
 crossplatform_cpack_helper(
     ${CMAKE_SOURCE_DIR}/../../releases               # OUTPUT_DIRECTORY
     "zeungine-headers"                               # DISPLAY_NAME
