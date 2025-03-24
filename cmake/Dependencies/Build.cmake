@@ -63,9 +63,14 @@ if(ANDROID)
         --sysroot=${CMAKE_SYSROOT}
     )
 endif()
+if(WIN32)
+    set(openssl_CONFIGURE ${SHELL} ${openssl_CONFIGURE})
+    set(openssl_MAKE ${SHELL} ${openssl_MAKE})
+    set(openssl_MAKE_INSTALL ${SHELL} ${openssl_MAKE_INSTALL})
+endif()
 message(STATUS "openssl-configure: \"${openssl_CONFIGURE}\"")
 execute_process(
-    COMMAND ${SHELL} ${openssl_CONFIGURE}
+    COMMAND ${openssl_CONFIGURE}
     WORKING_DIRECTORY ${openssl_SOURCE_DIR}
     RESULT_VARIABLE openssl_ConfigureResult)
 if(openssl_ConfigureResult)
@@ -74,8 +79,8 @@ else()
     message(STATUS "openssl-configure: success")
 endif()
 add_custom_target(openssl ALL
-    COMMAND ${SHELL} ${openssl_MAKE}
-    COMMAND ${SHELL} ${openssl_MAKE_INSTALL}
+    COMMAND ${openssl_MAKE}
+    COMMAND ${openssl_MAKE_INSTALL}
     WORKING_DIRECTORY ${openssl_SOURCE_DIR}
     COMMENT "Building OpenSSL"
 )
@@ -173,7 +178,7 @@ endif()
 #     GIT_TAG win_x86_64)
 # FetchContent_MakeAvailable(swiftshader)
 
-# FfMpeG
+# FFmpeg
 message(STATUS "|FetchContent&Build&buildInstall|OneTime: ffmpeg")
 FetchContent_Declare(ffmpeg
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
@@ -250,27 +255,12 @@ if(ffmpeg_ConfigureResult)
 else()
     message(STATUS "ffmpeg-configure: success")
 endif()
-message(STATUS "ffmpeg-build")
-execute_process(
+add_custom_target(ffmpeg ALL
     COMMAND ${ffmpeg_BUILD_COMMAND}
-    RESULT_VARIABLE ffmpeg_BuildResult
-    WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR})
-if(ffmpeg_BuildResult)
-    message(FATAL_ERROR "ffmpeg-build: failure: ${ffmpeg_ConfigureResult}")
-else()
-    message(STATUS "ffmpeg-build: success")
-endif()
-message(STATUS "ffmpeg-install: ${ffmpeg_INSTALL_COMMAND}")
-execute_process(
     COMMAND ${ffmpeg_INSTALL_COMMAND}
-    RESULT_VARIABLE ffmpeg_InstallResult
-    WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR})
-if(ffmpeg_InstallResult)
-    message(FATAL_ERROR "ffmpeg-install: failure: ${ffmpeg_ConfigureResult}")
-else()
-    message(STATUS "ffmpeg-install: success")
-endif()
-# end of ffmegp(!)
+    WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR}
+    COMMENT "Building ffmpeg"
+)
 
 # Freetype
 message(STATUS "FetchContent: freetype")
