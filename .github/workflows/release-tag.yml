@@ -1,4 +1,4 @@
-name: Release on Tag
+name: New Version Build Test and Package
 on:
   push:
     tags:
