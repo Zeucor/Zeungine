@@ -27,7 +27,7 @@ jobs:
       - name: Install Dependencies on Windows
         if: runner.os == 'Windows'
         run: |
-          choco install dos2unix ninja
+          choco install dos2unix ninja nasm
           C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -S --noconfirm make diffutils"
         shell: bash
 
@@ -44,7 +44,9 @@ jobs:
 
       - name: Build Package on Windows
         if: runner.os == 'Windows'
-        run: .\win-package.bat 8
+        run: |
+          "C:\Program Files\NASM\nasmpath.bat"
+          .\win-package.bat 8
         shell: cmd
       
       - name: Create Release
