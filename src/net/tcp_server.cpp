@@ -3,7 +3,8 @@
 #include <zg/net/tcp_server.hpp>
 using namespace zg::net;
 #define BACKLOG 5
-tcp_server::tcp_server(int port, bool bitStream) : port(port), bitStream(bitStream)
+tcp_server::tcp_server(int port, bool bitStream, SSL_CTX* ssl_ctx) :
+		port(port), bitStream(bitStream), ssl_ctx(ssl_ctx)
 {
 	socket_init::initialize();
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -51,7 +52,17 @@ tcp_server::ClientTuple& tcp_server::acceptOne()
 #endif
 	}
 	auto id = ++totalClients;
-	auto client_iostream = std::make_shared<zg::net::streams::tcp_iostream>(client_fd);
+	SSL* ssl = 0;
+	if (ssl_ctx)
+	{
+		ssl = SSL_new(ssl_ctx);
+		SSL_set_fd(ssl, client_fd);
+		if (SSL_accept(ssl) < 0)
+		{
+			zg::Logger::print(zg::Logger::Error, "SSL failed to accept");
+		}
+	}
+	auto client_iostream = std::make_shared<zg::net::streams::tcp_iostream>(std::pair<int, SSL*>(client_fd, ssl));
 	auto client_serial = std::make_shared<Serial>(*client_iostream, bitStream);
 	auto& clientTuple = (clientStreamMap[id] = ClientTuple(client_fd, client_serial, client_iostream));
 	return clientTuple;

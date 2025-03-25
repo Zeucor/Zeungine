@@ -6,9 +6,14 @@
 #include <zg/Logger.hpp>
 #include <zg/net/tcp_client.hpp>
 using namespace zg::net;
-tcp_client::tcp_client(const std::string& host, int port) : tcp_iostream(connect(host, port)) {}
-int tcp_client::connect(const std::string& host, int port)
+tcp_client::tcp_client(const std::string& host, int port, SSL_CTX* ssl_ctx) : tcp_iostream(connect(host, port, ssl_ctx)) {}
+std::pair<int, SSL*> tcp_client::connect(const std::string& host, int port, SSL_CTX* ssl_ctx)
 {
+	SSL* ssl = 0;
+	if (ssl_ctx)
+	{
+		ssl = SSL_new(ssl_ctx);
+	}
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
 	sockaddr_in server_addr{};
 	server_addr.sin_family = AF_INET;
@@ -25,5 +30,12 @@ int tcp_client::connect(const std::string& host, int port)
 	{
 		throw std::runtime_error("Connection failed!");
 	}
-	return sock;
+	if (ssl)
+	{
+		if (SSL_connect(ssl) < 0)
+		{
+			throw std::runtime_error("SSL Connection failed!");
+		}
+	}
+	return {sock, ssl};
 }

@@ -2,12 +2,17 @@
 #include <istream>
 #include <ostream>
 #include "tcp_streambuf.hpp"
+#include "openssl/ssl.h"
+#include "openssl/err.h"
+using SSLPair = std::pair<SSL_CTX*, SSL*>;
 namespace zg::net::streams
 {
 	class tcp_istream : public std::istream
 	{
 	public:
-		explicit tcp_istream(int socket_fd);
+		explicit tcp_istream(const std::pair<int, SSL*>& fd_ssl_pair);
+
+		void SSLUpgrade(SSL* sslPointer);
 
 	private:
 		tcp_streambuf buf;
@@ -16,7 +21,9 @@ namespace zg::net::streams
 	class tcp_ostream : public std::ostream
 	{
 	public:
-		explicit tcp_ostream(int socket_fd);
+		explicit tcp_ostream(const std::pair<int, SSL*>& fd_ssl_pair);
+
+		void SSLUpgrade(SSL* sslPointer);
 
 	private:
 		tcp_streambuf buf;
@@ -25,7 +32,9 @@ namespace zg::net::streams
 	class tcp_iostream : public std::iostream
 	{
 	public:
-		explicit tcp_iostream(int socket_fd);
+		explicit tcp_iostream(const std::pair<int, SSL*>& fd_ssl_pair);
+
+		void SSLUpgrade(SSL* sslPointer);
 
 	private:
 		tcp_streambuf buf;

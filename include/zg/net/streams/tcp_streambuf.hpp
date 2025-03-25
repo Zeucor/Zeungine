@@ -2,14 +2,17 @@
 #include <streambuf>
 #include <vector>
 #include <zg/Standard.hpp>
+#include <openssl/ssl.h>
 namespace zg::net::streams
 {
 	class tcp_streambuf : public std::streambuf
 	{
 	public:
-		explicit tcp_streambuf(int socket_fd, std::size_t buffer_size = 4096);
+		explicit tcp_streambuf(const std::pair<int, SSL*>& fd_ssl_pair, std::size_t buffer_size = 4096);
 
 		~tcp_streambuf();
+
+		void SSLUpgrade(SSL* sslPointer);
 
 	protected:
 		int underflow() override;
@@ -24,7 +27,8 @@ namespace zg::net::streams
 #elif defined(__linux__) || defined(MACOS)
 		using SocketIdentifier = int;
 #endif
-		SocketIdentifier socket_fd;
+		SocketIdentifier fd;
 		std::vector<char> buffer;
+		SSL* ssl;
 	};
 } // namespace zg

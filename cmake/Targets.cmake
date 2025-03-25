@@ -18,11 +18,6 @@ zg_setup_target(avdevice ${ZG_TYPE}
 zg_setup_target(avcodec ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${avcodec_NAME} avcodec ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
-if(WIN32)
-	if(ZG_TYPE STREQUAL STATIC)
-		set(ZG_LIBRARIES ${ZG_LIBRARIES} ws2_32 secur32 bcrypt mfplat mf mfuuid strmiids)
-	endif()
-endif()
 zg_setup_target(avfilter ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${avfilter_NAME} avfilter ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
@@ -35,20 +30,30 @@ zg_setup_target(swresample ${ZG_TYPE}
 zg_setup_target(swscale ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${swscale_NAME} swscale ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(ssl STATIC
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ffmpeg_ZG_LIB_PREFIX}" ssl ssl ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(crypto STATIC
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ffmpeg_ZG_LIB_PREFIX}" crypto crypto ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
-if(ZG_TYPE STREQUAL SHARED)
-elseif(ZG_TYPE STREQUAL STATIC)
+if(ZG_TYPE STREQUAL STATIC)
 	zg_setup_target(zlib STATIC
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
 		"${ZG_LIB_PREFIX}" zlib zlib "${STATIC_ZG_LIB_SUFFIX}" ON)
 	zg_setup_target(bzip2 STATIC
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
 		"${ZG_LIB_PREFIX}" bzip2 bzip2 "${STATIC_ZG_LIB_SUFFIX}" ON)
+endif()
+zg_setup_target(ssl STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ffmpeg_ZG_LIB_PREFIX}" ssl ssl "${STATIC_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(crypto STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ffmpeg_ZG_LIB_PREFIX}" crypto crypto "${STATIC_ZG_LIB_SUFFIX}" ON)
+if(WIN32)
+	if(ZG_TYPE STREQUAL STATIC)
+	# ucrt
+		set(ZG_LIBRARIES ${ZG_LIBRARIES} ws2_32 secur32 crypt32 bcrypt mfplat mf mfuuid strmiids advapi32  iphlpapi legacy_stdio_definitions)
+		# if (RELEASE_OR_DEBUG STREQUAL Release)
+		# 	set(ZG_LIBRARIES ${ZG_LIBRARIES} msvcrt)
+		# else()
+		# 	set(ZG_LIBRARIES ${ZG_LIBRARIES} msvcrtd)
+		# endif()
+	endif()
 endif()
 # zg_setup_target(lunasvg ${ZG_TYPE}
 # 	"${ZG_LIB_INSTALL_PREFIX_ABS}"

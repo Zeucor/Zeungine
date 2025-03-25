@@ -6,6 +6,7 @@
 #include <zg/net/tcp_server.hpp>
 #include <zg/net/udp_client.hpp>
 #include <zg/net/udp_server.hpp>
+#include <zg/net/ssl_factory.hpp>
 // tcp
 #define TCP_PORT 8033
 #define TCP_HOST "127.0.0.1"
@@ -39,7 +40,8 @@ int main()
 }
 void tcp_server()
 {
-	zg::net::tcp_server tcpServer(TCP_PORT, TCP_BITSTREAM);
+	auto ssl_ctx = zg::net::ssl_factory::createServer();
+	zg::net::tcp_server tcpServer(TCP_PORT, TCP_BITSTREAM, ssl_ctx);
 	{
 		std::unique_lock lock(tcpServerStartMutex);
 		tcpServerStarted = true;
@@ -61,7 +63,8 @@ void tcp_client()
 		std::unique_lock lock(tcpServerStartMutex);
 		tcpServerStartCV.wait(lock, [] { return tcpServerStarted; });
 	}
-	zg::net::tcp_client tcp_client(TCP_HOST, TCP_PORT);
+	auto ssl_ctx = zg::net::ssl_factory::createClient();
+	zg::net::tcp_client tcp_client(TCP_HOST, TCP_PORT, ssl_ctx);
 	Serial serial(tcp_client, TCP_BITSTREAM);
 	std::vector<bool> clientBits(TCP_BITSLENGTH, false);
 	serial.readBits(clientBits, 0, clientBits.size());
