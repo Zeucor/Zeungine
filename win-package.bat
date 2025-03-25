@@ -8,6 +8,8 @@ if "%~1"=="" (
     exit /b 1
 )
 
+call "C:\\Program Files\\NASM\\nasmpath.bat"
+
 set MODE=%1
 
 :: Execute based on mode
