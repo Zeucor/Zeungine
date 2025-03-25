@@ -8,7 +8,7 @@ if "%~1"=="" (
     exit /b 1
 )
 
-call "C:\\Program Files\\NASM\\nasmpath.bat"
+@set path=C:\Program Files\NASM;%path%
 
 set MODE=%1
 
