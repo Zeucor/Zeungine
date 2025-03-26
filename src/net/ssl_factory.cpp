@@ -11,7 +11,11 @@ SSL_CTX* ssl_factory::createClient()
 }
 SSL_CTX* ssl_factory::createServer()
 {
-	SSL_CTX* ssl_ctx = 0;
+	SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_server_method());
+	if (!ssl_ctx)
+	{
+		throw std::runtime_error("failed to create SSL context");
+	}
 	const int kBits = 2048;
 	const int kCertDuration = 365;
 	RSA* rsa = nullptr;
@@ -66,13 +70,11 @@ SSL_CTX* ssl_factory::createServer()
 			throw std::runtime_error("Error writing certificate to BIO.");
 		}
 		{
-			char* certBuf = nullptr;
-			long certLen = BIO_get_mem_data(certBio, &certBuf);
-			std::string cert(certBuf, certLen);
-			char* keyBuf = nullptr;
-			long keyLen = BIO_get_mem_data(keyBio, &keyBuf);
-			std::string key(keyBuf, keyLen);
-			ssl_ctx = createServer(cert, key);
+			if (SSL_CTX_use_certificate(ssl_ctx, x509) != 1 ||
+				SSL_CTX_use_PrivateKey(ssl_ctx, pkey) != 1)
+			{
+				throw std::runtime_error("Failed to assign certificate or private key to SSL context");
+			}
 		}
 	}
 cleanup:
@@ -107,5 +109,44 @@ SSL_CTX* ssl_factory::createServer(const std::string& cert, const std::string& k
 	{
 		throw std::runtime_error("failed to create SSL context");
 	}
+	BIO* certBio = BIO_new_mem_buf(cert.data(), static_cast<int>(cert.size()));
+	X509* x509 = PEM_read_bio_X509(certBio, nullptr, nullptr, nullptr);
+	BIO_free(certBio);
+	if (!x509)
+	{
+		SSL_CTX_free(ctx);
+		throw std::runtime_error("Failed to load X509 certificate");
+	}
+	if (SSL_CTX_use_certificate(ctx, x509) != 1)
+	{
+		X509_free(x509);
+		SSL_CTX_free(ctx);
+		throw std::runtime_error("Failed to assign certificate to SSL context");
+	}
+	BIO* keyBio = BIO_new_mem_buf(key.data(), static_cast<int>(key.size()));
+	EVP_PKEY* pkey = PEM_read_bio_PrivateKey(keyBio, nullptr, nullptr, nullptr);
+	BIO_free(keyBio);
+	if (!pkey)
+	{
+		X509_free(x509);
+		SSL_CTX_free(ctx);
+		throw std::runtime_error("Failed to load private key");
+	}
+	if (SSL_CTX_use_PrivateKey(ctx, pkey) != 1)
+	{
+		EVP_PKEY_free(pkey);
+		X509_free(x509);
+		SSL_CTX_free(ctx);
+		throw std::runtime_error("Failed to assign private key to SSL context");
+	}
+	if (SSL_CTX_check_private_key(ctx) != 1)
+	{
+		EVP_PKEY_free(pkey);
+		X509_free(x509);
+		SSL_CTX_free(ctx);
+		throw std::runtime_error("Private key does not match certificate");
+	}
+	EVP_PKEY_free(pkey);
+	X509_free(x509);
 	return ctx;
 }

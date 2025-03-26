@@ -65,7 +65,7 @@ void tcp_client()
 		tcpServerStartCV.wait(lock, [] { return tcpServerStarted; });
 	}
 	auto ssl_ctx = zg::net::ssl_factory::createClient();
-	zg::net::tcp_client tcp_client(TCP_HOST, TCP_PORT, ssl_ctx);
+	zg::net::tcp_client tcp_client(TCP_HOST, TCP_PORT, ssl_ctx, false);
 	Serial serial(tcp_client, TCP_BITSTREAM);
 	std::vector<bool> clientBits(TCP_BITSLENGTH, false);
 	serial.readBits(clientBits, 0, clientBits.size());

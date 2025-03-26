@@ -5,16 +5,20 @@
 #endif
 #include <zg/Logger.hpp>
 #include <zg/net/tcp_client.hpp>
+#include <zg/net/socket_init.hpp>
 using namespace zg::net;
-tcp_client::tcp_client(const std::string& host, int port, SSL_CTX* ssl_ctx) : tcp_iostream(connect(host, port, ssl_ctx)) {}
-std::pair<int, SSL*> tcp_client::connect(const std::string& host, int port, SSL_CTX* ssl_ctx)
+tcp_client::tcp_client(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts) : tcp_iostream(connect(host, port, ssl_ctx, verifyCerts)) {}
+std::pair<int, SSL*> tcp_client::connect(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts)
 {
+	socket_init::initialize();
 	SSL* ssl = 0;
 	if (ssl_ctx)
 	{
 		ssl = SSL_new(ssl_ctx);
+		if (!verifyCerts)
+			SSL_set_verify(ssl, SSL_VERIFY_NONE, NULL);
 	}
-	int sock = socket(AF_INET, SOCK_STREAM, 0);
+	int fd = socket(AF_INET, SOCK_STREAM, 0);
 	sockaddr_in server_addr{};
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(port);
@@ -26,16 +30,25 @@ std::pair<int, SSL*> tcp_client::connect(const std::string& host, int port, SSL_
 	{
 		throw std::runtime_error("Invalid address/Address not supported!");
 	}
-	if (::connect(sock, (sockaddr*)&server_addr, sizeof(server_addr)) < 0)
+	if (::connect(fd, (sockaddr*)&server_addr, sizeof(server_addr)) < 0)
 	{
 		throw std::runtime_error("Connection failed!");
 	}
 	if (ssl)
 	{
-		if (SSL_connect(ssl) < 0)
+		SSL_set_fd(ssl, fd);
+		int ret = 0;
+		if ((ret = SSL_connect(ssl)) < 0)
 		{
-			throw std::runtime_error("SSL Connection failed!");
+			int ssl_err = SSL_get_error(ssl, ret);
+			unsigned long err = 0;
+			std::string errStr;
+			while ((err = ERR_get_error()) != 0)
+			{
+				errStr += "OpenSSL Error: " + std::string(ERR_reason_error_string(err)) + "\n";
+			}
+			throw std::runtime_error("SSL Connection failed: " + errStr);
 		}
 	}
-	return {sock, ssl};
+	return {fd, ssl};
 }

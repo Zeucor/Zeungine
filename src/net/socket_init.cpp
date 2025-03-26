@@ -5,6 +5,8 @@
 #pragma comment(lib, "ws2_32.lib") // Link against Winsock library
 #endif
 #include <zg/Logger.hpp>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 using namespace zg::net;
 bool socket_init::initialized =
 #ifdef _WIN32
@@ -23,5 +25,8 @@ void socket_init::initialize()
 		throw std::runtime_error("WSAStartup failed");
 	}
 #endif
+	SSL_library_init();
+	SSL_load_error_strings();
+	OpenSSL_add_all_algorithms();
 	initialized = true;
 }

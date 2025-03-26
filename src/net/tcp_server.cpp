@@ -57,9 +57,17 @@ tcp_server::ClientTuple& tcp_server::acceptOne()
 	{
 		ssl = SSL_new(ssl_ctx);
 		SSL_set_fd(ssl, client_fd);
-		if (SSL_accept(ssl) < 0)
+		int ret = 0;
+		if ((ret = SSL_accept(ssl)) < 0)
 		{
-			zg::Logger::print(zg::Logger::Error, "SSL failed to accept");
+			int ssl_error = SSL_get_error(ssl, ret);
+			std::string errStr;
+			unsigned long err = 0;
+			while ((err = ERR_get_error()) != 0)
+			{
+				errStr += "OpenSSL Error: " + std::string(ERR_reason_error_string(err)) + "\n";
+			}
+			zg::Logger::print(zg::Logger::Error, "SSL failed to accept: " + errStr);
 		}
 	}
 	auto client_iostream = std::make_shared<zg::net::streams::tcp_iostream>(std::pair<int, SSL*>(client_fd, ssl));
