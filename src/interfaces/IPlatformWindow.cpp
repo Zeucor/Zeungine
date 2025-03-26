@@ -38,7 +38,7 @@ IPlatformWindow *zg::createPlatformWindow()
     {
 
         auto xdgSessionType = getenv("XDG_SESSION_TYPE");
-        if (strcmp(xdgSessionType, "x11") == 0)
+        if (!xdgSessionType || strcmp(xdgSessionType, "x11") == 0)
         {
             return new XCBWindow();
         }

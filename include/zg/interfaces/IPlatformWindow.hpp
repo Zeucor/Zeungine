@@ -51,7 +51,7 @@ namespace zg
 #endif
 #ifdef __linux__
 		auto xdgSessionType = getenv("XDG_SESSION_TYPE");
-		if (strcmp(xdgSessionType, "x11") == 0)
+		if (!xdgSessionType || strcmp(xdgSessionType, "x11") == 0)
 		{
 			selected = WINDOW_TYPE_XCB;
 		}
