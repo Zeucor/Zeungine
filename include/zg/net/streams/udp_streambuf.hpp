@@ -30,6 +30,10 @@ namespace zg::net::streams
 		SocketIdentifier fd;
 		sockaddr_in addr;
 		std::vector<char> buffer;
+#ifdef _WIN32
 		inline static int addr_len = sizeof(sockaddr_in);
+#else
+		inline static socklen_t addr_len = sizeof(sockaddr_in);
+#endif
 	};
 } // namespace zg::net::streams
