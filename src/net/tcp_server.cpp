@@ -27,6 +27,10 @@ tcp_server::tcp_server(int port, bool bitStream, SSL_CTX* ssl_ctx) :
 		throw std::runtime_error("Listen failed");
 	}
 }
+tcp_server::~tcp_server()
+{
+	close();
+}
 void tcp_server::close()
 {
 #ifdef _WIN32

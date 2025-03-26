@@ -30,5 +30,7 @@ namespace zg::net::streams
 		SocketIdentifier fd;
 		std::vector<char> buffer;
 		SSL* ssl;
+
+		void close();
 	};
 } // namespace zg

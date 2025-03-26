@@ -7,7 +7,15 @@
 #include <zg/net/tcp_client.hpp>
 #include <zg/net/socket_init.hpp>
 using namespace zg::net;
-tcp_client::tcp_client(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts) : tcp_iostream(connect(host, port, ssl_ctx, verifyCerts)) {}
+tcp_client::tcp_client(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts) : tcp_iostream(connect(host, port, ssl_ctx, verifyCerts)),
+	ssl_ctx(ssl_ctx) {}
+tcp_client::~tcp_client()
+{
+    if (ssl_ctx)
+    {
+        SSL_CTX_free(ssl_ctx);
+    }
+}
 std::pair<int, SSL*> tcp_client::connect(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts)
 {
 	socket_init::initialize();

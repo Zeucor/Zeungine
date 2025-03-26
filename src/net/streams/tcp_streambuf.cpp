@@ -8,6 +8,7 @@ tcp_streambuf::tcp_streambuf(const std::pair<int, SSL*>& fd_ssl_pair, std::size_
 tcp_streambuf::~tcp_streambuf()
 {
     sync();
+    close();
 }
 int tcp_streambuf::underflow()
 {
@@ -53,4 +54,17 @@ int tcp_streambuf::sync()
         pbump(-n);
     }
     return 0;
+}
+void tcp_streambuf::close()
+{
+	if (ssl)
+    {
+        int ret = SSL_shutdown(ssl);
+        if (ret == 0) SSL_shutdown(ssl);
+        SSL_free(ssl);
+    }
+    if (fd >= 0)
+    {
+        ::closesocket(fd);
+    }
 }

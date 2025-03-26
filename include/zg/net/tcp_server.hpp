@@ -24,7 +24,12 @@ namespace zg::net
 
 	public:
 		tcp_server(int port, bool bitStream = false, SSL_CTX* ssl_ctx = 0);
+		~tcp_server();
+
+	private:
 		void close();
+
+	public:
 		ClientTuple& acceptOne();
 		void upgradeSSL(SSL_CTX* ssl_ctx);
 	};
