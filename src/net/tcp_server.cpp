@@ -48,7 +48,7 @@ tcp_server::ClientTuple& tcp_server::acceptOne()
 		int error = WSAGetLastError();
 		throw std::runtime_error("Accept failed. Error code: " + std::to_string(error));
 #else
-		throw std::runtime_error("Accept failed: " + std::strerror(errno));
+		throw std::runtime_error("Accept failed: " + std::string(std::strerror(errno)));
 #endif
 	}
 	auto id = ++totalClients;
