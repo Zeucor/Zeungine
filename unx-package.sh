@@ -25,14 +25,14 @@ build_dependencies_static() {
     cd cmake/Dependencies
 
     echo " -- Starting Zeungine Dependencies Debug/STATIC Configure"
-    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
+    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC
     echo " -- Starting Zeungine Dependencies Debug/STATIC Build"
     cmake --build build-debug --config Debug
     echo " -- Starting Zeungine Dependencies Debug/STATIC Install"
     sudo cmake --install build-debug --config Debug
 
     echo " -- Starting Zeungine Dependencies Release/STATIC Configure"
-    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
+    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC
     echo " -- Starting Zeungine Dependencies Release/STATIC Build"
     cmake --build build-release --config Release
     echo " -- Starting Zeungine Dependencies Release/STATIC Install"
@@ -46,14 +46,14 @@ build_dependencies_shared() {
     cd cmake/Dependencies
 
     echo " -- Starting Zeungine Dependencies Debug/SHARED Configure"
-    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
+    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=SHARED
     echo " -- Starting Zeungine Dependencies Debug/SHARED Build"
     cmake --build build-debug --config Debug
     echo " -- Starting Zeungine Dependencies Debug/SHARED Install"
     sudo cmake --install build-debug --config Debug
 
     echo " -- Starting Zeungine Dependencies Release/SHARED Configure"
-    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
+    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED
     echo " -- Starting Zeungine Dependencies Release/SHARED Build"
     cmake --build build-release --config Release
     echo " -- Starting Zeungine Dependencies Release/SHARED Install"
@@ -66,7 +66,7 @@ build_headers() {
     cd cmake/Headers
 
     echo " -- Starting zeungine Headers Configure"
-    cmake -G Ninja -B build -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
+    cmake -B build -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED
     echo " -- Starting zeungine Headers Install"
     sudo cmake --install build
 
@@ -75,14 +75,14 @@ build_headers() {
 
 build_zeungine_static() {
     echo " -- Starting zeungine Debug/STATIC Configure"
-    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
+    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC
     echo " -- Starting zeungine Debug/STATIC Build"
     cmake --build build-debug --config Debug
     echo " -- Starting zeungine Debug/STATIC Install"
     sudo cmake --install build-debug --config Debug
 
     echo " -- Starting zeungine Release/STATIC Configure"
-    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=STATIC
+    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC
     echo " -- Starting zeungine Release/STATIC Build"
     cmake --build build-release --config Release
     echo " -- Starting zeungine Release/STATIC Install"
@@ -91,14 +91,14 @@ build_zeungine_static() {
 
 build_zeungine_shared() {
     echo " -- Starting zeungine Debug/SHARED Configure"
-    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
+    cmake -G Ninja -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=SHARED
     echo " -- Starting zeungine Debug/SHARED Build"
     cmake --build build-debug --config Debug
     echo " -- Starting zeungine Debug/SHARED Install"
     sudo cmake --install build-debug --config Debug
 
     echo " -- Starting zeungine Release/SHARED Configure"
-    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_PACKAGE=ON -D ZG_TYPE=SHARED
+    cmake -G Ninja -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED
     echo " -- Starting zeungine Release/SHARED Build"
     cmake --build build-release --config Release
     echo " -- Starting zeungine Release/SHARED Install"
