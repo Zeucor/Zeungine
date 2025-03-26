@@ -43,5 +43,5 @@ jobs:
 
       - name: Build Package on Windows
         if: runner.os == 'Windows'
-        run: .\win-package.bat 0
+        run: .\win-package.bat 8
         shell: cmd
