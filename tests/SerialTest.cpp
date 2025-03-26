@@ -7,6 +7,7 @@
 #include <zg/net/udp_client.hpp>
 #include <zg/net/udp_server.hpp>
 #include <zg/net/ssl_factory.hpp>
+#include <condition_variable>
 // tcp
 #define TCP_PORT 8033
 #define TCP_HOST "127.0.0.1"
