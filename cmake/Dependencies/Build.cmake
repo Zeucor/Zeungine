@@ -14,8 +14,63 @@ endif()
 
 #New Dependency Declarations to the top!
 
+# brotli
+message(STATUS "FetchContent: brotli")
+FetchContent_Declare(brotli
+    GIT_REPOSITORY https://github.com/google/brotli.git
+    GIT_TAG v1.1.0)
+FetchContent_MakeAvailable(brotli)
+
+# harfbuzz
+message(STATUS "FetchContent: harfbuzz")
+FetchContent_Declare(harfbuzz
+    GIT_REPOSITORY https://github.com/harfbuzz/harfbuzz.git
+    GIT_TAG 11.0.0)
+FetchContent_MakeAvailable(harfbuzz)
+
+# zlib
+message(STATUS "FetchContent: zlib")
+FetchContent_Declare(zlib
+    GIT_REPOSITORY https://github.com/ZeunO8/zlib.git
+    GIT_TAG apple-fix)
+FetchContent_GetProperties(zlib)
+if(NOT zlib_POPULATED)
+    FetchContent_Populate(zlib)
+endif()
+
+set(ZLIB_SOURCES
+    "${zlib_SOURCE_DIR}/zutil.c"
+    "${zlib_SOURCE_DIR}/uncompr.c"
+    "${zlib_SOURCE_DIR}/trees.c"
+    "${zlib_SOURCE_DIR}/inftrees.c"
+    "${zlib_SOURCE_DIR}/inflate.c"
+    "${zlib_SOURCE_DIR}/inffast.c"
+    "${zlib_SOURCE_DIR}/infback.c"
+    "${zlib_SOURCE_DIR}/gzwrite.c"
+    "${zlib_SOURCE_DIR}/gzread.c"
+    "${zlib_SOURCE_DIR}/gzlib.c"
+    "${zlib_SOURCE_DIR}/gzclose.c"
+    "${zlib_SOURCE_DIR}/deflate.c"
+    "${zlib_SOURCE_DIR}/crc32.c"
+    "${zlib_SOURCE_DIR}/compress.c"
+    "${zlib_SOURCE_DIR}/adler32.c"
+)
+
+add_library(zlib STATIC ${ZLIB_SOURCES})
+target_include_directories(zlib PRIVATE ${zlib_SOURCE_DIR})
+set(ZLIB_LIBRARY zlib)
+set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR})
+
+# png
+message(STATUS "FetchContent: png")
+FetchContent_Declare(png
+    GIT_REPOSITORY https://github.com/pnggroup/libpng.git
+    GIT_TAG v1.6.47)
+FetchContent_MakeAvailable(png)
+
 # OpenSSL
 if(NOT MACOS)
+    message(STATUS "FetchContent: openssl")
     FetchContent_Declare(openssl
         GIT_REPOSITORY https://github.com/openssl/openssl.git
         GIT_TAG openssl-3.4.1)
@@ -90,37 +145,8 @@ if(NOT MACOS)
     )
 endif()
 
-# zlib
-FetchContent_Declare(zlib
-    GIT_REPOSITORY https://github.com/ZeunO8/zlib.git
-    GIT_TAG apple-fix)
-FetchContent_GetProperties(zlib)
-if(NOT zlib_POPULATED)
-    FetchContent_Populate(zlib)
-endif()
-
-set(ZLIB_SOURCES
-    "${zlib_SOURCE_DIR}/zutil.c"
-    "${zlib_SOURCE_DIR}/uncompr.c"
-    "${zlib_SOURCE_DIR}/trees.c"
-    "${zlib_SOURCE_DIR}/inftrees.c"
-    "${zlib_SOURCE_DIR}/inflate.c"
-    "${zlib_SOURCE_DIR}/inffast.c"
-    "${zlib_SOURCE_DIR}/infback.c"
-    "${zlib_SOURCE_DIR}/gzwrite.c"
-    "${zlib_SOURCE_DIR}/gzread.c"
-    "${zlib_SOURCE_DIR}/gzlib.c"
-    "${zlib_SOURCE_DIR}/gzclose.c"
-    "${zlib_SOURCE_DIR}/deflate.c"
-    "${zlib_SOURCE_DIR}/crc32.c"
-    "${zlib_SOURCE_DIR}/compress.c"
-    "${zlib_SOURCE_DIR}/adler32.c"
-)
-
-add_library(zlib STATIC ${ZLIB_SOURCES})
-target_include_directories(zlib PRIVATE ${zlib_SOURCE_DIR})
-
 # bzip2
+message(STATUS "FetchContent: bzip2")
 FetchContent_Declare(bzip2
     GIT_REPOSITORY https://github.com/centricular/bzip2.git
     GIT_TAG 928fd716ecffa87f47d47585a9e09ff364c7689a)

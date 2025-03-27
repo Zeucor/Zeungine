@@ -208,3 +208,11 @@ else()
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+if(ZG_TYPE STREQUAL STATIC)
+    set(PNG_SHARED OFF)
+    set(PNG_LIBRARY png_shared)
+else()
+    set(PNG_STATIC OFF)
+    set(PNG_LIBRARY png_static)
+endif()

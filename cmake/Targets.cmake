@@ -6,9 +6,15 @@ endif()
 zg_setup_target(freetype ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)
-if(UNIX)
-	set(ZG_LIBRARIES ${ZG_LIBRARIES} png harfbuzz brotlidec)
-endif()
+zg_setup_target(png STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ffmpeg_ZG_LIB_PREFIX}" ${PNG_LIBRARY} ${PNG_LIBRARY} "${STATIC_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(harfbuzz STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ffmpeg_ZG_LIB_PREFIX}" harfbuzz harfbuzz "${STATIC_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(brotlidec STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ffmpeg_ZG_LIB_PREFIX}" brotlidec brotlidec "${STATIC_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(avformat ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${avformat_NAME} avformat ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
