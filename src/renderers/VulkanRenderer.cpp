@@ -1669,9 +1669,12 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 	attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 	attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	renderPassHash ^= attachment.samples ^ (attachment.loadOp << ++shift) ^ (attachment.storeOp << ++shift) ^
-		(attachment.stencilLoadOp << ++shift) ^ (attachment.stencilStoreOp << ++shift) ^
-		(attachment.initialLayout << ++shift);
+	renderPassHash ^= attachment.samples;
+	renderPassHash ^= (attachment.loadOp << ++shift);
+	renderPassHash ^= (attachment.storeOp << ++shift);
+	renderPassHash ^= (attachment.stencilLoadOp << ++shift);
+	renderPassHash ^= (attachment.stencilStoreOp << ++shift);
+	renderPassHash ^= (attachment.initialLayout << ++shift);
 	switch (framebuffer.texture.format)
 	{
 	case textures::Texture::Depth:
@@ -1685,7 +1688,8 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 		attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		break;
 	}
-	renderPassHash ^= (attachment.format << ++shift) ^ (attachment.finalLayout << ++shift);
+	renderPassHash ^= (attachment.format << ++shift);
+	renderPassHash ^= (attachment.finalLayout << ++shift);
 	attachments.push_back(attachment);
 	std::vector<VkAttachmentReference> colorAttachmentRefs;
 	std::vector<VkAttachmentReference> depthAttachmentRefs;
@@ -1729,9 +1733,12 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 		break;
 	}
-	renderPassHash ^= (dependency.srcSubpass << ++shift) ^ (dependency.dstSubpass << ++shift) ^
-		(dependency.srcStageMask << ++shift) ^ (dependency.srcAccessMask << ++shift) ^
-		(dependency.dstStageMask << ++shift) ^ (dependency.dstAccessMask << ++shift);
+	renderPassHash ^= (dependency.srcSubpass << ++shift);
+	renderPassHash ^= (dependency.dstSubpass << ++shift);
+	renderPassHash ^= (dependency.srcStageMask << ++shift);
+	renderPassHash ^= (dependency.srcAccessMask << ++shift);
+	renderPassHash ^= (dependency.dstStageMask << ++shift);
+	renderPassHash ^= (dependency.dstAccessMask << ++shift);
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassInfo.attachmentCount = attachments.size();
