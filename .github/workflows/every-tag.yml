@@ -14,6 +14,8 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-14
+          - macos-13
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -30,6 +32,12 @@ jobs:
           C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -S --noconfirm make diffutils"
         shell: bash
 
+      - name: Install Dependencies on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install nasm ninja
+        shell: bash
+
       - name: Install Vulkan SDK
         uses: humbletim/install-vulkan-sdk@v1.2
         with:
@@ -38,6 +46,11 @@ jobs:
 
       - name: Build Package on Linux
         if: runner.os == 'Linux'
+        run: ./unx-package.sh 0
+        shell: bash
+
+      - name: Build Package on macOS
+        if: runner.os == 'macOS'
         run: ./unx-package.sh 0
         shell: bash
 
