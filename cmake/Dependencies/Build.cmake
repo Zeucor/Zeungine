@@ -15,80 +15,80 @@ endif()
 #New Dependency Declarations to the top!
 
 # OpenSSL
-FetchContent_Declare(openssl
-    GIT_REPOSITORY https://github.com/openssl/openssl.git
-    GIT_TAG openssl-3.4.1)
-FetchContent_GetProperties(openssl)
-if(NOT openssl_POPULATED)
-    FetchContent_Populate(openssl)
-endif()
-
-function(add_openssl_config VARI)
-    # if(WIN32)
-        # set(openssl_CONFIGURE "${openssl_CONFIGURE} ${VARI}" PARENT_SCOPE)
-    # else()
-        set(openssl_CONFIGURE ${openssl_CONFIGURE} ${VARI} PARENT_SCOPE)
-    # endif()
-endfunction()
-if(ANDROID)
-    set(openssl_BUILD_TYPE ${ANDROID_MARCH})
-    add_openssl_config("./Configure")
-    add_openssl_config(${openssl_BUILD_TYPE})
-    set(openssl_MAKE make)
-    set(openssl_MAKE_INSTALL make install_sw install_ssldirs)
-elseif(WINDOWS)
-    if(${RELEASE_OR_DEBUG} STREQUAL "Debug")
-        set(openssl_BUILD_TYPE debug-VC-WIN64A)
-    else()
-        set(openssl_BUILD_TYPE VC-WIN64A)
+if(NOT MACOS)
+    FetchContent_Declare(openssl
+        GIT_REPOSITORY https://github.com/openssl/openssl.git
+        GIT_TAG openssl-3.4.1)
+    FetchContent_GetProperties(openssl)
+    if(NOT openssl_POPULATED)
+        FetchContent_Populate(openssl)
     endif()
-    add_openssl_config(perl)
-    add_openssl_config(Configure)
-    add_openssl_config(${openssl_BUILD_TYPE})
-    set(openssl_MAKE nmake)
-    set(openssl_MAKE_INSTALL nmake install_sw install_ssldirs)
-else()
-    add_openssl_config("./config")
-    set(openssl_MAKE make)
-    set(openssl_MAKE_INSTALL make install_sw install_ssldirs)
-endif()
-add_openssl_config(no-shared)
-add_openssl_config(--prefix=${openssl_BINARY_DIR})
-add_openssl_config(--openssldir=${openssl_BINARY_DIR})
-if(ANDROID)
-    set(openssl_CONFIGURE
-        env
-        CC=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang
-        CXX=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang++
-        AR=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
-        LD=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/ld.lld
-        ${openssl_CONFIGURE}
-        --sysroot=${CMAKE_SYSROOT}
+
+    function(add_openssl_config VARI)
+        # if(WIN32)
+            # set(openssl_CONFIGURE "${openssl_CONFIGURE} ${VARI}" PARENT_SCOPE)
+        # else()
+            set(openssl_CONFIGURE ${openssl_CONFIGURE} ${VARI} PARENT_SCOPE)
+        # endif()
+    endfunction()
+    if(ANDROID)
+        set(openssl_BUILD_TYPE ${ANDROID_MARCH})
+        add_openssl_config("./Configure")
+        add_openssl_config(${openssl_BUILD_TYPE})
+        set(openssl_MAKE make)
+        set(openssl_MAKE_INSTALL make install_sw install_ssldirs)
+    elseif(WINDOWS)
+        if(${RELEASE_OR_DEBUG} STREQUAL "Debug")
+            set(openssl_BUILD_TYPE debug-VC-WIN64A)
+        else()
+            set(openssl_BUILD_TYPE VC-WIN64A)
+        endif()
+        add_openssl_config(perl)
+        add_openssl_config(Configure)
+        add_openssl_config(${openssl_BUILD_TYPE})
+        set(openssl_MAKE nmake)
+        set(openssl_MAKE_INSTALL nmake install_sw install_ssldirs)
+    else()
+        add_openssl_config("./config")
+        set(openssl_MAKE make)
+        set(openssl_MAKE_INSTALL make install_sw install_ssldirs)
+    endif()
+    add_openssl_config(no-shared)
+    add_openssl_config(--prefix=${openssl_BINARY_DIR})
+    add_openssl_config(--openssldir=${openssl_BINARY_DIR})
+    if(ANDROID)
+        set(openssl_CONFIGURE
+            env
+            CC=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang
+            CXX=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang++
+            AR=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+            LD=${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/ld.lld
+            ${openssl_CONFIGURE}
+            --sysroot=${CMAKE_SYSROOT}
+        )
+    endif()
+    # if(WIN32)
+    #     set(openssl_CONFIGURE ${openssl_CONFIGURE})
+    #     set(openssl_MAKE ${openssl_MAKE})
+    #     set(openssl_MAKE_INSTALL ${openssl_MAKE_INSTALL})
+    # endif()
+    message(STATUS "openssl-configure: \"${openssl_CONFIGURE}\"")
+    execute_process(
+        COMMAND ${openssl_CONFIGURE}
+        WORKING_DIRECTORY ${openssl_SOURCE_DIR}
+        RESULT_VARIABLE openssl_ConfigureResult)
+    if(openssl_ConfigureResult)
+        message(FATAL_ERROR "openssl-configure: ${openssl_ConfigureResult}")
+    else()
+        message(STATUS "openssl-configure: success")
+    endif()
+    add_custom_target(openssl ALL
+        COMMAND ${openssl_MAKE}
+        COMMAND ${openssl_MAKE_INSTALL}
+        WORKING_DIRECTORY ${openssl_SOURCE_DIR}
+        COMMENT "Building OpenSSL"
     )
-elseif(MACOS)
-    add_openssl_config("CFLAGS=\"-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\"")
 endif()
-# if(WIN32)
-#     set(openssl_CONFIGURE ${openssl_CONFIGURE})
-#     set(openssl_MAKE ${openssl_MAKE})
-#     set(openssl_MAKE_INSTALL ${openssl_MAKE_INSTALL})
-# endif()
-message(STATUS "openssl-configure: \"${openssl_CONFIGURE}\"")
-execute_process(
-    COMMAND ${openssl_CONFIGURE}
-    WORKING_DIRECTORY ${openssl_SOURCE_DIR}
-    RESULT_VARIABLE openssl_ConfigureResult)
-if(openssl_ConfigureResult)
-    message(FATAL_ERROR "openssl-configure: ${openssl_ConfigureResult}")
-else()
-    message(STATUS "openssl-configure: success")
-endif()
-add_custom_target(openssl ALL
-    COMMAND ${openssl_MAKE}
-    COMMAND ${openssl_MAKE_INSTALL}
-    WORKING_DIRECTORY ${openssl_SOURCE_DIR}
-    COMMENT "Building OpenSSL"
-)
 
 # zlib
 FetchContent_Declare(zlib

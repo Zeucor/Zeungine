@@ -25,12 +25,14 @@ zg_setup_target(swscale ${ZG_TYPE}
 # elseif(UNIX)
     # set(openssl_LIB_DIR "${openssl_BINARY_DIR}/lib64")
 # endif()
-zg_setup_target(ssl STATIC
-    "${openssl_LIB_DIR}"
-    "${ffmpeg_ZG_LIB_PREFIX}" ssl ssl "${STATIC_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(crypto STATIC
-    "${openssl_LIB_DIR}"
-    "${ffmpeg_ZG_LIB_PREFIX}" crypto crypto "${STATIC_ZG_LIB_SUFFIX}" ON)
+if(NOT MACOS)
+    zg_setup_target(ssl STATIC
+        "${openssl_LIB_DIR}"
+        "${ffmpeg_ZG_LIB_PREFIX}" ssl ssl "${STATIC_ZG_LIB_SUFFIX}" ON)
+    zg_setup_target(crypto STATIC
+        "${openssl_LIB_DIR}"
+        "${ffmpeg_ZG_LIB_PREFIX}" crypto crypto "${STATIC_ZG_LIB_SUFFIX}" ON)
+endif()
 
 install(FILES ${ZG_LIBRARIES_TO_INSTALL}
     DESTINATION ${ZG_LIB_INSTALL_PREFIX}

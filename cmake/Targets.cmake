@@ -38,12 +38,17 @@ if(ZG_TYPE STREQUAL STATIC)
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
 		"${ZG_LIB_PREFIX}" bzip2 bzip2 "${STATIC_ZG_LIB_SUFFIX}" ON)
 endif()
-zg_setup_target(ssl STATIC
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ffmpeg_ZG_LIB_PREFIX}" ssl ssl "${STATIC_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(crypto STATIC
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ffmpeg_ZG_LIB_PREFIX}" crypto crypto "${STATIC_ZG_LIB_SUFFIX}" ON)
+if(MACOS)
+	find_package(OpenSSL REQUIRED)
+	set(ZG_LIBRARIES ${ZG_LIBRARIES} OpenSSL::SSL OpenSSL::Crypto)
+else()
+	zg_setup_target(ssl STATIC
+		"${ZG_LIB_INSTALL_PREFIX_ABS}"
+		"${ffmpeg_ZG_LIB_PREFIX}" ssl ssl "${STATIC_ZG_LIB_SUFFIX}" ON)
+	zg_setup_target(crypto STATIC
+		"${ZG_LIB_INSTALL_PREFIX_ABS}"
+		"${ffmpeg_ZG_LIB_PREFIX}" crypto crypto "${STATIC_ZG_LIB_SUFFIX}" ON)
+endif()
 if(WIN32)
 	if(ZG_TYPE STREQUAL STATIC)
 	# ucrt
