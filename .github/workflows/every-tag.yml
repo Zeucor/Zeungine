@@ -35,7 +35,8 @@ jobs:
       - name: List directory macOS
         if: runner.os == 'macOS'
         run: |
-          ls -lah /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+          ls -lah /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System
+          ls -lah /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr
         shell: bash
 
       - name: Install Dependencies on macOS
