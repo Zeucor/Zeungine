@@ -347,11 +347,13 @@ public:
 	{
 		if (writeStreamPointer)
 			return writeStreamPointer->tellp();
+		return -1;
 	}
 	size_t getReadPosition()
 	{
 		if (readStreamPointer)
 			return readStreamPointer->tellg();
+		return -1;
 	}
 	void setWritePosition(size_t index)
 	{
