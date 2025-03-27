@@ -47,7 +47,8 @@ if(MACOS)
 		"-framework AudioToolbox"
 		"-framework CoreMedia"
 		"-framework VideoToolbox"
-		"-framework Security")
+		"-framework Security"
+		iconv)
 else()
 	zg_setup_target(ssl STATIC
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
