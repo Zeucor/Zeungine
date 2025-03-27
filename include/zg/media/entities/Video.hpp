@@ -29,8 +29,8 @@ namespace zg::media::entities
 		bool preRender() override;
 		void setSize(glm::vec3 newSize) override;
 		std::vector<float> inputFrames(const float* frames, const int32_t& channelCount, const unsigned long& frameCount,
-																	 const zg::audio::audio_time_t& time);
+																	 const zg::audio::audio_time_t& time) override;
 		void outputFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount,
-											const zg::audio::audio_time_t& time);
+											const zg::audio::audio_time_t& time) override;
 	};
 } // namespace zg::media::entities
