@@ -36,7 +36,7 @@ jobs:
       - name: Install Dependencies on macOS
         if: runner.os == 'macOS'
         run: |
-          brew install nasm ninja openssl libpng harfbuzz brotli
+          brew install nasm ninja openssl
         shell: bash
 
       - name: Install Vulkan SDK
