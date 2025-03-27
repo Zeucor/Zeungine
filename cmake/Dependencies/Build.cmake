@@ -65,6 +65,8 @@ if(ANDROID)
         ${openssl_CONFIGURE}
         --sysroot=${CMAKE_SYSROOT}
     )
+elseif(MACOS)
+    add_openssl_config("CFLAGS=\"-I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include\"")
 endif()
 # if(WIN32)
 #     set(openssl_CONFIGURE ${openssl_CONFIGURE})
