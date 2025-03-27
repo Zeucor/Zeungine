@@ -46,10 +46,5 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #endif
-// learn from a**<:._.:>
 #define STANDARD std
-/*
-1 long jau awagitar
-#define STANDARD zgg/*|om+t|*/
-
 #define GLMATH glm
