@@ -67,7 +67,7 @@ void tcp_streambuf::close()
 	}
 	if (fd >= 0)
 	{
-#ifdef _WiN32
+#ifdef _WIN32
 		::closesocket(fd);
 #else
 		::close(fd);
