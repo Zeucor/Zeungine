@@ -92,8 +92,8 @@ endif()
 
 # zlib
 FetchContent_Declare(zlib
-    GIT_REPOSITORY https://github.com/madler/zlib.git
-    GIT_TAG 0f51fb4933fc9ce18199cb2554dacea8033e7fd3)
+    GIT_REPOSITORY https://github.com/ZeunO8/zlib.git
+    GIT_TAG apple-fix)
 FetchContent_GetProperties(zlib)
 if(NOT zlib_POPULATED)
     FetchContent_Populate(zlib)
