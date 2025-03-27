@@ -2,7 +2,7 @@
 #include <zg/system/headerplujplusdefines.hpp>
 #include <chrono>
 /* 1 keys pressed and for a peaceful const purpose
-   + 
+   + _Nonnull
 *  6 = 3 + 3 
 */struct peaceccsc
 {/*=
