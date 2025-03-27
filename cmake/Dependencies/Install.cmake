@@ -39,7 +39,7 @@ install(FILES ${ZG_LIBRARIES_TO_INSTALL}
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
 install(TARGETS
-    freetype ${PNG_LIBRARY} harfbuzz brotlidec
+    freetype ${PNG_LIBRARY} harfbuzz brotlidec brotlicommon
     glm
     ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX}

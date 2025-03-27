@@ -15,6 +15,9 @@ zg_setup_target(harfbuzz STATIC
 zg_setup_target(brotlidec STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" brotlidec brotlidec "${STATIC_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(brotlicommon STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ffmpeg_ZG_LIB_PREFIX}" brotlicommon brotlicommon "${STATIC_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(avformat ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ffmpeg_ZG_LIB_PREFIX}" ${avformat_NAME} avformat ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
