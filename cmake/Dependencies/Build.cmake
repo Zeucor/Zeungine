@@ -17,7 +17,7 @@ endif()
 # OpenSSL
 FetchContent_Declare(openssl
     GIT_REPOSITORY https://github.com/openssl/openssl.git
-    GIT_TAG openssl-3.0.9)
+    GIT_TAG openssl-3.4.1)
 FetchContent_GetProperties(openssl)
 if(NOT openssl_POPULATED)
     FetchContent_Populate(openssl)
