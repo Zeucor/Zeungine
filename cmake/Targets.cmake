@@ -40,7 +40,14 @@ if(ZG_TYPE STREQUAL STATIC)
 endif()
 if(MACOS)
 	find_package(OpenSSL REQUIRED)
-	set(ZG_LIBRARIES ${ZG_LIBRARIES} OpenSSL::SSL OpenSSL::Crypto)
+	set(ZG_LIBRARIES
+		${ZG_LIBRARIES}
+		OpenSSL::SSL
+		OpenSSL::Crypto
+		"-framework AudioToolbox"
+		"-framework CoreMedia"
+		"-framework VideoToolbox"
+		"-framework Security")
 else()
 	zg_setup_target(ssl STATIC
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
