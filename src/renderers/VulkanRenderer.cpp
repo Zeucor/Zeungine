@@ -1882,6 +1882,10 @@ VkFormat VulkanRenderer::findDepthFormat(uint32_t _format)
 			candidates.push_back(VK_FORMAT_D24_UNORM_S8_UINT);
 			break;
 		};
+	default:
+		{
+			break;
+		};
 	}
 	return findSupportedFormat(candidates, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
@@ -2003,7 +2007,11 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 		{
 			usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 			break;
-		}
+		};
+	default:
+		{
+			break;
+		};
 	}
 	// TODO: Vulkan: Implement createImage1D && createImage3D
 	createImage(texture.size.x, texture.size.y, format, VK_IMAGE_TILING_LINEAR, usage,
