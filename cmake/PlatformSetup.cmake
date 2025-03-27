@@ -206,3 +206,5 @@ else()
     set(swresample_NAME swresample)
     set(swscale_NAME swscale)
 endif()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
