@@ -94,7 +94,7 @@ set(PNG_SOURCES
 )
 
 if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
-    list(APPEND PNG_SOURCES "${png_SOURCE_DIR}/arm/filter_neon_intrinsics.c" "${png_SOURCE_DIR}/arm/palette_neon_intrinsics.c")
+    list(APPEND PNG_SOURCES "${png_SOURCE_DIR}/arm/filter_neon_intrinsics.c" "${png_SOURCE_DIR}/arm/palette_neon_intrinsics.c" "${png_SOURCE_DIR}/arm/arm_init.c")
 endif()
 if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
     list(APPEND PNG_SOURCES "${png_SOURCE_DIR}/intel/filter_sse2_intrinsics.c" "${png_SOURCE_DIR}/intel/intel_init.c")
