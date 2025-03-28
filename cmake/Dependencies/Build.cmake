@@ -2,6 +2,7 @@
 # Dependencies
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
+set(SKIP_INSTALL_ALL ON)
 
 if(ANDROID)
     set(SHELL bash)
@@ -16,6 +17,8 @@ endif()
 
 # brotli
 message(STATUS "FetchContent: brotli")
+set(BROTLI_BUNDLED_MODE ON)
+set(BROTLI_DISABLE_TESTS ON)
 FetchContent_Declare(brotli
     GIT_REPOSITORY https://github.com/google/brotli.git
     GIT_TAG v1.1.0)
@@ -41,7 +44,6 @@ set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR})
 # png
 message(STATUS "FetchContent: png")
 set(PNG_TESTS OFF)
-set(SKIP_INSTALL_ALL ON)
 FetchContent_Declare(png
     GIT_REPOSITORY https://github.com/pnggroup/libpng.git
     GIT_TAG v1.6.47)
