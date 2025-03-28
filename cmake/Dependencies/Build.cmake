@@ -36,43 +36,33 @@ message(STATUS "FetchContent: zlib")
 FetchContent_Declare(zlib
     GIT_REPOSITORY https://github.com/ZeunO8/zlib.git
     GIT_TAG apple-fix)
-# FetchContent_GetProperties(zlib)
-# if(NOT zlib_POPULATED)
-#     FetchContent_Populate(zlib)
-# endif()
+FetchContent_GetProperties(zlib)
+if(NOT zlib_POPULATED)
+    FetchContent_Populate(zlib)
+endif()
 
-# message(STATUS "zlib-configure: ${SHELL} ./configure")
-# execute_process(
-#     COMMAND ${SHELL} "./configure"
-#     WORKING_DIRECTORY ${zlib_SOURCE_DIR}
-#     RESULT_VARIABLE zlib_ConfigureResult)
-# if(zlib_ConfigureResult)
-#     message(FATAL_ERROR "zlib-configure: ${zlib_ConfigureResult}")
-# else()
-#     message(STATUS "zlib-configure: success")
-# endif()
+set(ZLIB_SOURCES
+    "${zlib_SOURCE_DIR}/zutil.c"
+    "${zlib_SOURCE_DIR}/uncompr.c"
+    "${zlib_SOURCE_DIR}/trees.c"
+    "${zlib_SOURCE_DIR}/inftrees.c"
+    "${zlib_SOURCE_DIR}/inflate.c"
+    "${zlib_SOURCE_DIR}/inffast.c"
+    "${zlib_SOURCE_DIR}/infback.c"
+    "${zlib_SOURCE_DIR}/gzwrite.c"
+    "${zlib_SOURCE_DIR}/gzread.c"
+    "${zlib_SOURCE_DIR}/gzlib.c"
+    "${zlib_SOURCE_DIR}/gzclose.c"
+    "${zlib_SOURCE_DIR}/deflate.c"
+    "${zlib_SOURCE_DIR}/crc32.c"
+    "${zlib_SOURCE_DIR}/compress.c"
+    "${zlib_SOURCE_DIR}/adler32.c"
+)
 
-# set(ZLIB_SOURCES
-#     "${zlib_SOURCE_DIR}/zutil.c"
-#     "${zlib_SOURCE_DIR}/uncompr.c"
-#     "${zlib_SOURCE_DIR}/trees.c"
-#     "${zlib_SOURCE_DIR}/inftrees.c"
-#     "${zlib_SOURCE_DIR}/inflate.c"
-#     "${zlib_SOURCE_DIR}/inffast.c"
-#     "${zlib_SOURCE_DIR}/infback.c"
-#     "${zlib_SOURCE_DIR}/gzwrite.c"
-#     "${zlib_SOURCE_DIR}/gzread.c"
-#     "${zlib_SOURCE_DIR}/gzlib.c"
-#     "${zlib_SOURCE_DIR}/gzclose.c"
-#     "${zlib_SOURCE_DIR}/deflate.c"
-#     "${zlib_SOURCE_DIR}/crc32.c"
-#     "${zlib_SOURCE_DIR}/compress.c"
-#     "${zlib_SOURCE_DIR}/adler32.c"
-# )
-
-# add_library(zlib STATIC ${ZLIB_SOURCES})
-# target_include_directories(zlib PRIVATE ${zlib_SOURCE_DIR})
-FetchContent_MakeAvailable(zlib)
+add_library(zlib STATIC ${ZLIB_SOURCES})
+target_include_directories(zlib PRIVATE ${zlib_SOURCE_DIR})
+configure_file(${zlib_SOURCE_DIR}/zconf.h.cmakein ${zlib_SOURCE_DIR}/zconf.h)
+# FetchContent_MakeAvailable(zlib)
 
 # png
 message(STATUS "FetchContent: png")
