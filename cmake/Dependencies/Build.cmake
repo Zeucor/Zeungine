@@ -98,7 +98,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
 endif()
 if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
     list(APPEND PNG_SOURCES "${png_SOURCE_DIR}/intel/filter_sse2_intrinsics.c" "${png_SOURCE_DIR}/intel/intel_init.c")
-list()
+endif()
 
 add_library(png STATIC ${PNG_SOURCES})
 target_include_directories(png PRIVATE ${png_SOURCE_DIR})
