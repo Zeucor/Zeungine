@@ -103,6 +103,7 @@ set(PNG_SOURCES
 
 add_library(png STATIC ${PNG_SOURCES})
 target_include_directories(png PRIVATE ${png_SOURCE_DIR})
+target_include_directories(png PRIVATE ${zlib_SOURCE_DIR})
 configure_file(${png_SOURCE_DIR}/scripts/pnglibconf.h.prebuilt ${png_SOURCE_DIR}/pnglibconf.h)
 
 # OpenSSL
