@@ -23,7 +23,7 @@ int udp_streambuf::underflow()
     if (gptr() < egptr())
         return traits_type::to_int_type(*gptr());
 
-    size_t n = recvfrom(fd, buffer.data(), buffer.size(), 0, (sockaddr*)&addr, &addr_len);
+    size_t n = recvfrom(fd, buffer.data(), buffer.size(), 1, (sockaddr*)&addr, &addr_len);
     if (n <= 0)
         return traits_type::eof();
 
@@ -44,7 +44,7 @@ int udp_streambuf::overflow(int c)
 }
 int udp_streambuf::sync()
 {
-	size_t sent = sendto(fd, pbase(), pptr() - pbase(), 0, (struct sockaddr*)&addr, sizeof(addr));
+	size_t sent = sendto(fd, pbase(), pptr() - pbase(), 1, (struct sockaddr*)&addr, sizeof(addr));
 	if (sent == -1)
 		return -1;
 
