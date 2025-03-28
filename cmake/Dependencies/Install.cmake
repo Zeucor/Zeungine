@@ -20,11 +20,11 @@ zg_setup_target(swresample ${ZG_TYPE}
 zg_setup_target(swscale ${ZG_TYPE}
     "${ffmpeg_BINARY_DIR}/lib"
     "${ffmpeg_ZG_LIB_PREFIX}" swscale swscale ".${ffmpeg_ZG_LIB_SUFFIX}" ON)
-# if(WIN32)
+if(WIN32)
     set(openssl_LIB_DIR "${openssl_BINARY_DIR}/lib")
-# elseif(UNIX)
-    # set(openssl_LIB_DIR "${openssl_BINARY_DIR}/lib64")
-# endif()
+elseif(UNIX)
+    set(openssl_LIB_DIR "${openssl_BINARY_DIR}/lib64")
+endif()
 if(NOT MACOS)
     zg_setup_target(ssl STATIC
         "${openssl_LIB_DIR}"
