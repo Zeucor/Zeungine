@@ -33,36 +33,15 @@ message(STATUS "FetchContent: zlib")
 FetchContent_Declare(zlib
     GIT_REPOSITORY https://github.com/ZeunO8/zlib.git
     GIT_TAG apple-fix)
-FetchContent_GetProperties(zlib)
-if(NOT zlib_POPULATED)
-    FetchContent_Populate(zlib)
-endif()
+FetchContent_MakeAvailable(zlib)
 
-set(ZLIB_SOURCES
-    "${zlib_SOURCE_DIR}/zutil.c"
-    "${zlib_SOURCE_DIR}/uncompr.c"
-    "${zlib_SOURCE_DIR}/trees.c"
-    "${zlib_SOURCE_DIR}/inftrees.c"
-    "${zlib_SOURCE_DIR}/inflate.c"
-    "${zlib_SOURCE_DIR}/inffast.c"
-    "${zlib_SOURCE_DIR}/infback.c"
-    "${zlib_SOURCE_DIR}/gzwrite.c"
-    "${zlib_SOURCE_DIR}/gzread.c"
-    "${zlib_SOURCE_DIR}/gzlib.c"
-    "${zlib_SOURCE_DIR}/gzclose.c"
-    "${zlib_SOURCE_DIR}/deflate.c"
-    "${zlib_SOURCE_DIR}/crc32.c"
-    "${zlib_SOURCE_DIR}/compress.c"
-    "${zlib_SOURCE_DIR}/adler32.c"
-)
-
-add_library(zlib STATIC ${ZLIB_SOURCES})
-target_include_directories(zlib PRIVATE ${zlib_SOURCE_DIR})
 set(ZLIB_LIBRARY zlib)
 set(ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR})
 
 # png
 message(STATUS "FetchContent: png")
+set(PNG_TESTS OFF)
+set(SKIP_INSTALL_ALL ON)
 FetchContent_Declare(png
     GIT_REPOSITORY https://github.com/pnggroup/libpng.git
     GIT_TAG v1.6.47)
