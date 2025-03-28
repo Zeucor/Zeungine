@@ -8,7 +8,7 @@ zg_setup_target(freetype ${ZG_TYPE}
 	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(png STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${PNG_ZG_LIB_PREFIX}" ${PNG_LIBRARY_REAL} ${PNG_LIBRARY_REAL} "${PNG_ZG_LIB_SUFFIX}" ON)
+	"${PNG_ZG_LIB_PREFIX}" png png "${PNG_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(harfbuzz STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${HB_ZG_LIB_PREFIX}" harfbuzz harfbuzz "${HB_ZG_LIB_SUFFIX}" ON)
