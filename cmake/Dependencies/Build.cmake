@@ -93,6 +93,13 @@ set(PNG_SOURCES
     "${png_SOURCE_DIR}/pngwutil.c"
 )
 
+if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm64")
+    list(APPEND PNG_SOURCES "${png_SOURCE_DIR}/arm/filter_neon_intrinsics.c" "${png_SOURCE_DIR}/arm/palette_neon_intrinsics.c")
+endif()
+if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+    list(APPEND PNG_SOURCES "${png_SOURCE_DIR}/intel/filter_sse2_intrinsics.c" "${png_SOURCE_DIR}/intel/intel_init.c")
+list()
+
 add_library(png STATIC ${PNG_SOURCES})
 target_include_directories(png PRIVATE ${png_SOURCE_DIR})
 target_include_directories(png PRIVATE ${zlib_SOURCE_DIR})
