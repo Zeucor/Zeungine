@@ -81,6 +81,7 @@ set(PNG_SOURCES
     "${png_SOURCE_DIR}/pngget.c"
     "${png_SOURCE_DIR}/pngmem.c"
     "${png_SOURCE_DIR}/pngpread.c"
+    "${png_SOURCE_DIR}/pngread.c"
     "${png_SOURCE_DIR}/pngrio.c"
     "${png_SOURCE_DIR}/pngrtran.c"
     "${png_SOURCE_DIR}/pngrutil.c"
