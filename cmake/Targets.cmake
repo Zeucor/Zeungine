@@ -46,6 +46,9 @@ if(ZG_TYPE STREQUAL STATIC)
 	zg_setup_target(bzip2 STATIC
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
 		"${ZG_LIB_PREFIX}" bzip2 bzip2 "${STATIC_ZG_LIB_SUFFIX}" ON)
+	zg_setup_target(lzma STATIC
+		"${ZG_LIB_INSTALL_PREFIX_ABS}"
+		"${ZG_LIB_PREFIX}" lzma lzma "${STATIC_ZG_LIB_SUFFIX}" ON)
 endif()
 if(MACOS)
 	find_package(OpenSSL REQUIRED)
