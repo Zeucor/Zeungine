@@ -86,6 +86,7 @@ set(PNG_SOURCES
     "${png_SOURCE_DIR}/pngrtran.c"
     "${png_SOURCE_DIR}/pngrutil.c"
     "${png_SOURCE_DIR}/pngset.c"
+    "${png_SOURCE_DIR}/pngtrans.c"
     "${png_SOURCE_DIR}/pngwio.c"
     "${png_SOURCE_DIR}/pngwrite.c"
     "${png_SOURCE_DIR}/pngwtran.c"
