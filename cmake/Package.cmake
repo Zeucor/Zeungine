@@ -75,6 +75,7 @@ function(crossplatform_cpack_helper
     elseif(MACOS)
         set(CPACK_GENERATOR "productbuild")
         set(CPACK_PRODUCTBUILD_IDENTIFIER "${MACOS_BUNDLE_ID}")
+        set(CPACK_PRODUCTBUILD_COMPONENT_INSTALL ON)
     endif()
     include(CPack)
 endfunction()
