@@ -39,6 +39,6 @@ if(ZG_PACKAGE)
         "C:"
         "zeungine-uninstaller"
         "dev.zeucor.zeungine"
-        "core zedit headers cmakeconfig dependencies")
+        "core zedit")
     set(CPACK_NSIS_MENU_LINKS "Release/STATIC/zedit.exe" "ZEdit")
 endif()
