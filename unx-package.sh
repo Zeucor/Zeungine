@@ -107,6 +107,7 @@ build_zeungine_shared() {
 
 bundle() {
     echo " -- Starting zeungine MultiCPack"
+    sudo df -h
     sudo cpack --config cmake/MultiCPackConfig.cmake
 }
 
