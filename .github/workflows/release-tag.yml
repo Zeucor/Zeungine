@@ -17,6 +17,7 @@ jobs:
           - macos-13
     steps:
       - name: Maximize build space
+        if: runner.os == 'Linux'
         uses: easimon/maximize-build-space@master
         with:
           root-reserve-mb: 2048
