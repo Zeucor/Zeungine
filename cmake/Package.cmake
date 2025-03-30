@@ -54,6 +54,7 @@ function(crossplatform_cpack_helper
         set(CPACK_GENERATOR "DEB")
         set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${MAINTAINER}")
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${DEB_DEPENDS}")
+        set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
     elseif(RPM)
         set(CPACK_GENERATOR "RPM")
         set(CPACK_RPM_PACKAGE_DEPENDS "${RPM_DEPENDS}")
