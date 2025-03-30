@@ -56,7 +56,7 @@ if(ZG_TYPE STREQUAL STATIC)
 endif()
 
 set(CPACK_COMPONENT_DEPENDENCIES_DESCRIPTION "Zeungine Dependency Libraries")
-set(CPACK_COMPONENT_DEPENDENCIES_GROUP "Development")
+set(CPACK_COMPONENT_DEPENDENCIES_GROUP "Zeungine")
 
 if(LINUX)
     install(CODE "execute_process(COMMAND /bin/sh -c \"echo ${ZG_LIB_INSTALL_PREFIX} > ${LD_CONF_FILE}\")")

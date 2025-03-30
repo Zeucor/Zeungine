@@ -16,7 +16,6 @@ if(ZG_INSTALL)
 endif()
 if(ZG_PACKAGE)
     include(cmake/Package.cmake)
-    set(WINDOWS_START_MENU_LINKS "Release/STATIC/zedit.exe" "ZEdit")
     crossplatform_cpack_helper(
         ${CMAKE_SOURCE_DIR}/releases
         Zeungine
@@ -33,11 +32,13 @@ if(ZG_PACKAGE)
         "Zeucor"
         "Zeun"
         "Zeun"
-        "libgl1-mesa-dri,libx11-6,libvulkan1,libxrandr2,libxfixes3,libxkbcommon-x11-0,libsecret-1-0,libglib2.0-dev,libdrm-dev,libpng-dev,libharfbuzz-dev,libbrotli-dev"
+        "libgl1-mesa-dri,libx11-6,libvulkan1,libxrandr2,libxfixes3,libxkbcommon-x11-0,libsecret-1-0,libglib2.0-dev,libdrm-dev"
         ""
         "Development/Tools"
         "Program Files\\\\Zeungine"
         "C:"
         "zeungine-uninstaller"
-        "dev.zeucor.zeungine")
+        "dev.zeucor.zeungine"
+        "core zedit headers cmakeconfig dependencies")
+    set(CPACK_NSIS_MENU_LINKS "Release/STATIC/zedit.exe" "ZEdit")
 endif()

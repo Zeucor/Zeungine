@@ -23,6 +23,7 @@ function(crossplatform_cpack_helper
     WINDOWS_PREFERRED_INSTALL_ROOT      # i.e. C:
     WINDOWS_UNINSTALL_NAME              # i.e. ${TARGET_NAME}-uninstaller
     MACOS_BUNDLE_ID                     # i.e. com.projectorg.projectname
+    COMPONENTS_ALL                      # i.e. core tool-is headers cmakeconfig dependencies
 )
     # message(STATUS "WINDOWS_START_MENU_LINKS: ${WINDOWS_START_MENU_LINKS}")
     # message(STATUS "WINDOWS_PREFERRED_INSTALL_DIRECTORY: ${WINDOWS_PREFERRED_INSTALL_DIRECTORY}")
@@ -64,7 +65,6 @@ function(crossplatform_cpack_helper
         set(CPACK_GENERATOR "NSIS")
         set(CPACK_CMAKE_GENERATOR "Ninja")
         set(CPACK_NSIS_MODIFY_PATH ON)
-        # set(CPACK_NSIS_MENU_LINKS ${WINDOWS_START_MENU_LINKS})
         set(CPACK_NSIS_DISPLAY_NAME ${DISPLAY_NAME})
         set(CPACK_NSIS_PACKAGE_NAME ${TARGET_NAME})
         set(CPACK_RESOURCE_FILE_LICENSE "${LICENSE}")
@@ -73,7 +73,10 @@ function(crossplatform_cpack_helper
     elseif(MACOS)
         set(CPACK_GENERATOR "productbuild")
         set(CPACK_PRODUCTBUILD_IDENTIFIER "${MACOS_BUNDLE_ID}")
-        set(CPACK_PRODUCTBUILD_COMPONENT_INSTALL ON)
     endif()
+    set(CPACK_PRODUCTBUILD_COMPONENT_INSTALL ON)
+    set(CPACK_COMPONENTS_ALL ${COMPONENTS_ALL})
+    set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
+    set(CPACK_MONOLITHIC_INSTALL OFF)
     include(CPack)
 endfunction()

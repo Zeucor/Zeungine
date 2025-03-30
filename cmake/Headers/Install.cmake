@@ -107,11 +107,11 @@ install(DIRECTORY ${ZG_SRC_ABS}/include/zg DESTINATION ${ZG_INC_INSTALL_PREFIX}
     COMPONENT headers)
 
 set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")
-set(CPACK_COMPONENT_HEADERS_GROUP "Development")
+set(CPACK_COMPONENT_HEADERS_GROUP "Zeungine")
 
 install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ../Targets.cmake DESTINATION ${ZG_SHR_INSTALL_PREFIX}
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT cmakeconfig)
 
 set(CPACK_COMPONENT_CMAKECONFIG_DESCRIPTION "Zeungine CMake Configuration")
-set(CPACK_COMPONENT_CMAKECONFIG_GROUP "Development")
+set(CPACK_COMPONENT_CMAKECONFIG_GROUP "Zeungine")
