@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <codecvt>
@@ -42,17 +43,16 @@
 #endif
 #include <zg/glm.hpp>
 #if defined(__linux) || defined(MACOS)
+#include <arpa/inet.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <netdb.h>
+#include <sys/socket.h>
 #include <termios.h>
 #include <unistd.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #endif
 #define STANDARD std
 #define GLMATH glm
-#include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <openssl/ssl.h>
 #include <openssl/x509v3.h>

@@ -1,8 +1,5 @@
 #pragma once
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <memory>
+#include <zg/Standard.hpp>
 namespace zg::net::http
 {
     using Scheme = std::string;
