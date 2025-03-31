@@ -410,7 +410,7 @@ else()
 endif()
 message(STATUS "ffmpeg-dos2unix")
 execute_process(COMMAND dos2unix configure WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR})
-message(STATUS "ffmpeg-configure: ${SHELL} \"./configure ${ffmpeg_CONFIGURE}\"")
+message(STATUS "ffmpeg-configure: ${SHELL} \"${ffmpeg_CONFIGURE}\"")
 execute_process(
     COMMAND ${SHELL} ${ffmpeg_CONFIGURE}
     WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR}
