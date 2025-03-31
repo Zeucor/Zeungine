@@ -57,6 +57,7 @@ int tcp_streambuf::sync()
 		pbump(-n);
 	}
 	gbuffer.clear();
+	readIndex = 0;
 	pbuffer.clear();
 	return 0;
 }
