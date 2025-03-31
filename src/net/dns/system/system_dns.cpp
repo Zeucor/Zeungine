@@ -13,7 +13,6 @@ std::vector<std::string> system_dns::queryAAAA(const std::string& hostname)
 std::vector<std::string> system_dns::queryFamily(const int& family, const std::string& hostname)
 {
 	std::vector<std::string> ips;
-#if defined(_WIN32)
     zg::net::socket_init::initialize();
 	hostent* host = gethostbyname(hostname.c_str());
     if (!host)
@@ -23,11 +22,8 @@ std::vector<std::string> system_dns::queryFamily(const int& family, const std::s
     for (auto hostIndex = 0; host->h_addr_list[hostIndex]; hostIndex++)
     {
         in_addr addr;
-        memcpy(&addr, host->h_addr_list[hostIndex], sizeof(struct in_addr));
+        memcpy(&addr, host->h_addr_list[hostIndex], sizeof(in_addr));
         ips.push_back(inet_ntoa(addr));
     }
-#elif defined(__linux__) || defined(MACOS)
-	struct addrinfo hints[], *res;
-#endif
 	return ips;
 }
