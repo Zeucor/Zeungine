@@ -1,12 +1,6 @@
 #include <zg/net/socket_init.hpp>
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib") // Link against Winsock library
-#endif
+#include <zg/Standard.hpp>
 #include <zg/Logger.hpp>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
 using namespace zg::net;
 bool socket_init::initialized =
 #ifdef _WIN32

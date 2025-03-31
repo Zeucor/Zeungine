@@ -28,6 +28,9 @@
 #include <zg/interfaces/IFile.hpp>
 #include <zg/queue.hpp>
 #if defined(_WIN32)
+// #include <winsock2.h>
+// #include <ws2tcpip.h>
+// #pragma comment(lib, "ws2_32.lib")
 #include <windows.h>
 #elif defined(MACOS)
 #include <fcntl.h>
@@ -45,6 +48,10 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #endif
 #define STANDARD std
 #define GLMATH glm
+#include <openssl/ssl.h>
+#include <openssl/err.h>

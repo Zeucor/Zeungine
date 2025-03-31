@@ -2,7 +2,6 @@
 #include <streambuf>
 #include <vector>
 #include <zg/Standard.hpp>
-#include <openssl/ssl.h>
 namespace zg::net::streams
 {
 	class tcp_streambuf : public std::streambuf
@@ -28,7 +27,8 @@ namespace zg::net::streams
 		using SocketIdentifier = int;
 #endif
 		SocketIdentifier fd;
-		std::vector<char> buffer;
+		std::vector<char> gbuffer;
+		std::vector<char> pbuffer;
 		SSL* ssl;
 
 		void close();

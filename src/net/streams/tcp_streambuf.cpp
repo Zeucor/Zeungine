@@ -1,10 +1,10 @@
 #include <zg/net/streams/tcp_streambuf.hpp>
 using namespace zg::net::streams;
 tcp_streambuf::tcp_streambuf(const std::pair<int, SSL*>& fd_ssl_pair, std::size_t buffer_size) :
-		fd(std::get<0>(fd_ssl_pair)), buffer(buffer_size), ssl(std::get<1>(fd_ssl_pair))
+		fd(std::get<0>(fd_ssl_pair)), gbuffer(buffer_size), pbuffer(buffer_size), ssl(std::get<1>(fd_ssl_pair))
 {
-	setg(buffer.data(), buffer.data(), buffer.data());
-	setp(buffer.data(), buffer.data() + buffer.size());
+	setg(gbuffer.data(), gbuffer.data(), gbuffer.data());
+	setp(pbuffer.data(), pbuffer.data() + pbuffer.size());
 }
 tcp_streambuf::~tcp_streambuf()
 {
@@ -18,13 +18,13 @@ int tcp_streambuf::underflow()
 
 	size_t n;
 	if (ssl)
-		n = SSL_read(ssl, buffer.data(), buffer.size());
+		n = SSL_read(ssl, gptr(), 1);
 	else
-		n = recv(fd, buffer.data(), buffer.size(), 1);
+		n = recv(fd, gptr(), 1, 1);
 	if (n <= 0)
 		return traits_type::eof();
 
-	setg(buffer.data(), buffer.data(), buffer.data() + n);
+	setg(gbuffer.data(), gptr(), gptr() + n);
 	return traits_type::to_int_type(*gptr());
 }
 int tcp_streambuf::overflow(int c)

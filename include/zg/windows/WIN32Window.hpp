@@ -1,7 +1,6 @@
 #pragma once
 #ifdef _WIN32
 #include "../Window.hpp"
-#include <windows.h>
 namespace zg
 {
 	struct WIN32Window : IPlatformWindow
