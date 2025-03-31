@@ -1,7 +1,7 @@
 #include <zg/net/streams/tcp_streambuf.hpp>
 using namespace zg::net::streams;
 tcp_streambuf::tcp_streambuf(const std::pair<int, SSL*>& fd_ssl_pair, std::size_t buffer_size) :
-		fd(std::get<0>(fd_ssl_pair)), gbuffer(buffer_size), pbuffer(buffer_size), ssl(std::get<1>(fd_ssl_pair))
+		fd(std::get<0>(fd_ssl_pair)), /*gbuffer(buffer_size), */ pbuffer(buffer_size), ssl(std::get<1>(fd_ssl_pair))
 {
 	setg(gbuffer.data(), gbuffer.data(), gbuffer.data());
 	setp(pbuffer.data(), pbuffer.data() + pbuffer.size());
@@ -13,18 +13,20 @@ tcp_streambuf::~tcp_streambuf()
 }
 int tcp_streambuf::underflow()
 {
-	if (gptr() < egptr())
-		return traits_type::to_int_type(*gptr());
-
-	size_t n;
+	if (gptr() >= egptr())
+	{
+		gbuffer.resize(gbuffer.size() + readSize);
+		setg(gbuffer.data(), gbuffer.data() + readIndex, gbuffer.data() + readIndex + readSize);
+	}
+	size_t __bytes__read__;
 	if (ssl)
-		n = SSL_read(ssl, gptr(), 1);
+		__bytes__read__ = SSL_read(ssl, gptr(), readSize);
 	else
-		n = recv(fd, gptr(), 1, 1);
-	if (n <= 0)
+		__bytes__read__ = recv(fd, gptr(), readSize, 1);
+	if (__bytes__read__ <= 0)
 		return traits_type::eof();
-
-	setg(gbuffer.data(), gptr(), gptr() + n);
+	readIndex += __bytes__read__;
+	setg(gbuffer.data(), gptr(), gptr() + __bytes__read__);
 	return traits_type::to_int_type(*gptr());
 }
 int tcp_streambuf::overflow(int c)
@@ -54,6 +56,8 @@ int tcp_streambuf::sync()
 
 		pbump(-n);
 	}
+	gbuffer.clear();
+	pbuffer.clear();
 	return 0;
 }
 void tcp_streambuf::close()

@@ -2,7 +2,7 @@
 #include <zg/Logger.hpp>
 int main()
 {
-    auto response = zg::net::http::http_client::restSync("GET", "https://ipinfo.io/loc");
+    auto response = zg::net::http::http_client::restSync("GET", "https://search.brave.com/");
     zg::Logger::print(
         zg::Logger::Blank,
         "StatusCode: ",

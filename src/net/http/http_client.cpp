@@ -1,7 +1,5 @@
 #include <zg/net/http/http_client.hpp>
-#include <zg/net/dns/system/system_dns.hpp>
 #include <zg/net/ssl_factory.hpp>
-#include <zg/net/string_is_ipv4.hpp>
 #include <zg/Serial.hpp>
 using namespace zg::net::http;
 #define PIECE_INDEX_SCHEME      0
@@ -163,24 +161,10 @@ http_response http_client::restSync(const Verb& verb, const std::string& uri, co
         ssl_ctx = ssl_factory::createClient();
     }
     auto& host = std::get<INDEX_EXTRACTED_HOST>(extracted);
-    std::string ip;
-    if (zg::net::string_is_ipv4(host))
-    {
-        ip = host;
-    }
-    else
-    {
-        auto ips = zg::net::dns::system::system_dns::queryA(host);
-        if (ips.size())
-        {
-            ip = ips[0];
-        }
-        else
-        {
-            throw std::runtime_error("Could not find ip for host: " + host);
-        }
-    }
-    tcp_client tcpClient(ip, std::get<INDEX_EXTRACTED_PORT>(extracted), ssl_ctx, false);
+    X509_VERIFY_PARAM *param = SSL_CTX_get0_param(ssl_ctx);
+    X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+    X509_VERIFY_PARAM_set1_host(param, host.c_str(), 0);
+    tcp_client tcpClient(host, std::get<INDEX_EXTRACTED_PORT>(extracted), ssl_ctx, false);
     Serial serial(tcpClient);
     http_request request;
     request.verb = verb;

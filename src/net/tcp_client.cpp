@@ -6,6 +6,8 @@
 #include <zg/Logger.hpp>
 #include <zg/net/tcp_client.hpp>
 #include <zg/net/socket_init.hpp>
+#include <zg/net/string_is_ipv4.hpp>
+#include <zg/net/dns/system/system_dns.hpp>
 using namespace zg::net;
 tcp_client::tcp_client(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts) : tcp_iostream(connect(host, port, ssl_ctx, verifyCerts)),
 	ssl_ctx(ssl_ctx) {}
@@ -18,6 +20,23 @@ tcp_client::~tcp_client()
 }
 std::pair<int, SSL*> tcp_client::connect(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts)
 {
+    std::string ip;
+    if (zg::net::string_is_ipv4(host))
+    {
+        ip = host;
+    }
+    else
+    {
+        auto ips = zg::net::dns::system::system_dns::queryA(host);
+        if (ips.size())
+        {
+            ip = ips[0];
+        }
+        else
+        {
+            throw std::runtime_error("Could not find ip for host: " + host);
+        }
+    }
 	socket_init::initialize();
 	SSL* ssl = 0;
 	if (ssl_ctx)
@@ -31,9 +50,9 @@ std::pair<int, SSL*> tcp_client::connect(const std::string& host, int port, SSL_
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(port);
 #if defined(__linux__) || defined(MACOS)
-	if (inet_pton(AF_INET, host.c_str(), &server_addr.sin_addr) <= 0)
+	if (inet_pton(AF_INET, ip.c_str(), &server_addr.sin_addr) <= 0)
 #elif defined(_WIN32)
-	if (InetPtonA(AF_INET, host.c_str(), &server_addr.sin_addr) <= 0)
+	if (InetPtonA(AF_INET, ip.c_str(), &server_addr.sin_addr) <= 0)
 #endif
 	{
 		throw std::runtime_error("Invalid address/Address not supported!");
@@ -45,6 +64,7 @@ std::pair<int, SSL*> tcp_client::connect(const std::string& host, int port, SSL_
 	if (ssl)
 	{
 		SSL_set_fd(ssl, fd);
+		SSL_set_tlsext_host_name(ssl, host.c_str());
 		int ret = 0;
 		if ((ret = SSL_connect(ssl)) < 0)
 		{

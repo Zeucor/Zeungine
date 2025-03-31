@@ -7,6 +7,9 @@ namespace zg::net::streams
 	class tcp_streambuf : public std::streambuf
 	{
 	public:
+		size_t readSize = 1;
+		size_t readIndex = 0; 
+
 		explicit tcp_streambuf(const std::pair<int, SSL*>& fd_ssl_pair, std::size_t buffer_size = 4096);
 
 		~tcp_streambuf();
@@ -30,7 +33,6 @@ namespace zg::net::streams
 		std::vector<char> gbuffer;
 		std::vector<char> pbuffer;
 		SSL* ssl;
-
 		void close();
 	};
 } // namespace zg
