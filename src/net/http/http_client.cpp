@@ -155,15 +155,12 @@ _appendPiece:
 http_response http_client::restSync(const Verb& verb, const std::string& uri, const Headers& headers, const Body& body)
 {
     auto extracted = extractUri(uri);
+    auto& host = std::get<INDEX_EXTRACTED_HOST>(extracted);
     SSL_CTX* ssl_ctx = 0;
     if (std::get<INDEX_EXTRACTED_SECURE>(extracted))
     {
-        ssl_ctx = ssl_factory::createClient();
+        ssl_ctx = ssl_factory::createClient(host);
     }
-    auto& host = std::get<INDEX_EXTRACTED_HOST>(extracted);
-    X509_VERIFY_PARAM *param = SSL_CTX_get0_param(ssl_ctx);
-    X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
-    X509_VERIFY_PARAM_set1_host(param, host.c_str(), 0);
     tcp_client tcpClient(host, std::get<INDEX_EXTRACTED_PORT>(extracted), ssl_ctx, false);
     Serial serial(tcpClient);
     http_request request;

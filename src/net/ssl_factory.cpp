@@ -1,12 +1,16 @@
 #include <zg/net/ssl_factory.hpp>
+#include <openssl/x509v3.h>
 using namespace zg::net;
-SSL_CTX* ssl_factory::createClient()
+SSL_CTX* ssl_factory::createClient(const std::string& host)
 {
 	SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 	if (!ctx)
 	{
 		throw std::runtime_error("failed to create SSL context");
 	}
+    X509_VERIFY_PARAM *param = SSL_CTX_get0_param(ctx);
+    X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+    X509_VERIFY_PARAM_set1_host(param, host.c_str(), 0);
 	return ctx;
 }
 SSL_CTX* ssl_factory::createServer()
