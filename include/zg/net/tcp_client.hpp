@@ -1,5 +1,5 @@
 #pragma once
-#include "streams/tcp_iostream.hpp"
+#include "tcp_iostream.hpp"
 namespace zg::net
 {
 	struct tcp_client : zg::net::streams::tcp_iostream

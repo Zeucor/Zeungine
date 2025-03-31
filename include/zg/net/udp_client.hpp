@@ -1,5 +1,5 @@
 #pragma once
-#include "streams/udp_iostream.hpp"
+#include "udp_iostream.hpp"
 namespace zg::net
 {
 	struct udp_client : zg::net::streams::udp_iostream

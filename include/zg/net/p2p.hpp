@@ -39,9 +39,14 @@ namespace zg::net
 		using LobbyMap = std::map<UniqueIdentifier, std::shared_ptr<Lobby>>;
 
 	protected:
+		struct host_info_factory;
 		struct HostInfo
 		{
-			long* hostPlanet = (long *)1;
+			friend p2p;
+			friend host_info_factory;
+			// gpos is used for distance calculations and lobby/party coordinations
+		protected:
+			long* hostPlanet = (long*)1;
 			long double latitude;
 			long double longitude;
 			std::pair<UniqueIdentifier, PartyMap> partyMapPair;

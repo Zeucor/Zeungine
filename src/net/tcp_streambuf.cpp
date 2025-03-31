@@ -1,4 +1,4 @@
-#include <zg/net/streams/tcp_streambuf.hpp>
+#include <zg/net/tcp_streambuf.hpp>
 using namespace zg::net::streams;
 tcp_streambuf::tcp_streambuf(const std::pair<int, SSL*>& fd_ssl_pair, std::size_t buffer_size) :
 		fd(std::get<0>(fd_ssl_pair)), /*gbuffer(buffer_size), */ pbuffer(buffer_size), ssl(std::get<1>(fd_ssl_pair))

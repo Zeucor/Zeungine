@@ -7,7 +7,7 @@
 #include <zg/net/tcp_client.hpp>
 #include <zg/net/socket_init.hpp>
 #include <zg/net/string_is_ipv4.hpp>
-#include <zg/net/dns/system/system_dns.hpp>
+#include <zg/net/system_dns.hpp>
 using namespace zg::net;
 tcp_client::tcp_client(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts) : tcp_iostream(connect(host, port, ssl_ctx, verifyCerts)),
 	ssl_ctx(ssl_ctx) {}

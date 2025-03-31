@@ -1,5 +1,5 @@
 #include <zg/net/p2p.hpp>
-#include <zg/net/http/http_client.hpp>
+#include <zg/net/http_client.hpp>
 using namespace zg::net;
 p2p::HostInfo p2p::host_info_factory::create()
 {
@@ -26,4 +26,16 @@ p2p::p2p(const std::string& announceIP):
     
 {
     startAnnounce();
+}
+bool p2p::doingAnnounce()
+{
+    return !!announceClient;
+}
+void p2p::startAnnounce()
+{
+
+}
+void p2p::closeAnnounce()
+{
+    return;
 }

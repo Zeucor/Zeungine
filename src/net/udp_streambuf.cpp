@@ -1,4 +1,4 @@
-#include <zg/net/streams/udp_streambuf.hpp>
+#include <zg/net/udp_streambuf.hpp>
 using namespace zg::net::streams;
 udp_streambuf::udp_streambuf(const SocketPair& fd_addr_pair) :
 		fd(std::get<0>(fd_addr_pair)), addr(std::get<1>(fd_addr_pair)), buffer(4196)

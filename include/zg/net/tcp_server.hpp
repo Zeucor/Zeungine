@@ -2,7 +2,7 @@
 #include <map>
 #include <zg/Events.hpp>
 #include <zg/Serial.hpp>
-#include "streams/tcp_iostream.hpp"
+#include "tcp_iostream.hpp"
 namespace zg::net
 {
 	struct tcp_server

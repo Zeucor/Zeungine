@@ -1,4 +1,4 @@
-#include <zg/net/dns/system/system_dns.hpp>
+#include <zg/net/system_dns.hpp>
 #include <zg/net/socket_init.hpp>
 using namespace zg::net::dns::system;
 std::vector<std::string> system_dns::queryA(const std::string& hostname) { return queryFamily(AF_INET, hostname); }
