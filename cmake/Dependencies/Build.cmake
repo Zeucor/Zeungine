@@ -300,8 +300,6 @@ set(BZIP2_SOURCES
     "${bzip2_SOURCE_DIR}/huffman.c"
     "${bzip2_SOURCE_DIR}/mk251.c"
     "${bzip2_SOURCE_DIR}/randtable.c"
-    "${bzip2_SOURCE_DIR}/spewG.c"
-    "${bzip2_SOURCE_DIR}/unzcrash.c"
 )
 
 add_library(bzip2 STATIC ${BZIP2_SOURCES})
