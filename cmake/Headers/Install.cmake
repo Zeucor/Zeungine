@@ -6,6 +6,7 @@ set(lunasvg_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/
 set(stb_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/stb-src")
 set(miniaudio_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/miniaudio-src")
 set(openssl_INC_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/openssl-build/include")
+set(exprtk_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/exprtk-src")
 
 # openssl includes
 if(NOT MACOS)
@@ -104,6 +105,10 @@ install(FILES ${miniaudio_SOURCE_DIR}/miniaudio.h
 install(DIRECTORY ${ZG_SRC_ABS}/include/zg DESTINATION ${ZG_INC_INSTALL_PREFIX}
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
+    COMPONENT headers)
+
+install(FILES ${xprtk_SOURCE_DIR}/exprtk.hpp DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     COMPONENT headers)
 
 set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")

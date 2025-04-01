@@ -15,6 +15,16 @@ endif()
 
 #New Dependency Declarations to the top!
 
+# ExprTK
+message(STATUS "FetchContent: exprtk")
+FetchContent_Declare(exprtk
+    GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
+    GIT_TAG master)
+FetchContent_GetProperties(exprtk)
+if(NOT exprtk_POPULATED)
+    FetchContent_Populate(exprtk)
+endif()
+
 # lzma
 message(STATUS "FetchContent: lzma")
 FetchContent_Declare(lzma
