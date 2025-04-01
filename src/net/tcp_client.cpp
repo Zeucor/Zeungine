@@ -7,7 +7,7 @@
 #include <zg/net/tcp_client.hpp>
 #include <zg/net/socket_init.hpp>
 #include <zg/net/string_is_ipv4.hpp>
-#include <zg/net/system_dns.hpp>
+#include <zg/net/resolve_host_or_ip_to_ip.hpp>
 using namespace zg::net;
 tcp_client::tcp_client(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts) : tcp_iostream(connect(host, port, ssl_ctx, verifyCerts)),
 	ssl_ctx(ssl_ctx) {}
@@ -20,23 +20,7 @@ tcp_client::~tcp_client()
 }
 std::pair<int, SSL*> tcp_client::connect(const std::string& host, int port, SSL_CTX* ssl_ctx, bool verifyCerts)
 {
-    std::string ip;
-    if (zg::net::string_is_ipv4(host))
-    {
-        ip = host;
-    }
-    else
-    {
-        auto ips = zg::net::dns::system::system_dns::queryA(host);
-        if (ips.size())
-        {
-            ip = ips[0];
-        }
-        else
-        {
-            throw std::runtime_error("Could not find ip for host: " + host);
-        }
-    }
+    std::string ip = resolve_host_or_ip_to_ip(host);
 	socket_init::initialize();
 	SSL* ssl = 0;
 	if (ssl_ctx)

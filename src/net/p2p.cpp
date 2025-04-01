@@ -1,5 +1,6 @@
 #include <zg/net/p2p.hpp>
 #include <zg/net/http_client.hpp>
+#include <zg/Logger.hpp>
 using namespace zg::net;
 p2p::HostInfo p2p::host_info_factory::create()
 {
@@ -29,11 +30,15 @@ p2p::p2p(const std::string& announceIP):
 }
 bool p2p::doingAnnounce()
 {
-    return !!announceClient;
+    return !!announceReceiver;
 }
 void p2p::startAnnounce()
 {
-
+    announceReceiver = std::make_shared<udpmc_receiver>(announceIP, 8427);
+    char _char = 0;
+    Serial serial(*announceReceiver);
+    serial >> _char;
+    zg::Logger::print(zg::Logger::Blank, "Received char: ", _char);
 }
 void p2p::closeAnnounce()
 {

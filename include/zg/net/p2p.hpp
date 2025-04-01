@@ -1,6 +1,8 @@
 #pragma once
 #include "udp_client.hpp"
 #include "udp_server.hpp"
+#include "udpmc_receiver.hpp"
+#include "udpmc_sender.hpp"
 namespace zg::net
 {
 #define PARTY_INFO_NAME_LENGTH 33
@@ -60,8 +62,8 @@ namespace zg::net
 	private:
 		HostInfo hostInfo = host_info_factory::create();
 		std::string announceIP;
-		std::shared_ptr<udp_server> announceServer;
-		std::shared_ptr<udp_client> announceClient;
+		std::shared_ptr<udpmc_sender> announceSender;
+		std::shared_ptr<udpmc_receiver> announceReceiver;
 		std::unordered_map<UniqueIdentifier, PartyInfo> partyInfos;
 		std::unordered_map<UniqueIdentifier, LobbyInfo> lobbyInfos;
 

@@ -60,6 +60,6 @@ udp_server::IOStreamPointer udp_server::receiveOne(bool nonBlock, unsigned int n
 	{
 		clientStream = std::make_shared<zg::net::streams::udp_iostream>(zg::net::streams::udp_streambuf::SocketPair(server_fd, client_addr));
 	}
-	clientStream->pushData(buffer, recv_len);
+	clientStream->write(buffer, recv_len);
 	return clientStream;
 }
