@@ -45,7 +45,7 @@ The following programs must be available in your PATH
 ###### Linux
 
 ```bash
-apt install libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev  libdrm-dev ninja-build nasm
+apt install nasm libvulkan-dev libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev libxcb-keysyms1-dev libdrm-dev ninja-build libwayland-client0 libwayland-server0 libwayland-dev libxfixes-dev libxcb-xfixes0-dev libxrender-dev libxrandr-dev libxcb-util-dev libdrm-dev libgtkmm-3.0-dev
 ```
 
 apt packages for zeungine coming soon
