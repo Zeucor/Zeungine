@@ -56,6 +56,7 @@ namespace zg
 	struct VulkanFramebufferImpl
 	{
 		VkRenderPass renderPass;
+		textures::Framebuffer* zgFramebuffer = 0;
 		VkFramebuffer framebuffer;
 		uint32_t attachmentsSize;
 		uint32_t width;
@@ -63,6 +64,12 @@ namespace zg
 	};
 	struct VulkanVAOImpl
 	{
+		using SSBOBuffers = std::unordered_map<std::string, std::pair<VkBuffer, VkDeviceMemory>>;
+		using UniformBuffers = std::vector<VkBuffer>;
+		using UniformBuffersMemory = std::vector<VkDeviceMemory>;
+		using UniformBuffersMapped = std::vector<void*>;
+		using BufferInfos = std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t>, VkDescriptorBufferInfo>>;
+		using UniformLocationTable = std::unordered_map<std::string, int32_t>;
 		VkBuffer vertexBuffer = 0;
 		VkDeviceMemory vertexBufferMemory = 0;
 		void* vertexData = 0;
@@ -71,17 +78,30 @@ namespace zg
 		VkDeviceMemory indiceBufferMemory = 0;
 		void* indiceData = 0;
 		uint32_t indiceBufferSize;
-		VkDescriptorPool descriptorPool;
-		VkDescriptorSet descriptorSet;
-		std::unordered_map<std::string, std::pair<VkBuffer, VkDeviceMemory>> ssboBuffers;
-		std::vector<VkBuffer> uniformBuffers;
-		std::vector<VkDeviceMemory> uniformBuffersMemory;
-		std::vector<void*> uniformBuffersMapped;
-		std::vector<std::pair<std::tuple<ELayoutBindingType, uint32_t>, VkDescriptorBufferInfo>> bufferInfos;
-		std::unordered_map<std::string, int32_t> uniformLocationTable;
+		std::unordered_map<void*, VkDescriptorPool> descriptorPools;
+		std::unordered_map<void*, VkDescriptorSet> descriptorSets;
+		std::unordered_map<void*, SSBOBuffers> ssboBuffers;
+		std::unordered_map<void*, UniformBuffers> uniformBuffers;
+		std::unordered_map<void*, UniformBuffersMemory> uniformBuffersMemory;
+		std::unordered_map<void*, UniformBuffersMapped> uniformBuffersMapped;
+		std::unordered_map<void*, BufferInfos> bufferInfos;
+		std::unordered_map<void*, UniformLocationTable> uniformLocationTable;
+		VkDescriptorPool& getDescriptorPool(void* data) { return descriptorPools[data]; }
+		VkDescriptorSet& getDescriptorSet(void* data) { return descriptorSets[data]; }
+		SSBOBuffers& getSsboBuffers(void* data) { return ssboBuffers[data]; }
+		UniformBuffers& getUniformBuffers(void* data) { return uniformBuffers[data]; }
+		UniformBuffersMemory& getUniformBuffersMemory(void* data) { return uniformBuffersMemory[data]; }
+		UniformBuffersMapped& getUniformBuffersMapped(void* data) { return uniformBuffersMapped[data]; }
+		BufferInfos& getBufferInfos(void* data) { return bufferInfos[data]; }
+		UniformLocationTable& getUniformLocationTable(void* data) { return uniformLocationTable[data]; }
 	};
 	struct VulkanShaderImpl
 	{
+		using UBOLayoutBindings = std::vector<
+			std::pair<std::tuple<ELayoutBindingType, uint32_t, std::string, uint32_t, bool>, VkDescriptorSetLayoutBinding>>;
+		using SSBOBindings = std::unordered_map<std::string, std::tuple<uint32_t, uint32_t, uint32_t>>;
+		using UBOStringBindings = std::unordered_map<std::string, uint32_t>;
+		using TextureBindings = std::unordered_map<std::string, uint32_t>;
 		/**
 		 * @brief
 		 * tuple: 0: layoutBindingType
@@ -90,24 +110,26 @@ namespace zg
 		 *        3: bindingIndex
 		 *        4: isArray
 		 */
-		std::vector<
-			std::pair<std::tuple<ELayoutBindingType, uint32_t, std::string, uint32_t, bool>, VkDescriptorSetLayoutBinding>>
-			uboLayoutBindings;
-		VkDescriptorSetLayout descriptorSetLayout;
+		std::unordered_map<void*, UBOLayoutBindings> uboLayoutBindings;
+		std::unordered_map<void*, VkDescriptorSetLayout> descriptorSetLayouts;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 		shaders::ShaderMap shaders;
-		std::unordered_map<std::string, std::tuple<uint32_t, uint32_t, uint32_t>> ssboBindings;
-		std::unordered_map<std::string, uint32_t> textureArrayBindings;
-		std::unordered_map<std::string, uint32_t> textureBindings;
-		std::unordered_map<std::string, uint32_t> uboStringBindings;
+		std::unordered_map<void*, SSBOBindings> ssboBindings;
+		std::unordered_map<void*, TextureBindings> textureBindings;
+		std::unordered_map<void*, UBOStringBindings> uboStringBindings;
+		UBOLayoutBindings& getUboLayoutBindings(void* data) { return uboLayoutBindings[data]; }
+		SSBOBindings& getSsboBindings(void* data) { return ssboBindings[data]; }
+		VkDescriptorSetLayout& getDescriptorSetLayout(void* data) { return descriptorSetLayouts[data]; }
+		UBOStringBindings& getUboStringBindings(void* data) { return uboStringBindings[data]; }
+		TextureBindings& getTextureBindings(void* data) { return textureBindings[data]; }
 	};
 	static inline std::unordered_map<size_t, VkRenderPass> renderPassMap = {};
 	constexpr int MAX_FRAMES_IN_FLIGHT = 1;
-	#define GET_PROC_ADDR_MEMBER(NAME) PFN_vkVoidFunction(*NAME)(VkInstance instance, const char *pName)
-	#define VK_GLOBAL(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(0, NAME)
-	#define VK_INSTANCE(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(instance, NAME)
-	using GetProcAddrFunc = PFN_vkVoidFunction(*)(VkInstance, const char *);
+#define GET_PROC_ADDR_MEMBER(NAME) PFN_vkVoidFunction (*NAME)(VkInstance instance, const char* pName)
+#define VK_GLOBAL(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(0, NAME)
+#define VK_INSTANCE(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(instance, NAME)
+	using GetProcAddrFunc = PFN_vkVoidFunction (*)(VkInstance, const char*);
 	struct VulkanRenderer : IRenderer
 	{
 		static bool fallbackToSwiftshader;
@@ -224,6 +246,9 @@ namespace zg
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
 		std::vector<VkImageView> swapChainImageViews;
+		VkImage depthImage;
+		VkDeviceMemory depthImageMemory;
+		VkImageView depthImageView;
 		std::vector<VkFramebuffer> swapChainFramebuffers;
 		VkRenderPass renderPass;
 		VkCommandPool commandPool;
@@ -277,10 +302,11 @@ namespace zg
 		void createFramebuffers();
 		void createCommandPool();
 		void createCommandBuffers();
+		void createDepthResources();
 		void createSyncObjects();
 		void createImageStagingBuffer();
 		void init() override;
-		void destroyAtRenderPassEndOrDestroy(const std::function<void()> &function);
+		void destroyAtRenderPassEndOrDestroy(const std::function<void()>& function);
 		void callDestroyAtRenderPassEndOrDestroy();
 		void destroy() override;
 		void destroySwapChain();

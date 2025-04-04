@@ -24,7 +24,7 @@ void VML::mouseMoveHandler(glm::vec2 coords)
 	glm::vec2 center = {scene.window.windowWidth / 2, scene.window.windowHeight / 2};
 	auto& currentWindow = (Window&)scene.window;
 	auto diff = coords - center;
-	scene.view.addPhiTheta(diff.x * 0.001f, -diff.y * 0.001f);
+	scene.viewPointer->addPhiTheta(diff.x * 0.001f, -diff.y * 0.001f);
 	scene.window.warpPointer(center);
 }
 void VML::focusHandler(bool focused)

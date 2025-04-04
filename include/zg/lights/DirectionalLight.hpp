@@ -14,6 +14,10 @@ namespace zg::lights
     textures::Texture texture;
     textures::Framebuffer framebuffer;
     glm::mat4 lightSpaceMatrix;
+    bool lookAtSet = false;
+    glm::vec3 lookAt = glm::vec3(0);
     DirectionalLightShadow(Window &window, DirectionalLight &directionalLight);
+    void addShader();
+    void update();
   };
 }

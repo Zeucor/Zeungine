@@ -8,11 +8,15 @@ namespace zg::vp
   {
     glm::vec3 position;
     glm::vec3 direction;
+    glm::vec3 up;
     glm::mat4 matrix;
     float phi;
     float theta;
     std::pair<UniqueIdentifier, std::map<UniqueIdentifier, ViewResizeHandler>> viewResizeHandlers;
-    View(glm::vec3 position, glm::vec3 direction);
+    bool lookAtSet = false;
+    glm::vec3 lookAt = glm::vec3(0);
+    View(glm::vec3 position, glm::vec3 direction, glm::vec3 up);
+    View(glm::vec3 position, glm::vec3 direction, glm::vec3 up, bool lookAtSet, glm::vec3 lookAt);
     void update();
     void addPhiTheta(float addPhi, float addTheta);
     UniqueIdentifier addResizeHandler(const ViewResizeHandler &callback);

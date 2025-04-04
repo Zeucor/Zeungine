@@ -1,27 +1,38 @@
 #include <zg/lights/DirectionalLight.hpp>
 #include <zg/shaders/ShaderManager.hpp>
+#include <zg/renderers/VulkanRenderer.hpp>
+#include <zg/vp/Projection.hpp>
+#include <zg/vp/View.hpp>
 #include <iostream>
 using namespace zg::lights;
 DirectionalLightShadow::DirectionalLightShadow(Window &window,
 											   DirectionalLight &directionalLight) : window(window),
-																					//  shader(*shaders::ShaderManager::getShaderByConstants(window, {"Color", "Position", "Normal", "Model", "LightSpaceMatrix"}).second),
 																					 directionalLight(directionalLight),
-																					 texture(window, glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
-																					 framebuffer(window, texture)
+																					 texture(window, glm::ivec4(8192, 8192, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
+																					 framebuffer(window, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
 {
-	glm::vec2 projectionDimensions = {96, 96};
-	glm::mat4 lightProjection = glm::ortho(-projectionDimensions.x, projectionDimensions.x, -projectionDimensions.y, projectionDimensions.y, directionalLight.nearPlane, directionalLight.farPlane);
-	glm::vec3 lightDirection = glm::normalize(directionalLight.direction);
-	glm::vec3 lightTarget = directionalLight.position + lightDirection;
-	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	if (glm::abs(glm::dot(worldUp, lightDirection)) > 0.99f)
+	update();
+}
+void DirectionalLightShadow::addShader()
+{
+	if (shader)
+		return;
+	void* data = 0;	
+	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(window.iRenderer);
+	if (vulkanRenderer.currentFramebufferImpl)
 	{
-		worldUp = glm::vec3(1.0f, 0.0f, 0.0f); // Switch to X-axis as up
+		data = vulkanRenderer.currentFramebufferImpl->renderPass;
 	}
-	glm::vec3 right = glm::normalize(glm::cross(worldUp, lightDirection));
-	glm::vec3 correctedUp = glm::normalize(glm::cross(lightDirection, right));
-	glm::mat4 lightView = glm::lookAt(directionalLight.position,
-									  lightTarget,
-									  correctedUp);
-	lightSpaceMatrix = lightProjection * lightView;
+	else
+	{
+		data = vulkanRenderer.renderPass;
+	} 
+	shader = shaders::ShaderManager::getShaderByConstants(window, {"DepthMap", "Color", "Position", "Normal", "Model", "LightSpaceMatrix"}, data).second.get();
+}
+void DirectionalLightShadow::update()
+{
+	static glm::vec2 projectionDimensions = {192, 192};
+	vp::Projection projection(window, projectionDimensions, directionalLight.nearPlane, directionalLight.farPlane);
+	vp::View view(directionalLight.position, directionalLight.direction, directionalLight.up, lookAtSet, lookAt);
+	lightSpaceMatrix = projection.matrix * view.matrix;
 }

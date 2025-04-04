@@ -27,35 +27,35 @@ VFBLR::~VFBLR()
 }
 void VFBLR::onFrontTick()
 {
-    scene.view.position.x += scene.view.direction.x * force * scene.window.deltaTime;
-    scene.view.position.y += scene.view.direction.y * force * scene.window.deltaTime;
-    scene.view.position.z += scene.view.direction.z * force * scene.window.deltaTime;
-    scene.view.update();
+    scene.viewPointer->position.x += scene.viewPointer->direction.x * force * scene.window.deltaTime;
+    scene.viewPointer->position.y += scene.viewPointer->direction.y * force * scene.window.deltaTime;
+    scene.viewPointer->position.z += scene.viewPointer->direction.z * force * scene.window.deltaTime;
+    scene.viewPointer->update();
 }
 void VFBLR::onBackTick()
 {
-    scene.view.position.x -= scene.view.direction.x * force * scene.window.deltaTime;
-    scene.view.position.y -= scene.view.direction.y * force * scene.window.deltaTime;
-    scene.view.position.z -= scene.view.direction.z * force * scene.window.deltaTime;
-    scene.view.update();
+    scene.viewPointer->position.x -= scene.viewPointer->direction.x * force * scene.window.deltaTime;
+    scene.viewPointer->position.y -= scene.viewPointer->direction.y * force * scene.window.deltaTime;
+    scene.viewPointer->position.z -= scene.viewPointer->direction.z * force * scene.window.deltaTime;
+    scene.viewPointer->update();
 }
 void VFBLR::onLeftTick()
 {
     glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec3 right = glm::normalize(glm::cross(scene.view.direction, worldUp));
-    glm::vec3 up = glm::normalize(glm::cross(right, scene.view.direction));
-    scene.view.position.x -= right.x * force * scene.window.deltaTime;
-    scene.view.position.y -= right.y * force * scene.window.deltaTime;
-    scene.view.position.z -= right.z * force * scene.window.deltaTime;
-    scene.view.update();
+    glm::vec3 right = glm::normalize(glm::cross(scene.viewPointer->direction, worldUp));
+    glm::vec3 up = glm::normalize(glm::cross(right, scene.viewPointer->direction));
+    scene.viewPointer->position.x -= right.x * force * scene.window.deltaTime;
+    scene.viewPointer->position.y -= right.y * force * scene.window.deltaTime;
+    scene.viewPointer->position.z -= right.z * force * scene.window.deltaTime;
+    scene.viewPointer->update();
 }
 void VFBLR::onRightTick()
 {
     glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec3 right = glm::normalize(glm::cross(scene.view.direction, worldUp));
-    glm::vec3 up = glm::normalize(glm::cross(right, scene.view.direction));
-    scene.view.position.x += right.x * force * scene.window.deltaTime;
-    scene.view.position.y += right.y * force * scene.window.deltaTime;
-    scene.view.position.z += right.z * force * scene.window.deltaTime;
-    scene.view.update();
+    glm::vec3 right = glm::normalize(glm::cross(scene.viewPointer->direction, worldUp));
+    glm::vec3 up = glm::normalize(glm::cross(right, scene.viewPointer->direction));
+    scene.viewPointer->position.x += right.x * force * scene.window.deltaTime;
+    scene.viewPointer->position.y += right.y * force * scene.window.deltaTime;
+    scene.viewPointer->position.z += right.z * force * scene.window.deltaTime;
+    scene.viewPointer->update();
 }

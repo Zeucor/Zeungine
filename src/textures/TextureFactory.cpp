@@ -55,12 +55,18 @@ void TextureFactory::initTexture(Texture &texture, const std::string_view path)
 };
 void TextureFactory::initTexture(Texture &texture, const std::vector<std::string_view> &paths)
 {
-  preInitTexture(texture);
   std::vector<images::ImageLoader::ImagePair> imagePairs;
   for (const auto &path : paths)
   {
     imagePairs.push_back(images::ImageLoader::load(path));
   }
+  if (!texture.size.x || !texture.size.y && imagePairs.size())
+  {
+    auto firstImageSize = imagePairs[0].first;
+    texture.size.x = firstImageSize.x;
+    texture.size.y = firstImageSize.y;
+  }
+  preInitTexture(texture);
   midInitTexture(texture, imagePairs);
   postInitTexture(texture);
 };

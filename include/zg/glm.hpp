@@ -8,3 +8,5 @@
 #include <glm/gtx/closest_point.hpp>
 #include <glm/gtx/normal.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtc/constants.hpp>
+#include <glm/gtx/norm.hpp>

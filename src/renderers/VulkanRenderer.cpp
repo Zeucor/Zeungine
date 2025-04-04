@@ -4,6 +4,7 @@
 #include <zg/entities/Plane.hpp>
 #include <zg/renderers/VulkanRenderer.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
+#include <zg/system/ErrorPopup.hpp>
 #include <zg/textures/TextureFactory.hpp>
 #include <zg/vaos/VAOFactory.hpp>
 #ifdef _WIN32
@@ -60,22 +61,26 @@ static std::unordered_map<shaders::ShaderType, VkShaderStageFlagBits> stageStage
 static std::unordered_map<textures::Texture::Format, VkFormat> textureFormat_Format = {
 	{textures::Texture::Format::RGBA8, VK_FORMAT_R8G8B8A8_SRGB},
 	{textures::Texture::Format::Depth, VK_FORMAT_D32_SFLOAT},
-	{textures::Texture::Format::DepthStencil, VK_FORMAT_D32_SFLOAT_S8_UINT}};
+	{textures::Texture::Format::DepthStencil, VK_FORMAT_D32_SFLOAT_S8_UINT},
+	{textures::Texture::Format::Stencil, VK_FORMAT_R8_UINT}};
 static std::unordered_map<textures::Texture::Format, VkImageLayout> textureFormat_imageLayout = {
 	{textures::Texture::Format::RGBA8, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
-	{textures::Texture::Format::Depth, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL},
-	{textures::Texture::Format::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}};
+	{textures::Texture::Format::Depth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL},
+	{textures::Texture::Format::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL},
+	{textures::Texture::Format::Stencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}};
 static std::unordered_map<textures::Texture::Format, VkImageLayout> textureFormat_descriptor_imageLayout = {
 	{textures::Texture::Format::RGBA8, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
 	{textures::Texture::Format::Depth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL},
-	{textures::Texture::Format::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL}};
+	{textures::Texture::Format::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL},
+	{textures::Texture::Format::Stencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL}};
 static std::unordered_map<textures::Texture::Format, VkImageAspectFlags> textureFormat_imageAspect = {
 	{textures::Texture::Format::RGBA8, VK_IMAGE_ASPECT_COLOR_BIT},
 	{textures::Texture::Format::Depth, VK_IMAGE_ASPECT_DEPTH_BIT},
-	{textures::Texture::Format::DepthStencil, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT}};
+	{textures::Texture::Format::DepthStencil, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT},
+	{textures::Texture::Format::Stencil, VK_IMAGE_ASPECT_STENCIL_BIT}};
 // static std::unordered_map<EFramebufferAttachmentType, VkFormat> attachmentType_Format = {
 // 	{EFramebufferAttachmentType::Color, VK_FORMAT_R8G8B8A8_SRGB},
-// 	{EFramebufferAttachmentType::Depth, VK_FORMAT_D32_SFLOAT},
+// 	{EFramebufferAttachmentType::Depth, VK_FORMAT_D32_SFLOA_S8_UINTT},
 // 	{EFramebufferAttachmentType::DepthStencil, VK_FORMAT_D32_SFLOAT_S8_UINT}
 // };
 // static std::unordered_map<EFramebufferAttachmentType, VkImageLayout> attachmentType_finalLayout = {
@@ -134,6 +139,7 @@ void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	createSwapChain();
 	createImageViews();
 	createRenderPass();
+	createDepthResources();
 	createFramebuffers();
 	createCommandPool();
 	createCommandBuffers();
@@ -364,8 +370,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBits
 																						 VkDebugUtilsMessageTypeFlagsEXT messageType,
 																						 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-		std::cout << pCallbackData->pMessage << std::endl;
+	if (messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT ||
+			messageSeverity == VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		system::ErrorPopup::show(pCallbackData->pMessage);
 	return VK_FALSE;
 }
 void VulkanRenderer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
@@ -895,21 +902,35 @@ void VulkanRenderer::createRenderPass()
 	VkAttachmentReference colorAttachmentRef{};
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	VkAttachmentDescription depthAttachment{};
+	depthAttachment.format = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
+	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	VkAttachmentReference depthAttachmentRef{};
+	depthAttachmentRef.attachment = 1;
+	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	VkSubpassDescription subpass{};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &colorAttachmentRef;
+	subpass.pDepthStencilAttachment = &depthAttachmentRef;
 	VkSubpassDependency dependency{};
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependency.dstSubpass = 0;
 	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	dependency.srcAccessMask = 0;
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+	std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo.attachmentCount = 1;
-	renderPassInfo.pAttachments = &colorAttachment;
+	renderPassInfo.attachmentCount = attachments.size();
+	renderPassInfo.pAttachments = attachments.data();
 	renderPassInfo.subpassCount = 1;
 	renderPassInfo.pSubpasses = &subpass;
 	renderPassInfo.dependencyCount = 1;
@@ -926,12 +947,14 @@ void VulkanRenderer::createFramebuffers()
 	swapChainFramebuffers.resize(swapChainImageViewsSize);
 	for (uint32_t index = 0; index < swapChainImageViewsSize; index++)
 	{
-		VkImageView attachments[] = {swapChainImageViews[index]};
+	std:
+	vector:
+		std::vector<VkImageView> attachments({{swapChainImageViews[index], depthImageView}});
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferInfo.renderPass = renderPass;
-		framebufferInfo.attachmentCount = 1;
-		framebufferInfo.pAttachments = attachments;
+		framebufferInfo.attachmentCount = attachments.size();
+		framebufferInfo.pAttachments = attachments.data();
 		framebufferInfo.width = swapChainExtent.width;
 		framebufferInfo.height = swapChainExtent.height;
 		framebufferInfo.layers = 1;
@@ -969,6 +992,14 @@ void VulkanRenderer::createCommandBuffers()
 		throw std::runtime_error("VulkanRenderer-createCommandBuffers: failed to allocate command buffers!");
 	}
 	return;
+}
+void VulkanRenderer::createDepthResources()
+{
+	VkFormat depthFormat = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
+	createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL,
+							VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage,
+							depthImageMemory);
+	depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 void VulkanRenderer::createSyncObjects()
 {
@@ -1089,6 +1120,10 @@ void VulkanRenderer::destroySwapChain()
 		_vkDestroyImageView(device, imageView, 0);
 	}
 	_vkDestroySwapchainKHR(device, swapChain, 0);
+	_vkDestroyImage(device, depthImage, 0);
+	_vkDestroyImageView(device, depthImageView, 0);
+	_vkFreeMemory(device, depthImageMemory, 0);
+
 }
 void VulkanRenderer::preBeginRenderPass()
 {
@@ -1135,15 +1170,17 @@ void VulkanRenderer::beginRenderPass()
 	renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
 	renderPassInfo.renderArea.offset = {0, 0};
 	renderPassInfo.renderArea.extent = swapChainExtent;
+	std::array<VkClearValue, 2> clearValues{};
 	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	glm::vec4 clearColor(0, 0, 0, 1);
 	if (renderWindow.scene)
 	{
 		clearColor = ((Scene&)*renderWindow.scene).clearColor;
 	}
-	VkClearValue vkClearColor = {{{clearColor.r, clearColor.g, clearColor.b, clearColor.a}}};
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &vkClearColor;
+	clearValues[0].color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
+	clearValues[1].depthStencil = {1.0f, 0};
+	renderPassInfo.clearValueCount = clearValues.size();
+	renderPassInfo.pClearValues = clearValues.data();
 	_vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	return;
 }
@@ -1219,12 +1256,15 @@ void VulkanRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std
 		return;
 	}
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	memcpy(vaoImpl.uniformBuffersMapped[location], pointer, size);
+	auto data = Entity::getShaderData(shader.window);
+	auto& uniformBuffersMapped = vaoImpl.getUniformBuffersMapped(data);
+	memcpy(uniformBuffersMapped[location], pointer, size);
 }
 int32_t VulkanRenderer::getUniformLocation(shaders::Shader& shader, vaos::VAO& vao, const std::string_view& name)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto& table = vaoImpl.uniformLocationTable;
+	auto data = Entity::getShaderData(shader.window);
+	auto& table = vaoImpl.getUniformLocationTable(data);
 	std::string stringName(name);
 	auto iter = table.find(stringName);
 	if (iter == table.end())
@@ -1240,7 +1280,7 @@ void VulkanRenderer::bindShader(shaders::Shader& shader, Entity& entity)
 	{
 		compileProgram(shader);
 	}
-	if (!entity.ensured)
+	if (!entity.isEnsured())
 	{
 		ensureEntity(shader, entity);
 	}
@@ -1285,23 +1325,26 @@ void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shader
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
-	auto ssboIter = shaderImpl.ssboBindings.find(stringName);
+	auto data = Entity::getShaderData(shader.window);
+	auto& ssboBindings = shaderImpl.getSsboBindings(data);
+	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
+	auto ssboIter = ssboBindings.find(stringName);
 	std::tuple<uint32_t, uint32_t, uint32_t>* ssboBindingPointer = 0;
-	if (ssboIter == shaderImpl.ssboBindings.end())
+	if (ssboIter == ssboBindings.end())
 	{
-		ssboBindingPointer = &shaderImpl.ssboBindings[stringName];
+		ssboBindingPointer = &ssboBindings[stringName];
 		std::get<1>(*ssboBindingPointer) = bindingIndex;
 		VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1,
 																									(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-		shaderImpl.uboLayoutBindings.push_back({{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding});
-		int32_t uboLayoutBindingIndex = shaderImpl.uboLayoutBindings.size() - 1;
+		uboLayoutBindings.push_back({{ELayoutBindingType::SSBO, 0, "", bindingIndex, false}, layoutBinding});
+		int32_t uboLayoutBindingIndex = uboLayoutBindings.size() - 1;
 		std::get<2>(*ssboBindingPointer) = uboLayoutBindingIndex;
 	}
 	else
 	{
 		ssboBindingPointer = &ssboIter->second;
 		auto uboLayoutBindingIndex = std::get<2>(*ssboBindingPointer);
-		shaderImpl.uboLayoutBindings[uboLayoutBindingIndex].second.stageFlags |= stageStageFlag[shaderType];
+		uboLayoutBindings[uboLayoutBindingIndex].second.stageFlags |= stageStageFlag[shaderType];
 	}
 	std::get<0>(*ssboBindingPointer) |= (uint32_t)shaderType;
 }
@@ -1312,12 +1355,15 @@ void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderT
 	std::string stringName(name);
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, (uint32_t)1,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	shaderImpl.uboLayoutBindings.push_back(
+	auto data = Entity::getShaderData(shader.window);
+	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
+	auto& uboStringBindings = shaderImpl.getUboStringBindings(data);
+	uboLayoutBindings.push_back(
 		{{ELayoutBindingType::UniformBuffer, bufferSize, stringName, bindingIndex, isArray}, layoutBinding});
-	shaderImpl.uboStringBindings[stringName] = bindingIndex;
+	uboStringBindings[stringName] = bindingIndex;
 	for (uint32_t index = 0; index < 1; index++)
 	{
-		shaderImpl.uboStringBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
+		uboStringBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
 	}
 }
 void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, shaders::ShaderType shaderType,
@@ -1328,12 +1374,14 @@ void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, 
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 																								(uint32_t)descriptorCount,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	shaderImpl.uboLayoutBindings.push_back(
-		{{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding});
-	shaderImpl.textureBindings[stringName] = bindingIndex;
+	auto data = Entity::getShaderData(shader.window);
+	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
+	auto& textureBindings = shaderImpl.getTextureBindings(data);
+	uboLayoutBindings.push_back({{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding});
+	textureBindings[stringName] = bindingIndex;
 	for (uint32_t index = 0; index < descriptorCount; index++)
 	{
-		shaderImpl.textureArrayBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
+		textureBindings[stringName + "[" + std::to_string(index) + "]"] = bindingIndex + index;
 	}
 }
 void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std::string_view name, const void* pointer,
@@ -1342,15 +1390,19 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std:
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	std::string stringName(name);
-	auto ssboIter = shaderImpl.ssboBindings.find(stringName);
-	if (ssboIter == shaderImpl.ssboBindings.end())
+	auto data = Entity::getShaderData(shader.window);
+	auto& ssboBindings = shaderImpl.getSsboBindings(data);
+	auto ssboIter = ssboBindings.find(stringName);
+	if (ssboIter == ssboBindings.end())
 	{
 		return;
 	}
-	auto ssboBufferIter = vaoImpl.ssboBuffers.find(stringName);
-	if (ssboBufferIter == vaoImpl.ssboBuffers.end())
+	auto& ssboBuffers = vaoImpl.getSsboBuffers(data);
+	auto ssboBufferIter = ssboBuffers.find(stringName);
+	if (ssboBufferIter == ssboBuffers.end())
 	{
-		return;
+		ssboBuffers[stringName] = {0, 0};
+		ssboBufferIter = ssboBuffers.find(stringName);
 	}
 	auto& buffer = std::get<0>(ssboBufferIter->second);
 	auto& deviceMemory = std::get<1>(ssboBufferIter->second);
@@ -1375,7 +1427,8 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std:
 	storageBufferInfo.range = size;
 	VkWriteDescriptorSet descriptorWrite{};
 	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = vaoImpl.descriptorSet;
+	auto& entity = (Entity&)vao;
+	descriptorWrite.dstSet = vaoImpl.getDescriptorSet(data);
 	descriptorWrite.dstBinding = bindingIndex;
 	descriptorWrite.dstArrayElement = 0;
 	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -1390,11 +1443,16 @@ void VulkanRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const s
 	std::string stringName(name);
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto& entity = (Entity&)vao;
+	auto data = entity.getShaderData(entity.window);
+	auto& textureBindings = shaderImpl.getTextureBindings(data);
+	auto& bindingIndex = textureBindings[stringName];
+	if (!bindingIndex)
+		return;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	VkWriteDescriptorSet descriptorWrite{};
 	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = vaoImpl.descriptorSet;
-	auto& bindingIndex = shaderImpl.textureBindings[stringName];
+	descriptorWrite.dstSet = vaoImpl.getDescriptorSet(data);
 	descriptorWrite.dstBinding = bindingIndex;
 	descriptorWrite.dstArrayElement = 0;
 	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1444,6 +1502,8 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	if (shader.compiled)
 		return true;
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto data = Entity::getShaderData(shader.window);
+	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 	for (auto& shaderPair : shaderImpl.shaders)
 	{
@@ -1535,7 +1595,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	colorBlending.blendConstants[2] = 0.0f;
 	colorBlending.blendConstants[3] = 0.0f;
 	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
-	for (auto& uboLayoutBinding : shaderImpl.uboLayoutBindings)
+	for (auto& uboLayoutBinding : uboLayoutBindings)
 	{
 		layoutBindings.push_back(uboLayoutBinding.second);
 	}
@@ -1543,15 +1603,16 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	descriptorSetLayoutInfo.bindingCount = layoutBindings.size();
 	descriptorSetLayoutInfo.pBindings = layoutBindings.data();
+	auto& descriptorSetLayout = shaderImpl.getDescriptorSetLayout(data);
 	if (!VKcheck("vkCreateDescriptorSetLayout",
-							 _vkCreateDescriptorSetLayout(device, &descriptorSetLayoutInfo, 0, &shaderImpl.descriptorSetLayout)))
+							 _vkCreateDescriptorSetLayout(device, &descriptorSetLayoutInfo, 0, &descriptorSetLayout)))
 	{
 		throw std::runtime_error("Failed to create descriptor set layout");
 	}
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &shaderImpl.descriptorSetLayout;
+	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 	if (!VKcheck("vkCreatePipelineLayout",
 							 _vkCreatePipelineLayout(device, &pipelineLayoutInfo, 0, &shaderImpl.pipelineLayout)))
 	{
@@ -1578,6 +1639,40 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 		pipelineInfo.renderPass = currentFramebufferImpl->renderPass;
 	else
 		pipelineInfo.renderPass = renderPass;
+	VkPipelineDepthStencilStateCreateInfo depthStencilState{};
+	bool hasDepthAttachment = false;
+	if ((currentFramebufferImpl && currentFramebufferImpl->zgFramebuffer->hasDepthAttachment()) ||
+			!currentFramebufferImpl)
+	{
+		hasDepthAttachment = true;
+		depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencilState.depthTestEnable = VK_TRUE;
+		depthStencilState.depthWriteEnable = VK_TRUE;
+		depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencilState.depthBoundsTestEnable = VK_FALSE;
+		depthStencilState.stencilTestEnable = VK_FALSE;
+		depthStencilState.front = {};
+		depthStencilState.back = {};
+		pipelineInfo.pDepthStencilState = &depthStencilState;
+	}
+	// VkSubpassDescription subpass{};
+	// bool hasColorAttachment = (!currentFramebufferImpl || (currentFramebufferImpl &&
+	// currentFramebufferImpl->zgFramebuffer->hasColorAttachment())); VkAttachmentReference colorAttachmentRef{};
+	// VkAttachmentReference depthAttachmentRef{};
+	// if (hasColorAttachment)
+	// {
+	// 	colorAttachmentRef.attachment = 0;
+	// 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	// 	subpass.pColorAttachments = &colorAttachmentRef;
+	// 	subpass.colorAttachmentCount = 1;
+	// }
+	// if (hasDepthAttachment)
+	// {
+	// 	depthAttachmentRef.attachment = 0;
+	// 	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	// 	subpass.pDepthStencilAttachment = &depthAttachmentRef;
+	// }
+	// subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 	if (!VKcheck("vkCreateGraphicsPipelines",
@@ -1603,10 +1698,13 @@ void VulkanRenderer::destroyShader(shaders::Shader& shader)
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	destroyAtRenderPassEndOrDestroy(
-		[&, descriptorSetLayout = shaderImpl.descriptorSetLayout, graphicsPipeline = shaderImpl.graphicsPipeline,
+		[&, descriptorSetLayouts = shaderImpl.descriptorSetLayouts, graphicsPipeline = shaderImpl.graphicsPipeline,
 		 pipelineLayout = shaderImpl.pipelineLayout, shaders = shaderImpl.shaders]
 		{
-			_vkDestroyDescriptorSetLayout(device, descriptorSetLayout, 0);
+			for (auto& pair : descriptorSetLayouts)
+			{
+				_vkDestroyDescriptorSetLayout(device, pair.second, 0);
+			}
 			_vkDestroyPipeline(device, graphicsPipeline, 0);
 			_vkDestroyPipelineLayout(device, pipelineLayout, 0);
 			for (auto& shaderPair : shaders)
@@ -1625,30 +1723,37 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 	renderPassInfo.renderArea.extent.width = framebufferImpl.width;
 	renderPassInfo.renderArea.extent.height = framebufferImpl.height;
 	std::vector<VkClearValue> clearValues;
-	VkClearValue clearValue;
-	switch (framebuffer.texture.format)
+	for (auto& pair : framebuffer.textureAttachmentPairs)
 	{
-	case textures::Texture::Depth:
+		auto& texture = *pair.first;
+		VkClearValue clearValue;
+		switch (pair.second)
 		{
-			clearValue.depthStencil = {0.0f, 0};
-			break;
-		}
-	default:
-		{
-			glm::vec4 clearColor = framebuffer.clearColor;
-			if (framebuffer.scenePointer)
+		case textures::Framebuffer::AttachmentType::Depth:
+		case textures::Framebuffer::AttachmentType::DepthStencil:
+		case textures::Framebuffer::AttachmentType::Stencil:
 			{
-				clearColor = framebuffer.scenePointer->clearColor;
+				clearValue.depthStencil = {1.0f, 0};
+				break;
 			}
-			clearValue.color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
-			break;
+		case textures::Framebuffer::AttachmentType::Color:
+			{
+				glm::vec4 clearColor = framebuffer.clearColor;
+				if (framebuffer.scenePointer)
+				{
+					clearColor = framebuffer.scenePointer->clearColor;
+				}
+				clearValue.color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
+				break;
+			}
 		}
+		clearValues.push_back(clearValue);
 	}
-	clearValues.push_back(clearValue);
 	renderPassInfo.clearValueCount = clearValues.size();
 	renderPassInfo.pClearValues = clearValues.data();
 	_vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	currentFramebufferImpl = &framebufferImpl;
+	((VulkanFramebufferImpl*)currentFramebufferImpl)->zgFramebuffer = (zg::textures::Framebuffer*)&framebuffer;
 }
 void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
 {
@@ -1662,76 +1767,105 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 	size_t renderPassHash = 0;
 	uint8_t shift = 0;
 	std::vector<VkAttachmentDescription> attachments;
-	VkAttachmentDescription attachment{};
-	attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-	attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	renderPassHash ^= attachment.samples;
-	renderPassHash ^= (attachment.loadOp << ++shift);
-	renderPassHash ^= (attachment.storeOp << ++shift);
-	renderPassHash ^= (attachment.stencilLoadOp << ++shift);
-	renderPassHash ^= (attachment.stencilStoreOp << ++shift);
-	renderPassHash ^= (attachment.initialLayout << ++shift);
-	switch (framebuffer.texture.format)
+	for (auto& pair : framebuffer.textureAttachmentPairs)
 	{
-	case textures::Texture::Depth:
+		VkAttachmentDescription attachment{};
+		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		renderPassHash ^= attachment.samples;
+		renderPassHash ^= (attachment.loadOp << ++shift);
+		renderPassHash ^= (attachment.storeOp << ++shift);
+		renderPassHash ^= (attachment.stencilLoadOp << ++shift);
+		renderPassHash ^= (attachment.stencilStoreOp << ++shift);
+		renderPassHash ^= (attachment.initialLayout << ++shift);
+		if (!framebufferImpl.width && !framebufferImpl.height)
 		{
+			auto& texture = *pair.first;
+			framebufferImpl.width = texture.size.x;
+			framebufferImpl.height = texture.size.y;
+		}
+		switch (pair.second)
+		{
+		case textures::Framebuffer::AttachmentType::Depth:
 			attachment.format = VK_FORMAT_D32_SFLOAT;
 			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 			break;
-		}
-	default:
-		attachment.format = VK_FORMAT_R8G8B8A8_SRGB;
-		attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		break;
-	}
-	renderPassHash ^= (attachment.format << ++shift);
-	renderPassHash ^= (attachment.finalLayout << ++shift);
-	attachments.push_back(attachment);
-	std::vector<VkAttachmentReference> colorAttachmentRefs;
-	std::vector<VkAttachmentReference> depthAttachmentRefs;
-	uint32_t attachmentIndex = 0;
-	VkAttachmentReference ref{};
-	ref.attachment = attachmentIndex++;
-	switch (framebuffer.texture.format)
-	{
-	case textures::Texture::Depth:
-		{
-			ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			depthAttachmentRefs.push_back(ref);
+		case textures::Framebuffer::AttachmentType::DepthStencil:
+			attachment.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
+			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 			break;
+		case textures::Framebuffer::AttachmentType::Color:
+			attachment.format = VK_FORMAT_R8G8B8A8_SRGB;
+			attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			break;
+		case textures::Framebuffer::AttachmentType::Stencil:
+			attachment.format = VK_FORMAT_R8_UINT;
+			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			break;
+		default:
+			throw std::runtime_error("Unsupported attachment type");
 		}
-	default:
-		ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		colorAttachmentRefs.push_back(ref);
-		break;
+		renderPassHash ^= (attachment.format << ++shift);
+		renderPassHash ^= (attachment.finalLayout << ++shift);
+		attachments.push_back(attachment);
 	}
-	renderPassHash ^= (ref.layout << ++shift);
+	std::vector<VkAttachmentReference> colorAttachmentRefs;
+	VkAttachmentReference depthAttachmentRef;
+	uint32_t attachmentIndex = 0;
 	VkSubpassDescription subpass{};
+	for (auto& pair : framebuffer.textureAttachmentPairs)
+	{
+		switch (pair.second)
+		{
+		case textures::Framebuffer::AttachmentType::DepthStencil:
+		case textures::Framebuffer::AttachmentType::Stencil:
+		case textures::Framebuffer::AttachmentType::Depth:
+			depthAttachmentRef.attachment = attachmentIndex++;
+			depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			subpass.pDepthStencilAttachment = &depthAttachmentRef;
+			renderPassHash ^= (depthAttachmentRef.layout << ++shift);
+			break;
+		case textures::Framebuffer::AttachmentType::Color:
+			{
+				VkAttachmentReference ref{};
+				ref.attachment = attachmentIndex++;
+				ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				colorAttachmentRefs.push_back(ref);
+				renderPassHash ^= (ref.layout << ++shift);
+				break;
+			}
+		}
+	}
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = colorAttachmentRefs.size();
 	subpass.pColorAttachments = colorAttachmentRefs.data();
-	subpass.pDepthStencilAttachment = depthAttachmentRefs.data();
 	VkSubpassDependency dependency{};
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependency.dstSubpass = 0;
-	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	dependency.srcStageMask = 0;
 	dependency.srcAccessMask = 0;
-	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-
-	switch (framebuffer.texture.format)
+	dependency.dstStageMask = 0;
+	for (auto& pair : framebuffer.textureAttachmentPairs)
 	{
-	case textures::Texture::Depth:
+		switch (pair.second)
 		{
-			dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		case textures::Framebuffer::AttachmentType::Stencil:
+		case textures::Framebuffer::AttachmentType::Depth:
+		case textures::Framebuffer::AttachmentType::DepthStencil:
+			dependency.srcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependency.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			dependency.dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			break;
+		case textures::Framebuffer::AttachmentType::Color:
+			dependency.srcStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			dependency.dstAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			dependency.dstStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 			break;
 		}
-	default:
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		break;
 	}
 	renderPassHash ^= (dependency.srcSubpass << ++shift);
 	renderPassHash ^= (dependency.dstSubpass << ++shift);
@@ -1761,10 +1895,12 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 		renderPassMap[renderPassHash] = framebufferImpl.renderPass;
 	}
 	std::vector<VkImageView> imageViews;
-	auto& textureImpl = *(VulkanTextureImpl*)framebuffer.texture.rendererData;
-	framebufferImpl.width = framebuffer.texture.size.x;
-	framebufferImpl.height = framebuffer.texture.size.y;
-	imageViews.push_back(textureImpl.textureImageView);
+	for (auto& pair : framebuffer.textureAttachmentPairs)
+	{
+		auto& texture = *pair.first;
+		auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
+		imageViews.push_back(textureImpl.textureImageView);
+	}
 	VkFramebufferCreateInfo framebufferInfo{};
 	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	framebufferInfo.renderPass = framebufferImpl.renderPass;
@@ -1871,6 +2007,11 @@ VkFormat VulkanRenderer::findDepthFormat(uint32_t _format)
 	textures::Texture::Format format = (textures::Texture::Format)_format;
 	switch (format)
 	{
+	case textures::Texture::Format::Stencil:
+		{
+			candidates.push_back(VK_FORMAT_R8_UINT);
+			break;
+		};
 	case textures::Texture::Format::Depth:
 		{
 			candidates.push_back(VK_FORMAT_D32_SFLOAT);
@@ -1923,6 +2064,10 @@ void VulkanRenderer::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t 
 	_vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 	endSingleTimeCommands(commandBuffer);
 }
+bool hasStencilComponent(VkFormat format)
+{
+	return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+}
 void VulkanRenderer::transitionImageLayout(VulkanTextureImpl& textureImpl, VkImage image, VkFormat format,
 																					 VkImageLayout oldLayout, VkImageLayout newLayout,
 																					 VkImageAspectFlags aspectMask)
@@ -1936,12 +2081,23 @@ void VulkanRenderer::transitionImageLayout(VulkanTextureImpl& textureImpl, VkIma
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = image;
-	barrier.subresourceRange.aspectMask = aspectMask;
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = 1;
 	barrier.subresourceRange.baseArrayLayer = 0;
 	barrier.subresourceRange.layerCount = 1;
+	if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+	{
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
+		if (hasStencilComponent(format))
+		{
+			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+		}
+	}
+	else
+	{
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	}
 	VkPipelineStageFlags sourceStage;
 	VkPipelineStageFlags destinationStage;
 
@@ -1952,6 +2108,13 @@ void VulkanRenderer::transitionImageLayout(VulkanTextureImpl& textureImpl, VkIma
 
 		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
+	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+	{
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	}
 	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 	{
@@ -1985,27 +2148,34 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 	texture.rendererData = new VulkanTextureImpl();
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
 	VkFormat format;
+	VkImageTiling tiling;
 	if (texture.format == textures::Texture::Format::RGBA8)
 	{
 		format = textureFormat_Format[texture.format];
+		tiling = VK_IMAGE_TILING_LINEAR;
 	}
 	else if (texture.format == textures::Texture::Format::Depth ||
 					 texture.format == textures::Texture::Format::DepthStencil)
 	{
 		format = findDepthFormat(texture.format);
+		tiling = VK_IMAGE_TILING_OPTIMAL;
 	}
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	VkImageLayout newLayout;
 	switch (texture.format)
 	{
 	case textures::Texture::Format::RGBA8:
 		{
 			usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 			break;
 		};
+	case textures::Texture::Format::Stencil:
 	case textures::Texture::Format::Depth:
 	case textures::Texture::Format::DepthStencil:
 		{
 			usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			break;
 		};
 	default:
@@ -2014,12 +2184,13 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 		};
 	}
 	// TODO: Vulkan: Implement createImage1D && createImage3D
-	createImage(texture.size.x, texture.size.y, format, VK_IMAGE_TILING_LINEAR, usage,
-							VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImpl.textureImage, textureImpl.textureImageMemory);
+	createImage(texture.size.x, texture.size.y, format, tiling, usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+							textureImpl.textureImage, textureImpl.textureImageMemory);
 	auto aspectMask = textureFormat_imageAspect[texture.format];
 	textureImpl.textureImageView = createImageView(textureImpl.textureImage, format, aspectMask);
-	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_UNDEFINED,
-												VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, aspectMask);
+
+	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_UNDEFINED, newLayout,
+												aspectMask);
 	// create sampler
 	VkPhysicalDeviceProperties properties{};
 	_vkGetPhysicalDeviceProperties(physicalDevice, &properties);
@@ -2096,10 +2267,7 @@ void VulkanRenderer::midInitTexture(const textures::Texture& texture,
 	_vkDestroyBuffer(device, _stagingBuffer, 0);
 	_vkFreeMemory(device, _stagingBufferMemory, 0);
 }
-void VulkanRenderer::postInitTexture(const textures::Texture& texture)
-{
-	texture.bind();
-}
+void VulkanRenderer::postInitTexture(const textures::Texture& texture) { texture.bind(); }
 void VulkanRenderer::destroyTexture(textures::Texture& texture)
 {
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
@@ -2134,8 +2302,10 @@ void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_v
 void VulkanRenderer::drawVAO(const vaos::VAO& vao)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto& shader = *(dynamic_cast<const Entity&>(vao)).shader;
-	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto& entity = (Entity&)vao;
+	auto data = entity.getShaderData(entity.window);
+	auto& shader = *entity.addShader();
+	auto& shaderImpl = *(VulkanShaderImpl*)(shader.rendererData);
 	if (vaoImpl.vertexBuffer == VK_NULL_HANDLE)
 	{
 		return;
@@ -2145,7 +2315,7 @@ void VulkanRenderer::drawVAO(const vaos::VAO& vao)
 	_vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
 	_vkCmdBindIndexBuffer(*commandBuffer, vaoImpl.indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
 	_vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
-													 &vaoImpl.descriptorSet, 0, 0);
+													 &vaoImpl.getDescriptorSet(data), 0, 0);
 	auto& indices = vao.indiceCount;
 	if (!indices)
 	{
@@ -2179,20 +2349,29 @@ void VulkanRenderer::destroyVAO(vaos::VAO& vao)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	destroyAtRenderPassEndOrDestroy(
-		[&, uniformBuffers = vaoImpl.uniformBuffers, uniformBuffersMemory = vaoImpl.uniformBuffersMemory,
-		 descriptorPool = vaoImpl.descriptorPool, indiceBuffer = vaoImpl.indiceBuffer,
-		 indiceBufferMemory = vaoImpl.indiceBufferMemory, vertexBuffer = vaoImpl.vertexBuffer,
-		 vertexBufferMemory = vaoImpl.vertexBufferMemory]
+		[&, ssboBuffers = vaoImpl.ssboBuffers, uniformBuffers = vaoImpl.uniformBuffers,
+		 uniformBuffersMemory = vaoImpl.uniformBuffersMemory, descriptorPools = vaoImpl.descriptorPools,
+		 indiceBuffer = vaoImpl.indiceBuffer, indiceBufferMemory = vaoImpl.indiceBufferMemory,
+		 vertexBuffer = vaoImpl.vertexBuffer, vertexBufferMemory = vaoImpl.vertexBufferMemory]
 		{
-			for (auto& uniformBuffer : uniformBuffers)
+			for (auto& pair : ssboBuffers)
 			{
-				_vkDestroyBuffer(device, uniformBuffer, 0);
+				for (auto &pair2 : pair.second)
+				{
+					_vkDestroyBuffer(device, pair2.second.first, 0);
+					_vkFreeMemory(device, pair2.second.second, 0);
+				}
 			}
-			for (auto& uniformBufferMemory : uniformBuffersMemory)
+			for (auto& pair : uniformBuffers)
+				for (auto& uniformBuffer : pair.second)
+					_vkDestroyBuffer(device, uniformBuffer, 0);
+			for (auto& pair : uniformBuffersMemory)
+				for (auto& uniformBufferMemory : pair.second)
+					_vkFreeMemory(device, uniformBufferMemory, 0);
+			for (auto& pair : descriptorPools)
 			{
-				_vkFreeMemory(device, uniformBufferMemory, 0);
+				_vkDestroyDescriptorPool(device, pair.second, 0);
 			}
-			_vkDestroyDescriptorPool(device, descriptorPool, 0);
 			_vkDestroyBuffer(device, indiceBuffer, 0);
 			_vkFreeMemory(device, indiceBufferMemory, 0);
 			_vkDestroyBuffer(device, vertexBuffer, 0);
@@ -2205,10 +2384,13 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 	if (!shader.compiled)
 		return;
 	auto& entity = dynamic_cast<Entity&>(vao);
-	if (entity.ensured)
+	if (entity.isEnsured())
 		return;
+	auto data = entity.getShaderData(entity.window);
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
+	auto& ssboBindings = shaderImpl.getSsboBindings(data);
 	std::vector<VkDescriptorPoolSize> poolSizes;
 	auto getPoolSize = [&](auto type) -> VkDescriptorPoolSize&
 	{
@@ -2222,34 +2404,34 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 		poolSizes.push_back({type, 0});
 		return poolSizes[poolSizes.size() - 1];
 	};
-	for (auto& uboLayoutBinding : shaderImpl.uboLayoutBindings)
+	for (auto& uboLayoutBinding : uboLayoutBindings)
 	{
 		auto& layoutBinding = uboLayoutBinding.second;
 		auto& poolSize = getPoolSize(layoutBinding.descriptorType);
 		poolSize.descriptorCount++;
 	}
-	if (shaderImpl.ssboBindings.size())
+	if (ssboBindings.size())
 	{
 		auto layoutBinding = getPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-		layoutBinding.descriptorCount = shaderImpl.ssboBindings.size();
+		layoutBinding.descriptorCount = ssboBindings.size();
 	}
 
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolInfo.poolSizeCount = poolSizes.size();
 	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = shaderImpl.uboLayoutBindings.size() + shaderImpl.ssboBindings.size();
+	poolInfo.maxSets = uboLayoutBindings.size() + ssboBindings.size();
 
-	auto& descriptorPool = vaoImpl.descriptorPool;
+	auto& descriptorPool = vaoImpl.getDescriptorPool(data);
 
 	if (!VKcheck("vkCreateDescriptorPool", _vkCreateDescriptorPool(device, &poolInfo, 0, &descriptorPool)))
 	{
 		throw std::runtime_error("Failed to create descriptor pool!");
 	}
 
-	auto& descriptorSet = vaoImpl.descriptorSet;
+	auto& descriptorSet = vaoImpl.getDescriptorSet(data);
 
-	std::vector<VkDescriptorSetLayout> layouts(1, shaderImpl.descriptorSetLayout);
+	std::vector<VkDescriptorSetLayout> layouts(1, shaderImpl.getDescriptorSetLayout(data));
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = descriptorPool;
@@ -2261,17 +2443,18 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 
-	auto& bufferInfos = vaoImpl.bufferInfos;
-	for (auto uboLayoutBindingPair : shaderImpl.uboLayoutBindings)
+	auto& bufferInfos = vaoImpl.getBufferInfos(data);
+	auto& uniformBuffers = vaoImpl.getUniformBuffers(data);
+	auto& uniformBuffersMemory = vaoImpl.getUniformBuffersMemory(data);
+	auto& uniformBuffersMapped = vaoImpl.getUniformBuffersMapped(data);
+	auto& uniformLocationTable = vaoImpl.getUniformLocationTable(data);
+	for (auto uboLayoutBindingPair : uboLayoutBindings)
 	{
 		if (std::get<0>(uboLayoutBindingPair.first) != ELayoutBindingType::UniformBuffer)
 		{
 			continue;
 		}
 		auto& descriptorSetLayoutBinding = uboLayoutBindingPair.second;
-		auto& uniformBuffers = vaoImpl.uniformBuffers;
-		auto& uniformBuffersMemory = vaoImpl.uniformBuffersMemory;
-		auto& uniformBuffersMapped = vaoImpl.uniformBuffersMapped;
 		uniformBuffers.resize(uniformBuffers.size() + 1);
 		uniformBuffersMemory.resize(uniformBuffersMemory.size() + 1);
 		const auto& bufferSize = std::get<1>(uboLayoutBindingPair.first);
@@ -2292,7 +2475,7 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 			bufferInfo.range = bufferSize;
 			bufferInfos.push_back(
 				{{std::get<0>(uboLayoutBindingPair.first), std::get<3>(uboLayoutBindingPair.first)}, bufferInfo});
-			vaoImpl.uniformLocationTable[std::get<2>(uboLayoutBindingPair.first)] = uniformBuffersMappedIndex;
+			uniformLocationTable[std::get<2>(uboLayoutBindingPair.first)] = uniformBuffersMappedIndex;
 		}
 		else
 		{
@@ -2307,7 +2490,7 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 				bufferInfo.range = bufferSize;
 				bufferInfos.push_back(
 					{{std::get<0>(uboLayoutBindingPair.first), std::get<3>(uboLayoutBindingPair.first) + index}, bufferInfo});
-				vaoImpl.uniformLocationTable[std::get<2>(uboLayoutBindingPair.first) + "[" + std::to_string(index) + "]"] =
+				uniformLocationTable[std::get<2>(uboLayoutBindingPair.first) + "[" + std::to_string(index) + "]"] =
 					uniformBuffersMappedIndex;
 			}
 		}
@@ -2329,8 +2512,7 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 		descriptorWrite.pBufferInfo = &bufferInfoPair.second;
 		_vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, 0);
 	}
-
-	entity.ensured = true;
+	entity.setEnsured();
 };
 VkCommandBuffer VulkanRenderer::beginSingleTimeCommands()
 {
@@ -2506,6 +2688,7 @@ bool zg::VKcheck(const char* fn, VkResult result)
 		};
 	default:
 		{
+			zg::Logger::print(zg::Logger::Blank, "VKcheck failed: ", result);
 			return false;
 		}
 	}

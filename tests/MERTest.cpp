@@ -3,16 +3,12 @@
 using namespace zg::math;
 int main()
 {
-	MathematicalEquation eq("x=2/1/2/2");
-	MathematicalEquation ez("y=3*x");
-    std::map<char, double> eqvars;
-	MathematicalEquationResolver::solveEquation(eq, eqvars);
-    std::map<char, double> ezvars{{'x', 3}};
-	MathematicalEquationResolver::solveEquation(ez, ezvars);
-	zg::Logger::print(zg::Logger::Blank, "eq:");
-	for (auto& pair : eqvars)
-		zg::Logger::print(zg::Logger::Blank, pair.first, ": ", pair.second);
-	zg::Logger::print(zg::Logger::Blank, "ez:");
-	for (auto& pair : ezvars)
-		zg::Logger::print(zg::Logger::Blank, pair.first, ": ", pair.second);
+	MathematicalEquation eq_x("t");
+	MathematicalEquation eq_y("sin(t)");
+	MathematicalEquation eq_z("cos(t)");
+	std::map<char, double> vars({{'t', 0}});
+	for (double& t = vars['t']; t < 7; t += 0.25)
+	{
+		zg::Logger::print(zg::Logger::Blank, "x=", MathematicalEquationResolver::solve(eq_x, vars), "y=", MathematicalEquationResolver::solve(eq_y, vars), "z=", MathematicalEquationResolver::solve(eq_z, vars));
+	}
 }

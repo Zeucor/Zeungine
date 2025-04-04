@@ -7,10 +7,10 @@ PointLightShadow::PointLightShadow(
 	Window &window,
 	PointLight &pointLight) : window(window),
 							//   shader(
-							// 	  *shaders::ShaderManager::getShaderByConstants(window, {"Color", "Position", "Normal", "Model", "PointLightSpaceMatrix"}, {shaders::ShaderType::Vertex, shaders::ShaderType::Geometry, shaders::ShaderType::Fragment}).second),
+							// 	  *shaders::ShaderManager::getShaderByConstants(window, {"DepthMap", "Color", "Position", "Normal", "Model", "PointLightSpaceMatrix"}, {shaders::ShaderType::Vertex, shaders::ShaderType::Geometry, shaders::ShaderType::Fragment}).second),
 							  pointLight(pointLight),
 							  texture(window, glm::ivec4(2048, 2048, 1, 1), 0, textures::Texture::Depth, textures::Texture::Float),
-							  framebuffer(window, texture)
+							  framebuffer(window, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
 {
 	updateShadowTransforms();
 }

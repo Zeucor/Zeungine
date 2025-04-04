@@ -1,5 +1,6 @@
 #include <glm/fwd.hpp>
 #include <stdexcept>
+#include <zg/Logger.hpp>
 #include <zg/Window.hpp>
 #include <zg/lights/Lights.hpp>
 #include <zg/renderers/GLRenderer.hpp>
@@ -15,7 +16,6 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-
                   return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
                     ") in vec4 inColor;";
                 }
@@ -23,7 +23,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end())
+                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end() ||
+                      std::find(constants.begin(), constants.end(), "DepthMap") != constants.end())
                   {
                     return "";
                   }
@@ -193,20 +194,20 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   shader.addUBO(ShaderType::Vertex, "DirectionalLightSpaceMatrices", bindingIndex, sizeof(glm::mat4));
                   string += "layout(binding = " + std::to_string(bindingIndex) +
                     ") uniform DirectionalLightSpaceMatrices {\n" +
-                    " mat4 matrix[4];\n" +
+                    " mat4 matrix[1];\n" +
                     "} directionalLightSpaceMatrices;\n";
                   string += "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex) +
-                    ") out vec4 outDirectionalLightSpacePositions[4];\n";
-                  ShaderFactory::currentOutLayoutIndex += 4;
+                    ") out vec4 outDirectionalLightSpacePositions[1];\n";
+                  ShaderFactory::currentOutLayoutIndex += 1;
                   bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addUBO(ShaderType::Vertex, "SpotLightSpaceMatrices", bindingIndex, sizeof(glm::mat4));
                   string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform SpotLightSpaceMatrices {\n"
                     +
-                    "  mat4 matrix[4];\n" +
+                    "  mat4 matrix[1];\n" +
                     "} spotLightSpaceMatrices;\n";
                   string += "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex) +
-                    ") out vec4 outSpotLightSpacePositions[4];";
-                  ShaderFactory::currentOutLayoutIndex += 4;
+                    ") out vec4 outSpotLightSpacePositions[1];";
+                  ShaderFactory::currentOutLayoutIndex += 1;
                   return string;
                 }
               }
@@ -221,7 +222,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end())
+                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end() ||
+                      std::find(constants.begin(), constants.end(), "DepthMap") != constants.end())
                   {
                     return "";
                   }
@@ -428,7 +430,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end())
+                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end() ||
+                      std::find(constants.begin(), constants.end(), "DepthMap") != constants.end())
                   {
                     return "";
                   }
@@ -442,7 +445,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end())
+                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end() ||
+                      std::find(constants.begin(), constants.end(), "DepthMap") != constants.end())
                   {
                     return "";
                   }
@@ -515,7 +519,17 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  return "uniform float fogDensity;\nuniform vec4 fogColor;";
+                  auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addUBO(ShaderType::Fragment, "FogDensity", bindingIndex, sizeof(glm::vec3));
+                  auto string = "layout(binding = " + std::to_string(bindingIndex) + ") uniform FogDensity {\n" +
+                    " float value;\n" +
+                    "} fogDensity;";
+                  bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addUBO(ShaderType::Fragment, "FogColor", bindingIndex, sizeof(glm::vec3));
+                  string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform FogColor {\n" +
+                    " vec4 value;\n" +
+                    "} fogColor;";
+                  return string;
                 }
               }
             }
@@ -557,6 +571,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "struct DirectionalLight{\n"
                     "  vec3 position;\n"
                     "  vec3 direction;\n"
+                    "  vec3 up;\n"
                     "  vec3 color;\n"
                     "  float intensity;\n"
                     "  float nearPlane;\n"
@@ -572,24 +587,6 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  float nearPlane;\n"
                     "  float farPlane;\n"
                     "};\n";
-                  auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addSSBO(ShaderType::Fragment, "PointLights", bindingIndex);
-                  string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer PointLightBuffer {\n"
-                    +
-                    " PointLight pointLights[];\n" +
-                    "};\n";
-                  bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addSSBO(ShaderType::Fragment, "DirectionalLights", bindingIndex);
-                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
-                    ") buffer DirectionalLightBuffer {\n" +
-                    " DirectionalLight directionalLights[];\n" +
-                    "};\n";
-                  bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addSSBO(ShaderType::Fragment, "SpotLights", bindingIndex);
-                  string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer SpotLightBuffer {\n"
-                    +
-                    " SpotLight spotLights[];\n" +
-                    "};";
                   return string;
                 }
               }
@@ -601,10 +598,17 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  auto bindingIndex = ShaderFactory::currentBindingIndex;
-                  shader.addTexture(bindingIndex, ShaderType::Fragment, "directionalLightSamplers", 4);
-                  std::string string("layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D directionalLightSamplers[4];");
-                  currentBindingIndex += 4;
+                  auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Fragment, "DirectionalLights", bindingIndex);
+                  std::string string;
+                    string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer DirectionalLightBuffer {\n" +
+                      " DirectionalLight directionalLights[];\n" +
+                      "};\n";
+                  bindingIndex = ShaderFactory::currentBindingIndex;
+                  shader.addTexture(bindingIndex, ShaderType::Fragment, "directionalLightSamplers", 1);
+                  string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D directionalLightSamplers[1];";
+                  currentBindingIndex += 1;
                   return string;
                 }
               }
@@ -616,10 +620,17 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  auto bindingIndex = ShaderFactory::currentBindingIndex;
-                  shader.addTexture(bindingIndex, ShaderType::Fragment, "spotLightSamplers", 4);
-                  std::string string("layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D spotLightSamplers[4];");
-                  currentBindingIndex += 4;
+                  auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Fragment, "SpotLights", bindingIndex);
+                  std::string string;
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer SpotLightBuffer {\n"
+                    +
+                    " SpotLight spotLights[];\n" +
+                    "};";
+                  bindingIndex = ShaderFactory::currentBindingIndex;
+                  shader.addTexture(bindingIndex, ShaderType::Fragment, "spotLightSamplers", 1);
+                  string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D spotLightSamplers[1];";
+                  currentBindingIndex += 1;
                   return string;
                 }
               }
@@ -631,10 +642,17 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
-                    auto bindingIndex = ShaderFactory::currentBindingIndex;
-                    shader.addTexture(bindingIndex, ShaderType::Fragment, "pointLightSamplers", 4);
-                    std::string string("layout(binding = " + std::to_string(bindingIndex) + ") uniform samplerCube pointLightSamplers[4];");
-                    currentBindingIndex += 4;
+                    auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                    shader.addSSBO(ShaderType::Fragment, "PointLights", bindingIndex);
+                    std::string string;
+                    string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer PointLightBuffer {\n"
+                      +
+                      " PointLight pointLights[];\n" +
+                      "};\n";
+                    bindingIndex = ShaderFactory::currentBindingIndex;
+                    shader.addTexture(bindingIndex, ShaderType::Fragment, "pointLightSamplers", 1);
+                    string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform samplerCube pointLightSamplers[1];";
+                    currentBindingIndex += 1;
                     return string;
                   }
                 }
@@ -647,11 +665,11 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   std::string string(
                     "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex) +
-                    ") in vec4 inDirectionalLightSpacePositions[4];\n");
-                  ShaderFactory::currentInLayoutIndex += 4;
+                    ") in vec4 inDirectionalLightSpacePositions[1];\n");
+                  ShaderFactory::currentInLayoutIndex += 1;
                   string += "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex) +
-                    ") in vec4 inSpotLightSpacePositions[4];";
-                  ShaderFactory::currentInLayoutIndex += 4;
+                    ") in vec4 inSpotLightSpacePositions[1];";
+                  ShaderFactory::currentInLayoutIndex += 1;
                   return string;
                 }
               }
@@ -762,7 +780,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   return
-                    "float calculateDirectionalLightShadowFactor(in vec4 lightSpacePosition, in sampler2D shadowMap, in vec3 normal, in vec3 lightDir);";
+                    "float calculateDirectionalLightShadowFactor(in vec4 lightSpacePosition, in sampler2D shadowMap, in vec3 normal, in vec3 lightDir, float near, float far);";
                 }
               }
             }
@@ -801,7 +819,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end())
+                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end() ||
+                      std::find(constants.begin(), constants.end(), "DepthMap") != constants.end())
                   {
                     return "";
                   }
@@ -876,8 +895,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   return std::string("  float distance = length(inPosition.xyz - cameraPosition.value);\n") +
-                    "  float fogFactor = calculateFogFactor(distance, fogDensity);\n"
-                    "  FragColor = mix(fogColor, FragColor, fogFactor);";
+                    "  float fogFactor = calculateFogFactor(distance, fogDensity.value);\n"
+                    "  FragColor = mix(fogColor.value, FragColor, fogFactor);";
                 }
               }
             }
@@ -889,44 +908,84 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   return std::string("  vec3 normal = normalize(inNormal);\n") +
                     "  vec3 viewDir = normalize(cameraPosition.value - inFragPosition.xyz);\n"
-                    "  vec3 lightingColor = vec3(0.0);\n"
-                    "  int pointLightCount = pointLights.length();\n"
-                    "  int directionalLightCount = directionalLights.length();\n"
-                    "  int spotLightCount = spotLights.length();\n"
-                    "  for (int i = 0; i < pointLightCount; ++i){\n"
-                    "    float shadowFactor = 0.0;"
-                    "    vec3 lightDir = normalize(pointLights[i].position - inFragPosition.xyz);\n"
-                    "    switch (i) {\n"
-                    "      case 0: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[0], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
-                    "      case 1: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[1], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
-                    "      case 2: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[2], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
-                    "      case 3: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[3], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
-                    "    }\n"
-                    "    lightingColor += calculatePointLight(pointLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
-                    "  }\n"
-                    "  for (int i = 0; i < directionalLightCount; ++i){\n"
-                    "    vec3 lightDir = normalize(-directionalLights[i].direction);\n"
-                    "    float shadowFactor = 0.0;"
-                    "    switch (i) {\n"
-                    "      case 0: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[0], normal, lightDir); break;\n"
-                    "      case 1: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[1], normal, lightDir); break;\n"
-                    "      case 2: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[2], normal, lightDir); break;\n"
-                    "      case 3: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[3], normal, lightDir); break;\n"
-                    "    }\n"
-                    "    lightingColor += calculateDirectionalLight(directionalLights[i], normal, viewDir, shadowFactor, lightDir);\n"
-                    "  }\n"
-                    "  for (int i = 0; i < spotLightCount; ++i){\n"
-                    "    vec3 lightDir = normalize(spotLights[i].position - inFragPosition.xyz);\n"
-                    "    float shadowFactor = 0.0;"
-                    "    switch (i) {\n"
-                    "      case 0: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[0], normal, lightDir); break;\n"
-                    "      case 1: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[1], normal, lightDir); break;\n"
-                    "      case 2: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[2], normal, lightDir); break;\n"
-                    "      case 3: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[3], normal, lightDir); break;\n"
-                    "    }\n"
-                    "    lightingColor += calculateSpotLight(spotLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
-                    "  }\n"
-                    "  FragColor = FragColor * vec4(lightingColor, 1.0);";
+                    "  vec3 lightingColor = vec3(0.0);\n";
+                }
+              }
+            }
+          },
+          {
+            "PointLightShadowMaps", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                {
+                  return  "  int pointLightCount = pointLights.length();\n"
+                          "  for (int i = 0; i < pointLightCount; ++i){\n"
+                          "    float shadowFactor = 0.0;"
+                          "    vec3 lightDir = normalize(pointLights[i].position - inFragPosition.xyz);\n"
+                          "    switch (i) {\n"
+                          "      case 0: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[0], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
+                          // "      case 1: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[1], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
+                          // "      case 2: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[2], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
+                          // "      case 3: shadowFactor = calculatePointLightShadowFactor(inFragPosition.xyz, pointLightSamplers[3], pointLights[i].position, pointLights[i].nearPlane, pointLights[i].farPlane, lightDir, normal); break;\n"
+                          "    }\n"
+                          "    lightingColor += calculatePointLight(pointLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
+                          "  }";
+                }
+              }
+            }
+          },
+          {
+            "DirectionalLightShadowMaps", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                {
+                  return  "  int directionalLightCount = directionalLights.length();\n"
+                          "  for (int i = 0; i < directionalLightCount; ++i){\n"
+                          "    vec3 lightDir = normalize(-directionalLights[i].direction);\n"
+                          "    float shadowFactor = 0.0;\n"
+                          "    switch (i) {\n"
+                          "      case 0: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[0], normal, lightDir, directionalLights[i].nearPlane, directionalLights[i].farPlane); break;\n"
+                          // "      case 1: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[1], normal, lightDir, directionalLights[i].nearPlane, directionalLights[i].farPlane); break;\n"
+                          // "      case 2: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[2], normal, lightDir, directionalLights[i].nearPlane, directionalLights[i].farPlane); break;\n"
+                          // "      case 3: shadowFactor = calculateDirectionalLightShadowFactor(inDirectionalLightSpacePositions[i], directionalLightSamplers[3], normal, lightDir, directionalLights[i].nearPlane, directionalLights[i].farPlane); break;\n"
+                          "    }\n"
+                          "    lightingColor += calculateDirectionalLight(directionalLights[i], normal, viewDir, shadowFactor, lightDir);\n"
+                          "  }";
+                }
+              }
+            }
+          },
+          {
+            "SpotLightShadowMaps", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                {
+                  return  "  int spotLightCount = spotLights.length();\n"
+                          "  for (int i = 0; i < spotLightCount; ++i){\n"
+                          "    vec3 lightDir = normalize(spotLights[i].position - inFragPosition.xyz);\n"
+                          "    float shadowFactor = 0.0;"
+                          "    switch (i) {\n"
+                          "      case 0: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[0], normal, lightDir); break;\n"
+                          // "      case 1: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[1], normal, lightDir); break;\n"
+                          // "      case 2: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[2], normal, lightDir); break;\n"
+                          // "      case 3: shadowFactor = calculateSpotLightShadowFactor(inSpotLightSpacePositions[i], spotLightSamplers[3], normal, lightDir); break;\n"
+                          "    }\n"
+                          "    lightingColor += calculateSpotLight(spotLights[i], inFragPosition.xyz, normal, viewDir, shadowFactor, lightDir);\n"
+                          "  }";
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "postPostInMain", {
+          {
+            "Lighting", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                {
+                  return "  FragColor = FragColor * vec4(lightingColor, 1.0);";
                 }
               }
             }
@@ -996,19 +1055,37 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           {
             "DirectionalLightShadowMaps", {
               {
-                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                ++ShaderFactory::hooksCount, [](shaders::Shader& shader, const auto& constants)-> std::string
                 {
-                  return std::string(
-                      "float calculateDirectionalLightShadowFactor(in vec4 lightSpacePosition, in sampler2D shadowMap, in vec3 normal, in vec3 lightDir){\n")
-                    +
-                    "  vec3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;\n" +
-                    "  projCoords = projCoords * 0.5 + 0.5;\n" +
-                    "  float closestDepth = texture(shadowMap, projCoords.xy).r;\n" +
-                    "  float currentDepth = projCoords.z;\n" +
-                    "  float bias = max(0.00001 * (1.0 - dot(normal, lightDir)), 0.00001);\n" +
-                    "  float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;\n" +
-                    "  return shadow;\n" +
-                    "}";
+                  std::string string(
+                      "float calculateDirectionalLightShadowFactor(in vec4 lightSpacePosition, in sampler2D shadowMap, in vec3 normal, in vec3 lightDir, float near, float far){\n");
+                  string += "  vec2 projCoords = lightSpacePosition.xy;//  / lightSpacePosition.w;\n";
+                  if (shader.window.iRenderer->renderer == RENDERER::RENDERER_VULKAN)
+                  {
+                    string += "  projCoords.xy = projCoords.xy * 0.5 + 0.5;\n"
+                              "  projCoords.y = 1.0 - projCoords.y;\n";
+                  }
+                  else
+                  {
+                    string += "  projCoords = projCoords * 0.5 + 0.5;\n";
+                  }
+                  string += "  float closestDepth = texture(shadowMap, projCoords.xy).r;\n"
+                            "  closestDepth = closestDepth;"
+                            "  float currentDepth = (lightSpacePosition.z / lightSpacePosition.w);\n";
+                  if (shader.window.iRenderer->renderer == RENDERER::RENDERER_VULKAN)
+                  {
+                    string += "  float currentLinearDepth = near * far / (far - currentDepth * (far - near));\n"
+                              "  float closestLinearDepth = near * far / (far - (1.0 - closestDepth) * (far - near));\n"
+                              "  float bias = max(0.00001 * (1.0 - dot(normal, lightDir)), 0.00001);\n"
+                              "  float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;//currentDepth;//closestDepth;\n";
+                  }
+                  else
+                  {
+                    string += "  float shadow = (currentDepth) > closestDepth ? 1.0 : 0.0;\n";
+                  }
+                  string += "  return shadow;\n"
+                            "}";
+                  return string;
                 }
               }
             }
@@ -1018,16 +1095,20 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  return std::string(
-                      "float calculateSpotLightShadowFactor(in vec4 lightSpacePosition, in sampler2D shadowMap, in vec3 normal, in vec3 lightDir){\n") +
-                    "  vec3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;\n" +
-                    "  projCoords = projCoords * 0.5 + 0.5;\n" +
-                    "  float closestDepth = texture(shadowMap, projCoords.xy).r;\n" +
-                    "  float currentDepth = projCoords.z;\n" +
-                    "  float bias = max(0.00001 * (1.0 - dot(normal, lightDir)), 0.00001);\n" +
-                    "  float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;\n" +
-                    "  return shadow;\n" +
-                    "}";
+                  std::string string(
+                      "float calculateSpotLightShadowFactor(in vec4 lightSpacePosition, in sampler2D shadowMap, in vec3 normal, in vec3 lightDir){\n");
+                  string += "  vec3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;\n";
+                  if (shader.window.iRenderer->renderer != RENDERER::RENDERER_VULKAN)
+                  {
+                    string += "  projCoords = projCoords * 0.5 + 0.5;\n";
+                  }
+                  string += "  float closestDepth = texture(shadowMap, projCoords.xy).r;\n"
+                  "  float currentDepth = projCoords.z;\n"
+                  "  float bias = max(0.00001 * (1.0 - dot(normal, lightDir)), 0.00001);\n"
+                  "  float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;\n"
+                  "  return shadow;\n"
+                  "}";
+                  return string;
                 }
               }
             }
@@ -1061,7 +1142,7 @@ ShaderFactory::ShaderTypeMap ShaderFactory::shaderTypes = {
 	{ShaderType::Geometry, GL_GEOMETRY_SHADER},
 	{ShaderType::Fragment, GL_FRAGMENT_SHADER}
 #ifdef USE_GL
-  ,
+	,
 	{ShaderType::TessellationControl, GL_TESS_CONTROL_SHADER},
 	{ShaderType::TessellationEvaluation, GL_TESS_EVALUATION_SHADER},
 	{ShaderType::Compute, GL_COMPUTE_SHADER}
@@ -1094,37 +1175,37 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	ShaderPair shaderPair;
 	auto& shaderString = shaderPair.first;
 	auto& shaderHooks = hooks[shaderType];
-// #if defined(USE_GL) || defined(USE_VULKAN)
+	// #if defined(USE_GL) || defined(USE_VULKAN)
 	shaderString += "#version 460 core\n";
-  shaderString += "precision highp float;\n";
-  shaderString += "precision highp samplerCube;\n";
-// #elif defined(USE_EGL)
-//   shaderString += "#version 310 es\n";
-//   if (shaderType == ShaderType::Geometry)
-//   {
-//     const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
-//     if (strstr(extensions, "GL_EXT_geometry_shader") == NULL)
-//     {
-//       printf("GL_EXT_geometry_shader not supported!\n");
-//     }
-//     else
-//     {
-//       shaderString += "#extension GL_EXT_geometry_shader : require\n";
-//       printf("GL_EXT_geometry_shader is supported.\n");
-//     }
-//     if (strstr(extensions, "GL_OES_geometry_shader") == NULL)
-//     {
-//       printf("GL_OES_geometry_shader not supported!\n");
-//     }
-//     else
-//     {
-//       shaderString += "#extension GL_OES_geometry_shader : require\n";
-//       printf("GL_OES_geometry_shader is supported.\n");
-//     }
-//   }
-//   shaderString += "precision mediump float;\n";
-//   shaderString += "precision mediump samplerCube;\n";
-// #endif
+	shaderString += "precision highp float;\n";
+	shaderString += "precision highp samplerCube;\n";
+	// #elif defined(USE_EGL)
+	//   shaderString += "#version 310 es\n";
+	//   if (shaderType == ShaderType::Geometry)
+	//   {
+	//     const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
+	//     if (strstr(extensions, "GL_EXT_geometry_shader") == NULL)
+	//     {
+	//       printf("GL_EXT_geometry_shader not supported!\n");
+	//     }
+	//     else
+	//     {
+	//       shaderString += "#extension GL_EXT_geometry_shader : require\n";
+	//       printf("GL_EXT_geometry_shader is supported.\n");
+	//     }
+	//     if (strstr(extensions, "GL_OES_geometry_shader") == NULL)
+	//     {
+	//       printf("GL_OES_geometry_shader not supported!\n");
+	//     }
+	//     else
+	//     {
+	//       shaderString += "#extension GL_OES_geometry_shader : require\n";
+	//       printf("GL_OES_geometry_shader is supported.\n");
+	//     }
+	//   }
+	//   shaderString += "precision mediump float;\n";
+	//   shaderString += "precision mediump samplerCube;\n";
+	// #endif
 	currentInLayoutIndex = 0;
 	currentOutLayoutIndex = 0;
 	appendHooks(shaderString, shaderHooks["preLayout"], constants, shader);
@@ -1133,13 +1214,15 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	shaderString += "void main()\n{\n";
 	appendHooks(shaderString, shaderHooks["preInMain"], constants, shader);
 	appendHooks(shaderString, shaderHooks["postInMain"], constants, shader);
+	appendHooks(shaderString, shaderHooks["postPostInMain"], constants, shader);
 	shaderString += "}\n";
 	appendHooks(shaderString, shaderHooks["postMain"], constants, shader);
 	if (!compileShader(shader, shaderType, shaderPair))
 	{
-// #ifndef USE_VULKAN
+		zg::Logger::print(zg::Logger::Blank, "Errored Shader\n\n", shaderString);
+		// #ifndef USE_VULKAN
 		throw std::runtime_error("Failed to compile fragment shader");
-// #endif
+		// #endif
 	}
 	return shaderPair;
 }
@@ -1159,10 +1242,7 @@ bool ShaderFactory::compileShader(Shader& shader, ShaderType shaderType, ShaderP
 {
 	return shader.window.iRenderer->compileShader(shader, shaderType, shaderPair);
 }
-bool ShaderFactory::compileProgram(Shader& shader)
-{
-	return shader.window.iRenderer->compileProgram(shader);
-}
+bool ShaderFactory::compileProgram(Shader& shader) { return shader.window.iRenderer->compileProgram(shader); }
 uint32_t ShaderFactory::addHook(const ShaderType& shaderType, const std::string_view hookName,
 																const std::string_view runtimeConstant, const Shader::ShaderHook& hook)
 {

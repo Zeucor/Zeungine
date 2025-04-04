@@ -57,12 +57,13 @@ void DropdownMenu::addOption(std::string_view name, const OptionPressHandler &ha
 bool DropdownMenu::preRender()
 {
 	const auto &model = getModelMatrix();
+	auto shader = addShader();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
-	shader->setBlock("View", *this, scene.view.matrix);
-	shader->setBlock("Projection", *this, scene.projection.matrix);
-	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	shader->unbind();
 	return true;
 };
@@ -162,12 +163,13 @@ DropdownItem::~DropdownItem()
 bool DropdownItem::preRender()
 {
 	const auto &model = getModelMatrix();
+	auto shader = addShader();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
-	shader->setBlock("View", *this, scene.view.matrix);
-	shader->setBlock("Projection", *this, scene.projection.matrix);
-	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	shader->unbind();
 	return true;
 };

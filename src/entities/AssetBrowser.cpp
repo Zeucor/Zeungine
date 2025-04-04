@@ -47,12 +47,13 @@ Asset::Asset(Window& window, Scene& scene, glm::vec3 position, const std::filesy
 bool Asset::preRender()
 {
 	const auto& model = getModelMatrix();
+	auto shader = addShader();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
-	shader->setBlock("View", *this, scene.view.matrix);
-	shader->setBlock("Projection", *this, scene.projection.matrix);
-	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	shader->unbind();
 	return true;
 }
@@ -102,12 +103,13 @@ Folder::Folder(Window& window, Scene& scene, glm::vec3 position, const std::file
 bool Folder::preRender()
 {
 	const auto& model = getModelMatrix();
+	auto shader = addShader();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
-	shader->setBlock("View", *this, scene.view.matrix);
-	shader->setBlock("Projection", *this, scene.projection.matrix);
-	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	shader->unbind();
 	return true;
 }
@@ -133,12 +135,13 @@ Breadcrumbs::Breadcrumbs(Window& window, Scene& scene, float width, fonts::freet
 bool Breadcrumbs::preRender()
 {
 	const auto& model = getModelMatrix();
+	auto shader = addShader();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
-	shader->setBlock("View", *this, scene.view.matrix);
-	shader->setBlock("Projection", *this, scene.projection.matrix);
-	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	shader->unbind();
 	return true;
 }
@@ -223,12 +226,13 @@ AssetGrid::AssetGrid(Window& window, Scene& scene, float width, float height, gl
 bool AssetGrid::preRender()
 {
 	const auto& model = getModelMatrix();
+	auto shader = addShader();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
-	shader->setBlock("View", *this, scene.view.matrix);
-	shader->setBlock("Projection", *this, scene.projection.matrix);
-	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	shader->unbind();
 	return true;
 }
@@ -334,12 +338,13 @@ void AssetBrowser::update()
 bool AssetBrowser::preRender()
 {
 	const auto& model = getModelMatrix();
+	auto shader = addShader();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
-	shader->setBlock("View", *this, scene.view.matrix);
-	shader->setBlock("Projection", *this, scene.projection.matrix);
-	shader->setBlock("CameraPosition", *this, scene.view.position, 16);
+	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	shader->unbind();
 	return true;
 }

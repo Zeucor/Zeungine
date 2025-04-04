@@ -33,7 +33,7 @@ Window::Window(Window& _parentWindow, Scene& _parentScene, const char* _childTit
 			_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
 		framebufferDepthTexture(std::make_shared<textures::Texture>(
 			_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
-		framebuffer(std::make_shared<textures::Framebuffer>(_parentWindow, *framebufferTexture, *framebufferDepthTexture)),
+		framebuffer(std::make_shared<textures::Framebuffer>(_parentWindow, std::vector<textures::Framebuffer::TextureAttachmentPair>({{framebufferTexture.get(), textures::Framebuffer::AttachmentType::Color}/*, {framebufferDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}*/}))),
 		framebufferPlane(std::make_shared<entities::Plane>(
 			_parentWindow, *parentScene,
 			glm::vec3(NDCFramebufferPlane ? (-1 + ((childWindowX + (childWindowWidth / 2)) / _parentWindow.windowWidth / 0.5))
@@ -69,10 +69,10 @@ void Window::update()
 }
 void Window::preRender()
 {
+	if (scene)
+		scene->preRender();
 	if (!isChildWindow)
-	{
 		return;
-	}
 	runRunnables();
 	updateKeyboard();
 	updateMouse();
@@ -83,18 +83,16 @@ void Window::preRender()
 void Window::render()
 {
 	std::lock_guard lock(renderMutex);
-	preRender();
 	updateDeltaTime();
 	if (scene)
 		scene->render();
-	postRender();
 };
 void Window::postRender()
 {
+	if (scene)
+		scene->postRender();
 	if (!isChildWindow)
-	{
 		return;
-	}
 	framebuffer->unbind();
 }
 void Window::startWindow()
@@ -104,12 +102,11 @@ void Window::startWindow()
 	iRenderer = createRenderer();
 	auto& iRendererRef = *iRenderer;
 	iPlatformWindowRef.init(*this);
-	iPlatformWindowRef.pollMessages();
 	iRendererRef.createContext(&iPlatformWindowRef);
 	iRendererRef.init();
+	runRunnables();
 	iPlatformWindowRef.postInit();
 	iPlatformWindowRef.disableKeyAutoRepeat();
-	runRunnables();
 	while (true)
 	{
 		framebudget.begin();
@@ -117,31 +114,22 @@ void Window::startWindow()
 		{
 			framebudget.sleep();
 			break;
-		}
-		framebudget.tick();
-		iRendererRef.preBeginRenderPass();
-		framebudget.tick();
-		runRunnables();
-		framebudget.tick();
-		updateKeyboard();
-		framebudget.tick();
-		updateMouse();
-		framebudget.tick();
-		update();
-		framebudget.tick();
+		} framebudget.tick();
+		iRendererRef.preBeginRenderPass(); framebudget.tick();
+		runRunnables(); framebudget.tick();
+		updateKeyboard(); framebudget.tick();
+		updateMouse(); framebudget.tick();
+		update(); framebudget.tick();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
-			framebudget.tick();
-			childWindow.render();
+			childWindow.render(); framebudget.tick();
 		}
-		framebudget.tick();
-		iRendererRef.beginRenderPass();
-		framebudget.tick();
-		render();
-		framebudget.tick();
+		preRender(); framebudget.tick();
+		iRendererRef.beginRenderPass(); framebudget.tick();
+		render(); framebudget.tick();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
@@ -149,11 +137,10 @@ void Window::startWindow()
 				continue;
 			framebudget.tick();
 			childWindow.framebufferPlane->render();
-		}
-		framebudget.tick();
-		iRendererRef.postRenderPass();
-		framebudget.tick();
-		callPreSwapbuffersOnceoff();
+		} framebudget.tick();
+		iRendererRef.postRenderPass(); framebudget.tick();
+		postRender(); framebudget.tick();
+		callPreSwapbuffersOnceoff(); framebudget.tick();
 		iRendererRef.swapBuffers();
 		framebudget.end();
 		framebudget.sleep();

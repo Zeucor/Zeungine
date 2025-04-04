@@ -15,6 +15,7 @@ namespace zg::lights
 	{
 		alignas(16) glm::vec3 position;
 		alignas(16) glm::vec3 direction;
+		alignas(16) glm::vec3 up;
 		alignas(16) glm::vec3 color;
 		float intensity;
 		float nearPlane;

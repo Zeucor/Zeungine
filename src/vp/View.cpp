@@ -1,8 +1,19 @@
 #include <zg/vp/View.hpp>
 using namespace zg;
 using namespace zg::vp;
-View::View(glm::vec3 _position, glm::vec3 _direction) : position(_position),
-														direction(glm::normalize(_direction))
+View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up) : position(_position),
+														direction(glm::normalize(_direction)),
+														up(_up)
+{
+	phi = atan2(direction.z, direction.x);
+	theta = acos(glm::clamp(direction.y, -1.0f, 1.0f));
+	update();
+}
+View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up, bool _lookAtSet, glm::vec3 _lookAt) : position(_position),
+														direction(glm::normalize(_direction)),
+														up(_up),
+														lookAtSet(_lookAtSet),
+														lookAt(_lookAt)
 {
 	phi = atan2(direction.z, direction.x);
 	theta = acos(glm::clamp(direction.y, -1.0f, 1.0f));
@@ -10,7 +21,19 @@ View::View(glm::vec3 _position, glm::vec3 _direction) : position(_position),
 }
 void View::update()
 {
-	matrix = glm::lookAt(position, position + direction, glm::vec3{0, 1, 0});
+	if (lookAtSet)
+		matrix = glm::lookAt(position, lookAt, up);
+	else
+	{
+		auto _direction_ = direction;
+		_setMatrix:
+		matrix = glm::lookAt(position, position + _direction_, up);
+		if (std::isnan(matrix[0][0]))
+		{
+			_direction_ += 0.000004;
+			goto _setMatrix;
+		}
+	}
 }
 void View::addPhiTheta(float addPhi, float addTheta)
 {

@@ -166,7 +166,7 @@ EditorScene::EditorScene(Window& window) :
 	addEntity(gameWindowBorder);
 	setupGameWindow();
 	setupCodeWindow();
-	resizeID = view.addResizeHandler(
+	resizeID = viewPointer->addResizeHandler(
 		[&](auto newSize) mutable
 		{
 			toolbarHeight = newSize.y / 14;
@@ -209,7 +209,7 @@ EditorScene::EditorScene(Window& window) :
 };
 EditorScene::~EditorScene()
 {
-	view.removeResizeHandler(resizeID);
+	viewPointer->removeResizeHandler(resizeID);
 	gameWindowBorder->removeMouseHoverHandler(gameWindowBorderHoverID);
 	gameWindowBorder->removeMousePressHandler(0, gameWindowBorderPressID);
 };

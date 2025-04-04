@@ -18,12 +18,35 @@ void Entity::update()
 		childEntity.second->update();
 	}
 }
-void Entity::addShader()
+shaders::Shader* Entity::addShader(shaders::Shader* setShader)
 {
+	auto data = getShaderData(window);
+	auto& shader = shaders[data];
 	if (shader)
-		return;
+		return shader;
+	if (setShader)
+	{
+		shader = setShader;
+	}
+	else
+	{
+		shader = shaders::ShaderManager::getShaderByConstants(window, constants, data).second.get();
+	}
+	return shader;
+}
+bool Entity::isEnsured()
+{
+	auto data = getShaderData(window);
+	return ensuredBools[data];
+}
+void Entity::setEnsured()
+{
+	auto data = getShaderData(window);
+	ensuredBools[data] = true;
+}
+void* Entity::getShaderData(Window& window)
+{
 	void* data = 0;
-// #ifdef USE_VULKAN
 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(window.iRenderer);
 	if (vulkanRenderer.currentFramebufferImpl)
 	{
@@ -33,13 +56,12 @@ void Entity::addShader()
 	{
 		data = vulkanRenderer.renderPass;
 	}
-// #endif
-	shader = shaders::ShaderManager::getShaderByConstants(window, constants, data).second.get();
+	return data;
 }
 bool Entity::preRender() { return true; };
 void Entity::render()
 {
-	addShader();
+	auto shader = addShader();
 	if (!preRender())
 		return;
 	shader->bind(*this);
@@ -54,9 +76,9 @@ void Entity::postRender() {}
 const glm::mat4& Entity::getModelMatrix()
 {
 	model = glm::translate(glm::mat4(1.0f), position);
-	model = glm::rotate(model, rotation.x, {1, 0, 0});
-	model = glm::rotate(model, rotation.y, {0, 1, 0});
-	model = glm::rotate(model, rotation.z, {0, 0, 1});
+	model = glm::rotate(model, glm::radians(rotation.x), {1, 0, 0});
+	model = glm::rotate(model, glm::radians(rotation.y), {0, 1, 0});
+	model = glm::rotate(model, glm::radians(rotation.z), {0, 0, 1});
 	model = glm::scale(model, scale);
 	if (parentEntity)
 	{

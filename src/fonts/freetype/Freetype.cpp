@@ -177,15 +177,15 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 	}
 	if (!framebufferPointer)
 	{
+		auto attachments = std::vector<textures::Framebuffer::TextureAttachmentPair>({{(textures::Texture*)texturePointer.get(), textures::Framebuffer::AttachmentType::Color}});
 		((std::shared_ptr<textures::Framebuffer>&)framebufferPointer) =
-			std::make_shared<textures::Framebuffer>(window, *texturePointer);
+			std::make_shared<textures::Framebuffer>(window, attachments);
 	}
-	auto& framebuffer = *framebufferPointer;
 	if (!scenePointer)
 	{
 		((std::shared_ptr<Scene>&)scenePointer) =
 			std::make_shared<Scene>(window, glm::vec3(scaledSize.x / 2.f, scaledSize.y / 2.f, 50), glm::vec3(0, 0, -1),
-															glm::vec2(scaledSize), &framebuffer, false);
+															glm::vec2(scaledSize), framebufferPointer, false, false);
 	}
 	auto& scene = *scenePointer;
 	strings::Utf8Iterator iterator(string, 0);
@@ -259,9 +259,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 		cursorPosition /= textureScale;
 	}
 	scene.clearColor = glm::vec4(0);
-	framebuffer.bind();
 	scene.render();
-	framebuffer.unbind();
 	return;
 }
 void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 position, glm::vec4 color, float fontSize,
