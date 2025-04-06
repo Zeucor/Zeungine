@@ -1,11 +1,12 @@
 #include <zg/Window.hpp>
 #include <zg/system/ErrorPopup.hpp>
+#include <iostream>
 #if defined(_WIN32)
 #include <windows.h>
-#elif defined(__linux__)
-#include <gtk/gtk.h>
-#elif defined(MACOS)
-#include <Cocoa/Cocoa.h>
+// #elif defined(__linux__)
+// #include <gtk/gtk.h>
+// #elif defined(MACOS)
+// #include <Cocoa/Cocoa.h>
 #endif
 using namespace zg::system;
 #if defined(_WIN32)
@@ -58,21 +59,23 @@ bool ErrorPopup::show(const std::string& message)
 		DispatchMessage(&msg);
 	}
 #elif defined(__linux__)
-	gtk_init(0, nullptr);
-	GtkWidget* dialog =
-		gtk_message_dialog_new(nullptr, GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "%s", message.c_str());
-	gtk_dialog_run(GTK_DIALOG(dialog));
-	gtk_widget_destroy(dialog);
+	std::cerr << message << std::endl;
+	// gtk_init(0, nullptr);
+	// GtkWidget* dialog =
+	// 	gtk_message_dialog_new(nullptr, GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "%s", message.c_str());
+	// gtk_dialog_run(GTK_DIALOG(dialog));
+	// gtk_widget_destroy(dialog);
 #elif defined(MACOS)
-	@autoreleasepool
-	{
-		NSAlert* alert = [[NSAlert alloc] init];
-		[alert setMessageText:@"Error"];
-		[alert setInformativeText:[NSString stringWithUTF8String:message.c_str()]];
-		[alert addButtonWithTitle:@"OK"];
-		[alert setAlertStyle:NSAlertStyleCritical];
-		[alert runModal];
-	}
+	std::cerr << message << std::endl;
+	// @autoreleasepool
+	// {
+	// 	NSAlert* alert = [[NSAlert alloc] init];
+	// 	[alert setMessageText:@"Error"];
+	// 	[alert setInformativeText:[NSString stringWithUTF8String:message.c_str()]];
+	// 	[alert addButtonWithTitle:@"OK"];
+	// 	[alert setAlertStyle:NSAlertStyleCritical];
+	// 	[alert runModal];
+	// }
 #endif
 	return true;
 }
