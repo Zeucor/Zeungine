@@ -1,6 +1,7 @@
 #include <zg/vp/VFBLR.hpp>
 using namespace zg::vp;
 VFBLR::VFBLR(Scene& scene, KeyScheme keyScheme, float force):
+    
     scene(scene),
     keyScheme(keyScheme),
     force(force)
@@ -58,4 +59,25 @@ void VFBLR::onRightTick()
     scene.viewPointer->position.y += right.y * force * scene.window.deltaTime;
     scene.viewPointer->position.z += right.z * force * scene.window.deltaTime;
     scene.viewPointer->update();
+}
+template<>
+Serial& serialize(Serial& serial, const std::shared_ptr<zg::vp::VFBLR>& vfblrPointer)
+{
+	auto& vfblr = *vfblrPointer;
+	serial << true << vfblr.keyScheme << vfblr.force;
+	return serial;
+}
+template<>
+Serial& deserialize(Serial& serial, std::shared_ptr<zg::vp::VFBLR>& vfblrPointer)
+{
+	bool wroteBit = false;
+	serial >> wroteBit;
+	if (!wroteBit)
+		return serial; 
+	auto* scenePointer = (zg::Scene*)serial.getContextPointer("Scene");
+	VFBLR::KeyScheme keyScheme = (VFBLR::KeyScheme)0;
+    float force = 0;
+	serial >> keyScheme >> force;
+	vfblrPointer = std::make_shared<zg::vp::VFBLR>(*scenePointer, keyScheme, force);
+	return serial;
 }

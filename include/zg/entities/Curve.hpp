@@ -1,41 +1,62 @@
 #pragma once
 #include <zg/Entity.hpp>
+#include <zg/Scene.hpp>
 #include <zg/glm.hpp>
 #include <zg/math/MER.hpp>
 #include <zg/utilities.hpp>
+
 namespace zg::entities
 {
 	static const float VEC_EPSILON = 1e-5f;
 	template <size_t N = 3, typename Real = float>
 	struct NDParametricCurve : Entity
 	{
+		size_t getTypeID() override { return EntityTypeID<NDParametricCurve<N, Real>>::id; }
 	private:
 		inline static size_t curvesCount = 0;
 
 	public:
-		glm::vec4 color;
-		float radius;
-		Scene& scene;
+		Scene* scenePointer = 0;
+		glm::vec4 color = glm::vec4(1);
+		float radius = 0.75;
 		std::map<char, double> vars = {{'t', 0}};
+		double tStart;
+		double tEnd;
+		double tStep;
 		double* t_p = 0;
 		std::array<std::string, N> equations;
 		std::vector<glm::vec4> colors;
 		std::vector<glm::vec3> normals = {};
 		template <typename... Args>
-		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, glm::vec4 color,
-											const shaders::RuntimeConstants& constants, float radius, double tStart, double tEnd,
-											double tStep, const std::string& t_equation, const Args&... args) :
-				Entity(window,
-							 zg::mergeVectors<std::string_view>(
+		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+											glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float radius,
+											const std::map<char, double>& vars, double tStart, double tEnd, double tStep,
+											const std::string& t_equation, const Args&... args) :
+				Entity(window, scene,
+							 zg::mergeVectors<std::string>(
 								 {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
 							 getIndiceCount(tStart, tEnd, tStep), {}, getElementCount(tStart, tEnd, tStep), {}, position, rotation,
-							 scale, "Curve " + std::to_string(++curvesCount)),
-				color(color), radius(radius), scene(scene)
+							 scale, (!name.empty()) ? name : ("Curve " + std::to_string(++curvesCount))),
+				scenePointer(&scene), color(color), radius(radius), vars(vars), tStart(tStart), tEnd(tEnd), tStep(tStep)
 		{
-
-			t_p = &vars['t'];
+			t_p = &this->vars['t'];
 			size_t index = 0;
 			addFunctions(index, t_equation, args...);
+			generateAndUpdateCurve(tStart, tEnd, tStep);
+		}
+		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+											glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float radius,
+											const std::map<char, double>& vars, double tStart, double tEnd, double tStep,
+											const std::array<std::string, N>& equations) :
+				Entity(window, scene,
+							 zg::mergeVectors<std::string>(
+								 {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
+							 getIndiceCount(tStart, tEnd, tStep), {}, getElementCount(tStart, tEnd, tStep), {}, position, rotation,
+							 scale, (!name.empty()) ? name : ("Curve " + std::to_string(++curvesCount))),
+				scenePointer(&scene), color(color), radius(radius), vars(vars), tStart(tStart), tEnd(tEnd), tStep(tStep),
+				equations(equations)
+		{
+			t_p = &this->vars['t'];
 			generateAndUpdateCurve(tStart, tEnd, tStep);
 		}
 
@@ -383,12 +404,12 @@ namespace zg::entities
 			const auto& model = getModelMatrix();
 			auto shader = addShader();
 			shader->bind(*this);
-			scene.entityPreRender(*this);
+			scenePointer->entityPreRender(*this);
 			shader->setBlock("Model", *this, model);
-			shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+			shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scenePointer->viewPointer->matrix);
 			shader->setBlock("Projection", *this,
-											 projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-			shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
+											 projectionPointer ? projectionPointer->matrix : scenePointer->projectionPointer->matrix);
+			shader->setBlock("CameraPosition", *this, scenePointer->viewPointer->position, 16);
 			shader->unbind();
 			return true;
 		}

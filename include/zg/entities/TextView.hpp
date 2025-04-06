@@ -6,13 +6,14 @@
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/interfaces/ISizable.hpp>
 #include <array>
+
 namespace zg::entities
 {
 	struct TextView : Entity, ISizable
 	{
+		size_t getTypeID() override { return EntityTypeID<TextView>::id; };
 		std::vector<glm::vec3> normals = {};
 		std::shared_ptr<textures::Texture> texturePointer;
-		Scene &scene;
 		glm::vec4 textColor;
 		std::string oldText;
 		std::string text;

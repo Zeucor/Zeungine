@@ -3,5 +3,5 @@
 #include <vector>
 namespace zg::shaders
 {
-	using RuntimeConstants = std::vector<std::string_view>;
+	using RuntimeConstants = std::vector<std::string>;
 }

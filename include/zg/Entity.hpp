@@ -6,13 +6,30 @@
 #include <zg/vaos/VAO.hpp>
 #include <zg/vp/Projection.hpp>
 #include <zg/vp/View.hpp>
+#include <zg/entities/TypeID.hpp>
 #include "./ComponentHolder.hpp"
 namespace zg
 {
+	struct Scene;
 	struct Entity : vaos::VAO, ComponentHolder<zg::interfaces::IEntityComponent>
 	{
+		friend Scene;
+		friend Window;
+		using SerializeFunction = std::function<Serial&(Serial&, const std::shared_ptr<Entity>&)>;
+		using DeserializeFunction = std::function<Serial&(Serial&, std::shared_ptr<Entity>&)>;
+		using SerializeMap = std::unordered_map<size_t, SerializeFunction>;
+		using DeserializeMap = std::unordered_map<size_t, DeserializeFunction>;
+		static void registerSerialize(size_t ID, const SerializeFunction& function);
+		static void registerDeserialize(size_t ID, const DeserializeFunction& function);
+		static SerializeFunction getSerialize(size_t ID);
+		static DeserializeFunction getDeserialize(size_t ID);
+		protected:
+		static void cleanupSerialize();
+		public:
 		Window& window;
+		Scene& scene;
 		size_t ID = 0;
+		virtual size_t getTypeID() = 0;
 		size_t VALUE = 0;
 		std::vector<uint32_t> indices;
 		std::vector<glm::vec3> positions;
@@ -36,9 +53,10 @@ namespace zg
 		using MouseHoverHandler = std::function<void(bool)>;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		std::string name;
-		Entity(Window& _window, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
+		Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
 					 const std::vector<uint32_t>& indices, uint32_t elementCount, const std::vector<glm::vec3>& positions,
 					 glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, std::string_view name);
+		~Entity();
 		virtual void update();
 		shaders::Shader* addShader(shaders::Shader* setShader = 0);
 		bool isEnsured();

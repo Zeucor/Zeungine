@@ -1,15 +1,23 @@
 #include <zg/Entity.hpp>
-#include <zg/shaders/ShaderManager.hpp>
-// #ifdef USE_VULKAN
+#include <zg/Scene.hpp>
 #include <zg/renderers/VulkanRenderer.hpp>
-// #endif
+#include <zg/shaders/ShaderManager.hpp>
 using namespace zg;
-Entity::Entity(Window& _window, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
+Entity::Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
 							 const std::vector<uint32_t>& _indices, uint32_t elementCount, const std::vector<glm::vec3>& _positions,
 							 glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale, std::string_view _name) :
-		VAO(_window, constants, indiceCount, elementCount), window(_window), indices(_indices), positions(_positions),
-		position(_position), rotation(_rotation), scale(_scale), name(_name)
+		VAO(_window, constants, indiceCount, elementCount), window(_window), scene(_scene), indices(_indices),
+		positions(_positions), position(_position), rotation(_rotation), scale(_scale), name(_name)
 {
+	scene.entitiesByName[name] = {this, [](auto pointer) {}};
+}
+Entity::~Entity()
+{
+	auto nameIter = scene.entitiesByName.find(name);
+	if (nameIter != scene.entitiesByName.end())
+	{
+		scene.entitiesByName.erase(nameIter);
+	}
 }
 void Entity::update()
 {

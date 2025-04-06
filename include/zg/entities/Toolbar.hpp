@@ -7,13 +7,14 @@
 #include <zg/entities/TextView.hpp>
 #include <array>
 #include <zg/entities/DropdownMenu.hpp>
+
 namespace zg::entities
 {
 	struct Toolbar : Entity
 	{
+		size_t getTypeID() override { return EntityTypeID<Toolbar>::id; }
 		size_t ID = 0;
 		std::vector<glm::vec4> colors;
-		Scene &scene;
 		fonts::freetype::FreetypeFont &font;
 		std::shared_ptr<Plane> xButton;
 		std::shared_ptr<textures::Texture> xButtonTexture;

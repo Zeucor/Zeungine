@@ -7,6 +7,7 @@
 #include <zg/glm.hpp>
 #include <zg/interfaces/ISizable.hpp>
 #include "./TextView.hpp"
+
 namespace zg::entities
 {
 	inline static glm::ivec2 iconSize(24, 24);
@@ -15,7 +16,7 @@ namespace zg::entities
 	static std::shared_ptr<textures::Texture> getIconTexture(const std::filesystem::path& path, Window& window);
 	struct Asset : Entity, ISizable
 	{
-		Scene& scene;
+		size_t getTypeID() override { return EntityTypeID<Asset>::id; }
 		std::filesystem::path path;
 		fonts::freetype::FreetypeFont& font;
 		std::shared_ptr<textures::Texture> iconTexture;
@@ -31,7 +32,7 @@ namespace zg::entities
 	};
 	struct Folder : Entity, ISizable
 	{
-		Scene& scene;
+		size_t getTypeID() override { return EntityTypeID<Folder>::id; }
 		std::filesystem::path path;
 		fonts::freetype::FreetypeFont& font;
 		std::shared_ptr<textures::Texture> iconTexture;
@@ -47,7 +48,7 @@ namespace zg::entities
 	};
 	struct Breadcrumbs : Entity, ISizable
 	{
-		Scene& scene;
+		size_t getTypeID() override { return EntityTypeID<Breadcrumbs>::id; }
 		std::vector<glm::vec4> colors;
 		glm::vec4 backgroundColor;
 		float width;
@@ -68,7 +69,7 @@ namespace zg::entities
 	};
 	struct AssetGrid : Entity, ISizable
 	{
-		Scene& scene;
+		size_t getTypeID() override { return EntityTypeID<AssetGrid>::id; }
 		std::vector<glm::vec4> colors;
 		glm::vec4 backgroundColor;
 		float width;
@@ -87,9 +88,9 @@ namespace zg::entities
 	};
 	struct AssetBrowser : Entity, ISizable
 	{
+		size_t getTypeID() override { return EntityTypeID<AssetBrowser>::id; }
 		std::vector<glm::vec4> colors;
 		glm::vec4 backgroundColor;
-		Scene& scene;
 		fonts::freetype::FreetypeFont& font;
 		float width;
 		float height;

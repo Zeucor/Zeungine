@@ -9,7 +9,7 @@ namespace zg::media::entities
 {
 	struct Video : Entity, ISizable, zg::media::ReadMediaStream, zg::audio::ISoundNode
 	{
-		Scene& scene;
+		size_t getTypeID() override { return EntityTypeID<Video>::id; }
 		std::vector<glm::vec2> uvs;
 		std::vector<glm::vec3> normals = {};
 		std::shared_ptr<textures::Texture> texturePointer;

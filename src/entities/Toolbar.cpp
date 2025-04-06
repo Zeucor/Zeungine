@@ -10,7 +10,7 @@ Toolbar::Toolbar(Window &_window,
 				 glm::vec4 color,
 				 float height,
 				 fonts::freetype::FreetypeFont &font,
-				 std::string_view name) : Entity(_window, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6,
+				 std::string_view name) : Entity(_window, scene, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6,
 												 {
 													 0, 1, 2, 2, 3, 0 // Front face
 												 },
@@ -21,7 +21,7 @@ Toolbar::Toolbar(Window &_window,
 												 position, rotation, scale,
 												 name.empty() ? "Toolbar " + std::to_string(++toolbarsCount) : name),
 										  colors({color, color, color, color}),
-										  scene(scene),
+										  
 										  font(font),
 										  height(height),
 										  NDCHeight((height / _window.windowHeight) * 2)

@@ -42,10 +42,36 @@ void TextureFactory::initTexture(Texture &texture, const void *data)
   for (int i = 0; i < imageCount; i++)
   {
     imagePairs.push_back({{texture.size.x, texture.size.y}, {(uint8_t *)data, [](uint8_t *) {}}});
+    if (data)
+    {
+      auto bytessize = texture.size.x * texture.size.y * 4;
+      char* chardata = (char*)malloc(bytessize);
+      memcpy(chardata, data, bytessize);
+      texture.datas.push_back(std::pair<size_t, std::shared_ptr<char>>(bytessize, std::shared_ptr<char>(chardata, free)));
+    }
   }
   midInitTexture(texture, imagePairs);
   postInitTexture(texture);
-};
+}
+void TextureFactory::initTexture(Texture &texture, const std::vector<void *> datas)
+{
+  preInitTexture(texture);
+  auto imageCount = texture.size.w > 0 ? 6 : texture.size.z;
+  std::vector<images::ImageLoader::ImagePair> imagePairs;
+  for (int i = 0; i < imageCount; i++)
+  {
+    imagePairs.push_back({{texture.size.x, texture.size.y}, {(uint8_t *)datas[i], [](uint8_t *) {}}});
+    if (datas[i])
+    {
+      auto bytessize = texture.size.x * texture.size.y * 4;
+      char* chardata = (char*)malloc(bytessize);
+      memcpy(chardata, datas[i], bytessize);
+      texture.datas.push_back(std::pair<size_t, std::shared_ptr<char>>(bytessize, std::shared_ptr<char>(chardata, free)));
+    }
+  }
+  midInitTexture(texture, imagePairs);
+  postInitTexture(texture);
+}
 void TextureFactory::initTexture(Texture &texture, const std::string_view path)
 {
   preInitTexture(texture);

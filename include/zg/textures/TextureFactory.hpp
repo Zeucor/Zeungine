@@ -27,6 +27,7 @@ namespace zg::textures
 		static FormatsMap formats;
 		static TypesMap types;
 		static void initTexture(Texture &texture, const void *data);
+		static void initTexture(Texture &texture, const std::vector<void *> datas);
 		static void initTexture(Texture &texture, const std::string_view path);
 		static void initTexture(Texture &texture, const std::vector<std::string_view> &paths);
 		static void preInitTexture(Texture &texture);

@@ -1,7 +1,7 @@
 #include <zg/entities/SkyBox.hpp>
 #include <zg/utilities.hpp>
 using namespace zg::entities;
-SkyBox::SkyBox(Window &window, Scene &scene, const std::vector<std::string_view> &texturePaths, std::string_view name) : Entity(window, {{"UV3", "Position", "TextureCube", "View", "Projection", "SkyBox"}}, 36,
+SkyBox::SkyBox(Window &window, Scene &scene, const std::vector<std::string_view> &texturePaths, std::string_view name) : Entity(window, scene, {{"UV3", "Position", "TextureCube", "View", "Projection", "SkyBox"}}, 36,
 																																{
 																																	0, 1, 2, 2, 3, 0,		// Front face
 																																	6, 7, 4, 4, 5, 6,		// Back face
@@ -86,7 +86,7 @@ SkyBox::SkyBox(Window &window, Scene &scene, const std::vector<std::string_view>
 																															 {1.0f, -1.0f, 1.0f},	// 22
 																															 {1.0f, -1.0f, -1.0f},	// 23
 																														 }),
-																														 texture(window, {0, 0, 0, 1}, texturePaths), scene(scene)
+																														 texture(window, {0, 0, 0, 1}, texturePaths)
 {
 	switch (window.iRenderer->renderer)
 	{

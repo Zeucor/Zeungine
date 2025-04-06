@@ -7,12 +7,13 @@
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/interfaces/ISizable.hpp>
 #include <zg/strings/HookedConsole.hpp>
+
 namespace zg::entities
 {
 	struct Console : Entity, ISizable
 	{
+		size_t getTypeID() override { return EntityTypeID<Console>::id; }
 		std::vector<glm::vec4> colors;
-		Scene &scene;
 		glm::vec4 backgroundColor;
 		fonts::freetype::FreetypeFont &font;
 		float width;

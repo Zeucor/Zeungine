@@ -454,3 +454,152 @@ void Scene::unhookMouseEvents()
 	}
 	window.removeMouseMoveHandler(mouseMoveID);
 }
+std::shared_ptr<zg::Entity> Scene::getEntityByName(const std::string& name)
+{
+	return entitiesByName[name];
+}
+template<>
+Serial& serialize(Serial& serial, const Scene& scene)
+{
+	serial << true << scene.drawColorToWindowPlane << scene.clearColor << scene.projectionPointer;
+	auto entitiesSize = scene.entities.size();
+	serial << entitiesSize;
+	for (auto& entityPair : scene.entities)
+	{
+		auto& key = entityPair.first;
+		auto& pointer = entityPair.second;
+		if (!pointer)
+		{
+			serial << false;
+			continue;
+		}
+		auto ID = pointer->getTypeID();
+		serial << true << key << ID;
+		auto serializeFunction = Entity::getSerialize(ID);
+		serializeFunction(serial, pointer);
+	}
+	serial << scene.entitiesCount;
+
+	auto pointLightsSize = scene.pointLights.size();
+	serial << pointLightsSize;
+	for (auto pointLight : scene.pointLights)
+	{
+		serial << pointLight;
+	}
+	auto directionalLightsSize = scene.directionalLights.size();
+	serial << directionalLightsSize;
+	for (auto directionalLight : scene.directionalLights)
+	{
+		serial << directionalLight;
+	}
+	auto spotLightsSize = scene.spotLights.size();
+	serial << spotLightsSize;
+	for (auto spotLight : scene.spotLights)
+	{
+		serial << spotLight;
+	}
+	auto texturesSize = scene.sceneTextures.size();
+	serial << texturesSize;
+	for (auto& texturePointer : scene.sceneTextures)
+	{
+		serial << texturePointer;
+	}
+	bool framebuffer = !!scene.framebufferPointer;
+	serial << framebuffer;
+	if (framebuffer)
+	{
+		auto textureAttachmentSize = scene.framebufferPointer->textureAttachmentPairs.size();
+		serial << textureAttachmentSize;
+		for (auto& textureAttachment : scene.framebufferPointer->textureAttachmentPairs)
+		{
+			serial << textureAttachment.second;
+		}
+	}
+	serial << scene.windowPlane << scene.viewPointer;
+	return serial;
+}
+template<>
+Serial& deserialize(Serial& serial, Scene& scene)
+{
+	bool wroteBit = false;
+	serial >> wroteBit;
+	if (!wroteBit)
+		return serial;
+	serial >> scene.drawColorToWindowPlane >> scene.clearColor >> scene.projectionPointer;
+	auto entitiesSize = scene.entities.size();
+	serial >> entitiesSize;
+	for (size_t i = 0; i < entitiesSize; i++)
+	{
+		bool readBit = false;
+		serial >> readBit;
+		if (!readBit)
+			continue;
+		size_t key = 0, ID = 0;
+		serial >> key >> ID;
+		auto deserializeFunction = Entity::getDeserialize(ID);
+		std::shared_ptr<zg::Entity> entityPointer;
+		deserializeFunction(serial, entityPointer);
+		scene.entities[key] = entityPointer;
+		scene.postAddEntity(entityPointer, {ID});
+		if (scene.window.onEntityAdded)
+			scene.window.onEntityAdded(entityPointer);
+	}
+	serial >> scene.entitiesCount;
+	auto pointLightsSize = scene.pointLights.size();
+	serial >> pointLightsSize;
+	scene.pointLights.resize(pointLightsSize);
+	for (auto& pointLight : scene.pointLights)
+	{
+		serial >> pointLight;
+	}
+	for (auto& pointLight : scene.pointLights)
+	{
+		scene.pointLightShadows.emplace_back(scene.window, pointLight);
+	}
+	auto directionalLightsSize = scene.directionalLights.size();
+	serial >> directionalLightsSize;
+	scene.directionalLights.resize(directionalLightsSize);
+	for (auto& directionalLight : scene.directionalLights)
+	{
+		serial >> directionalLight;
+	}
+	for (auto& directionalLight : scene.directionalLights)
+	{
+		scene.directionalLightShadows.emplace_back(scene.window, directionalLight);
+	}
+	auto spotLightsSize = scene.spotLights.size();
+	serial >> spotLightsSize;
+	scene.spotLights.resize(spotLightsSize);
+	for (auto& spotLight : scene.spotLights)
+	{
+		serial >> spotLight;
+	}
+	for (auto& spotLight : scene.spotLights)
+	{
+		scene.spotLightShadows.emplace_back(scene.window, spotLight);
+	}
+	auto texturesSize = scene.sceneTextures.size();
+	serial >> texturesSize;
+	scene.sceneTextures.resize(texturesSize);
+	for (auto& texturePointer : scene.sceneTextures)
+	{
+		serial >> texturePointer;
+	}
+	bool framebuffer = false;
+	serial >> framebuffer;
+	if (framebuffer)
+	{
+		std::vector<zg::textures::Framebuffer::TextureAttachmentPair> textureAttachmentPairs;
+		size_t textureAttachmentSize = textureAttachmentPairs.size();
+		serial >> textureAttachmentSize;
+		for (size_t i = 0; i < textureAttachmentSize; ++i)
+		{
+			zg::textures::Framebuffer::AttachmentType attachmentType;
+			serial >> attachmentType;
+			textureAttachmentPairs.emplace_back((zg::textures::Texture*)scene.sceneTextures[i].get(), attachmentType);
+		}
+		scene.framebufferPointer = std::make_shared<zg::textures::Framebuffer>(scene.window, textureAttachmentPairs);
+	}
+	serial >> scene.windowPlane >> scene.viewPointer;
+	return serial;
+}

@@ -21,7 +21,7 @@ endif()
 
 file(GLOB_RECURSE ZG_C_SOURCES "src/*.c")
 file(GLOB_RECURSE ZG_CXX_SOURCES "src/*.cpp")
-set(ZG_SOURCES ${ZG_SOURCES} ${ZG_C_SOURCES} ${ZG_CXX_SOURCES})
+set(ZG_SOURCES "os_src/EntityRegistry.cpp" ${ZG_SOURCES} ${ZG_C_SOURCES} ${ZG_CXX_SOURCES})
 
 include(FetchContent)
 #set(FETCHCONTENT_QUIET OFF)

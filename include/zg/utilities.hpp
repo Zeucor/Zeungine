@@ -9,6 +9,19 @@ namespace zg
 		result.reserve(vec1.size() + vec2.size());
 		result.insert(result.end(), vec1.begin(), vec1.end());
 		result.insert(result.end(), vec2.begin(), vec2.end());
+		for (int i = result.size() - 1; i > 0; --i)
+		{
+			auto& item = result[i];
+			for (int j = i - 1; j >= 0; --j)
+			{
+				auto& item2 = result[j];
+				if (item == item2)
+				{
+					result.erase(result.begin() + i);
+					break;
+				}
+			}
+		}
 		return result;
 	};
 }

@@ -15,4 +15,5 @@ std::size_t zg::crypto::hashVector(const std::vector<T> &vec)
 	return combinedHash;
 };
 template size_t zg::crypto::hashVector<std::string_view>(const std::vector<std::string_view> &);
+template size_t zg::crypto::hashVector<std::string>(const std::vector<std::string> &);
 template size_t zg::crypto::hashVector<size_t>(const std::vector<size_t> &);

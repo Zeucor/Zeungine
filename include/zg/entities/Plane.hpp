@@ -3,6 +3,7 @@
 #include <zg/Scene.hpp>
 #include <zg/glm.hpp>
 #include <array>
+
 namespace zg
 {
 	struct Window;
@@ -11,10 +12,11 @@ namespace zg::entities
 {
 	struct Plane : Entity
 	{
+		size_t getTypeID() override { return EntityTypeID<Plane>::id; }
+		glm::vec4 color;
 		std::vector<glm::vec4> colors;
 		std::vector<glm::vec2> uvs;
 		std::vector<glm::vec3> normals = {};
-		Scene &scene;
 		textures::Texture *texturePointer = 0;
 		glm::vec2 size;
 		inline static size_t planesCount = 0;

@@ -5,12 +5,13 @@
 #include "./TextView.hpp"
 #include <zg/glm.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
+
 namespace zg::entities
 {
 	struct DropdownMenu : Entity
 	{
+		size_t getTypeID() override { return EntityTypeID<DropdownMenu>::id; }
 		std::vector<glm::vec4> colors;
-		Scene &scene;
 		glm::vec2 size;
 		using OptionPressHandler = std::function<void()>;
 		fonts::freetype::FreetypeFont &font;
@@ -31,8 +32,8 @@ namespace zg::entities
 	};
 	struct DropdownItem : Entity
 	{
+		size_t getTypeID() override { return EntityTypeID<DropdownItem>::id; }
 		std::vector<glm::vec4> colors;
-		Scene &scene;
 		glm::vec2 size;
 		std::string text;
 		DropdownMenu::OptionPressHandler handler;

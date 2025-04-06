@@ -160,6 +160,7 @@ _exit:
 	iPlatformWindowRef.destroy();
 	delete iRenderer;
 	delete iPlatformWindow;
+	zg::Entity::cleanupSerialize();
 }
 void Window::updateKeyboard()
 {

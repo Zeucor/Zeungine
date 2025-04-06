@@ -1,12 +1,14 @@
 #pragma once
 #include <zg/Entity.hpp>
+
 namespace zg::entities
 {
 	struct Cube : Entity
 	{
+		size_t getTypeID() override { return EntityTypeID<Cube>::id; }
+		glm::vec3 size;
 		std::vector<glm::vec4> colors;
 		std::vector<glm::vec3> normals = {};
-		Scene &scene;
 		inline static size_t cubesCount = 0;
 		Cube(Window &window,
 			 Scene &scene,

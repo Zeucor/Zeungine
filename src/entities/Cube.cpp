@@ -1,11 +1,12 @@
 #include <zg/Scene.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/utilities.hpp>
+#include <zg/Serial.hpp>
 using namespace zg::entities;
 Cube::Cube(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
 					 glm::vec3 size, const zg::shaders::RuntimeConstants& constants, std::string_view name) :
-		zg::Entity(window,
-							 zg::mergeVectors<std::string_view>(
+		zg::Entity(window, scene,
+							 zg::mergeVectors<std::string>(
 								 {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
 							 36,
 							 {
@@ -32,6 +33,7 @@ Cube::Cube(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 r
 								 {size.x / 2, -size.y / 2, size.z / 2},		{size.x / 2, -size.y / 2, -size.z / 2} // Bottom
 							 },
 							 position, rotation, scale, name.empty() ? "Cube " + std::to_string(++cubesCount) : name),
+		size(size),
 		colors({
 			{1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 0, 1}, // Front face
 			{0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, // Back face
@@ -39,8 +41,7 @@ Cube::Cube(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 r
 			{1, 1, 0, 1}, {1, 1, 0, 1}, {1, 1, 0, 1}, {1, 1, 0, 1}, // Right face
 			{0, 1, 1, 1}, {0, 1, 1, 1}, {0, 1, 1, 1}, {0, 1, 1, 1}, // Top face
 			{1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1} // Bottom face
-		}),
-		scene(scene)
+		})
 {
 	computeNormals(indices, positions, normals);
 	updateIndices(indices);
@@ -60,4 +61,53 @@ bool Cube::preRender()
 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	shader->unbind();
 	return true;
-};
+}
+template<>
+Serial& serialize(Serial& serial, const std::shared_ptr<zg::entities::Cube>& cubePointer)
+{
+	if (!cubePointer)
+	{
+		serial << false;
+		return serial;
+	}
+	auto& cube = *cubePointer;
+	serial << true;
+	auto& position = cube.position;
+	auto& rotation = cube.rotation;
+	auto& scale = cube.scale;
+	auto& size = cube.size;
+	auto& constants = cube.constants;
+	auto& name = cube.name;
+	serial << position << rotation << scale << size;
+	auto constantsSize = constants.size();
+	serial << constantsSize;
+	for (auto j = 0; j < constantsSize; j++)
+		serial << constants[j];
+	serial << name;
+	return serial;
+}
+template<>
+Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::Cube>& cubePointer)
+{
+	bool wroteBit = false;
+	serial >> wroteBit;
+	if (!wroteBit)
+		return serial;
+	zg::Window* windowPointer = (zg::Window*)serial.getContextPointer("Window");
+	zg::Scene* scenePointer = (zg::Scene*)serial.getContextPointer("Scene");
+	glm::vec3 position{0};
+	glm::vec3 rotation{0};
+	glm::vec3 scale{0};
+	glm::vec3 size{0};
+	zg::shaders::RuntimeConstants constants{};
+	std::string name{};
+	serial >> position >> rotation >> scale >> size;
+	auto constantsSize = constants.size();
+	serial >> constantsSize;
+	constants.resize(constantsSize);
+	for (auto j = 0; j < constantsSize; j++)
+		serial >> constants[j];
+	serial >> name;
+	cubePointer = std::make_shared<zg::entities::Cube>(*windowPointer, *scenePointer, position, rotation, scale, size, constants, name);
+	return serial;
+}

@@ -4,10 +4,10 @@
 using namespace zg::media::entities;
 Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale,
 						 glm::vec2 _size, const std::string& uri, std::string_view name) :
-		Entity(_window, {"UV2", "Texture2D", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
+		Entity(_window, _scene, {"UV2", "Texture2D", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
 					 {0, 1, 2, 2, 3, 0}, 4, {}, _position, _rotation, _scale,
 					 name.empty() ? "Video " + std::to_string(++videosCount) : name),
-		ReadMediaStream(_window, uri), ISoundNode(_window.audioEngine, true, false), scene(_scene), uvs({
+		ReadMediaStream(_window, uri), ISoundNode(_window.audioEngine, true, false), uvs({
 																																																	// Front face
 																																																	{0, 0}, // 0
 																																																	{1, 0}, // 1
@@ -20,10 +20,10 @@ Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rot
 Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale,
 						 glm::vec2 _size, const std::string& uri, const std::shared_ptr<interfaces::IFile>& _filePointer,
 						 std::string_view name) :
-		Entity(_window, {"UV2", "Texture2D", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
+		Entity(_window, _scene, {"UV2", "Texture2D", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
 					 {0, 1, 2, 2, 3, 0}, 4, {}, _position, _rotation, _scale,
 					 name.empty() ? "Video " + std::to_string(++videosCount) : name),
-		ReadMediaStream(_window, uri, _filePointer), ISoundNode(_window.audioEngine, true, false), scene(_scene),
+		ReadMediaStream(_window, uri, _filePointer), ISoundNode(_window.audioEngine, true, false),
 		uvs({
 			// Front face
 			{0, 0}, // 0

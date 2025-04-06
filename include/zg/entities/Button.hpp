@@ -6,12 +6,13 @@
 #include <zg/glm.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
 
+
 namespace zg::entities
 {
 	struct Button : Entity
 	{
+		size_t getTypeID() override { return EntityTypeID<Button>::id; }
 		std::vector<glm::vec4> colors;
-		Scene &scene;
 		glm::vec2 size;
 		std::string text;
 		std::shared_ptr<TextView> textView;

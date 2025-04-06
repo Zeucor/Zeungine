@@ -34,3 +34,21 @@ void VML::focusHandler(bool focused)
 	else
 		scene.window.iPlatformWindow->showPointer();
 }
+template<>
+Serial& serialize(Serial& serial, const std::shared_ptr<zg::vp::VML>& vmlPointer)
+{
+	auto& vml = *vmlPointer;
+	serial << true;
+	return serial;
+}
+template<>
+Serial& deserialize(Serial& serial, std::shared_ptr<zg::vp::VML>& vmlPointer)
+{
+	bool wroteBit = false;
+	serial >> wroteBit;
+	if (!wroteBit)
+		return serial; 
+	auto* scenePointer = (zg::Scene*)serial.getContextPointer("Scene");
+	vmlPointer = std::make_shared<zg::vp::VML>(*scenePointer);
+	return serial;
+}

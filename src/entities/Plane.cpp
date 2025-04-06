@@ -2,8 +2,8 @@
 #include <zg/utilities.hpp>
 using namespace zg::entities;
 Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
-			 glm::vec2 size, glm::vec4 color, const zg::shaders::RuntimeConstants &constants, std::string_view name) : zg::Entity(window,
-																																  zg::mergeVectors<std::string_view>(
+			 glm::vec2 size, glm::vec4 color, const zg::shaders::RuntimeConstants &constants, std::string_view name) : zg::Entity(window, scene,
+																																  zg::mergeVectors<std::string>(
 																																	  {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
 																																  6, {0, 1, 2, 2, 3, 0}, 4,
 																																  {
@@ -13,7 +13,7 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3
 																																	  {-size.x / 2, size.y / 2, 0} // Front
 																																  },
 																																  position, rotation, scale, name.empty() ? "Plane " + std::to_string(++planesCount) : name),
-																													   uvs({{}, {}, {}, {}}), scene(scene), size(size)
+																													   uvs({{}, {}, {}, {}}),  size(size)
 {
 	computeNormals(indices, positions, normals);
 	updateIndices(indices);
@@ -23,8 +23,8 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3
 };
 Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
 			 glm::vec2 size, textures::Texture &texture, const zg::shaders::RuntimeConstants &constants,
-			 std::string_view name) : zg::Entity(window,
-												 zg::mergeVectors<std::string_view>(
+			 std::string_view name) : zg::Entity(window, scene,
+												 zg::mergeVectors<std::string>(
 													 {{"UV2", "Position", "Normal", "Texture2D", "View", "Projection", "Model", "CameraPosition"}}, constants),
 												 6,
 												 {
@@ -45,7 +45,7 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3
 																	{1, 1}, // 2
 																	{0, 1}	// 3
 																}),
-									  scene(scene), texturePointer(&texture), size(size)
+									   texturePointer(&texture), size(size)
 {
 	switch (window.iRenderer->renderer)
 	{
@@ -93,3 +93,55 @@ void Plane::setSize(glm::vec2 size)
 	updateElements("Position", positions);
 	this->size = size;
 };
+
+template<>
+Serial& serialize(Serial& serial, const std::shared_ptr<zg::entities::Plane>& planePointer)
+{
+	if (!planePointer)
+	{
+		serial << false;
+		return serial;
+	}
+	auto& plane = *planePointer;
+	serial << true;
+	auto& position = plane.position;
+	auto& rotation = plane.rotation;
+	auto& scale = plane.scale;
+	auto& size = plane.size;
+	auto& color = plane.color;
+	auto& constants = plane.constants;
+	auto& name = plane.name;
+	serial << position << rotation << scale << size;
+	auto constantsSize = constants.size();
+	serial << constantsSize;
+	for (auto j = 0; j < constantsSize; j++)
+		serial << constants[j];
+	serial << name;
+	return serial;
+}
+template<>
+Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::Plane>& planePointer)
+{
+	bool wroteBit = false;
+	serial >> wroteBit;
+	if (!wroteBit)
+		return serial;
+	zg::Window* windowPointer = (zg::Window*)serial.getContextPointer("Window");
+	zg::Scene* scenePointer = (zg::Scene*)serial.getContextPointer("Scene");
+	glm::vec3 position{0};
+	glm::vec3 rotation{0};
+	glm::vec3 scale{0};
+	glm::vec2 size{0};
+	glm::vec4 color{0};
+	zg::shaders::RuntimeConstants constants{};
+	std::string name{};
+	serial >> position >> rotation >> scale >> size >> color;
+	auto constantsSize = constants.size();
+	serial >> constantsSize;
+	constants.resize(constantsSize);
+	for (auto j = 0; j < constantsSize; j++)
+		serial >> constants[j];
+	serial >> name;
+	planePointer = std::make_shared<zg::entities::Plane>(*windowPointer, *scenePointer, position, rotation, scale, size, color, constants, name);
+	return serial;
+}

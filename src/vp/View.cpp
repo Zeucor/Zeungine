@@ -1,4 +1,5 @@
 #include <zg/vp/View.hpp>
+#include <zg/Serial.hpp>
 using namespace zg;
 using namespace zg::vp;
 View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up) : position(_position),
@@ -74,4 +75,27 @@ void View::callResizeHandler(glm::vec2 newSize)
 	{
 		handler(newSize);
 	}
+}
+template<>
+Serial& serialize(Serial& serial, const std::shared_ptr<zg::vp::View>& viewPointer)
+{
+	auto& view = *viewPointer;
+	serial << true << view.position << view.direction << view.up << view.lookAtSet << view.lookAt;
+	return serial;
+}
+template<>
+Serial& deserialize(Serial& serial, std::shared_ptr<zg::vp::View>& viewPointer)
+{
+	bool wroteBit = false;
+	serial >> wroteBit;
+	if (!wroteBit)
+		return serial;
+	glm::vec3 position{0};
+	glm::vec3 direction{0};
+	glm::vec3 up{0};
+	bool lookAtSet = false;
+	glm::vec3 lookAt{0};
+	serial >> position >> direction >> up >> lookAtSet >> lookAt;
+	viewPointer = std::make_shared<zg::vp::View>(position, direction, up, lookAtSet, lookAt);
+	return serial;
 }

@@ -7,12 +7,13 @@
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/interfaces/ISizable.hpp>
 
+
 namespace zg::entities
 {
 	struct PanelMenu : Entity, ISizable
 	{
+		size_t getTypeID() override { return EntityTypeID<PanelMenu>::id; }
 		std::vector<glm::vec4> colors;
-		Scene &scene;
 		glm::vec4 color;
 		fonts::freetype::FreetypeFont &font;
 		std::string title;
@@ -42,8 +43,8 @@ namespace zg::entities
 
 	struct PanelItem : Entity, ISizable
 	{
+		size_t getTypeID() override { return EntityTypeID<PanelItem>::id; }
 		std::vector<glm::vec4> colors;
-		Scene &scene;
 		std::string text;
 		std::shared_ptr<TextView> textView;
 		fonts::freetype::FreetypeFont &font;

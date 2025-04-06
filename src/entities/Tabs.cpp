@@ -6,12 +6,12 @@ using namespace zg::entities;
 TabsBar::TabsBar(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
 								 glm::vec4 color, fonts::freetype::FreetypeFont& font, float width, float height,
 								 const zg::shaders::RuntimeConstants& constants, std::string_view name) :
-		zg::Entity(window,
-							 zg::mergeVectors<std::string_view>(
+		zg::Entity(window, scene,
+							 zg::mergeVectors<std::string>(
 								 {{"Color", "Position", "View", "Projection", "Model", "CameraPosition"}}, constants),
 							 6, {0, 1, 2, 2, 3, 0}, 4, {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}}, position, rotation, scale,
 							 name.empty() ? "TabsBar " + std::to_string(++tabBarsCount) : name),
-		scene(scene), size({0, 0}), color(color), font(font), width(width), height(height)
+		 size({0, 0}), color(color), font(font), width(width), height(height)
 {
 	updateIndices(indices);
 	setColor(color);
@@ -76,12 +76,12 @@ Tab::Tab(Window& window, Scene& scene, glm::vec3 position, glm::vec3 rotation, g
 				 const std::string_view text, fonts::freetype::FreetypeFont& font, float height,
 				 const TabsBar::TabClickHandler& handler, bool active, TabsBar& tabsBar, const zgfilesystem::File& iconFile,
 				 const shaders::RuntimeConstants& constants, std::string_view name) :
-		zg::Entity(window,
-							 zg::mergeVectors<std::string_view>(
+		zg::Entity(window, scene,
+							 zg::mergeVectors<std::string>(
 								 {{"Color", "Position", "View", "Projection", "Model", "CameraPosition"}}, constants),
 							 6, {0, 1, 2, 2, 3, 0}, 4, {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}}, position, rotation, scale,
 							 name.empty() ? "Tab " + std::to_string(++tabsCount) : name),
-		scene(scene), size({0, 0}), text(text), font(font), height(height), NDCHeight((height / window.windowHeight) * 2),
+		 size({0, 0}), text(text), font(font), height(height), NDCHeight((height / window.windowHeight) * 2),
 		handler(handler), active(active),
 		activeColor(std::clamp(color[0] * 2.f, 0.f, 1.f), std::clamp(color[1] * 2.f, 0.f, 1.f),
 								std::clamp(color[2] * 2.f, 0.f, 1.f), color[3]),

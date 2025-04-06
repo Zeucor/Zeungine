@@ -15,10 +15,10 @@ std::shared_ptr<textures::Texture> zg::entities::getIconTexture(const std::files
 }
 Asset::Asset(Window& window, Scene& scene, glm::vec3 position, const std::filesystem::path& path,
 						 fonts::freetype::FreetypeFont& font) :
-		Entity(window, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6, {0, 1, 2, 2, 3, 0}, 4,
+		Entity(window, scene, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6, {0, 1, 2, 2, 3, 0}, 4,
 					 {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, glm::vec3(0), glm::vec3(0), glm::vec3(1),
 					 "Asset " + std::to_string(++assetsCount)),
-		scene(scene), path(path), font(font)
+		 path(path), font(font)
 {
 	// icon
 	auto iconPath = determineIconPath(path.extension());
@@ -71,10 +71,10 @@ std::filesystem::path Asset::determineIconPath(const std::filesystem::path& exte
 }
 Folder::Folder(Window& window, Scene& scene, glm::vec3 position, const std::filesystem::path& path,
 							 fonts::freetype::FreetypeFont& font) :
-		Entity(window, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6, {0, 1, 2, 2, 3, 0}, 4,
+		Entity(window, scene, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6, {0, 1, 2, 2, 3, 0}, 4,
 					 {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, glm::vec3(0), glm::vec3(0), glm::vec3(1),
 					 "Folder " + std::to_string(++foldersCount)),
-		scene(scene), path(path), font(font)
+		 path(path), font(font)
 {
 	// icon
 	auto iconPath = determineIconPath();
@@ -119,10 +119,10 @@ std::filesystem::path Folder::determineIconPath()
 }
 Breadcrumbs::Breadcrumbs(Window& window, Scene& scene, float width, fonts::freetype::FreetypeFont& font,
 												 glm::vec3 position, const std::filesystem::path& rootPath) :
-		Entity(window, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6, {0, 1, 2, 2, 3, 0}, 4,
+		Entity(window, scene, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6, {0, 1, 2, 2, 3, 0}, 4,
 					 {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, position, glm::vec3(0), glm::vec3(1),
 					 "Breadcrumb " + std::to_string(++breadcrumbsCount)),
-		scene(scene), width(width), fontSize(window.windowHeight / 32), font(font), rootPath(rootPath)
+		 width(width), fontSize(window.windowHeight / 32), font(font), rootPath(rootPath)
 {
 	updateIndices(indices);
 	backgroundColor = {0.4, 0.4, 0.4, 1};
@@ -211,10 +211,10 @@ void Breadcrumbs::setSize(glm::vec3 newSize)
 	size = actualNewSize;
 }
 AssetGrid::AssetGrid(Window& window, Scene& scene, float width, float height, glm::vec3 position) :
-		Entity(window, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6, {0, 1, 2, 2, 3, 0}, 4,
+		Entity(window, scene, {"Color", "Position", "View", "Projection", "Model", "CameraPosition"}, 6, {0, 1, 2, 2, 3, 0}, 4,
 					 {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, position, glm::vec3(0), glm::vec3(1),
 					 "AssetGrid " + std::to_string(++assetGridsCount)),
-		scene(scene), width(width), height(height),
+		 width(width), height(height),
 		columnCount(static_cast<int>(width / (itemWidth / window.windowWidth / 0.5)))
 {
 	updateIndices(indices);
@@ -270,12 +270,12 @@ AssetBrowser::AssetBrowser(zg::Window& window, zg::Scene& scene, glm::vec3 posit
 													 glm::vec3 scale, glm::vec4 backgroundColor, fonts::freetype::FreetypeFont& font, float width,
 													 float height, std::filesystem::path projectDirectory,
 													 const zg::shaders::RuntimeConstants& constants, std::string_view name) :
-		zg::Entity(window,
-							 zg::mergeVectors<STANDARD::string_view>(
+		zg::Entity(window, scene,
+							 zg::mergeVectors<std::string>(
 								 {{"Color", "Position", "View", "Projection", "Model", "CameraPosition"}}, constants),
 							 6, {0, 1, 2, 2, 3, 0}, 4, {{0, -0, 0}, {0, -0, 0}, {0, 0, 0}, {0, 0, 0}}, position, rotation, scale,
 							 name.empty() ? "AssetBrowser " + std::to_string(++assetBrowsersCount) : name),
-		scene(scene), backgroundColor(backgroundColor), font(font), width(width), height(height),
+		 backgroundColor(backgroundColor), font(font), width(width), height(height),
 		excludePaths({projectDirectory / "build", projectDirectory / ".vscode"}), projectDirectory(projectDirectory),
 		directoryWatcher(projectDirectory, excludePaths), currentDirectory(projectDirectory)
 {

@@ -21,6 +21,7 @@ namespace zg
 		Window &window;
 		glm::vec4 clearColor = glm::vec4(0);
 		std::shared_ptr<vp::Projection> projectionPointer;
+		std::unordered_map<std::string, std::shared_ptr<Entity>> entitiesByName;
 		std::map<size_t, std::shared_ptr<Entity>> entities;
 		size_t entitiesCount = 0;
 		std::vector<lights::PointLight> pointLights;
@@ -36,6 +37,7 @@ namespace zg
 		std::array<UniqueIdentifier, 7 - 0 + 1> mousePressIDs;
 		UniqueIdentifier mouseMoveID;
 		Entity *currentHoveredEntity = 0;
+		//
 		std::shared_ptr<vp::View> viewPointer;
 		bool useBVH;
 		Scene(Window &_window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov, const std::shared_ptr<textures::Framebuffer>& framebufferPointer = {}, bool drawColorToWindowPlane = true, bool useBVH = true);
@@ -61,5 +63,6 @@ namespace zg
 		Entity *findEntityByPrimID(const size_t &primID);
 		void hookMouseEvents();
 		void unhookMouseEvents();
+		std::shared_ptr<zg::Entity> getEntityByName(const std::string& name);
 	};
 }

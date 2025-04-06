@@ -30,12 +30,15 @@ namespace zg::textures
 		};
 		Window &window;
 		glm::ivec4 size;
+		std::vector<std::pair<size_t, std::shared_ptr<char>>> datas;
 		Format format;
 		Type type;
 		FilterType filterType;
 		void *rendererData = 0;
 		explicit Texture(Window &window, const glm::ivec4 &size, const void *data, const Format &format = RGBA8,
 						 const Type &type = UnsignedByte, const FilterType &filterType = Linear);
+		explicit Texture(Window &window, const glm::ivec4 &size, const std::vector<void *> datas, const Format &format = RGBA8,
+						const Type &type = UnsignedByte, const FilterType &filterType = Linear);
 		explicit Texture(Window &window, const glm::ivec4 &size, const std::string_view path,
 						 const Format &format = RGBA8, const Type &type = UnsignedByte,
 						 const FilterType &filterType = Linear);

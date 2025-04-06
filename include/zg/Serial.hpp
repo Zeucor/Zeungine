@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <istream>
 #include <ostream>
+#include <unordered_map>
 
 struct Serial;
 
@@ -79,6 +80,7 @@ private:
 	char currentWriteByte = 0;
 	char bitsWrittenWriteByte = 0;
 	bool bitStream = false;
+	std::unordered_map<std::string, void*> contextPointers;
 
 public:
 	std::ostream* writeStreamPointer = 0;
@@ -364,5 +366,18 @@ public:
 	{
 		if (readStreamPointer)
 			readStreamPointer->seekg(index);
+	}
+
+	void* getContextPointer(const std::string& key)
+	{
+		auto iter = contextPointers.find(key);
+		if (iter == contextPointers.end())
+			return 0;
+		return iter->second;
+	}
+
+	void setContextPointer(const std::string& key, void* value)
+	{
+		contextPointers[key] = value;
 	}
 };

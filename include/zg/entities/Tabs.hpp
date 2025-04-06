@@ -7,13 +7,14 @@
 #include <zg/glm.hpp>
 #include "./TextView.hpp"
 #include "./Plane.hpp"
+
 namespace zg::entities
 {
 	struct Tab;
 	struct TabsBar : Entity
 	{
+		size_t getTypeID() override { return EntityTypeID<TabsBar>::id; }
 		std::vector<glm::vec4> colors;
-		Scene& scene;
 		glm::vec2 size;
 		glm::vec4 color;
 		fonts::freetype::FreetypeFont& font;
@@ -36,8 +37,8 @@ namespace zg::entities
 
 	struct Tab : Entity
 	{
+		size_t getTypeID() override { return EntityTypeID<Tab>::id; }
 		std::vector<glm::vec4> colors;
-		Scene& scene;
 		glm::vec2 size;
 		std::string text;
 		std::shared_ptr<TextView> textView;
