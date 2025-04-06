@@ -305,12 +305,12 @@ namespace zg::entities
 				for (size_t i = 0; i < centralPoints.size(); ++i)
 				{
 					glm::vec3 center = glm::vec3(centralPoints[i]);
-					const glm::vec3& N = normals_frame[i];
+					const glm::vec3& normal_frame = normals_frame[i];
 					const glm::vec3& B = binormals_frame[i];
 					for (int j = 0; j < circleSegments; ++j)
 					{
 						float angle = (float)j / (float)circleSegments * glm::two_pi<float>();
-						glm::vec3 offset = radius * (cos(angle) * N + sin(angle) * B);
+						glm::vec3 offset = radius * (cos(angle) * normal_frame + sin(angle) * B);
 						vertices.push_back(center + offset);
 						vertex_colors.push_back(color);
 						vertex_normals.push_back(glm::normalize(offset));
