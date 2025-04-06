@@ -8,22 +8,89 @@ if(ANDROID)
     set(SHELL bash)
 elseif(WIN32)
     set(SHELL "C:\\msys64\\msys2_shell.cmd" "-defterm" "-no-start" "-mingw64" "-here" "-use-full-path" "-c")
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} /EHsc)
 else()
     set(SHELL bash)
 endif()
 
 #New Dependency Declarations to the top!
 
-# ExprTK
-message(STATUS "FetchContent: exprtk")
-FetchContent_Declare(exprtk
-    GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
-    GIT_TAG master)
-FetchContent_GetProperties(exprtk)
-if(NOT exprtk_POPULATED)
-    FetchContent_Populate(exprtk)
+# zstd
+message(STATUS "FetchContent: zstd")
+FetchContent_Declare(zstd
+    GIT_REPOSITORY https://github.com/facebook/zstd.git
+    GIT_TAG v1.5.7)
+FetchContent_GetProperties(zstd)
+if(NOT zstd_POPULATED)
+    FetchContent_Populate(zstd)
 endif()
+
+file(GLOB ZSTD_COMMON_SOURCES ${zstd_SOURCE_DIR}/lib/common/*.c)
+file(GLOB ZSTD_COMPRESS_SOURCES ${zstd_SOURCE_DIR}/lib/compress/*.c)
+file(GLOB ZSTD_DECOMPRESS_SOURCES ${zstd_SOURCE_DIR}/lib/decompress/*.c)
+file(GLOB ZSTD_DICTBUILDER_SOURCES ${zstd_SOURCE_DIR}/lib/dictBuilder/*.c)
+
+add_library(zstd STATIC ${ZSTD_COMMON_SOURCES} ${ZSTD_COMPRESS_SOURCES} ${ZSTD_DECOMPRESS_SOURCES} ${ZSTD_DICTBUILDER_SOURCES})
+
+target_include_directories(zstd PRIVATE ${zstd_SOURCE_DIR}/lib)
+
+# zlib
+message(STATUS "FetchContent: zlib")
+FetchContent_Declare(zlib
+    GIT_REPOSITORY https://github.com/ZeunO8/zlib.git
+    GIT_TAG apple-fix)
+FetchContent_GetProperties(zlib)
+if(NOT zlib_POPULATED)
+    FetchContent_Populate(zlib)
+endif()
+
+set(ZLIB_SOURCES
+    "${zlib_SOURCE_DIR}/zutil.c"
+    "${zlib_SOURCE_DIR}/uncompr.c"
+    "${zlib_SOURCE_DIR}/trees.c"
+    "${zlib_SOURCE_DIR}/inftrees.c"
+    "${zlib_SOURCE_DIR}/inflate.c"
+    "${zlib_SOURCE_DIR}/inffast.c"
+    "${zlib_SOURCE_DIR}/infback.c"
+    "${zlib_SOURCE_DIR}/gzwrite.c"
+    "${zlib_SOURCE_DIR}/gzread.c"
+    "${zlib_SOURCE_DIR}/gzlib.c"
+    "${zlib_SOURCE_DIR}/gzclose.c"
+    "${zlib_SOURCE_DIR}/deflate.c"
+    "${zlib_SOURCE_DIR}/crc32.c"
+    "${zlib_SOURCE_DIR}/compress.c"
+    "${zlib_SOURCE_DIR}/adler32.c"
+)
+
+add_library(zlib STATIC ${ZLIB_SOURCES})
+target_include_directories(zlib PRIVATE ${zlib_SOURCE_DIR})
+configure_file(${zlib_SOURCE_DIR}/zconf.h.cmakein ${zlib_SOURCE_DIR}/zconf.h)
+
+# bzip2
+message(STATUS "FetchContent: bzip2")
+FetchContent_Declare(bzip2
+    GIT_REPOSITORY https://github.com/centricular/bzip2.git
+    GIT_TAG 928fd716ecffa87f47d47585a9e09ff364c7689a)
+FetchContent_MakeAvailable(bzip2)
+FetchContent_GetProperties(bzip2)
+if(NOT bzip2_POPULATED)
+    FetchContent_Populate(bzip2)
+endif()
+
+set(BZIP2_SOURCES
+    "${bzip2_SOURCE_DIR}/blocksort.c"
+    "${bzip2_SOURCE_DIR}/bzip2.c"
+    "${bzip2_SOURCE_DIR}/bzlib.c"
+    "${bzip2_SOURCE_DIR}/compress.c"
+    "${bzip2_SOURCE_DIR}/crctable.c"
+    "${bzip2_SOURCE_DIR}/decompress.c"
+    "${bzip2_SOURCE_DIR}/dlltest.c"
+    "${bzip2_SOURCE_DIR}/huffman.c"
+    "${bzip2_SOURCE_DIR}/mk251.c"
+    "${bzip2_SOURCE_DIR}/randtable.c"
+)
+
+add_library(bzip2 STATIC ${BZIP2_SOURCES})
+target_include_directories(bzip2 PRIVATE ${bzip2_SOURCE_DIR})
 
 # lzma
 message(STATUS "FetchContent: lzma")
@@ -121,6 +188,85 @@ target_include_directories(lzma PRIVATE
     "${lzma_SOURCE_DIR}/liblzma/simple"
     "${lzma_SOURCE_DIR}")
 
+# Boost
+message(STATUS "FetchContent: boost")
+FetchContent_Declare(boost
+    GIT_REPOSITORY https://github.com/boostorg/boost
+    GIT_TAG boost-1.87.0)
+FetchContent_GetProperties(boost)
+if(NOT boost_POPULATED)
+    FetchContent_Populate(boost)
+endif()
+
+file(GLOB BOOST_LIB_SOURCES
+    "${boost_SOURCE_DIR}/libs/*/src/*.cpp"
+    "${boost_SOURCE_DIR}/libs/*/src/*.c"
+)
+
+# Building Boost without support for: python, graph_parallel, stacktrace, mpi, container (dlmalloc)
+
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/python/src/.*\\.cpp$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/python/src/.*\\.c$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/graph_parallel/src/.*\\.cpp$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/graph_parallel/src/.*\\.c$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/stacktrace/src/.*\\.cpp$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/stacktrace/src/.*\\.c$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/mpi/src/.*\\.cpp$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/mpi/src/.*\\.c$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/context/src/untested.cpp$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/container/src/dlmalloc_2_8_6.c$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/container/src/dlmalloc_ext_2_8_6.c$")
+if(WINDOWS)
+    list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/stacktrace/src/addr2line.cpp$")
+elseif(UNIX)
+    list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/stacktrace/src/windbg.cpp$")
+    list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/stacktrace/src/windbg_cached.cpp$")
+endif()
+
+# message(STATUS "BOOST_LIB_SOURCES: ${BOOST_LIB_SOURCES}")
+
+add_library(boost STATIC ${BOOST_LIB_SOURCES})
+
+file(GLOB BOOST_INCLUDES "${boost_SOURCE_DIR}/libs/*/include" "${boost_SOURCE_DIR}/libs/*/include/boost")
+
+file(GLOB BOOST_NUMERIC_INCLUDES
+    "${boost_SOURCE_DIR}/libs/numeric/conversion/include"
+    "${boost_SOURCE_DIR}/libs/numeric/conversion/include/boost"
+    "${boost_SOURCE_DIR}/libs/numeric/interval/include"
+    "${boost_SOURCE_DIR}/libs/numeric/interval/include/boost"
+    "${boost_SOURCE_DIR}/libs/numeric/odeint/include"
+    "${boost_SOURCE_DIR}/libs/numeric/odeint/include/boost"
+    "${boost_SOURCE_DIR}/libs/numeric/ublas/include"
+    "${boost_SOURCE_DIR}/libs/numeric/ublas/include/boost"
+)
+
+# message(STATUS "BOOST_INCLUDES: ${BOOST_INCLUDES}")
+
+target_include_directories(boost PRIVATE ${BOOST_INCLUDES})
+target_include_directories(boost PRIVATE ${BOOST_NUMERIC_INCLUDES})
+target_include_directories(boost PRIVATE ${bzip2_SOURCE_DIR})
+target_include_directories(boost PRIVATE ${lzma_SOURCE_DIR}/liblzma/api)
+target_include_directories(boost PRIVATE ${zlib_SOURCE_DIR})
+target_include_directories(boost PRIVATE ${zstd_SOURCE_DIR}/lib)
+if(UNIX)
+    target_compile_definitions(boost PRIVATE BOOST_USE_UCONTEXT)
+elseif(WINDOWS)
+    target_compile_definitions(boost PRIVATE BOOST_USE_WINFIB)
+endif()
+
+# find_package(MPI REQUIRED)
+# target_include_directories(boost PRIVATE ${MPI_C_INCLUDE_DIRS})
+
+# ExprTK
+message(STATUS "FetchContent: exprtk")
+FetchContent_Declare(exprtk
+    GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
+    GIT_TAG master)
+FetchContent_GetProperties(exprtk)
+if(NOT exprtk_POPULATED)
+    FetchContent_Populate(exprtk)
+endif()
+
 # brotli
 message(STATUS "FetchContent: brotli")
 set(BROTLI_BUNDLED_MODE ON)
@@ -136,39 +282,6 @@ FetchContent_Declare(harfbuzz
     GIT_REPOSITORY https://github.com/harfbuzz/harfbuzz.git
     GIT_TAG 11.0.0)
 FetchContent_MakeAvailable(harfbuzz)
-
-# zlib
-message(STATUS "FetchContent: zlib")
-FetchContent_Declare(zlib
-    GIT_REPOSITORY https://github.com/ZeunO8/zlib.git
-    GIT_TAG apple-fix)
-FetchContent_GetProperties(zlib)
-if(NOT zlib_POPULATED)
-    FetchContent_Populate(zlib)
-endif()
-
-set(ZLIB_SOURCES
-    "${zlib_SOURCE_DIR}/zutil.c"
-    "${zlib_SOURCE_DIR}/uncompr.c"
-    "${zlib_SOURCE_DIR}/trees.c"
-    "${zlib_SOURCE_DIR}/inftrees.c"
-    "${zlib_SOURCE_DIR}/inflate.c"
-    "${zlib_SOURCE_DIR}/inffast.c"
-    "${zlib_SOURCE_DIR}/infback.c"
-    "${zlib_SOURCE_DIR}/gzwrite.c"
-    "${zlib_SOURCE_DIR}/gzread.c"
-    "${zlib_SOURCE_DIR}/gzlib.c"
-    "${zlib_SOURCE_DIR}/gzclose.c"
-    "${zlib_SOURCE_DIR}/deflate.c"
-    "${zlib_SOURCE_DIR}/crc32.c"
-    "${zlib_SOURCE_DIR}/compress.c"
-    "${zlib_SOURCE_DIR}/adler32.c"
-)
-
-add_library(zlib STATIC ${ZLIB_SOURCES})
-target_include_directories(zlib PRIVATE ${zlib_SOURCE_DIR})
-configure_file(${zlib_SOURCE_DIR}/zconf.h.cmakein ${zlib_SOURCE_DIR}/zconf.h)
-# FetchContent_MakeAvailable(zlib)
 
 # png
 message(STATUS "FetchContent: png")
@@ -287,33 +400,6 @@ if(NOT MACOS)
         COMMENT "Building OpenSSL"
     )
 endif()
-
-# bzip2
-message(STATUS "FetchContent: bzip2")
-FetchContent_Declare(bzip2
-    GIT_REPOSITORY https://github.com/centricular/bzip2.git
-    GIT_TAG 928fd716ecffa87f47d47585a9e09ff364c7689a)
-FetchContent_MakeAvailable(bzip2)
-FetchContent_GetProperties(bzip2)
-if(NOT bzip2_POPULATED)
-    FetchContent_Populate(bzip2)
-endif()
-
-set(BZIP2_SOURCES
-    "${bzip2_SOURCE_DIR}/blocksort.c"
-    "${bzip2_SOURCE_DIR}/bzip2.c"
-    "${bzip2_SOURCE_DIR}/bzlib.c"
-    "${bzip2_SOURCE_DIR}/compress.c"
-    "${bzip2_SOURCE_DIR}/crctable.c"
-    "${bzip2_SOURCE_DIR}/decompress.c"
-    "${bzip2_SOURCE_DIR}/dlltest.c"
-    "${bzip2_SOURCE_DIR}/huffman.c"
-    "${bzip2_SOURCE_DIR}/mk251.c"
-    "${bzip2_SOURCE_DIR}/randtable.c"
-)
-
-add_library(bzip2 STATIC ${BZIP2_SOURCES})
-target_include_directories(bzip2 PRIVATE ${bzip2_SOURCE_DIR})
 
 # miniaudio
 FetchContent_Declare(

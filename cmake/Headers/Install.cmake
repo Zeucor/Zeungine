@@ -7,6 +7,20 @@ set(stb_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/stb-
 set(miniaudio_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/miniaudio-src")
 set(openssl_INC_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/openssl-build/include")
 set(exprtk_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/exprtk-src")
+set(boost_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/boost-src")
+
+# boost includes
+file(GLOB BOOST_INCLUDES "${boost_SOURCE_DIR}/libs/*/include/boost")
+list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/python/include/boost$")
+list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/graph_parallel/include/boost$")
+list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/stacktrace/include/boost$")
+list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/mpi/include/boost$")
+
+foreach(dir ${BOOST_INCLUDES})
+    install(DIRECTORY "${dir}" DESTINATION ${ZG_INC_INSTALL_PREFIX}
+        FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+endforeach()
 
 # openssl includes
 if(NOT MACOS)

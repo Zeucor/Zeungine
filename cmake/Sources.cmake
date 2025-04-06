@@ -1,27 +1,21 @@
 # OS Sources
 
 if(MACOS)
-    file(GLOB_RECURSE ZG_MAC_SOURCES "os_src/macos/*.c" "os_src/macos/*.cpp" "os_src/macos/*.mm")
-    set(ZG_SOURCES ${ZG_MAC_SOURCES})
+    set(OS_SRC macos)
 elseif(LINUX)
-    file(GLOB_RECURSE ZG_LNX_SOURCES "os_src/linux/*.c" "os_src/linux/*.cpp" "os_src/linux/*.lx")
-    set(ZG_SOURCES ${ZG_LNX_SOURCES})
+    set(OS_SRC linux)
 elseif(ANDROID OR IOS)
-    file(GLOB_RECURSE ZG_EGL_SOURCES "os_src/egl/*.c" "os_src/egl/*.cpp" "os_src/egl/*.eg")
-    set(ZG_SOURCES ${ZG_EGL_SOURCES})
+    set(OS_SRC egl)
 elseif(WIN32)
-    file(GLOB_RECURSE ZG_WIN_SOURCES "os_src/windows/*.c" "os_src/windows/*.cpp" "os_src/windows/*.ww")
-    set(ZG_SOURCES ${ZG_WIN_SOURCES})
+    set(OS_SRC windows)
 elseif(ZUG)
-    file(GLOB_RECURSE ZG_ZUG_SOURCES os_src/coj/*.cpp os_src/coj/*.c)
-    set(ZG_SOURCES ${ZG_ZUG_SOURCES})
+    set(OS_SRC coj)
 endif()
 
 # ZG Sources
 
-file(GLOB_RECURSE ZG_C_SOURCES "src/*.c")
-file(GLOB_RECURSE ZG_CXX_SOURCES "src/*.cpp")
-set(ZG_SOURCES "os_src/EntityRegistry.cpp" ${ZG_SOURCES} ${ZG_C_SOURCES} ${ZG_CXX_SOURCES})
+file(GLOB_RECURSE ZG_SOURCES "src/*.c" "src/*.cpp" "os_src/${OS_SRC}/*.cpp" "os_src/${OS_SRC}/*.c" "os_src/${OS_SRC}/*.mm")
+set(ZG_SOURCES ${ZG_SOURCES})
 
 include(FetchContent)
 #set(FETCHCONTENT_QUIET OFF)

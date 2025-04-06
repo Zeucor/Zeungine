@@ -40,20 +40,14 @@ install(FILES ${ZG_LIBRARIES_TO_INSTALL}
     COMPONENT dependencies)
 
 install(TARGETS
+    boost
     freetype png harfbuzz brotlidec brotlicommon
     glm
+    zlib bzip2 lzma zstd
     ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     RUNTIME DESTINATION ${ZG_LIB_INSTALL_PREFIX}
     COMPONENT dependencies)
-if(ZG_TYPE STREQUAL STATIC)
-    install(TARGETS
-        zlib bzip2 lzma
-        ARCHIVE DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-        LIBRARY DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-        RUNTIME DESTINATION ${ZG_LIB_INSTALL_PREFIX}
-        COMPONENT dependencies)
-endif()
 
 set(CPACK_COMPONENT_DEPENDENCIES_DESCRIPTION "Zeungine Dependency Libraries")
 set(CPACK_COMPONENT_DEPENDENCIES_GROUP "Zeungine")
