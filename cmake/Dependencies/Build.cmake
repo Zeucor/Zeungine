@@ -203,8 +203,10 @@ file(GLOB BOOST_LIB_SOURCES
     "${boost_SOURCE_DIR}/libs/*/src/*.c"
 )
 
-# Building Boost without support for: python, graph_parallel, stacktrace, mpi, container (dlmalloc)
+# Building Boost without support for: atomic, python, graph_parallel, stacktrace, mpi, container (dlmalloc)
 
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/atomic/src/.*\\.cpp$")
+list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/atomic/src/.*\\.c$")
 list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/python/src/.*\\.cpp$")
 list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/python/src/.*\\.c$")
 list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/graph_parallel/src/.*\\.cpp$")
