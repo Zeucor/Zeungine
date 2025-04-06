@@ -55,7 +55,7 @@ struct TestScene : Scene
 		directionalLightShadows[0].update();
 	}
 };
-auto calculatePosition = [&](int index)
+auto calculatePosition = [](int index)
 {
 	if (index == 0)
 	{ // Special case for the first one near the center
