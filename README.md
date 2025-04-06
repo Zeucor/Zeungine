@@ -1,12 +1,32 @@
 # Zeungine
 
-<img src="/images/zeungine-logo.png" alt="Zeungine Logo" width="400" height="400">
+<img src="images/zeungine-logo.png" alt="Zeungine Logo" width="400" height="400">
 
 A library that simplifies 3D Game abstraction written in C++. Supports on Windows 10/11, Linux (X11) and MacOS
 
 Uses CMake for it's build system and comes with some included tests
 
-![Build Status](https://github.com/Zeucor/Zeungine/actions/workflows/tag.yml/badge.svg)
+![Build Status](https://github.com/Zeucor/Zeungine/actions/workflows/every-tag.yml/badge.svg)
+
+***zg*** uses many libraries to help piece together the engine
+
+ - OpenGL
+ - Vulkan
+ - SPIRV-Tools
+ - glslang
+ - Boost Libraries
+ - OpenSSL
+ - FFmpeg
+ - zlib
+ - bzip2
+ - lzma
+ - zstd
+ - exprtk
+ - brotli
+ - freetype
+ - glm
+ - harfbuzz
+ - png
 
 ### Cloning
 
