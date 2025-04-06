@@ -2,7 +2,9 @@
 
 <img src="images/zeungine-logo.png" alt="Zeungine Logo" width="400" height="400">
 
-A library that simplifies 3D Game abstraction written in C++. Supports on Windows 10/11, Linux (X11) and MacOS
+A library that abstracts and simplifies 3D Game creation written in C++.
+
+Supports [Windows 10/11](https://en.wikipedia.org/wiki/Microsoft_Windows), [Linux (X11/XCB/Wayland)](https://en.wikipedia.org/wiki/Linux) and [MacOS](https://en.wikipedia.org/wiki/MacOS) with support for [Android](https://en.wikipedia.org/wiki/Android_(operating_system)) and [iOS](https://en.wikipedia.org/wiki/IOS) in the roadmap
 
 Uses CMake for it's build system and comes with some included tests
 
