@@ -10,23 +10,23 @@ Uses CMake for it's build system and comes with some included tests
 
 ***zg*** uses many libraries to help piece together the engine
 
- - OpenGL
- - Vulkan
- - SPIRV-Tools
- - glslang
- - Boost Libraries
- - OpenSSL
- - FFmpeg
- - zlib
- - bzip2
- - lzma
- - zstd
- - exprtk
- - brotli
- - freetype
- - glm
- - harfbuzz
- - png
+ - [OpenGL](https://www.opengl.org/)
+ - [Vulkan](https://www.vulkan.org/)
+ - [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools)
+ - [glslang](https://github.com/KhronosGroup/glslang)
+ - [Boost Libraries](https://www.boost.org/)
+ - [OpenSSL](https://www.openssl.org/)
+ - [FFmpeg](https://www.ffmpeg.org/)
+ - [zlib](https://github.com/madler/zlib)
+ - [bzip2](https://github.com/libarchive/bzip2)
+ - [lzma](https://tukaani.org/xz/)
+ - [zstd](https://github.com/facebook/zstd)
+ - [exprtk](https://github.com/ArashPartow/exprtk)
+ - [brotli](https://github.com/google/brotli)
+ - [freetype](https://freetype.org/)
+ - [glm](https://github.com/icaven/glm)
+ - [harfbuzz](https://harfbuzz.github.io/)
+ - [png](http://www.libpng.org/pub/png/libpng.html)
 
 ### Cloning
 
