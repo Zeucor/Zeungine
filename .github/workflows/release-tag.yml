@@ -121,3 +121,51 @@ jobs:
           asset_path: ./releases/zeungine-${{ github.ref }}-windows-AMD64.exe
           asset_name: zeungine-${{ github.ref }}-windows-AMD64.exe
           asset_content_type: application/octet-stream
+
+      # MacOS upload
+      - name: Get uploadUrl for macOS
+        if: runner.os == 'macOS'
+        id: get_upload_url_macos
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          api_url="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}"
+          response=$(curl \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -s \
+            "$api_url")
+          if [ $? -ne 0 ]; then
+            echo "::error::Failed to fetch release data from GitHub API"
+            exit 1
+          fi
+          upload_url=$(echo "$response" | jq -r '.upload_url')
+          if [ -z "$upload_url" ]; then
+            echo "::error::upload_url is empty or not found in the API response"
+            echo "Full API response: $response"
+            exit 1
+          fi
+          echo "::set-output name=url::$upload_url"
+        shell: bash
+
+      - name: Upload arm.pkg
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_macos.outputs.url}}
+          asset_path: ./releases/zeungine-${{ github.ref }}-macos-arm64.pkg
+          asset_name: zeungine-${{ github.ref }}-macos-arm64.pkg
+          asset_content_type: application/octet-stream
+
+      - name: Upload x86_64.pkg
+        if: matrix.os == 'macos-13'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.get_upload_url_macos.outputs.url}}
+          asset_path: ./releases/zeungine-${{ github.ref }}-macos-x86_64.pkg
+          asset_name: zeungine-${{ github.ref }}-macos-x86_64.pkg
+          asset_content_type: application/octet-stream
