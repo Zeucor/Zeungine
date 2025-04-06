@@ -233,7 +233,8 @@ namespace zg::entities
 
 				// --- Initialize First Frame (i=0) ---
 				glm::vec3 T0 = tangents[0];
-				glm::vec3 N0, B0;
+				glm::vec3 N0;
+				glm::vec3 _B0_;
 				{ // Scope for initial frame calculation
 					glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); // Initial up vector
 					glm::vec3 potential_N = glm::cross(T0, up);
@@ -250,12 +251,12 @@ namespace zg::entities
 						}
 					}
 					N0 = glm::normalize(potential_N);
-					B0 = glm::normalize(glm::cross(T0, N0));
-					// Ensure orthogonality if needed (might slightly change N0/B0)
-					// N0 = glm::normalize(glm::cross(B0, T0));
+					_B0_ = glm::normalize(glm::cross(T0, N0));
+					// Ensure orthogonality if needed (might slightly change N0/_B0_)
+					// N0 = glm::normalize(glm::cross(_B0_, T0));
 				}
 				normals_frame[0] = N0;
-				binormals_frame[0] = B0;
+				binormals_frame[0] = _B0_;
 
 				// --- Propagate Frame using Double Reflection (RMF) ---
 				for (size_t i = 1; i < centralPoints.size(); ++i)
