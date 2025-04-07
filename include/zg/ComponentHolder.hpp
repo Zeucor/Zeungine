@@ -62,7 +62,7 @@ namespace zg
 
 		std::shared_ptr<T> getComponentByID(size_t id)
 		{
-			auto& components_id_index = std::get<1>(m_components).get<component_by_id>();
+			auto& components_id_index = std::get<1>(m_components).template get<component_by_id>();
 			auto it_id = components_id_index.find(id);
 			if (it_id != components_id_index.end())
 			{
@@ -73,7 +73,7 @@ namespace zg
 
 		std::shared_ptr<T> getComponentByName(const std::string& name)
 		{
-			auto& components_name_index = std::get<1>(m_components).get<component_by_name>();
+			auto& components_name_index = std::get<1>(m_components).template get<component_by_name>();
 			auto it_name = components_name_index.find(name);
 			if (it_name != components_name_index.end())
 			{
