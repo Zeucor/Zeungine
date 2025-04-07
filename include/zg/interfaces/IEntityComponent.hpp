@@ -9,8 +9,8 @@ namespace zg::interfaces
 	struct IEntityComponent : IComponent
 	{
 		virtual ~IEntityComponent() = default;
-		virtual void onUpdate(Entity& entity) = 0;
-		virtual void onAdded(Entity& entity) = 0;
-		virtual void onRemoved(Entity& entity) = 0;
+		virtual void onAttached() = 0;
+		virtual void onUpdate() = 0;
+		virtual void onDetached() = 0;
 	};
 } // namespace zg::interfaces

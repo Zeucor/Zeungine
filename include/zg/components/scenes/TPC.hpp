@@ -5,10 +5,11 @@ namespace zg::components::scenes
 {
     struct TPC : zg::interfaces::ISceneComponent
     {
+        Scene& scene;
         std::string castaddr;
-        TPC(const std::string &castaddr);
-		void onUpdate(zg::Scene& scene);
-		void onAdded(zg::Scene& scene);
-		void onRemoved(zg::Scene& scene);
+        TPC(Scene& scene, const std::string &castaddr);
+		void onAttached();
+		void onUpdate();
+		void onDetached();
     };
 }

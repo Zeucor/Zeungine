@@ -7,15 +7,16 @@ namespace zg::components::scenes
 		friend Scene;
 
 	private:
+		Scene& scene;
 		std::string_view key;
         std::string castaddr;
 
 	public:
-		P2P(std::string_view key, const std::string &castaddr);
+		P2P(Scene& scene, std::string_view key, const std::string &castaddr);
 
 	protected:
-		void onUpdate(Scene& scene) override;
-		void onAdded(Scene& scene) override;
-		void onRemoved(Scene& scene) override;
+		void onAttached() override;
+		void onUpdate() override;
+		void onDetached() override;
 	};
 } // namespace zg::components::scenes

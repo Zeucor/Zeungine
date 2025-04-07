@@ -9,8 +9,8 @@ namespace zg::interfaces
 	struct ISceneComponent : IComponent
 	{
 		virtual ~ISceneComponent() = default;
-		virtual void onUpdate(Scene& scene) = 0;
-		virtual void onAdded(Scene& scene) = 0;
-		virtual void onRemoved(Scene& scene) = 0;
+		virtual void onAttached() = 0;
+		virtual void onUpdate() = 0;
+		virtual void onDetached() = 0;
 	};
 } // namespace zg::interfaces
