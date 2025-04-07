@@ -44,14 +44,14 @@ build_dependencies_static_macos() {
     cd cmake/Dependencies
 
     echo " -- Starting Zeungine Dependencies Debug/STATIC Configure"
-    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13
+    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++
     echo " -- Starting Zeungine Dependencies Debug/STATIC Build"
     cmake --build build-debug --config Debug
     echo " -- Starting Zeungine Dependencies Debug/STATIC Install"
     sudo cmake --install build-debug --config Debug
 
     echo " -- Starting Zeungine Dependencies Release/STATIC Configure"
-    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13
+    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++
     echo " -- Starting Zeungine Dependencies Release/STATIC Build"
     cmake --build build-release --config Release
     echo " -- Starting Zeungine Dependencies Release/STATIC Install"
