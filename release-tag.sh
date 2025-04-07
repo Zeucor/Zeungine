@@ -30,5 +30,6 @@ git add cmake/InstallPrefix.cmake
 git commit -m "$TAG"
 
 git tag "$TAG"
-git push origin main --follow-tags
+git push
+git push --tags
 
