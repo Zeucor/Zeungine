@@ -9,6 +9,7 @@ usage() {
     echo "  5 - Build dependencies shared only"
     echo "  6 - Build zeungine static only"
     echo "  7 - Build zeungine shared only"
+    echo "  8 - Build 1,2,3 and bundle mac runner"
     exit 1
 }
 
@@ -20,7 +21,6 @@ fi
 
 MODE=$1
 
-# Function to build static dependencies
 build_dependencies_static() {
     cd cmake/Dependencies
 
@@ -33,6 +33,25 @@ build_dependencies_static() {
 
     echo " -- Starting Zeungine Dependencies Release/STATIC Configure"
     cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC
+    echo " -- Starting Zeungine Dependencies Release/STATIC Build"
+    cmake --build build-release --config Release
+    echo " -- Starting Zeungine Dependencies Release/STATIC Install"
+    sudo cmake --install build-release --config Release
+
+    cd ../..
+}
+build_dependencies_static_macos() {
+    cd cmake/Dependencies
+
+    echo " -- Starting Zeungine Dependencies Debug/STATIC Configure"
+    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13
+    echo " -- Starting Zeungine Dependencies Debug/STATIC Build"
+    cmake --build build-debug --config Debug
+    echo " -- Starting Zeungine Dependencies Debug/STATIC Install"
+    sudo cmake --install build-debug --config Debug
+
+    echo " -- Starting Zeungine Dependencies Release/STATIC Configure"
+    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13
     echo " -- Starting Zeungine Dependencies Release/STATIC Build"
     cmake --build build-release --config Release
     echo " -- Starting Zeungine Dependencies Release/STATIC Install"
@@ -139,6 +158,12 @@ case "$MODE" in
         ;;
     7)
         build_zeungine_shared
+        ;;
+    8)
+        build_dependencies_static_macos
+        build_headers
+        build_zeungine_static
+        bundle
         ;;
     *)
         echo "Invalid mode: $MODE"
