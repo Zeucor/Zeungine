@@ -11,8 +11,8 @@ TAG="$1"
 
 git fetch --tags --force
 
-PREV_HASH=$(git for-each-ref --sort=-creatordate --format '%(objectname)' refs/tags | sed -n 2p)
-PREV_TAG=$(git for-each-ref --sort=-creatordate --format '%(refname:strip=2)' refs/tags | sed -n 2p)
+PREV_HASH=$(git for-each-ref --sort=-creatordate --format '%(objectname)' refs/tags | sed -n 1p)
+PREV_TAG=$(git for-each-ref --sort=-creatordate --format '%(refname:strip=2)' refs/tags | sed -n 1p)
 CURR_HASH=$(git rev-parse HEAD)
 
 echo "## Changes since $PREV_TAG" > CURVER_CHANGELOG.md
