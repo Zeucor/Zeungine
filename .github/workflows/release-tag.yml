@@ -6,7 +6,30 @@ on:
 permissions:
   contents: write
 jobs:
-  release:
+  create_release_job:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body_path: CURVER_CHANGELOG.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build_and_upload_job:
+    name: Build on ${{ matrix.os }} and Upload
+    needs: create_release_job
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -26,146 +49,81 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
-
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Install Dependencies on Linux
         if: runner.os == 'Linux'
         run: |
           sudo apt update
-          sudo apt install nasm libvulkan-dev libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev libxcb-keysyms1-dev libdrm-dev ninja-build libwayland-client0 libwayland-server0 libwayland-dev libxfixes-dev libxcb-xfixes0-dev libxrender-dev libxrandr-dev libxcb-util-dev libdrm-dev libgtkmm-3.0-dev
+          sudo apt install -y nasm libvulkan-dev libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev libxcb-keysyms1-dev libdrm-dev ninja-build libwayland-client0 libwayland-server0 libwayland-dev libxfixes-dev libxcb-xfixes0-dev libxrender-dev libxrandr-dev libxcb-util-dev libdrm-dev libgtkmm-3.0-dev
         shell: bash
-
       - name: Install Dependencies on Windows
         if: runner.os == 'Windows'
         run: |
           choco install dos2unix ninja nasm
           C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -S --noconfirm make diffutils"
         shell: bash
-
       - name: Install Dependencies on macOS
         if: runner.os == 'macOS'
         run: |
           brew install nasm
         shell: bash
-
       - name: Install Vulkan SDK
         uses: humbletim/install-vulkan-sdk@v1.2
         with:
           version: 1.4.309.0
           cache: true
-
       - name: Build Package on Linux
         if: runner.os == 'Linux'
         run: ./unx-package.sh 0
         shell: bash
-
       - name: Build Package on macOS
         if: runner.os == 'macOS'
         run: ./unx-package.sh 0
         shell: bash
-
       - name: Build Package on Windows
         if: runner.os == 'Windows'
         run: .\win-package.bat 8
         shell: cmd
-      
-      - name: Create Release
-        if: runner.os == 'Linux'
-        id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          body_path: CURVER_CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Linux Upload
-
-      - name: Upload deb
+      - name: Upload deb (Linux)
         if: runner.os == 'Linux'
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
+          upload_url: ${{ needs.create_release_job.outputs.upload_url }}
           asset_path: ./releases/zeungine-${{ github.ref_name }}-debian-x86_64.deb
           asset_name: zeungine-${{ github.ref_name }}-debian-x86_64.deb
-          asset_content_type: application/octet-stream
-
-      # Windows upload
-      - name: Get uploadUrl for Windows
-        if: runner.os == 'Windows'
-        id: get_upload_url_windows
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $ErrorActionPreference = "Stop"
-          $release = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/${env:GITHUB_REPOSITORY}/releases/tags/${env:GITHUB_REF_NAME}" -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
-          Write-Output "Release Object: $($release | ConvertTo-Json -Depth 3)"
-          $uploadUrl = $release.upload_url
-          echo "::set-output name=url::$uploadUrl"
-        shell: pwsh
-
-      - name: Upload exe
+          asset_content_type: application/vnd.debian.binary-package
+      - name: Upload exe (Windows)
         if: runner.os == 'Windows'
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{steps.get_upload_url_windows.outputs.url}}
+          upload_url: ${{ needs.create_release_job.outputs.upload_url }}
           asset_path: ./releases/zeungine-${{ github.ref_name }}-windows-AMD64.exe
           asset_name: zeungine-${{ github.ref_name }}-windows-AMD64.exe
-          asset_content_type: application/octet-stream
-
-      # MacOS upload
-      - name: Get uploadUrl for macOS
-        if: runner.os == 'macOS'
-        id: get_upload_url_macos
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          api_url="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}"
-          response=$(curl \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -s \
-            "$api_url")
-          if [ $? -ne 0 ]; then
-            echo "::error::Failed to fetch release data from GitHub API"
-            exit 1
-          fi
-          upload_url=$(echo "$response" | jq -r '.upload_url')
-          if [ -z "$upload_url" ]; then
-            echo "::error::upload_url is empty or not found in the API response"
-            echo "Full API response: $response"
-            exit 1
-          fi
-          echo "::set-output name=url::$upload_url"
-        shell: bash
-
-      - name: Upload arm.pkg
+          asset_content_type: application/vnd.microsoft.portable-executable
+      - name: Upload arm.pkg (macOS Latest - ARM)
         if: matrix.os == 'macos-latest'
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{steps.get_upload_url_macos.outputs.url}}
+          upload_url: ${{ needs.create_release_job.outputs.upload_url }}
           asset_path: ./releases/zeungine-${{ github.ref_name }}-macos-arm64.pkg
           asset_name: zeungine-${{ github.ref_name }}-macos-arm64.pkg
           asset_content_type: application/octet-stream
-
-      - name: Upload x86_64.pkg
+      - name: Upload x86_64.pkg (macOS 13 - Intel)
         if: matrix.os == 'macos-13'
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{steps.get_upload_url_macos.outputs.url}}
+          upload_url: ${{ needs.create_release_job.outputs.upload_url }}
           asset_path: ./releases/zeungine-${{ github.ref_name }}-macos-x86_64.pkg
           asset_name: zeungine-${{ github.ref_name }}-macos-x86_64.pkg
           asset_content_type: application/octet-stream
