@@ -19,6 +19,7 @@ function(create_test TEST_NAME TEST_SOURCE TEST_ARGS LIBRARY)
     if(ZG_INSTALL_TESTS)
         install(FILES ${CMAKE_BINARY_DIR}/${TEST_NAME}${TEST_SUFFIX}
             DESTINATION ${ZG_BIN_INSTALL_PREFIX}
+            PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
             COMPONENT tests)
     endif()
 endfunction()
