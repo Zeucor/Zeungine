@@ -2,7 +2,8 @@
 #include <zg/Scene.hpp>
 #include <zg/components/entities/RigidBody.hpp>
 #include <zg/components/entities/Collider.hpp>
-#include <zg/components/scenes/Physics.hpp>
+#include <zg/components/scenes/PhysicsScene.hpp>
+#include <zg/components/scenes/GravityByVector.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/vp/VML.hpp>
 #include <zg/vp/VFBLR.hpp>
@@ -18,7 +19,8 @@ struct PhysicsScene : zg::Scene
         vfblr(*this, zg::vp::VFBLR::KeyScheme::WSADSC, 8.f)
     {
         clearColor = {0, 0, 1, 1};
-        addComponent(std::make_shared<zg::components::scenes::Physics>(*this));
+        addComponent(std::make_shared<zg::components::scenes::GravityByVector>(glm::vec3(0, -10, 0)));
+        addComponent(std::make_shared<zg::components::scenes::PhysicsScene>(*this));
         floor = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 40, 50), glm::vec3(0), glm::vec3(1), glm::vec3(20, 0.5, 20));
         floor->addComponent(std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo(*floor, zg::components::entities::BodyType::Static)));
         addEntity(floor);

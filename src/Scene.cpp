@@ -130,6 +130,7 @@ void Scene::removeEntity(const size_t& id)
 void Scene::preUpdate() {}
 void Scene::update()
 {
+	++updateNonce;
 	preUpdate();
 	for (auto& componentEntry : std::get<1>(m_components))
 	{

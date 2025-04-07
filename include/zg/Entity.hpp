@@ -1,12 +1,12 @@
 #pragma once
 #include <zg/Window.hpp>
+#include <zg/entities/TypeID.hpp>
 #include <zg/interfaces/IEntityComponent.hpp>
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/shaders/Shader.hpp>
 #include <zg/vaos/VAO.hpp>
 #include <zg/vp/Projection.hpp>
 #include <zg/vp/View.hpp>
-#include <zg/entities/TypeID.hpp>
 #include "./ComponentHolder.hpp"
 namespace zg
 {
@@ -15,6 +15,8 @@ namespace zg
 	{
 		friend Scene;
 		friend Window;
+
+	public:
 		using SerializeFunction = std::function<Serial&(Serial&, const std::shared_ptr<Entity>&)>;
 		using DeserializeFunction = std::function<Serial&(Serial&, std::shared_ptr<Entity>&)>;
 		using SerializeMap = std::unordered_map<size_t, SerializeFunction>;
@@ -23,9 +25,11 @@ namespace zg
 		static void registerDeserialize(size_t ID, const DeserializeFunction& function);
 		static SerializeFunction getSerialize(size_t ID);
 		static DeserializeFunction getDeserialize(size_t ID);
-		protected:
+
+	protected:
 		static void cleanupSerialize();
-		public:
+
+	public:
 		Window& window;
 		Scene& scene;
 		size_t ID = 0;
@@ -52,10 +56,14 @@ namespace zg
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseMoveHandler>> mouseMoveHandlers;
 		using MouseHoverHandler = std::function<void(bool)>;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseHoverHandler>> mouseHoverHandlers;
+		size_t updateNonce;
 		std::string name;
+
+	public:
 		Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
 					 const std::vector<uint32_t>& indices, uint32_t elementCount, const std::vector<glm::vec3>& positions,
 					 glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, std::string_view name);
+		~Entity();
 		virtual void preUpdate();
 		void update();
 		shaders::Shader* addShader(shaders::Shader* setShader = 0);
@@ -65,7 +73,7 @@ namespace zg
 		virtual bool preRender();
 		void render();
 		virtual void postRender();
-		const glm::mat4& getModelMatrix();
+		glm::mat4& getModelMatrix();
 		size_t addChild(const std::shared_ptr<Entity>& child);
 		void removeChild(size_t& ID);
 		UniqueIdentifier addMousePressHandler(const Button& button, const MousePressHandler& callback);

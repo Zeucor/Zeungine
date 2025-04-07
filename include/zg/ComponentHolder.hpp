@@ -26,7 +26,7 @@ namespace zg
 		typedef boost::multi_index::multi_index_container<
 			ComponentEntry,
 			boost::multi_index::indexed_by<
-				boost::multi_index::hashed_unique<boost::multi_index::tag<component_by_id>,
+				boost::multi_index::ordered_unique<boost::multi_index::tag<component_by_id>,
 																					boost::multi_index::member<ComponentEntry, size_t, &ComponentEntry::ID>>,
 				boost::multi_index::hashed_unique<
 					boost::multi_index::tag<component_by_name>,

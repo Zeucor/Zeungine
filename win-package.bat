@@ -39,6 +39,8 @@ if "%MODE%"=="0" (
     call :build_headers
     call :build_zeungine_static
     call :bundle
+) else if "%MODE%"=="9" (
+    call :bundle  
 ) else (
     echo Invalid mode: %MODE%
     call :usage
@@ -53,15 +55,16 @@ if "%MODE%"=="0" (
 exit /b 0
 
 :usage
-echo   0 - Build static all and bundle
-echo   1 - Build dependencies static only
-echo   2 - Build headers only
-echo   3 - Build zeungine static only
-echo   4 - Build dependencies static only
-echo   5 - Build dependencies shared only
-echo   6 - Build zeungine static only
-echo   7 - Build zeungine shared only
-echo   8 - Build all (enterprise vcvars64.bat) and bundle
+echo "  0 - Build static all and bundle"
+echo "  1 - Build dependencies static only"
+echo "  2 - Build headers only"
+echo "  3 - Build zeungine static only"
+echo "  4 - Build dependencies static only"
+echo "  5 - Build dependencies shared only"
+echo "  6 - Build zeungine static only"
+echo "  7 - Build zeungine shared only"
+echo "  8 - Build all (enterprise vcvars64.bat) and bundle"
+echo "  9 - bundle"
 goto :EOF
 
 :bundle

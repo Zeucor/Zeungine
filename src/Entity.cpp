@@ -10,6 +10,14 @@ Entity::Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& 
 		positions(_positions), position(_position), rotation(_rotation), scale(_scale), name(_name)
 {
 }
+Entity::~Entity()
+{
+	auto& components_id_index = std::get<1>(m_components).get<component_by_id>();
+	for (const auto& componentEntry : components_id_index)
+	{
+        componentEntry.COMPONENT->onDetached();
+    }
+}
 void Entity::preUpdate() {}
 void Entity::update()
 {
@@ -78,8 +86,14 @@ void Entity::render()
 	}
 }
 void Entity::postRender() {}
-const glm::mat4& Entity::getModelMatrix()
+glm::mat4& Entity::getModelMatrix()
 {
+	// ensure model is only recomputed once per update nonce, also, set updateNonce here
+	if (updateNonce == scene.updateNonce)
+	{
+		return model;
+	}
+	updateNonce = scene.updateNonce;
 	model = glm::translate(glm::mat4(1.0f), position);
 	model = glm::rotate(model, glm::radians(rotation.x), {1, 0, 0});
 	model = glm::rotate(model, glm::radians(rotation.y), {0, 1, 0});

@@ -61,9 +61,10 @@ namespace zg
 		std::array<UniqueIdentifier, 7 - 0 + 1> mousePressIDs;
 		UniqueIdentifier mouseMoveID;
 		Entity* currentHoveredEntity = 0;
-		//
 		std::shared_ptr<vp::View> viewPointer;
 		bool useBVH;
+		size_t updateNonce = 0;
+		//
 		Scene(Window& _window, glm::vec3 cameraPosition, glm::vec3 cameraDirection, float fov,
 					const std::shared_ptr<textures::Framebuffer>& framebufferPointer = {}, bool drawColorToWindowPlane = true,
 					bool useBVH = true);
