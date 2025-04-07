@@ -84,7 +84,7 @@ TestScene::TestScene(Window& window) :
 		auto dldirection = glm::normalize(zg::math::Rotations::Vec3AroundVec3({0, 0, 1}, {0, 0, 0}, {90, 0, 0}));
 		auto dlup = glm::normalize(zg::math::Rotations::Vec3AroundVec3({0, 1, 0}, {0, 0, 0}, {90, 0, 0}));
 		directionalLights.push_back({
-			centerPos + glm::vec3(0, 64, 0), // position
+			centerPos + glm::vec3(0, 72, 0), // position
 			dldirection,
 			dlup,
 			{1, 1, 1}, // color
