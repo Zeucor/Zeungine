@@ -1,3 +1,25 @@
+## Changes since v0.3.7.16
+
+- 437bb41 updates to physics simulation (Steven French, 21 seconds ago)
+- 143a9a2 v0.3.8.2 (Steven French, 76 minutes ago)
+- 6296cd5 Update CHANGELOG for v0.3.8.2 (Steven French, 76 minutes ago)
+- 496c838 v0.3.8.1 (Steven French, 79 minutes ago)
+- 8ee23fc Update CHANGELOG for v0.3.8.1 (Steven French, 79 minutes ago)
+- cc61a75 fix TYPE_ZG_LIB_SUFFIX (Steven French, 79 minutes ago)
+- 173e894 v0.3.8.0 (Steven French, 2 hours ago)
+- aa68020 Update CHANGELOG for v0.3.8.0 (Steven French, 2 hours ago)
+- 0a4f9b6 ComponentHolder: fix call to template get function (Steven French, 2 hours ago)
+- b5362c2 various improvements all round Scene and Entity. Implement various Physics component functions. (Steven French, 2 hours ago)
+- 1d59df5 fix zeungine lib install (Steven French, 4 hours ago)
+- 17a6429 fix core component install (Steven French, 4 hours ago)
+- f4ca91c add missing component and physics files (Steven French, 4 hours ago)
+- dac9244 use a boost multi index to store components by ID and NAME (Steven French, 4 hours ago)
+- b17d461 packaging fixes (include tests) & update root paths on windows (Steven French, 4 hours ago)
+- bae4c0c Merge branch 'master' of github.com:Zeucor/Zeungine (Steven French, 5 hours ago)
+- f9efc6c some physics scaffolding (Steven French, 5 hours ago)
+- 2045497 call update methods for components in Scene and Entity. store the component ID. change update virtual to preUpdate (Steven French, 5 hours ago)
+- 52513e0 some fixes to dependencies install for macos (Steven French, 5 hours ago)
+- 45a54dc update Deps install to just use FILES (Steven French, 5 hours ago)
 ## Changes since v0.3.7.15
 
 - 496c838 v0.3.8.1 (Steven French, 3 minutes ago)
