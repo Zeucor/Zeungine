@@ -45,68 +45,46 @@ void Collider::onDetached()
 }
 void Collider::updateWorldAABB()
 {
-
-	// Ensure we have necessary data
-	if (!transform || !info.shapeData)
+	if (!ownerRigidBody || !ownerRigidBody->transform)
+	{
+		// Default AABB or handle error
+		worldAABB._min = glm::vec3(0.0f);
+		worldAABB._max = glm::vec3(0.0f);
 		return;
-
-	// Get shape type
-	ShapeType type = info.shapeData->getType();
-
-	// Reset AABB before calculation
-	worldAABB.reset();
-
-	// --- Calculate AABB based on Shape Type ---
-	if (type == ShapeType::Box)
-	{
-		const auto* boxData = static_cast<const BoxShapeData*>(info.shapeData.get());
-		const glm::vec3 h = boxData->halfExtents; // Local half-extents
-
-		// Define the 8 local corners of the box relative to the collider's offset
-		glm::vec3 localCorners[8] = {info.offset + glm::vec3(-h.x, -h.y, -h.z), info.offset + glm::vec3(h.x, -h.y, -h.z),
-																 info.offset + glm::vec3(h.x, h.y, -h.z),		info.offset + glm::vec3(-h.x, h.y, -h.z),
-																 info.offset + glm::vec3(-h.x, -h.y, h.z),	info.offset + glm::vec3(h.x, -h.y, h.z),
-																 info.offset + glm::vec3(h.x, h.y, h.z),		info.offset + glm::vec3(-h.x, h.y, h.z)};
-
-		// TODO: Apply local collider rotation offset (info.rotationOffset) to localCorners *before* world transform if
-		// needed. glm::mat4 localRotMat = glm::mat4_cast(info.rotationOffset); // If rotationOffset is used
-
-		// Transform corners to world space and find min/max
-		for (int i = 0; i < 8; ++i)
-		{
-			// Apply local rotation if necessary: rotatedCorner = localRotMat * glm::vec4(localCorners[i], 1.0f);
-			glm::vec4 worldCorner = (*transform) * glm::vec4(localCorners[i], 1.0f);
-			worldAABB.encompass(glm::vec3(worldCorner));
-		}
 	}
-	else if (type == ShapeType::Sphere)
-	{
-		const auto* sphereData = static_cast<const SphereShapeData*>(info.shapeData.get());
-		float radius = sphereData->radius;
 
-		// Calculate world center of the sphere (considering offset)
-		// TODO: Apply local rotation offset if needed
-		glm::vec3 localCenter = info.offset;
-		glm::vec3 worldCenter = glm::vec3((*transform) * glm::vec4(localCenter, 1.0f));
-
-		// Account for entity scale - find the maximum scale component
-		// Note: This assumes uniform scaling for simplicity. Non-uniform scaling makes sphere AABBs tricky.
-		glm::vec3 scale =
-			glm::vec3(glm::length((*transform)[0]), glm::length((*transform)[1]), glm::length((*transform)[2]));
-		float maxScale = (std::max)({scale.x, scale.y, scale.z});
-		float worldRadius = radius * maxScale;
-
-		worldAABB._min = worldCenter - glm::vec3(worldRadius);
-		worldAABB._max = worldCenter + glm::vec3(worldRadius);
+	const auto* boxData = static_cast<const BoxShapeData*>(info.shapeData.get());
+	if (!boxData || info.shapeData->getType() != ShapeType::Box)
+	{ // Check shape type too
+		// Handle non-box or missing data - maybe calculate based on owner bounds?
+		// For now, set to a point or default
+		worldAABB._min = ownerRigidBody->getPosition(); // Approx center
+		worldAABB._max = ownerRigidBody->getPosition();
+		return;
 	}
-	// TODO: Implement AABB calculation for other shapes (Capsule, Mesh, ConvexHull)
-	else
+
+	// Combine world transform with collider's local offset and rotation
+	glm::mat4 localOffsetTransform = glm::translate(glm::mat4(1.0f), info.offset) * glm::mat4_cast(info.rotationOffset);
+	glm::mat4 finalTransform = (*ownerRigidBody->transform) * localOffsetTransform;
+
+	// Get box half extents
+	const glm::vec3 h = boxData->halfExtents;
+
+	// Define the 8 local vertices of the box
+	glm::vec3 localVertices[8] = {{-h.x, -h.y, -h.z}, {h.x, -h.y, -h.z}, {h.x, h.y, -h.z}, {-h.x, h.y, -h.z},
+																{-h.x, -h.y, h.z},	{h.x, -h.y, h.z},	 {h.x, h.y, h.z},	 {-h.x, h.y, h.z}};
+
+	// Initialize min/max with the first transformed vertex
+	glm::vec3 firstWorldVertex = glm::vec3(finalTransform * glm::vec4(localVertices[0], 1.0f));
+	worldAABB._min = firstWorldVertex;
+	worldAABB._max = firstWorldVertex;
+
+	// Transform remaining vertices and update min/max
+	for (int i = 1; i < 8; ++i)
 	{
-		// Default: Use a small box around the entity's origin as a fallback
-		glm::vec3 worldPos = glm::vec3((*transform)[3]);
-		worldAABB._min = worldPos - glm::vec3(0.1f);
-		worldAABB._max = worldPos + glm::vec3(0.1f);
-		// std::cerr << "Warning: updateWorldAABB not implemented for shape type: " << static_cast<int>(type) << std::endl;
+		glm::vec3 worldVertex = glm::vec3(finalTransform * glm::vec4(localVertices[i], 1.0f));
+		worldAABB._min = (glm::min)(worldAABB._min, worldVertex);
+		worldAABB._max = (glm::max)(worldAABB._max, worldVertex);
 	}
 }
 ShapeType Collider::getShapeType() const { return info.shapeData ? info.shapeData->getType() : ShapeType::_Count; }

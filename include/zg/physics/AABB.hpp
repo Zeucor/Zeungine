@@ -19,8 +19,25 @@ namespace zg::physics
 		// Check for overlap with another AABB
 		bool overlaps(const AABB& other) const
 		{
-			return (_max.x >= other._min.x && _min.x <= other._max.x && _max.y >= other._min.y && _min.y <= other._max.y &&
-							_max.z >= other._min.z && _min.z <= other._max.z);
+			float minX1 = (std::min)(_min.x, _max.x);
+			float maxX1 = (std::max)(_min.x, _max.x);
+			float minY1 = (std::min)(_min.y, _max.y);
+			float maxY1 = (std::max)(_min.y, _max.y);
+			float minZ1 = (std::min)(_min.z, _max.z);
+			float maxZ1 = (std::max)(_min.z, _max.z);
+		
+			float minX2 = (std::min)(other._min.x, other._max.x);
+			float maxX2 = (std::max)(other._min.x, other._max.x);
+			float minY2 = (std::min)(other._min.y, other._max.y);
+			float maxY2 = (std::max)(other._min.y, other._max.y);
+			float minZ2 = (std::min)(other._min.z, other._max.z);
+			float maxZ2 = (std::max)(other._min.z, other._max.z);
+		
+			bool overlapsX = maxX1 >= minX2 && minX1 <= maxX2;
+			bool overlapsY = maxY1 >= minY2 && minY1 <= maxY2;
+			bool overlapsZ = maxZ1 >= minZ2 && minZ1 <= maxZ2;
+		
+			return overlapsX && overlapsY && overlapsZ;
 		}
 
 		// Expand the AABB to include a point

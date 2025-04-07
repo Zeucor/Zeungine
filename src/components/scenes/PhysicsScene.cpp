@@ -126,11 +126,11 @@ void PhysicsScene::applyPositionalCorrection()
 				// Apply the correction
 				if (bodyA->isDynamic() && bodyA->transform)
 				{
-					bodyA->translate(-correctionVector * bodyA->inverseMass);
+					bodyA->translate(correctionVector * bodyA->inverseMass);
 				}
 				if (bodyB->isDynamic() && bodyB->transform)
 				{
-					bodyB->translate(correctionVector * bodyB->inverseMass);
+					bodyB->translate(-correctionVector * bodyB->inverseMass);
 				}
 			}
 		}
@@ -398,92 +398,115 @@ void PhysicsScene::resolveCollisionImpulses(double dt)
 	const int impulseResolutionIterations = 15; // Number of solver iterations
 
 	// --- PGS-like Iteration Loop ---
-	for (int iter = 0; iter < impulseResolutionIterations; ++iter)
+	// for (int iter = 0; iter < impulseResolutionIterations; ++iter)
+	// {
+	// In each iteration, process all contacts sequentially
+	for (const physics::CollisionManifold& manifold :
+			 collisionContacts) // Use const ref, impulse application modifies bodies directly
 	{
-		// In each iteration, process all contacts sequentially
-		for (const physics::CollisionManifold& manifold :
-				 collisionContacts) // Use const ref, impulse application modifies bodies directly
+		auto colliderA = manifold.colliderA;
+		auto colliderB = manifold.colliderB;
+		auto bodyA = colliderA ? colliderA->getOwnerRigidBody() : nullptr;
+		auto bodyB = colliderB ? colliderB->getOwnerRigidBody() : nullptr;
+
+		if (!bodyA || !bodyB || !colliderA || !colliderB)
+			continue;
+		if (bodyA->isStatic() && bodyB->isStatic())
+			continue;
+		if (colliderA->getIsSensor() || colliderB->getIsSensor())
+			continue;
+
+		// --- 1. Calculate Relative Velocity (using CURRENT velocities) ---
+		glm::vec3 relativeVelocity = bodyB->linearVelocity -
+			bodyA->linearVelocity; // Velocities might have been updated by previous contacts in this iteration
+		float velocityAlongNormal = glm::dot(relativeVelocity, manifold.normal);
+
+		// --- 2. Calculate Effective Mass & Restitution ---
+		float restitutionA = colliderA->getPhysicsMaterial().restitution;
+		float restitutionB = colliderB->getPhysicsMaterial().restitution;
+		float invMassSum = bodyA->inverseMass + bodyB->inverseMass;
+		if (invMassSum <= 1e-9f)
+			continue;
+		float effectiveMass = 1.0f / invMassSum;
+
+		// --- 3. Calculate Impulse Magnitude (j) ---
+		// Use the penetration depth detected at the start of the step
+		float penetrationError = std::max(0.0f, manifold.penetrationDepth - slop);
+		float baumgarteBias = (baumgarteBeta / fdt) * penetrationError;
+
+		float restitutionVelocityA = -restitutionA * velocityAlongNormal;
+		float restitutionVelocityB = -restitutionB * velocityAlongNormal;
+
+		if (restitutionVelocityA)
 		{
-			auto colliderA = manifold.colliderA;
-			auto colliderB = manifold.colliderB;
-			auto bodyA = colliderA ? colliderA->getOwnerRigidBody() : nullptr;
-			auto bodyB = colliderB ? colliderB->getOwnerRigidBody() : nullptr;
+			const int x = 0;
+			auto y = x + 2;
+			auto func = [](auto z) { return z; };
+			func(y);
+		}
+		if (restitutionVelocityB)
+		{
+			const int x = 0;
+			auto y = x + 2;
+			auto func = [](auto z) { return z; };
+			func(y);
+		}
 
-			if (!bodyA || !bodyB || !colliderA || !colliderB)
-				continue;
-			if (bodyA->isStatic() && bodyB->isStatic())
-				continue;
-			if (colliderA->getIsSensor() || colliderB->getIsSensor())
-				continue;
+		float deltaVelocityA = -velocityAlongNormal + restitutionVelocityA;
+		float jA = deltaVelocityA * effectiveMass;
+		float deltaVelocityB = -velocityAlongNormal + restitutionVelocityB;
+		float jB = deltaVelocityB * effectiveMass;
 
-			// --- 1. Calculate Relative Velocity (using CURRENT velocities) ---
-			glm::vec3 relativeVelocity = bodyB->linearVelocity -
-				bodyA->linearVelocity; // Velocities might have been updated by previous contacts in this iteration
-			float velocityAlongNormal = glm::dot(relativeVelocity, manifold.normal);
+		// *** Impulse Clamping (Important for stability) ***
+		// We should clamp the *accumulated* impulse, but for simplicity here,
+		// we can clamp the impulse calculated in this iteration step.
+		// A common technique is warm starting (using previous frame's impulse) - not implemented here.
+		// For now, just ensure the calculated impulse magnitude is non-negative.
+		// j = std::max(0.0f, j);
 
-			// --- 2. Calculate Effective Mass & Restitution ---
-			float restitution =
-				std::min(colliderA->getPhysicsMaterial().restitution, colliderB->getPhysicsMaterial().restitution);
-			float invMassSum = bodyA->inverseMass + bodyB->inverseMass;
-			if (invMassSum <= 1e-9f)
-				continue;
-			float effectiveMass = 1.0f / invMassSum;
 
-			// --- 3. Calculate Impulse Magnitude (j) ---
-			// Use the penetration depth detected at the start of the step
-			float penetrationError = std::max(0.0f, manifold.penetrationDepth - slop);
-			float baumgarteBias = (baumgarteBeta / fdt) * penetrationError;
+		// --- 4. Apply Impulse IMMEDIATELY ---
+		if (jA > 0)
+		{
+			glm::vec3 impulse = manifold.normal * jA;
 
-			float restitutionVelocity = 0.0f;
-			if (velocityAlongNormal < -velocityCorrectionThreshold)
+			if (bodyA->isDynamic())
 			{
-				restitutionVelocity = -restitution * velocityAlongNormal;
+				bodyA->linearVelocity += impulse * bodyA->inverseMass;
+				// TODO: Apply angular impulse
 			}
+		}
+		if (jB > 0)
+		{
+			glm::vec3 impulse = manifold.normal * jB;
 
-			float deltaVelocity = -velocityAlongNormal + restitutionVelocity + baumgarteBias;
-			float j = deltaVelocity * effectiveMass;
-
-			// *** Impulse Clamping (Important for stability) ***
-			// We should clamp the *accumulated* impulse, but for simplicity here,
-			// we can clamp the impulse calculated in this iteration step.
-			// A common technique is warm starting (using previous frame's impulse) - not implemented here.
-			// For now, just ensure the calculated impulse magnitude is non-negative.
-			// j = std::max(0.0f, j);
-
-
-			// --- 4. Apply Impulse IMMEDIATELY ---
-			if (j > 0)
+			if (bodyB->isDynamic())
 			{
-				glm::vec3 impulse = manifold.normal * j;
-	
-				if (bodyA->isDynamic())
-				{
-					bodyA->linearVelocity -= impulse * bodyA->inverseMass;
-					// TODO: Apply angular impulse
-				}
-				if (bodyB->isDynamic())
-				{
-					bodyB->linearVelocity += impulse * bodyB->inverseMass;
-					// TODO: Apply angular impulse
-				}
+				bodyB->linearVelocity -= impulse * bodyB->inverseMass;
+				// TODO: Apply angular impulse
 			}
-			else if (j < 0)
+		}
+		if (jA < 0)
+		{
+			glm::vec3 impulse = -manifold.normal * jA;
+
+			if (bodyA->isDynamic())
 			{
-				glm::vec3 impulse = manifold.normal * -j;
-	
-				if (bodyA->isDynamic())
-				{
-					bodyA->linearVelocity -= impulse * bodyA->inverseMass;
-					// TODO: Apply angular impulse
-				}
-				if (bodyB->isDynamic())
-				{
-					bodyB->linearVelocity += impulse * bodyB->inverseMass;
-					// TODO: Apply angular impulse
-				}
+				bodyA->linearVelocity += impulse * bodyA->inverseMass;
+				// TODO: Apply angular impulse
 			}
-		} // End loop through contacts
-	} // End iteration loop
+		}
+		if (jB < 0)
+		{
+			glm::vec3 impulse = -manifold.normal * jB;
+			if (bodyB->isDynamic())
+			{
+				bodyB->linearVelocity -= impulse * bodyB->inverseMass;
+				// TODO: Apply angular impulse
+			}
+		}
+	} // End loop through contacts
+	// } // End iteration loop
 }
 void PhysicsScene::synchronizeTransforms() {}
 void PhysicsScene::projectBoxOntoAxis(entities::Collider* boxCollider, const glm::vec3& axis, float& minProj,
