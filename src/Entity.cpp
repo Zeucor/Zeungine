@@ -9,15 +9,6 @@ Entity::Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& 
 		VAO(_window, constants, indiceCount, elementCount), window(_window), scene(_scene), indices(_indices),
 		positions(_positions), position(_position), rotation(_rotation), scale(_scale), name(_name)
 {
-	scene.entitiesByName[name] = {this, [](auto pointer) {}};
-}
-Entity::~Entity()
-{
-	auto nameIter = scene.entitiesByName.find(name);
-	if (nameIter != scene.entitiesByName.end())
-	{
-		scene.entitiesByName.erase(nameIter);
-	}
 }
 void Entity::update()
 {

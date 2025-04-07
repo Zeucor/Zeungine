@@ -111,7 +111,7 @@ size_t Scene::addEntity(const std::shared_ptr<Entity>& entity, bool callOnEntity
 {
 	auto id = ++entitiesCount;
 	entity->ID = id;
-	entities[id] = entity;
+	entities.insert({id, entity->name, entity});
 	postAddEntity(entity, {id});
 	if (callOnEntityAdded && window.onEntityAdded)
 		window.onEntityAdded(entity);
@@ -122,8 +122,8 @@ void Scene::removeEntity(const size_t& id)
 	auto entityIter = entities.find(id);
 	if (entityIter != entities.end())
 	{
-		preRemoveEntity(entityIter->second, {id});
-		entityIter->second->ID = 0;
+		preRemoveEntity(entityIter->ENTITY, {id});
+		entityIter->ENTITY->ID = 0;
 		entities.erase(entityIter);
 	}
 }
@@ -135,7 +135,7 @@ void Scene::update()
 	auto end = entities.end();
 	for (; it != end; it++)
 	{
-		it->second->update();
+		it->ENTITY->update();
 	}
 	if (useBVH)
 	{
@@ -158,7 +158,7 @@ void Scene::preRender()
 		iRenderer.clear();
 		for (auto& entityPair : entities)
 		{
-			auto& entityPointer = entityPair.second;
+			auto& entityPointer = entityPair.ENTITY;
 			auto& vbo = *std::dynamic_pointer_cast<vaos::VAO>(entityPointer);
 			auto& glEntity = *std::dynamic_pointer_cast<Entity>(entityPointer);
 			if (!glEntity.affectedByShadows)
@@ -182,7 +182,7 @@ void Scene::preRender()
 		iRenderer.clear();
 		for (auto& entityPair : entities)
 		{
-			auto& entityPointer = entityPair.second;
+			auto& entityPointer = entityPair.ENTITY;
 			auto& vbo = *std::dynamic_pointer_cast<vaos::VAO>(entityPointer);
 			auto& glEntity = *std::dynamic_pointer_cast<Entity>(entityPointer);
 			if (!glEntity.affectedByShadows)
@@ -205,7 +205,7 @@ void Scene::preRender()
 		iRenderer.clear();
 		for (auto& entityPair : entities)
 		{
-			auto& entityPointer = entityPair.second;
+			auto& entityPointer = entityPair.ENTITY;
 			auto& vbo = *std::dynamic_pointer_cast<vaos::VAO>(entityPointer);
 			auto& glEntity = *std::dynamic_pointer_cast<Entity>(entityPointer);
 			if (!glEntity.affectedByShadows)
@@ -254,7 +254,7 @@ void Scene::renderEntities()
 	auto end = entities.end();
 	for (; it != end; it++)
 	{
-		it->second->render();
+		it->ENTITY->render();
 	}
 	if (framebufferPointer)
 		framebufferPointer->unbind();
@@ -456,7 +456,13 @@ void Scene::unhookMouseEvents()
 }
 std::shared_ptr<zg::Entity> Scene::getEntityByName(const std::string& name)
 {
-	return entitiesByName[name];
+	auto& entities_name_index = entities.get<entity_by_name>();
+	auto it_name = entities_name_index.find(name);
+	if (it_name != entities_name_index.end())
+	{
+		return it_name->ENTITY;
+	}
+	return {};
 }
 template<>
 Serial& serialize(Serial& serial, const Scene& scene)
@@ -466,17 +472,17 @@ Serial& serialize(Serial& serial, const Scene& scene)
 	serial << entitiesSize;
 	for (auto& entityPair : scene.entities)
 	{
-		auto& key = entityPair.first;
-		auto& pointer = entityPair.second;
-		if (!pointer)
+		auto& ID = entityPair.ID;
+		auto& entityPointer = entityPair.ENTITY;
+		if (!entityPointer)
 		{
 			serial << false;
 			continue;
 		}
-		auto ID = pointer->getTypeID();
-		serial << true << key << ID;
-		auto serializeFunction = Entity::getSerialize(ID);
-		serializeFunction(serial, pointer);
+		auto ENTITY_TYPE_ID = entityPointer->getTypeID();
+		serial << true << ID << ENTITY_TYPE_ID;
+		auto serializeFunction = Entity::getSerialize(ENTITY_TYPE_ID);
+		serializeFunction(serial, entityPointer);
 	}
 	serial << scene.entitiesCount;
 
@@ -534,12 +540,12 @@ Serial& deserialize(Serial& serial, Scene& scene)
 		serial >> readBit;
 		if (!readBit)
 			continue;
-		size_t key = 0, ID = 0;
-		serial >> key >> ID;
-		auto deserializeFunction = Entity::getDeserialize(ID);
+		size_t ID = 0, ENTITY_TYPE_ID = 0;
+		serial >> ID >> ENTITY_TYPE_ID;
+		auto deserializeFunction = Entity::getDeserialize(ENTITY_TYPE_ID);
 		std::shared_ptr<zg::Entity> entityPointer;
 		deserializeFunction(serial, entityPointer);
-		scene.entities[key] = entityPointer;
+		scene.entities.insert({ID, entityPointer->name, entityPointer});
 		scene.postAddEntity(entityPointer, {ID});
 		if (scene.window.onEntityAdded)
 			scene.window.onEntityAdded(entityPointer);
