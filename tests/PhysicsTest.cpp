@@ -22,10 +22,26 @@ struct PhysicsScene : zg::Scene
         addComponent(std::make_shared<zg::components::scenes::GravityByVector>(glm::vec3(0, -10, 0)));
         addComponent(std::make_shared<zg::components::scenes::PhysicsScene>(*this));
         floor = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 40, 50), glm::vec3(0), glm::vec3(1), glm::vec3(20, 0.5, 20));
-        floor->addComponent(std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo(*floor, zg::components::entities::BodyType::Static)));
+        floor->addComponent(std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*floor, zg::components::entities::BodyType::Static}));
+        floor->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo(
+            *floor,
+            std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(20, 0.5, 20)),
+            zg::components::entities::PhysicsMaterial{},
+            glm::vec3(0),
+            glm::quat(1, 0, 0, 0),
+            false
+        )));
         addEntity(floor);
         cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
-        cube->addComponent(std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo(*cube, zg::components::entities::BodyType::Dynamic)));
+        cube->addComponent(std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube, zg::components::entities::BodyType::Dynamic}));
+        cube->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo(
+            *cube,
+            std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5)),
+            zg::components::entities::PhysicsMaterial{},
+            glm::vec3(0),
+            glm::quat(1, 0, 0, 0),
+            false
+        )));
         addEntity(cube);
     }
 };

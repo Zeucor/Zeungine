@@ -2,6 +2,7 @@
 #include <zg/components/entities/Collider.hpp>
 #include <zg/components/entities/RigidBody.hpp>
 using namespace zg::components::entities;
+BoxShapeData::BoxShapeData(glm::vec3 halfExtents) : halfExtents(halfExtents) {};
 Collider::Collider(const ColliderInfo& info) :
 		IEntityComponent("Collider"), info(info), transform(&info.entity.getModelMatrix()),
 		deltaTime(info.entity.window.deltaTime)

@@ -26,6 +26,7 @@ namespace zg::components::entities
 	struct BoxShapeData : ShapeData
 	{
 		glm::vec3 halfExtents; // Half-width, half-height, half-depth
+		BoxShapeData(glm::vec3 halfExtents);
 		ShapeType getType() const override { return ShapeType::Box; }
 	};
 	struct SphereShapeData : ShapeData

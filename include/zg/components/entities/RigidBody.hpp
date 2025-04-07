@@ -1,7 +1,6 @@
 #pragma once
 #include <zg/glm.hpp>
 #include <zg/interfaces/IEntityComponent.hpp>
-#include <zg/glm.hpp>
 namespace zg
 {
 	struct Entity;
@@ -27,33 +26,40 @@ namespace zg::components::entities
 		float angularDamping = 0.05f;
 		bool useGravity = true;
 		bool isKinematicInitially = false;
-        glm::vec<3, bool> freezeRotationAxes = {false, false, false};
-        glm::vec<3, bool> freezeVelocityAxes = {false, false, false};
+		glm::vec<3, bool> freezeRotationAxes = {false, false, false};
+		glm::vec<3, bool> freezeVelocityAxes = {false, false, false};
 	};
 	struct Collider;
 	struct RigidBody : interfaces::IEntityComponent
 	{
 		RigidBodyInfo info;
 		glm::mat4* transform = 0;
+		glm::vec3* position = 0;
+		glm::vec3* rotation = 0;
 		scenes::PhysicsScene* physicsScene = 0;
-        std::vector<Collider*> colliders;
-        glm::vec3 linearVelocity = {0.0f, 0.0f, 0.0f};
-        glm::vec3 angularVelocity = {0.0f, 0.0f, 0.0f};
-        glm::vec3 forceAccumulator = {0.0f, 0.0f, 0.0f};
-        glm::vec3 torqueAccumulator = {0.0f, 0.0f, 0.0f};
-        float inverseMass = 0.0f;
+		std::vector<Collider*> colliders;
+		glm::vec3 linearVelocity = {0.0f, 0.0f, 0.0f};
+		glm::vec3 angularVelocity = {0.0f, 0.0f, 0.0f};
+		glm::vec3 forceAccumulator = {0.0f, 0.0f, 0.0f};
+		glm::vec3 torqueAccumulator = {0.0f, 0.0f, 0.0f};
+		float inverseMass = 0.0f;
 		RigidBody(const RigidBodyInfo& info);
-        void addCollider(Collider* collider);
-        void removeCollider(Collider* collider);
+		void addCollider(Collider* collider);
+		void removeCollider(Collider* collider);
 		void onAttached() override;
 		void onUpdate() override;
 		void onDetached() override;
-        void applyForce(glm::vec3 force, glm::vec3 worldPoint); // Apply force at world point
-        void applyForceToCenter(glm::vec3 force); // Apply force at center of mass
-        void applyTorque(glm::vec3 torque); // Apply rotational force
-        void clearForces(); // Clears force and torque accumulators (called by Physics system each step)
-        bool isStatic() const;
-        bool isKinematic() const;
-        bool isDynamic() const;
+		void applyForce(glm::vec3 force, glm::vec3 worldPoint); // Apply force at world point
+		void applyForceToCenter(glm::vec3 force); // Apply force at center of mass
+		void applyTorque(glm::vec3 torque); // Apply rotational force
+		void clearForces(); // Clears force and torque accumulators (called by Physics system each step)
+		glm::vec3 getPosition() const;
+		glm::vec3 getRotation() const;
+		void setPosition(glm::vec3 pos);
+		void setRotation(glm::vec3 rot);
+		void translate(glm::vec3 deltaPos);
+		bool isStatic() const;
+		bool isKinematic() const;
+		bool isDynamic() const;
 	};
 } // namespace zg::components::entities

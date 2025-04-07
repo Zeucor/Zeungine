@@ -4,7 +4,8 @@
 #include <zg/components/scenes/PhysicsScene.hpp>
 using namespace zg::components::entities;
 RigidBody::RigidBody(const RigidBodyInfo& info) :
-		IEntityComponent("RigidBody"), info(info), transform(&info.entity.getModelMatrix())
+		IEntityComponent("RigidBody"), info(info), transform(&info.entity.getModelMatrix()),
+		position(&info.entity.position), rotation(&info.entity.rotation)
 {
 }
 void RigidBody::addCollider(Collider* collider) { colliders.push_back(collider); }
@@ -96,6 +97,42 @@ void RigidBody::clearForces()
 {
 	forceAccumulator = glm::vec3(0);
 	torqueAccumulator = glm::vec3(0);
+}
+
+glm::vec3 RigidBody::getPosition() const
+{
+	if (!position)
+		return glm::vec3(0);
+	return *position;
+}
+
+glm::vec3 RigidBody::getRotation() const
+{
+	if (!rotation)
+		return glm::vec3(0);
+	return *rotation;
+}
+
+void RigidBody::setPosition(glm::vec3 pos)
+{
+	if (!position)
+		return;
+	*position = pos;
+}
+
+void RigidBody::setRotation(glm::vec3 rot)
+{
+	if (!rotation)
+		return;
+	*rotation += rot;
+}
+
+void RigidBody::translate(glm::vec3 deltaPos)
+{
+	if (!position)
+		return;
+	// More efficient than setPosition(getPosition() + deltaPos)
+	*position += deltaPos;
 }
 bool RigidBody::isStatic() const { return info.bodyType == BodyType::Static; }
 bool RigidBody::isKinematic() const { return info.bodyType == BodyType::Kinematic; }
