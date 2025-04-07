@@ -26,6 +26,10 @@ mv NEW_CHANGELOG.md CHANGELOG.md
 git add CHANGELOG.md CURVER_CHANGELOG.md
 git commit -m "Update CHANGELOG for $TAG"
 
+git add cmake/InstallPrefix.cmake
+git commit -m "$TAG"
+
 git tag "$TAG"
-git push origin main --follow-tags
+git push
+git push --tags
 
