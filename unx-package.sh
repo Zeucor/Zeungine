@@ -9,7 +9,6 @@ usage() {
     echo "  5 - Build dependencies shared only"
     echo "  6 - Build zeungine static only"
     echo "  7 - Build zeungine shared only"
-    echo "  8 - Build 1,2,3 and bundle mac runner"
     exit 1
 }
 
@@ -40,27 +39,7 @@ build_dependencies_static() {
 
     cd ../..
 }
-build_dependencies_static_macos() {
-    cd cmake/Dependencies
 
-    echo " -- Starting Zeungine Dependencies Debug/STATIC Configure"
-    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++
-    echo " -- Starting Zeungine Dependencies Debug/STATIC Build"
-    cmake --build build-debug --config Debug
-    echo " -- Starting Zeungine Dependencies Debug/STATIC Install"
-    sudo cmake --install build-debug --config Debug
-
-    echo " -- Starting Zeungine Dependencies Release/STATIC Configure"
-    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++
-    echo " -- Starting Zeungine Dependencies Release/STATIC Build"
-    cmake --build build-release --config Release
-    echo " -- Starting Zeungine Dependencies Release/STATIC Install"
-    sudo cmake --install build-release --config Release
-
-    cd ../..
-}
-
-# Function to build shared dependencies
 build_dependencies_shared() {
     cd cmake/Dependencies
 
@@ -158,12 +137,6 @@ case "$MODE" in
         ;;
     7)
         build_zeungine_shared
-        ;;
-    8)
-        build_dependencies_static_macos
-        build_headers
-        build_zeungine_static
-        bundle
         ;;
     *)
         echo "Invalid mode: $MODE"

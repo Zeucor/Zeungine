@@ -64,7 +64,7 @@ jobs:
 
       - name: Build Package on macOS
         if: runner.os == 'macOS'
-        run: ./unx-package.sh 8
+        run: ./unx-package.sh 0
         shell: bash
 
       - name: Build Package on Windows
