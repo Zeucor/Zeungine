@@ -1,6 +1,7 @@
 #include <zg/Window.hpp>
 #include <zg/Scene.hpp>
-#include <zg/components/entities/RigidBodyCollider.hpp>
+#include <zg/components/entities/RigidBody.hpp>
+#include <zg/components/entities/Collider.hpp>
 #include <zg/components/scenes/Physics.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/vp/VML.hpp>
@@ -19,10 +20,10 @@ struct PhysicsScene : zg::Scene
         clearColor = {0, 0, 1, 1};
         addComponent(std::make_shared<zg::components::scenes::Physics>(*this));
         floor = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 40, 50), glm::vec3(0), glm::vec3(1), glm::vec3(20, 0.5, 20));
-        floor->addComponent(std::make_shared<zg::components::entities::RigidBodyCollider>(*floor, true));
+        floor->addComponent(std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo(*floor, zg::components::entities::BodyType::Static)));
         addEntity(floor);
         cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
-        cube->addComponent(std::make_shared<zg::components::entities::RigidBodyCollider>(*cube, false));
+        cube->addComponent(std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo(*cube, zg::components::entities::BodyType::Dynamic)));
         addEntity(cube);
     }
 };

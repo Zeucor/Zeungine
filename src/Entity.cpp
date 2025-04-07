@@ -14,9 +14,9 @@ void Entity::preUpdate() {}
 void Entity::update()
 {
 	preUpdate();
-	for (auto& component : std::get<1>(m_components))
+	for (auto& componentEntry : std::get<1>(m_components))
 	{
-		component.second->onUpdate();
+		componentEntry.COMPONENT->onUpdate();
 	}
 	for (auto& childEntity : children)
 	{

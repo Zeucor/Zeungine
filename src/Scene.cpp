@@ -131,9 +131,9 @@ void Scene::preUpdate() {}
 void Scene::update()
 {
 	preUpdate();
-	for (auto& component : std::get<1>(m_components))
+	for (auto& componentEntry : std::get<1>(m_components))
 	{
-		component.second->onUpdate();
+		componentEntry.COMPONENT->onUpdate();
 	}
 	auto it = entities.begin();
 	auto end = entities.end();

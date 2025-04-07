@@ -8,6 +8,7 @@ namespace zg::interfaces
 {
 	struct ISceneComponent : IComponent
 	{
+		ISceneComponent(const std::string& name);
 		virtual ~ISceneComponent() = default;
 		virtual void onAttached() = 0;
 		virtual void onUpdate() = 0;

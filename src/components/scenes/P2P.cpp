@@ -1,6 +1,7 @@
 #include <zg/components/scenes/P2P.hpp>
 using namespace zg::components::scenes;
 P2P::P2P(Scene& scene, std::string_view key, const std::string &castaddr):
+    ISceneComponent("P2P"),
     scene(scene),
     key(key),
     castaddr(castaddr)

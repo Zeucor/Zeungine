@@ -8,6 +8,7 @@ namespace zg::interfaces
 {
 	struct IEntityComponent : IComponent
 	{
+		IEntityComponent(const std::string& name);
 		virtual ~IEntityComponent() = default;
 		virtual void onAttached() = 0;
 		virtual void onUpdate() = 0;
