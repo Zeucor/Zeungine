@@ -10,6 +10,8 @@ include(cmake/Sources.cmake)
 include(cmake/Targets.cmake)
 include(cmake/Library.cmake)
 include(cmake/Tests.cmake)
+set(CPACK_COMPONENT_TESTS_DESCRIPTION "Zeungine Tests")
+set(CPACK_COMPONENT_TESTS_GROUP "Zeungine")
 include(cmake/Editor.cmake)
 if(ZG_INSTALL)
     include(cmake/Install.cmake)
@@ -21,6 +23,7 @@ if(ZG_PACKAGE)
     cpack_add_component(headers)
     cpack_add_component(cmakeconfig)
     cpack_add_component(dependencies)
+    cpack_add_component(tests)
     include(cmake/Package.cmake)
     crossplatform_cpack_helper(
         ${CMAKE_SOURCE_DIR}/releases
@@ -45,6 +48,6 @@ if(ZG_PACKAGE)
         "C:"
         "zeungine-uninstaller"
         "dev.zeucor.zeungine"
-        "core;zedit;headers;cmakeconfig;dependencies")
+        "core;zedit;headers;cmakeconfig;dependencies;tests")
     set(CPACK_NSIS_MENU_LINKS "Release/STATIC/zedit.exe" "ZEdit")
 endif()
