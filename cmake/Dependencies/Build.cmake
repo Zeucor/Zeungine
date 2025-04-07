@@ -222,6 +222,7 @@ list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/container
 list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/container/src/dlmalloc_ext_2_8_6.c$")
 if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64")
     list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/log/src/dump_avx2.cpp$")
+    list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/log/src/dump_ssse3.cpp$")
 endif()
 if(WINDOWS)
     list(FILTER BOOST_LIB_SOURCES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/stacktrace/src/addr2line.cpp$")
