@@ -49,7 +49,7 @@ jobs:
       - name: Install Dependencies on macOS
         if: runner.os == 'macOS'
         run: |
-          brew install nasm ninja openssl
+          brew install nasm
         shell: bash
 
       - name: Install Vulkan SDK
