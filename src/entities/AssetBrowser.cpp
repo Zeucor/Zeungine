@@ -328,7 +328,7 @@ AssetBrowser::AssetBrowser(zg::Window& window, zg::Scene& scene, glm::vec3 posit
 			assetGridRef.addAsset(path, font);
 	}
 };
-void AssetBrowser::update()
+void AssetBrowser::preUpdate()
 {
 	auto changes = directoryWatcher.update();
 	for (auto& changePair : changes)

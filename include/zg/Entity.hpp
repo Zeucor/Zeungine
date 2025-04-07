@@ -56,7 +56,8 @@ namespace zg
 		Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
 					 const std::vector<uint32_t>& indices, uint32_t elementCount, const std::vector<glm::vec3>& positions,
 					 glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, std::string_view name);
-		virtual void update();
+		virtual void preUpdate();
+		void update();
 		shaders::Shader* addShader(shaders::Shader* setShader = 0);
 		bool isEnsured();
 		void setEnsured();

@@ -106,7 +106,7 @@ namespace zg::entities
 								 glm::vec4 backgroundColor, fonts::freetype::FreetypeFont& font, float width, float height,
 								 std::filesystem::path projectDirectory, const shaders::RuntimeConstants& constants = {},
 								 std::string_view name = "");
-		void update() override;
+		void preUpdate() override;
 		bool preRender() override;
 		void setBackgroundColor(glm::vec4 newBackgroundColor);
 		void setSize(glm::vec3 newSize) override;

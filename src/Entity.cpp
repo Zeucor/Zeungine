@@ -10,8 +10,14 @@ Entity::Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& 
 		positions(_positions), position(_position), rotation(_rotation), scale(_scale), name(_name)
 {
 }
+void Entity::preUpdate() {}
 void Entity::update()
 {
+	preUpdate();
+	for (auto& component : std::get<1>(m_components))
+	{
+		component.second->onUpdate();
+	}
 	for (auto& childEntity : children)
 	{
 		childEntity.second->update();

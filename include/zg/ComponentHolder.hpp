@@ -15,6 +15,8 @@ namespace zg
         {
             auto id = ++std::get<0>(m_components);
             std::get<1>(m_components)[id] = component;
+            component->ID = id;
+            component->onAttached();
             return id;
         }
         /**
@@ -26,17 +28,9 @@ namespace zg
             auto iter = map.find(id);
             if (iter == map.end())
                 return false;
+            iter->second->onDetached();
             map.erase(iter);
             id = 0;
-            return true;
-        }
-        bool updateComponent(UniqueIdentifier id, const std::shared_ptr<T>& component)
-        {
-            auto& map = std::get<1>(m_components);
-            auto iter = map.find(id);
-            if (iter == map.end())
-                return false;
-            iter->second = component;
             return true;
         }
     };

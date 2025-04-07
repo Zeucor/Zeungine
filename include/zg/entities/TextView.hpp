@@ -55,7 +55,7 @@ namespace zg::entities
 						  const ReFontSizeHandler &reFontSizeHandler = {},
 						  std::string_view name = "");
 		~TextView() override;
-		void update() override;
+		void preUpdate() override;
 		void forceUpdate();
 		bool preRender() override;
 		void setSize(glm::vec3 size) override;

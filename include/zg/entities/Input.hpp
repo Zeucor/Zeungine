@@ -52,7 +52,7 @@ namespace zg::entities
 			  const shaders::RuntimeConstants &constants = {},
 			  const std::string_view name = "");
 		~Input();
-		void update() override;
+		void preUpdate() override;
 		bool preRender() override;
 		void setColor(glm::vec4 color);
 		void setSize(glm::vec2 size);

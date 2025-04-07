@@ -58,7 +58,7 @@ TextView::~TextView()
 {
 	window.removeResizeHandler(resizeID);
 }
-void TextView::update()
+void TextView::preUpdate()
 {
 	if (oldText != text)
 	{
