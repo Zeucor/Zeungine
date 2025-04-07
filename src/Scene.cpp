@@ -464,6 +464,16 @@ std::shared_ptr<zg::Entity> Scene::getEntityByName(const std::string& name)
 	}
 	return {};
 }
+std::shared_ptr<zg::Entity> Scene::getEntityByID(const size_t& id)
+{
+	auto& entities_id_index = entities.get<entity_by_id>();
+	auto it_id = entities_id_index.find(id);
+	if (it_id != entities_id_index.end())
+	{
+		return it_id->ENTITY;
+	}
+	return {};
+}
 template<>
 Serial& serialize(Serial& serial, const Scene& scene)
 {

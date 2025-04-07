@@ -97,5 +97,6 @@ namespace zg
 		void hookMouseEvents();
 		void unhookMouseEvents();
 		std::shared_ptr<zg::Entity> getEntityByName(const std::string& name);
+		std::shared_ptr<zg::Entity> getEntityByID(const size_t& id);
 	};
 } // namespace zg
