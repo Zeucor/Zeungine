@@ -13,6 +13,15 @@ struct PhysicsScene : zg::Scene
     zg::vp::VFBLR vfblr;
     std::shared_ptr<zg::entities::Cube> floor;
     std::shared_ptr<zg::entities::Cube> cube;
+    std::shared_ptr<zg::components::entities::RigidBody> cubeRigidBody;
+    zg::UniqueIdentifier fID = 0;
+    zg::UniqueIdentifier bID = 0;
+    zg::UniqueIdentifier lID = 0;
+    zg::UniqueIdentifier rID = 0;
+    int f = 0;
+    int b = 0;
+    int l = 0;
+    int r = 0;
     PhysicsScene(zg::Window& window):
         Scene(window, { 50, 50, 50 }, { 0, -1, 1 }, 81.f),
         vml(*this),
@@ -33,7 +42,8 @@ struct PhysicsScene : zg::Scene
         }));
         addEntity(floor);
         cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
-        cube->addComponent(std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube, zg::components::entities::BodyType::Dynamic}));
+        cubeRigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube, zg::components::entities::BodyType::Dynamic});
+        cube->addComponent(cubeRigidBody);
         cube->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *cube,
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
@@ -43,6 +53,37 @@ struct PhysicsScene : zg::Scene
             false
         }));
         addEntity(cube);
+        f = KEYCODE_UP;
+        b = KEYCODE_DOWN;
+        l = KEYCODE_LEFT;
+        r = KEYCODE_RIGHT;
+        std::function<void()> onFrontTickFunction = [&]()
+        {
+            cubeRigidBody->applyForceToCenter({0, 0, 10});
+        };
+        fID = window.addKeyUpdateHandler(f, onFrontTickFunction);
+        std::function<void()> onBackTickFunction = [&]()
+        {
+            cubeRigidBody->applyForceToCenter({0, 0, -10});
+        };
+        bID = window.addKeyUpdateHandler(b, onBackTickFunction);
+        std::function<void()> onLeftTickFunction = [&]()
+        {
+            cubeRigidBody->applyForceToCenter({-10, 0, 0});
+        };
+        lID = window.addKeyUpdateHandler(l, onLeftTickFunction);
+        std::function<void()> onRightTickFunction = [&]()
+        {
+            cubeRigidBody->applyForceToCenter({10, 0, 0});
+        };
+        rID = window.addKeyUpdateHandler(r, onRightTickFunction);
+    }
+    ~PhysicsScene()
+    {
+        window.removeKeyUpdateHandler(f, fID);
+        window.removeKeyUpdateHandler(b, bID);
+        window.removeKeyUpdateHandler(l, lID);
+        window.removeKeyUpdateHandler(r, rID);
     }
 };
 int main()
