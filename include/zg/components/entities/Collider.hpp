@@ -42,6 +42,8 @@ namespace zg::components::entities
 	};
 	struct MeshShapeData : ShapeData
 	{
+		Entity& entity;
+		MeshShapeData(Entity& entity);
 		ShapeType getType() const override { return ShapeType::Mesh; }
 	};
 	struct ConvexHullShapeData : ShapeData
@@ -68,7 +70,7 @@ namespace zg::components::entities
 		ColliderInfo info;
 		RigidBody* ownerRigidBody = 0; // Pointer to the RB this collider is attached to
 		glm::mat4* transform = 0; // Pointer to the entity's transform (for AABB updates)
-        physics::AABB worldAABB;
+		physics::AABB worldAABB;
 		long double& deltaTime;
 
 	public:
@@ -77,6 +79,9 @@ namespace zg::components::entities
 		void onUpdate() override;
 		void onDetached() override;
 		void updateWorldAABB();
+		physics::AABB getSweptWorldAABB(long double ldt) const;
+		physics::AABB calculateWorldAABB(const glm::mat4& worldTransform) const;
+		// getters
 		ShapeType getShapeType() const;
 		PhysicsMaterial& getPhysicsMaterial();
 		const PhysicsMaterial& getPhysicsMaterial() const;
@@ -88,7 +93,6 @@ namespace zg::components::entities
 		ColliderInfo& getColliderInfo();
 		RigidBody* getOwnerRigidBody();
 		const glm::mat4* getTransform();
-		physics::AABB& getWorldAABB();
-		const physics::AABB& getWorldAABB() const;
+		physics::AABB getWorldAABB() const;
 	};
 } // namespace zg::components::entities

@@ -43,6 +43,8 @@ namespace zg::components::entities
 		glm::vec3 forceAccumulator = {0.0f, 0.0f, 0.0f};
 		glm::vec3 torqueAccumulator = {0.0f, 0.0f, 0.0f};
 		float inverseMass = 0.0f;
+		glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+		glm::mat3 inverseInertiaTensor = glm::mat3(1.0f);
 		RigidBody(const RigidBodyInfo& info);
 		void addCollider(Collider* collider);
 		void removeCollider(Collider* collider);
@@ -55,11 +57,13 @@ namespace zg::components::entities
 		void clearForces(); // Clears force and torque accumulators (called by Physics system each step)
 		glm::vec3 getPosition() const;
 		glm::vec3 getRotation() const;
+		glm::quat getOrientation() const;
 		void setPosition(glm::vec3 pos);
 		void setRotation(glm::vec3 rot);
 		void translate(glm::vec3 deltaPos);
 		bool isStatic() const;
 		bool isKinematic() const;
 		bool isDynamic() const;
+		glm::mat3 getInverseInertiaTensorWorld() const;
 	};
 } // namespace zg::components::entities

@@ -113,6 +113,11 @@ glm::vec3 RigidBody::getRotation() const
 	return *rotation;
 }
 
+glm::quat RigidBody::getOrientation() const
+{
+	return orientation;
+}
+
 void RigidBody::setPosition(glm::vec3 pos)
 {
 	if (!position)
@@ -137,3 +142,26 @@ void RigidBody::translate(glm::vec3 deltaPos)
 bool RigidBody::isStatic() const { return info.bodyType == BodyType::Static; }
 bool RigidBody::isKinematic() const { return info.bodyType == BodyType::Kinematic; }
 bool RigidBody::isDynamic() const { return info.bodyType == BodyType::Dynamic; }
+glm::mat3 RigidBody::getInverseInertiaTensorWorld() const
+{
+	// Static objects have infinite inertia -> zero inverse inertia
+	if (isStatic())
+	{
+		return glm::mat3(0.0f);
+	}
+
+	// 1. Convert the orientation quaternion to a 3x3 rotation matrix (R)
+	// This matrix transforms vectors from body-space to world-space.
+	glm::mat3 R = glm::toMat3(orientation);
+
+	// 2. Get the body-space inverse inertia tensor (I_body_inv)
+	const glm::mat3& I_body_inv = this->inverseInertiaTensor;
+
+	// 3. Calculate I_world_inv = R * I_body_inv * R^T
+	//    (where R^T is the transpose of R)
+	// Note: Matrix multiplication order matters!
+	glm::mat3 I_world_inv = R * I_body_inv * glm::transpose(R);
+
+	// 4. Return the result
+	return I_world_inv;
+}

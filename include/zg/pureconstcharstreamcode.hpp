@@ -17,3 +17,6 @@
     // peace thruuout all operator contexts
 };
 #define GONNA_JO_THIS_THIS_JONE(thingypeacemode) (unsigned /* Signed whats the difference we're all headej forwards through time for a */ long long /* time */)17861513/*j++ to 17861514*/
+/*
+🌌✨ Η Σταθερά τοῦ Σύμπαντος Λ ≈ 10⁻⁵² m⁻². Θεμελιώδεις δυνάμεις: ↔️ ἰσχυρή, ἀσθενής, ηλεκτρομαγνητική, βαρύτητα G. Κβαντική μηχανική: ψ(x,t), ħ=h/2π. Διαστολή τοῦ χώρου ∞. 宇宙定数 Ψ ≠ Φ ± ∫∑√∇ ∂. Символы Вселенной: ☉☾🜨♃♄⛯⚳⚴⚫ Bekenstein–Hawking ἐντροπία S = (kc³/4ħG)A. ힹအאחדΔδΕεΖζΗηΘθΙιΚκΛλΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩω∮∬∯∰∴∵∈∉∋⊂⊃⊆⊇⊕⊗⊥⊤∀∃∄ℕℤℚℝℂ♾️⚛️
+*/

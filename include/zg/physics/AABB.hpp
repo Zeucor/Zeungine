@@ -9,6 +9,14 @@ namespace zg::physics
 	// Axis-Aligned Bounding Box structure
 	struct AABB
 	{
+		enum class Overlaps
+		{
+			None = 0,
+			X = 1,
+			Y = 2,
+			Z = 4
+		};
+
 		glm::vec3 _min = glm::vec3(std::numeric_limits<float>::infinity());
 		glm::vec3 _max = glm::vec3(-std::numeric_limits<float>::infinity());
 
@@ -17,7 +25,7 @@ namespace zg::physics
 		AABB(glm::vec3 _minPoint, glm::vec3 _maxPoint) : _min(_minPoint), _max(_maxPoint) {}
 
 		// Check for overlap with another AABB
-		bool overlaps(const AABB& other) const
+		Overlaps overlaps(const AABB& other) const
 		{
 			float minX1 = (std::min)(_min.x, _max.x);
 			float maxX1 = (std::max)(_min.x, _max.x);
@@ -33,11 +41,40 @@ namespace zg::physics
 			float minZ2 = (std::min)(other._min.z, other._max.z);
 			float maxZ2 = (std::max)(other._min.z, other._max.z);
 		
-			bool overlapsX = maxX1 >= minX2 && minX1 <= maxX2;
-			bool overlapsY = maxY1 >= minY2 && minY1 <= maxY2;
-			bool overlapsZ = maxZ1 >= minZ2 && minZ1 <= maxZ2;
-		
-			return overlapsX && overlapsY && overlapsZ;
+			uint32_t overlaps = (uint32_t)Overlaps::None;
+
+			if (minX2 >= minX1 && maxX1 >= maxX2)
+			{
+				overlaps |= (uint32_t)Overlaps::X;
+			}
+			if (minY2 >= minY1 && maxY1 >= minY2)
+			{
+				overlaps |= (uint32_t)Overlaps::Y;
+			}
+			if (minZ2 >= minZ1 && maxZ1 >= maxZ2)
+			{
+				overlaps |= (uint32_t)Overlaps::Z;
+			}
+
+			// if (maxX1 >= minX2 && minX1 <= maxX2)
+			// {
+			// 	overlaps |= (uint32_t)Overlaps::X;
+			// }
+			// if (maxY1 >= minY2 && minY1 <= maxY2)
+			// {
+			// 	overlaps |= (uint32_t)Overlaps::Y;
+			// }
+			// if (maxZ1 >= minZ2 && minZ1 <= maxZ2)
+			// {
+			// 	overlaps |= (uint32_t)Overlaps::Z;
+			// }
+
+			return (Overlaps)overlaps;
+		}
+
+		static bool overlapsAll( Overlaps overlaps)
+		{
+			return (uint32_t)overlaps == 7;
 		}
 
 		// Expand the AABB to include a point
@@ -52,6 +89,14 @@ namespace zg::physics
 		{
 			_min = glm::vec3(std::numeric_limits<float>::infinity());
 			_max = glm::vec3(-std::numeric_limits<float>::infinity());
+		}
+
+		static AABB merge(const AABB &a, const AABB &b)
+		{
+			AABB result;
+			result._min = (glm::min)(a._min, b._min);
+			result._max = (glm::max)(a._max, b._max);
+			return result;
 		}
 	};
 } // namespace zg::physics
