@@ -1,4 +1,6 @@
-## Changes since v0.3.8.4
+## Changes since v0.3.8.5
 
-- e4bb868 Merge branch 'master' of github.com:Zeucor/Zeungine (Steven French, 24 seconds ago)
-- da03879 Physics components are now working with Box-Box collisions and resolutions (Steven French, 35 seconds ago)
+- 8be14c0 physics improvements (collision resolution & response) (Steven French, 45 seconds ago)
+- 2842f3a feature rich physics update, Continuous Collision Detection, Time of Impact resolution. Working for Box-Box collisions (Steven French, 2 hours ago)
+- 92d333b Merge branch 'master' of github.com:Zeucor/Zeungine (Steven French, 2 days ago)
+- 4fdea77 PhysicsTest: apply forces to cube (Steven French, 2 days ago)
