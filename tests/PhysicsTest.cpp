@@ -7,6 +7,7 @@
 #include <zg/entities/Cube.hpp>
 #include <zg/vp/VML.hpp>
 #include <zg/vp/VFBLR.hpp>
+#include <zg/math/Rotations.hpp>
 struct PhysicsScene : zg::Scene
 {
     zg::vp::VML vml;
@@ -36,13 +37,34 @@ struct PhysicsScene : zg::Scene
         vfblr(*this, zg::vp::VFBLR::KeyScheme::WSADSC, 8.f)
     {
         clearColor = {0, 0, 1, 1};
-        addComponent(std::make_shared<zg::components::scenes::GravityByVector>(glm::vec3(0, -2.345, 0)));
+        zg::shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
+
+		// auto dldirection = glm::normalize(zg::math::Rotations::Vec3AroundVec3({0, 0, 1}, {0, 0, 0}, {90, 0, 0}));
+        // dldirection = glm::normalize(zg::math::Rotations::Vec3AroundVec3(dldirection, {0, 0, 0}, {0, 90, 90}));
+		// auto dlup = glm::normalize(zg::math::Rotations::Vec3AroundVec3({0, 1, 0}, {0, 0, 0}, {90, 0, 0}));
+        // dlup = glm::normalize(zg::math::Rotations::Vec3AroundVec3(dlup, {0, 0, 0}, {0, 90, 0}));
+        glm::vec3 dldirection{1, -1, 1};
+        dldirection = glm::normalize(dldirection);
+        glm::vec3 dlup{0, 1, 0};
+		directionalLights.push_back({
+			glm::vec3(20, 80, 20), // position
+			dldirection, // direction
+			dlup, // up
+			glm::vec3(1.f, 1.f, 1.f), // color
+			1.f, // intensity,
+			1.f, // nearPlane
+			364.f // farPlane
+		});
+		auto& dl = directionalLights[0];
+		directionalLightShadows.emplace_back(window, directionalLights[0]);
+
+        addComponent(std::make_shared<zg::components::scenes::GravityByVector>(glm::vec3(0, -9.81, 0)));
         addComponent(std::make_shared<zg::components::scenes::PhysicsScene>(*this));
-        floor = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 40, 50), glm::vec3(0), glm::vec3(1), glm::vec3(20, 0.5, 20));
+        floor = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 40, 50), glm::vec3(0), glm::vec3(1), glm::vec3(2000, 0.5, 2000), commonShaderConstants);
         floor->addComponent(std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*floor, zg::components::entities::BodyType::Static}));
         floor->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *floor,
-            std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(20, 0.5, 20) / 2.f),
+            std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(2000, 0.5, 2000) / 2.f),
             zg::components::entities::PhysicsMaterial{},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
@@ -50,56 +72,56 @@ struct PhysicsScene : zg::Scene
         }));
         addEntity(floor);
         // cube
-        cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
+        cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
         cubeRigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube, zg::components::entities::BodyType::Dynamic});
         cube->addComponent(cubeRigidBody);
         cube->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *cube,
             // std::make_shared<zg::components::entities::MeshShapeData>(*cube),
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-            zg::components::entities::PhysicsMaterial{0.5f, 0.8f},
+            zg::components::entities::PhysicsMaterial{0.95f, 0.8f},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
         }));
         addEntity(cube);
         // cube2
-        cube2 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(53, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
+        cube2 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(53, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
         cube2RigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube2, zg::components::entities::BodyType::Dynamic});
         cube2->addComponent(cube2RigidBody);
         cube2->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *cube2,
             // std::make_shared<zg::components::entities::MeshShapeData>(*cube2),
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-            zg::components::entities::PhysicsMaterial{0.5f, 0.5f},
+            zg::components::entities::PhysicsMaterial{0.95f, 0.5f},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
         }));
         addEntity(cube2);
         // cube3
-        cube3 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(47, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
+        cube3 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(47, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
         cube3RigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube3, zg::components::entities::BodyType::Dynamic});
         cube3->addComponent(cube3RigidBody);
         cube3->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *cube3,
             // std::make_shared<zg::components::entities::MeshShapeData>(*cube3),
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-            zg::components::entities::PhysicsMaterial{0.5f, 0.7f},
+            zg::components::entities::PhysicsMaterial{0.95f, 0.7f},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
         }));
         addEntity(cube3);
         // cube4
-        cube4 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 54), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
+        cube4 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 54), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
         cube4RigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube4, zg::components::entities::BodyType::Dynamic});
         cube4->addComponent(cube4RigidBody);
         cube4->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *cube4,
             // std::make_shared<zg::components::entities::MeshShapeData>(*cube4),
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-            zg::components::entities::PhysicsMaterial{0.5f, 0.9f},
+            zg::components::entities::PhysicsMaterial{0.95f, 0.9f},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -133,7 +155,7 @@ struct PhysicsScene : zg::Scene
         rID = window.addKeyUpdateHandler(r, onRightTickFunction);
         std::function<void()> onSpaceTickFunction = [&]()
         {
-            cubeRigidBody->applyForceToCenter({0, 5, 0});
+            cubeRigidBody->applyForceToCenter({0, 11, 0});
         };
         sID = window.addKeyUpdateHandler(s, onSpaceTickFunction);
     }
