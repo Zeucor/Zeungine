@@ -1,3 +1,6 @@
+## Changes since v0.3.9.0
+
+- e3efbc6 PhysicsTest: enable lighting (Steven French, 32 seconds ago)
 ## Changes since v0.3.8.5
 
 - 8be14c0 physics improvements (collision resolution & response) (Steven French, 45 seconds ago)
