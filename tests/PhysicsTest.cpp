@@ -14,6 +14,12 @@ struct PhysicsScene : zg::Scene
     std::shared_ptr<zg::entities::Cube> floor;
     std::shared_ptr<zg::entities::Cube> cube;
     std::shared_ptr<zg::components::entities::RigidBody> cubeRigidBody;
+    std::shared_ptr<zg::entities::Cube> cube2;
+    std::shared_ptr<zg::components::entities::RigidBody> cube2RigidBody;
+    std::shared_ptr<zg::entities::Cube> cube3;
+    std::shared_ptr<zg::components::entities::RigidBody> cube3RigidBody;
+    std::shared_ptr<zg::entities::Cube> cube4;
+    std::shared_ptr<zg::components::entities::RigidBody> cube4RigidBody;
     zg::UniqueIdentifier fID = 0;
     zg::UniqueIdentifier bID = 0;
     zg::UniqueIdentifier lID = 0;
@@ -43,6 +49,7 @@ struct PhysicsScene : zg::Scene
             false
         }));
         addEntity(floor);
+        // cube
         cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
         cubeRigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube, zg::components::entities::BodyType::Dynamic});
         cube->addComponent(cubeRigidBody);
@@ -56,6 +63,49 @@ struct PhysicsScene : zg::Scene
             false
         }));
         addEntity(cube);
+        // cube2
+        cube2 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(53, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
+        cube2RigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube2, zg::components::entities::BodyType::Dynamic});
+        cube2->addComponent(cube2RigidBody);
+        cube2->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
+            *cube2,
+            // std::make_shared<zg::components::entities::MeshShapeData>(*cube2),
+            std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
+            zg::components::entities::PhysicsMaterial{0.5f, 0.5f},
+            glm::vec3(0),
+            glm::quat(1, 0, 0, 0),
+            false
+        }));
+        addEntity(cube2);
+        // cube3
+        cube3 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(47, 47, 58), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
+        cube3RigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube3, zg::components::entities::BodyType::Dynamic});
+        cube3->addComponent(cube3RigidBody);
+        cube3->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
+            *cube3,
+            // std::make_shared<zg::components::entities::MeshShapeData>(*cube3),
+            std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
+            zg::components::entities::PhysicsMaterial{0.5f, 0.7f},
+            glm::vec3(0),
+            glm::quat(1, 0, 0, 0),
+            false
+        }));
+        addEntity(cube3);
+        // cube4
+        cube4 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 54), glm::vec3(0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5));
+        cube4RigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube4, zg::components::entities::BodyType::Dynamic});
+        cube4->addComponent(cube4RigidBody);
+        cube4->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
+            *cube4,
+            // std::make_shared<zg::components::entities::MeshShapeData>(*cube4),
+            std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
+            zg::components::entities::PhysicsMaterial{0.5f, 0.9f},
+            glm::vec3(0),
+            glm::quat(1, 0, 0, 0),
+            false
+        }));
+        addEntity(cube4);
+        // cube controls
         f = KEYCODE_UP;
         b = KEYCODE_DOWN;
         l = KEYCODE_LEFT;

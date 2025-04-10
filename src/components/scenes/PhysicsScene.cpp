@@ -121,7 +121,7 @@ void PhysicsScene::stepSimulationCCD(long double dt)
 	{
 		total_dt += sub_dt;
 		long double minTOI = total_dt;
-		std::map<float, TOIResult> earliestCollisions;
+		std::multimap<long double, TOIResult> earliestCollisions;
 
 		// --- 1. Broadphase using Swept AABBs ---
 		potentialPairs.clear();
@@ -206,23 +206,49 @@ void PhysicsScene::stepSimulationCCD(long double dt)
 			// Use a small epsilon when comparing TOIs
 			if (currentResult.colliding)
 			{
-				earliestCollisions[currentResult.toi] = currentResult;
+				earliestCollisions.insert({currentResult.toi, currentResult});
 			}
 		} // End loop through potential pairs
 
-		float ldt = 0;
+		long double ldt = 0;
 		if (earliestCollisions.size())
 		{
-			for (auto& toiPair : earliestCollisions)
+
+			auto it = earliestCollisions.begin();
+			while (it != earliestCollisions.end())
 			{
-				float idt = toiPair.first - ldt;
-				ldt = toiPair.first;
+				// Get the current key we are processing
+				auto currentKey = it->first;
+
+				// Prepare a vector to hold all values for this key
+				std::vector<TOIResult> valuesForKey;
+
+				// Find the end of the range for the current key.
+				// upper_bound gives the first element GREATER than currentKey.
+				auto rangeEndIt = earliestCollisions.upper_bound(currentKey);
+
+				// Iterate only through the elements matching the current key
+				// (from the current iterator 'it' up to 'rangeEndIt')
+				for (auto currentIt = it; currentIt != rangeEndIt; ++currentIt)
+				{
+					valuesForKey.push_back(currentIt->second);
+				}
+
+				// Process the key and its collected values
+				for (size_t i = 0; i < valuesForKey.size(); ++i)
+				{
+					collisionContacts.push_back(valuesForKey[i].manifold);
+				}
+
+				float idt = currentKey - ldt;
+				ldt = currentKey;
 				updateTransforms(idt);
-				collisionContacts.clear();
-				collisionContacts.push_back(toiPair.second.manifold);
 				resolveCollisionImpulses(idt);
 				applyPositionalCorrection();
 				updateVelocities(idt);
+				collisionContacts.clear();
+
+				it = rangeEndIt;
 			}
 		}
 		else
@@ -230,7 +256,6 @@ void PhysicsScene::stepSimulationCCD(long double dt)
 		_integrateFullTOI:
 			ldt = minTOI;
 			updateTransforms(minTOI);
-			applyPositionalCorrection();
 			updateVelocities(minTOI);
 		}
 		if (!ldt)
@@ -361,14 +386,13 @@ void PhysicsScene::applyPositionalCorrection()
 		// Apply the correction
 		if (bodyA->isDynamic() && bodyA->transform)
 		{
-			bodyA->translate(correctionVector * bodyA->inverseMass);
-			continue;
+			bodyA->translate(-correctionVector * bodyA->inverseMass);
 		}
 		if (bodyB->isDynamic() && bodyB->transform)
 		{
-			bodyB->translate(-correctionVector * bodyB->inverseMass);
-			continue;
+			bodyB->translate(correctionVector * bodyB->inverseMass);
 		}
+		continue;
 	}
 	// Removed return value as it wasn't used in the loop structure anymore
 }
@@ -1744,16 +1768,20 @@ void PhysicsScene::resolveCollisionImpulses(double dt)
 		// --- Apply Impulse ---
 		glm::vec3 impulseVec = manifold.normal * j;
 
+		if (bodyA->isDynamic() && bodyB->isDynamic())
+		{
+			j *= 1;
+		}
+
 		if (bodyA->isDynamic())
 		{
 			bodyA->linearVelocity += impulseVec * bodyA->inverseMass;
-			continue;
 		}
 		if (bodyB->isDynamic())
 		{
 			bodyB->linearVelocity -= impulseVec * bodyB->inverseMass;
-			continue;
 		}
+		continue;
 	}
 }
 void PhysicsScene::synchronizeTransforms() {}
