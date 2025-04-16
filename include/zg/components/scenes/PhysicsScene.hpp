@@ -31,62 +31,30 @@ namespace zg::components::scenes
 			AtOrBelow // Self's relevant boundary should be <= Other's relevant boundary
 		};
 
-		Normal normal; // Type of constraint (relative position)
-		int axis; // The primary world axis (0=x, 1=y, 2=z) of the constraint
-		float&
-			referenceSelf; // Reference to the relevant boundary (_min[axis] or _max[axis]) of the self collider's World AABB
-		float& referenceOther; // Reference to the relevant boundary (_min[axis] or _max[axis]) of the other collider's
-													 // World AABB
-		float& positionSelf; // Reference to the position component (e.g., owner->position[axis]) to be modified
-		const glm::quat& rotationSelf; // Const reference to the owner's rotation quaternion
-		glm::vec3 localHalfExtents; // Local space half-extents of the self collider (center-to-face distances)
-
-		// Constructor updated to accept rotation and local half-extents
-		Constraint(Normal normal, int axis, float& referenceSelf, float& referenceOther, float& positionSelf,
-							 const glm::quat& rotationSelf, const glm::vec3& localHalfExtents) :
-				normal(normal), axis(axis), referenceSelf(referenceSelf), // Store reference to world AABB boundary
-				referenceOther(referenceOther), // Store reference to world AABB boundary
-				positionSelf(positionSelf), // Store reference to position component
-				rotationSelf(rotationSelf), // Store const reference to rotation
-				localHalfExtents(localHalfExtents) // Store local dimensions by value
+		Normal normal;
+		float referencePosition;
+		float& positionSelf;
+		Constraint(Normal normal, float referencePosition, float& positionSelf) :
+				normal(normal), referencePosition(referencePosition),
+				positionSelf(positionSelf)
 		{
 		}
 
 		// Applies the constraint, adjusting positionSelf based on rotation
 		void apply()
 		{
-			float offset_axis = 0.0f;
-			std::vector<glm::vec3> localCorners(8);
-			localCorners[0] = glm::vec3(-localHalfExtents.x, -localHalfExtents.y, -localHalfExtents.z);
-			localCorners[1] = glm::vec3(localHalfExtents.x, -localHalfExtents.y, -localHalfExtents.z);
-			localCorners[2] = glm::vec3(localHalfExtents.x, localHalfExtents.y, -localHalfExtents.z);
-			localCorners[3] = glm::vec3(-localHalfExtents.x, localHalfExtents.y, -localHalfExtents.z);
-			localCorners[4] = glm::vec3(-localHalfExtents.x, -localHalfExtents.y, localHalfExtents.z);
-			localCorners[5] = glm::vec3(localHalfExtents.x, -localHalfExtents.y, localHalfExtents.z);
-			localCorners[6] = glm::vec3(localHalfExtents.x, localHalfExtents.y, localHalfExtents.z);
-			localCorners[7] = glm::vec3(-localHalfExtents.x, localHalfExtents.y, localHalfExtents.z);
-			float min_extent_on_axis = (std::numeric_limits<float>::max)();
-			float max_extent_on_axis = (std::numeric_limits<float>::lowest)();
-			for (const auto& localCorner : localCorners)
-			{
-				glm::vec3 relativeWorldCorner = rotationSelf * localCorner;
-				min_extent_on_axis = (std::min)(min_extent_on_axis, relativeWorldCorner[axis]);
-				max_extent_on_axis = (std::max)(max_extent_on_axis, relativeWorldCorner[axis]);
-			}
 			if (normal == AtOrAbove)
 			{
-				if (referenceSelf < referenceOther)
+				if (positionSelf < referencePosition)
 				{
-					offset_axis = min_extent_on_axis;
-					positionSelf = referenceOther - offset_axis;
+					positionSelf = referencePosition;
 				}
 			}
 			else
 			{
-				if (referenceSelf > referenceOther)
+				if (positionSelf > referencePosition)
 				{
-					offset_axis = max_extent_on_axis;
-					positionSelf = referenceOther - offset_axis;
+					positionSelf = referencePosition;
 				}
 			}
 		}
@@ -117,7 +85,8 @@ namespace zg::components::scenes
 		void onDetached() override;
 		void registerRigidBody(entities::RigidBody* rigidBody);
 		void unregisterRigidBody(entities::RigidBody* rigidBody);
-		static std::pair<glm::vec3, glm::quat> getTransformsAtTime(entities::RigidBody* rb, float t, bool updateVelocities = false);
+		static std::pair<glm::vec3, glm::quat> getTransformsAtTime(entities::RigidBody* rb, float t);
+		void updateVelocities(entities::RigidBody* rb, float t);
 
 	private:
 		// Performs one fixed step of the simulation

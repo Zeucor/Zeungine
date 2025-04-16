@@ -20,6 +20,8 @@ namespace zg::physics
 		bool colliding = false;
 		std::vector<glm::vec3> contactPoints;
 		size_t contactCount = 0;
+		std::pair<glm::vec3, glm::quat> toiTransformsA;
+		std::pair<glm::vec3, glm::quat> toiTransformsB;
 		CollisionMannifold() = default;
 		CollisionMannifold(components::entities::Collider* a, components::entities::Collider* b) : colliderA(a), colliderB(b) {}
 	};

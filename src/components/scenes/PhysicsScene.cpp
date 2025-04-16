@@ -122,6 +122,13 @@ void PhysicsScene::stepSimulationCCD(float dt)
 	{
 		gravity->applyGravity(*this, dt);
 	}
+	for (auto& body : rigidBodies)
+	{
+		if (body)
+		{
+			updateVelocities(body, dt);
+		}
+	}
 	subStepCount++;
 	float subStepDt = remainingDt;
 	float earliestTOI = subStepDt;
@@ -199,9 +206,9 @@ void PhysicsScene::stepSimulationCCD(float dt)
 				//
 				resolveCollisionImpulses(1);
 				collisionContacts.clear();
-				//
-				// applyConstraints(bodyA);
-				// applyConstraints(bodyB);
+				// 
+				applyConstraints(bodyA);
+				applyConstraints(bodyB);
 			}
 			remainingDt = dt - ldt;
 			it = rangeEndIt;
@@ -289,61 +296,35 @@ void PhysicsScene::resolveConstraint(const CollisionMannifold& collisionMannifol
 
 	// 4. Determine constraint type (Normal) and identify relevant AABB boundaries based on the collision normal direction
 	Constraint::Normal normalA, normalB;
-	float* refA = nullptr; // Pointer to the relevant float boundary value in worldAABB_A (_min[axis] or _max[axis])
-	float* refB = nullptr; // Pointer to the relevant float boundary value in worldAABB_B (_min[axis] or _max[axis])
+	float refA = 0;
+	float refB = 0;
 
-	// Use the sign of the normal component along the dominant axis
 	if (collisionMannifold.normal[axis] <
-			0) // Normal points from B towards A along negative axis (e.g., A is below B on Y axis)
+			0)
 	{
-		// Body A's min face is constrained by Body B's max face
-		normalA = Constraint::AtOrAbove; // A's min[axis] must be >= B's max[axis]
-		normalB = Constraint::AtOrBelow; // B's max[axis] must be <= A's min[axis]
-		refA = &(worldAABB_A._min[axis]); // Reference A's minimum boundary on this axis
-		refB = &(worldAABB_B._max[axis]); // Reference B's maximum boundary on this axis
+		normalA = Constraint::AtOrAbove;
+		normalB = Constraint::AtOrBelow;
 	}
-	else // Normal points from B towards A along positive axis (e.g., A is above B on Y axis)
-			 // (collisionMannifold.normal[axis] > 0)
+	else
 	{
-		// Body A's max face is constrained by Body B's min face
-		normalA = Constraint::AtOrBelow; // A's max[axis] must be <= B's min[axis]
-		normalB = Constraint::AtOrAbove; // B's min[axis] must be >= A's max[axis]
-		refA = &(worldAABB_A._max[axis]); // Reference A's maximum boundary on this axis
-		refB = &(worldAABB_B._min[axis]); // Reference B's minimum boundary on this axis
+		normalA = Constraint::AtOrBelow;
+		normalB = Constraint::AtOrAbove;
 	}
-
-	// Check if references were assigned (should always happen if axis != -1)
-	if (!refA || !refB)
-	{
-		// Handle error or log warning - shouldn't happen with the axis check above
-		return;
-	}
-
-	// 5. Get references/pointers for position and rotation
-	// IMPORTANT: getPosition() MUST return glm::vec3& (a non-const reference) for modification to work.
-	// If it returns by value or const&, the constraint cannot modify the position directly.
+	refA = collisionMannifold.toiTransformsA.first[axis];
+	refB = collisionMannifold.toiTransformsB.first[axis];
 	glm::vec3& posVecA = (glm::vec3&)bodyA->getPosition();
 	glm::vec3& posVecB = (glm::vec3&)bodyB->getPosition();
-	float* posA = &(posVecA[axis]); // Pointer to the specific position component of A
-	float* posB = &(posVecB[axis]); // Pointer to the specific position component of B
-
-	// Get const references to rotations (assuming getOrientation returns const glm::quat&)
-	const glm::quat& rotA = bodyA->getOrientation();
-	const glm::quat& rotB = bodyB->getOrientation();
-
-
-	// 6. Add constraints to the map, but only for dynamic bodies
-	// The constraint for body A uses B's boundary as 'other'
+	float* posA = &(posVecA[axis]);
+	float* posB = &(posVecB[axis]);
 	if (bodyA->isDynamic())
 	{
-		// Pass references to A's boundary, B's boundary, A's position component, A's rotation, and A's local size
-		colliderConstraints[bodyA].emplace_back(normalA, axis, *refA, *refB, *posA, rotA, localHalfExtentsA);
+		colliderConstraints[bodyA].emplace_back(normalA, refA, *posA);
 	}
 	// The constraint for body B uses A's boundary as 'other'
 	if (bodyB->isDynamic())
 	{
 		// Pass references to B's boundary, A's boundary, B's position component, B's rotation, and B's local size
-		colliderConstraints[bodyB].emplace_back(normalB, axis, *refB, *refA, *posB, rotB, localHalfExtentsB);
+		colliderConstraints[bodyB].emplace_back(normalB, refB, *posB);
 	}
 }
 
@@ -838,23 +819,13 @@ void PhysicsScene::projectTriangle(const glm::vec3& v0, const glm::vec3& v1, con
  * @param t The time offset from the beginning of the frame.
  * @return The predicted 4x4 world transform matrix at time t.
  */
-std::pair<glm::vec3, glm::quat> PhysicsScene::getTransformsAtTime(RigidBody* rb, float t, bool updateVelocities)
+std::pair<glm::vec3, glm::quat> PhysicsScene::getTransformsAtTime(RigidBody* rb, float t)
 {
 	auto currentPos = rb->getPosition();
-	auto linearAcceleration = rb->getForceAccumulator() * rb->getInverseMass();
 	auto linearVelocity = rb->getLinearVelocity();
-	linearVelocity = linearVelocity + linearAcceleration * t;
-	if (updateVelocities)
-		rb->setLinearVelocity(linearVelocity);
 	auto finalPos = currentPos + linearVelocity * t;
 
-	auto torque = rb->getTorqueAccumulator();
-	auto inverseInertiaTensor = rb->getInverseInertiaTensorWorld();
-	auto angularAcceleration = inverseInertiaTensor * torque;
 	auto angularVelocity = rb->getAngularVelocity();
-	angularVelocity = angularVelocity + angularAcceleration * t;
-	if (updateVelocities)
-		rb->setAngularVelocity(angularVelocity);
 	auto finalOrientation = rb->getOrientation();
 	float angle = glm::length(angularVelocity) * t;
 	if (angle > 0)
@@ -864,6 +835,20 @@ std::pair<glm::vec3, glm::quat> PhysicsScene::getTransformsAtTime(RigidBody* rb,
 		finalOrientation = glm::normalize(deltaRotation * finalOrientation);
 	}
 	return {finalPos, finalOrientation};
+}
+
+void PhysicsScene::updateVelocities(RigidBody* rb, float t)
+{
+	auto linearAcceleration = rb->getForceAccumulator() * rb->getInverseMass();
+	auto linearVelocity = rb->getLinearVelocity();
+	linearVelocity = linearVelocity + linearAcceleration * t;
+	rb->setLinearVelocity(linearVelocity);
+	auto torque = rb->getTorqueAccumulator();
+	auto inverseInertiaTensor = rb->getInverseInertiaTensorWorld();
+	auto angularAcceleration = inverseInertiaTensor * torque;
+	auto angularVelocity = rb->getAngularVelocity();
+	angularVelocity = angularVelocity + angularAcceleration * t;
+	rb->setAngularVelocity(angularVelocity);
 }
 
 /**
@@ -1272,6 +1257,8 @@ bool staticOBBIntersection(const OBB& obbA, const OBB& obbB, CollisionMannifold&
 
 	// --- Collision Confirmed - Generate Contact Points ---
 	outManifold.colliding = true;
+	outManifold.toiTransformsA = {obbA.center, obbA.orientation};
+	outManifold.toiTransformsB = {obbB.center, obbB.orientation};
 	outManifold.normal = collisionNormal;
 	// Ensure penetration depth isn't negative due to float errors
 	outManifold.penetrationDepth = std::max(0.0f, minPenetration);
@@ -1560,17 +1547,31 @@ TOIResult PhysicsScene::findTOIBoxBox(Collider* boxColliderA, Collider* boxColli
 	}
 	auto rbA = boxColliderA->getOwnerRigidBody();
 	auto rbB = boxColliderB->getOwnerRigidBody();
+	//
 	auto posA0 = rbA->getPosition();
 	auto ornA0 = rbA->getOrientation();
+	auto linAccA = rbA->getForceAccumulator() * rbA->getInverseMass();
 	auto linVelA = rbA->getLinearVelocity();
-	auto linAccA = rbA->getLinearAcceleration();
+	// linVelA = linVelA + linAccA * dt;
+	// auto torA = rbA->getTorqueAccumulator();
+	// auto iitA = rbA->getInverseInertiaTensorWorld();
+	// auto angAccA = iitA * torA;
 	auto angVelA = rbA->getAngularVelocity();
+	// angVelA = angVelA + angAccA * dt;
 	auto halfExtentsA = boxColliderA->getColliderInfo().shapeData->getHalfExtents();
+
 	auto posB0 = rbB->getPosition();
 	auto ornB0 = rbB->getOrientation();
+	auto linAccB = rbB->getForceAccumulator() * rbB->getInverseMass();
 	auto linVelB = rbB->getLinearVelocity();
+	// linVelB = linVelB + linAccB * dt;
+	// auto torB = rbB->getTorqueAccumulator();
+	// auto iitB = rbB->getInverseInertiaTensorWorld();
+	// auto angAccB = iitB * torB;
 	auto angVelB = rbB->getAngularVelocity();
+	// angVelB = angVelB + angAccB * dt;
 	auto halfExtentsB = boxColliderB->getColliderInfo().shapeData->getHalfExtents();
+
 	OBB obbA0(posA0, ornA0, halfExtentsA);
 	OBB obbB0(posB0, ornB0, halfExtentsB);
 	glm::vec3 initialSeparationVector = obbB0.center - obbA0.center;

@@ -169,7 +169,7 @@ void RigidBody::update(float dt, bool _clearForces)
 {
 	if (!sleeping && isDynamic())
 	{
-		auto transforms = scenes::PhysicsScene::getTransformsAtTime(this, dt, true);
+		auto transforms = scenes::PhysicsScene::getTransformsAtTime(this, dt);
 		*position = transforms.first;
 		*rotation = transforms.second;
 		// auto _linear_damping = (std::max)(0.0f, (std::min)(1.0f, info.linearDamping));
