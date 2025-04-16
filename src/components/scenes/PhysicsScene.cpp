@@ -18,12 +18,13 @@ using zg::components::entities::RigidBody;
 using zg::components::entities::ShapeType;
 using zg::components::entities::SphereShapeData;
 using zg::physics::AABB;
-using zg::physics::CollisionMannifold;
+using zg::physics::CollisionManifold;
 using zg::physics::OBB;
 using zg::physics::Plane;
 using zg::physics::Projection;
 PhysicsScene::PhysicsScene(Scene& scene) :
-		ISceneComponent("PhysicsScene"), scene(scene), deltaTime(scene.window.deltaTime)
+		ISceneComponent("PhysicsScene"), scene(scene), deltaTime(scene.window.deltaTime),
+        contactListener(std::make_unique<ZGContactListener>(*this))
 {
 	std::cout << "PhysicsScene created." << std::endl;
 }
@@ -58,6 +59,7 @@ void PhysicsScene::onAttached()
 
 	// --- Jolt Physics System Creation ---
 	mPhysicsSystem = std::make_unique<JPH::PhysicsSystem>();
+    mPhysicsSystem->SetContactListener(contactListener.get());
 #define JOLT_MAX_BODIES 100000
 #define JOLT_NUM_BODY_MUTEXES 10000
 #define JOLT_MAX_BODY_PAIRS 1000
@@ -173,4 +175,66 @@ void PhysicsScene::synchronize()
 			std::cerr << "WARN: Could not find entity mapping for active body " << bodyID.GetIndex() << std::endl;
 		}
 	}
+}
+
+
+ZGContactListener::ZGContactListener(PhysicsScene& physicsScene):
+physicsScene(physicsScene)
+{
+
+}
+
+CollisionManifold ZGContactListener::constructManifold(RigidBody* rb1, RigidBody* rb2, const JPH::ContactManifold& inManifold)
+{
+    zg::physics::CollisionManifold manifold(rb1, rb2);
+    manifold.colliding = true;
+    manifold.normal = ToJolt<JPH::Vec3, glm::vec3>(inManifold.mWorldSpaceNormal);
+    manifold.penetrationDepth = inManifold.mPenetrationDepth;
+    size_t i = 0;
+    for (auto &cp : inManifold.mRelativeContactPointsOn1)
+    {
+        manifold.worldContactPointsOnA.push_back(ToJolt<JPH::Vec3, glm::vec3>(inManifold.GetWorldSpaceContactPointOn1(i++)));
+        manifold.relativeContactPointsOnA.push_back(ToJolt<JPH::Vec3, glm::vec3>(cp));
+    }
+    i = 0;
+    for (auto &cp : inManifold.mRelativeContactPointsOn2)
+    {
+        manifold.worldContactPointsOnB.push_back(ToJolt<JPH::Vec3, glm::vec3>(inManifold.GetWorldSpaceContactPointOn2(i++)));
+        manifold.relativeContactPointsOnB.push_back(ToJolt<JPH::Vec3, glm::vec3>(cp));
+    }
+    return manifold;
+}
+
+void ZGContactListener::OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2,
+    const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
+{
+    std::lock_guard lock(mutex);
+    auto rb1 = physicsScene.joltIDRigidBodies[inBody1.GetID()];
+    auto rb2 = physicsScene.joltIDRigidBodies[inBody2.GetID()];
+    auto manifold = constructManifold(rb1, rb2, inManifold);
+    rb1->addActiveManifold(manifold);
+    rb2->addActiveManifold(manifold);
+}
+
+void ZGContactListener::OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2,
+                                                                const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
+{
+    std::lock_guard lock(mutex);
+    auto rb1 = physicsScene.joltIDRigidBodies[inBody1.GetID()];
+    auto rb2 = physicsScene.joltIDRigidBodies[inBody2.GetID()];
+    rb1->removeActiveManifold(*rb2);
+    rb2->removeActiveManifold(*rb1);
+    auto manifold = constructManifold(rb1, rb2, inManifold);
+    rb1->addActiveManifold(manifold);
+    rb2->addActiveManifold(manifold);
+}
+
+// Called when two bodies stop touching.
+void ZGContactListener::OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair)
+{
+    std::lock_guard lock(mutex);
+    auto rb1 = physicsScene.joltIDRigidBodies[inSubShapePair.GetBody1ID()];
+    auto rb2 = physicsScene.joltIDRigidBodies[inSubShapePair.GetBody2ID()];
+    rb1->removeActiveManifold(*rb2);
+    rb2->removeActiveManifold(*rb1);
 }

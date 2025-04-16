@@ -1,7 +1,7 @@
 #pragma once
 #include <zg/glm.hpp>
 #include <zg/interfaces/IEntityComponent.hpp>
-#include <zg/physics/CollisionMannifold.hpp>
+#include <zg/physics/CollisionManifold.hpp>
 #include <zg/physics/ToJolt.hpp>
 namespace zg
 {
@@ -47,7 +47,7 @@ namespace zg::components::entities
 		std::vector<Collider*> colliders; // Colliders attached to this body
 		JPH::BodyID joltBodyID;
 		bool sleeping = false;
-		std::unordered_map<RigidBody*, physics::CollisionMannifold> activeRigidBodyMannifolds;
+		std::unordered_map<RigidBody*, physics::CollisionManifold> activeRigidBodyManifolds;
 
 	public:
 		RigidBody(const RigidBodyInfo& info);
@@ -103,8 +103,9 @@ namespace zg::components::entities
 		bool isDynamic() const;
 		glm::vec3 getCenterAtTime(float t) const;
 		void update(float dt, bool clearForces = true);
-		bool isTouching(RigidBody& rigidBody, physics::CollisionMannifold*& mannifoldPointer);
-		void addActiveMannifold(const physics::CollisionMannifold& mannifold);
-		void clearActiveMannifolds();
+		bool isTouching(RigidBody& rigidBody, physics::CollisionManifold*& ManifoldPointer);
+		void addActiveManifold(const physics::CollisionManifold& Manifold);
+		void removeActiveManifold(RigidBody& otherRb);
+		void clearActiveManifolds();
 	};
 } // namespace zg::components::entities

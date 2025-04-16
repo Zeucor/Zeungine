@@ -202,7 +202,8 @@ void RigidBody::recreateJoltBody()
 		// bodySettings.mMassPropertiesOverride.mInertia = JPH::Mat44::sRotation(...) * inertiaTensor * ...;
 	}
 
-	bodySettings.mAllowedDOFs = JPH::EAllowedDOFs::Plane2D;
+	// bodySettings.mAllowedDOFs = JPH::EAllowedDOFs::Plane2D;
+	bodySettings.mAllowedDOFs = JPH::EAllowedDOFs::None;
 	if (!info.freezeRotationAxes.x)
 	{
 		bodySettings.mAllowedDOFs |= JPH::EAllowedDOFs::RotationX;
@@ -398,28 +399,28 @@ bool RigidBody::isStatic() const { return info.bodyType == BodyType::Static; }
 bool RigidBody::isKinematic() const { return info.bodyType == BodyType::Kinematic; }
 bool RigidBody::isDynamic() const { return info.bodyType == BodyType::Dynamic; }
 glm::vec3 RigidBody::getCenterAtTime(float t) const { return *position + getLinearVelocity() * t; }
-bool RigidBody::isTouching(RigidBody& rigidBody, physics::CollisionMannifold*& mannifoldPointer)
+bool RigidBody::isTouching(RigidBody& rigidBody, physics::CollisionManifold*& ManifoldPointer)
 {
-	auto iter = activeRigidBodyMannifolds.find(&rigidBody);
-	if (iter == activeRigidBodyMannifolds.end())
+	auto iter = activeRigidBodyManifolds.find(&rigidBody);
+	if (iter == activeRigidBodyManifolds.end())
 	{
 		return false;
 	}
-	mannifoldPointer = &iter->second;
+	ManifoldPointer = &iter->second;
 	return true;
 }
-void RigidBody::addActiveMannifold(const physics::CollisionMannifold& mannifold)
+void RigidBody::addActiveManifold(const physics::CollisionManifold& manifold)
 {
-	static auto isCollider = [](RigidBody& rb, Collider* c)
-	{
-		auto cs = rb.getColliders();
-		for (auto& cv : cs)
-			if (cv == c)
-				return true;
-		return false;
-	};
-	auto rigidBodyPointer = isCollider(*this, mannifold.colliderA) ? mannifold.colliderB->getOwnerRigidBody()
-																																 : mannifold.colliderA->getOwnerRigidBody();
-	activeRigidBodyMannifolds[rigidBodyPointer] = mannifold;
+	auto rigidBodyPointer = (this == manifold.bodyA) ? manifold.bodyB : manifold.bodyA;
+	activeRigidBodyManifolds[rigidBodyPointer] = manifold;
 }
-void RigidBody::clearActiveMannifolds() { activeRigidBodyMannifolds.clear(); }
+void RigidBody::removeActiveManifold(RigidBody& otherRb)
+{
+	auto iter = activeRigidBodyManifolds.find(&otherRb);
+	if (iter == activeRigidBodyManifolds.end())
+	{
+		return;
+	}
+	activeRigidBodyManifolds.erase(iter);
+}
+void RigidBody::clearActiveManifolds() { activeRigidBodyManifolds.clear(); }
