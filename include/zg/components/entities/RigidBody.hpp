@@ -70,7 +70,7 @@ namespace zg::components::entities
 		void clearForces(); // Clears force and torque accumulators (called by Physics system each step)
 		const glm::vec3& getPosition() const;
 		const glm::quat& getOrientation() const;
-		const glm::mat4& getInverseInertiaTensorBody() const { return inverseInertiaTensorBody; }
+		const glm::mat3& getInverseInertiaTensorBody() const { return inverseInertiaTensorBody; }
 		const glm::vec3 getLinearVelocity() const { return linearVelocity; }
 		const glm::vec3 getLinearAcceleration() const { return linearAcceleration; }
 		RigidBodyInfo& getInfo() { return info; }
