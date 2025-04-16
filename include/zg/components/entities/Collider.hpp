@@ -22,38 +22,55 @@ namespace zg::components::entities
 	{
 		virtual ~ShapeData() = default;
 		virtual ShapeType getType() const = 0;
+		virtual glm::vec3 getHalfExtents() const = 0;
+		virtual glm::mat3 calculateInverseInertiaBody(float mass) = 0;
+		physics::AABB getLocalAABB()
+		{
+			auto he = getHalfExtents();
+			return {-he, he};
+		}
 	};
 	struct BoxShapeData : ShapeData
 	{
 		glm::vec3 halfExtents; // Half-width, half-height, half-depth
 		BoxShapeData(glm::vec3 halfExtents);
 		ShapeType getType() const override { return ShapeType::Box; }
+		glm::vec3 getHalfExtents() const { return halfExtents; }
+		glm::mat3 calculateInverseInertiaBody(float mass) override;
 	};
 	struct SphereShapeData : ShapeData
 	{
 		float radius;
 		ShapeType getType() const override { return ShapeType::Sphere; }
+		glm::vec3 getHalfExtents() const { return glm::vec3(radius); }
+		glm::mat3 calculateInverseInertiaBody(float mass) override;
 	};
 	struct CapsuleShapeData : ShapeData
 	{
 		float radius;
 		float height; // Height of the cylindrical part
 		ShapeType getType() const override { return ShapeType::Capsule; }
+		glm::vec3 getHalfExtents() const { return glm::vec3(radius, (height / 2.f) + radius, radius); }
+		glm::mat3 calculateInverseInertiaBody(float mass) override;
 	};
 	struct MeshShapeData : ShapeData
 	{
 		Entity& entity;
 		MeshShapeData(Entity& entity);
 		ShapeType getType() const override { return ShapeType::Mesh; }
+		glm::vec3 getHalfExtents() const { /* TODO: Find half extents */ return glm::vec3(1); }
+		glm::mat3 calculateInverseInertiaBody(float mass) override;
 	};
 	struct ConvexHullShapeData : ShapeData
 	{
 		ShapeType getType() const override { return ShapeType::ConvexHull; }
+		glm::vec3 getHalfExtents() const { /* TODO: Find half extents */ return glm::vec3(1); }
+		glm::mat3 calculateInverseInertiaBody(float mass) override;
 	};
 	struct PhysicsMaterial
 	{
-		float friction = 0.5f; // Coefficient of friction (0=slippery, 1+ = high friction)
-		float restitution = 0.2f; // Bounciness (0=inelastic, 1=perfectly elastic)
+		float friction = 0.8f; // Coefficient of friction (0=slippery, 1+ = high friction)
+		float restitution = 0.f; // Bounciness (0=inelastic, 1=perfectly elastic)
 	};
 	struct ColliderInfo
 	{
@@ -79,8 +96,8 @@ namespace zg::components::entities
 		void onUpdate() override;
 		void onDetached() override;
 		void updateWorldAABB();
-		physics::AABB getSweptWorldAABB(long double ldt) const;
-		physics::AABB calculateWorldAABB(const glm::mat4& worldTransform) const;
+		physics::AABB getSweptWorldAABB(float ldt) const;
+		physics::AABB calculateWorldAABB(const glm::vec3& center, const glm::quat& rotation) const;
 		// getters
 		ShapeType getShapeType() const;
 		PhysicsMaterial& getPhysicsMaterial();
@@ -92,7 +109,9 @@ namespace zg::components::entities
 		bool getIsSensor();
 		ColliderInfo& getColliderInfo();
 		RigidBody* getOwnerRigidBody();
+		const RigidBody* getOwnerRigidBody() const;
 		const glm::mat4* getTransform();
-		physics::AABB getWorldAABB() const;
+		const physics::AABB& getWorldAABB() const;
+		virtual glm::vec3 getCenterAtTime(float t) const;
 	};
 } // namespace zg::components::entities

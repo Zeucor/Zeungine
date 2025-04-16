@@ -28,6 +28,10 @@ void View::update()
 	{
 		auto _direction_ = direction;
 		_setMatrix:
+		if (std::isnan(direction.x) || std::isnan(direction.y) || std::isnan(direction.z))
+		{
+			return;
+		}
 		matrix = glm::lookAt(position, position + _direction_, up);
 		if (std::isnan(matrix[0][0]))
 		{

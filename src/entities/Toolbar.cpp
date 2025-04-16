@@ -5,7 +5,7 @@ using namespace zg::entities;
 Toolbar::Toolbar(Window &_window,
 				 Scene &scene,
 				 glm::vec3 position,
-				 glm::vec3 rotation,
+				 glm::quat rotation,
 				 glm::vec3 scale,
 				 glm::vec4 color,
 				 float height,

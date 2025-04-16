@@ -19,6 +19,7 @@ namespace zg::physics
 		float penetrationDepth = 0.0f; // Minimum penetration depth along the normal
 		bool colliding = false;
 		std::vector<glm::vec3> contactPoints;
+		size_t contactCount = 0;
 		CollisionMannifold() = default;
 		CollisionMannifold(components::entities::Collider* a, components::entities::Collider* b) : colliderA(a), colliderB(b) {}
 	};

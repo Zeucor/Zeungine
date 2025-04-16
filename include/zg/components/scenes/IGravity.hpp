@@ -10,6 +10,6 @@ namespace zg::components::scenes
         virtual void onAttached() = 0;
 		virtual void onUpdate() = 0;
         virtual void onDetached() = 0;
-        virtual void applyGravity(PhysicsScene& physicsScene) = 0;
+        virtual void applyGravity(PhysicsScene& physicsScene, float dt) = 0;
     };
 }

@@ -3,7 +3,7 @@
 #include <zg/utilities.hpp>
 #include <zg/Serial.hpp>
 using namespace zg::entities;
-Cube::Cube(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+Cube::Cube(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 					 glm::vec3 size, const zg::shaders::RuntimeConstants& constants, std::string_view name) :
 		zg::Entity(window, scene,
 							 zg::mergeVectors<std::string>(
@@ -35,11 +35,11 @@ Cube::Cube(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 r
 							 position, rotation, scale, name.empty() ? "Cube " + std::to_string(++cubesCount) : name),
 		size(size),
 		colors({
-			{1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 0, 1}, // Front face
-			{0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, // Back face
+			{1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 1, 1}, {1, 0, 1, 1}, // Front face
+			{0, 0, 1, 1}, {0, 0, 1, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, // Back face
 			{0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, // Left face
 			{1, 1, 0, 1}, {1, 1, 0, 1}, {1, 1, 0, 1}, {1, 1, 0, 1}, // Right face
-			{0, 1, 1, 1}, {0, 1, 1, 1}, {0, 1, 1, 1}, {0, 1, 1, 1}, // Top face
+			{0, 0.2, 1, 1}, {0, 1, 0.3, 1}, {0.5, 0, 1, 1}, {.8, 0.7, 0, 1}, // Top face
 			{1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1} // Bottom face
 		})
 {
@@ -95,10 +95,10 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::Cube>& cubePoi
 		return serial;
 	zg::Window* windowPointer = (zg::Window*)serial.getContextPointer("Window");
 	zg::Scene* scenePointer = (zg::Scene*)serial.getContextPointer("Scene");
-	glm::vec3 position{0};
-	glm::vec3 rotation{0};
-	glm::vec3 scale{0};
-	glm::vec3 size{0};
+	glm::vec3 position(0);
+	glm::quat rotation(0, 0, 0, 0);
+	glm::vec3 scale(0);
+	glm::vec3 size(0);
 	zg::shaders::RuntimeConstants constants{};
 	std::string name{};
 	serial >> position >> rotation >> scale >> size;

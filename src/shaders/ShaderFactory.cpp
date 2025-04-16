@@ -567,6 +567,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  float range;\n"
                     "  float nearPlane;\n"
                     "  float farPlane;\n"
+                    "  float ambientFactor;\n"
                     "};\n"
                     "struct DirectionalLight{\n"
                     "  vec3 position;\n"
@@ -576,6 +577,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  float intensity;\n"
                     "  float nearPlane;\n"
                     "  float farPlane;\n"
+                    "  float ambientFactor;\n"
                     "};\n"
                     "struct SpotLight{\n"
                     "  vec3 position;\n"
@@ -586,6 +588,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  float outerCutoff;\n"
                     "  float nearPlane;\n"
                     "  float farPlane;\n"
+                    "  float ambientFactor;\n"
                     "};\n";
                   return string;
                 }
@@ -1020,7 +1023,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  float diff = max(dot(normal, lightDir), 0.0);\n" +
                     "  vec3 reflectDir = reflect(-lightDir, normal);\n" +
                     "  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n" +
-                    "  vec3 ambient = 0.1 * light.color;\n" +
+                    "  vec3 ambient = light.ambientFactor * light.color;\n" +
                     "  vec3 diffuse = diff * light.color * light.intensity * attenuation * (1.0 - shadowFactor);\n" +
                     "  vec3 specular = spec * light.color * light.intensity * attenuation * (1.0 - shadowFactor);\n" +
                     "  return (ambient + diffuse + specular);\n" +
@@ -1030,7 +1033,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  float diff = max(dot(normal, lightDir), 0.0);\n" +
                     "  vec3 reflectDir = reflect(-lightDir, normal);\n" +
                     "  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n" +
-                    "  vec3 ambient = 0.1 * light.color;\n" +
+                    "  vec3 ambient = light.ambientFactor * light.color;\n" +
                     "  vec3 diffuse = diff * light.color * light.intensity * (1.0 - shadowFactor);\n" +
                     "  vec3 specular = spec * light.color * light.intensity * (1.0 - shadowFactor);\n" +
                     "  return ambient + diffuse + specular;\n" +
@@ -1043,7 +1046,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                     "  float diff = max(dot(normal, lightDir), 0.0);\n" +
                     "  vec3 reflectDir = reflect(-lightDir, normal);\n" +
                     "  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n" +
-                    "  vec3 ambient = 0.1 * light.color;\n" +
+                    "  vec3 ambient = light.ambientFactor * light.color;\n" +
                     "  vec3 diffuse = diff * light.color * light.intensity * intensity * (1.0 - shadowFactor);\n" +
                     "  vec3 specular = spec * light.color * light.intensity * intensity * (1.0 - shadowFactor);\n" +
                     "  return ambient + diffuse + specular;\n" +

@@ -4,7 +4,7 @@ using namespace zg::entities;
 TextView::TextView(Window &window,
 				   Scene &scene,
 				   glm::vec3 position,
-				   glm::vec3 rotation,
+				   glm::quat rotation,
 				   glm::vec3 scale,
 				   glm::vec4 textColor,
 				   const std::string_view text,

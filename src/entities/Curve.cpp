@@ -56,10 +56,10 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::NDParametricCu
 		return serial;
 	zg::Window* windowPointer = (zg::Window*)serial.getContextPointer("Window");
 	zg::Scene* scenePointer = (zg::Scene*)serial.getContextPointer("Scene");
-	glm::vec3 position{0};
-	glm::vec3 rotation{0};
-	glm::vec3 scale{0};
-	glm::vec4 color{0};
+	glm::vec3 position(0);
+	glm::quat rotation(0, 0, 0, 0);
+	glm::vec3 scale(0);
+	glm::vec4 color(0);
 	zg::shaders::RuntimeConstants constants;
 	double tStart = 0;
 	double tEnd = 0;

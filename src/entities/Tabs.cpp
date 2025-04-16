@@ -3,7 +3,7 @@
 #include <zg/utilities.hpp>
 #include <zg/images/SVGRasterize.hpp>
 using namespace zg::entities;
-TabsBar::TabsBar(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+TabsBar::TabsBar(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 								 glm::vec4 color, fonts::freetype::FreetypeFont& font, float width, float height,
 								 const zg::shaders::RuntimeConstants& constants, std::string_view name) :
 		zg::Entity(window, scene,
@@ -72,7 +72,7 @@ void TabsBar::markInactive(Tab* activeTab)
 		}
 	}
 };
-Tab::Tab(Window& window, Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, glm::vec4 color,
+Tab::Tab(Window& window, Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec4 color,
 				 const std::string_view text, fonts::freetype::FreetypeFont& font, float height,
 				 const TabsBar::TabClickHandler& handler, bool active, TabsBar& tabsBar, const zgfilesystem::File& iconFile,
 				 const shaders::RuntimeConstants& constants, std::string_view name) :

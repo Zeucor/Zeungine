@@ -1,7 +1,7 @@
 #include <zg/entities/Plane.hpp>
 #include <zg/utilities.hpp>
 using namespace zg::entities;
-Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 			 glm::vec2 size, glm::vec4 color, const zg::shaders::RuntimeConstants &constants, std::string_view name) : zg::Entity(window, scene,
 																																  zg::mergeVectors<std::string>(
 																																	  {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
@@ -21,7 +21,7 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 };
-Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 			 glm::vec2 size, textures::Texture &texture, const zg::shaders::RuntimeConstants &constants,
 			 std::string_view name) : zg::Entity(window, scene,
 												 zg::mergeVectors<std::string>(
@@ -128,11 +128,11 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::Plane>& planeP
 		return serial;
 	zg::Window* windowPointer = (zg::Window*)serial.getContextPointer("Window");
 	zg::Scene* scenePointer = (zg::Scene*)serial.getContextPointer("Scene");
-	glm::vec3 position{0};
-	glm::vec3 rotation{0};
-	glm::vec3 scale{0};
-	glm::vec2 size{0};
-	glm::vec4 color{0};
+	glm::vec3 position(0);
+	glm::quat rotation(0, 0, 0, 0);
+	glm::vec3 scale(0);
+	glm::vec2 size(0);
+	glm::vec4 color(0);
 	zg::shaders::RuntimeConstants constants{};
 	std::string name{};
 	serial >> position >> rotation >> scale >> size >> color;

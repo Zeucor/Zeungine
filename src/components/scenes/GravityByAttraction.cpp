@@ -1,12 +1,13 @@
 #include <zg/components/entities/RigidBody.hpp>
 #include <zg/components/scenes/GravityByAttraction.hpp>
 #include <zg/components/scenes/PhysicsScene.hpp>
+#include <zg/components/entities/Collider.hpp>
 using namespace zg::components::scenes;
 GravityByAttraction::GravityByAttraction(float gravitationalConstant) : gravitationalConstant(gravitationalConstant) {}
 void GravityByAttraction::onAttached() {}
 void GravityByAttraction::onUpdate() {}
 void GravityByAttraction::onDetached() {}
-void GravityByAttraction::applyGravity(PhysicsScene& physicsScene)
+void GravityByAttraction::applyGravity(PhysicsScene& physicsScene, float dt)
 {
 	auto& rigidBodies = physicsScene.rigidBodies;
 	size_t rigidBodiesSize = rigidBodies.size(); // Use size_t for size
@@ -16,56 +17,63 @@ void GravityByAttraction::applyGravity(PhysicsScene& physicsScene)
 	for (size_t i = 0; i < rigidBodiesSize; ++i)
 	{
 		entities::RigidBody* rigidBodyA = rigidBodiesData[i];
-        if (!rigidBodyA || !rigidBodyA->isDynamic() || !rigidBodyA->info.useGravity) {
+        if (!rigidBodyA || !rigidBodyA->isDynamic() || !rigidBodyA->getUseGravity()) {
              continue; // Skip if null, not dynamic, or doesn't use gravity
         }
 
         // Get properties of body A
-		float bodyAMass = rigidBodyA->info.mass; // Use info.mass directly
+		float bodyAMass = rigidBodyA->getMass(); // Use info.mass directly
         if (std::abs(bodyAMass) < 1e-6f) continue; // Skip bodies with zero mass
 
         // Extract position correctly from the const mat4*
-		glm::vec3 positionA = glm::vec3((*rigidBodyA->transform)[3]);
-
         glm::vec3 totalForceOnA = glm::vec3(0.0f); // Accumulate force here
+        const auto& collidersA = rigidBodyA->getColliders();
+        for (auto& colliderA : collidersA)
+        {
+            auto AABB_A = colliderA->getWorldAABB();
+    
+            for (size_t j = 0; j < rigidBodiesSize; ++j) // Corrected loop bound: j < rigidBodiesSize
+            {
+                if (i == j) continue; // Skip self
+    
+                entities::RigidBody* rigidBodyB = rigidBodiesData[j];
+                 if (!rigidBodyB) continue; // Skip null pointers
+    
+                 const auto& collidersB = rigidBodyB->getColliders();
 
-		for (size_t j = 0; j < rigidBodiesSize; ++j) // Corrected loop bound: j < rigidBodiesSize
-		{
-			if (i == j) continue; // Skip self
+                 for (auto& colliderB : collidersB)
+                 {
+                    auto AABB_B = colliderB->getWorldAABB();
+                        
+                    // Get properties of body B
+                    float bodyBMass = rigidBodyB->getMass();
+                    if (std::abs(bodyBMass) < 1e-6f) continue; // Skip bodies with zero mass
+        
+                    // Extract position correctly
+                    glm::vec3 n;
+                    float pd, md;
+                    int axis;
+                    auto overlaps = AABB_A.overlaps(AABB_B, n, pd, md, axis);
 
-            entities::RigidBody* rigidBodyB = rigidBodiesData[j];
-             if (!rigidBodyB) continue; // Skip null pointers
+                    // Calculate force between A and B
+                    auto halfExtentsA = colliderA->getColliderInfo().shapeData->getHalfExtents();
+                    auto halfExtentsB = colliderB->getColliderInfo().shapeData->getHalfExtents();
+                    md += halfExtentsA[axis] + halfExtentsB[axis];
 
-            // Get properties of body B
-			float bodyBMass = rigidBodyB->info.mass;
-            if (std::abs(bodyBMass) < 1e-6f) continue; // Skip bodies with zero mass
-
-            // Extract position correctly
-			glm::vec3 positionB = glm::vec3((*rigidBodyB->transform)[3]);
-
-            // Calculate force between A and B
-			glm::vec3 vectorAB = positionB - positionA;
-			float distanceSq = glm::dot(vectorAB, vectorAB); // Use distance squared to avoid sqrt
-
-            // Avoid division by zero or extremely large forces at close range
-            const float minDistanceSq = 1e-4f; // Minimum distance squared threshold
-            if (distanceSq < minDistanceSq) {
-                continue; // Skip calculation if bodies are too close
+                    glm::vec3 directionAB = n; // Normalize
+        
+                    // Calculate gravitational force magnitude: F = G * (m1 * m2) / r^2
+                    float forceMagnitude = gravitationalConstant * (bodyAMass * bodyBMass) / (md * md);
+        
+                    // Calculate force vector applied ON A BY B
+                    glm::vec3 forceOnA = directionAB * forceMagnitude;
+        
+                    // Accumulate the force on body A
+                    totalForceOnA += forceOnA;
+                }
             }
-
-            float distance = std::sqrt(distanceSq); // Calculate distance only when needed
-			glm::vec3 directionAB = vectorAB / distance; // Normalize
-
-            // Calculate gravitational force magnitude: F = G * (m1 * m2) / r^2
-			float forceMagnitude = gravitationalConstant * (bodyAMass * bodyBMass) / distanceSq;
-
-            // Calculate force vector applied ON A BY B
-			glm::vec3 forceOnA = directionAB * forceMagnitude;
-
-            // Accumulate the force on body A
-            totalForceOnA += forceOnA;
-		}
+        }
         // Apply the total accumulated force to body A's center of mass
-		rigidBodyA->applyForceToCenter(totalForceOnA);
+		rigidBodyA->applyForceToCenter(totalForceOnA, (float)dt);
 	}
 }

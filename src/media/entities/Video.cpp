@@ -2,7 +2,7 @@
 #include <zg/Window.hpp>
 #include <zg/media/entities/Video.hpp>
 using namespace zg::media::entities;
-Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale,
+Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::quat _rotation, glm::vec3 _scale,
 						 glm::vec2 _size, const std::string& uri, std::string_view name) :
 		Entity(_window, _scene, {"UV2", "Texture2D", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,
 					 {0, 1, 2, 2, 3, 0}, 4, {}, _position, _rotation, _scale,
@@ -17,7 +17,7 @@ Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rot
 {
 	init(_size);
 }
-Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::vec3 _rotation, glm::vec3 _scale,
+Video::Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::quat _rotation, glm::vec3 _scale,
 						 glm::vec2 _size, const std::string& uri, const std::shared_ptr<interfaces::IFile>& _filePointer,
 						 std::string_view name) :
 		Entity(_window, _scene, {"UV2", "Texture2D", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}, 6,

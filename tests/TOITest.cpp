@@ -35,7 +35,7 @@ CollisionResult SweptAABB(
     float t_exit = deltaTime; // Earliest time collision interval ends
 
     // Small epsilon to handle floating point comparisons and division by zero
-    const float epsilon = 1e-8;
+    const float epsilon = 0;
 
     // Check each axis (X, Y, Z)
     for (int i = 0; i < 3; ++i) {

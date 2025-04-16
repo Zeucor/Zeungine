@@ -48,7 +48,7 @@ SkyBox::SkyBox(Window &window, Scene &scene, const std::vector<std::string_view>
 																																	{1.0f, -1.0f, -1.0f},  // 22
 																																	{1.0f, -1.0f, 1.0f},   // 23
 																																},
-																																{0, 0, 0}, {0, 0, 0}, {1, 1, 1}, name.empty() ? "SkyBox " + std::to_string(++skyBoxesCount) : name),
+																																{0, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, name.empty() ? "SkyBox " + std::to_string(++skyBoxesCount) : name),
 																														 uvs({
 																															 // Front face
 																															 {-1.0f, -1.0f, -1.0f}, // 0

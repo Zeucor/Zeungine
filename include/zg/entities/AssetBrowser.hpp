@@ -102,7 +102,7 @@ namespace zg::entities
 		std::shared_ptr<Breadcrumbs> breadcrumbs;
 		std::shared_ptr<AssetGrid> assetGrid;
 		inline static size_t assetBrowsersCount = 0;
-		AssetBrowser(Window& window, Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+		AssetBrowser(Window& window, Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 								 glm::vec4 backgroundColor, fonts::freetype::FreetypeFont& font, float width, float height,
 								 std::filesystem::path projectDirectory, const shaders::RuntimeConstants& constants = {},
 								 std::string_view name = "");

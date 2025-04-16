@@ -14,15 +14,15 @@ void GravityByVector::onUpdate()
 void GravityByVector::onDetached()
 {
 }
-void GravityByVector::applyGravity(PhysicsScene& physicsScene)
+void GravityByVector::applyGravity(PhysicsScene& physicsScene, float dt)
 {
     for (auto rigidBody : physicsScene.rigidBodies) // Use range-based for loop
     {
         // Apply gravity only to dynamic bodies that have useGravity enabled
-        if (rigidBody && rigidBody->isDynamic() && rigidBody->info.useGravity)
+        if (rigidBody && rigidBody->isDynamic() && rigidBody->getUseGravity())
         {
             // Apply force F = m * g
-            rigidBody->applyForceToCenter(gravity * rigidBody->info.mass);
+            rigidBody->applyForceToCenter(gravity * rigidBody->getMass(), dt);
         }
     }
 }

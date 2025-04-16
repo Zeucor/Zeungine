@@ -2,10 +2,37 @@
 #include <zg/components/entities/Collider.hpp>
 #include <zg/components/entities/RigidBody.hpp>
 #include <zg/physics/AABB.hpp>
+#include <zg/components/scenes/PhysicsScene.hpp>
 using namespace zg::components::entities;
 using zg::physics::AABB;
 BoxShapeData::BoxShapeData(glm::vec3 halfExtents) : halfExtents(halfExtents) {}
+glm::mat3 BoxShapeData::calculateInverseInertiaBody(float mass)
+{
+	// Calculate dimensions from half extents
+	float width = 2.0f * halfExtents.x;
+	float height = 2.0f * halfExtents.y;
+	float depth = 2.0f * halfExtents.z;
+
+	// Calculate the inertia tensor components
+	float Ixx = (1.0f / 12.0f) * mass * (height * height + depth * depth);
+	float Iyy = (1.0f / 12.0f) * mass * (width * width + depth * depth);
+	float Izz = (1.0f / 12.0f) * mass * (width * width + height * height);
+
+	// Construct the inertia tensor matrix
+	glm::mat3 inertiaTensor = glm::mat3(0.0f); // Initialize to zero
+	inertiaTensor[0][0] = Ixx;
+	inertiaTensor[1][1] = Iyy;
+	inertiaTensor[2][2] = Izz;
+
+	glm::mat3 inverseInertiaTensor = glm::inverse(inertiaTensor);
+	return inverseInertiaTensor;
+}
 MeshShapeData::MeshShapeData(Entity& entity) : entity(entity) {}
+glm::mat3 MeshShapeData::calculateInverseInertiaBody(float mass)
+{
+	glm::mat3 inverseInertiaBody(0.0f);
+	return inverseInertiaBody;
+}
 Collider::Collider(const ColliderInfo& info) :
 		IEntityComponent("Collider"), info(info), transform(&info.entity.getModelMatrix()),
 		deltaTime(info.entity.window.deltaTime)
@@ -120,66 +147,21 @@ void Collider::updateWorldAABB()
  * @param dt The time interval (delta time) over which to calculate the swept volume.
  * @return AABB The world-space AABB encompassing the collider's motion during dt.
  */
-AABB Collider::getSweptWorldAABB(long double ldt) const
+AABB Collider::getSweptWorldAABB(float dt) const
 {
 	auto body = ownerRigidBody;
 	if (!body)
 	{
-		// If no owner body, return the static world AABB
 		return getWorldAABB();
 	}
-
-	// --- 1. Calculate AABB at the start (t=0) ---
-	AABB startAABB = getWorldAABB(); // Use existing method for current AABB
-
-	// If the body is static or dt is negligible, the swept AABB is just the start AABB
-	if (body->isStatic() || ldt <= 1e-9L)
+	AABB startAABB = getWorldAABB();
+	if (body->isStatic())
 	{
 		return startAABB;
 	}
-
-	float dt = static_cast<float>(ldt); // Use float for glm calculations
-
-	// --- 2. Predict Transform at the end (t=dt) ---
-
-	// Predict final position
-	// Simple Euler integration: finalPos = currentPos + linearVel * dt
-	glm::vec3 currentPos = body->getPosition();
-	glm::vec3 finalPos = currentPos + body->linearVelocity * dt;
-
-	// Predict final orientation
-	// Simple Euler integration for orientation: finalRot = deltaRot * currentRot
-	glm::quat currentRot = body->getOrientation();
-	glm::quat finalRot = currentRot;
-	if (glm::length2(body->angularVelocity) > 1e-9f)
-	{
-		float angle = glm::length(body->angularVelocity) * dt;
-		glm::vec3 axis = glm::normalize(body->angularVelocity);
-		glm::quat rotationDelta = glm::angleAxis(angle, axis);
-		finalRot = rotationDelta * currentRot;
-		finalRot = glm::normalize(finalRot); // Ensure it remains normalized
-	}
-
-	// Construct the predicted world transform matrix for the RigidBody at t=dt
-	glm::mat4 finalBodyTransform = glm::translate(glm::mat4(1.0f), finalPos) * glm::mat4_cast(finalRot);
-
-	// --- 3. Calculate AABB at the predicted end (t=dt) ---
-
-	// Combine predicted body transform with the collider's local offset/rotation
-	glm::mat4 localOffsetTransform = glm::translate(glm::mat4(1.0f), getOffset()) * glm::mat4_cast(getRotationOffset());
-	glm::mat4 finalColliderWorldTransform = finalBodyTransform * localOffsetTransform;
-
-	// Calculate the AABB using the predicted final transform
-	AABB endAABB = calculateWorldAABB(finalColliderWorldTransform);
-
-	// --- 4. Merge Start and End AABBs ---
+	auto finalTransforms = scenes::PhysicsScene::getTransformsAtTime(body, dt);
+	AABB endAABB = calculateWorldAABB(finalTransforms.first, finalTransforms.second);
 	AABB sweptAABB = AABB::merge(startAABB, endAABB);
-
-	// --- 5. (Optional) Add a small margin for floating point errors ---
-	// float epsilon = 0.01f; // Small padding value
-	// sweptAABB.min -= glm::vec3(epsilon);
-	// sweptAABB.max += glm::vec3(epsilon);
-
 	return sweptAABB;
 }
 
@@ -191,108 +173,33 @@ AABB Collider::getSweptWorldAABB(long double ldt) const
  * @param worldTransform The specific world transform matrix to use for calculation.
  * @return AABB The calculated world-space AABB.
  */
-AABB Collider::calculateWorldAABB(const glm::mat4& worldTransform) const
+AABB Collider::calculateWorldAABB(const glm::vec3& center, const glm::quat& rotation) const
 {
-	AABB worldAABB; // Default constructor initializes to invalid/empty state
-	auto shapeDataPtr = info.shapeData.get();
-
-	if (!shapeDataPtr)
+	auto localAABB = info.shapeData->getLocalAABB();
+	std::vector<glm::vec3> localCorners(8);
+	localCorners[0] = localAABB._min;
+	localCorners[1] = glm::vec3(localAABB._max.x, localAABB._min.y, localAABB._min.z);
+	localCorners[2] = glm::vec3(localAABB._max.x, localAABB._max.y, localAABB._min.z);
+	localCorners[3] = glm::vec3(localAABB._min.x, localAABB._max.y, localAABB._min.z);
+	localCorners[4] = glm::vec3(localAABB._min.x, localAABB._min.y, localAABB._max.z);
+	localCorners[5] = glm::vec3(localAABB._max.x, localAABB._min.y, localAABB._max.z);
+	localCorners[6] = localAABB._max;
+	localCorners[7] = glm::vec3(localAABB._min.x, localAABB._max.y, localAABB._max.z);
+	AABB _worldAABB_;
+	_worldAABB_._min = glm::vec3((std::numeric_limits<float>::max)());
+	_worldAABB_._max = glm::vec3((std::numeric_limits<float>::lowest)());
+	for (const auto& localCorner : localCorners)
 	{
-		// Cannot calculate AABB without shape data
-		std::cerr << "Warning: Cannot calculate AABB for collider without shape data." << std::endl;
-		// Return an AABB centered at the transform's position with zero size?
-		glm::vec3 pos = glm::vec3(worldTransform[3]);
-		worldAABB._min = pos;
-		worldAABB._max = pos;
-		return worldAABB;
+		glm::vec3 worldCorner = center + (rotation * localCorner);
+		_worldAABB_.encompass(worldCorner);
 	}
-	auto& shapeData = *shapeDataPtr;
-
-	switch (shapeData.getType())
-	{
-	case ShapeType::Box:
-		{
-			const auto* boxData = static_cast<const BoxShapeData*>(shapeDataPtr);
-			const glm::vec3 h = boxData->halfExtents; // Local half-extents
-
-			// Define the 8 local vertices of the box
-			glm::vec3 localVertices[8] = {{-h.x, -h.y, -h.z}, {h.x, -h.y, -h.z}, {h.x, h.y, -h.z}, {-h.x, h.y, -h.z},
-																		{-h.x, -h.y, h.z},	{h.x, -h.y, h.z},	 {h.x, h.y, h.z},	 {-h.x, h.y, h.z}};
-
-			// Transform each local vertex to world space and expand the AABB
-			for (int i = 0; i < 8; ++i)
-			{
-				glm::vec4 worldVertex4 = worldTransform * glm::vec4(localVertices[i], 1.0f);
-				worldAABB.encompass(glm::vec3(worldVertex4)); // Expand using the world vertex
-			}
-			break;
-		}
-	case ShapeType::Sphere:
-		{
-			const auto* sphereData = static_cast<const SphereShapeData*>(shapeDataPtr);
-			float radius = sphereData->radius;
-			glm::vec3 worldCenter = glm::vec3(worldTransform[3]); // Center is just the translation part
-
-			// A sphere's AABB is simply its center +/- radius in each dimension
-			worldAABB._min = worldCenter - glm::vec3(radius);
-			worldAABB._max = worldCenter + glm::vec3(radius);
-			break;
-		}
-	case ShapeType::Mesh:
-		{
-			const auto* meshData = static_cast<const MeshShapeData*>(shapeDataPtr);
-			const auto& vertices = meshData->entity.positions; // Assuming positions are in local space
-
-			if (vertices.empty())
-			{
-				std::cerr << "Warning: Cannot calculate AABB for mesh collider with no vertices." << std::endl;
-				glm::vec3 pos = glm::vec3(worldTransform[3]);
-				worldAABB._min = pos;
-				worldAABB._max = pos;
-				return worldAABB;
-			}
-
-			// Transform each mesh vertex to world space and expand the AABB
-			for (const auto& localVertex : vertices)
-			{
-				glm::vec4 worldVertex4 = worldTransform * glm::vec4(localVertex, 1.0f);
-				worldAABB.encompass(glm::vec3(worldVertex4));
-			}
-			break;
-		}
-	// TODO: Add cases for other shape types (Capsule, Cylinder, etc.)
-	default:
-		std::cerr << "Warning: AABB calculation not implemented for this shape type." << std::endl;
-		glm::vec3 pos = glm::vec3(worldTransform[3]);
-		worldAABB._min = pos;
-		worldAABB._max = pos;
-		break;
-	}
-
-	return worldAABB;
+	return _worldAABB_;
 }
 
 // Assume getWorldAABB() calls calculateWorldAABB with the *current* transform
-AABB Collider::getWorldAABB() const
+const AABB& Collider::getWorldAABB() const
 {
-	auto body = ownerRigidBody;
-	if (!body || !body->transform)
-	{
-		// Handle case where collider might exist without a body or transform (e.g., static collider)
-		// Need a way to get its static world transform if applicable
-		// For now, assume it needs a body+transform for non-static cases
-		// If it's truly static, maybe store its world AABB directly?
-		// Returning an empty/invalid AABB might be safer if state is unexpected.
-		std::cerr << "Warning: Cannot get world AABB for collider without owner body/transform." << std::endl;
-		return AABB(); // Return default (invalid) AABB
-	}
-
-	// Calculate current world transform of the collider
-	auto& bodyWorldTransform = *body->transform; // Assuming transform component exists
-	glm::mat4 localOffsetTransform = glm::translate(glm::mat4(1.0f), getOffset()) * glm::mat4_cast(getRotationOffset());
-	glm::mat4 currentColliderWorldTransform = bodyWorldTransform * localOffsetTransform;
-
-	return calculateWorldAABB(currentColliderWorldTransform);
+	return (((AABB&)worldAABB) = calculateWorldAABB(ownerRigidBody->getPosition(), ownerRigidBody->getOrientation()));
 }
 ShapeType Collider::getShapeType() const { return info.shapeData ? info.shapeData->getType() : ShapeType::_Count; }
 PhysicsMaterial& Collider::getPhysicsMaterial() { return info.material; }
@@ -304,5 +211,16 @@ const glm::quat& Collider::getRotationOffset() const { return info.rotationOffse
 bool Collider::getIsSensor() { return info.isSensor; }
 ColliderInfo& Collider::getColliderInfo() { return info; }
 RigidBody* Collider::getOwnerRigidBody() { return ownerRigidBody; }
+const RigidBody* Collider::getOwnerRigidBody() const { return ownerRigidBody; }
 const glm::mat4* Collider::getTransform() { return transform; }
-// const zg::AABB& Collider::getWorldAABB() const { return worldAABB; }
+glm::vec3 Collider::getCenterAtTime(float t) const
+{
+	// Example implementation:
+	AABB initialAABB = getWorldAABB();
+	glm::vec3 initialCenter = initialAABB.getCenter();
+	if (ownerRigidBody)
+	{
+		return initialCenter + ownerRigidBody->linearVelocity * t;
+	}
+	return initialCenter; // Static object
+}

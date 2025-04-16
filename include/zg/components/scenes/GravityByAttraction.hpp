@@ -9,6 +9,6 @@ namespace zg::components::scenes
         void onAttached() override;
 		void onUpdate() override;
         void onDetached() override;
-        void applyGravity(PhysicsScene& physicsScene) override;
+        void applyGravity(PhysicsScene& physicsScene, float dt) override;
     };
 }

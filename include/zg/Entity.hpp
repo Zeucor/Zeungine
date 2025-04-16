@@ -38,7 +38,7 @@ namespace zg
 		std::vector<uint32_t> indices;
 		std::vector<glm::vec3> positions;
 		glm::vec3 position;
-		glm::vec3 rotation;
+		glm::quat rotation;
 		glm::vec3 scale;
 		glm::mat4 model;
 		std::shared_ptr<vp::Projection> projectionPointer;
@@ -62,7 +62,7 @@ namespace zg
 	public:
 		Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
 					 const std::vector<uint32_t>& indices, uint32_t elementCount, const std::vector<glm::vec3>& positions,
-					 glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, std::string_view name);
+					 glm::vec3 position, glm::quat rotation, glm::vec3 scale, std::string_view name);
 		~Entity();
 		virtual void preUpdate();
 		void update();

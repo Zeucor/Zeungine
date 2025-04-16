@@ -28,7 +28,7 @@ namespace zg::entities
 		std::vector<glm::vec4> colors;
 		std::vector<glm::vec3> normals = {};
 		template <typename... Args>
-		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 											glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float radius,
 											const std::map<char, double>& vars, double tStart, double tEnd, double tStep,
 											const std::string& t_equation, const Args&... args) :
@@ -44,7 +44,7 @@ namespace zg::entities
 			addFunctions(index, t_equation, args...);
 			generateAndUpdateCurve(tStart, tEnd, tStep);
 		}
-		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale,
+		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 											glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float radius,
 											const std::map<char, double>& vars, double tStart, double tEnd, double tStep,
 											const std::array<std::string, N>& equations) :

@@ -10,6 +10,7 @@ namespace zg::lights
 		float range;
 		float nearPlane;
 		float farPlane;
+		float ambientFactor;
 	};
 	struct DirectionalLight
 	{
@@ -20,6 +21,7 @@ namespace zg::lights
 		float intensity;
 		float nearPlane;
 		float farPlane;
+		float ambientFactor;
 	};
 	struct SpotLight
 	{
@@ -31,5 +33,6 @@ namespace zg::lights
 		float outerCutoff;
 		float nearPlane;
 		float farPlane;
+		float ambientFactor;
 	};
 }

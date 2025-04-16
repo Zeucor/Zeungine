@@ -24,7 +24,7 @@ struct ExampleScene : Scene
 			window,						// reference to window
 			*this,						// reference to scene
 			glm::vec3(0, 0, 0),			// position
-			glm::vec3(0, 0, 0),			// rotation
+			glm::quat(1, 0, 0, 0),			// rotation
 			glm::vec3(1, 1, 1),			// scale
 			glm::vec3(2, 1, 4),			// cube size
 			shaders::RuntimeConstants() // additional shader constants
