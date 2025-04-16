@@ -17,13 +17,14 @@ namespace zg::components::scenes
 		Scene& scene;
 		Entity& entity;
 		float distance = 8.f;
-		float verticalOffset = 1.5f; // Offset the look-at point slightly above the entity's base position
-		float mouseSensitivity = 0.1f; // Adjust sensitivity of mouse movement
-		// Camera orientation angles (in degrees)
-		float currentYaw = 180.0f; // Rotation around the vertical axis (Y-axis)
-		float currentPitch = -22.5f; // Rotation around the horizontal axis (X-axis)
-		float minPitch = -90.0f; // Minimum vertical angle
-		float maxPitch = -5.0f; // Maximum vertical angle
+		float verticalOffset = 1.5f;
+		float mouseSensitivity = 0.1f;
+		float currentYaw = 180.0f; // Camera Yaw
+		float currentPitch = -22.5f;
+		float minPitch = -90.0f;
+		float maxPitch = -5.0f;
+		glm::vec2 lastPosition = {0.0f, 0.0f};
+		float deadZonePercent = 0.1f;
 
 		EntityThirdPersonCamera(Scene& scene, Entity& entity) :
 				ISceneComponent("EntityThirdPersonCamera"), scene(scene), entity(entity)
@@ -36,118 +37,162 @@ namespace zg::components::scenes
 
 		~EntityThirdPersonCamera()
 		{
-			scene.window.removeMouseMoveHandler(mouseMoveID);
-			scene.window.removeFocusHandler(focusID);
+			if (mouseMoveID != 0)
+			{
+				scene.window.removeMouseMoveHandler(mouseMoveID);
+			}
+			if (focusID != 0)
+			{
+				scene.window.removeFocusHandler(focusID);
+			}
 		}
 
 		void onAttached() override {}
 
 		void onUpdate() override
 		{
-			// Ensure view pointer is valid
 			if (!scene.viewPointer)
 				return;
 
-			// Get the current view properties
 			zg::vp::View& view = *scene.viewPointer;
-			glm::vec3& viewPosition = view.position; // Camera's current position (will be updated)
-			glm::vec3& viewDirection = view.direction; // Camera's look direction (will be updated)
-
-			// Get the target entity's base position
+			glm::vec3& viewPosition = view.position;
+			glm::vec3& viewDirection = view.direction;
 			glm::vec3 targetBasePosition = entity.position;
 
-			// Calculate the point the camera should look at (entity position + vertical offset)
 			glm::vec3 lookAtTarget = targetBasePosition + glm::vec3(0.0f, verticalOffset, 0.0f);
 
-			// --- Calculate Camera Position based on Orbit ---
-			// Convert angles from degrees to radians for trigonometric functions
-			float yawRad = glm::radians(currentYaw);
-			float pitchRad = glm::radians(currentPitch);
-
-			// Calculate camera position relative to the lookAtTarget using spherical coordinates
-			// Start with an offset along the positive Z-axis (behind the target in typical right-handed coords)
+			// Calculate camera position based on currentYaw/currentPitch
+			float cameraYawRad = glm::radians(currentYaw);
+			float cameraPitchRad = glm::radians(currentPitch);
 			glm::vec3 offset = glm::vec3(0.0f, 0.0f, distance);
-
-			// Apply pitch rotation (around X-axis) - Rotate around the target's local X
-			glm::quat pitchQuat = glm::angleAxis(pitchRad, glm::vec3(1.0f, 0.0f, 0.0f));
-			// Apply yaw rotation (around Y-axis) - Rotate around the world's Y
-			glm::quat yawQuat = glm::angleAxis(yawRad, glm::vec3(0.0f, 1.0f, 0.0f));
-
-			// Combine rotations: Apply yaw first, then pitch relative to the yawed orientation
-			// Note: Quaternion multiplication order matters. p * q applies q then p.
-			// We want to rotate around world Y (yaw) then local X (pitch).
-			// So, calculate the final offset by rotating the initial offset vector.
-			offset = yawQuat * pitchQuat * offset; // Apply pitch then yaw to the offset vector
-
-			// Final camera position is the lookAtTarget plus the calculated offset
+			glm::quat pitchQuat = glm::angleAxis(cameraPitchRad, glm::vec3(1.0f, 0.0f, 0.0f));
+			glm::quat yawQuat = glm::angleAxis(cameraYawRad, glm::vec3(0.0f, 1.0f, 0.0f));
+			offset = yawQuat * pitchQuat * offset;
 			viewPosition = lookAtTarget + offset;
-
-			// --- Update View Direction ---
-			// The camera should always look at the lookAtTarget point
 			viewDirection = glm::normalize(lookAtTarget - viewPosition);
+			view.update();
 
-			// --- Update Entity Rotation ---
-			// Rotate the entity around its vertical axis (Y) to match the camera's yaw.
-			// Create a quaternion representing rotation around the world Y-axis by yawRad radians.
-			// We negate yawRad because typically positive yaw means turning right (clockwise around Y),
-			// but entity rotation might follow a different convention. Adjust if needed.
-			// Or, if the entity should face the *opposite* direction of the camera's forward vector projected onto the XZ
-			// plane. Let's assume the entity should face the same direction the camera is looking *horizontally*.
-			entity.rotation = glm::angleAxis(-glm::radians(360.f-currentYaw), glm::vec3(0.0f, 1.0f, 0.0f));
+			// --- Update Entity Yaw Rotation ---
+			glm::vec3 horizontalOffset =
+				glm::vec3(viewPosition.x - targetBasePosition.x, 0.0f, viewPosition.z - targetBasePosition.z);
 
+			if (glm::length2(horizontalOffset) > 1e-5f)
+			{
+				// Calculate target yaw based on camera position (range [-pi, pi])
+				// This is the direction the entity should face (-horizontalOffset)
+				float targetEntityYawRad = atan2(-horizontalOffset.x, -horizontalOffset.z);
 
-			// Update the view's internal state (if necessary)
-			view.update(); // Example call, ensure your view updates its matrices
+				glm::quat currentEntityRot = entity.rotation;
+
+				// --- Get current entity yaw using forward vector ---
+				glm::mat4 currentRotMat = glm::mat4_cast(currentEntityRot);
+				// IMPORTANT: Assumes model's forward is +Z. If it's +X use [0], -Z use -[2], etc.
+				glm::vec3 currentForward = glm::normalize(glm::vec3(currentRotMat[2]));
+				// Calculate yaw angle from the forward vector's projection on XZ plane (relative to +Z)
+				float currentEntityYawRad = atan2(currentForward.x, currentForward.z);
+				// ----------------------------------------------------
+
+				// Calculate the raw difference in yaw
+				float deltaYawRad = targetEntityYawRad - currentEntityYawRad;
+
+				// Normalize the angle difference to the shortest path range [-pi, pi]
+				while (deltaYawRad > glm::pi<float>())
+				{
+					deltaYawRad -= 2.0f * glm::pi<float>();
+				}
+				while (deltaYawRad <= -glm::pi<float>())
+				{
+					deltaYawRad += 2.0f * glm::pi<float>();
+				}
+
+				// Create a rotation quaternion for the shortest angle difference
+				glm::quat yawRotationDelta = glm::angleAxis(deltaYawRad, glm::vec3(0.0f, 1.0f, 0.0f));
+				// Apply the delta rotation (pre-multiplication preserves existing pitch/roll) and normalize
+				entity.setOrientation(glm::normalize(yawRotationDelta * currentEntityRot));
+			}
 		}
 
 		void mouseMoveHandler(glm::vec2 coords)
 		{
-			// Ignore mouse movement if the window just warped the pointer
 			if (scene.window.justWarpedPointer)
 			{
+				lastPosition = coords;
 				scene.window.justWarpedPointer = false;
 				return;
 			}
 
-			// Ignore mouse movement if the window doesn't have focus
 			if (!scene.window.focused)
+			{
 				return;
+			}
 
-			// Calculate the center of the window
-			glm::vec2 center = {scene.window.windowWidth / 2.0f, scene.window.windowHeight / 2.0f};
+			glm::vec2 delta = coords - lastPosition;
 
-			// Calculate the difference (delta) between the current mouse coordinates and the center
-			glm::vec2 delta = coords - center;
-
-			// --- Update Yaw and Pitch based on mouse delta ---
-			// Adjust yaw based on horizontal mouse movement (delta.x)
+			// Update Camera Yaw/Pitch
 			currentYaw -= delta.x * mouseSensitivity;
-			// Keep yaw within 0-360 range (optional, but good practice)
 			currentYaw = fmod(currentYaw, 360.0f);
 			if (currentYaw < 0.0f)
+			{
 				currentYaw += 360.0f;
+			}
 
-
-			// Adjust pitch based on vertical mouse movement (delta.y)
-			// Invert delta.y because typically moving mouse up decreases pitch
 			currentPitch += delta.y * mouseSensitivity;
-
-			// Clamp the pitch to prevent the camera from flipping over
 			currentPitch = std::clamp(currentPitch, minPitch, maxPitch);
 
-			// --- Don't directly modify viewPointer's phi/theta here ---
-			// The onUpdate function now calculates position/direction based on currentYaw/currentPitch
+			// Conditional Warp Logic
+			glm::vec2 center = {scene.window.windowWidth / 2.0f, scene.window.windowHeight / 2.0f};
+			float boxHalfWidth = scene.window.windowWidth * (deadZonePercent * 0.5f);
+			float boxHalfHeight = scene.window.windowHeight * (deadZonePercent * 0.5f);
+			zg::physics::AABB<2> centerBox(glm::vec2(center.x - boxHalfWidth, center.y - boxHalfHeight),
+																		 glm::vec2(center.x + boxHalfWidth, center.y + boxHalfHeight));
 
-			// Warp the mouse pointer back to the center of the window
-			scene.window.warpPointer(center);
+			if (!centerBox.isPointInside(coords))
+			{
+				scene.window.warpPointer(center);
+			}
+
+			lastPosition = coords;
 		}
+
 
 		void focusHandler(bool focused)
 		{
 			if (focused)
-				scene.window.iPlatformWindow->hidePointer();
+			{
+				// Sync camera yaw FROM entity when gaining focus
+				glm::quat currentEntityRot = entity.rotation;
+
+				// --- Get current entity yaw using forward vector on focus ---
+				glm::mat4 currentRotMat = glm::mat4_cast(currentEntityRot);
+				// IMPORTANT: Assumes model's forward is +Z. Adjust index [2] if needed.
+				glm::vec3 currentForward = glm::normalize(glm::vec3(currentRotMat[2]));
+				float currentEntityYawRad = atan2(currentForward.x, currentForward.z);
+				// -----------------------------------------------------------
+
+				// Convert entity yaw to degrees and set camera yaw
+				// Relationship: CameraYaw = EntityYaw + 180 degrees (approx)
+				currentYaw = glm::degrees(currentEntityYawRad) + 180.0f;
+
+				// Normalize camera yaw to [0, 360)
+				currentYaw = fmod(currentYaw, 360.0f);
+				if (currentYaw < 0.0f)
+				{
+					currentYaw += 360.0f;
+				}
+
+				if (scene.window.iPlatformWindow)
+					scene.window.iPlatformWindow->hidePointer();
+
+				// Initialize lastPosition and warp pointer
+				glm::vec2 center = {scene.window.windowWidth / 2.0f, scene.window.windowHeight / 2.0f};
+				lastPosition = center;
+				scene.window.warpPointer(center);
+			}
 			else
-				scene.window.iPlatformWindow->showPointer();
+			{
+				if (scene.window.iPlatformWindow)
+					scene.window.iPlatformWindow->showPointer();
+			}
 		}
 
 		void onDetached() override {}

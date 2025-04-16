@@ -2,6 +2,10 @@
 #include <zg/glm.hpp>
 #include <zg/interfaces/IEntityComponent.hpp>
 #include <zg/physics/AABB.hpp>
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 namespace zg
 {
 	struct Entity;
@@ -23,8 +27,8 @@ namespace zg::components::entities
 		virtual ~ShapeData() = default;
 		virtual ShapeType getType() const = 0;
 		virtual glm::vec3 getHalfExtents() const = 0;
-		virtual glm::mat3 calculateInverseInertiaBody(float mass) = 0;
-		physics::AABB getLocalAABB()
+		virtual JPH::ShapeRefC createJoltShape() const = 0;
+		physics::AABB<3> getLocalAABB()
 		{
 			auto he = getHalfExtents();
 			return {-he, he};
@@ -36,14 +40,14 @@ namespace zg::components::entities
 		BoxShapeData(glm::vec3 halfExtents);
 		ShapeType getType() const override { return ShapeType::Box; }
 		glm::vec3 getHalfExtents() const { return halfExtents; }
-		glm::mat3 calculateInverseInertiaBody(float mass) override;
+		JPH::ShapeRefC createJoltShape() const override;
 	};
 	struct SphereShapeData : ShapeData
 	{
 		float radius;
 		ShapeType getType() const override { return ShapeType::Sphere; }
 		glm::vec3 getHalfExtents() const { return glm::vec3(radius); }
-		glm::mat3 calculateInverseInertiaBody(float mass) override;
+		JPH::ShapeRefC createJoltShape() const override;
 	};
 	struct CapsuleShapeData : ShapeData
 	{
@@ -51,7 +55,7 @@ namespace zg::components::entities
 		float height; // Height of the cylindrical part
 		ShapeType getType() const override { return ShapeType::Capsule; }
 		glm::vec3 getHalfExtents() const { return glm::vec3(radius, (height / 2.f) + radius, radius); }
-		glm::mat3 calculateInverseInertiaBody(float mass) override;
+		JPH::ShapeRefC createJoltShape() const override;
 	};
 	struct MeshShapeData : ShapeData
 	{
@@ -59,15 +63,15 @@ namespace zg::components::entities
 		MeshShapeData(Entity& entity);
 		ShapeType getType() const override { return ShapeType::Mesh; }
 		glm::vec3 getHalfExtents() const { /* TODO: Find half extents */ return glm::vec3(1); }
-		glm::mat3 calculateInverseInertiaBody(float mass) override;
+		JPH::ShapeRefC createJoltShape() const override;
 	};
 	struct ConvexHullShapeData : ShapeData
 	{
 		ShapeType getType() const override { return ShapeType::ConvexHull; }
 		glm::vec3 getHalfExtents() const { /* TODO: Find half extents */ return glm::vec3(1); }
-		glm::mat3 calculateInverseInertiaBody(float mass) override;
+		JPH::ShapeRefC createJoltShape() const override;
 	};
-	struct PhysicsMaterial
+	struct zgPhysicsMaterial
 	{
 		float friction = 0.8f; // Coefficient of friction (0=slippery, 1+ = high friction)
 		float restitution = 0.f; // Bounciness (0=inelastic, 1=perfectly elastic)
@@ -76,18 +80,17 @@ namespace zg::components::entities
 	{
 		Entity& entity;
 		std::shared_ptr<ShapeData> shapeData;
-		PhysicsMaterial material;
-		glm::vec3 offset = {0, 0, 0}; // Local offset from the RigidBody's center/entity origin
-		glm::quat rotationOffset = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); // Local rotation offset
-		bool isSensor = false; // Trigger only (detects overlaps/collisions but no physical response)
+		zgPhysicsMaterial material;
+		glm::vec3 offset = {0, 0, 0};
+		glm::quat rotationOffset = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+		bool isSensor = false;
 	};
 	struct Collider : interfaces::IEntityComponent
 	{
 	private:
 		ColliderInfo info;
-		RigidBody* ownerRigidBody = 0; // Pointer to the RB this collider is attached to
-		glm::mat4* transform = 0; // Pointer to the entity's transform (for AABB updates)
-		physics::AABB worldAABB;
+		RigidBody* ownerRigidBody = 0;
+		physics::AABB<3> worldAABB;
 		long double& deltaTime;
 
 	public:
@@ -95,13 +98,10 @@ namespace zg::components::entities
 		void onAttached() override;
 		void onUpdate() override;
 		void onDetached() override;
-		void updateWorldAABB();
-		physics::AABB getSweptWorldAABB(float ldt) const;
-		physics::AABB calculateWorldAABB(const glm::vec3& center, const glm::quat& rotation) const;
 		// getters
 		ShapeType getShapeType() const;
-		PhysicsMaterial& getPhysicsMaterial();
-		const PhysicsMaterial& getPhysicsMaterial() const;
+		zgPhysicsMaterial& getPhysicsMaterial();
+		const zgPhysicsMaterial& getPhysicsMaterial() const;
 		glm::vec3& getOffset();
 		const glm::vec3& getOffset() const;
 		glm::quat& getRotationOffset();
@@ -110,8 +110,6 @@ namespace zg::components::entities
 		ColliderInfo& getColliderInfo();
 		RigidBody* getOwnerRigidBody();
 		const RigidBody* getOwnerRigidBody() const;
-		const glm::mat4* getTransform();
-		const physics::AABB& getWorldAABB() const;
-		virtual glm::vec3 getCenterAtTime(float t) const;
+		physics::AABB<3>& getWorldAABB();
 	};
 } // namespace zg::components::entities

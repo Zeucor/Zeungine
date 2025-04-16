@@ -93,5 +93,7 @@ namespace zg
 				uv.y = 1 - uv.y;
 			}
 		}
+		void setPosition(glm::vec3 newPosition);
+		void setOrientation(glm::quat newOrientation);
 	};
 } // namespace zg

@@ -2,6 +2,7 @@
 #include <zg/Scene.hpp>
 #include <zg/renderers/VulkanRenderer.hpp>
 #include <zg/shaders/ShaderManager.hpp>
+#include <zg/components/entities/RigidBody.hpp>
 using namespace zg;
 Entity::Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
 							 const std::vector<uint32_t>& _indices, uint32_t elementCount, const std::vector<glm::vec3>& _positions,
@@ -238,4 +239,20 @@ void Entity::callMouseHoverHandler(bool hovered)
 	{
 		handler(hovered);
 	}
+}
+void Entity::setPosition(glm::vec3 newPosition)
+{
+	position = newPosition;
+	auto rigidBodyComponent = std::dynamic_pointer_cast<zg::components::entities::RigidBody>(getComponentByName("RigidBody"));
+	if (rigidBodyComponent)
+		rigidBodyComponent->setPosition(position);
+	return;
+}
+void Entity::setOrientation(glm::quat newOrientation)
+{
+	rotation = newOrientation;
+	auto rigidBodyComponent = std::dynamic_pointer_cast<zg::components::entities::RigidBody>(getComponentByName("RigidBody"));
+	if (rigidBodyComponent)
+		rigidBodyComponent->setOrientation(rotation);
+	return;
 }

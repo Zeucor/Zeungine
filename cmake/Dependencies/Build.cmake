@@ -14,6 +14,21 @@ endif()
 
 #New Dependency Declarations to the top!
 
+# Jolt
+message(STATUS "FetchContent: jolt")
+FetchContent_Declare(jolt
+    GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
+    GIT_TAG v5.3.0)
+FetchContent_GetProperties(jolt)
+if(NOT jolt_POPULATED)
+    FetchContent_Populate(jolt)
+endif()
+file(GLOB_RECURSE JOLT_SOURCES ${jolt_SOURCE_DIR}/Jolt/*.c ${jolt_SOURCE_DIR}/Jolt/*.cpp)
+
+add_library(jolt STATIC ${JOLT_SOURCES})
+
+target_include_directories(jolt PRIVATE ${jolt_SOURCE_DIR})
+
 # zstd
 message(STATUS "FetchContent: zstd")
 FetchContent_Declare(zstd

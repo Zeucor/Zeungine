@@ -19,8 +19,8 @@ struct CollisionResult {
 // Assumes velocities are constant over the deltaTime.
 // deltaTime is typically 1.0 for normalized calculations, result toi is then scaled.
 CollisionResult SweptAABB(
-    const AABB& a, const glm::vec3& vel_a,
-    const AABB& b, const glm::vec3& vel_b,
+    const AABB<3>& a, const glm::vec3& vel_a,
+    const AABB<3>& b, const glm::vec3& vel_b,
     float deltaTime = 1.0)
 {
     CollisionResult result;
@@ -116,8 +116,8 @@ CollisionResult SweptAABB(
 // --- Example Usage ---
 int main() {
     // Define two AABBs
-    AABB box_a = {{0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}}; // Unit cube at origin
-    AABB box_b = {{5.0, 0.0, 0.0}, {6.0, 1.0, 1.0}}; // Unit cube at x=5
+    AABB<3> box_a = {{0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}}; // Unit cube at origin
+    AABB<3> box_b = {{5.0, 0.0, 0.0}, {6.0, 1.0, 1.0}}; // Unit cube at x=5
 
     // Define velocities
     glm::vec3 vel_a = {2.0, 0.0, 0.0}; // Box A moves towards Box B

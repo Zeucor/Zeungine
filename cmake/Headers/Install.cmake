@@ -8,6 +8,17 @@ set(miniaudio_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_dep
 set(openssl_INC_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/openssl-build/include")
 set(exprtk_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/exprtk-src")
 set(boost_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/boost-src")
+set(jolt_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/jolt-src")
+
+# jolt includes
+install(DIRECTORY ${jolt_SOURCE_DIR}/Jolt
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    COMPONENT headers
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.inl"
+    PATTERN "*.inc")
 
 # boost includes
 file(GLOB BOOST_INCLUDES "${boost_SOURCE_DIR}/libs/*/include/boost")

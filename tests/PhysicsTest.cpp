@@ -83,7 +83,7 @@ struct PhysicsScene : zg::Scene
         floor->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *floor,
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(2000, 0.5, 2000) / 2.f),
-            zg::components::entities::PhysicsMaterial{0.80f, -0.0f},
+            zg::components::entities::zgPhysicsMaterial{0.80f, 0.7f},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -97,7 +97,7 @@ struct PhysicsScene : zg::Scene
             *cube,
             // std::make_shared<zg::components::entities::MeshShapeData>(*cube),
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-            zg::components::entities::PhysicsMaterial{0.80f, 0.0f},
+            zg::components::entities::zgPhysicsMaterial{0.80f, 0.7f},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -111,7 +111,7 @@ struct PhysicsScene : zg::Scene
             *cube2,
             // std::make_shared<zg::components::entities::MeshShapeData>(*cube2),
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-            zg::components::entities::PhysicsMaterial{0.80f, 0.0f},
+            zg::components::entities::zgPhysicsMaterial{0.80f, 0.7f},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -125,7 +125,7 @@ struct PhysicsScene : zg::Scene
             *cube3,
             // std::make_shared<zg::components::entities::MeshShapeData>(*cube3),
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-            zg::components::entities::PhysicsMaterial{0.80f, 0.0f},
+            zg::components::entities::zgPhysicsMaterial{0.80f, 0.7f},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -139,7 +139,7 @@ struct PhysicsScene : zg::Scene
             *cube4,
             // std::make_shared<zg::components::entities::MeshShapeData>(*cube4),
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-            zg::components::entities::PhysicsMaterial{0.80f, 0.0f},
+            zg::components::entities::zgPhysicsMaterial{0.80f, 0.7f},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -154,7 +154,7 @@ struct PhysicsScene : zg::Scene
         wall1->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *wall1,
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1, 5, 20) / 2.f),
-            zg::components::entities::PhysicsMaterial{},
+            zg::components::entities::zgPhysicsMaterial{},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -167,7 +167,7 @@ struct PhysicsScene : zg::Scene
         wall2->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *wall2,
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1, 5, 20) / 2.f),
-            zg::components::entities::PhysicsMaterial{},
+            zg::components::entities::zgPhysicsMaterial{},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -180,7 +180,7 @@ struct PhysicsScene : zg::Scene
         wall3->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *wall3,
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(20, 5, 1) / 2.f),
-            zg::components::entities::PhysicsMaterial{},
+            zg::components::entities::zgPhysicsMaterial{},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -193,7 +193,7 @@ struct PhysicsScene : zg::Scene
         wall4->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *wall4,
             std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(20, 5, 1) / 2.f),
-            zg::components::entities::PhysicsMaterial{},
+            zg::components::entities::zgPhysicsMaterial{},
             glm::vec3(0),
             glm::quat(1, 0, 0, 0),
             false
@@ -207,27 +207,27 @@ struct PhysicsScene : zg::Scene
         s = 32;
         std::function<void()> onFrontTickFunction = [&]()
         {
-            cubeRigidBody->applyLocalForceToCenter({0, 0, -18}, window.deltaTime);
+            cubeRigidBody->applyLocalForceToCenter({0, 0, 30});
         };
         std::function<void()> onBackTickFunction = [&]()
         {
-            cubeRigidBody->applyLocalForceToCenter({0, 0, 18}, window.deltaTime);
+            cubeRigidBody->applyLocalForceToCenter({0, 0, -30});
         };
         std::function<void()> onLeftTickFunction = [&]()
         {
-            cubeRigidBody->applyLocalForceToCenter({-18, 0, 0}, window.deltaTime);
+            cubeRigidBody->applyLocalForceToCenter({30, 0, 0});
         };
         std::function<void()> onRightTickFunction = [&]()
         {
-            cubeRigidBody->applyLocalForceToCenter({18, 0, 0}, window.deltaTime);
+            cubeRigidBody->applyLocalForceToCenter({-30, 0, 0});
         };
         std::function<void()> onSpaceTickFunction = [&]()
         {
             zg::physics::CollisionMannifold* mannifoldPointer = 0;
-            if (cubeRigidBody->isTouching(*floorRigidBody, mannifoldPointer))
-            {
-                cubeRigidBody->applyLocalForceToCenter({0, 518, 0}, window.deltaTime);
-            }
+            // if (cubeRigidBody->isTouching(*floorRigidBody, mannifoldPointer))
+            // {
+                cubeRigidBody->applyLocalForceToCenter({0, 518, 0});
+            // }
         };
         //
         fID = window.addKeyUpdateHandler(f, onFrontTickFunction);

@@ -37,7 +37,7 @@ endif()
 set(ZG_TARGETS_TO_INSTALL
     boost
     freetype png harfbuzz brotlidec brotlicommon
-    glm
+    glm jolt
     zlib bzip2 lzma zstd
 )
 set(TARGET_ARTIFACT_FILES_TO_INSTALL "")
