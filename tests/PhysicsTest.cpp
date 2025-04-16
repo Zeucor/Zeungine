@@ -91,7 +91,15 @@ struct PhysicsScene : zg::Scene
         addEntity(floor);
         // cube
         cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::quat(1, 0, 0, 0), glm::vec3(1), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
-        cubeRigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube, zg::components::entities::BodyType::Dynamic});
+        cubeRigidBody = std::make_shared<zg::components::entities::RigidBody>(zg::components::entities::RigidBodyInfo{*cube, zg::components::entities::BodyType::Dynamic,
+            1.0f,
+            0.85f,
+            0.7f,
+            true,
+            false,
+            glm::vec<3, bool>(1, 0, 1),
+            glm::vec<3, bool>(0)
+        });
         cube->addComponent(cubeRigidBody);
         cube->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
             *cube,

@@ -93,7 +93,7 @@ void RigidBody::recreateJoltBody()
 		if (hasOffset || hasRotation)
 		{
 			finalShape = new JPH::RotatedTranslatedShape(ToJolt<glm::vec3, JPH::Vec3>(colInfo.offset),
-																							ToJolt<glm::quat, JPH::Quat>(colInfo.rotationOffset), baseShape);
+																									 ToJolt<glm::quat, JPH::Quat>(colInfo.rotationOffset), baseShape);
 		}
 		else
 		{
@@ -202,6 +202,32 @@ void RigidBody::recreateJoltBody()
 		// bodySettings.mMassPropertiesOverride.mInertia = JPH::Mat44::sRotation(...) * inertiaTensor * ...;
 	}
 
+	bodySettings.mAllowedDOFs = JPH::EAllowedDOFs::Plane2D;
+	if (!info.freezeRotationAxes.x)
+	{
+		bodySettings.mAllowedDOFs |= JPH::EAllowedDOFs::RotationX;
+	}
+	if (!info.freezeRotationAxes.y)
+	{
+		bodySettings.mAllowedDOFs |= JPH::EAllowedDOFs::RotationY;
+	}
+	if (!info.freezeRotationAxes.z)
+	{
+		bodySettings.mAllowedDOFs |= JPH::EAllowedDOFs::RotationZ;
+	}
+	if (!info.freezeVelocityAxes.x)
+	{
+		bodySettings.mAllowedDOFs |= JPH::EAllowedDOFs::TranslationX;
+	}
+	if (!info.freezeVelocityAxes.y)
+	{
+		bodySettings.mAllowedDOFs |= JPH::EAllowedDOFs::TranslationY;
+	}
+	if (!info.freezeVelocityAxes.z)
+	{
+		bodySettings.mAllowedDOFs |= JPH::EAllowedDOFs::TranslationZ;
+	}
+
 	// --- Create and Add Body ---
 	body = joltBodyInterface->CreateBody(bodySettings);
 	if (!body)
@@ -271,12 +297,14 @@ void RigidBody::clearForces()
 const glm::vec3& RigidBody::getPosition() const { return *position; }
 void RigidBody::setPosition(glm::vec3 newPosition)
 {
-    physicsScene->GetBodyInterface().SetPosition(joltBodyID, ToJolt<glm::vec3, JPH::Vec3>(newPosition), JPH::EActivation::Activate);
+	physicsScene->GetBodyInterface().SetPosition(joltBodyID, ToJolt<glm::vec3, JPH::Vec3>(newPosition),
+																							 JPH::EActivation::Activate);
 }
 const glm::quat& RigidBody::getOrientation() const { return *rotation; }
 void RigidBody::setOrientation(glm::quat newOrientation)
 {
-    physicsScene->GetBodyInterface().SetRotation(joltBodyID, ToJolt<glm::quat, JPH::Quat>(newOrientation), JPH::EActivation::Activate);
+	physicsScene->GetBodyInterface().SetRotation(joltBodyID, ToJolt<glm::quat, JPH::Quat>(newOrientation),
+																							 JPH::EActivation::Activate);
 }
 const glm::vec3 RigidBody::getLinearVelocity() const
 {
