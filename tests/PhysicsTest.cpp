@@ -84,7 +84,7 @@ struct PhysicsScene : zg::Scene
 		floor->addComponent(floorRigidBody);
 		floor->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
 			*floor, std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(2000, 0.5, 2000) / 2.f),
-			zg::components::entities::PhysicsMaterial{0.80f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+			zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 		addEntity(floor);
 		// cube
 		cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::quat(1, 0, 0, 0),
@@ -97,7 +97,7 @@ struct PhysicsScene : zg::Scene
 			*cube,
 			// std::make_shared<zg::components::entities::MeshShapeData>(*cube),
 			std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-			zg::components::entities::PhysicsMaterial{0.80f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+			zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 		addEntity(cube);
 		// cube2
 		cube2 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(53, 47, 58), glm::quat(1, 0, 0, 0),
@@ -109,7 +109,7 @@ struct PhysicsScene : zg::Scene
 			*cube2,
 			// std::make_shared<zg::components::entities::MeshShapeData>(*cube2),
 			std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-			zg::components::entities::PhysicsMaterial{0.80f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+			zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 		addEntity(cube2);
 		// cube3
 		cube3 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(47, 47, 58), glm::quat(1, 0, 0, 0),
@@ -121,7 +121,7 @@ struct PhysicsScene : zg::Scene
 			*cube3,
 			// std::make_shared<zg::components::entities::MeshShapeData>(*cube3),
 			std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-			zg::components::entities::PhysicsMaterial{0.80f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+			zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 		addEntity(cube3);
 		// cube4
 		cube4 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 54), glm::quat(1, 0, 0, 0),
@@ -133,7 +133,7 @@ struct PhysicsScene : zg::Scene
 			*cube4,
 			// std::make_shared<zg::components::entities::MeshShapeData>(*cube4),
 			std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-			zg::components::entities::PhysicsMaterial{0.80f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+			zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 		addEntity(cube4);
 		//
 		// walls
