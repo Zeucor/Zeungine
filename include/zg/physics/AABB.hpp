@@ -126,7 +126,7 @@ namespace zg::physics
 			return (Overlaps)currentOverlaps;
 		}
 
-		static bool overlapsN(Overlaps overlaps, size_t N)
+		static bool overlapsNSides(Overlaps overlaps, size_t NSides)
 		{
 			auto i = (uint32_t)overlaps;
 			auto c = 0;
@@ -135,7 +135,7 @@ namespace zg::physics
 				if (i & n)
 					c++;
 			}
-			return c >= N;
+			return c >= NSides;
 		}
 
 		static bool overlapsNAxis(Overlaps overlaps, size_t NAxis)
