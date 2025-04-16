@@ -31,142 +31,146 @@ void PhysicsScene::onAttached()
 {
 	gravity = dynamic_cast<IGravity*>(scene.getComponentByName("IGravity").get());
 	std::cout << "PhysicsScene attached." << std::endl;
-	
-    std::cout << "Initializing Jolt Physics..." << std::endl;
 
-    // --- Jolt Allocation Hooks (Optional but recommended) ---
-    // Register allocation hook if desired (e.g., for memory tracking)
-    RegisterDefaultAllocator();
+	std::cout << "Initializing Jolt Physics..." << std::endl;
 
-    // --- Jolt Factory ---
-    Factory::sInstance = new Factory();
+	// --- Jolt Allocation Hooks (Optional but recommended) ---
+	// Register allocation hook if desired (e.g., for memory tracking)
+	JPH::RegisterDefaultAllocator();
 
-    // --- Jolt Type Registration ---
-    // Register all Jolt physics types
-    RegisterTypes();
+	// --- Jolt Factory ---
+	JPH::Factory::sInstance = new JPH::Factory();
 
-    // --- Jolt Allocators & Job System ---
-    // We need a temp allocator for temporary allocations during the physics update.
-    // We're pre-allocating 10 MB. Adjust this based on your needs.
-    mTempAllocator = std::make_unique<TempAllocatorImpl>(10 * 1024 * 1024);
+	// --- Jolt Type Registration ---
+	// Register all Jolt physics types
+	JPH::RegisterTypes();
 
-    // We need a job system that will execute physics jobs on multiple threads.
-    // MaxConcurrentJobs determines the maximum number of jobs that can run in parallel.
-    // MaxJobs determines the maximum number of jobs that can be added to the queue.
-    // Consider using JPH::JobSystemSingleThreaded for debugging or simpler scenarios.
-    mJobSystem = std::make_unique<JobSystemThreadPool>(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
+	// --- Jolt Allocators & Job System ---
+	// We need a temp allocator for temporary allocations during the physics update.
+	// We're pre-allocating 10 MB. Adjust this based on your needs.
+	mTempAllocator = std::make_unique<JPH::TempAllocatorImpl>(10 * 1024 * 1024);
 
-    // --- Jolt Physics System Creation ---
-    mPhysicsSystem = std::make_unique<PhysicsSystem>();
-	#define JOLT_MAX_BODIES 100000
-	#define JOLT_NUM_BODY_MUTEXES 10000
-	#define JOLT_MAX_BODY_PAIRS 1000
-	#define JOLT_MAX_CONTACT_CONSTRAINTS 1000
-    mPhysicsSystem->Init(JOLT_MAX_BODIES, JOLT_NUM_BODY_MUTEXES, JOLT_MAX_BODY_PAIRS, JOLT_MAX_CONTACT_CONSTRAINTS,
-                         mBroadPhaseLayerInterface, mObjectVsBroadPhaseLayerFilter, mObjectLayerPairFilter);
+	// We need a job system that will execute physics jobs on multiple threads.
+	// MaxConcurrentJobs determines the maximum number of jobs that can run in parallel.
+	// MaxJobs determines the maximum number of jobs that can be added to the queue.
+	// Consider using JPH::JobSystemSingleThreaded for debugging or simpler scenarios.
+	mJobSystem = std::make_unique<JPH::JobSystemThreadPool>(2048, 128, std::thread::hardware_concurrency() - 1);
 
-    // --- Jolt Listeners (Optional) ---
-    // Initialize and set your contact/activation listeners here if you have them
-    // Example:
-    // mContactListener = new MyContactListener();
-    // mPhysicsSystem->SetContactListener(mContactListener);
-    // mPhysicsSystem->SetBodyActivationListener(mBodyActivationListener); // If you have one
+	// --- Jolt Physics System Creation ---
+	mPhysicsSystem = std::make_unique<JPH::PhysicsSystem>();
+#define JOLT_MAX_BODIES 100000
+#define JOLT_NUM_BODY_MUTEXES 10000
+#define JOLT_MAX_BODY_PAIRS 1000
+#define JOLT_MAX_CONTACT_CONSTRAINTS 1000
+	mPhysicsSystem->Init(JOLT_MAX_BODIES, JOLT_NUM_BODY_MUTEXES, JOLT_MAX_BODY_PAIRS, JOLT_MAX_CONTACT_CONSTRAINTS,
+											 mBroadPhaseLayerInterface, mObjectVsBroadPhaseLayerFilter, mObjectLayerPairFilter);
 
-    std::cout << "Jolt Physics Initialized Successfully." << std::endl;
+	// --- Jolt Listeners (Optional) ---
+	// Initialize and set your contact/activation listeners here if you have them
+	// Example:
+	// mContactListener = new MyContactListener();
+	// mPhysicsSystem->SetContactListener(mContactListener);
+	// mPhysicsSystem->SetBodyActivationListener(mBodyActivationListener); // If you have one
+
+	std::cout << "Jolt Physics Initialized Successfully." << std::endl;
 }
-void PhysicsScene::onUpdate()
-{
-	stepSimulation(deltaTime);
-}
+void PhysicsScene::onUpdate() { stepSimulation(deltaTime); }
 void PhysicsScene::onDetached()
 {
 	rigidBodiesJoltID.clear();
-    joltIDRigidBodies.clear();
-	UnregisterTypes();
-	delete Factory::sInstance;
-	Factory::sInstance = nullptr;
+	joltIDRigidBodies.clear();
+	JPH::UnregisterTypes();
+	delete JPH::Factory::sInstance;
+	JPH::Factory::sInstance = nullptr;
 	gravity = nullptr; // Clear pointer, don't delete if owned by scene
 	std::cout << "PhysicsScene detached." << std::endl;
 }
 void PhysicsScene::registerRigidBody(RigidBody* rigidBody)
 {
-    auto joltBodyID = rigidBody->getJoltBodyID();
-    rigidBodiesJoltID[rigidBody] = joltBodyID;
-    joltIDRigidBodies[joltBodyID] = rigidBody;
-    std::cout << "Registered RigidBody." << std::endl;
+	auto joltBodyID = rigidBody->getJoltBodyID();
+	rigidBodiesJoltID[rigidBody] = joltBodyID;
+	joltIDRigidBodies[joltBodyID] = rigidBody;
+	std::cout << "Registered RigidBody." << std::endl;
 }
 void PhysicsScene::unregisterRigidBody(RigidBody* rigidBody)
 {
 	if (rigidBody)
 	{
-        auto joltBodyID = rigidBody->getJoltBodyID();
+		auto joltBodyID = rigidBody->getJoltBodyID();
 		rigidBodiesJoltID.erase(rigidBody);
-        joltIDRigidBodies.erase(joltBodyID);
+		joltIDRigidBodies.erase(joltBodyID);
 	}
 }
 JPH::PhysicsSystem& PhysicsScene::GetJoltPhysicsSystem() { return *mPhysicsSystem; }
 JPH::BodyInterface& PhysicsScene::GetBodyInterface() { return mPhysicsSystem->GetBodyInterface(); }
-const BodyLockInterface& PhysicsScene::GetBodyLockInterface() { return mPhysicsSystem->GetBodyLockInterfaceNoLock(); }
+const JPH::BodyLockInterface& PhysicsScene::GetBodyLockInterface()
+{
+	return mPhysicsSystem->GetBodyLockInterfaceNoLock();
+}
 void PhysicsScene::stepSimulation(float dt)
 {
-    mPhysicsSystem->Update(dt, 10, mTempAllocator.get(), mJobSystem.get());
-    synchronize();
+	mPhysicsSystem->Update(dt, 10, mTempAllocator.get(), mJobSystem.get());
+	synchronize();
 }
 void PhysicsScene::synchronize()
 {
-    
-    if (!mPhysicsSystem) return;
 
-    BodyInterface &body_interface = mPhysicsSystem->GetBodyInterface();
+	if (!mPhysicsSystem)
+		return;
 
-    // Iterate through *active* Jolt bodies. Inactive bodies don't need updating.
-    // Note: This requires locking if accessed from multiple threads.
-    // Consider processing only bodies linked to your active entities if possible.
-    const BodyLockInterface& lock_interface = GetBodyLockInterface(); // Use NoLock if on main thread
-    // const BodyLockInterface& lock_interface = mPhysicsSystem->GetBodyLockInterface(); // Use locking version if needed
+	auto& body_interface = mPhysicsSystem->GetBodyInterface();
 
-    BodyIDVector active_body_ids;
-    mPhysicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, active_body_ids); // Get IDs of currently active bodies
+	// Iterate through *active* Jolt bodies. Inactive bodies don't need updating.
+	// Note: This requires locking if accessed from multiple threads.
+	// Consider processing only bodies linked to your active entities if possible.
+	const JPH::BodyLockInterface& lock_interface = GetBodyLockInterface(); // Use NoLock if on main thread
+	// const JPH::BodyLockInterface& lock_interface = mPhysicsSystem->GetBodyLockInterface(); // Use locking version if
+	// needed
 
-    for (const BodyID& bodyID : active_body_ids)
-    {
-        // Find the corresponding Zeungine entity
-        auto entityIt = joltIDRigidBodies.find(bodyID);
-        if (entityIt != joltIDRigidBodies.end())
-        {
-            auto rb = entityIt->second;
+	JPH::BodyIDVector active_body_ids;
+	mPhysicsSystem->GetActiveBodies(JPH::EBodyType::RigidBody, active_body_ids); // Get IDs of currently active bodies
 
-                 // Lock the body to read its state safely (use ReadLock)
-                 BodyLockRead lock(lock_interface, bodyID);
-                 if (lock.Succeeded()) // Important: Check if lock was successful
-                 {
-                     const Body& body = lock.GetBody();
+	for (const auto& bodyID : active_body_ids)
+	{
+		// Find the corresponding Zeungine entity
+		auto entityIt = joltIDRigidBodies.find(bodyID);
+		if (entityIt != joltIDRigidBodies.end())
+		{
+			auto rb = entityIt->second;
 
-                     // Only update transforms for non-static bodies
-                     if (!body.IsStatic())
-                     {
-                         // Get world position and rotation from Jolt
-                         Vec3 position = body.GetPosition();
-                         Quat rotation = body.GetRotation();
+			// Lock the body to read its state safely (use ReadLock)
+			JPH::BodyLockRead lock(lock_interface, bodyID);
+			if (lock.Succeeded()) // Important: Check if lock was successful
+			{
+				const auto& body = lock.GetBody();
 
-                         // Update the Zeungine TransformComponent
-                         (*rb->position) = ToJolt<JPH::Vec3, glm::vec3>(position);
-                         (*rb->rotation) = ToJolt<JPH::Quat, glm::quat>(rotation);
+				// Only update transforms for non-static bodies
+				if (!body.IsStatic())
+				{
+					// Get world position and rotation from Jolt
+					auto position = body.GetPosition();
+					auto rotation = body.GetRotation();
 
-                         // Optional: Update linear/angular velocity in RigidBodyComponent if needed
-                         // RigidBodyComponent* rbComp = Zeungine::GetComponent<RigidBodyComponent>(entity);
-                         // if (rbComp) {
-                        // rbComp->linearVelocity = FromJoltVec3(body.GetLinearVelocity());
-                        // rbComp->angularVelocity = FromJoltVec3(body.GetAngularVelocity());
-                         // }
-                     }
-                 }
-                 else {
-                      std::cerr << "WARN: Failed to lock body " << bodyID.GetIndex() << " for transform sync." << std::endl;
-                 }
-        }
-         else {
-             std::cerr << "WARN: Could not find entity mapping for active body " << bodyID.GetIndex() << std::endl;
-         }
-    }
+					// Update the Zeungine TransformComponent
+					(*rb->position) = ToJolt<JPH::Vec3, glm::vec3>(position);
+					(*rb->rotation) = ToJolt<JPH::Quat, glm::quat>(rotation);
+
+					// Optional: Update linear/angular velocity in RigidBodyComponent if needed
+					// RigidBodyComponent* rbComp = Zeungine::GetComponent<RigidBodyComponent>(entity);
+					// if (rbComp) {
+					// rbComp->linearVelocity = FromJoltVec3(body.GetLinearVelocity());
+					// rbComp->angularVelocity = FromJoltVec3(body.GetAngularVelocity());
+					// }
+				}
+			}
+			else
+			{
+				std::cerr << "WARN: Failed to lock body " << bodyID.GetIndex() << " for transform sync." << std::endl;
+			}
+		}
+		else
+		{
+			std::cerr << "WARN: Could not find entity mapping for active body " << bodyID.GetIndex() << std::endl;
+		}
+	}
 }

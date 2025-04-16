@@ -92,7 +92,7 @@ void RigidBody::recreateJoltBody()
 
 		if (hasOffset || hasRotation)
 		{
-			finalShape = new RotatedTranslatedShape(ToJolt<glm::vec3, JPH::Vec3>(colInfo.offset),
+			finalShape = new JPH::RotatedTranslatedShape(ToJolt<glm::vec3, JPH::Vec3>(colInfo.offset),
 																							ToJolt<glm::quat, JPH::Quat>(colInfo.rotationOffset), baseShape);
 		}
 		else
@@ -139,7 +139,7 @@ void RigidBody::recreateJoltBody()
 	}
 
 	// // --- Create BodyCreationSettings ---
-	BodyCreationSettings bodySettings;
+	JPH::BodyCreationSettings bodySettings;
 	bodySettings.SetShape(finalShape);
 	bodySettings.mPosition = ToJolt<glm::vec3, JPH::Vec3>(*position);
 	bodySettings.mRotation = ToJolt<glm::quat, JPH::Quat>(*rotation);
@@ -147,7 +147,7 @@ void RigidBody::recreateJoltBody()
 
 	// // Determine MotionType and ObjectLayer (Using simple layers for now)
 	// // TODO: Get layers from PhysicsScene or project settings
-	ObjectLayer objectLayer;
+	JPH::ObjectLayer objectLayer;
 	switch (info.bodyType)
 	{
 	case BodyType::Static:
@@ -193,7 +193,7 @@ void RigidBody::recreateJoltBody()
 								<< "]. Setting to 1.0." << std::endl;
 			info.mass = 1.0f;
 		}
-		bodySettings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+		bodySettings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
 		bodySettings.mMassPropertiesOverride.mMass = info.mass;
 		// Jolt calculates inertia based on shape and mass.
 		// Can override inertia tensor here if needed:
@@ -212,7 +212,7 @@ void RigidBody::recreateJoltBody()
 	joltBodyID = body->GetID(); // Store the new ID
 
 	// // Add the body to the simulation (activate it)
-	joltBodyInterface->AddBody(joltBodyID, EActivation::Activate);
+	joltBodyInterface->AddBody(joltBodyID, JPH::EActivation::Activate);
 
 	physicsScene->registerRigidBody(this);
 	// std::cout << "RigidBody: Successfully created/recreated Jolt body for Entity [" << info.entity.ID << "] with ID "

@@ -14,23 +14,21 @@
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/RegisterTypes.h>
-using namespace JPH;
-using namespace JPH::literals;
 namespace Layers
 {
-	static constexpr ObjectLayer NON_MOVING = 0;
-	static constexpr ObjectLayer MOVING = 1;
-	static constexpr ObjectLayer NUM_LAYERS = 2;
+	static constexpr JPH::ObjectLayer NON_MOVING = 0;
+	static constexpr JPH::ObjectLayer MOVING = 1;
+	static constexpr JPH::ObjectLayer NUM_LAYERS = 2;
 }; // namespace Layers
 
 namespace BroadPhaseLayers
 {
-	static constexpr BroadPhaseLayer NON_MOVING(0);
-	static constexpr BroadPhaseLayer MOVING(1);
-	static constexpr uint NUM_LAYERS(2);
+	static constexpr JPH::BroadPhaseLayer NON_MOVING(0);
+	static constexpr JPH::BroadPhaseLayer MOVING(1);
+	static constexpr unsigned int NUM_LAYERS = 2;
 }; // namespace BroadPhaseLayers
 
-class BPLayerInterfaceImpl final : public BroadPhaseLayerInterface
+class BPLayerInterfaceImpl final : public JPH::BroadPhaseLayerInterface
 {
 public:
 	BPLayerInterfaceImpl()
@@ -40,22 +38,22 @@ public:
 		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
 	}
 
-	virtual uint GetNumBroadPhaseLayers() const override { return BroadPhaseLayers::NUM_LAYERS; }
+	virtual unsigned int GetNumBroadPhaseLayers() const override { return BroadPhaseLayers::NUM_LAYERS; }
 
-	virtual BroadPhaseLayer GetBroadPhaseLayer(ObjectLayer inLayer) const override
+	virtual JPH::BroadPhaseLayer GetBroadPhaseLayer(JPH::ObjectLayer inLayer) const override
 	{
 		JPH_ASSERT(inLayer < Layers::NUM_LAYERS);
 		return mObjectToBroadPhase[inLayer];
 	}
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
-	virtual const char* GetBroadPhaseLayerName(BroadPhaseLayer inLayer) const override
+	virtual const char* GetBroadPhaseLayerName(JPH::BroadPhaseLayer inLayer) const override
 	{
-		switch ((BroadPhaseLayer::Type)inLayer)
+		switch ((JPH::BroadPhaseLayer::Type)inLayer)
 		{
-		case (BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:
 			return "NON_MOVING";
-		case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:
 			return "MOVING";
 		default:
 			JPH_ASSERT(false);
@@ -65,14 +63,14 @@ public:
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 private:
-	BroadPhaseLayer mObjectToBroadPhase[Layers::NUM_LAYERS];
+	JPH::BroadPhaseLayer mObjectToBroadPhase[Layers::NUM_LAYERS];
 };
 
 // Function defining if two object layers can collide
-class ZGObjectVsBroadPhaseLayerFilter : public ObjectVsBroadPhaseLayerFilter
+class ZGObjectVsBroadPhaseLayerFilter : public JPH::ObjectVsBroadPhaseLayerFilter
 {
 public:
-	bool ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const override
+	bool ShouldCollide(JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2) const override
 	{
 		switch (inLayer1)
 		{
@@ -88,10 +86,10 @@ public:
 };
 
 
-class ZGObjectLayerPairFilter : public ObjectLayerPairFilter
+class ZGObjectLayerPairFilter : public JPH::ObjectLayerPairFilter
 {
 public:
-	bool ShouldCollide(ObjectLayer inLayer1, ObjectLayer inLayer2) const override
+	bool ShouldCollide(JPH::ObjectLayer inLayer1, JPH::ObjectLayer inLayer2) const override
 	{
 		switch (inLayer1)
 		{

@@ -71,7 +71,7 @@ namespace zg::components::entities
 		glm::vec3 getHalfExtents() const { /* TODO: Find half extents */ return glm::vec3(1); }
 		JPH::ShapeRefC createJoltShape() const override;
 	};
-	struct zgPhysicsMaterial
+	struct PhysicsMaterial
 	{
 		float friction = 0.8f; // Coefficient of friction (0=slippery, 1+ = high friction)
 		float restitution = 0.f; // Bounciness (0=inelastic, 1=perfectly elastic)
@@ -80,7 +80,7 @@ namespace zg::components::entities
 	{
 		Entity& entity;
 		std::shared_ptr<ShapeData> shapeData;
-		zgPhysicsMaterial material;
+		PhysicsMaterial material;
 		glm::vec3 offset = {0, 0, 0};
 		glm::quat rotationOffset = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 		bool isSensor = false;
@@ -100,8 +100,8 @@ namespace zg::components::entities
 		void onDetached() override;
 		// getters
 		ShapeType getShapeType() const;
-		zgPhysicsMaterial& getPhysicsMaterial();
-		const zgPhysicsMaterial& getPhysicsMaterial() const;
+		PhysicsMaterial& getPhysicsMaterial();
+		const PhysicsMaterial& getPhysicsMaterial() const;
 		glm::vec3& getOffset();
 		const glm::vec3& getOffset() const;
 		glm::quat& getRotationOffset();

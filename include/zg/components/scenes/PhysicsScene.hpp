@@ -30,7 +30,7 @@ namespace zg::components::scenes
 		void unregisterRigidBody(entities::RigidBody* rigidBody);
 		JPH::PhysicsSystem& GetJoltPhysicsSystem();
 		JPH::BodyInterface& GetBodyInterface();
-		const BodyLockInterface& GetBodyLockInterface();
+		const JPH::BodyLockInterface& GetBodyLockInterface();
 
 	private:
 		void stepSimulation(float totalDt);

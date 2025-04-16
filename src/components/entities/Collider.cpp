@@ -77,8 +77,8 @@ void Collider::onDetached()
 	std::cout << "Collider detached." << std::endl;
 }
 ShapeType Collider::getShapeType() const { return info.shapeData ? info.shapeData->getType() : ShapeType::_Count; }
-zgPhysicsMaterial& Collider::getPhysicsMaterial() { return info.material; }
-const zgPhysicsMaterial& Collider::getPhysicsMaterial() const { return info.material; }
+PhysicsMaterial& Collider::getPhysicsMaterial() { return info.material; }
+const PhysicsMaterial& Collider::getPhysicsMaterial() const { return info.material; }
 glm::vec3& Collider::getOffset() { return info.offset; }
 const glm::vec3& Collider::getOffset() const { return info.offset; }
 glm::quat& Collider::getRotationOffset() { return info.rotationOffset; }
