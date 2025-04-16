@@ -66,6 +66,8 @@ void PhysicsScene::onAttached()
 #define JOLT_MAX_CONTACT_CONSTRAINTS 1000
 	mPhysicsSystem->Init(JOLT_MAX_BODIES, JOLT_NUM_BODY_MUTEXES, JOLT_MAX_BODY_PAIRS, JOLT_MAX_CONTACT_CONSTRAINTS,
 											 mBroadPhaseLayerInterface, mObjectVsBroadPhaseLayerFilter, mObjectLayerPairFilter);
+    if (gravity)
+        mPhysicsSystem->SetGravity(JPH::Vec3(0, 0, 0));
 
 	// --- Jolt Listeners (Optional) ---
 	// Initialize and set your contact/activation listeners here if you have them
@@ -111,6 +113,8 @@ const JPH::BodyLockInterface& PhysicsScene::GetBodyLockInterface()
 }
 void PhysicsScene::stepSimulation(float dt)
 {
+    if (gravity)
+        gravity->applyGravity(*this, dt);
 	mPhysicsSystem->Update(dt, 10, mTempAllocator.get(), mJobSystem.get());
 	synchronize();
 }
