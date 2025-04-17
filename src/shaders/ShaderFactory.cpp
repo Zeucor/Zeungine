@@ -1065,8 +1065,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   string += "  vec2 projCoords = lightSpacePosition.xy;//  / lightSpacePosition.w;\n";
                   if (shader.window.iRenderer->renderer == RENDERER::RENDERER_VULKAN)
                   {
-                    string += "  projCoords.xy = projCoords.xy * 0.5 + 0.5;\n"
-                              "  projCoords.y = 1.0 - projCoords.y;\n";
+                    string += "  projCoords.xy = projCoords.xy * 0.5 + 0.5;\n";
+                              // "  projCoords.y = 1.0 - projCoords.y;\n";
                   }
                   else
                   {

@@ -20,7 +20,7 @@ void Projection::update()
 {
   if (!isOrthographic)
   {
-    if (window.iRenderer->renderer == RENDERER::RENDERER_VULKAN)
+    if (window.iRenderer->renderer == RENDERER_VULKAN)
     {
       matrix = glm::infinitePerspectiveRH_ZO(glm::radians(fov), (float)window.windowWidth / window.windowHeight, nearPlane);
     }
@@ -31,7 +31,7 @@ void Projection::update()
   }
   else
   {
-    if (window.iRenderer->renderer == RENDERER::RENDERER_VULKAN)
+    if (window.iRenderer->renderer == RENDERER_VULKAN)
     {
 			matrix = glm::orthoRH_ZO(-orthoSize.x / 2, orthoSize.x / 2, -orthoSize.y / 2, orthoSize.y / 2, nearPlane, farPlane);
     }
@@ -40,6 +40,8 @@ void Projection::update()
 			matrix = glm::orthoRH_NO(-orthoSize.x / 2, orthoSize.x / 2, -orthoSize.y / 2, orthoSize.y / 2, nearPlane, farPlane);
     }
   }
+  if (window.iRenderer->renderer == RENDERER_VULKAN)
+    matrix[1][1] *= -1.0f;
 }
 template<>
 Serial& serialize(Serial& serial, const std::shared_ptr<zg::vp::Projection>& projectionPointer)

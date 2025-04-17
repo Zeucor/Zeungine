@@ -1291,9 +1291,9 @@ void VulkanRenderer::bindShader(shaders::Shader& shader, Entity& entity)
 		auto& framebufferImpl = *currentFramebufferImpl;
 		VkViewport viewport{};
 		viewport.x = 0.0f;
-		viewport.y = framebufferImpl.height;
+		viewport.y = 0.0f;
 		viewport.width = (float)framebufferImpl.width;
-		viewport.height = -(float)framebufferImpl.height;
+		viewport.height = (float)framebufferImpl.height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		_vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
@@ -1307,9 +1307,9 @@ void VulkanRenderer::bindShader(shaders::Shader& shader, Entity& entity)
 	{
 		VkViewport viewport{};
 		viewport.x = 0.0f;
-		viewport.y = swapChainExtent.height;
+		viewport.y = 0.0f;
 		viewport.width = (float)swapChainExtent.width;
-		viewport.height = -(float)swapChainExtent.height;
+		viewport.height = (float)swapChainExtent.height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		_vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
@@ -1548,9 +1548,9 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	VkViewport viewport{};
 	VkRect2D scissor{};
 	viewport.x = 0.0f;
-	viewport.y = swapChainExtent.height;
+	viewport.y = 0.0f;
 	viewport.width = (float)swapChainExtent.width;
-	viewport.height = -(float)swapChainExtent.height;
+	viewport.height = (float)swapChainExtent.height;
 	scissor.extent = swapChainExtent;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
