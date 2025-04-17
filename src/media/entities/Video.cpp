@@ -56,7 +56,8 @@ void Video::init(glm::vec2 _size)
 }
 bool Video::preRender()
 {
-	sweetFrameTime = budget->begin();
+	budget->begin();
+	auto swwetFrameTime = budget->getZslept();
 	if (sweetFrameTime)
 	{
 		if (firstFrame)

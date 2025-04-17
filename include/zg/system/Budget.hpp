@@ -37,7 +37,7 @@ namespace zg::budget
 	struct IBudget
 	{
 		virtual ~IBudget() = default;
-		virtual bool begin() = 0;
+		virtual NANO_TIMEPOINT begin() = 0;
 		virtual bool tick(bool true_if_false_or___true_if_true_and_now_at_or_after_next_budget__) = 0;
 		virtual SecondsDuration getCurrentBudget() = 0;
 		virtual SecondsDuration getBeginningBudget() = 0;
@@ -62,16 +62,17 @@ namespace zg::budget
 		friend FBudget;
 
 	private:
-		void zsleep()
+		TimePoint zsleep()
 		{
 			auto& history_tuple = m_History.front();
 			auto& zslept = std::get<4>(history_tuple);
 			if (zslept)
-				return;
+				return SYS_CLOCK::now();
 			std::unique_lock lock(mTx);
 			cv.wait_until(lock, m_IsNextBudgetWakeAtTimePoint, [&] { return m_wakezwakez; });
 			m_wakezwakez = false;
 			zslept = true; // this only gets set once forever(y) HistoryItem
+			return m_IsNextBudgetWakeAtTimePoint;
 		}
 
 	public:
@@ -97,26 +98,24 @@ namespace zg::budget
 				// saveChunk();
 			}
 		}
-		bool begin() override
+		TimePoint begin() override
 		{
+			auto __now = NANO_TIMEPOINT_CAST(SYS_CLOCK::now());
 			if (!m_instantStart && !m_sleeponsleep)
 			{
-				zsleep();
+				__now = zsleep();
 			}
 			std::unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
 			auto& begin = std::get<0>(history_tuple);
-			auto __now = NANO_TIMEPOINT_CAST(SYS_CLOCK::now());
 			if ((m_instantStart && !m_sleeponsleep) || !m_instantStart)
 			{
 				if (__now >= m_IsNextBudgetWakeAtTimePoint)
 				{
-					begin = __now;
-					return true;
+					return (begin = __now);
 				}
 			}
-			auto& zslept = std::get<4>(history_tuple);
-			return zslept;
+			return __now;
 		}
 		bool tick(bool true_if_false_or___true_if_true_and_now_at_or_after_next_budget__ = false) override
 		{
@@ -204,6 +203,23 @@ namespace zg::budget
 			cv.notify_one();
 		}
 		Real getBudgetUsed() { return m_BudgetUsed; }
+
+		SecondsDuration& getCurrentSeconds()
+		{
+			auto& history_tuple = m_History.front();
+			return std::get<2>(history_tuple);
+		}
+
+		const SecondsDuration& getCurrentSeconds() const
+		{
+			auto& history_tuple = m_History.front();
+			return std::get<2>(history_tuple);
+		}
+		bool getZslept()
+		{
+			auto& history_tuple = m_History.front();
+			return std::get<4>(history_tuple);
+		}
 
 	private:
 		SecondsDuration m_BudgetTime;
@@ -300,7 +316,8 @@ namespace zg::budget
 		TimePoint setNextBudgetWakeAtTimePoint()
 		{
 			auto __now = NANO_TIMEPOINT_CAST(SYS_CLOCK::now());
-			auto nsQuantized = SecondsDuration(m_budgetCountNs - (__now.time_since_epoch().count() % m_budgetCountNs));
+			auto mod = (__now.time_since_epoch().count() % m_budgetCountNs);
+			auto nsQuantized = (mod > 500000) ? SecondsDuration(m_budgetCountNs - mod) : SecondsDuration(0);
 			m_IsZgBudget = nsQuantized;
 			m_IsNextBudgetWakeAtTimePoint = NANO_TIMEPOINT_CAST(__now + m_IsZgBudget);
 			return __now;

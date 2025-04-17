@@ -69,7 +69,7 @@ namespace zg
 		zg::td::queue<PreSwapbuffersOnceoff> preSwapbuffersOnceoffs;
 		std::shared_ptr<Scene> scene;
 		bool open = true;
-		std::chrono::steady_clock::time_point lastFrameTime;
+		NANO_TIMEPOINT lastFrameTime;
 		long double deltaTime;
 		long double lastFrameDeltaTime;
 		bool justWarpedPointer = false;
@@ -160,7 +160,7 @@ namespace zg
 		// runnables
 		void runOnThread(const Runnable& runnable);
 		void runRunnables();
-		void updateDeltaTime();
+		void updateDeltaTime(NANO_TIMEPOINT now);
 		void resize(glm::vec2 newSize);
 		void registerOnEntityAddedFunction(const OnEntityAddedFunction& function);
 	};

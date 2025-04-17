@@ -91,7 +91,6 @@ void Window::preRender()
 void Window::render()
 {
 	std::lock_guard lock(renderMutex);
-	updateDeltaTime();
 	if (scene)
 		scene->render();
 };
@@ -117,7 +116,8 @@ void Window::startWindow()
 	iPlatformWindowRef.disableKeyAutoRepeat();
 	while (true)
 	{
-		framebudget.begin();
+		auto _now = framebudget.begin();
+		updateDeltaTime(_now);
 		if (!iPlatformWindowRef.pollMessages())
 		{
 			framebudget.sleep();
@@ -163,8 +163,8 @@ void Window::startWindow()
 		framebudget.tick();
 		callPreSwapbuffersOnceoff();
 		framebudget.tick();
-		iRendererRef.swapBuffers();
 		framebudget.end();
+		iRendererRef.swapBuffers();
 		framebudget.sleep();
 	}
 _exit:
@@ -676,12 +676,11 @@ void Window::runRunnables()
 		runnable(dynamic_cast<Window&>(*this));
 	}
 };
-void Window::updateDeltaTime()
+void Window::updateDeltaTime(NANO_TIMEPOINT now)
 {
-	auto currentTime = std::chrono::steady_clock::now();
-	std::chrono::duration<long double> duration = currentTime - lastFrameTime;
-	lastFrameDeltaTime = duration.count();
-	lastFrameTime = currentTime;
+	auto duration = now - lastFrameTime;
+	lastFrameDeltaTime = duration.count() / 1'000'000'000.0L;
+	lastFrameTime = now;
 };
 void Window::resize(glm::vec2 newSize)
 {

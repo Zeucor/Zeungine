@@ -8,13 +8,15 @@
 #include <zg/components/scenes/PhysicsScene.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/entities/Curve.hpp>
+#include <zg/entities/Frame.hpp>
+#include <zg/entities/Plane.hpp>
 #include <zg/entities/Volume.hpp>
 #include <zg/math/Rotations.hpp>
 #include <zg/physics/CollisionManifold.hpp>
 #include <zg/vp/VFBLR.hpp>
 #include <zg/vp/VML.hpp>
-#include <zg/entities/Frame.hpp>
 zg::shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
+glm::vec3 windowVisualizerPosition(57, 42, 58);
 struct PhysicsScene : zg::Scene
 {
 	std::shared_ptr<zg::components::scenes::EntityThirdPersonCamera> thirdPerson;
@@ -42,8 +44,12 @@ struct PhysicsScene : zg::Scene
 	std::vector<glm::vec2> curve1Points;
 	size_t curve1PointsIndex = 0;
 	zg::UniqueIdentifier curve1ID = 0;
+	char curveFrameOffset = 0;
 	std::shared_ptr<zg::entities::NUVVolume<3, float>> cube5;
 	std::shared_ptr<zg::entities::Frame> frame;
+	std::shared_ptr<zg::entities::Plane> median;
+	std::shared_ptr<zg::entities::Plane> overwork;
+	std::shared_ptr<zg::entities::Plane> underwork;
 	zg::UniqueIdentifier frameID;
 	zg::UniqueIdentifier fID = 0;
 	zg::UniqueIdentifier bID = 0;
@@ -212,19 +218,19 @@ struct PhysicsScene : zg::Scene
 			// x = a * exp(b*v) * cos(k*v) * cos(u)
 			// y = a * exp(b*v) * cos(k*v) * sin(u)
 			// z = a * exp(b*v) * sin(k*v)
-			auto seashell_volume = std::make_shared<zg::entities::NUVVolume<3, float>>(
-				window, *this, glm::vec3(50, 45, 50), // Position
-				glm::quat(1, 0, 0, 0), // Rotation
-				glm::vec3(2.0f), // Scale
-				glm::vec4(1.0, 0.5, 0.2, 1.0), // Orange color
-				commonShaderConstants, "Seashell Volume", seashell_params,
-				// U range: [0, 2*pi] (around the axis)
-				0.0, 2.0 * _pi_, _pi_ / 5.f, // U range and step
-				// V range: [0, 4*pi] (along the spiral length)
-				0.0, 4.0 * _pi_, _pi_ / 5.f, // V range and step
-				// Position Equations (using finite differencing for normals)
-				seashell_eqs, seashell_normal_eqs);
-			addEntity(seashell_volume);
+			// auto seashell_volume = std::make_shared<zg::entities::NUVVolume<3, float>>(
+			// 	window, *this, glm::vec3(50, 45, 50), // Position
+			// 	glm::quat(1, 0, 0, 0), // Rotation
+			// 	glm::vec3(2.0f), // Scale
+			// 	glm::vec4(1.0, 0.5, 0.2, 1.0), // Orange color
+			// 	commonShaderConstants, "Seashell Volume", seashell_params,
+			// 	// U range: [0, 2*pi] (around the axis)
+			// 	0.0, 2.0 * _pi_, _pi_ / 5.f, // U range and step
+			// 	// V range: [0, 4*pi] (along the spiral length)
+			// 	0.0, 4.0 * _pi_, _pi_ / 5.f, // V range and step
+			// 	// Position Equations (using finite differencing for normals)
+			// 	seashell_eqs, seashell_normal_eqs);
+			// addEntity(seashell_volume);
 			// std::map<std::string, double> tanh_box_params = {
 			// 	{"rx", 0.5}, // Radius/half-extent x
 			// 	{"ry", 0.5}, // Radius/half-extent y
@@ -386,10 +392,22 @@ struct PhysicsScene : zg::Scene
 		// frame
 		{
 			auto angle = glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
-			frame = std::make_shared<zg::entities::Frame>(
-				window, *this, glm::vec3(55, 50.5, 58), angle, glm::vec3(1), glm::vec2(5, 1), 0.1f, glm::vec4(1, 1, 1, 1), commonShaderConstants,
-				"Window Curve Frame");
+			frame = std::make_shared<zg::entities::Frame>(window, *this, windowVisualizerPosition + glm::vec3(0, 0.5, -0.1), angle, glm::vec3(1),
+																										glm::vec2(5.1, 2.0f), 0.2f, glm::vec4(1, 1, 1, 1),
+																										commonShaderConstants, "Window Curve Frame");
 			frameID = addEntity(frame);
+			median = std::make_shared<zg::entities::Plane>(window, *this, windowVisualizerPosition + glm::vec3(0, 0.5, -0.05), angle, glm::vec3(1),
+																										 glm::vec2(5.1, 0.05f), glm::vec4(0, 0.8, 0.1, 1.f),
+																										 commonShaderConstants, "Window Curve Median");
+			addEntity(median);
+			overwork = std::make_shared<zg::entities::Plane>(window, *this, windowVisualizerPosition + glm::vec3(0, 1.0, -0.05), angle, glm::vec3(1),
+																										 glm::vec2(5.1, 0.05f), glm::vec4(0.9, 0.1, 0.1, 1.f),
+																										 commonShaderConstants, "Window Curve Overwork");
+			addEntity(overwork);
+			underwork = std::make_shared<zg::entities::Plane>(window, *this, windowVisualizerPosition + glm::vec3(0, 0.0, -0.05), angle, glm::vec3(1),
+																										 glm::vec2(5.1, 0.05f), glm::vec4(0.1, 0.1, 0.95, 1.f),
+																										 commonShaderConstants, "Window Curve Underwork");
+			addEntity(underwork);
 		}
 		// cube controls
 		{
@@ -433,10 +451,20 @@ struct PhysicsScene : zg::Scene
 				curve1Points.resize(50);
 				auto angle = glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
 				curve1 = std::make_shared<zg::entities::NDParametricCurve<2, float>>(
-					window, *this, glm::vec3(55, 50, 58), angle, glm::vec3(1), glm::vec4(1, 1, 1, 1), commonShaderConstants,
+					window, *this, windowVisualizerPosition, angle, glm::vec3(1), glm::vec4(1, 1, 1, 1), commonShaderConstants,
 					"Window Curve", 0.1f, std::map<std::string, double>(), curve1Points);
 				curve1ID = addEntity(curve1);
 			}
+			if (curveFrameOffset > 0)
+			{
+				curveFrameOffset++;
+				if (curveFrameOffset == 5)
+				{
+					curveFrameOffset = 0;
+				}
+				return;
+			}
+			curveFrameOffset++;
 			static constexpr float step = 0.1f;
 			auto curve1PointsData = curve1Points.data();
 			if (curve1PointsIndex >= 50)
@@ -444,7 +472,7 @@ struct PhysicsScene : zg::Scene
 				auto i = 0;
 				for (; i < curve1PointsIndex - 1; i++)
 				{
-					auto& p = curve1PointsData[i+1];
+					auto& p = curve1PointsData[i + 1];
 					p.x -= step;
 					curve1PointsData[i] = p;
 				}
@@ -453,7 +481,7 @@ struct PhysicsScene : zg::Scene
 			}
 			float lastFrameDelta = window.lastFrameDeltaTime;
 			auto lastX = curve1PointsIndex ? curve1Points[curve1PointsIndex - 1].x : -2.5;
-			auto thisY = (std::min)(1.0f, (1.f / (float)window.deltaTime) / (1.f / lastFrameDelta));
+			auto thisY = (lastFrameDelta / (float)window.deltaTime) - 1.0f;
 			// std::cout << "lastFrameDelta: " << lastFrameDelta << ", deltaTime: " << window.deltaTime << ", thisY: " << thisY << std::endl;
 			auto point = glm::vec2(lastX + step, thisY);
 			curve1PointsData[curve1PointsIndex++] = point;
@@ -471,7 +499,7 @@ struct PhysicsScene : zg::Scene
 };
 int main()
 {
-	zg::Window window("Physics Test", 1920, 1080, -1, -1, true, false, 144);
+	zg::Window window("Physics Test", 1920, 1080, -1, -1, true, false, 60);
 	window.runOnThread([](auto& window) { window.setScene(std::make_shared<PhysicsScene>(window)); });
 	window.addKeyPressHandler(27,
 														[&](auto pressed)
