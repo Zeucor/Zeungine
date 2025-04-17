@@ -82,8 +82,8 @@ struct PhysicsScene : zg::Scene
 			directionalLightShadows.emplace_back(window, directionalLights[0]);
 		}
 		// addComponent(std::make_shared<zg::components::scenes::GravityByAttraction>(0.000005f));
-		addComponent(std::make_shared<zg::components::scenes::GravityByVector>(glm::vec3(0, -9.81, 0)));
-		addComponent(std::make_shared<zg::components::scenes::PhysicsScene>(*this));
+		addComponent(std::make_shared<zg::components::scenes::PhysicsScene>(*this, (long double)(1.0L / 40.0L)));
+		addComponent(std::make_shared<zg::components::scenes::GravityByVector>(*this, glm::vec3(0, -9.81, 0)));
 		//
 		{
 			floor = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 40, 50), glm::quat(1, 0, 0, 0),
@@ -387,7 +387,7 @@ struct PhysicsScene : zg::Scene
 		{
 			auto angle = glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
 			frame = std::make_shared<zg::entities::Frame>(
-				window, *this, glm::vec3(55, 50, 58), angle, glm::vec3(1), glm::vec2(5, 5), 0.1f, glm::vec4(1, 1, 1, 1), commonShaderConstants,
+				window, *this, glm::vec3(55, 50.5, 58), angle, glm::vec3(1), glm::vec2(5, 1), 0.1f, glm::vec4(1, 1, 1, 1), commonShaderConstants,
 				"Window Curve Frame");
 			frameID = addEntity(frame);
 		}
@@ -441,19 +441,20 @@ struct PhysicsScene : zg::Scene
 			auto curve1PointsData = curve1Points.data();
 			if (curve1PointsIndex >= 50)
 			{
-				curve1Points.erase(curve1Points.begin());
-				for (auto i = 0; i < curve1PointsIndex; i++)
+				auto i = 0;
+				for (; i < curve1PointsIndex - 1; i++)
 				{
-					auto& p = curve1PointsData[i];
+					auto& p = curve1PointsData[i+1];
 					p.x -= step;
+					curve1PointsData[i] = p;
 				}
-				curve1Points.push_back({});
+				curve1PointsData[i] = glm::vec2(0);
 				curve1PointsIndex--;
 			}
 			float lastFrameDelta = window.lastFrameDeltaTime;
 			auto lastX = curve1PointsIndex ? curve1Points[curve1PointsIndex - 1].x : -2.5;
-			auto thisY = (std::min)(1.0f, (float)window.deltaTime / lastFrameDelta);
-			std::cout << "lastFrameDelta: " << lastFrameDelta << ", deltaTime: " << window.deltaTime << ", thisY: " << thisY << std::endl;
+			auto thisY = (std::min)(1.0f, (1.f / (float)window.deltaTime) / (1.f / lastFrameDelta));
+			// std::cout << "lastFrameDelta: " << lastFrameDelta << ", deltaTime: " << window.deltaTime << ", thisY: " << thisY << std::endl;
 			auto point = glm::vec2(lastX + step, thisY);
 			curve1PointsData[curve1PointsIndex++] = point;
 			curve1->generateAndUpdateCurve(curve1Points);
@@ -465,6 +466,7 @@ struct PhysicsScene : zg::Scene
 		window.removeKeyUpdateHandler(b, bID);
 		window.removeKeyUpdateHandler(l, lID);
 		window.removeKeyUpdateHandler(r, rID);
+		unregisterAllComponents();
 	}
 };
 int main()

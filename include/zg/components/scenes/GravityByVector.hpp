@@ -4,8 +4,9 @@ namespace zg::components::scenes
 {
     struct GravityByVector : IGravity
     {
+        Scene& scene;
         glm::vec3 gravity;
-        GravityByVector(glm::vec3 gravity);
+        GravityByVector(Scene& scene, glm::vec3 gravity);
         void onAttached() override;
 		void onUpdate() override;
         void onDetached() override;

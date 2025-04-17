@@ -27,12 +27,23 @@ namespace zg
 			ComponentEntry,
 			boost::multi_index::indexed_by<
 				boost::multi_index::ordered_unique<boost::multi_index::tag<component_by_id>,
-																					boost::multi_index::member<ComponentEntry, size_t, &ComponentEntry::ID>>,
+																					 boost::multi_index::member<ComponentEntry, size_t, &ComponentEntry::ID>>,
 				boost::multi_index::hashed_unique<
 					boost::multi_index::tag<component_by_name>,
 					boost::multi_index::member<ComponentEntry, std::string, &ComponentEntry::NAME>>>>
 			ComponentContainer;
 		std::pair<UniqueIdentifier, ComponentContainer> m_components;
+
+		virtual ~ComponentHolder() { unregisterAllComponents(); }
+		void unregisterAllComponents()
+		{
+			auto& container = std::get<1>(m_components);
+			for (auto& entry : container)
+			{
+				entry.COMPONENT->onDetached();
+			}
+			container.clear();
+		}
 		/**
 		 * @brief adds a component to m_components and returns it's unique id
 		 */
@@ -50,13 +61,26 @@ namespace zg
 		 */
 		bool removeComponent(UniqueIdentifier& id)
 		{
-			auto& container = std::get<1>(m_components);
-			auto iter = container.find(id);
-			if (iter == container.end())
+			auto& components_id_index = std::get<1>(m_components).template get<component_by_id>();
+			auto it_id = components_id_index.find(id);
+			if (it_id == components_id_index.end())
 				return false;
-			iter->second->onDetached();
-			container.erase(iter);
+			it_id->COMPONENT->onDetached();
+			components_id_index.erase(it_id);
 			id = 0;
+			return true;
+		}
+		/**
+		 * @brief removes a component by name, returns false if the component does not exist
+		 */
+		bool removeComponent(const std::string& name)
+		{
+			auto& components_name_index = std::get<1>(m_components).template get<component_by_name>();
+			auto it_name = components_name_index.find(name);
+			if (it_name == components_name_index.end())
+				return false;
+			it_name->COMPONENT->onDetached();
+			components_name_index.erase(it_name);
 			return true;
 		}
 

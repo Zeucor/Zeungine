@@ -22,15 +22,17 @@ using zg::physics::CollisionManifold;
 using zg::physics::OBB;
 using zg::physics::Plane;
 using zg::physics::Projection;
-PhysicsScene::PhysicsScene(Scene& scene) :
-		ISceneComponent("PhysicsScene"), scene(scene), deltaTime(scene.window.deltaTime),
-        contactListener(std::make_unique<ZGContactListener>(*this))
+PhysicsScene::PhysicsScene(Scene& scene, long double deltaTime) :
+		ISceneComponent("PhysicsScene"), scene(scene),
+        contactListener(std::make_unique<ZGContactListener>(*this)),
+		deltaTime(deltaTime),
+		frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
+		framebudget(frameduration, 1, false, false, "PhysicsSceneBudget")
 {
 	std::cout << "PhysicsScene created." << std::endl;
 }
 void PhysicsScene::onAttached()
 {
-	gravity = dynamic_cast<IGravity*>(scene.getComponentByName("IGravity").get());
 	std::cout << "PhysicsScene attached." << std::endl;
 
 	std::cout << "Initializing Jolt Physics..." << std::endl;
@@ -77,10 +79,23 @@ void PhysicsScene::onAttached()
 	// mPhysicsSystem->SetBodyActivationListener(mBodyActivationListener); // If you have one
 
 	std::cout << "Jolt Physics Initialized Successfully." << std::endl;
+	thread = std::make_unique<std::thread>(&PhysicsScene::loop, this);
 }
-void PhysicsScene::onUpdate() { stepSimulation(deltaTime); }
+void PhysicsScene::onUpdate() { synchronize(); }
 void PhysicsScene::onDetached()
 {
+	{
+		std::lock_guard lock(runningMutex);
+		running = false;
+	}
+	if (thread->joinable())
+		thread->join();
+	for (auto& entityEntry : scene.entities)
+	{
+		auto& entity = *entityEntry.ENTITY;
+		entity.removeComponent("Collider");
+		entity.removeComponent("RigidBody");
+	}
 	rigidBodiesJoltID.clear();
 	joltIDRigidBodies.clear();
 	JPH::UnregisterTypes();
@@ -110,6 +125,27 @@ JPH::BodyInterface& PhysicsScene::GetBodyInterface() { return mPhysicsSystem->Ge
 const JPH::BodyLockInterface& PhysicsScene::GetBodyLockInterface()
 {
 	return mPhysicsSystem->GetBodyLockInterfaceNoLock();
+}
+void PhysicsScene::setGravity(IGravity* gravityPointer)
+{
+	gravity = gravityPointer;
+}
+void PhysicsScene::loop()
+{
+	do
+	{
+		runningMutex.lock();
+		if (!running)
+		{
+			runningMutex.unlock();
+			break;
+		}
+		framebudget.begin();
+		stepSimulation(deltaTime);
+		framebudget.end();
+		runningMutex.unlock();
+		framebudget.sleep();
+	} while (true);
 }
 void PhysicsScene::stepSimulation(float dt)
 {

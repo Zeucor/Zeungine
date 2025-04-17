@@ -2,9 +2,18 @@
 #include <zg/components/entities/RigidBody.hpp>
 #include <zg/components/scenes/GravityByAttraction.hpp>
 #include <zg/components/scenes/PhysicsScene.hpp>
+#include <zg/Scene.hpp>
 using namespace zg::components::scenes;
-GravityByAttraction::GravityByAttraction(float gravitationalConstant) : gravitationalConstant(gravitationalConstant) {}
-void GravityByAttraction::onAttached() {}
+GravityByAttraction::GravityByAttraction(Scene& scene, float gravitationalConstant) :
+		scene(scene), gravitationalConstant(gravitationalConstant)
+{
+}
+void GravityByAttraction::onAttached()
+{
+	auto physicsScene = std::dynamic_pointer_cast<PhysicsScene>(scene.getComponentByName("PhysicsScene"));
+	if (physicsScene)
+		physicsScene->setGravity(this);
+}
 void GravityByAttraction::onUpdate() {}
 void GravityByAttraction::onDetached() {}
 void GravityByAttraction::applyGravity(PhysicsScene& physicsScene, float dt)

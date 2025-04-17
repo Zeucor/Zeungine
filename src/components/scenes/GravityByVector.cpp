@@ -1,12 +1,17 @@
 #include <zg/components/scenes/GravityByVector.hpp>
 #include <zg/components/scenes/PhysicsScene.hpp>
 #include <zg/components/entities/RigidBody.hpp>
+#include <zg/Scene.hpp>
 using namespace zg::components::scenes;
-GravityByVector::GravityByVector(glm::vec3 gravity):
+GravityByVector::GravityByVector(Scene& scene, glm::vec3 gravity):
+    scene(scene),
     gravity(gravity)
 {}
 void GravityByVector::onAttached()
 {
+    auto physicsScene = std::dynamic_pointer_cast<PhysicsScene>(scene.getComponentByName("PhysicsScene"));
+    if (physicsScene)
+        physicsScene->setGravity(this);
 }
 void GravityByVector::onUpdate()
 {

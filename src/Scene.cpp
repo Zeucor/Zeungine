@@ -443,11 +443,12 @@ void Scene::hookMouseEvents()
 			auto xRatio2 = 1 / yRatio;
 			auto x = xRatio * 2;
 			auto x2 = yRatio * x;
-			windowPlane = std::make_shared<entities::Plane>(window, *this, glm::vec3(0), glm::vec3(0, 180, 0),
-																											glm::vec3(1), glm::vec2(2, 2), *colorAttachmentIter->first);
+			windowPlane = std::make_shared<entities::Plane>(window, *this, glm::vec3(0), glm::vec3(0, 180, 0), glm::vec3(1),
+																											glm::vec2(2, 2), *colorAttachmentIter->first);
 			auto& windowPlaneRef = *windowPlane;
 			windowPlaneRef.projectionPointer = std::make_shared<vp::Projection>(window, glm::vec2(2, 2));
-			windowPlaneRef.viewPointer = std::make_shared<vp::View>(glm::vec3(0, 0, -1), glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
+			windowPlaneRef.viewPointer =
+				std::make_shared<vp::View>(glm::vec3(0, 0, -1), glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
 		}
 	}
 }
@@ -479,7 +480,7 @@ std::shared_ptr<zg::Entity> Scene::getEntityByID(const size_t& id)
 	}
 	return {};
 }
-template<>
+template <>
 Serial& serialize(Serial& serial, const Scene& scene)
 {
 	serial << true << scene.drawColorToWindowPlane << scene.clearColor << scene.projectionPointer;
@@ -539,7 +540,7 @@ Serial& serialize(Serial& serial, const Scene& scene)
 	serial << scene.windowPlane << scene.viewPointer;
 	return serial;
 }
-template<>
+template <>
 Serial& deserialize(Serial& serial, Scene& scene)
 {
 	bool wroteBit = false;

@@ -4,8 +4,9 @@ namespace zg::components::scenes
 {
     struct GravityByAttraction : IGravity
     {
+        Scene& scene;
         float gravitationalConstant;
-        GravityByAttraction(float gravitationalConstant);
+        GravityByAttraction(Scene& scene, float gravitationalConstant);
         void onAttached() override;
 		void onUpdate() override;
         void onDetached() override;

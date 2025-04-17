@@ -2,6 +2,8 @@
 #include <zg/interfaces/ISceneComponent.hpp>
 #include <zg/physics/CollisionManifold.hpp>
 #include <zg/physics/ToJolt.hpp>
+#include <zg/system/Budget.hpp>
+#include <thread>
 #include <mutex>
 namespace zg
 {
@@ -15,8 +17,12 @@ namespace zg::components::scenes
 {
 	struct IGravity;
 	struct ZGContactListener;
+	struct GravityByVector;
+	struct GravityByAttraction;
 	struct PhysicsScene : interfaces::ISceneComponent
 	{
+		friend GravityByVector;
+		friend GravityByAttraction;
 	public:
 		Scene& scene;
 		IGravity* gravity = 0;
@@ -24,8 +30,7 @@ namespace zg::components::scenes
 		std::unordered_map<JPH::BodyID, entities::RigidBody*> joltIDRigidBodies;
 		std::vector<physics::CollisionManifold> collisionContacts;
 		std::unique_ptr<ZGContactListener> contactListener;
-		long double& deltaTime;
-		PhysicsScene(Scene& scene);
+		PhysicsScene(Scene& scene, long double deltaTime);
 		void onAttached() override;
 		void onUpdate() override;
 		void onDetached() override;
@@ -34,8 +39,18 @@ namespace zg::components::scenes
 		JPH::PhysicsSystem& GetJoltPhysicsSystem();
 		JPH::BodyInterface& GetBodyInterface();
 		const JPH::BodyLockInterface& GetBodyLockInterface();
+		long double deltaTime;
+		NANOSECONDS_DURATION frameduration;
+		budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL> framebudget;
+		std::unique_ptr<std::thread> thread;
+		bool running = true;
+		std::mutex runningMutex;
+
+	protected:
+		void setGravity(IGravity* gravityPointer);
 
 	private:
+		void loop();
 		void stepSimulation(float totalDt);
 		void synchronize();
 		// --- Jolt Core Systems ---
