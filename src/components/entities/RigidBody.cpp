@@ -304,7 +304,7 @@ void RigidBody::setPosition(glm::vec3 newPosition)
 const glm::quat& RigidBody::getOrientation() const { return *rotation; }
 void RigidBody::setOrientation(glm::quat newOrientation)
 {
-	physicsScene->GetBodyInterface().SetRotation(joltBodyID, ToJolt<glm::quat, JPH::Quat>(newOrientation),
+	physicsScene->GetBodyInterface().SetRotation(joltBodyID, ToJolt<glm::quat, JPH::Quat>(newOrientation).Normalized(),
 																							 JPH::EActivation::Activate);
 }
 const glm::vec3 RigidBody::getLinearVelocity() const
