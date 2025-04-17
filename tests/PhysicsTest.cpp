@@ -469,7 +469,7 @@ struct PhysicsScene : zg::Scene
 };
 int main()
 {
-	zg::Window window("Physics Test", 1920, 1080, -1, -1, true, false, 50);
+	zg::Window window("Physics Test", 1920, 1080, -1, -1, true, false, 144);
 	window.runOnThread([](auto& window) { window.setScene(std::make_shared<PhysicsScene>(window)); });
 	window.addKeyPressHandler(27,
 														[&](auto pressed)
