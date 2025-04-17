@@ -1,19 +1,20 @@
 #include <zg/entities/Plane.hpp>
 #include <zg/utilities.hpp>
 using namespace zg::entities;
-Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-			 glm::vec2 size, glm::vec4 color, const zg::shaders::RuntimeConstants &constants, std::string_view name) : zg::Entity(window, scene,
-																																  zg::mergeVectors<std::string>(
-																																	  {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
-																																  6, getIndices(window), 4,
-																																  {
-																																	  {-size.x / 2, -size.y / 2, 0},
-																																	  {size.x / 2, -size.y / 2, 0},
-																																	  {size.x / 2, size.y / 2, 0},
-																																	  {-size.x / 2, size.y / 2, 0} // Front
-																																  },
-																																  position, rotation, scale, name.empty() ? "Plane " + std::to_string(++planesCount) : name),
-																													   uvs({{}, {}, {}, {}}),  size(size)
+Plane::Plane(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
+						 glm::vec2 size, glm::vec4 color, const zg::shaders::RuntimeConstants& constants, std::string_view name) :
+		zg::Entity(window, scene,
+							 zg::mergeVectors<std::string>(
+								 {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
+							 6, getIndices(window), 4,
+							 {
+								 {-size.x / 2, -size.y / 2, 0},
+								 {size.x / 2, -size.y / 2, 0},
+								 {size.x / 2, size.y / 2, 0},
+								 {-size.x / 2, size.y / 2, 0} // Front
+							 },
+							 position, rotation, scale, name.empty() ? "Plane " + std::to_string(++planesCount) : name),
+		uvs({{}, {}, {}, {}}), size(size)
 {
 	computeNormals(window.iRenderer->frontFace, indices, positions, normals);
 	updateIndices(indices);
@@ -21,29 +22,29 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 };
-Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-			 glm::vec2 size, textures::Texture &texture, const zg::shaders::RuntimeConstants &constants,
-			 std::string_view name) : zg::Entity(window, scene,
-												 zg::mergeVectors<std::string>(
-													 {{"UV2", "Position", "Normal", "Texture2D", "View", "Projection", "Model", "CameraPosition"}}, constants),
-												 6,
-												 getIndices(window),
-												 4,
-												 {
-													 {-size.x / 2, -size.y / 2, 0},
-													 {size.x / 2, -size.y / 2, 0},
-													 {size.x / 2, size.y / 2, 0},
-													 {-size.x / 2, size.y / 2, 0} // Front
-												 },
-												 position, rotation, scale, name.empty() ? "Plane " + std::to_string(++planesCount) : name),
-									  colors({{}, {}, {}, {}}), uvs({
-																	// Front face
-																	{0, 0}, // 0
-																	{1, 0}, // 1
-																	{1, 1}, // 2
-																	{0, 1}	// 3
-																}),
-									   texturePointer(&texture), size(size)
+Plane::Plane(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
+						 glm::vec2 size, textures::Texture& texture, const zg::shaders::RuntimeConstants& constants,
+						 std::string_view name) :
+		zg::Entity(
+			window, scene,
+			zg::mergeVectors<std::string>(
+				{{"UV2", "Position", "Normal", "Texture2D", "View", "Projection", "Model", "CameraPosition"}}, constants),
+			6, getIndices(window), 4,
+			{
+				{-size.x / 2, -size.y / 2, 0},
+				{size.x / 2, -size.y / 2, 0},
+				{size.x / 2, size.y / 2, 0},
+				{-size.x / 2, size.y / 2, 0} // Front
+			},
+			position, rotation, scale, name.empty() ? "Plane " + std::to_string(++planesCount) : name),
+		colors({{}, {}, {}, {}}), uvs({
+																// Front face
+																{0, 0}, // 0
+																{1, 0}, // 1
+																{1, 1}, // 2
+																{0, 1} // 3
+															}),
+		texturePointer(&texture), size(size)
 {
 	switch (window.iRenderer->renderer)
 	{
@@ -63,19 +64,20 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat
 std::vector<uint32_t> Plane::getIndices(zg::Window& window)
 {
 	if (window.iRenderer->frontFace == zg::CLOCKWISE)
-		return {{0, 1, 2, 2, 3, 0}};
-	else
 		return {{2, 1, 0, 0, 3, 2}};
+	else
+		return {{0, 1, 2, 2, 3, 0}};
 }
 bool Plane::preRender()
 {
-	const auto &model = getModelMatrix();
+	const auto& model = getModelMatrix();
 	auto shader = addShader();
 	shader->bind(*this);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("Projection", *this,
+									 projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	if (texturePointer)
 		shader->setTexture("Texture2D", *this, *texturePointer, 0);
@@ -99,7 +101,7 @@ void Plane::setSize(glm::vec2 size)
 	this->size = size;
 };
 
-template<>
+template <>
 Serial& serialize(Serial& serial, const std::shared_ptr<zg::entities::Plane>& planePointer)
 {
 	if (!planePointer)
@@ -124,7 +126,7 @@ Serial& serialize(Serial& serial, const std::shared_ptr<zg::entities::Plane>& pl
 	serial << name;
 	return serial;
 }
-template<>
+template <>
 Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::Plane>& planePointer)
 {
 	bool wroteBit = false;
@@ -147,6 +149,7 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::Plane>& planeP
 	for (auto j = 0; j < constantsSize; j++)
 		serial >> constants[j];
 	serial >> name;
-	planePointer = std::make_shared<zg::entities::Plane>(*windowPointer, *scenePointer, position, rotation, scale, size, color, constants, name);
+	planePointer = std::make_shared<zg::entities::Plane>(*windowPointer, *scenePointer, position, rotation, scale, size,
+																											 color, constants, name);
 	return serial;
 }
