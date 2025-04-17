@@ -25,6 +25,7 @@ namespace zg::entities
     struct PanelMenu;
     struct PanelItem;
     struct Plane;
+    struct Frame;
     struct SkyBox;
     struct StatusText;
     struct TabsBar;
@@ -73,7 +74,7 @@ ZG_DEFINE_ENTITY_ID(zg::entities::Toolbar, ZG_BASE_OFFSET_ZGCORE + 23);
 #define NUVVolume_3_float zg::entities::NUVVolume<3, float>
 ZG_DEFINE_ENTITY_ID(NUVVolume_2_float, ZG_BASE_OFFSET_ZGCORE + 24);
 ZG_DEFINE_ENTITY_ID(NUVVolume_3_float, ZG_BASE_OFFSET_ZGCORE + 25);
-
+ZG_DEFINE_ENTITY_ID(zg::entities::Frame, ZG_BASE_OFFSET_ZGCORE + 26);
 ZG_DEFINE_ENTITY_ID(zg::media::entities::Audio, ZG_BASE_OFFSET_ZGCORE + 300);
 ZG_DEFINE_ENTITY_ID(zg::media::entities::Video, ZG_BASE_OFFSET_ZGCORE + 301);
 ZG_DEFINE_ENTITY_ID(zg::media::entities::Image, ZG_BASE_OFFSET_ZGCORE + 302);
