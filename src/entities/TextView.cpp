@@ -45,7 +45,7 @@ TextView::TextView(Window &window,
 											resizeHandler(resizeHandler),
 											reFontSizeHandler(reFontSizeHandler)
 {
-	computeNormals(indices, positions, normals);
+	computeNormals(window.iRenderer->frontFace, indices, positions, normals);
 	updateIndices(indices);
 	// updateElements("UV2", uvs);
 	updateElements("Position", positions);

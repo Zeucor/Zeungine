@@ -71,11 +71,24 @@ void EGLRenderer::init()
 {
 	glEnable(GL_DEPTH_TEST);
 	GLcheck(*this, "glEnable");
-	glEnable(GL_CULL_FACE);
-	GLcheck(*this, "glEnable");
-	glCullFace(GL_BACK);
-	GLcheck(*this, "glCullFace");
-	glFrontFace(GL_CCW);
+	if (cullMode == zg::NOCULL)
+	{
+		glDisable(GL_CULL_FACE);
+		GLcheck(*this, "glDisable");
+	}
+	else
+	{
+		glEnable(GL_CULL_FACE);
+		GLcheck(*this, "glEnable");
+		if (cullMode == zg::FRONT)
+			glCullFace(GL_FRONT);
+		if (cullMode == zg::BACK)
+			glCullFace(GL_BACK);;
+		if (cullMode == zg::FRONTANDBACK)
+			glCullFace(GL_FRONT_BACK);
+		GLcheck(*this, "glCullFace");
+	}
+	glFrontFace(frontFace == zg::COUNTERCLOCKWISE ? GL_CCW : CL_CW);
 	GLcheck(*this, "glFrontFace");
 	glViewport(0, 0, platformWindowPointer->renderWindowPointer->windowWidth,
 			   platformWindowPointer->renderWindowPointer->windowHeight);

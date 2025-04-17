@@ -1079,7 +1079,7 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   {
                     string += "  float currentLinearDepth = near * far / (far - currentDepth * (far - near));\n"
                               "  float closestLinearDepth = near * far / (far - (1.0 - closestDepth) * (far - near));\n"
-                              "  float bias = max(0.00001 * (1.0 - dot(normal, lightDir)), 0.00001);\n"
+                              "  float bias = max(0.003 * (1.0 - dot(normal, lightDir)), 0.003);\n"
                               "  float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;//currentDepth;//closestDepth;\n";
                   }
                   else

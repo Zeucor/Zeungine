@@ -43,11 +43,25 @@ namespace zg
 		RENDERER_METAL,
 		RENDERER_DIRECTX
 	};
+	enum FRONTFACE
+	{
+		CLOCKWISE,
+		COUNTERCLOCKWISE
+	};
+	enum CULLMODE
+	{
+		NOCULL,
+		BACK,
+		FRONT,
+		FRONTANDBACK
+	};
 	struct Entity;
 	struct IRenderer
 	{
 		IPlatformWindow *platformWindowPointer = nullptr;
 		RENDERER renderer;
+		FRONTFACE frontFace = CLOCKWISE;
+		CULLMODE cullMode = BACK;
 		virtual ~IRenderer() = default;
 		virtual void init() = 0;
 		virtual void createContext(IPlatformWindow *platformWindowPointer) = 0;

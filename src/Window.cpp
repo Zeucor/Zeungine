@@ -1,5 +1,7 @@
 #include <iostream>
+#include <set>
 #include <stdexcept>
+#include <vector>
 #include <zg/Logger.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
@@ -15,9 +17,10 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #endif
 Window::Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY, bool borderless,
 							 bool _vsync, uint32_t framerate) :
-		windowWidth(windowWidth), windowHeight(windowHeight), windowX(windowX), windowY(windowY), deltaTime(1.0 / framerate), borderless(borderless),
-		framerate(framerate), title(title), shaderContext(new ShaderContext), vsync(_vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration),
-		systemFonts(*this)
+		windowWidth(windowWidth), windowHeight(windowHeight), windowX(windowX), windowY(windowY),
+		deltaTime(1.0 / framerate), borderless(borderless), framerate(framerate), title(title),
+		shaderContext(new ShaderContext), vsync(_vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
+		framebudget(frameduration), systemFonts(*this)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -26,14 +29,19 @@ Window::Window(Window& _parentWindow, Scene& _parentScene, const char* _childTit
 							 float childWindowHeight, float childWindowX, float childWindowY, bool _NDCFramebufferPlane, bool _vsync,
 							 uint32_t framerate) :
 		iRenderer(_parentWindow.iRenderer), windowWidth(childWindowWidth), windowHeight(childWindowHeight),
-		windowX(childWindowX), windowY(childWindowY), framerate(framerate), deltaTime(1.0 / framerate), borderless(false), title(_childTitle),
-		isChildWindow(true), parentWindow(&_parentWindow), parentScene(&_parentScene),
+		windowX(childWindowX), windowY(childWindowY), framerate(framerate), deltaTime(1.0 / framerate), borderless(false),
+		title(_childTitle), isChildWindow(true), parentWindow(&_parentWindow), parentScene(&_parentScene),
 		shaderContext(_parentWindow.shaderContext), NDCFramebufferPlane(_NDCFramebufferPlane),
 		framebufferTexture(std::make_shared<textures::Texture>(
 			_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
 		framebufferDepthTexture(std::make_shared<textures::Texture>(
 			_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
-		framebuffer(std::make_shared<textures::Framebuffer>(_parentWindow, std::vector<textures::Framebuffer::TextureAttachmentPair>({{framebufferTexture.get(), textures::Framebuffer::AttachmentType::Color}/*, {framebufferDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}*/}))),
+		framebuffer(std::make_shared<textures::Framebuffer>(
+			_parentWindow,
+			std::vector<textures::Framebuffer::TextureAttachmentPair>(
+				{{framebufferTexture.get(),
+					textures::Framebuffer::AttachmentType::
+						Color} /*, {framebufferDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}*/}))),
 		framebufferPlane(std::make_shared<entities::Plane>(
 			_parentWindow, *parentScene,
 			glm::vec3(NDCFramebufferPlane ? (-1 + ((childWindowX + (childWindowWidth / 2)) / _parentWindow.windowWidth / 0.5))
@@ -104,8 +112,8 @@ void Window::startWindow()
 	iPlatformWindowRef.init(*this);
 	iRendererRef.createContext(&iPlatformWindowRef);
 	iRendererRef.init();
-	runRunnables();
 	iPlatformWindowRef.postInit();
+	runRunnables();
 	iPlatformWindowRef.disableKeyAutoRepeat();
 	while (true)
 	{
@@ -114,22 +122,32 @@ void Window::startWindow()
 		{
 			framebudget.sleep();
 			break;
-		} framebudget.tick();
-		iRendererRef.preBeginRenderPass(); framebudget.tick();
-		runRunnables(); framebudget.tick();
-		updateKeyboard(); framebudget.tick();
-		updateMouse(); framebudget.tick();
-		update(); framebudget.tick();
+		}
+		framebudget.tick();
+		iRendererRef.preBeginRenderPass();
+		framebudget.tick();
+		runRunnables();
+		framebudget.tick();
+		updateKeyboard();
+		framebudget.tick();
+		updateMouse();
+		framebudget.tick();
+		update();
+		framebudget.tick();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
 			if (childWindow.minimized)
 				continue;
-			childWindow.render(); framebudget.tick();
+			childWindow.render();
+			framebudget.tick();
 		}
-		preRender(); framebudget.tick();
-		iRendererRef.beginRenderPass(); framebudget.tick();
-		render(); framebudget.tick();
+		preRender();
+		framebudget.tick();
+		iRendererRef.beginRenderPass();
+		framebudget.tick();
+		render();
+		framebudget.tick();
 		for (auto& childWindowPointer : childWindows)
 		{
 			auto& childWindow = *childWindowPointer;
@@ -137,10 +155,14 @@ void Window::startWindow()
 				continue;
 			framebudget.tick();
 			childWindow.framebufferPlane->render();
-		} framebudget.tick();
-		iRendererRef.postRenderPass(); framebudget.tick();
-		postRender(); framebudget.tick();
-		callPreSwapbuffersOnceoff(); framebudget.tick();
+		}
+		framebudget.tick();
+		iRendererRef.postRenderPass();
+		framebudget.tick();
+		postRender();
+		framebudget.tick();
+		callPreSwapbuffersOnceoff();
+		framebudget.tick();
 		iRendererRef.swapBuffers();
 		framebudget.end();
 		framebudget.sleep();
@@ -657,8 +679,8 @@ void Window::runRunnables()
 void Window::updateDeltaTime()
 {
 	auto currentTime = std::chrono::steady_clock::now();
-	// std::chrono::duration<long double> duration = currentTime - lastFrameTime;
-	// deltaTime = duration.count();
+	std::chrono::duration<long double> duration = currentTime - lastFrameTime;
+	lastFrameDeltaTime = duration.count();
 	lastFrameTime = currentTime;
 };
 void Window::resize(glm::vec2 newSize)
@@ -676,39 +698,131 @@ void Window::registerOnEntityAddedFunction(const OnEntityAddedFunction& function
 	onEntityAdded = function;
 	return;
 }
-void zg::computeNormals(const std::vector<uint32_t>& indices, const std::vector<glm::vec3>& positions,
-												std::vector<glm::vec3>& normals)
+
+void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& indices,
+												const std::vector<glm::vec3>& positions, std::vector<glm::vec3>& normals)
 {
-	const glm::vec3* positionsData = positions.data();
-	const auto* indicesData = (const glm::ivec3*)indices.data();
-	const auto nbTriangles = indices.size() / 3;
-	const auto nbVertices = positions.size();
-	const auto nbNormals = nbVertices;
-	normals.resize(nbNormals);
-	auto* normalsData = normals.data();
-	memset(normalsData, 0, nbVertices * sizeof(glm::vec3));
-	for (uint32_t index = 0; index < nbTriangles; index++)
+	const float FACE_NORMAL_EPSILON_SQ = 1e-12f * 1e-12f;
+	const float EDGE_LEN_EPSILON_SQ = 1e-10f * 1e-10f;
+	const float VEC_EPSILON_SQ = 1e-10f * 1e-10f;
+	// Prevent division by zero or extremely large weights from tiny edge products
+	const float MIN_DENOMINATOR = EDGE_LEN_EPSILON_SQ * EDGE_LEN_EPSILON_SQ;
+
+
+	const size_t nbVertices = positions.size();
+	const size_t nbIndices = indices.size();
+
+	if (nbVertices == 0 || nbIndices == 0)
 	{
-		const auto& indice = indicesData[index];
-		const auto& vertex1 = positionsData[indice.x];
-		const auto& vertex2 = positionsData[indice.y];
-		const auto& vertex3 = positionsData[indice.z];
-		auto& normal1 = normalsData[indice.x];
-		auto& normal2 = normalsData[indice.y];
-		auto& normal3 = normalsData[indice.z];
-		auto triangleNormal = cross(vertex2 - vertex1, vertex3 - vertex1);
-		if (!static_cast<bool>(triangleNormal.x) && !static_cast<bool>(triangleNormal.y) &&
-				!static_cast<bool>(triangleNormal.z))
+		normals.clear();
+		return;
+	}
+	if (nbIndices % 3 != 0)
+	{
+		normals.clear();
+		return;
+	}
+
+	if (normals.size() != nbVertices)
+	{
+		normals.resize(nbVertices);
+	}
+	std::fill(normals.begin(), normals.end(), glm::vec3(0.0f));
+
+
+	for (size_t i = 0; i < nbIndices; i += 3)
+	{
+		uint32_t i1 = indices[i + 0];
+		uint32_t i2 = indices[i + 1];
+		uint32_t i3 = indices[i + 2];
+
+		if (i1 >= nbVertices || i2 >= nbVertices || i3 >= nbVertices)
 		{
 			continue;
 		}
-		normal1 += triangleNormal;
-		normal2 += triangleNormal;
-		normal3 += triangleNormal;
+
+		const glm::vec3& p1 = positions[i1];
+		const glm::vec3& p2 = positions[i2];
+		const glm::vec3& p3 = positions[i3];
+
+		glm::vec3 fn_unnormalized;
+		if (frontFace == zg::COUNTERCLOCKWISE)
+		{
+			fn_unnormalized = glm::cross(p2 - p1, p3 - p1);
+		}
+		else
+		{
+			fn_unnormalized = glm::cross(p3 - p1, p2 - p1);
+		}
+
+		float face_len_sq = glm::dot(fn_unnormalized, fn_unnormalized);
+		if (face_len_sq < FACE_NORMAL_EPSILON_SQ)
+		{
+			continue; // Skip degenerate face
+		}
+
+		// Edges for vertex 1
+		glm::vec3 e12 = p2 - p1;
+		glm::vec3 e13 = p3 - p1;
+		float len12_sq = glm::dot(e12, e12);
+		float len13_sq = glm::dot(e13, e13);
+
+		if (len12_sq > EDGE_LEN_EPSILON_SQ && len13_sq > EDGE_LEN_EPSILON_SQ)
+		{
+			float denominator = len12_sq * len13_sq;
+			float weight = 1.0f / glm::max(MIN_DENOMINATOR, denominator);
+			normals[i1] += fn_unnormalized * weight;
+		}
+
+		// Edges for vertex 2
+		glm::vec3 e21 = p1 - p2; // -e12
+		glm::vec3 e23 = p3 - p2;
+		float len21_sq = len12_sq; // Reuse squared length
+		float len23_sq = glm::dot(e23, e23);
+
+		if (len21_sq > EDGE_LEN_EPSILON_SQ && len23_sq > EDGE_LEN_EPSILON_SQ)
+		{
+			float denominator = len21_sq * len23_sq;
+			float weight = 1.0f / glm::max(MIN_DENOMINATOR, denominator);
+			normals[i2] += fn_unnormalized * weight;
+		}
+
+		// Edges for vertex 3
+		glm::vec3 e31 = p1 - p3; // -e13
+		glm::vec3 e32 = p2 - p3; // -e23
+		float len31_sq = len13_sq; // Reuse squared length
+		float len32_sq = len23_sq; // Reuse squared length
+
+		if (len31_sq > EDGE_LEN_EPSILON_SQ && len32_sq > EDGE_LEN_EPSILON_SQ)
+		{
+			float denominator = len31_sq * len32_sq;
+			float weight = 1.0f / glm::max(MIN_DENOMINATOR, denominator);
+			normals[i3] += fn_unnormalized * weight;
+		}
 	}
-	for (uint32_t index = 0; index < nbVertices; index++)
+
+	// Normalize final normals
+	for (size_t i = 0; i < nbVertices; ++i)
 	{
-		auto& normal = normalsData[index];
-		normal = glm::normalize(normal);
+		float normal_len_sq = glm::dot(normals[i], normals[i]);
+
+		if (normal_len_sq > VEC_EPSILON_SQ)
+		{
+			normals[i] = normals[i] / std::sqrt(normal_len_sq);
+		}
+		else
+		{
+			// Fallback for zero-length normals
+			const glm::vec3& pos = positions[i];
+			float pos_len_sq = glm::dot(pos, pos);
+			if (pos_len_sq > VEC_EPSILON_SQ)
+			{
+				normals[i] = pos / std::sqrt(pos_len_sq);
+			}
+			else
+			{
+				normals[i] = glm::vec3(0.0f, 0.0f, 1.0f); // Default Z-up
+			}
+		}
 	}
 }

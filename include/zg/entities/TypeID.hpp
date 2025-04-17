@@ -16,6 +16,8 @@ namespace zg::entities
     struct Cube;
     template <size_t N, typename T>
     struct NDParametricCurve;
+    template <size_t N, typename T>
+    struct NUVVolume;
     struct Dialog;
     struct DropdownMenu;
     struct DropdownItem;
@@ -50,10 +52,10 @@ ZG_DEFINE_ENTITY_ID(zg::entities::AssetBrowser, ZG_BASE_OFFSET_ZGCORE + 5);
 ZG_DEFINE_ENTITY_ID(zg::entities::Button, ZG_BASE_OFFSET_ZGCORE + 6);
 ZG_DEFINE_ENTITY_ID(zg::entities::Console, ZG_BASE_OFFSET_ZGCORE + 7);
 ZG_DEFINE_ENTITY_ID(zg::entities::Cube, ZG_BASE_OFFSET_ZGCORE + 8);
-#define NDParametricCurve_2_float NDParametricCurve<2, float>
-#define NDParametricCurve_3_float NDParametricCurve<3, float>
-ZG_DEFINE_ENTITY_ID(zg::entities::NDParametricCurve_2_float, ZG_BASE_OFFSET_ZGCORE + 9);
-ZG_DEFINE_ENTITY_ID(zg::entities::NDParametricCurve_3_float, ZG_BASE_OFFSET_ZGCORE + 10);
+#define NDParametricCurve_2_float zg::entities::NDParametricCurve<2, float>
+#define NDParametricCurve_3_float zg::entities::NDParametricCurve<3, float>
+ZG_DEFINE_ENTITY_ID(NDParametricCurve_2_float, ZG_BASE_OFFSET_ZGCORE + 9);
+ZG_DEFINE_ENTITY_ID(NDParametricCurve_3_float, ZG_BASE_OFFSET_ZGCORE + 10);
 ZG_DEFINE_ENTITY_ID(zg::entities::Dialog, ZG_BASE_OFFSET_ZGCORE + 11);
 ZG_DEFINE_ENTITY_ID(zg::entities::DropdownMenu, ZG_BASE_OFFSET_ZGCORE + 12);
 ZG_DEFINE_ENTITY_ID(zg::entities::DropdownItem, ZG_BASE_OFFSET_ZGCORE + 13);
@@ -67,6 +69,10 @@ ZG_DEFINE_ENTITY_ID(zg::entities::TabsBar, ZG_BASE_OFFSET_ZGCORE + 20);
 ZG_DEFINE_ENTITY_ID(zg::entities::Tab, ZG_BASE_OFFSET_ZGCORE + 21);
 ZG_DEFINE_ENTITY_ID(zg::entities::TextView, ZG_BASE_OFFSET_ZGCORE + 22);
 ZG_DEFINE_ENTITY_ID(zg::entities::Toolbar, ZG_BASE_OFFSET_ZGCORE + 23);
+#define NUVVolume_2_float zg::entities::NUVVolume<2, float>
+#define NUVVolume_3_float zg::entities::NUVVolume<3, float>
+ZG_DEFINE_ENTITY_ID(NUVVolume_2_float, ZG_BASE_OFFSET_ZGCORE + 24);
+ZG_DEFINE_ENTITY_ID(NUVVolume_3_float, ZG_BASE_OFFSET_ZGCORE + 25);
 
 ZG_DEFINE_ENTITY_ID(zg::media::entities::Audio, ZG_BASE_OFFSET_ZGCORE + 300);
 ZG_DEFINE_ENTITY_ID(zg::media::entities::Video, ZG_BASE_OFFSET_ZGCORE + 301);

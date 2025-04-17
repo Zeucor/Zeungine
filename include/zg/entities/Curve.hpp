@@ -7,11 +7,11 @@
 
 namespace zg::entities
 {
-	static const float VEC_EPSILON = 1e-5f;
 	template <size_t N = 3, typename Real = float>
 	struct NDParametricCurve : Entity
 	{
 		size_t getTypeID() override { return EntityTypeID<NDParametricCurve<N, Real>>::id; }
+
 	private:
 		inline static size_t curvesCount = 0;
 
@@ -19,7 +19,7 @@ namespace zg::entities
 		Scene* scenePointer = 0;
 		glm::vec4 color = glm::vec4(1);
 		float radius = 0.75;
-		std::map<char, double> vars = {{'t', 0}};
+		std::map<std::string, double> vars = {{"t", 0}};
 		double tStart;
 		double tEnd;
 		double tStep;
@@ -27,10 +27,23 @@ namespace zg::entities
 		std::array<std::string, N> equations;
 		std::vector<glm::vec4> colors;
 		std::vector<glm::vec3> normals = {};
+		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
+											glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float radius,
+											const std::map<std::string, double>& vars, const std::vector<glm::vec<N, Real>>& points) :
+				Entity(window, scene,
+							 zg::mergeVectors<std::string>(
+								 {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
+							 getIndiceCount(points), {}, getElementCount(points), {}, position, rotation, scale,
+							 (!name.empty()) ? name : ("Curve " + std::to_string(++curvesCount))),
+				scenePointer(&scene), color(color), radius(radius), vars(vars), tStart(tStart), tEnd(tEnd), tStep(tStep)
+		{
+			t_p = &this->vars["t"];
+			generateAndUpdateCurve(points);
+		}
 		template <typename... Args>
 		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 											glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float radius,
-											const std::map<char, double>& vars, double tStart, double tEnd, double tStep,
+											const std::map<std::string, double>& vars, double tStart, double tEnd, double tStep,
 											const std::string& t_equation, const Args&... args) :
 				Entity(window, scene,
 							 zg::mergeVectors<std::string>(
@@ -39,14 +52,14 @@ namespace zg::entities
 							 scale, (!name.empty()) ? name : ("Curve " + std::to_string(++curvesCount))),
 				scenePointer(&scene), color(color), radius(radius), vars(vars), tStart(tStart), tEnd(tEnd), tStep(tStep)
 		{
-			t_p = &this->vars['t'];
+			t_p = &this->vars["t"];
 			size_t index = 0;
-			addFunctions(index, t_equation, args...);
+			addEquations(index, t_equation, args...);
 			generateAndUpdateCurve(tStart, tEnd, tStep);
 		}
 		NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 											glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float radius,
-											const std::map<char, double>& vars, double tStart, double tEnd, double tStep,
+											const std::map<std::string, double>& vars, double tStart, double tEnd, double tStep,
 											const std::array<std::string, N>& equations) :
 				Entity(window, scene,
 							 zg::mergeVectors<std::string>(
@@ -56,53 +69,96 @@ namespace zg::entities
 				scenePointer(&scene), color(color), radius(radius), vars(vars), tStart(tStart), tEnd(tEnd), tStep(tStep),
 				equations(equations)
 		{
-			t_p = &this->vars['t'];
+			t_p = &this->vars["t"];
 			generateAndUpdateCurve(tStart, tEnd, tStep);
 		}
 
-		glm::vec<N, float> solveForT(double t)
+		// --- Count and other methods remain the same as user provided ---
+		size_t calculateCentralPointsCount(const std::vector<glm::vec<N, Real>>& points) { return points.size(); }
+
+		size_t calculateCentralPointsCount(double tStart, double tEnd, double tStep)
 		{
-			*t_p = t;
-			size_t index = 0;
-			glm::vec<N, float> vec;
-			for (auto& equation : equations)
-				vec[index++] = zg::math::MathematicalEquationResolver::solve(equation, vars);
-			return vec;
+			if (tStep <= 0)
+				return 0;
+			return static_cast<size_t>(std::floor((tEnd - tStart) / tStep + VEC_EPSILON)) + 1;
 		}
 
-		// --- generateAndUpdateCurve using Rotation Minimizing Frame (Double Reflection) ---
-		void generateAndUpdateCurve(double tStart, double tEnd, double tStep)
+		size_t getIndiceCount(size_t numPoints)
 		{
-			const float VEC_EPSILON = 1e-5f;
+			if (numPoints < 2)
+				return 0;
+			size_t numSegments = numPoints - 1;
+			size_t indiceCount = 0;
+			if constexpr (N == 2)
+			{
+				indiceCount = (numSegments + 1) * 6; // Segments + closing segment
+			}
+			else if constexpr (N == 3)
+			{
+				const int circleSegments = 16;
+				indiceCount = (numSegments + 1) * circleSegments * 6; // Segments + closing segment
+			}
+			return indiceCount;
+		}
+
+		size_t getElementCount(size_t numPoints)
+		{
+			size_t elementCount = 0;
+			if constexpr (N == 2)
+			{
+				elementCount = numPoints * 2;
+			}
+			else if constexpr (N == 3)
+			{
+				const int circleSegments = 16;
+				elementCount = numPoints * circleSegments;
+			}
+			return elementCount;
+		}
+
+		size_t getIndiceCount(double tStart, double tEnd, double tStep)
+		{
+			size_t numPoints = calculateCentralPointsCount(tStart, tEnd, tStep);
+			return getIndiceCount(numPoints);
+		}
+
+		size_t getElementCount(double tStart, double tEnd, double tStep)
+		{
+			size_t numPoints = calculateCentralPointsCount(tStart, tEnd, tStep);
+			return getElementCount(numPoints);
+		}
+
+		uint32_t getIndiceCount(const std::vector<glm::vec<N, Real>>& points)
+		{
+			size_t numPoints = calculateCentralPointsCount(points);
+			return getIndiceCount(numPoints);
+		}
+		uint32_t getElementCount(const std::vector<glm::vec<N, Real>>& points)
+		{
+			size_t numPoints = calculateCentralPointsCount(points);
+			return getElementCount(numPoints);
+		}
+		void generateAndUpdateCurve(const std::vector<glm::vec<N, Real>>& centralPoints)
+		{
 			const float VEC_EPSILON_SQ = VEC_EPSILON * VEC_EPSILON;
 
 			// Ensure member vectors are clear
-			this->indices.clear();
-			this->positions.clear();
-			this->colors.clear();
-			this->normals.clear();
+			indices.clear();
+			positions.clear();
+			colors.clear();
+			normals.clear();
 
 			// Use references for convenience
 			std::vector<unsigned int>& indices = this->indices;
-			std::vector<glm::vec3>& vertices = this->positions;
-			std::vector<glm::vec4>& vertex_colors = this->colors; // Use member colors vector
-			std::vector<glm::vec3>& vertex_normals = this->normals; // Use member normals vector
+			std::vector<glm::vec3>& vertices = positions;
+			std::vector<glm::vec4>& vertex_colors = colors; // Use member colors vector
+			std::vector<glm::vec3>& vertex_normals = normals; // Use member normals vector
 
 			vertices.reserve(elementCount);
 			vertex_normals.reserve(elementCount);
 			vertex_colors.reserve(elementCount);
 			indices.reserve(indiceCount);
 
-			std::vector<glm::vec<N, Real>> centralPoints;
-			std::vector<double> t_values; // Store t values if needed for debug
-
-			// Pre-calculate central points
-			const double loop_eps = tStep * 0.001;
-			for (double t = tStart; t <= tEnd + loop_eps; t += tStep)
-			{
-				centralPoints.push_back(solveForT(t));
-				t_values.push_back(t);
-			}
 
 			if (centralPoints.size() < 2)
 			{
@@ -110,6 +166,8 @@ namespace zg::entities
 				// Handle degenerate case (e.g., create a single ring or nothing)
 				return;
 			}
+
+			auto& frontFace = window.iRenderer->frontFace;
 
 			if constexpr (N == 2)
 			{
@@ -135,11 +193,11 @@ namespace zg::entities
 						tangent = glm::normalize(glm::vec2(centralPoints[i + 1]) - glm::vec2(centralPoints[i - 1]));
 					}
 					// Handle potential zero tangent (normalize might return NaN)
-					if (glm::any(glm::isnan(tangent)) || glm::length2(tangent) < VEC_EPSILON_SQ)
+					if (glm::any(glm::isnan(tangent)) || glm::length2(tangent) <= VEC_EPSILON_SQ)
 					{
 						if (i > 0)
 							tangent = glm::normalize(p - glm::vec2(centralPoints[i - 1])); // Try backward
-						if (glm::any(glm::isnan(tangent)) || glm::length2(tangent) < VEC_EPSILON_SQ)
+						if (glm::any(glm::isnan(tangent)) || glm::length2(tangent) <= VEC_EPSILON_SQ)
 							tangent = glm::vec2(1.0f, 0.0f); // Default
 					}
 					glm::vec2 normal = glm::vec2(-tangent.y, tangent.x);
@@ -156,12 +214,24 @@ namespace zg::entities
 					{
 						int idx = (int)i * 2;
 						// Original user indexing for 2D
-						indices.push_back(idx - 2);
-						indices.push_back(idx - 1);
-						indices.push_back(idx);
-						indices.push_back(idx);
-						indices.push_back(idx - 1);
-						indices.push_back(idx + 1);
+						if (frontFace == zg::COUNTERCLOCKWISE)
+						{
+							indices.push_back(idx - 2);
+							indices.push_back(idx - 1);
+							indices.push_back(idx);
+							indices.push_back(idx);
+							indices.push_back(idx - 1);
+							indices.push_back(idx + 1);
+						}
+						else
+						{
+							indices.push_back(idx);
+							indices.push_back(idx - 1);
+							indices.push_back(idx - 2);
+							indices.push_back(idx + 1);
+							indices.push_back(idx - 1);
+							indices.push_back(idx);
+						}
 					}
 				}
 				// Closing for 2D
@@ -169,12 +239,24 @@ namespace zg::entities
 				{
 					int firstRowIdx = 0;
 					int lastRowIdx = (centralPoints.size() - 1) * 2;
-					indices.push_back(lastRowIdx);
-					indices.push_back(lastRowIdx + 1);
-					indices.push_back(firstRowIdx);
-					indices.push_back(firstRowIdx);
-					indices.push_back(lastRowIdx + 1);
-					indices.push_back(firstRowIdx + 1);
+					if (frontFace == zg::COUNTERCLOCKWISE)
+					{
+						indices.push_back(lastRowIdx);
+						indices.push_back(lastRowIdx + 1);
+						indices.push_back(firstRowIdx);
+						indices.push_back(firstRowIdx);
+						indices.push_back(lastRowIdx + 1);
+						indices.push_back(firstRowIdx + 1);
+					}
+					else
+					{
+						indices.push_back(firstRowIdx);
+						indices.push_back(lastRowIdx + 1);
+						indices.push_back(lastRowIdx);
+						indices.push_back(firstRowIdx + 1);
+						indices.push_back(lastRowIdx + 1);
+						indices.push_back(firstRowIdx);
+					}
 				}
 			}
 			// --- N == 3 Case (Tube Curve with RMF) ---
@@ -209,12 +291,12 @@ namespace zg::entities
 
 					// Normalize tangent, handle zero length robustly
 					float tangent_len_sq = glm::length2(T);
-					if (tangent_len_sq < VEC_EPSILON_SQ)
+					if (tangent_len_sq <= VEC_EPSILON_SQ)
 					{
 						if (i > 0)
 							T = p_curr - glm::vec3(centralPoints[i - 1]); // Try backward diff
 						tangent_len_sq = glm::length2(T);
-						if (tangent_len_sq < VEC_EPSILON_SQ)
+						if (tangent_len_sq <= VEC_EPSILON_SQ)
 						{
 							T = glm::vec3(1.0f, 0.0f, 0.0f);
 							std::cerr << "WARN: Zero tangent at i=" << i << ". Using default.\n";
@@ -238,15 +320,15 @@ namespace zg::entities
 				{ // Scope for initial frame calculation
 					glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); // Initial up vector
 					glm::vec3 potential_N = glm::cross(T0, up);
-					if (glm::length2(potential_N) < VEC_EPSILON_SQ)
+					if (glm::length2(potential_N) <= VEC_EPSILON_SQ)
 					{ // If T0 is parallel to Y-up
 						up = glm::vec3(1.0f, 0.0f, 0.0f); // Try X-up
 						potential_N = glm::cross(T0, up);
-						if (glm::length2(potential_N) < VEC_EPSILON_SQ)
+						if (glm::length2(potential_N) <= VEC_EPSILON_SQ)
 						{ // If T0 also parallel to X-up (e.g., T0 is Z-aligned)
 							up = glm::vec3(0.0f, 1.0f, 0.0f); // Use Y-up again, N will be X-aligned
 							potential_N = glm::cross(glm::vec3(0.0f, 0.0f, 1.0f), up); // Arbitrary N if T0 is zero (shouldn't happen)
-							if (glm::length2(T0) < VEC_EPSILON_SQ)
+							if (glm::length2(T0) <= VEC_EPSILON_SQ)
 								potential_N = glm::vec3(1.0f, 0.0f, 0.0f); // Handle zero T0
 						}
 					}
@@ -275,7 +357,7 @@ namespace zg::entities
 					glm::vec3 B_curr;
 
 					// Check for degenerate reflection (T_curr == -T_prev)
-					if (v2_len_sq < VEC_EPSILON_SQ)
+					if (v2_len_sq <= VEC_EPSILON_SQ)
 					{
 						// Reflect across an arbitrary axis orthogonal to T_curr
 						// E.g., reflect N across T_curr, B across T_curr
@@ -320,12 +402,24 @@ namespace zg::entities
 							int prevRow = (i - 1) * circleSegments;
 							int currRow = i * circleSegments;
 							int nextJ = (j + 1) % circleSegments;
-							indices.push_back(prevRow + nextJ);
-							indices.push_back(currRow + j);
-							indices.push_back(prevRow + j);
-							indices.push_back(currRow + nextJ);
-							indices.push_back(currRow + j);
-							indices.push_back(prevRow + nextJ);
+							if (frontFace == zg::COUNTERCLOCKWISE)
+							{
+								indices.push_back(prevRow + nextJ);
+								indices.push_back(currRow + j);
+								indices.push_back(prevRow + j);
+								indices.push_back(currRow + nextJ);
+								indices.push_back(currRow + j);
+								indices.push_back(prevRow + nextJ);
+							}
+							else
+							{
+								indices.push_back(prevRow + j);
+								indices.push_back(currRow + j);
+								indices.push_back(prevRow + nextJ);
+								indices.push_back(currRow + j);
+								indices.push_back(prevRow + nextJ);
+								indices.push_back(currRow + nextJ);
+							}
 						}
 					}
 				}
@@ -338,67 +432,60 @@ namespace zg::entities
 					for (int j = 0; j < circleSegments; ++j)
 					{
 						int nextJ = (j + 1) % circleSegments;
-						indices.push_back(lastRow + nextJ);
-						indices.push_back(firstRow + j);
-						indices.push_back(lastRow + j);
-						indices.push_back(firstRow + nextJ);
-						indices.push_back(firstRow + j);
-						indices.push_back(lastRow + nextJ);
+						if (frontFace == zg::COUNTERCLOCKWISE)
+						{
+							indices.push_back(lastRow + nextJ);
+							indices.push_back(firstRow + j);
+							indices.push_back(lastRow + j);
+							indices.push_back(firstRow + nextJ);
+							indices.push_back(firstRow + j);
+							indices.push_back(lastRow + nextJ);
+						}
+						else
+						{
+							indices.push_back(lastRow + j);
+							indices.push_back(firstRow + j);
+							indices.push_back(lastRow + nextJ);
+							indices.push_back(lastRow + nextJ);
+							indices.push_back(firstRow + j);
+							indices.push_back(firstRow + nextJ);
+						}
 					}
 				}
 			} // End if constexpr (N == 3)
-			// computeNormals(indices, positions, normals);
+			// computeNormals(window.iRenderer->frontFace, indices, positions, normals);
 			updateIndices(indices);
 			updateElements("Color", colors);
 			updateElements("Position", positions);
 			updateElements("Normal", normals);
-		} // End generateAndUpdateCurve method
-
-
-		// --- Count and other methods remain the same as user provided ---
-		size_t calculateCentralPointsCount(double tStart, double tEnd, double tStep)
-		{
-			const float VEC_EPSILON = 1e-5f; // Define locally if not static member
-			if (tStep <= 0)
-				return 0;
-			// Use epsilon for robust floating point comparison
-			return static_cast<size_t>(std::floor((tEnd - tStart) / tStep + VEC_EPSILON)) + 1;
 		}
 
-		size_t getIndiceCount(double tStart, double tEnd, double tStep)
+		glm::vec<N, float> solveForT(double t)
 		{
-			size_t numPoints = calculateCentralPointsCount(tStart, tEnd, tStep);
-			if (numPoints < 2)
-				return 0;
-			size_t numSegments = numPoints - 1;
-			size_t indiceCount = 0;
-			if constexpr (N == 2)
-			{
-				indiceCount = (numSegments + 1) * 6; // Segments + closing segment
-			}
-			else if constexpr (N == 3)
-			{
-				const int circleSegments = 16;
-				indiceCount = (numSegments + 1) * circleSegments * 6; // Segments + closing segment
-			}
-			return indiceCount;
+			*t_p = t;
+			size_t index = 0;
+			glm::vec<N, float> vec;
+			for (auto& equation : equations)
+				vec[index++] = zg::math::MathematicalEquationResolver::solve(equation, vars);
+			return vec;
 		}
 
-		size_t getElementCount(double tStart, double tEnd, double tStep)
+		// --- generateAndUpdateCurve using Rotation Minimizing Frame (Double Reflection) ---
+		void generateAndUpdateCurve(double tStart, double tEnd, double tStep)
 		{
-			size_t numPoints = calculateCentralPointsCount(tStart, tEnd, tStep);
-			size_t elementCount = 0;
-			if constexpr (N == 2)
+			std::vector<glm::vec<N, Real>> centralPoints;
+			std::vector<double> t_values; // Store t values if needed for debug
+
+			// Pre-calculate central points
+			const double loop_eps = tStep * 0.001;
+			for (double t = tStart; t <= tEnd + loop_eps; t += tStep)
 			{
-				elementCount = numPoints * 2;
+				centralPoints.push_back(solveForT(t));
+				t_values.push_back(t);
 			}
-			else if constexpr (N == 3)
-			{
-				const int circleSegments = 16;
-				elementCount = numPoints * circleSegments;
-			}
-			return elementCount;
-		}
+
+			generateAndUpdateCurve(centralPoints);
+		} // End generateAndUpdateCurve metho
 
 		bool preRender() override
 		{
@@ -418,12 +505,12 @@ namespace zg::entities
 
 	private:
 		template <typename... Args>
-		void addFunctions(size_t index, const std::string& t_equation, const Args&... args)
+		void addEquations(size_t index, const std::string& t_equation, const Args&... args)
 		{
 			equations[index] = t_equation;
-			addFunctions(++index, args...);
+			addEquations(++index, args...);
 		}
 
-		void addFunctions(size_t index) {}
+		void addEquations(size_t index) {}
 	};
 } // namespace zg::entities

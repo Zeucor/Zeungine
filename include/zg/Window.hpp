@@ -71,6 +71,7 @@ namespace zg
 		bool open = true;
 		std::chrono::steady_clock::time_point lastFrameTime;
 		long double deltaTime;
+		long double lastFrameDeltaTime;
 		bool justWarpedPointer = false;
 		bool borderless = false;
 		bool minimized = false;
@@ -163,6 +164,6 @@ namespace zg
 		void resize(glm::vec2 newSize);
 		void registerOnEntityAddedFunction(const OnEntityAddedFunction& function);
 	};
-	void computeNormals(const std::vector<uint32_t>& indices, const std::vector<glm::vec3>& positions,
+	void computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& indices, const std::vector<glm::vec3>& positions,
 											std::vector<glm::vec3>& normals);
 } // namespace zg

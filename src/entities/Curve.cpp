@@ -32,7 +32,7 @@ Serial& serialize(Serial& serial, const std::shared_ptr<zg::entities::NDParametr
 	serial << varsSize;
 	for (auto i = 1; i <= varsSize; ++i)
 	{
-		char key = 0;
+		std::string key = 0;
 		double value = 0;
 		serial << key << value;
 		vars[key] = value;
@@ -65,7 +65,7 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::NDParametricCu
 	double tEnd = 0;
 	double tStep = 0;
 	float radius = 0;
-	std::map<char, double> vars;
+	std::map<std::string, double> vars;
 	std::array<std::string, 3> equations;
 	serial >> position >> rotation >> scale >> color;
 	auto constantsSize = constants.size();
@@ -78,7 +78,7 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::NDParametricCu
 	serial >> varsSize;
 	for (auto i = 1; i <= varsSize; ++i)
 	{
-		char key = 0;
+		std::string key = 0;
 		double value = 0;
 		serial >> key >> value;
 		vars[key] = value;

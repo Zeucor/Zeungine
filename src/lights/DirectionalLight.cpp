@@ -31,7 +31,7 @@ void DirectionalLightShadow::addShader()
 }
 void DirectionalLightShadow::update()
 {
-	static glm::vec2 projectionDimensions = {192, 192};
+	static glm::vec2 projectionDimensions = {128, 128};
 	vp::Projection projection(window, projectionDimensions, directionalLight.nearPlane, directionalLight.farPlane);
 	vp::View view(directionalLight.position, directionalLight.direction, directionalLight.up, lookAtSet, lookAt);
 	lightSpaceMatrix = projection.matrix * view.matrix;

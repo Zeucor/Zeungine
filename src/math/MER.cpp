@@ -2,11 +2,11 @@
 #include <exprtk.hpp>
 using namespace zg::math;
 exprtk::parser<double> parser;
-double MathematicalEquationResolver::solve(const std::string& equation, const std::map<char, double>& variables)
+double MathematicalEquationResolver::solve(const std::string& equation, const std::map<std::string, double>& variables)
 {
 	exprtk::symbol_table<double> symbol_table;
 	for (auto& pair : variables)
-		symbol_table.add_variable(std::string(1, pair.first), (double&)pair.second);
+		symbol_table.add_variable(pair.first, (double&)pair.second);
 	exprtk::expression<double> expression;
 	expression.register_symbol_table(symbol_table);
 	if (!parser.compile(equation, expression))

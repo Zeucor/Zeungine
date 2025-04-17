@@ -279,8 +279,72 @@ void WIN32Window::warpPointer(glm::vec2 coords)
 	}
 	SetCursorPos(pt.x, pt.y);
 }
-void WIN32Window::showPointer() { ShowCursor(TRUE); }
-void WIN32Window::hidePointer() { ShowCursor(FALSE); }
+void WIN32Window::showPointer()
+{
+	// Force a WM_SETCURSOR message to be sent if the cursor is over the window
+	// Get current cursor position
+	POINT cursorPos;
+	if (GetCursorPos(&cursorPos))
+	{
+		// Check if the cursor is over our window's client area
+		RECT clientRect;
+		if (GetClientRect(hwnd, &clientRect))
+		{
+			if (ScreenToClient(hwnd, &cursorPos))
+			{
+				if (PtInRect(&clientRect, cursorPos))
+				{
+					// If cursor is inside, SetCursor will be called via WM_SETCURSOR
+					// We might need to invalidate or trigger a mouse move event
+					// or simply rely on the next natural mouse move.
+					// For immediate effect, you could call SetCursor directly here,
+					// but handling WM_SETCURSOR is generally preferred.
+					SetCursor(LoadCursor(NULL, IDC_ARROW)); // Show standard arrow
+				}
+				else
+				{
+					// Cursor is outside, ShowCursor might be needed if it was globally hidden
+					while (::ShowCursor(TRUE) < 0)
+						;
+				}
+			}
+		}
+	}
+	// Fallback or if not over window, ensure global counter is positive
+	while (::ShowCursor(TRUE) < 0)
+		;
+}
+void WIN32Window::hidePointer()
+{
+	// Force a WM_SETCURSOR message if the cursor is over the window
+	POINT cursorPos;
+	if (GetCursorPos(&cursorPos))
+	{
+		RECT clientRect;
+		if (GetClientRect(hwnd, &clientRect))
+		{
+			if (ScreenToClient(hwnd, &cursorPos))
+			{
+				if (PtInRect(&clientRect, cursorPos))
+				{
+					// If cursor is inside, SetCursor(NULL) will hide it via WM_SETCURSOR
+					// Triggering WM_SETCURSOR might require moving the mouse slightly
+					// or calling SetCursor directly for immediate effect.
+					SetCursor(NULL); // Hide cursor immediately if over client area
+				}
+				else
+				{
+					// Cursor is outside, use ShowCursor(FALSE)
+					while (::ShowCursor(FALSE) >= 0)
+						;
+				}
+			}
+		}
+	}
+	// Fallback or if not over window, ensure global counter is negative
+	while (::ShowCursor(FALSE) >= 0)
+		;
+}
 void WIN32Window::setXY()
 {
 	auto& windowX = renderWindowPointer->windowX;

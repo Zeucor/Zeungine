@@ -1,23 +1,14 @@
 #include <zg/Scene.hpp>
+#include <zg/Serial.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/utilities.hpp>
-#include <zg/Serial.hpp>
 using namespace zg::entities;
 Cube::Cube(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
 					 glm::vec3 size, const zg::shaders::RuntimeConstants& constants, std::string_view name) :
 		zg::Entity(window, scene,
 							 zg::mergeVectors<std::string>(
 								 {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
-							 36,
-							 {
-								 0,	 1,	 2,	 2,	 3,	 0, // Front face
-								 4,	 7,	 6,	 6,	 5,	 4, // Back face
-								 8,	 9,	 10, 10, 11, 8, // Left face
-								 12, 15, 14, 14, 13, 12, // Right face
-								 16, 17, 18, 18, 19, 16, // Top face
-								 20, 23, 22, 22, 21, 20 // Bottom face
-							 },
-							 24,
+							 36, getIndices(window), 24,
 							 {
 								 {-size.x / 2, -size.y / 2, size.z / 2},	{size.x / 2, -size.y / 2, size.z / 2},
 								 {size.x / 2, size.y / 2, size.z / 2},		{-size.x / 2, size.y / 2, size.z / 2}, // Front
@@ -33,22 +24,42 @@ Cube::Cube(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat r
 								 {size.x / 2, -size.y / 2, size.z / 2},		{size.x / 2, -size.y / 2, -size.z / 2} // Bottom
 							 },
 							 position, rotation, scale, name.empty() ? "Cube " + std::to_string(++cubesCount) : name),
-		size(size),
-		colors({
-			{1, 0, 0, 1}, {1, 0, 0, 1}, {1, 0, 1, 1}, {1, 0, 1, 1}, // Front face
-			{0, 0, 1, 1}, {0, 0, 1, 1}, {0, 1, 0, 1}, {0, 1, 0, 1}, // Back face
-			{0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, // Left face
-			{1, 1, 0, 1}, {1, 1, 0, 1}, {1, 1, 0, 1}, {1, 1, 0, 1}, // Right face
-			{0, 0.2, 1, 1}, {0, 1, 0.3, 1}, {0.5, 0, 1, 1}, {.8, 0.7, 0, 1}, // Top face
-			{1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1}, {1, 0, 1, 1} // Bottom face
-		})
+		size(size), colors({
+									{1, 0, 0, 1},		{1, 0, 0, 1},		{1, 0, 1, 1},		{1, 0, 1, 1}, // Front face
+									{0, 0, 1, 1},		{0, 0, 1, 1},		{0, 1, 0, 1},		{0, 1, 0, 1}, // Back face
+									{0, 0, 1, 1},		{0, 0, 1, 1},		{0, 0, 1, 1},		{0, 0, 1, 1}, // Left face
+									{1, 1, 0, 1},		{1, 1, 0, 1},		{1, 1, 0, 1},		{1, 1, 0, 1}, // Right face
+									{0, 0.2, 1, 1}, {0, 1, 0.3, 1}, {0.5, 0, 1, 1}, {.8, 0.7, 0, 1}, // Top face
+									{1, 0, 1, 1},		{1, 0, 1, 1},		{1, 0, 1, 1},		{1, 0, 1, 1} // Bottom face
+								})
 {
-	computeNormals(indices, positions, normals);
+	computeNormals(window.iRenderer->frontFace, indices, positions, normals);
 	updateIndices(indices);
 	updateElements("Color", colors);
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 };
+std::vector<uint32_t> Cube::getIndices(zg::Window& window)
+{
+	if (window.iRenderer->frontFace == zg::CLOCKWISE)
+		return {{
+			2,	1,	0,	0,	3,	2, // Front face
+			6,	7,	4,	4,	5,	6, // Back face
+			10,	9,	8, 8, 11, 10, // Left face
+			14, 15, 12, 12, 13, 14, // Right face
+			18, 17, 16, 16, 19, 18, // Top face
+			22, 23, 20, 20, 21, 22 // Bottom face
+		}};
+	else
+		return {{
+			0,	1,	2,	2,	3,	0, // Front face
+			4,	7,	6,	6,	5,	4, // Back face
+			8,	9,	10, 10, 11, 8, // Left face
+			12, 15, 14, 14, 13, 12, // Right face
+			16, 17, 18, 18, 19, 16, // Top face
+			20, 23, 22, 22, 21, 20 // Bottom face
+		}};
+}
 bool Cube::preRender()
 {
 	const auto& model = getModelMatrix();
@@ -57,12 +68,13 @@ bool Cube::preRender()
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("Projection", *this,
+									 projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
 	shader->unbind();
 	return true;
 }
-template<>
+template <>
 Serial& serialize(Serial& serial, const std::shared_ptr<zg::entities::Cube>& cubePointer)
 {
 	if (!cubePointer)
@@ -86,7 +98,7 @@ Serial& serialize(Serial& serial, const std::shared_ptr<zg::entities::Cube>& cub
 	serial << name;
 	return serial;
 }
-template<>
+template <>
 Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::Cube>& cubePointer)
 {
 	bool wroteBit = false;
@@ -108,6 +120,7 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::entities::Cube>& cubePoi
 	for (auto j = 0; j < constantsSize; j++)
 		serial >> constants[j];
 	serial >> name;
-	cubePointer = std::make_shared<zg::entities::Cube>(*windowPointer, *scenePointer, position, rotation, scale, size, constants, name);
+	cubePointer = std::make_shared<zg::entities::Cube>(*windowPointer, *scenePointer, position, rotation, scale, size,
+																										 constants, name);
 	return serial;
 }

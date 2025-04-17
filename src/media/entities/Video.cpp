@@ -49,7 +49,7 @@ void Video::init(glm::vec2 _size)
 	updateIndices(indices);
 	updateElements("UV2", uvs);
 	setSize(glm::vec3(_size, 0));
-	computeNormals(indices, positions, normals);
+	computeNormals(window.iRenderer->frontFace, indices, positions, normals);
 	updateElements("Normal", normals);
 	NANOSECONDS_DURATION videoFrameDuration = getVideoFrameDuration();
 	budget = std::make_shared<ZBudget<>>(videoFrameDuration, (size_t)1, true, false, uri + "+budget");

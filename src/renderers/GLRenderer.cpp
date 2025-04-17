@@ -124,11 +124,24 @@ void GLRenderer::init()
 	gladLoadGLContext(glContext, (GLADloadfunc)getProc);
 	glContext->Enable(GL_DEPTH_TEST);
 	GLcheck(*this, "glEnable");
-	glContext->Enable(GL_CULL_FACE);
-	GLcheck(*this, "glEnable");
-	glContext->CullFace(GL_BACK);
-	GLcheck(*this, "glCullFace");
-	glContext->FrontFace(GL_CCW);
+	if (cullMode == zg::NOCULL)
+	{
+		glContext->Disable(GL_CULL_FACE);
+		GLcheck(*this, "glDisable");
+	}
+	else
+	{
+		glContext->Enable(GL_CULL_FACE);
+		GLcheck(*this, "glEnable");
+		if (cullMode == zg::FRONT)
+			glContext->CullFace(GL_FRONT);
+		if (cullMode == zg::BACK)
+			glContext->CullFace(GL_BACK);;
+		if (cullMode == zg::FRONTANDBACK)
+			glContext->CullFace(GL_FRONT_BACK);
+		GLcheck(*this, "glCullFace");
+	}
+	glContext->FrontFace(frontFace == zg::COUNTERCLOCKWISE ? GL_CCW : GL_CW);
 	GLcheck(*this, "glFrontFace");
 	glContext->Viewport(0, 0, platformWindowPointer->renderWindowPointer->windowWidth,
 						platformWindowPointer->renderWindowPointer->windowHeight);

@@ -98,7 +98,7 @@ TestScene::TestScene(Window& window) :
 		directionalLightShadows.emplace_back(window, directionalLights[0]);
 		sun = std::make_shared<zg::entities::NDParametricCurve<3>>(
 			window, *this, dl.position, glm::quat(1, 0, 0, 0), glm::vec3(4.3), glm::vec4(0.944, 1.00, 0.760, 1),
-			shaders::RuntimeConstants(), "Sun", commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt,
+			shaders::RuntimeConstants(), "Sun", commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt,
 			"cos(8*t) * cos(t)", // Combination of angular frequencies
 			"sin(8*t) * cos(t)",
 			"sin(t)" // Controls latitude based on main angle t
@@ -118,7 +118,7 @@ TestScene::TestScene(Window& window) :
 				auto simpleHelix = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 4.0f * PI, commonDt, "2*cos(t)",
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 4.0f * PI, commonDt, "2*cos(t)",
 					"2*sin(t)", "0.5*t");
 				addEntity(simpleHelix);
 			}
@@ -128,7 +128,7 @@ TestScene::TestScene(Window& window) :
 				auto conicalHelix = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 8.0f * PI,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 8.0f * PI,
 					PI / 128.f, // Smaller dt for larger range
 					"0.5 * t * cos(t)", "0.5 * t * sin(t)", "0.5 * t");
 				addEntity(conicalHelix);
@@ -139,7 +139,7 @@ TestScene::TestScene(Window& window) :
 				auto toroidalSpiral1 = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt,
 					"(5 + 1.5 * cos(5 * t)) * cos(t)", "(5 + 1.5 * cos(5 * t)) * sin(t)", "1.5 * sin(5 * t)");
 				addEntity(toroidalSpiral1);
 			}
@@ -150,7 +150,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt, "sin(t) + 2 * sin(2 * t)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt, "sin(t) + 2 * sin(2 * t)",
 					"cos(t) - 2 * cos(2 * t)", "-sin(3 * t)");
 				addEntity(trefoilKnot);
 			}
@@ -161,7 +161,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.01f, PI - 0.01f,
+					commonLineThickness, std::map<std::string, double>(), 0.01f, PI - 0.01f,
 					PI / 128.f, // Avoid poles t=0, t=PI if parser struggles
 					"sin(t) * cos(15 * t)", "sin(t) * sin(15 * t)", "cos(t)");
 				addEntity(sphericalSpiral);
@@ -173,7 +173,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 4.0f * PI, commonDt, "1 * (1 + cos(t))", "1 * sin(t)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 4.0f * PI, commonDt, "1 * (1 + cos(t))", "1 * sin(t)",
 					"2 * sin(t / 2)");
 				addEntity(viviani);
 			}
@@ -184,7 +184,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt, "sin(t)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt, "sin(t)",
 					"sin(2 * t + acos(-1) / 3)", "cos(3 * t)");
 				addEntity(lissajous3D_123);
 			}
@@ -195,7 +195,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scale carefully
-					commonLineThickness, std::map<char, double>(), 0.0f, 12.0f * PI, PI / 256.f, // Needs high resolution & range
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 12.0f * PI, PI / 256.f, // Needs high resolution & range
 					"sin(t) * (exp(cos(t)) - 2 * cos(4 * t) - pow(sin(t / 12), 5))",
 					"cos(t) * (exp(cos(t)) - 2 * cos(4 * t) - pow(sin(t / 12), 5))",
 					"cos(2*t)" // Use cos for z variation
@@ -209,7 +209,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt, "(2 + cos(2 * t)) * cos(3 * t)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt, "(2 + cos(2 * t)) * cos(3 * t)",
 					"(2 + cos(2 * t)) * sin(3 * t)", "sin(4 * t)");
 				addEntity(figureEightKnot);
 			}
@@ -219,7 +219,7 @@ TestScene::TestScene(Window& window) :
 				auto ellipticalHelix = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 6.0f * PI, commonDt, "4 * cos(t)",
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 6.0f * PI, commonDt, "4 * cos(t)",
 					"2 * sin(t)",
 					"0.6 * t" // Different radii for x and y
 				);
@@ -231,7 +231,7 @@ TestScene::TestScene(Window& window) :
 				auto toroidalSpiral2 = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI,
 					PI / 128.f, // Needs more resolution
 					"(6 + 1 * cos(3 * t)) * cos(7 * t)", "(6 + 1 * cos(3 * t)) * sin(7 * t)", "1 * sin(3 * t)");
 				addEntity(toroidalSpiral2);
@@ -242,7 +242,7 @@ TestScene::TestScene(Window& window) :
 				auto archimedeanRaised = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 10.0f * PI, PI / 128.f,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 10.0f * PI, PI / 128.f,
 					"0.2 * t * cos(t)", "0.2 * t * sin(t)",
 					"2 * cos(t)" // Spirals out while oscillating vertically
 				);
@@ -255,7 +255,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt, "sin(t)", "sin(t) * cos(t)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt, "sin(t)", "sin(t) * cos(t)",
 					"cos(2*t)" // z oscillates twice per loop
 				);
 				addEntity(lemniscateGerono3D);
@@ -266,7 +266,7 @@ TestScene::TestScene(Window& window) :
 				auto helixOnCone = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.1f, 10.0f,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.1f, 10.0f,
 					0.05f, // Using linear t range for simplicity
 					"t * cos(8 * acos(-1) * t / 10)", // x = r * cos(angle), r=t, angle proportional to t
 					"t * sin(8 * acos(-1) * t / 10)", // y = r * sin(angle)
@@ -281,7 +281,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt, "pow(cos(t), 3)", "pow(sin(t), 3)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt, "pow(cos(t), 3)", "pow(sin(t), 3)",
 					"cos(4*t)" // z oscillates 4 times
 				);
 				addEntity(astroid3D);
@@ -293,7 +293,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt, "(2 + cos(5 * t / 2)) * cos(t)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt, "(2 + cos(5 * t / 2)) * cos(t)",
 					"(2 + cos(5 * t / 2)) * sin(t)", "sin(5 * t / 2)");
 				addEntity(cinquefoilKnot);
 			}
@@ -303,7 +303,7 @@ TestScene::TestScene(Window& window) :
 				auto twistedCubic = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), -5.0f, 5.0f,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), -5.0f, 5.0f,
 					0.1f, // Polynomials often look good over symmetric range
 					"t", "t*t", "t*t*t");
 				addEntity(twistedCubic);
@@ -315,7 +315,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt, "cos(3 * t)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt, "cos(3 * t)",
 					"cos(2 * t + acos(-1) / 2)", "sin(t)");
 				addEntity(lissajous3D_321);
 			}
@@ -325,7 +325,7 @@ TestScene::TestScene(Window& window) :
 				auto dampedHelix = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 10.0f * PI, PI / 128.f,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 10.0f * PI, PI / 128.f,
 					"exp(-0.1*t) * 5 * cos(2*t)", // Radius decreases exponentially
 					"exp(-0.1*t) * 5 * sin(2*t)", "0.4 * t");
 				addEntity(dampedHelix);
@@ -336,7 +336,7 @@ TestScene::TestScene(Window& window) :
 				auto saddleCurve = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), -2.0f * PI, 2.0f * PI, commonDt,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), -2.0f * PI, 2.0f * PI, commonDt,
 					"2 * t * cos(t)", // X follows spiral-like path
 					"3 * t * sin(t)", // Y follows related spiral
 					"(2*t*cos(t))^2 / 4 - (3*t*sin(t))^2 / 9" // z = x^2/a^2 - y^2/b^2
@@ -350,7 +350,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 12.0f * PI, PI / 128.f, // Needs range
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 12.0f * PI, PI / 128.f, // Needs range
 					"cos(t) + 0.5 * cos(7 * t) + 0.3 * sin(17 * t)", "sin(t) + 0.5 * sin(7 * t) + 0.3 * cos(17 * t)",
 					"0.2 * sin(3 * t)");
 				addEntity(billsCurve);
@@ -361,7 +361,7 @@ TestScene::TestScene(Window& window) :
 				auto paraboloidSpiral = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 4.0f * PI, PI / 128.f,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 4.0f * PI, PI / 128.f,
 					"sqrt(t) * cos(4*t)", // Use sqrt(t) for radius to match z=x^2+y^2
 					"sqrt(t) * sin(4*t)",
 					"t" // z = r^2 = t
@@ -375,7 +375,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 10.0f * PI, PI / 128.f,
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 10.0f * PI, PI / 128.f,
 					"t * cos(t)", // X based on t
 					"t * sin(t)", // Y based on t
 					"sin(5 * t)" // Z oscillates
@@ -389,7 +389,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt, "(2 + cos(3 * t)) * cos(2 * t)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt, "(2 + cos(3 * t)) * cos(2 * t)",
 					"(2 + cos(3 * t)) * sin(2 * t)", "sin(3 * t)");
 				addEntity(torusKnot23);
 			}
@@ -398,7 +398,7 @@ TestScene::TestScene(Window& window) :
 				// 25. Twisted Heart Curve 3D
 				auto twistedHeart3D = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5), glm::vec4(0.9, 0.2, 0.2, 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt,
 					"16 * pow(sin(t), 3)", "13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t)",
 					"2 * sin(t+acos(-1)/2)" // Add simple z oscillation
 				);
@@ -411,7 +411,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt,
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt,
 					"cos(8*t) * cos(t)", // Combination of angular frequencies
 					"sin(8*t) * cos(t)",
 					"sin(t)" // Controls latitude based on main angle t
@@ -424,7 +424,7 @@ TestScene::TestScene(Window& window) :
 				auto logSpiralRaised = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 6.0f * PI, PI / 128.f,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 6.0f * PI, PI / 128.f,
 					"0.5 * exp(0.15*t) * cos(t)", // Radius grows exponentially
 					"0.5 * exp(0.15*t) * sin(t)",
 					"3 * sin(t)" // Vertical oscillation
@@ -437,7 +437,7 @@ TestScene::TestScene(Window& window) :
 				auto hypotrochoid3D = std::make_shared<zg::entities::NDParametricCurve<3>>(
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
-					commonShaderConstants, "", commonLineThickness, std::map<char, double>(), 0.0f, 10.0f * PI,
+					commonShaderConstants, "", commonLineThickness, std::map<std::string, double>(), 0.0f, 10.0f * PI,
 					PI / 128.f, // Needs range for inner loops
 					"(5 - 2) * cos(t) + 3 * cos((5 - 2) / 2.0 * t)", // R=5, r=2, d=3
 					"(5 - 2) * sin(t) - 3 * sin((5 - 2) / 2.0 * t)",
@@ -452,7 +452,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, PI / 128.f, // More resolution needed
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, PI / 128.f, // More resolution needed
 					"cos(4 * t)", "sin(5 * t + acos(-1) / 4)", "cos(6 * t)");
 				addEntity(lissajous3D_456);
 			}
@@ -463,7 +463,7 @@ TestScene::TestScene(Window& window) :
 					window, *this, calculatePosition(j), glm::quat(1, 0, 0, 0), glm::vec3(0.5),
 					glm::vec4(Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), Random::value<float>(0.2, 0.9), 1),
 					commonShaderConstants, "", // Scaled up
-					commonLineThickness, std::map<char, double>(), 0.0f, 2.0f * PI, commonDt, "(1 + 0.5 * cos(t / 2.0)) * cos(t)",
+					commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt, "(1 + 0.5 * cos(t / 2.0)) * cos(t)",
 					"(1 + 0.5 * cos(t / 2.0)) * sin(t)",
 					"0.5 * sin(t / 2.0)" // Parameterization of center line of a Möbius strip
 				);

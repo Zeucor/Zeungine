@@ -12,6 +12,7 @@ namespace zg::components::scenes
 {
 	struct EntityThirdPersonCamera : interfaces::ISceneComponent
 	{
+		bool focused = false;
 		UniqueIdentifier mouseMoveID = 0;
 		UniqueIdentifier focusID = 0;
 		Scene& scene;
@@ -33,6 +34,7 @@ namespace zg::components::scenes
 				std::bind(&EntityThirdPersonCamera::mouseMoveHandler, this, std::placeholders::_1));
 			focusID =
 				scene.window.addFocusHandler(std::bind(&EntityThirdPersonCamera::focusHandler, this, std::placeholders::_1));
+			focusHandler(true);
 		}
 
 		~EntityThirdPersonCamera()
@@ -114,13 +116,6 @@ namespace zg::components::scenes
 
 		void mouseMoveHandler(glm::vec2 coords)
 		{
-			if (scene.window.justWarpedPointer)
-			{
-				lastPosition = coords;
-				scene.window.justWarpedPointer = false;
-				return;
-			}
-
 			if (!scene.window.focused)
 			{
 				return;
@@ -149,9 +144,12 @@ namespace zg::components::scenes
 			if (!centerBox.isPointInside(coords))
 			{
 				scene.window.warpPointer(center);
+				lastPosition = center;
 			}
-
-			lastPosition = coords;
+			else
+			{
+				lastPosition = coords;
+			}
 		}
 
 

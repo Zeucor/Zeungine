@@ -19,5 +19,6 @@ namespace zg::entities
 			 const shaders::RuntimeConstants &constants = {},
 			 std::string_view name = "");
 		bool preRender() override;
+		std::vector<uint32_t> getIndices(zg::Window& window);
 	};
 }

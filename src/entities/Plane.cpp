@@ -5,7 +5,7 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat
 			 glm::vec2 size, glm::vec4 color, const zg::shaders::RuntimeConstants &constants, std::string_view name) : zg::Entity(window, scene,
 																																  zg::mergeVectors<std::string>(
 																																	  {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
-																																  6, {0, 1, 2, 2, 3, 0}, 4,
+																																  6, getIndices(window), 4,
 																																  {
 																																	  {-size.x / 2, -size.y / 2, 0},
 																																	  {size.x / 2, -size.y / 2, 0},
@@ -15,7 +15,7 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat
 																																  position, rotation, scale, name.empty() ? "Plane " + std::to_string(++planesCount) : name),
 																													   uvs({{}, {}, {}, {}}),  size(size)
 {
-	computeNormals(indices, positions, normals);
+	computeNormals(window.iRenderer->frontFace, indices, positions, normals);
 	updateIndices(indices);
 	setColor(color);
 	updateElements("Position", positions);
@@ -27,9 +27,7 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat
 												 zg::mergeVectors<std::string>(
 													 {{"UV2", "Position", "Normal", "Texture2D", "View", "Projection", "Model", "CameraPosition"}}, constants),
 												 6,
-												 {
-													 0, 1, 2, 2, 3, 0 // Front face
-												 },
+												 getIndices(window),
 												 4,
 												 {
 													 {-size.x / 2, -size.y / 2, 0},
@@ -56,12 +54,19 @@ Plane::Plane(zg::Window &window, zg::Scene &scene, glm::vec3 position, glm::quat
 		flipUVsY(uvs);
 		break;
 	}
-	computeNormals(indices, positions, normals);
+	computeNormals(window.iRenderer->frontFace, indices, positions, normals);
 	updateIndices(indices);
 	updateElements("UV2", uvs);
 	updateElements("Position", positions);
 	updateElements("Normal", normals);
 };
+std::vector<uint32_t> Plane::getIndices(zg::Window& window)
+{
+	if (window.iRenderer->frontFace == zg::CLOCKWISE)
+		return {{0, 1, 2, 2, 3, 0}};
+	else
+		return {{2, 1, 0, 0, 3, 2}};
+}
 bool Plane::preRender()
 {
 	const auto &model = getModelMatrix();
