@@ -160,7 +160,7 @@ namespace zg
 		// runnables
 		void runOnThread(const Runnable& runnable);
 		void runRunnables();
-		void updateDeltaTime(NANO_TIMEPOINT now);
+		void updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTime);
 		void resize(glm::vec2 newSize);
 		void registerOnEntityAddedFunction(const OnEntityAddedFunction& function);
 	};

@@ -11,12 +11,13 @@
 #include <zg/entities/Frame.hpp>
 #include <zg/entities/Plane.hpp>
 #include <zg/entities/Volume.hpp>
+#include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/math/Rotations.hpp>
 #include <zg/physics/CollisionManifold.hpp>
 #include <zg/vp/VFBLR.hpp>
 #include <zg/vp/VML.hpp>
 zg::shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
-glm::vec3 windowVisualizerPosition(57, 42, 58);
+glm::vec3 windowVisualizerPosition(56.8, 42, 42);
 struct PhysicsScene : zg::Scene
 {
 	std::shared_ptr<zg::components::scenes::EntityThirdPersonCamera> thirdPerson;
@@ -56,14 +57,27 @@ struct PhysicsScene : zg::Scene
 	zg::UniqueIdentifier lID = 0;
 	zg::UniqueIdentifier rID = 0;
 	zg::UniqueIdentifier sID = 0;
+	zgfilesystem::File robotoFile;
+	zg::fonts::freetype::FreetypeFont robotoRegular;
+	std::vector<std::shared_ptr<zg::entities::Plane>> frametimeEntities;
+	int64_t frametimeCursorIndex = -1;
+	std::shared_ptr<zg::entities::Plane> frametimeCursor;
+	std::vector<std::shared_ptr<zg::entities::Plane>> lastDeltaTextEntities;
+	int64_t lastDeltaTextCursorIndex = -1;
+	std::shared_ptr<zg::entities::Plane> lastDeltaTextCursor;
 	int f = 0;
 	int b = 0;
 	int l = 0;
 	int r = 0;
 	int s = 0;
-	PhysicsScene(zg::Window& window) : Scene(window, {50, 50, 50}, {0, -1, 1}, 81.f)
-	// vml(*this),
-	// vfblr(*this, zg::vp::VFBLR::KeyScheme::WSADSC, 8.f)
+	PhysicsScene(zg::Window& window) :
+			Scene(window, {50, 50, 50}, {0, -1, 1}, 81.f),
+			// vml(*this),
+			// vfblr(*this, zg::vp::VFBLR::KeyScheme::WSADSC, 8.f)
+			robotoFile(
+				zgfilesystem::File(zgfilesystem::File::getProgramDirectoryPath() / "fonts" / "Roboto" / "Roboto-Regular.ttf",
+													 zg::enums::EFileLocation::Absolute, "r")),
+			robotoRegular(window, robotoFile)
 	{
 		clearColor = {0, 0, 1, 1};
 		{
@@ -106,7 +120,7 @@ struct PhysicsScene : zg::Scene
 		// cube
 		{
 			cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::quat(1, 0, 0, 0),
-																									glm::vec3(1), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
+																									glm::vec3(2), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
 			cubeRigidBody = std::make_shared<zg::components::entities::RigidBody>(
 				zg::components::entities::RigidBodyInfo{*cube, zg::components::entities::BodyType::Dynamic, 1.0f, 0.85f, 0.7f,
 																								true, false, glm::vec<3, bool>(1, 0, 1), glm::vec<3, bool>(0)});
@@ -114,7 +128,7 @@ struct PhysicsScene : zg::Scene
 			cube->addComponent(std::make_shared<zg::components::entities::Collider>(zg::components::entities::ColliderInfo{
 				*cube,
 				// std::make_shared<zg::components::entities::MeshShapeData>(*cube),
-				std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
+				std::make_shared<zg::components::entities::BoxShapeData>(glm::vec3(3.0, 3.0, 3.0) / 2.f),
 				zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 			addEntity(cube);
 			// cube2
@@ -391,23 +405,38 @@ struct PhysicsScene : zg::Scene
 		}
 		// frame
 		{
-			auto angle = glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
-			frame = std::make_shared<zg::entities::Frame>(window, *this, windowVisualizerPosition + glm::vec3(0, 0.5, -0.1), angle, glm::vec3(1),
-																										glm::vec2(5.1, 2.0f), 0.2f, glm::vec4(1, 1, 1, 1),
-																										commonShaderConstants, "Window Curve Frame");
+			auto angle = glm::angleAxis(glm::radians(0.f), glm::vec3(0.f, 1.f, 0.f));
+			frame = std::make_shared<zg::entities::Frame>(
+				window, *this, windowVisualizerPosition + glm::vec3(0, 1.0, -0.1), angle, glm::vec3(1), glm::vec2(5.1, 2.0f),
+				0.06f, glm::vec4(0.869, 0.860, 0.864, 1), commonShaderConstants, "Window Curve Frame");
 			frameID = addEntity(frame);
-			median = std::make_shared<zg::entities::Plane>(window, *this, windowVisualizerPosition + glm::vec3(0, 0.5, -0.05), angle, glm::vec3(1),
-																										 glm::vec2(5.1, 0.05f), glm::vec4(0, 0.8, 0.1, 1.f),
-																										 commonShaderConstants, "Window Curve Median");
+			median = std::make_shared<zg::entities::Plane>(
+				window, *this, windowVisualizerPosition + glm::vec3(0, 1.0, -0.05), angle, glm::vec3(1), glm::vec2(5.1, 0.05f),
+				glm::vec4(0.208, 0.990, 0.586, 1.f), commonShaderConstants, "Window Curve Median");
 			addEntity(median);
-			overwork = std::make_shared<zg::entities::Plane>(window, *this, windowVisualizerPosition + glm::vec3(0, 1.0, -0.05), angle, glm::vec3(1),
-																										 glm::vec2(5.1, 0.05f), glm::vec4(0.9, 0.1, 0.1, 1.f),
-																										 commonShaderConstants, "Window Curve Overwork");
+			overwork = std::make_shared<zg::entities::Plane>(
+				window, *this, windowVisualizerPosition + glm::vec3(0, 1.5, -0.05), angle, glm::vec3(1), glm::vec2(5.1, 0.05f),
+				glm::vec4(0.868, 0.960, 0.0384, 1.f), commonShaderConstants, "Window Curve Overwork");
 			addEntity(overwork);
-			underwork = std::make_shared<zg::entities::Plane>(window, *this, windowVisualizerPosition + glm::vec3(0, 0.0, -0.05), angle, glm::vec3(1),
-																										 glm::vec2(5.1, 0.05f), glm::vec4(0.1, 0.1, 0.95, 1.f),
-																										 commonShaderConstants, "Window Curve Underwork");
+			underwork = std::make_shared<zg::entities::Plane>(
+				window, *this, windowVisualizerPosition + glm::vec3(0, 0.5, -0.05), angle, glm::vec3(1), glm::vec2(5.1, 0.05f),
+				glm::vec4(0.700, 0.715, 1.00, 1.f), commonShaderConstants, "Window Curve Underwork");
 			addEntity(underwork);
+			//
+			std::string frametimeString = "Frametime: " + std::to_string(window.deltaTime);
+			float frametimeFontsize = 42, frametimeLineheight = 0;
+			auto frametimeBounds = glm::vec2(0);
+			auto frametimeBreakstyle = zg::enums::EBreakStyle::None;
+			auto frametimeScale = glm::vec3(1.f / (frametimeFontsize * 8.f), 1.f / (frametimeFontsize * 8.f), 1.f);
+			auto frametimeSize = robotoRegular.stringSize(frametimeString, frametimeFontsize, frametimeLineheight,
+																										frametimeBounds, frametimeBreakstyle);
+			robotoRegular.stringToScene(frametimeString,
+																	windowVisualizerPosition +
+																		glm::vec3(2.5 - (frametimeSize.x * frametimeScale.x),
+																							1.0 + ((frametimeLineheight * frametimeScale.y) / 2.f), -0.15),
+																	glm::vec4(0.869, 0.860, 0.864, 1), angle, frametimeScale, frametimeFontsize,
+																	frametimeLineheight, frametimeSize * (glm::vec2(frametimeScale) + glm::vec2(1e-3f)),
+																	frametimeBreakstyle, *this, frametimeEntities, frametimeCursorIndex, frametimeCursor);
 		}
 		// cube controls
 		{
@@ -448,11 +477,11 @@ struct PhysicsScene : zg::Scene
 		{
 			if (!curve1ID)
 			{
-				curve1Points.resize(50);
-				auto angle = glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
+				curve1Points.resize(42, glm::vec2(0));
+				auto angle = glm::angleAxis(glm::radians(0.f), glm::vec3(0.f, 1.f, 0.f));
 				curve1 = std::make_shared<zg::entities::NDParametricCurve<2, float>>(
 					window, *this, windowVisualizerPosition, angle, glm::vec3(1), glm::vec4(1, 1, 1, 1), commonShaderConstants,
-					"Window Curve", 0.1f, std::map<std::string, double>(), curve1Points);
+					"Window Curve", 0.02f, std::map<std::string, double>(), curve1Points);
 				curve1ID = addEntity(curve1);
 			}
 			if (curveFrameOffset > 0)
@@ -465,9 +494,10 @@ struct PhysicsScene : zg::Scene
 				return;
 			}
 			curveFrameOffset++;
-			static constexpr float step = 0.1f;
+			static constexpr float step = 0.125f;
+			static constexpr float startX = (-5 / 2.f) - (step * 2) + (step / 2.f);
 			auto curve1PointsData = curve1Points.data();
-			if (curve1PointsIndex >= 50)
+			if (curve1PointsIndex >= 42)
 			{
 				auto i = 0;
 				for (; i < curve1PointsIndex - 1; i++)
@@ -480,12 +510,33 @@ struct PhysicsScene : zg::Scene
 				curve1PointsIndex--;
 			}
 			float lastFrameDelta = window.lastFrameDeltaTime;
-			auto lastX = curve1PointsIndex ? curve1Points[curve1PointsIndex - 1].x : -2.5;
-			auto thisY = (lastFrameDelta / (float)window.deltaTime) - 1.0f;
-			// std::cout << "lastFrameDelta: " << lastFrameDelta << ", deltaTime: " << window.deltaTime << ", thisY: " << thisY << std::endl;
+			auto lastX = curve1PointsIndex ? curve1Points[curve1PointsIndex - 1].x : startX;
+			auto thisY = (lastFrameDelta / (float)window.deltaTime);
+			// std::cout << "lastFrameDelta: " << lastFrameDelta << ", deltaTime: " << window.deltaTime << ", thisY: " <<
+			// thisY
+			// 					<< std::endl;
 			auto point = glm::vec2(lastX + step, thisY);
 			curve1PointsData[curve1PointsIndex++] = point;
 			curve1->generateAndUpdateCurve(curve1Points);
+			// update lastDeltaText
+
+			std::string lastDeltaTextString = "Delta: " + std::to_string(window.lastFrameDeltaTime);
+			float lastDeltaTextFontsize = 42, lastDeltaTextLineheight = 0;
+			auto lastDeltaTextBounds = glm::vec2(0);
+			auto lastDeltaTextBreakstyle = zg::enums::EBreakStyle::None;
+			auto lastDeltaTextScale =
+				glm::vec3(1.f / (lastDeltaTextFontsize * 8.f), 1.f / (lastDeltaTextFontsize * 8.f), 1.f);
+			auto lastDeltaTextSize =
+				robotoRegular.stringSize(lastDeltaTextString, lastDeltaTextFontsize, lastDeltaTextLineheight,
+																 lastDeltaTextBounds, lastDeltaTextBreakstyle);
+			robotoRegular.stringToScene(
+				lastDeltaTextString,
+				windowVisualizerPosition +
+					glm::vec3(2.5 - (lastDeltaTextSize.x * lastDeltaTextScale.x),
+										-(lastDeltaTextSize.y * lastDeltaTextScale.y), -0.15),
+				glm::vec4(0.369, 0.760, 0.564, 1), glm::quat(1, 0, 0, 0), lastDeltaTextScale, lastDeltaTextFontsize,
+				lastDeltaTextLineheight, lastDeltaTextSize * (glm::vec2(lastDeltaTextScale) + glm::vec2(1e-3f)),
+				lastDeltaTextBreakstyle, *this, lastDeltaTextEntities, lastDeltaTextCursorIndex, lastDeltaTextCursor);
 		}
 	}
 	~PhysicsScene()

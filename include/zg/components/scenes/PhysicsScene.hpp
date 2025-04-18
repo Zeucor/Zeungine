@@ -80,7 +80,6 @@ namespace zg::components::scenes
 
 	private:
 		PhysicsScene& physicsScene;
-		std::mutex mutex;
 		physics::CollisionManifold constructManifold(entities::RigidBody* rb1, entities::RigidBody* rb2, const JPH::ContactManifold& inManifold);
 	};
 } // namespace zg::components::scenes

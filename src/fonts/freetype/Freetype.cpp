@@ -1,11 +1,11 @@
 #include <iostream>
 #include <stdexcept>
+#include <zg/Logger.hpp>
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/strings/Utf8Iterator.hpp>
-#include <zg/Logger.hpp>
 using namespace zg::fonts::freetype;
 FT_Library FreetypeFont::freetypeLibrary;
 bool FreetypeFont::freetypeLoaded = ([]()
@@ -107,8 +107,8 @@ FreetypeFont::FreetypeFont(Window& window, interfaces::IFile& fontFile) :
 	hasKerning = FT_HAS_KERNING(*actualFacePointer);
 };
 float textureScale = 1.f;
-const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fontSize, float& lineHeight, glm::vec2 bounds,
-																				 enums::EBreakStyle breakStyle)
+const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fontSize, float& lineHeight,
+																				 glm::vec2 bounds, enums::EBreakStyle breakStyle)
 {
 	strings::Utf8Iterator iterator(string, 0);
 	const unsigned long& stringSize = string.size();
@@ -120,6 +120,7 @@ const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fo
 		lineHeight = face->size->metrics.height / 64.f;
 	}
 	glm::vec2 currentPosition = {0, lineHeight};
+	float startX = currentPosition.x;
 	glm::vec2 size = {0, 0};
 	if (bounds.x)
 	{
@@ -145,10 +146,10 @@ const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fo
 		{
 			auto& character = getCharacter(codepoint, fontSize);
 			advanceX = (character.advance >> 6);
-			addNextKerning(fontSize, character.glyphIndex, iterator, advanceX);
+			addNextKerning(fontSize, character.glyphIndex, iterator, advanceX, 1);
 		}
 		if (scaledBounds.x > 0 &&
-				shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, scaledBounds.x, fontSize))
+				shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, scaledBounds.x, 1, startX, fontSize))
 		{
 			advanceLine();
 		}
@@ -177,7 +178,8 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 	}
 	if (!framebufferPointer)
 	{
-		auto attachments = std::vector<textures::Framebuffer::TextureAttachmentPair>({{(textures::Texture*)texturePointer.get(), textures::Framebuffer::AttachmentType::Color}});
+		auto attachments = std::vector<textures::Framebuffer::TextureAttachmentPair>(
+			{{(textures::Texture*)texturePointer.get(), textures::Framebuffer::AttachmentType::Color}});
 		((std::shared_ptr<textures::Framebuffer>&)framebufferPointer) =
 			std::make_shared<textures::Framebuffer>(window, attachments);
 	}
@@ -198,6 +200,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 	}
 	float descender = face->size->metrics.descender / 64.f;
 	glm::vec3 currentPosition = {0, scaledSize.y - descender - lineHeight, 25.f};
+	float startX = currentPosition.x;
 	auto advanceLine = [&]()
 	{
 		currentPosition.y -= lineHeight;
@@ -223,7 +226,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 		}
 		characterPointer = &getCharacter(codepoint, fontSize * textureScale);
 		advanceX = (characterPointer->advance >> 6);
-		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, scaledSize.x, fontSize))
+		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, scaledSize.x, 1, startX, fontSize))
 		{
 			advanceLine();
 		}
@@ -236,11 +239,11 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) +
 					(characterPointer->size.y / 2.f);
 				scene.addEntity(std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0),
-																										 glm::vec3(1, 1, 1), characterPointer->size,
-																										 *characterPointer->texturePointer),
+																													glm::vec3(1, 1, 1), characterPointer->size,
+																													*characterPointer->texturePointer),
 												false);
 			}
-			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX);
+			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX, 1);
 		}
 	_advance:
 		currentPosition.x += advanceX;
@@ -262,8 +265,9 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 	scene.render();
 	return;
 }
-void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 position, glm::vec4 color, float fontSize,
-																 float& lineHeight, glm::vec2 bounds, enums::EBreakStyle breakStyle, Scene& scene,
+void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 position, glm::vec4 color,
+																 glm::quat _rotation, glm::vec3 _scale, float fontSize, float& lineHeight,
+																 glm::vec2 bounds, enums::EBreakStyle breakStyle, Scene& scene,
 																 std::vector<std::shared_ptr<entities::Plane>>& existingAndUpdatedGlyphs,
 																 int64_t cursorIndex, std::shared_ptr<entities::Plane>& cursor)
 {
@@ -277,10 +281,11 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 	}
 	float descender = face->size->metrics.descender / 64.f;
 	auto currentPosition = position;
+	float startX = currentPosition.x;
 	auto advanceLine = [&]()
 	{
-		currentPosition.y -= lineHeight;
-		currentPosition.x = position.x;
+		currentPosition.y -= lineHeight * _scale.y;
+		currentPosition.x = startX;
 	};
 	FreetypeCharacter* characterPointer = 0;
 	float advanceX = 0;
@@ -307,8 +312,8 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 			continue;
 		}
 		characterPointer = &getCharacter(codepoint, fontSize * textureScale);
-		advanceX = (characterPointer->advance >> 6);
-		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, bounds.x, fontSize))
+		advanceX = (characterPointer->advance >> 6) * _scale.x;
+		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, bounds.x, _scale.x, startX, fontSize))
 		{
 			advanceLine();
 		}
@@ -317,33 +322,34 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 			if (characterPointer->size.x != 0 && characterPointer->size.y != 0)
 			{
 				glm::vec3 characterPosition = currentPosition;
-				characterPosition.x = currentPosition.x + characterPointer->bearing.x + (characterPointer->size.x / 2.f);
-				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) +
-					(characterPointer->size.y / 2.f);
+				characterPosition.x = currentPosition.x + ((characterPointer->bearing.x + (characterPointer->size.x / 2.f)) * _scale.x);
+				characterPosition.y = (currentPosition.y - ((characterPointer->size.y - characterPointer->bearing.y) * _scale.y)) + ((characterPointer->size.y / 2.f) * _scale.y);
 				if (iterator.index < existingAndUpdatedGlyphs.size())
 				{
 					auto& glyph = existingAndUpdatedGlyphs[iterator.index];
 					if (!glyph)
 					{
-						glyph =
-							std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1),
-																								characterPointer->size, *characterPointer->texturePointer);
+						glyph = std::make_shared<entities::Plane>(window, scene, characterPosition, _rotation, glm::vec3(1),
+																											glm::vec2(characterPointer->size) * glm::vec2(_scale), *characterPointer->texturePointer);
 						scene.addEntity(glyph);
 						glyph->VALUE = codepoint;
 					}
 					else if (glyph->VALUE != codepoint)
 					{
 						glyph->position = characterPosition;
-						glyph->setSize(characterPointer->size);;
+						glyph->setSize(glm::vec3(glm::vec2(characterPointer->size) * glm::vec2(_scale), 0));
 						glyph->texturePointer = characterPointer->texturePointer.get();
 						glyph->VALUE = codepoint;
+					}
+					if (glyph->position != characterPosition)
+					{
+						glyph->position = characterPosition;
 					}
 				}
 				else
 				{
-					auto glyph =
-						std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1),
-																							characterPointer->size, *characterPointer->texturePointer);
+					auto glyph = std::make_shared<entities::Plane>(window, scene, characterPosition, _rotation, glm::vec3(1),
+																												 glm::vec2(characterPointer->size) * glm::vec2(_scale), *characterPointer->texturePointer);
 					scene.addEntity(glyph);
 					existingAndUpdatedGlyphs.push_back(glyph);
 					glyph->VALUE = codepoint;
@@ -362,7 +368,7 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 					glyph = {};
 				}
 			}
-			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX);
+			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX, _scale.x);
 		}
 		else if (iterator.index >= existingAndUpdatedGlyphs.size())
 		{
@@ -379,10 +385,12 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 		++iterator;
 	}
 	codepointIndex = iterator.getCurrentCodepointIndex();
-	for (auto i = existingAndUpdatedGlyphs.size() - 1; i > codepointIndex; i--)
+	for (auto i = existingAndUpdatedGlyphs.size() - 1; i >= codepointIndex; i--)
 	{
-		scene.removeEntity(existingAndUpdatedGlyphs.back()->ID);
-		existingAndUpdatedGlyphs.erase(existingAndUpdatedGlyphs.end());
+		auto& entity = *existingAndUpdatedGlyphs.back();
+		scene.bvh->removeEntity(scene, entity);
+		scene.removeEntity(entity.ID);
+		existingAndUpdatedGlyphs.erase(existingAndUpdatedGlyphs.end()-1);
 	}
 	if (cursorIndex == codepointIndex + 1)
 	{
@@ -391,10 +399,11 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 	}
 	return;
 }
-void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 position, glm::vec4 color, float fontSize,
-																 float& lineHeight, glm::vec2 bounds, enums::EBreakStyle breakStyle, Scene &scene, Entity& entity,
-																 std::vector<std::shared_ptr<entities::Plane>>& existingAndUpdatedGlyphs,
-																 int64_t cursorIndex, std::shared_ptr<entities::Plane>& cursor)
+void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 position, glm::vec4 color,
+																	glm::quat _rotation, glm::vec3 _scale, float fontSize, float& lineHeight,
+																	glm::vec2 bounds, enums::EBreakStyle breakStyle, Scene& scene, Entity& entity,
+																	std::vector<std::shared_ptr<entities::Plane>>& existingAndUpdatedGlyphs,
+																	int64_t cursorIndex, std::shared_ptr<entities::Plane>& cursor)
 {
 	strings::Utf8Iterator iterator(string, 0);
 	const uint64_t& stringSize = string.size();
@@ -406,6 +415,7 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 	}
 	float descender = face->size->metrics.descender / 64.f;
 	auto currentPosition = position;
+	float startX = currentPosition.x;
 	auto advanceLine = [&]()
 	{
 		currentPosition.y -= lineHeight;
@@ -436,8 +446,8 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 			continue;
 		}
 		characterPointer = &getCharacter(codepoint, fontSize * textureScale);
-		advanceX = (characterPointer->advance >> 6);
-		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, bounds.x, fontSize))
+		advanceX = (characterPointer->advance >> 6) * _scale.x;
+		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, bounds.x, _scale.x, startX, fontSize))
 		{
 			advanceLine();
 		}
@@ -446,33 +456,35 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 			if (characterPointer->size.x != 0 && characterPointer->size.y != 0)
 			{
 				glm::vec3 characterPosition = currentPosition;
-				characterPosition.x = currentPosition.x + characterPointer->bearing.x + (characterPointer->size.x / 2.f);
-				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) +
-					(characterPointer->size.y / 2.f);
+				characterPosition.x = currentPosition.x + ((characterPointer->bearing.x + (characterPointer->size.x / 2.f)) * _scale.x);
+				characterPosition.y = (currentPosition.y - ((characterPointer->size.y - characterPointer->bearing.y) * _scale.y)) +
+					((characterPointer->size.y / 2.f) * _scale.y);
 				if (iterator.index < existingAndUpdatedGlyphs.size())
 				{
 					auto& glyph = existingAndUpdatedGlyphs[iterator.index];
 					if (!glyph)
 					{
-						glyph =
-							std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1),
-																								characterPointer->size, *characterPointer->texturePointer);
+						glyph = std::make_shared<entities::Plane>(window, scene, characterPosition, _rotation, glm::vec3(1),
+																											glm::vec2(characterPointer->size) * glm::vec2(_scale), *characterPointer->texturePointer);
 						entity.addChild(glyph);
 						glyph->VALUE = codepoint;
 					}
 					else if (glyph->VALUE != codepoint)
 					{
 						glyph->position = characterPosition;
-						glyph->setSize(characterPointer->size);;
+						glyph->setSize(glm::vec3(glm::vec2(characterPointer->size) * glm::vec2(_scale), 0));
 						glyph->texturePointer = characterPointer->texturePointer.get();
 						glyph->VALUE = codepoint;
+					}
+					if (glyph->position != characterPosition)
+					{
+						glyph->position = characterPosition;
 					}
 				}
 				else
 				{
-					auto glyph =
-						std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0), glm::vec3(1, 1, 1),
-																							characterPointer->size, *characterPointer->texturePointer);
+					auto glyph = std::make_shared<entities::Plane>(window, scene, characterPosition, _rotation, glm::vec3(1),
+																												 glm::vec2(characterPointer->size) * glm::vec2(_scale), *characterPointer->texturePointer);
 					entity.addChild(glyph);
 					existingAndUpdatedGlyphs.push_back(glyph);
 					glyph->VALUE = codepoint;
@@ -491,7 +503,7 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 					glyph = {};
 				}
 			}
-			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX);
+			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX, _scale.x);
 		}
 		else if (iterator.index >= existingAndUpdatedGlyphs.size())
 		{
@@ -533,7 +545,7 @@ FreetypeCharacter& FreetypeFont::getCharacter(float codepoint, float fontSize)
 };
 
 void FreetypeFont::addNextKerning(float fontSize, FT_UInt currentGlyphIndex, zg::strings::Utf8Iterator iterator,
-																	float& advanceX)
+																	float& advanceX, float scaleX)
 {
 	if (hasKerning && iterator.hasNextCodepoint())
 	{
@@ -547,19 +559,19 @@ void FreetypeFont::addNextKerning(float fontSize, FT_UInt currentGlyphIndex, zg:
 			FT_Get_Kerning(face, currentGlyphIndex, nextCharacter.glyphIndex, FT_KERNING_DEFAULT, &kerning);
 			if (!FT_IS_SCALABLE(face))
 			{
-				advanceX += (kerning.x);
+				advanceX += ((kerning.x)) * scaleX;
 			}
 			else
 			{
-				advanceX += ((float)(kerning.x) / (float)(1 << 6));
+				advanceX += (((float)(kerning.x) / (float)(1 << 6))) * scaleX;
 			}
 		}
 	}
 }
 float FreetypeFont::shouldAdvanceLine(zg::strings::Utf8Iterator iterator, glm::vec2 currentPosition, float advanceX,
-																			enums::EBreakStyle breakStyle, float boundsX, float fontSize)
+																			enums::EBreakStyle breakStyle, float boundsX, float scaleX, float startX, float fontSize)
 {
-	if (currentPosition.x + advanceX > boundsX)
+	if ((currentPosition.x + advanceX) > (boundsX + startX))
 		return true;
 	switch (breakStyle)
 	{
@@ -575,8 +587,8 @@ float FreetypeFont::shouldAdvanceLine(zg::strings::Utf8Iterator iterator, glm::v
 				if (codepoint == 0 || codepoint == 32 || codepoint == 10 || codepoint == 13 || codepoint == 9)
 					break;
 				auto& character = getCharacter(codepoint, fontSize);
-				advanceX += (character.advance >> 6);
-				if (currentPosition.x + advanceX > boundsX)
+				advanceX += (character.advance >> 6) * scaleX;
+				if ((currentPosition.x + advanceX) > (boundsX + startX))
 				{
 					breakAt = true;
 				}
@@ -598,8 +610,8 @@ float FreetypeFont::shouldAdvanceLine(zg::strings::Utf8Iterator iterator, glm::v
 						codepoint == 45)
 					break;
 				auto& character = getCharacter(codepoint, fontSize);
-				advanceX += (character.advance >> 6);
-				if (currentPosition.x + advanceX > boundsX)
+				advanceX += (character.advance >> 6) * scaleX;
+				if ((currentPosition.x + advanceX) > (boundsX + startX))
 				{
 					breakAt = true;
 				}

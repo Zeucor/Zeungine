@@ -117,7 +117,7 @@ void Window::startWindow()
 	while (true)
 	{
 		auto _now = framebudget.begin();
-		updateDeltaTime(_now);
+		updateDeltaTime(_now, false);
 		if (!iPlatformWindowRef.pollMessages())
 		{
 			framebudget.sleep();
@@ -163,7 +163,8 @@ void Window::startWindow()
 		framebudget.tick();
 		callPreSwapbuffersOnceoff();
 		framebudget.tick();
-		framebudget.end();
+		_now = framebudget.end();
+		updateDeltaTime(_now, true);
 		iRendererRef.swapBuffers();
 		framebudget.sleep();
 	}
@@ -676,10 +677,13 @@ void Window::runRunnables()
 		runnable(dynamic_cast<Window&>(*this));
 	}
 };
-void Window::updateDeltaTime(NANO_TIMEPOINT now)
+void Window::updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTime)
 {
-	auto duration = now - lastFrameTime;
-	lastFrameDeltaTime = duration.count() / 1'000'000'000.0L;
+	if (updateLastFrameDeltaTime)
+	{
+		auto duration = now - lastFrameTime;
+		lastFrameDeltaTime = duration.count() / 1'000'000'000.0L;
+	}
 	lastFrameTime = now;
 };
 void Window::resize(glm::vec2 newSize)

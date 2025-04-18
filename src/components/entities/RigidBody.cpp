@@ -39,8 +39,8 @@ void RigidBody::removeCollider(Collider* collider)
 	// If the Jolt body exists and a collider was actually removed, recreate the body.
 	if (changed && joltBodyInterface && !joltBodyID.IsInvalid())
 	{
-		std::cout << "RigidBody: Collider removed. Recreating Jolt body for Entity [" << info.entity.ID << "]."
-							<< std::endl;
+		// std::cout << "RigidBody: Collider removed. Recreating Jolt body for Entity [" << info.entity.ID << "]."
+		// 					<< std::endl;
 		recreateJoltBody();
 	}
 }
@@ -401,6 +401,7 @@ bool RigidBody::isDynamic() const { return info.bodyType == BodyType::Dynamic; }
 glm::vec3 RigidBody::getCenterAtTime(float t) const { return *position + getLinearVelocity() * t; }
 bool RigidBody::isTouching(RigidBody& rigidBody, physics::CollisionManifold*& ManifoldPointer)
 {
+	std::lock_guard lock(mutex);
 	auto iter = activeRigidBodyManifolds.find(&rigidBody);
 	if (iter == activeRigidBodyManifolds.end())
 	{
@@ -411,11 +412,13 @@ bool RigidBody::isTouching(RigidBody& rigidBody, physics::CollisionManifold*& Ma
 }
 void RigidBody::addActiveManifold(const physics::CollisionManifold& manifold)
 {
+	std::lock_guard lock(mutex);
 	auto rigidBodyPointer = (this == manifold.bodyA) ? manifold.bodyB : manifold.bodyA;
 	activeRigidBodyManifolds[rigidBodyPointer] = manifold;
 }
 void RigidBody::removeActiveManifold(RigidBody& otherRb)
 {
+	std::lock_guard lock(mutex);
 	auto iter = activeRigidBodyManifolds.find(&otherRb);
 	if (iter == activeRigidBodyManifolds.end())
 	{
@@ -423,4 +426,8 @@ void RigidBody::removeActiveManifold(RigidBody& otherRb)
 	}
 	activeRigidBodyManifolds.erase(iter);
 }
-void RigidBody::clearActiveManifolds() { activeRigidBodyManifolds.clear(); }
+void RigidBody::clearActiveManifolds()
+{
+	std::lock_guard lock(mutex);
+	activeRigidBodyManifolds.clear();
+}

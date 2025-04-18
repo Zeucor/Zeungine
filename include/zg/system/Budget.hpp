@@ -43,7 +43,7 @@ namespace zg::budget
 		virtual SecondsDuration getBeginningBudget() = 0;
 		virtual SecondsDuration durationToWaitTilNextBudget() = 0;
 		virtual SecondsDuration operator/(SecondsDuration a) = 0;
-		virtual void end() = 0;
+		virtual NANO_TIMEPOINT end() = 0;
 		virtual void sleep() = 0;
 		virtual void wake() = 0;
 	};
@@ -88,7 +88,8 @@ namespace zg::budget
 			// {
 			// 	// loadChunk();
 			// }
-			setNextBudgetWakeAtTimePoint();
+
+			setNextBudgetWakeAtTimePoint(m_begin);
 			pushFrontHistory();
 		};
 		~ZBudget()
@@ -168,16 +169,18 @@ namespace zg::budget
 			m_IsZgBudget = SecondsDuration(m_IsZgBudget - c);
 			return c;
 		}
-		void end() override
+		TimePoint end() override
 		{
+			TimePoint _now;
 			std::unique_lock lock(mTx);
 			auto& history_tuple = m_History.front();
 			auto& end = std::get<1>(history_tuple);
-			end = setNextBudgetWakeAtTimePoint();
+			end = setNextBudgetWakeAtTimePoint(_now);
 			auto& seconds = std::get<2>(history_tuple);
 			auto& begin = std::get<0>(history_tuple);
 			seconds = end - begin;
 			m_BudgetUsed = (seconds.count() / m_BudgetTime.count()) * 100.0;
+			return _now;
 		}
 		void sleep() override
 		{
@@ -248,6 +251,7 @@ namespace zg::budget
 		bool m_wakezwakez = false;
 		bool m_workedOvertime = true;
 		Real m_BudgetUsed = 0;
+		TimePoint m_begin;
 
 	private:
 		size_t calculateChunkID()
@@ -313,9 +317,9 @@ namespace zg::budget
 			return true;
 		}
 
-		TimePoint setNextBudgetWakeAtTimePoint()
+		TimePoint setNextBudgetWakeAtTimePoint(TimePoint& __now)
 		{
-			auto __now = NANO_TIMEPOINT_CAST(SYS_CLOCK::now());
+			__now = NANO_TIMEPOINT_CAST(SYS_CLOCK::now());
 			auto mod = (__now.time_since_epoch().count() % m_budgetCountNs);
 			auto nsQuantized = (mod > 500000) ? SecondsDuration(m_budgetCountNs - mod) : SecondsDuration(0);
 			m_IsZgBudget = nsQuantized;

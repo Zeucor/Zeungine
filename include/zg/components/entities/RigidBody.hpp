@@ -43,11 +43,12 @@ namespace zg::components::entities
 		glm::quat* rotation = 0;
 		scenes::PhysicsScene* physicsScene = nullptr; // Pointer to the scene managing physics
 		JPH::BodyInterface* joltBodyInterface = nullptr; // Cached pointer to Jolt's body interface
-		JPH::Body *body = 0;
+		JPH::Body* body = 0;
 		std::vector<Collider*> colliders; // Colliders attached to this body
 		JPH::BodyID joltBodyID;
 		bool sleeping = false;
 		std::unordered_map<RigidBody*, physics::CollisionManifold> activeRigidBodyManifolds;
+		std::mutex mutex;
 
 	public:
 		RigidBody(const RigidBodyInfo& info);

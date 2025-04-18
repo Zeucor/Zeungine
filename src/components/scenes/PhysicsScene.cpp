@@ -29,13 +29,13 @@ PhysicsScene::PhysicsScene(Scene& scene, long double deltaTime) :
 		frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
 		framebudget(frameduration, 1, false, false, "PhysicsSceneBudget")
 {
-	std::cout << "PhysicsScene created." << std::endl;
+	// std::cout << "PhysicsScene created." << std::endl;
 }
 void PhysicsScene::onAttached()
 {
-	std::cout << "PhysicsScene attached." << std::endl;
+	// std::cout << "PhysicsScene attached." << std::endl;
 
-	std::cout << "Initializing Jolt Physics..." << std::endl;
+	// std::cout << "Initializing Jolt Physics..." << std::endl;
 
 	// --- Jolt Allocation Hooks (Optional but recommended) ---
 	// Register allocation hook if desired (e.g., for memory tracking)
@@ -78,7 +78,7 @@ void PhysicsScene::onAttached()
 	// mPhysicsSystem->SetContactListener(mContactListener);
 	// mPhysicsSystem->SetBodyActivationListener(mBodyActivationListener); // If you have one
 
-	std::cout << "Jolt Physics Initialized Successfully." << std::endl;
+	// std::cout << "Jolt Physics Initialized Successfully." << std::endl;
 	thread = std::make_unique<std::thread>(&PhysicsScene::loop, this);
 }
 void PhysicsScene::onUpdate() { synchronize(); }
@@ -102,14 +102,14 @@ void PhysicsScene::onDetached()
 	delete JPH::Factory::sInstance;
 	JPH::Factory::sInstance = nullptr;
 	gravity = nullptr; // Clear pointer, don't delete if owned by scene
-	std::cout << "PhysicsScene detached." << std::endl;
+	// std::cout << "PhysicsScene detached." << std::endl;
 }
 void PhysicsScene::registerRigidBody(RigidBody* rigidBody)
 {
 	auto joltBodyID = rigidBody->getJoltBodyID();
 	rigidBodiesJoltID[rigidBody] = joltBodyID;
 	joltIDRigidBodies[joltBodyID] = rigidBody;
-	std::cout << "Registered RigidBody." << std::endl;
+	// std::cout << "Registered RigidBody." << std::endl;
 }
 void PhysicsScene::unregisterRigidBody(RigidBody* rigidBody)
 {
@@ -248,7 +248,6 @@ CollisionManifold ZGContactListener::constructManifold(RigidBody* rb1, RigidBody
 void ZGContactListener::OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2,
     const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
-    std::lock_guard lock(mutex);
     auto rb1 = physicsScene.joltIDRigidBodies[inBody1.GetID()];
     auto rb2 = physicsScene.joltIDRigidBodies[inBody2.GetID()];
     auto manifold = constructManifold(rb1, rb2, inManifold);
@@ -259,7 +258,6 @@ void ZGContactListener::OnContactAdded(const JPH::Body& inBody1, const JPH::Body
 void ZGContactListener::OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2,
                                                                 const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
-    std::lock_guard lock(mutex);
     auto rb1 = physicsScene.joltIDRigidBodies[inBody1.GetID()];
     auto rb2 = physicsScene.joltIDRigidBodies[inBody2.GetID()];
     rb1->removeActiveManifold(*rb2);
@@ -272,7 +270,6 @@ void ZGContactListener::OnContactPersisted(const JPH::Body& inBody1, const JPH::
 // Called when two bodies stop touching.
 void ZGContactListener::OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair)
 {
-    std::lock_guard lock(mutex);
     auto rb1 = physicsScene.joltIDRigidBodies[inSubShapePair.GetBody1ID()];
     auto rb2 = physicsScene.joltIDRigidBodies[inSubShapePair.GetBody2ID()];
     rb1->removeActiveManifold(*rb2);

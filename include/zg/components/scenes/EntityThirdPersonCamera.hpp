@@ -20,7 +20,7 @@ namespace zg::components::scenes
 		float distance = 8.f;
 		float verticalOffset = 1.5f;
 		float mouseSensitivity = 0.1f;
-		float currentYaw = 180.0f; // Camera Yaw
+		float currentYaw = 0.0f; // Camera Yaw
 		float currentPitch = -22.5f;
 		float minPitch = -90.0f;
 		float maxPitch = -5.0f;
