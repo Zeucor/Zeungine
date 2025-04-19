@@ -1,6 +1,6 @@
 #pragma once
 #include <zg/glm.hpp>
-#include <zg/interfaces/IEntityComponent.hpp>
+#include "EntityComponent.hpp"
 #include <zg/physics/AABB.hpp>
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
@@ -78,38 +78,38 @@ namespace zg::components::entities
 	};
 	struct ColliderInfo
 	{
-		Entity& entity;
-		std::shared_ptr<ShapeData> shapeData;
+		std::unique_ptr<ShapeData> shapeData;
 		PhysicsMaterial material;
 		glm::vec3 offset = {0, 0, 0};
 		glm::quat rotationOffset = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 		bool isSensor = false;
 	};
-	struct Collider : interfaces::IEntityComponent
-	{
-	private:
-		ColliderInfo info;
-		RigidBody* ownerRigidBody = 0;
-		physics::AABB<3> worldAABB;
-		long double& deltaTime;
+	// struct Collider : components::entities::EntityComponent
+	// {
+	// private:
+	// 	ColliderInfo info;
+	// 	RigidBody* ownerRigidBody = 0;
+	// 	physics::AABB<3> worldAABB;
+	// 	long double& deltaTime;
 
-	public:
-		Collider(const ColliderInfo& info);
-		void onAttached() override;
-		void onUpdate() override;
-		void onDetached() override;
-		// getters
-		ShapeType getShapeType() const;
-		PhysicsMaterial& getPhysicsMaterial();
-		const PhysicsMaterial& getPhysicsMaterial() const;
-		glm::vec3& getOffset();
-		const glm::vec3& getOffset() const;
-		glm::quat& getRotationOffset();
-		const glm::quat& getRotationOffset() const;
-		bool getIsSensor();
-		ColliderInfo& getColliderInfo();
-		RigidBody* getOwnerRigidBody();
-		const RigidBody* getOwnerRigidBody() const;
-		physics::AABB<3>& getWorldAABB();
-	};
+	// public:
+	// 	Collider(const ColliderInfo& info);
+	// 	void onAttached() override;
+	// 	void onUpdate() override;
+	// 	void onDetached() override;
+	// 	// getters
+	// 	ShapeType getShapeType() const;
+	// 	PhysicsMaterial& getPhysicsMaterial();
+	// 	const PhysicsMaterial& getPhysicsMaterial() const;
+	// 	glm::vec3& getOffset();
+	// 	const glm::vec3& getOffset() const;
+	// 	glm::quat& getRotationOffset();
+	// 	const glm::quat& getRotationOffset() const;
+	// 	bool getIsSensor();
+	// 	ColliderInfo& getColliderInfo();
+	// 	RigidBody* getOwnerRigidBody();
+	// 	const RigidBody* getOwnerRigidBody() const;
+	// 	physics::AABB<3>& getWorldAABB();
+	// };
+	components::entities::EntityComponentCreateInfo ColliderFactory(const ColliderInfo& colliderInfo);
 } // namespace zg::components::entities

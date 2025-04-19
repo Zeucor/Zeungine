@@ -15,51 +15,113 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 1;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
-Window::Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY, bool borderless,
-							 bool _vsync, uint32_t framerate) :
-		windowWidth(windowWidth), windowHeight(windowHeight), windowX(windowX), windowY(windowY),
-		deltaTime(1.0 / framerate), borderless(borderless), framerate(framerate), title(title),
-		shaderContext(new ShaderContext), vsync(_vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
-		framebudget(frameduration), systemFonts(*this)
+Window::Window(const WindowCreateInfo& info):
+	title(info.title),
+	childWindows([](auto& childWindow) { return childWindow.title; }),
+	windowWidth(info.windowWidth),
+	windowHeight(info.windowHeight),
+	windowX(info.windowX),
+	windowY(info.windowY),
+	scenes([](auto& scene) { return scene.name; }),
+	deltaTime(1.0 / info.framerate),
+	borderless(info.borderless),
+	framerate(info.framerate),
+	vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
+	framebudget(frameduration), systemFonts(*this)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
-}
-Window::Window(Window& _parentWindow, Scene& _parentScene, const char* _childTitle, float childWindowWidth,
-							 float childWindowHeight, float childWindowX, float childWindowY, bool _NDCFramebufferPlane, bool _vsync,
-							 uint32_t framerate) :
-		iRenderer(_parentWindow.iRenderer), windowWidth(childWindowWidth), windowHeight(childWindowHeight),
-		windowX(childWindowX), windowY(childWindowY), framerate(framerate), deltaTime(1.0 / framerate), borderless(false),
-		title(_childTitle), isChildWindow(true), parentWindow(&_parentWindow), parentScene(&_parentScene),
-		shaderContext(_parentWindow.shaderContext), NDCFramebufferPlane(_NDCFramebufferPlane),
-		framebufferTexture(std::make_shared<textures::Texture>(
-			_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
-		framebufferDepthTexture(std::make_shared<textures::Texture>(
-			_parentWindow, glm::ivec4(childWindowWidth, childWindowHeight, 1, 0), (void*)0)),
-		framebuffer(std::make_shared<textures::Framebuffer>(
-			_parentWindow,
+	if (info.isChildWindow)
+	{
+		shaderContext = (ShaderContext*)info.parentWindowPointer->shaderContext;
+		NDCFramebufferPlane = info.NDCFramebufferPlane;
+		framebufferTexture = std::make_shared<textures::Texture>(
+			info.parentWindowPointer->iRenderer, glm::ivec4(info.windowWidth, info.windowHeight, 1, 0), (void*)0);
+		framebufferDepthTexture = std::make_shared<textures::Texture>(
+			info.parentWindowPointer->iRenderer, glm::ivec4(info.windowWidth, info.windowHeight, 1, 0), (void*)0);
+		framebuffer = std::make_shared<textures::Framebuffer>(
+			*info.parentWindowPointer,
 			std::vector<textures::Framebuffer::TextureAttachmentPair>(
 				{{framebufferTexture.get(),
 					textures::Framebuffer::AttachmentType::
-						Color} /*, {framebufferDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}*/}))),
-		framebufferPlane(std::make_shared<entities::Plane>(
-			_parentWindow, *parentScene,
-			glm::vec3(NDCFramebufferPlane ? (-1 + ((childWindowX + (childWindowWidth / 2)) / _parentWindow.windowWidth / 0.5))
-																		: childWindowX + (childWindowWidth / 2),
-								NDCFramebufferPlane
-									? (1 - ((childWindowY + (childWindowHeight / 2)) / _parentWindow.windowHeight / 0.5))
-									: _parentWindow.windowHeight - childWindowY - (childWindowHeight / 2),
-								0.2),
-			glm::vec3(0), glm::vec3(1),
-			glm::vec2(childWindowWidth / (NDCFramebufferPlane ? (_parentWindow.windowWidth / 2) : 1),
-								childWindowHeight / (NDCFramebufferPlane ? (_parentWindow.windowHeight / 2) : 1)),
-			*framebufferTexture)),
-		vsync(_vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration),
-		systemFonts(*this)
+						Color} /*, {framebufferDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}*/}));
+		framebufferPlane->addToBVH = false;
+	}
+	else
+	{
+		shaderContext = new ShaderContext;
+	}
+}
+Window::Window(const Window& other):
+	title(other.title),
+	childWindows(other.childWindows),
+	windowWidth(other.windowWidth),
+	windowHeight(other.windowHeight),
+	windowX(other.windowX),
+	windowY(other.windowY),
+	scenes(other.scenes),
+	deltaTime(1.0 / other.framerate),
+	borderless(other.borderless),
+	framerate(other.framerate),
+	vsync(other.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
+	framebudget(frameduration), systemFonts(*this)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
-	framebufferPlane->addToBVH = false;
+	shaderContext = new ShaderContext;
+}
+Window& Window::operator=(const Window& other)
+{
+	iPlatformWindow = other.iPlatformWindow;
+	iRenderer = other.iRenderer;
+	windowWidth = other.windowWidth;
+	windowHeight = other.windowHeight;
+	windowX = other.windowX;
+	windowY = other.windowY;
+	framerate = other.framerate;
+#if defined(_WIN32) || defined(__linux__)
+	windowThread = other.windowThread;
+#endif
+	runnables = other.runnables;
+	keys = other.keys;
+	buttons = other.buttons;
+	keyPressHandlers = other.keyPressHandlers;
+	keyUpdateHandlers = other.keyUpdateHandlers;
+	anyKeyPressHandlers = other.anyKeyPressHandlers;
+	mousePressHandlers = other.mousePressHandlers;
+	mouseMoveHandlers = other.mouseMoveHandlers;
+	viewResizeHandlers = other.viewResizeHandlers;
+	focusHandlers = other.focusHandlers;
+	preSwapbuffersOnceoffs = other.preSwapbuffersOnceoffs;
+	scenes = other.scenes;
+	open = other.open;
+	lastFrameTime = other.lastFrameTime;
+	deltaTime = other.deltaTime;
+	lastFrameDeltaTime = other.lastFrameDeltaTime;
+	justWarpedPointer = other.justWarpedPointer;
+	borderless = other.borderless;
+	minimized = other.minimized;
+	maximized = other.maximized;
+	focused = other.focused;
+	onEntityAdded = other.onEntityAdded;
+	title = other.title;
+	mouseMoved = other.mouseMoved;
+	mouseCoords = other.mouseCoords;
+	mod = other.mod;
+	isChildWindow = other.isChildWindow;
+	parentWindow = other.parentWindow;
+	parentScene = other.parentScene;
+	childWindows = other.childWindows;
+	shaderContext = other.shaderContext;
+	NDCFramebufferPlane = other.NDCFramebufferPlane;
+	framebufferTexture = other.framebufferTexture;
+	framebufferDepthTexture = other.framebufferDepthTexture;
+	framebuffer = other.framebuffer;
+	framebufferPlane = other.framebufferPlane;
+	oldXY = other.oldXY;
+	vsync = other.vsync;
+	frameduration = other.frameduration;
+	return *this;
 }
 void Window::run()
 {
@@ -72,32 +134,40 @@ void Window::run()
 }
 void Window::update()
 {
-	if (scene)
-		scene->update();
+	auto scenesData = scenes.data();
+	auto scenesSize = scenes.size();
+	for (size_t index = 0; index < scenesSize; ++index)
+		scenesData[index].update();
 }
 void Window::preRender()
 {
-	if (scene)
-		scene->preRender();
+	auto scenesData = scenes.data();
+	auto scenesSize = scenes.size();
+	for (size_t index = 0; index < scenesSize; ++index)
+		scenesData[index].preRender();
 	if (!isChildWindow)
 		return;
 	runRunnables();
 	updateKeyboard();
 	updateMouse();
 	auto& framebufferRef = *framebuffer;
-	framebufferRef.scenePointer = (Scene*)scene.get();
+	// framebufferRef.scenePointer = (Scene*)scene.get();
 	framebufferRef.bind();
 }
 void Window::render()
 {
 	std::lock_guard lock(renderMutex);
-	if (scene)
-		scene->render();
+	auto scenesData = scenes.data();
+	auto scenesSize = scenes.size();
+	for (size_t index = 0; index < scenesSize; ++index)
+		scenesData[index].render();
 };
 void Window::postRender()
 {
-	if (scene)
-		scene->postRender();
+	auto scenesData = scenes.data();
+	auto scenesSize = scenes.size();
+	for (size_t index = 0; index < scenesSize; ++index)
+		scenesData[index].postRender();
 	if (!isChildWindow)
 		return;
 	framebuffer->unbind();
@@ -134,9 +204,11 @@ void Window::startWindow()
 		framebudget.tick();
 		update();
 		framebudget.tick();
-		for (auto& childWindowPointer : childWindows)
+		auto childWindowsSize = childWindows.size();
+		auto childWindowsData = childWindows.data();
+		for (size_t index = 0; index < childWindowsSize; ++index)
 		{
-			auto& childWindow = *childWindowPointer;
+			auto& childWindow = childWindowsData[index];
 			if (childWindow.minimized)
 				continue;
 			childWindow.render();
@@ -148,9 +220,9 @@ void Window::startWindow()
 		framebudget.tick();
 		render();
 		framebudget.tick();
-		for (auto& childWindowPointer : childWindows)
+		for (size_t index = 0; index < childWindowsSize; ++index)
 		{
-			auto& childWindow = *childWindowPointer;
+			auto& childWindow = childWindowsData[index];
 			if (childWindow.minimized)
 				continue;
 			framebudget.tick();
@@ -173,12 +245,8 @@ _exit:
 	audioEngine.stop();
 	audioEngine.clearPipeline();
 	delete shaderContext;
-	for (auto& childWindowPointer : childWindows)
-	{
-		delete childWindowPointer;
-	}
 	childWindows.clear();
-	scene.reset();
+	scenes.clear();
 	iRendererRef.destroy();
 	iPlatformWindowRef.destroy();
 	delete iRenderer;
@@ -301,12 +369,11 @@ void Window::setWidthHeight(float width, float height)
 	iPlatformWindow->setWidthHeight();
 }
 void Window::mouseCapture(bool capture) { iPlatformWindow->mouseCapture(capture); }
-zg::Window& Window::createChildWindow(const char* title, Scene& scene, float windowWidth, float windowHeight,
-																			float windowX, float windowY, bool NDCFramebufferPlane)
+zg::Window& Window::createChildWindow(const WindowCreateInfo& info)
 {
-	childWindows.push_back(
-		new Window(*this, (Scene&)scene, title, windowWidth, windowHeight, windowX, windowY, NDCFramebufferPlane));
-	return *childWindows.back();
+	auto usingInfo{info};
+	usingInfo.isChildWindow = true;
+	return *std::get<KEY_ID_VECTOR_VALUE_INDEX>(childWindows.emplace_back(usingInfo));
 }
 
 // Keyboard
@@ -427,9 +494,11 @@ void Window::handleKey(Key key, int32_t mod, bool pressed)
 {
 	auto& window = *dynamic_cast<Window*>(this);
 	bool hadChildFocus = false;
-	for (auto& childWindowPointer : window.childWindows)
+	auto childWindowsSize = childWindows.size();
+	auto childWindowsData = childWindows.data();
+	for (size_t index = 0; index < childWindowsSize; ++index)
 	{
-		auto& childWindow = *childWindowPointer;
+		auto& childWindow = childWindowsData[index];
 		if (childWindow.minimized)
 			continue;
 		if (!childWindow.focused)
@@ -523,9 +592,11 @@ void Window::handleMouseMove(uint32_t x, uint32_t y)
 {
 	auto& window = *dynamic_cast<Window*>(this);
 	bool hadChildFocus = false;
-	for (auto& childWindowPointer : window.childWindows)
+	auto childWindowsSize = childWindows.size();
+	auto childWindowsData = childWindows.data();
+	for (size_t index = 0; index < childWindowsSize; ++index)
 	{
-		auto& childWindow = *childWindowPointer;
+		auto& childWindow = childWindowsData[index];
 		if (childWindow.minimized)
 			continue;
 		if (!childWindow.focused)
@@ -547,9 +618,11 @@ void Window::handleMousePress(Button button, bool pressed)
 {
 	auto& window = *dynamic_cast<Window*>(this);
 	bool hadChildFocus = false;
-	for (auto& childWindowPointer : window.childWindows)
+	auto childWindowsSize = childWindows.size();
+	auto childWindowsData = childWindows.data();
+	for (size_t index = 0; index < childWindowsSize; ++index)
 	{
-		auto& childWindow = *childWindowPointer;
+		auto& childWindow = childWindowsData[index];
 		if (childWindow.minimized)
 			continue;
 		if (!childWindow.focused)
@@ -651,11 +724,28 @@ void Window::callPreSwapbuffersOnceoff()
 	handlersMutex.unlock();
 	onceoff();
 }
-std::shared_ptr<Scene> Window::setScene(const std::shared_ptr<Scene>& scene)
+Scene& Window::addScene(const SceneCreateInfo& info)
 {
-	this->scene = scene;
+	auto usingInfo{info};
+	usingInfo.windowPointer = this;
+	auto scene_tuple = scenes.emplace_back(usingInfo);
+	auto& scene = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(scene_tuple);
+	auto ID = std::get<KEY_ID_VECTOR_ID_INDEX>(scene_tuple);
+	scene.ID = ID;
+	if (scene.onAttachedFunction)
+		scene.onAttachedFunction(scene);
 	return scene;
-};
+}
+bool Window::removeScene(const Scene& scene)
+{
+	auto iter = scenes.find_id(scene.ID);
+	if (iter == scenes.end())
+	{
+		return false;
+	}
+	scenes.erase(iter);
+	return true;
+}
 void Window::runOnThread(const Runnable& runnable)
 {
 	// std::lock_guard lock(runnablesMutex);
@@ -692,8 +782,10 @@ void Window::resize(glm::vec2 newSize)
 		windowWidth = newSize.x;
 	if (windowHeight != newSize.y)
 		windowHeight = newSize.y;
-	if (scene)
-		scene->resize(newSize);
+	auto scenesSize = scenes.size();
+	auto scenesData = scenes.data();
+	for (size_t index = 0; index < scenesSize; ++index)
+		scenesData[index].resize(newSize);
 	callResizeHandler(newSize);
 };
 void Window::registerOnEntityAddedFunction(const OnEntityAddedFunction& function)
@@ -703,7 +795,7 @@ void Window::registerOnEntityAddedFunction(const OnEntityAddedFunction& function
 }
 
 void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& indices,
-												const std::vector<glm::vec3>& positions, std::vector<glm::vec3>& normals)
+												const std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& normals)
 {
 	const float FACE_NORMAL_EPSILON_SQ = 1e-12f * 1e-12f;
 	const float EDGE_LEN_EPSILON_SQ = 1e-10f * 1e-10f;
@@ -712,7 +804,7 @@ void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& in
 	const float MIN_DENOMINATOR = EDGE_LEN_EPSILON_SQ * EDGE_LEN_EPSILON_SQ;
 
 
-	const size_t nbVertices = positions.size();
+	const size_t nbVertices = vertices.size();
 	const size_t nbIndices = indices.size();
 
 	if (nbVertices == 0 || nbIndices == 0)
@@ -744,9 +836,9 @@ void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& in
 			continue;
 		}
 
-		const glm::vec3& p1 = positions[i1];
-		const glm::vec3& p2 = positions[i2];
-		const glm::vec3& p3 = positions[i3];
+		const glm::vec3& p1 = vertices[i1];
+		const glm::vec3& p2 = vertices[i2];
+		const glm::vec3& p3 = vertices[i3];
 
 		glm::vec3 fn_unnormalized;
 		if (frontFace == zg::COUNTERCLOCKWISE)
@@ -816,7 +908,7 @@ void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& in
 		else
 		{
 			// Fallback for zero-length normals
-			const glm::vec3& pos = positions[i];
+			const glm::vec3& pos = vertices[i];
 			float pos_len_sq = glm::dot(pos, pos);
 			if (pos_len_sq > VEC_EPSILON_SQ)
 			{

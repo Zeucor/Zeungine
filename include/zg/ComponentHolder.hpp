@@ -5,105 +5,131 @@
 #include <boost/multi_index_container.hpp>
 #include <map>
 #include <memory>
+#include <mutex>
 #include "./Events.hpp"
 namespace zg
 {
-	template <typename T>
+	template <typename ComponentT, typename ComponentInfoT>
 	struct ComponentHolder
 	{
 		struct ComponentEntry
 		{
 			size_t ID;
 			std::string NAME;
-			std::shared_ptr<T> COMPONENT;
+			ComponentT COMPONENT;
 		};
-		struct component_by_id
-		{
-		};
-		struct component_by_name
-		{
-		};
-		typedef boost::multi_index::multi_index_container<
-			ComponentEntry,
-			boost::multi_index::indexed_by<
-				boost::multi_index::ordered_unique<boost::multi_index::tag<component_by_id>,
-																					 boost::multi_index::member<ComponentEntry, size_t, &ComponentEntry::ID>>,
-				boost::multi_index::hashed_unique<
-					boost::multi_index::tag<component_by_name>,
-					boost::multi_index::member<ComponentEntry, std::string, &ComponentEntry::NAME>>>>
-			ComponentContainer;
+		typedef std::vector<ComponentEntry> ComponentContainer;
 		std::pair<UniqueIdentifier, ComponentContainer> m_components;
-
-		virtual ~ComponentHolder() { unregisterAllComponents(); }
-		void unregisterAllComponents()
+		std::shared_ptr<std::mutex> m_componentMutex;
+	
+		ComponentHolder():
+			m_componentMutex(std::make_shared<std::mutex>())
+		{}
+		ComponentHolder& operator=(const ComponentHolder& other)
 		{
+			m_components = other.m_components;
+			m_componentMutex = std::make_shared<std::mutex>();
+			return *this;
+		}
+		virtual ~ComponentHolder() { detachAllComponents(); }
+		void detachAllComponents()
+		{
+			std::lock_guard lock(*m_componentMutex);
 			auto& container = std::get<1>(m_components);
 			for (auto& entry : container)
-			{
-				entry.COMPONENT->onDetached();
-			}
+				entry.COMPONENT.onDetached();
 			container.clear();
 		}
 		/**
 		 * @brief adds a component to m_components and returns it's unique id
 		 */
-		UniqueIdentifier addComponent(const std::shared_ptr<T>& component)
+		UniqueIdentifier attachComponent(const ComponentInfoT& info)
 		{
+			std::lock_guard lock(*m_componentMutex);
 			auto id = ++std::get<0>(m_components);
-			component->ID = id;
-			std::get<1>(m_components).insert({id, component->NAME, component});
-			component->onAttached();
+			auto& components = std::get<1>(m_components);
+			auto& component = components.emplace_back(id, info.name, info).COMPONENT;
+			component.host = this;
+			component.onAttached();
 			return id;
 		}
 		/**
 		 * @brief removes a component by id, returns false if the component does not exist, sets componentID to zero on
 		 * success
 		 */
-		bool removeComponent(UniqueIdentifier& id)
+		bool detachComponent(UniqueIdentifier& id)
 		{
-			auto& components_id_index = std::get<1>(m_components).template get<component_by_id>();
-			auto it_id = components_id_index.find(id);
-			if (it_id == components_id_index.end())
-				return false;
-			it_id->COMPONENT->onDetached();
-			components_id_index.erase(it_id);
-			id = 0;
-			return true;
+			std::lock_guard lock(*m_componentMutex);
+			auto& components = std::get<1>(m_components);
+			auto componentsSize = components.size();
+			auto componentsData = components.data();
+			auto i = 0;
+			for (; i < componentsSize; i++)
+			{
+				if (componentsData[i].ID == id)
+				{
+					components.erase(components.begin()+i);
+					id = 0;
+					return true;
+				}
+			}
+			return false;
 		}
 		/**
 		 * @brief removes a component by name, returns false if the component does not exist
 		 */
-		bool removeComponent(const std::string& name)
+		bool detachComponent(const std::string& name)
 		{
-			auto& components_name_index = std::get<1>(m_components).template get<component_by_name>();
-			auto it_name = components_name_index.find(name);
-			if (it_name == components_name_index.end())
-				return false;
-			it_name->COMPONENT->onDetached();
-			components_name_index.erase(it_name);
-			return true;
+			std::lock_guard lock(*m_componentMutex);
+			auto& components = std::get<1>(m_components);
+			auto componentsSize = components.size();
+			auto componentsData = components.data();
+			auto i = 0;
+			for (; i < componentsSize; i++)
+			{
+				if (componentsData[i].NAME == name)
+				{
+					components.erase(components.begin() + i);
+					return true;
+				}
+			}
+			return false;
 		}
 
-		std::shared_ptr<T> getComponentByID(size_t id)
+		ComponentT& getComponentByID(size_t id)
 		{
-			auto& components_id_index = std::get<1>(m_components).template get<component_by_id>();
-			auto it_id = components_id_index.find(id);
-			if (it_id != components_id_index.end())
+			std::lock_guard lock(*m_componentMutex);
+			auto& components = std::get<1>(m_components);
+			auto componentsSize = components.size();
+			auto componentsData = components.data();
+			auto i = 0;
+			for (; i < componentsSize; i++)
 			{
-				return it_id->COMPONENT;
+				auto& entry = componentsData[i];
+				if (entry.ID == id)
+				{
+					return entry.COMPONENT;
+				}
 			}
-			return {};
+			throw std::runtime_error("Component not found with identifier");
 		}
 
-		std::shared_ptr<T> getComponentByName(const std::string& name)
+		ComponentT& getComponentByName(const std::string& name)
 		{
-			auto& components_name_index = std::get<1>(m_components).template get<component_by_name>();
-			auto it_name = components_name_index.find(name);
-			if (it_name != components_name_index.end())
+			std::lock_guard lock(*m_componentMutex);
+			auto& components = std::get<1>(m_components);
+			auto componentsSize = components.size();
+			auto componentsData = components.data();
+			auto i = 0;
+			for (; i < componentsSize; i++)
 			{
-				return it_name->COMPONENT;
+				auto& entry = componentsData[i];
+				if (entry.NAME == name)
+				{
+					return entry.COMPONENT;
+				}
 			}
-			return {};
+			throw std::runtime_error("Component not found with name");
 		}
 	};
 } // namespace zg

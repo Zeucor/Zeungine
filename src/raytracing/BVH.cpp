@@ -121,7 +121,7 @@ void BVH::addEntity(Entity& entity)
 {
 	auto& indiceCount = entity.indiceCount;
 	auto indicesData = entity.indices.data();
-	auto verticesData = entity.positions.data();
+	auto verticesData = entity.vertices.data();
 	auto& model = entity.getModelMatrix();
 	for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
 	{
@@ -159,7 +159,7 @@ void BVH::updateEntity(Entity& entity)
 	}
 	auto& indiceCount = entity.indiceCount;
 	auto indicesData = entity.indices.data();
-	auto verticesData = entity.positions.data();
+	auto verticesData = entity.vertices.data();
 	auto& model = entity.getModelMatrix();
 	for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
 	{
@@ -197,9 +197,11 @@ void BVH::removeEntity(Scene& scene, Entity& entity)
 																	 }),
 										triangles.end());
 	}
-	for (auto& pair : entity.children)
+	auto childrenData = entity.children.data();
+	auto childrenSize = entity.children.size();
+	for (size_t index = 0; index < childrenSize; ++index)
 	{
-		removeEntity(scene, *pair.second);
+		removeEntity(scene, childrenData[index]);
 	}
 	// auto end = std::chrono::high_resolution_clock::now();
 	// auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);

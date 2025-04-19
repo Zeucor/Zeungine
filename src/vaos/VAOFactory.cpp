@@ -13,7 +13,7 @@ VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {{"Indice", {3, sizeof(u
 														 {"UV3", {3, sizeof(float), ZG_FLOAT3}}};
 VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Indice", false}, {"Color", true}, {"Position", true}, {"Normal", true}, {"UV2", true}, {"UV3", true}, {"View", false}, {"Projection", false}, {"Model", false}, {"CameraPosition", false}, {"Fog", false}, {"Lighting", false}, {"LightSpaceMatrix", false}};
-void VAOFactory::generate(VAO &vao) { vao.vaoWindow.iRenderer->generateVAO(vao); };
+void VAOFactory::generate(VAO &vao) { vao.vaoIRenderer->generateVAO(vao); };
 size_t VAOFactory::getStride(const RuntimeConstants &constants)
 {
 	size_t stride = 0;
@@ -41,4 +41,4 @@ size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::strin
 	throw std::runtime_error("No such constant");
 };
 bool VAOFactory::isVAOConstant(const std::string_view constant) { return VAOConstants[constant]; }
-void VAOFactory::destroy(VAO &vao) { vao.vaoWindow.iRenderer->destroyVAO(vao); };
+void VAOFactory::destroy(VAO &vao) { vao.vaoIRenderer->destroyVAO(vao); };

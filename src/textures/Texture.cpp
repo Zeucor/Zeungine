@@ -2,8 +2,10 @@
 #include <zg/textures/Texture.hpp>
 #include <zg/textures/TextureFactory.hpp>
 #include <zg/Serial.hpp>
+#include <zg/interfaces/IRenderer.hpp>
+#include <zg/Window.hpp>
 using namespace zg::textures;
-Texture::Texture(Window &window, const glm::ivec4 &size, const void *data, const Format &format, const Type &type, const FilterType &filterType) : window(window),
+Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const void *data, const Format &format, const Type &type, const FilterType &filterType) : iRenderer(iRenderer),
                                                                                                                                                    size(size),
                                                                                                                                                    format(format),
                                                                                                                                                    type(type),
@@ -11,7 +13,7 @@ Texture::Texture(Window &window, const glm::ivec4 &size, const void *data, const
 {
   TextureFactory::initTexture(*this, data);
 }
-Texture::Texture(Window &window, const glm::ivec4 &size, const std::vector<void *> datas, const Format &format, const Type &type, const FilterType &filterType) : window(window),
+Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<void *> datas, const Format &format, const Type &type, const FilterType &filterType) : iRenderer(iRenderer),
                                                                                                                                                    size(size),
                                                                                                                                                    format(format),
                                                                                                                                                    type(type),
@@ -19,7 +21,7 @@ Texture::Texture(Window &window, const glm::ivec4 &size, const std::vector<void 
 {
   TextureFactory::initTexture(*this, datas);
 }
-Texture::Texture(Window &window, const glm::ivec4 &size, const std::string_view path, const Format &format, const Type &type, const FilterType &filterType) : window(window),
+Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::string_view path, const Format &format, const Type &type, const FilterType &filterType) : iRenderer(iRenderer),
                                                                                                                                                               size(size),
                                                                                                                                                               format(format),
                                                                                                                                                               type(type),
@@ -27,7 +29,7 @@ Texture::Texture(Window &window, const glm::ivec4 &size, const std::string_view 
 {
   TextureFactory::initTexture(*this, path);
 }
-Texture::Texture(Window &window, const glm::ivec4 &size, const std::vector<std::string_view> &paths, const Format &format, const Type &type, const FilterType &filterType) : window(window),
+Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<std::string_view> &paths, const Format &format, const Type &type, const FilterType &filterType) : iRenderer(iRenderer),
                                                                                                                                                                              size(size),
                                                                                                                                                                              format(format),
                                                                                                                                                                              type(type),
@@ -41,11 +43,11 @@ Texture::~Texture()
 }
 void Texture::bind() const
 {
-  window.iRenderer->bindTexture(*this);
+  iRenderer->bindTexture(*this);
 }
 void Texture::unbind() const
 {
-  window.iRenderer->unbindTexture(*this);
+  iRenderer->unbindTexture(*this);
 }
 void Texture::update(const void *data)
 {
@@ -97,6 +99,6 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::textures::Texture>& text
   zg::textures::Texture::FilterType filterType;
   serial >> format >> type >> filterType;
   auto windowPointer = (zg::Window*)serial.getContextPointer("Window");
-  texturePointer = std::make_shared<zg::textures::Texture>(*windowPointer, size, datas, format, type, filterType);
+  texturePointer = std::make_shared<zg::textures::Texture>(windowPointer->iRenderer, size, datas, format, type, filterType);
   return serial;
 }

@@ -10,33 +10,34 @@
 
 namespace zg::entities
 {
-	struct Console : Entity, ISizable
-	{
-		size_t getTypeID() override { return EntityTypeID<Console>::id; }
-		std::vector<glm::vec4> colors;
-		glm::vec4 backgroundColor;
-		fonts::freetype::FreetypeFont &font;
-		float width;
-		float height;
-		std::vector<std::shared_ptr<TextView>> consoleTextViews;
-		strings::HookedConsole hookedConsole;
-		size_t currentIndex = 0;
-		inline static size_t consolesCount = 0;
-		Console(Window &window,
-				Scene &scene,
-				glm::vec3 position,
-				glm::quat rotation,
-				glm::vec3 scale,
-				glm::vec4 backgroundColor,
-				fonts::freetype::FreetypeFont &font,
-				float width,
-				float height,
-				const shaders::RuntimeConstants &constants = {},
-				std::string_view name = "");
-		bool preRender() override;
-		void setBackgroundColor(glm::vec4 newBackgroundColor);
-		void setSize(glm::vec3 newSize) override;
-		void hookedCallback(const std::vector<std::string> &lines);
-		void showConsoleLines();
-	};
+	EntityCreateInfo ConsoleFactory(
+		glm::vec3 position,
+		glm::quat rotation,
+		glm::vec3 scale,
+		glm::vec4 backgroundColor,
+		fonts::freetype::FreetypeFont &font,
+		float width,
+		float height,
+		const shaders::RuntimeConstants &constants = {},
+		std::string_view name = "");
+	// struct Console : Entity, ISizable
+	// {
+	// 	size_t getTypeID() override { return EntityTypeID<Console>::id; }
+	// 	std::vector<glm::vec4> colors;
+	// 	glm::vec4 backgroundColor;
+	// 	fonts::freetype::FreetypeFont &font;
+	// 	float width;
+	// 	float height;
+	// 	std::vector<Entity*> consoleTextViews;
+	// 	strings::HookedConsole hookedConsole;
+	// 	size_t currentIndex = 0;
+	// 	inline static size_t consolesCount = 0;
+	// 	// Console(Window &window,
+	// 	// 		);
+	// 	bool preRender() override;
+	// 	void setBackgroundColor(glm::vec4 newBackgroundColor);
+	// 	void setSize(glm::vec3 newSize) override;
+	// 	void hookedCallback(const std::vector<std::string> &lines);
+	// 	void showConsoleLines();
+	// };
 }

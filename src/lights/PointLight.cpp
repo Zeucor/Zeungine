@@ -9,10 +9,17 @@ PointLightShadow::PointLightShadow(
 							//   shader(
 							// 	  *shaders::ShaderManager::getShaderByConstants(window, {"DepthMap", "Color", "Position", "Normal", "Model", "PointLightSpaceMatrix"}, {shaders::ShaderType::Vertex, shaders::ShaderType::Geometry, shaders::ShaderType::Fragment}).second),
 							  pointLight(pointLight),
-							  texture(window, glm::ivec4(2048, 2048, 1, 1), 0, textures::Texture::Depth, textures::Texture::Float),
+							  texture(window.iRenderer, glm::ivec4(2048, 2048, 1, 1), 0, textures::Texture::Depth, textures::Texture::Float),
 							  framebuffer(window, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
 {
 	updateShadowTransforms();
+}
+PointLightShadow& PointLightShadow::operator=(const PointLightShadow& other)
+{
+    shader = other.shader;
+    texture = other.texture;
+	updateShadowTransforms();
+	return *this;
 }
 void PointLightShadow::updateShadowTransforms()
 {

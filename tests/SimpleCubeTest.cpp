@@ -1,68 +1,79 @@
-#include <zg/Window.hpp>
-#include <zg/Scene.hpp>
-#include <zg/vp/VML.hpp>
-#include <zg/entities/Cube.hpp>
 #include <iostream>
+#include <zg/Scene.hpp>
+#include <zg/Window.hpp>
+#include <zg/entities/Cube.hpp>
+#include <zg/vp/VML.hpp>
 using namespace zg;
-struct ExampleScene : Scene
-{
-	vp::VML vml; // view mouse look
-	long double deltaTimeCounter = 0;
-	UniqueIdentifier mPressID = 0;
-	UniqueIdentifier nPressID = 0;
-	UniqueIdentifier rPressID = 0;
-	UniqueIdentifier qPressID = 0;
-	ExampleScene(Window &_window) : Scene(_window,
-										  {0, 10, 10},							// camera position
-										  glm::normalize(glm::vec3(0, -1, -1)), // camera direction
-										  81.f									// fov
-										  ),
-									vml(*this)
-	{
-		clearColor = {1, 0, 1, 1};
-		addEntity(std::make_shared<entities::Cube>(
-			window,						// reference to window
-			*this,						// reference to scene
-			glm::vec3(0, 0, 0),			// position
-			glm::quat(1, 0, 0, 0),			// rotation
-			glm::vec3(1, 1, 1),			// scale
-			glm::vec3(2, 1, 4),			// cube size
-			shaders::RuntimeConstants() // additional shader constants
-			));
-		mPressID = window.addKeyPressHandler('m', [&](auto pressed)
-											 {
-			if (pressed)
-				window.maximize(); });
-		nPressID = window.addKeyPressHandler('n', [&](auto pressed)
-											 {
-			if (pressed)
-				window.minimize(); });
-		rPressID = window.addKeyPressHandler('r', [&](auto pressed)
-											 {
-			if (pressed)
-				window.restore(); });
-		qPressID = window.addKeyPressHandler('q', [&](auto pressed)
-											 {
-			if (pressed)
-				window.close(); });
-	}
-	~ExampleScene()
-	{
-		window.removeKeyPressHandler('m', mPressID);
-		window.removeKeyPressHandler('n', nPressID);
-		window.removeKeyPressHandler('r', rPressID);
-		window.removeKeyPressHandler('q', qPressID);
-	}
-	void preUpdate() override
-	{
-		deltaTimeCounter += window.deltaTime;
-		clearColor = {std::sin(deltaTimeCounter), std::cos(deltaTimeCounter), std::tan(deltaTimeCounter), 1};
-	}
-};
+auto cubeCreateInfo = entities::CubeFactory("Basic Red Cube", {0, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, {2, 1, 3});
+SceneCreateInfo ExampleSceneFactory();
 int main()
 {
-	Window window("Cube Test", 1024, 768, -1, -1, true, false);
-	window.runOnThread([](auto &window)
-					   { window.setScene(std::make_shared<ExampleScene>(window)); });
+	WindowCreateInfo windowCreateInfo{.title = "Cube Test", .borderless = true, .vsync = false, .framerate = 144};
+	Window window(windowCreateInfo);
+	window.runOnThread(
+		[](auto& window)
+		{
+			auto sceneCreateInfo = ExampleSceneFactory();
+			window.addScene(sceneCreateInfo);
+		});
 	window.run();
 }
+SceneCreateInfo ExampleSceneFactory()
+{
+	SceneCreateInfo info{
+		.name = "ExampleScene",
+		.cameraPosition = glm::vec3(0, 10, 10),
+		.cameraDirection = glm::normalize(glm::vec3(0, -1, -1)),
+		.onAttachedFunction =
+			[](auto& scene)
+		{
+			scene.clearColor = {1, 0, 1, 1};
+			scene.setData<size_t>("CubeID", scene.addEntity(cubeCreateInfo));
+			scene.setData<zg::UniqueIdentifier>("mPressID",
+																					scene.window.addKeyPressHandler('m',
+																																					[&](auto pressed)
+																																					{
+																																						if (pressed)
+																																							scene.window.maximize();
+																																					}));
+			scene.setData<zg::UniqueIdentifier>("nPressID",
+																					scene.window.addKeyPressHandler('n',
+																																					[&](auto pressed)
+																																					{
+																																						if (pressed)
+																																							scene.window.minimize();
+																																					}));
+			scene.setData<zg::UniqueIdentifier>("rPressID",
+																					scene.window.addKeyPressHandler('r',
+																																					[&](auto pressed)
+																																					{
+																																						if (pressed)
+																																							scene.window.restore();
+																																					}));
+			scene.setData<zg::UniqueIdentifier>("qPressID",
+																					scene.window.addKeyPressHandler('q',
+																																					[&](auto pressed)
+																																					{
+																																						if (pressed)
+																																							scene.window.close();
+																																					}));
+
+			// vp::VML vml; // view mouse look
+			scene.make<float>("deltaTimeCounter", 0.f);
+		},
+		.onDetachedFunction =
+			[](auto& scene)
+		{
+			scene.window.removeKeyPressHandler('m', scene.getData<zg::UniqueIdentifier>("mPressID"));
+			scene.window.removeKeyPressHandler('n', scene.getData<zg::UniqueIdentifier>("nPressID"));
+			scene.window.removeKeyPressHandler('r', scene.getData<zg::UniqueIdentifier>("rPressID"));
+			scene.window.removeKeyPressHandler('q', scene.getData<zg::UniqueIdentifier>("qPressID"));
+		},
+		.preUpdateFunction =
+			[](auto& scene)
+		{
+			auto deltaTimeCounter = (scene.getData<float>("deltaTimeCounter") += scene.window.deltaTime);
+			scene.clearColor = {std::sin(deltaTimeCounter), std::cos(deltaTimeCounter), std::tan(deltaTimeCounter), 1};
+		}};
+	return info;
+};

@@ -1,7 +1,12 @@
 #include <zg/editor/CodeScene.hpp>
-using namespace zg::editor;
-CodeScene::CodeScene(Window &window) : Scene(window, {window.windowWidth / 2, window.windowHeight / 2, 50}, {0, 0, -1},
-											 {window.windowWidth, window.windowHeight})
+zg::SceneCreateInfo CodeSceneFactory()
 {
-	clearColor = {1, 1, 1, 1};
-};
+	zg::SceneCreateInfo info{
+		.name = "Code Scene",
+		.onAttachedFunction = [](auto& scene)
+		{
+			scene.clearColor = {1, 1, 1, 1};
+		}
+	};
+	return info;
+}

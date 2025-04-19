@@ -8,10 +8,19 @@ using namespace zg::lights;
 DirectionalLightShadow::DirectionalLightShadow(Window &window,
 											   DirectionalLight &directionalLight) : window(window),
 																					 directionalLight(directionalLight),
-																					 texture(window, glm::ivec4(8192, 8192, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
+																					 texture(window.iRenderer, glm::ivec4(8192, 8192, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
 																					 framebuffer(window, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
 {
 	update();
+}
+DirectionalLightShadow& DirectionalLightShadow::operator=(const DirectionalLightShadow& other)
+{
+    shader = other.shader;
+    texture = other.texture;
+    lightSpaceMatrix = other.lightSpaceMatrix;
+    lookAtSet = other.lookAtSet;
+    lookAt = other.lookAt;
+	return *this;
 }
 void DirectionalLightShadow::addShader()
 {

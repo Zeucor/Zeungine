@@ -60,7 +60,8 @@ namespace zg
 	{
 		IPlatformWindow *platformWindowPointer = nullptr;
 		RENDERER renderer;
-		FRONTFACE frontFace = CLOCKWISE;
+		static constexpr FRONTFACE DEFAULTFRONTFACE = CLOCKWISE;
+		FRONTFACE frontFace = DEFAULTFRONTFACE;
 		CULLMODE cullMode = BACK;
 		virtual ~IRenderer() = default;
 		virtual void init() = 0;

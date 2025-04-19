@@ -190,7 +190,7 @@ void WIN32Window::init(Window& renderWindow)
 	wc.style = CS_VREDRAW | CS_HREDRAW;
 	wc.lpfnWndProc = gl_wndproc;
 	wc.hInstance = hInstance;
-	wc.lpszClassName = renderWindow.title;
+	wc.lpszClassName = renderWindow.title.c_str();
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	RegisterClassEx(&wc);
 	dpiScale = 1.0f;
@@ -204,7 +204,7 @@ void WIN32Window::init(Window& renderWindow)
 	AdjustWindowRectEx(&desiredRect, wsStyle, FALSE, WS_EX_APPWINDOW);
 	adjustedWidth = desiredRect.right - desiredRect.left;
 	adjustedHeight = desiredRect.bottom - desiredRect.top;
-	hwnd = CreateWindowEx(WS_EX_APPWINDOW, renderWindow.title, renderWindow.title, wsStyle,
+	hwnd = CreateWindowEx(WS_EX_APPWINDOW, renderWindow.title.c_str(), renderWindow.title.c_str(), wsStyle,
 												renderWindow.windowX == -1 ? CW_USEDEFAULT : renderWindow.windowX,
 												renderWindow.windowY == -1 ? CW_USEDEFAULT : renderWindow.windowY, adjustedWidth,
 												adjustedHeight, 0, NULL, hInstance, renderWindowPointer);

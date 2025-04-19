@@ -1,4 +1,5 @@
 #include <zg/vp/VFBLR.hpp>
+#include <zg/Window.hpp>
 using namespace zg::vp;
 VFBLR::VFBLR(Scene& scene, KeyScheme keyScheme, float force):
     

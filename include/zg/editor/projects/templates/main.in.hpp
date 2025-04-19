@@ -5,7 +5,7 @@
 #include <zg/entities/Cube.hpp>
 struct MainScene : zg::Scene
 {
-	std::shared_ptr<zg::entities::Cube> cube;
+	Entity* cube;
 	UniqueIdentifier leftKeyID;
 	UniqueIdentifier rightKeyID;
 	UniqueIdentifier upKeyID;

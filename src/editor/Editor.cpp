@@ -1,6 +1,6 @@
 #include <zg/editor/EditorScene.hpp>
+#include <zg/Window.hpp>
 #include <zg/system/TerminalIO.hpp>
-using namespace zg::editor;
 using namespace zg::system;
 using namespace zg;
 int32_t main()
@@ -9,9 +9,17 @@ int32_t main()
 	teio.echo(false);
 	teio.canonical(false);
 	teio.setProfile();
-	Window window("Editor", 1280, 720, -1, -1, true, false);
-	window.runOnThread([&](auto &runningWindow) mutable
-					   { runningWindow.setScene(std::make_shared<EditorScene>((Window &)runningWindow)); });
+	WindowCreateInfo windowCreateInfo{
+		.title = "Editor",
+		.windowWidth = 1280,
+		.windowHeight = 720,
+		.windowX = -1,
+		.windowY = -1,
+		.borderless = true,
+		.vsync = false
+	};
+	Window window(windowCreateInfo);
+	window.addScene(EditorSceneFactory());
 	window.run();
 	return 0;
 };

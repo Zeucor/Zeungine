@@ -1,40 +1,47 @@
 #include <zg/Entity.hpp>
 #include <zg/Scene.hpp>
+#include <zg/Window.hpp>
+#include <zg/components/entities/RigidBody.hpp>
 #include <zg/renderers/VulkanRenderer.hpp>
 #include <zg/shaders/ShaderManager.hpp>
-#include <zg/components/entities/RigidBody.hpp>
 using namespace zg;
-Entity::Entity(Window& _window, Scene& _scene, const shaders::RuntimeConstants& constants, uint32_t indiceCount,
-							 const std::vector<uint32_t>& _indices, uint32_t elementCount, const std::vector<glm::vec3>& _positions,
-							 glm::vec3 _position, glm::quat _rotation, glm::vec3 _scale, std::string_view _name) :
-		VAO(_window, constants, indiceCount, elementCount), window(_window), scene(_scene), indices(_indices),
-		positions(_positions), position(_position), rotation(_rotation), scale(_scale), name(_name)
+Entity::Entity(const EntityCreateInfo& info) :
+		VAO(info.scenePointer->window.iRenderer, info.constants, info.indiceCount, info.vertexCount),
+		DataStorage<Entity>(info.getDataFunctionMap, info.setDataFunctionMap, info.dataMap),
+		window(info.scenePointer->window), scene(*info.scenePointer), indices(info.indices), vertices(info.vertices),
+		colors(info.colors), uv2s(info.uV2s), uv3s(info.uV3s), position(info.position), rotation(info.rotation),
+		scale(info.scale), children([](const auto& entity) { return entity.name; }), name(info.name),
+		preUpdateFunction(info.preUpdateFunction), preRenderFunction(info.preRenderFunction),
+		postRenderFunction(info.postRenderFunction)
 {
+	computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
+	updateIndices(indices);
+	if (colors.size())
+		updateElements("Color", colors);
+	if (uv2s.size())
+		updateElements("UV2", uv2s);
+	if (uv3s.size())
+		updateElements("UV3", uv3s);
+	updateElements("Position", vertices);
+	updateElements("Normal", normals);
 }
-Entity::~Entity()
-{
-	auto& components_id_index = std::get<1>(m_components).get<component_by_id>();
-	for (const auto& componentEntry : components_id_index)
-	{
-		componentEntry.COMPONENT->onDetached();
-	}
-}
-void Entity::preUpdate() {}
+Entity& Entity::operator=(const Entity& other) { return *this; }
 void Entity::update()
 {
-	preUpdate();
+	if (preUpdateFunction)
+		preUpdateFunction(*this);
 	for (auto& componentEntry : std::get<1>(m_components))
 	{
-		componentEntry.COMPONENT->onUpdate();
+		componentEntry.COMPONENT.onUpdate();
 	}
-	for (auto& childEntity : children)
-	{
-		childEntity.second->update();
-	}
+	auto childrenData = children.data();
+	auto childrenSize = children.size();
+	for (size_t index = 0; index < childrenSize; ++index)
+		childrenData[index].update();
 }
 shaders::Shader* Entity::addShader(shaders::Shader* setShader)
 {
-	auto data = getShaderData(window);
+	auto data = getShaderData(window.iRenderer);
 	auto& shader = shaders[data];
 	if (shader)
 		return shader;
@@ -50,18 +57,18 @@ shaders::Shader* Entity::addShader(shaders::Shader* setShader)
 }
 bool Entity::isEnsured()
 {
-	auto data = getShaderData(window);
+	auto data = getShaderData(window.iRenderer);
 	return ensuredBools[data];
 }
 void Entity::setEnsured()
 {
-	auto data = getShaderData(window);
+	auto data = getShaderData(window.iRenderer);
 	ensuredBools[data] = true;
 }
-void* Entity::getShaderData(Window& window)
+void* Entity::getShaderData(IRenderer* iRenderer)
 {
 	void* data = 0;
-	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(window.iRenderer);
+	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(iRenderer);
 	if (vulkanRenderer.currentFramebufferImpl)
 	{
 		data = vulkanRenderer.currentFramebufferImpl->renderPass;
@@ -72,21 +79,26 @@ void* Entity::getShaderData(Window& window)
 	}
 	return data;
 }
-bool Entity::preRender() { return true; };
 void Entity::render()
 {
 	auto shader = addShader();
-	if (!preRender())
+	if (preRenderFunction && !preRenderFunction(*this))
 		return;
 	shader->bind(*this);
+	const auto& model = getModelMatrix();
+	scene.entityPreRender(*this);
+	shader->setBlock("Model", *this, model);
+	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+	shader->setBlock("Projection", *this,
+									 projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setBlock("CameraPosition", *this, viewPointer ? viewPointer->position : scene.viewPointer->position, 16);
 	drawVAO();
 	shader->unbind();
-	for (auto& childEntity : children)
-	{
-		childEntity.second->render();
-	}
+	auto childrenData = children.data();
+	auto childrenSize = children.size();
+	for (size_t index = 0; index < childrenSize; ++index)
+		childrenData[index].render();
 }
-void Entity::postRender() {}
 glm::mat4& Entity::getModelMatrix()
 {
 	// Ensure model is only recomputed once per update nonce
@@ -129,20 +141,16 @@ glm::mat4& Entity::getModelMatrix()
 
 	return model;
 }
-size_t Entity::addChild(const std::shared_ptr<Entity>& child)
+size_t Entity::addChild(const EntityCreateInfo& childCreateInfo)
 {
-	auto id = ++childrenCount;
-	child->parentEntity = this;
-	child->ID = id;
-	children[id] = child;
-	return id;
+	auto child_tuple = children.emplace_back(childCreateInfo);
+	return std::get<KEY_ID_VECTOR_ID_INDEX>(child_tuple);
 }
 void Entity::removeChild(size_t& ID)
 {
-	auto iter = children.find(ID);
+	auto iter = children.find_id(ID);
 	if (iter == children.end())
 	{
-		ID = 0;
 		return;
 	}
 	children.erase(iter);
@@ -243,16 +251,16 @@ void Entity::callMouseHoverHandler(bool hovered)
 void Entity::setPosition(glm::vec3 newPosition)
 {
 	position = newPosition;
-	auto rigidBodyComponent = std::dynamic_pointer_cast<zg::components::entities::RigidBody>(getComponentByName("RigidBody"));
-	if (rigidBodyComponent)
-		rigidBodyComponent->setPosition(position);
+	// auto rigidBodyComponent =
+	// std::dynamic_pointer_cast<zg::components::entities::RigidBody>(getComponentByName("RigidBody")); if
+	// (rigidBodyComponent) 	rigidBodyComponent->setPosition(position);
 	return;
 }
 void Entity::setOrientation(glm::quat newOrientation)
 {
 	rotation = newOrientation;
-	auto rigidBodyComponent = std::dynamic_pointer_cast<zg::components::entities::RigidBody>(getComponentByName("RigidBody"));
-	if (rigidBodyComponent)
-		rigidBodyComponent->setOrientation(rotation);
+	// auto rigidBodyComponent =
+	// std::dynamic_pointer_cast<zg::components::entities::RigidBody>(getComponentByName("RigidBody")); if
+	// (rigidBodyComponent) 	rigidBodyComponent->setOrientation(rotation);
 	return;
 }

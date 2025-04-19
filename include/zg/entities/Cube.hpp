@@ -1,24 +1,7 @@
 #pragma once
 #include <zg/Entity.hpp>
-
+#include <zg/interfaces/IRenderer.hpp>
 namespace zg::entities
 {
-	struct Cube : Entity
-	{
-		size_t getTypeID() override { return EntityTypeID<Cube>::id; }
-		glm::vec3 size;
-		std::vector<glm::vec4> colors;
-		std::vector<glm::vec3> normals = {};
-		inline static size_t cubesCount = 0;
-		Cube(Window &window,
-			 Scene &scene,
-			 glm::vec3 position,
-			 glm::quat rotation,
-			 glm::vec3 scale,
-			 glm::vec3 size,
-			 const shaders::RuntimeConstants &constants = {},
-			 std::string_view name = "");
-		bool preRender() override;
-		std::vector<uint32_t> getIndices(zg::Window& window);
-	};
-}
+	EntityCreateInfo CubeFactory(std::string name = "", glm::vec3 position = {0, 0, 0}, glm::quat rotation = {1, 0, 0, 0}, glm::vec3 scale = {1, 1, 1}, glm::vec3 size = {1, 1, 1}, glm::vec4 color = {1,0,0,1}, const shaders::RuntimeConstants& constants = {}, zg::FRONTFACE frontFace = zg::IRenderer::DEFAULTFRONTFACE);
+} // namespace zg::entities

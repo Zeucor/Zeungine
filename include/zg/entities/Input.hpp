@@ -10,57 +10,58 @@
 
 namespace zg::entities
 {
-	struct Input : Entity
-	{
-		size_t getTypeID() override { return EntityTypeID<Input>::id; }
-		std::vector<glm::vec4> colors;
-		glm::vec2 size;
-		std::string *textPointer = 0;
-		std::shared_ptr<TextView> textView;
-		fonts::freetype::FreetypeFont &font;
-		float width;
-		float height;
-		float NDCWidth;
-		float NDCHeight;
-		std::string placeholderText;
-		std::shared_ptr<TextView> placeholderTextView;
-		std::shared_ptr<TextView> activeTextView;
-		float fontSize;
-		UniqueIdentifier mouseHoverID = 0;
-		UniqueIdentifier mousePressID = 0;
-		UniqueIdentifier anyKeyPressID = 0;
-		bool active = false;
-		bool hovered = false;
-		glm::vec4 activeColor;
-		glm::vec4 inactiveColor;
-		std::shared_ptr<Plane> cursorPlane;
-		float padding;
-		float NDCPadding;
-		inline static size_t inputsCount = 0;
-		inline static Input *activeInput = 0;
-		Input(Window &window,
-			  Scene &scene,
-			  glm::vec3 position,
-			  glm::quat rotation,
-			  glm::vec3 scale,
-			  glm::vec4 backgroundColor,
-			  fonts::freetype::FreetypeFont &font,
-			  float width,
-			  float height,
-			  const std::string &placeholderText,
-			  float padding = 8,
-			  const shaders::RuntimeConstants &constants = {},
-			  const std::string_view name = "");
-		~Input();
-		void preUpdate() override;
-		bool preRender() override;
-		void setColor(glm::vec4 color);
-		void setSize(glm::vec2 size);
-		void showTextView(const std::shared_ptr<TextView> &showTextView);
-		char getShiftedChar(const char &key, bool shiftPressed);
-		void setActive();
-		void setInactive();
-		void clear();
-		void handleKey(Key key, bool pressed);
-	};
+	EntityCreateInfo InputFactory(
+		glm::vec3 position,
+		glm::quat rotation,
+		glm::vec3 scale,
+		glm::vec4 backgroundColor,
+		fonts::freetype::FreetypeFont &font,
+		float width,
+		float height,
+		const std::string &placeholderText,
+		float padding = 8,
+		const shaders::RuntimeConstants &constants = {},
+		const std::string_view name = "");
+	// struct Input : Entity
+	// {
+	// 	size_t getTypeID() override { return EntityTypeID<Input>::id; }
+	// 	std::vector<glm::vec4> colors;
+	// 	glm::vec2 size;
+	// 	std::string *textPointer = 0;
+	// 	Entity* textView;
+	// 	fonts::freetype::FreetypeFont &font;
+	// 	float width;
+	// 	float height;
+	// 	float NDCWidth;
+	// 	float NDCHeight;
+	// 	std::string placeholderText;
+	// 	Entity* placeholderTextView;
+	// 	Entity* activeTextView;
+	// 	float fontSize;
+	// 	UniqueIdentifier mouseHoverID = 0;
+	// 	UniqueIdentifier mousePressID = 0;
+	// 	UniqueIdentifier anyKeyPressID = 0;
+	// 	bool active = false;
+	// 	bool hovered = false;
+	// 	glm::vec4 activeColor;
+	// 	glm::vec4 inactiveColor;
+	// 	Entity* cursorPlane;
+	// 	float padding;
+	// 	float NDCPadding;
+	// 	inline static size_t inputsCount = 0;
+	// 	inline static Input *activeInput = 0;
+	// 	Input(Window &window,
+	// 		  );
+	// 	~Input();
+	// 	void preUpdate() override;
+	// 	bool preRender() override;
+	// 	void setColor(glm::vec4 color);
+	// 	void setSize(glm::vec2 size);
+	// 	void showTextView(const Entity &showTextView);
+	// 	char getShiftedChar(const char &key, bool shiftPressed);
+	// 	void setActive();
+	// 	void setInactive();
+	// 	void clear();
+	// 	void handleKey(Key key, bool pressed);
+	// };
 }

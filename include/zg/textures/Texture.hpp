@@ -1,7 +1,13 @@
 #pragma once
-#include <zg/Window.hpp>
+namespace zg
+{
+	struct IRenderer;
+}
 #include <zg/glm.hpp>
 #include "../common.hpp"
+#include <memory>
+#include <vector>
+#include <map>
 namespace zg::textures
 {
 	struct Texture
@@ -28,21 +34,21 @@ namespace zg::textures
 			Linear = 1,
 			Nearest
 		};
-		Window &window;
+		IRenderer *iRenderer = 0;
 		glm::ivec4 size;
 		std::vector<std::pair<size_t, std::shared_ptr<char>>> datas;
 		Format format;
 		Type type;
 		FilterType filterType;
 		void *rendererData = 0;
-		explicit Texture(Window &window, const glm::ivec4 &size, const void *data, const Format &format = RGBA8,
+		explicit Texture(IRenderer *iRenderer, const glm::ivec4 &size, const void *data, const Format &format = RGBA8,
 						 const Type &type = UnsignedByte, const FilterType &filterType = Linear);
-		explicit Texture(Window &window, const glm::ivec4 &size, const std::vector<void *> datas, const Format &format = RGBA8,
+		explicit Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<void *> datas, const Format &format = RGBA8,
 						const Type &type = UnsignedByte, const FilterType &filterType = Linear);
-		explicit Texture(Window &window, const glm::ivec4 &size, const std::string_view path,
+		explicit Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::string_view path,
 						 const Format &format = RGBA8, const Type &type = UnsignedByte,
 						 const FilterType &filterType = Linear);
-		explicit Texture(Window &window, const glm::ivec4 &size, const std::vector<std::string_view> &paths,
+		explicit Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<std::string_view> &paths,
 						 const Format &format = RGBA8, const Type &type = UnsignedByte,
 						 const FilterType &filterType = Linear);
 		~Texture();

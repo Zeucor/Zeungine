@@ -160,8 +160,8 @@ void WaylandWindow::init(Window &renderWindow)
 	xdg_surface_add_listener(xdgSurface, &shellSurfaceListener, this);
 	xdgToplevel = xdg_surface_get_toplevel(xdgSurface);
 	xdg_toplevel_add_listener(xdgToplevel, &toplevelListener, this);
-	xdg_toplevel_set_title(xdgToplevel, renderWindowPointer->title);
-	xdg_toplevel_set_app_id(xdgToplevel, renderWindowPointer->title);
+	xdg_toplevel_set_title(xdgToplevel, renderWindowPointer->title.c_str());
+	xdg_toplevel_set_app_id(xdgToplevel, renderWindowPointer->title.c_str());
 	if (seatPointer)
 	{
 		wl_pointer_add_listener(seatPointer, &pointer_listener, this);

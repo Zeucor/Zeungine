@@ -102,7 +102,7 @@ struct ShaderVariable
     // basic type. Shader interface variables that are enumerated according to rules in GLES 3.1
     // spec section 7.3.1.1 page 77 are fine. For those variables the return value should match the
     // ARRAY_SIZE value that can be queried through the API.
-    unsigned int getBasicTypeElementCount() const;
+    unsigned int getBasicTypevertexCount() const;
 
     unsigned int getExternalSize() const;
 
@@ -282,7 +282,7 @@ struct InterfaceBlock
     bool isBuiltIn() const;
 
     bool isArray() const { return arraySize > 0; }
-    unsigned int elementCount() const { return std::max(1u, arraySize); }
+    unsigned int vertexCount() const { return std::max(1u, arraySize); }
 
     std::string name;
     std::string mappedName;

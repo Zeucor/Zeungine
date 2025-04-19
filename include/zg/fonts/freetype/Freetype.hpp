@@ -46,13 +46,13 @@ namespace zg::fonts::freetype
 		void stringToScene(const std::string_view string, glm::vec3 position, glm::vec4 color, glm::quat _rotation,
 											 glm::vec3 _scale, float fontSize, float& lineHeight, glm::vec2 bounds,
 											 enums::EBreakStyle breakStyle, Scene& scene,
-											 std::vector<std::shared_ptr<entities::Plane>>& existingAndUpdatedGlyphs, int64_t cursorIndex,
-											 std::shared_ptr<entities::Plane>& cursor);
+											 std::vector<Entity*>& existingAndUpdatedGlyphs, int64_t cursorIndex,
+											 Entity*& cursor);
 		void stringToEntity(const std::string_view string, glm::vec3 position, glm::vec4 color, glm::quat _rotation,
 												glm::vec3 _scale, float fontSize, float& lineHeight, glm::vec2 bounds,
 												enums::EBreakStyle breakStyle, Scene& scene, Entity& entity,
-												std::vector<std::shared_ptr<entities::Plane>>& existingAndUpdatedGlyphs, int64_t cursorIndex,
-												std::shared_ptr<entities::Plane>& cursor);
+												std::vector<Entity*>& existingAndUpdatedGlyphs, int64_t cursorIndex,
+												Entity*& cursor);
 		FreetypeCharacter& getCharacter(float codepoint, float fontSize);
 		static void FT_PRINT_AND_THROW_ERROR(const FT_Error& error, const std::string& fontPath);
 		void addNextKerning(float fontSize, FT_UInt currentGlyphIndex, zg::strings::Utf8Iterator iterator, float& advanceX, float scaleX);

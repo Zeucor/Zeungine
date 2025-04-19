@@ -17,28 +17,28 @@ zg::Entity::DeserializeMap& getDeserializeMap()
     }
     return *deserializeMapPointer;
 }
-void zg::Entity::registerSerialize(size_t ID, const SerializeFunction& function)
+void zg::Entity::registerSerialize(const std::string& typeName, const SerializeFunction& function)
 {
-    getSerializeMap()[ID] = function;
+    getSerializeMap()[typeName] = function;
 }
-void zg::Entity::registerDeserialize(size_t ID, const DeserializeFunction& function)
+void zg::Entity::registerDeserialize(const std::string& typeName, const DeserializeFunction& function)
 {
-    getDeserializeMap()[ID] = function;
+    getDeserializeMap()[typeName] = function;
 }
-zg::Entity::SerializeFunction zg::Entity::getSerialize(size_t ID)
+zg::Entity::SerializeFunction zg::Entity::getSerialize(const std::string& typeName)
 {
     auto& serializeMap = getSerializeMap();
-    auto iter = serializeMap.find(ID);
+    auto iter = serializeMap.find(typeName);
     if (iter == serializeMap.end())
-        throw std::runtime_error("TypeID: " + std::to_string(ID) + " serialize function not found");
+        throw std::runtime_error("TypeName: " + typeName + " serialize function not found");
     return iter->second;
 }
-zg::Entity::DeserializeFunction zg::Entity::getDeserialize(size_t ID)
+zg::Entity::DeserializeFunction zg::Entity::getDeserialize(const std::string& typeName)
 {
     auto& deserializeMap = getDeserializeMap();
-    auto iter = deserializeMap.find(ID);
+    auto iter = deserializeMap.find(typeName);
     if (iter == deserializeMap.end())
-        throw std::runtime_error("TypeID: " + std::to_string(ID) + " deserialize function not found");
+        throw std::runtime_error("TypeName: " + typeName + " deserialize function not found");
     return iter->second;
 }
 void zg::Entity::cleanupSerialize()
@@ -62,8 +62,8 @@ zg::Entity::registerDeserialize(EntityTypeID<TYPE>::id, [](auto& serial, auto& p
     return serial;\
 })
 auto registered = ([]()->bool{
-    REGISTER_ENTITY(zg::entities::Plane);
-    REGISTER_ENTITY(zg::entities::NDParametricCurve<3>);
-    REGISTER_ENTITY(zg::entities::Cube);
+    // REGISTER_ENTITY(zg::entities::Plane);
+    // REGISTER_ENTITY(zg::entities::NDParametricCurve<3, float>);
+    // REGISTER_ENTITY(zg::entities::Cube);
     return true;
 })();

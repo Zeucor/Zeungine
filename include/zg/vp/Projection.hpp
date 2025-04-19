@@ -8,6 +8,11 @@ namespace zg::vp
 {
   struct Projection
   {
+    enum TYPE
+    {
+      Perspective,
+      Orthographic
+    };
     Window &window;
     float fov = 0;
     glm::vec2 orthoSize = glm::vec2(0.0f);

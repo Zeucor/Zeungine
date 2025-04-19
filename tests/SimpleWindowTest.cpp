@@ -1,17 +1,16 @@
-#include <zg/Window.hpp>
 #include <zg/Scene.hpp>
+#include <zg/Window.hpp>
 using namespace zg;
-struct SimpleScene : Scene
-{
-	SimpleScene(Window &window) : Scene(window, {0, 10, 10}, {0, -1, -1}, 81.f)
-	{
-		clearColor = {1, 0, 0, 1};
-	};
-};
 int main()
 {
-	Window window("My Simple Window", 640, 480, -1, -1);
-	window.runOnThread([](auto &window)
-					   { window.setScene(std::make_shared<SimpleScene>(window)); });
+	WindowCreateInfo windowInfo{.title = "Simple Window", .windowWidth = 640, .windowHeight = 480};
+	Window window(windowInfo);
+	window.runOnThread(
+		[](auto& window)
+		{
+			SceneCreateInfo sceneInfo{.name = "Simple Scene",
+																.onAttachedFunction = [](auto& scene) { scene.clearColor = {1, 0, 0, 1}; }};
+			window.addScene(sceneInfo);
+		});
 	window.run();
 }

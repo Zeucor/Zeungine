@@ -3,13 +3,16 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include "components/windows/WindowComponent.hpp"
+#include "ComponentHolder.hpp"
+#include "fonts/SystemFonts.hpp"
+#include "queue.hpp"
+#include "system/Budget.hpp"
 #include "./Events.hpp"
 #include "./interfaces/IPlatformWindow.hpp"
 #include "./textures/Framebuffer.hpp"
 #include "audio/AudioEngine.hpp"
-#include <zg/queue.hpp>
-#include <zg/system/Budget.hpp>
-#include <zg/fonts/SystemFonts.hpp>
+#include "Scene.hpp"
 namespace zg
 {
 	namespace shaders
@@ -41,7 +44,8 @@ namespace zg
 #define KEYCODE_PAUSE 0x87
 #define KEYCODE_SUPER 0x88
 #define LAST_UNDEFINED_ASCII_IN_RANGE 0x9F
-	struct Window
+struct WindowCreateInfo;
+	struct Window : ComponentHolder<components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>
 	{
 		IPlatformWindow* iPlatformWindow;
 		IRenderer* iRenderer;
@@ -59,7 +63,8 @@ namespace zg
 		std::unordered_map<Button, int> buttons;
 		std::mutex handlersMutex;
 		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyPressHandler>>> keyPressHandlers;
-		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyUpdateHandler>>> keyUpdateHandlers;
+		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyUpdateHandler>>>
+			keyUpdateHandlers;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, AnyKeyPressHandler>> anyKeyPressHandlers;
 		std::unordered_map<Button, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MousePressHandler>>>
 			mousePressHandlers;
@@ -67,7 +72,7 @@ namespace zg
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, ViewResizeHandler>> viewResizeHandlers;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, FocusHandler>> focusHandlers;
 		zg::td::queue<PreSwapbuffersOnceoff> preSwapbuffersOnceoffs;
-		std::shared_ptr<Scene> scene;
+		zg::KeyIDVector<std::string, Scene> scenes;
 		bool open = true;
 		NANO_TIMEPOINT lastFrameTime;
 		long double deltaTime;
@@ -79,7 +84,7 @@ namespace zg
 		bool focused = false;
 		OnEntityAddedFunction onEntityAdded;
 		std::recursive_mutex renderMutex;
-		const char* title;
+		std::string title;
 		int windowKeys[256];
 		int windowButtons[7];
 		bool mouseMoved = false;
@@ -88,24 +93,24 @@ namespace zg
 		bool isChildWindow = false;
 		Window* parentWindow = 0;
 		Scene* parentScene = 0;
-		std::vector<Window*> childWindows;
+		KeyIDVector<std::string, Window> childWindows;
 		ShaderContext* shaderContext = 0;
 		bool NDCFramebufferPlane;
 		std::shared_ptr<textures::Texture> framebufferTexture;
 		std::shared_ptr<textures::Texture> framebufferDepthTexture;
 		std::shared_ptr<textures::Framebuffer> framebuffer;
-		std::shared_ptr<entities::Plane> framebufferPlane;
+		Entity* framebufferPlane;
 		glm::vec2 oldXY;
 		bool vsync = true;
 		audio::AudioEngine audioEngine;
 		NANOSECONDS_DURATION frameduration;
 		budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL> framebudget;
 		fonts::SystemFonts systemFonts;
-		Window(const char* title, float windowWidth, float windowHeight, float windowX, float windowY,
-					 bool borderless = false, bool vsync = true, uint32_t framerate = 60);
-		Window(Window& parentWindow, Scene& parentScene, const char* childTitle, float childWindowWidth,
-					 float childWindowHeight, float childWindowX, float childWindowY, bool NDCFramebufferPlane = false,
-					 bool vsync = true, uint32_t framerate = 60);
+		// when adding new members remember to add to operator=
+
+		Window(const WindowCreateInfo& info);
+		Window(const Window& other);
+		Window& operator=(const Window& other);
 		void run();
 		void update();
 		void preRender();
@@ -122,8 +127,7 @@ namespace zg
 		void setXY(float x, float y);
 		void setWidthHeight(float width, float height);
 		void mouseCapture(bool capture);
-		Window& createChildWindow(const char* title, Scene& scene, float windowWidth, float windowHeight, float windowX,
-															float windowY, bool NDCFramebufferPlane);
+		Window& createChildWindow(const WindowCreateInfo& info);
 		// Keyboard
 		UniqueIdentifier addKeyPressHandler(Key key, const KeyPressHandler& callback);
 		void removeKeyPressHandler(Key key, UniqueIdentifier& id);
@@ -156,7 +160,8 @@ namespace zg
 		void addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff);
 		void callPreSwapbuffersOnceoff();
 		// scene
-		std::shared_ptr<Scene> setScene(const std::shared_ptr<Scene>& scene);
+		Scene& addScene(const SceneCreateInfo& info);
+		bool removeScene(const Scene& scene);
 		// runnables
 		void runOnThread(const Runnable& runnable);
 		void runRunnables();
@@ -164,6 +169,21 @@ namespace zg
 		void resize(glm::vec2 newSize);
 		void registerOnEntityAddedFunction(const OnEntityAddedFunction& function);
 	};
-	void computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& indices, const std::vector<glm::vec3>& positions,
-											std::vector<glm::vec3>& normals);
+	void computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& indices,
+											const std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& normals);
+	struct WindowCreateInfo
+	{
+		std::string title = "Default Window Name";
+		float windowWidth = 1024;
+		float windowHeight = 768;
+		float windowX = -1;
+		float windowY = -1;
+		bool borderless = false;
+		bool vsync = true;
+		uint32_t framerate = 60;
+		bool isChildWindow = false;
+		Window* parentWindowPointer = 0;
+		Scene* parentScenePointer = 0;
+		bool NDCFramebufferPlane = false;
+	};
 } // namespace zg

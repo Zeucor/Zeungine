@@ -7,30 +7,32 @@
 #include <zg/system/Budget.hpp>
 namespace zg::media::entities
 {
-	struct Video : Entity, ISizable, zg::media::ReadMediaStream, zg::audio::ISoundNode
-	{
-		size_t getTypeID() override { return EntityTypeID<Video>::id; }
-		std::vector<glm::vec2> uvs;
-		std::vector<glm::vec3> normals = {};
-		std::shared_ptr<textures::Texture> texturePointer;
-		std::shared_ptr<budget::ZBudget<>> budget;
-		bool sweetFrameTime = true;
-		inline static size_t videosCount = 0;
-		Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::quat _rotation, glm::vec3 _scale, glm::vec2 _size,
-					const std::string& uri, std::string_view name = "");
-		Video(Window& _window, Scene& _scene, glm::vec3 _position, glm::quat _rotation, glm::vec3 _scale, glm::vec2 _size,
-					const std::string& uri, const std::shared_ptr<interfaces::IFile>& filePointer, std::string_view name = "");
+	EntityCreateInfo VideoFactory(Scene& _scene, glm::vec3 _position, glm::quat _rotation, glm::vec3 _scale, glm::vec2 _size,
+		const std::string& uri, std::string_view name = "");
+	EntityCreateInfo VideoFactory(Scene& _scene, glm::vec3 _position, glm::quat _rotation, glm::vec3 _scale, glm::vec2 _size,
+		const std::string& uri, const std::shared_ptr<interfaces::IFile>& filePointer, std::string_view name = "");
+	// struct Video : Entity, ISizable, zg::media::ReadMediaStream, zg::audio::ISoundNode
+	// {
+	// 	size_t getTypeID() override { return EntityTypeID<Video>::id; }
+	// 	std::vector<glm::vec2> uvs;
+	// 	std::vector<glm::vec3> normals = {};
+	// 	std::shared_ptr<textures::Texture> texturePointer;
+	// 	std::shared_ptr<budget::ZBudget<>> budget;
+	// 	bool sweetFrameTime = true;
+	// 	inline static size_t videosCount = 0;
+	// 	Video(Window& _window, );
+	// 	Video(Window& _window, );
 
-	private:
-		bool firstFrame = true;
-		void init(glm::vec2 _size);
+	// private:
+	// 	bool firstFrame = true;
+	// 	void init(glm::vec2 _size);
 
-	public:
-		bool preRender() override;
-		void setSize(glm::vec3 newSize) override;
-		std::vector<float> inputFrames(const float* frames, const int32_t& channelCount, const unsigned long& frameCount,
-																	 const zg::audio::audio_time_t& time) override;
-		void outputFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount,
-											const zg::audio::audio_time_t& time) override;
-	};
+	// public:
+	// 	bool preRender() override;
+	// 	void setSize(glm::vec3 newSize) override;
+	// 	std::vector<float> inputFrames(const float* frames, const int32_t& channelCount, const unsigned long& frameCount,
+	// 																 const zg::audio::audio_time_t& time) override;
+	// 	void outputFrames(float* frames, const int32_t& channelCount, const unsigned long& frameCount,
+	// 										const zg::audio::audio_time_t& time) override;
+	// };
 } // namespace zg::media::entities

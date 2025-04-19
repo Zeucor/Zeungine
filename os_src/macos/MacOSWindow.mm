@@ -72,7 +72,7 @@ void MacOSWindow::init(Window &renderWindow)
 										NSWindowStyleMaskMiniaturizable)
 							backing:NSBackingStoreBuffered
 							defer:NO];
-		NSString *nsTitle = [NSString stringWithUTF8String:renderWindow.title];
+		NSString *nsTitle = [NSString stringWithUTF8String:renderWindow.title.c_str()];
 		[window setTitle:nsTitle];
 		[window setDelegate:[[MacOSWindowDelegate alloc] initWithWindow:this]];
 		[window makeKeyAndOrderFront:nil];

@@ -3,7 +3,10 @@
 #include "../textures/Texture.hpp"
 #include "../textures/Framebuffer.hpp"
 #include "./Lights.hpp"
-#include "../Window.hpp"
+namespace zg
+{
+  struct Window;
+}
 namespace zg::lights
 {
   struct DirectionalLightShadow
@@ -17,6 +20,7 @@ namespace zg::lights
     bool lookAtSet = false;
     glm::vec3 lookAt = glm::vec3(0);
     DirectionalLightShadow(Window &window, DirectionalLight &directionalLight);
+    DirectionalLightShadow& operator=(const DirectionalLightShadow& other);
     void addShader();
     void update();
   };

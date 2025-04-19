@@ -1,5 +1,6 @@
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/textures/TextureFactory.hpp>
+#include <zg/interfaces/IRenderer.hpp>
 using namespace zg::textures;
 #if defined(USE_GL) || defined(USE_EGL)
 TextureFactory::InternalFormatsMap TextureFactory::internalFormats = {
@@ -98,17 +99,17 @@ void TextureFactory::initTexture(Texture &texture, const std::vector<std::string
 };
 void TextureFactory::preInitTexture(Texture &texture)
 {
-  texture.window.iRenderer->preInitTexture(texture);
+  texture.iRenderer->preInitTexture(texture);
 };
 void TextureFactory::midInitTexture(const Texture &texture, const std::vector<images::ImageLoader::ImagePair> &images)
 {
-  texture.window.iRenderer->midInitTexture(texture, images);
+  texture.iRenderer->midInitTexture(texture, images);
 }
 void TextureFactory::postInitTexture(const Texture &texture)
 {
-  texture.window.iRenderer->postInitTexture(texture);
+  texture.iRenderer->postInitTexture(texture);
 };
 void TextureFactory::destroyTexture(Texture &texture)
 {
-  texture.window.iRenderer->destroyTexture(texture);
+  texture.iRenderer->destroyTexture(texture);
 };

@@ -7,7 +7,7 @@ SpotLightShadow::SpotLightShadow(Window& window, SpotLight& spotLight) :
 		//  shader(*shaders::ShaderManager::getShaderByConstants(window, {"DepthMap", "Color", "Position", "Normal", "Model",
 		//  "LightSpaceMatrix"}).second),
 		spotLight(spotLight),
-		texture(window, glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
+		texture(window.iRenderer, glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
 		framebuffer(window, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
 {
 	float fov = glm::acos(glm::clamp(spotLight.outerCutoff, -1.0f, 1.0f)) * 2.0;
@@ -23,4 +23,11 @@ SpotLightShadow::SpotLightShadow(Window& window, SpotLight& spotLight) :
 	glm::vec3 correctedUp = glm::normalize(glm::cross(lightDirection, right));
 	glm::mat4 lightView = glm::lookAt(spotLight.position, lightTarget, correctedUp);
 	lightSpaceMatrix = lightProjection * lightView;
+}
+SpotLightShadow& SpotLightShadow::operator=(const SpotLightShadow& other)
+{
+	shader = other.shader;
+	texture = other.texture;
+	lightSpaceMatrix = other.lightSpaceMatrix;
+	return *this;
 }

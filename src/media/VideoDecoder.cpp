@@ -71,6 +71,6 @@ bool VideoDecoder::fillNextFrame(std::shared_ptr<textures::Texture>& texturePoin
 	// 	memcpy(rowBottom, tempRow, rowBytes);
 	// }
 	texturePointer = std::make_shared<textures::Texture>(
-		mediaStream.streamWindow, glm::ivec4(codecContext->width, codecContext->height, 1, 0), (void*)rgbaBuffer);
+		mediaStream.streamWindow.iRenderer, glm::ivec4(codecContext->width, codecContext->height, 1, 0), (void*)rgbaBuffer);
 	return true;
 }

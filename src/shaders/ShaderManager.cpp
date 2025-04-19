@@ -21,7 +21,7 @@ std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants
   if (hashIter != window.shaderContext->shadersByHash.end())
     return hashIter->second;
   std::cout << "Creating shader hash: " << hash <<std::endl;
-  auto shaderPointer = std::make_shared<Shader>(hash, window, constants, shaderTypes);
+  auto shaderPointer = std::make_shared<Shader>(hash, window.iRenderer, constants, shaderTypes);
   auto id = ++window.shaderContext->shaderCount;
   window.shaderContext->shaders[id] = shaderPointer;
   std::pair<uint32_t, std::shared_ptr<Shader>> pair(id, shaderPointer);

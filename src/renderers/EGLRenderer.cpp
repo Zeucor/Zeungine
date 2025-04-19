@@ -605,7 +605,7 @@ void EGLRenderer::updateElementsVAO(const vaos::VAO &vao, const std::string_view
 	auto &constantSize = vaos::VAOFactory::constantSizes[constant];
 	auto offset = vaos::VAOFactory::getOffset(vao.constants, constant);
 	auto elementStride = std::get<0>(constantSize) * std::get<1>(constantSize);
-	for (size_t index = offset, c = 1, elementIndex = 0; c <= vao.elementCount;
+	for (size_t index = offset, c = 1, elementIndex = 0; c <= vao.vertexCount;
 		 index += vao.stride, c++, elementIndex += elementStride)
 	{
 		glBufferSubData(GL_ARRAY_BUFFER, index, elementStride, &elementsAsChar[elementIndex]);
@@ -640,7 +640,7 @@ void EGLRenderer::generateVAO(vaos::VAO &vao)
 	glBindBuffer(GL_ARRAY_BUFFER, vaoImpl.vbo);
 	GLcheck(*this, "glBindBuffer");
 	auto stride = vaos::VAOFactory::getStride(vao.constants);
-	glBufferData(GL_ARRAY_BUFFER, stride * vao.elementCount, 0, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, stride * vao.vertexCount, 0, GL_STATIC_DRAW);
 	GLcheck(*this, "glBufferData");
 	size_t attribIndex = 0;
 	size_t offset = 0;
