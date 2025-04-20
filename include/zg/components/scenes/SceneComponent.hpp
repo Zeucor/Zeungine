@@ -13,16 +13,16 @@ namespace zg::components::scenes
 		std::function<void(SceneComponent&)> onAttachedFunction;
 		std::function<void(SceneComponent&)> onDetachedFunction;
 		std::function<void(SceneComponent&)> onUpdateFunction;
-		interfaces::IComponent<Scene, SceneComponent>::GetDataFunctionMap getDataFunctions;
-		interfaces::IComponent<Scene, SceneComponent>::SetDataFunctionMap setDataFunctions;
+		interfaces::IComponent<SceneComponent>::GetDataFunctionMap getDataFunctions;
+		interfaces::IComponent<SceneComponent>::SetDataFunctionMap setDataFunctions;
     };
-	struct SceneComponent : interfaces::IComponent<Scene, SceneComponent>
+	struct SceneComponent : interfaces::IComponent<SceneComponent>
 	{
 		std::function<void(SceneComponent&)> onAttachedFunction;
 		std::function<void(SceneComponent&)> onDetachedFunction;
 		std::function<void(SceneComponent&)> onUpdateFunction;
 		SceneComponent(const SceneComponentCreateInfo& info):
-			IComponent<Scene, SceneComponent>(info.name, info.getDataFunctions, info.setDataFunctions),
+			IComponent<SceneComponent>(info.name, info.getDataFunctions, info.setDataFunctions),
 			onAttachedFunction(info.onAttachedFunction),
 			onDetachedFunction(info.onDetachedFunction),
 			onUpdateFunction(info.onUpdateFunction)

@@ -13,16 +13,16 @@ namespace zg::components::entities
 		std::function<void(EntityComponent&)> onAttachedFunction;
 		std::function<void(EntityComponent&)> onDetachedFunction;
 		std::function<void(EntityComponent&)> onUpdateFunction;
-		interfaces::IComponent<Entity, EntityComponent>::GetDataFunctionMap getDataFunctions;
-		interfaces::IComponent<Entity, EntityComponent>::SetDataFunctionMap setDataFunctions;
+		interfaces::IComponent<EntityComponent>::GetDataFunctionMap getDataFunctions;
+		interfaces::IComponent<EntityComponent>::SetDataFunctionMap setDataFunctions;
     };
-	struct EntityComponent : interfaces::IComponent<Entity, EntityComponent>
+	struct EntityComponent : interfaces::IComponent<EntityComponent>
 	{
 		std::function<void(EntityComponent&)> onAttachedFunction;
 		std::function<void(EntityComponent&)> onDetachedFunction;
 		std::function<void(EntityComponent&)> onUpdateFunction;
 		EntityComponent(const EntityComponentCreateInfo& info):
-			IComponent<Entity, EntityComponent>(info.name, info.getDataFunctions, info.setDataFunctions),
+			IComponent<EntityComponent>(info.name, info.getDataFunctions, info.setDataFunctions),
 			onAttachedFunction(info.onAttachedFunction),
 			onDetachedFunction(info.onDetachedFunction),
 			onUpdateFunction(info.onUpdateFunction)

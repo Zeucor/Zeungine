@@ -47,6 +47,8 @@ namespace zg
 struct WindowCreateInfo;
 	struct Window : ComponentHolder<Window, components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>
 	{
+		size_t ID = 0;
+		std::string title;
 		IPlatformWindow* iPlatformWindow;
 		IRenderer* iRenderer;
 		float windowWidth;
@@ -84,7 +86,6 @@ struct WindowCreateInfo;
 		bool maximized = false;
 		bool focused = false;
 		OnEntityAddedFunction onEntityAdded;
-		std::string title;
 		int windowKeys[256];
 		int windowButtons[7];
 		bool mouseMoved = false;

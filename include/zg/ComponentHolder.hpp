@@ -9,6 +9,9 @@
 #include "./Events.hpp"
 namespace zg
 {
+	struct Entity;
+	struct Scene;
+	struct Window;
 	template <typename HostT, typename ComponentT, typename ComponentInfoT>
 	struct ComponentHolder
 	{
@@ -51,7 +54,34 @@ namespace zg
 			auto id = ++std::get<0>(m_components);
 			auto& components = std::get<1>(m_components);
 			auto& component = components.emplace_back(id, info.name, info).COMPONENT;
-			component.host = dynamic_cast<HostT*>(this);
+			auto& host = *dynamic_cast<HostT*>(this);
+			if constexpr (std::is_same_v<HostT, Entity>)
+			{
+				component.hostIDStack.push_back(host.scene.window.ID);
+				component.hostIDStack.push_back(host.scene.ID);
+				std::vector<size_t> parentEntityStack;
+				auto currentEntity = host.parentEntity;
+				while (currentEntity)
+				{
+					parentEntityStack.push_back(currentEntity->ID);
+					currentEntity = currentEntity.parentEntity;
+				}
+				auto parentEntityStackData = parentEntityStack.data();
+				for (int i = parentEntityStack.size(); i >= 0; --i)
+				{
+					component.hostIDStack.push_back(parentEntityStackData[i]);
+				}
+				component.hostIDStack.push_back(host.ID);
+			}
+			else if constexpr (std::is_same_v<HostT, Scene>)
+			{
+				component.hostIDStack.push_back(host.window.ID);
+				component.hostIDStack.push_back(host.ID);
+			}
+			else
+			{
+				component.hostIDStack.push_back(host.ID);
+			}
 			component.onAttached();
 			return id;
 		}

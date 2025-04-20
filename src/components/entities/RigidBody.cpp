@@ -3,6 +3,7 @@
 #include <zg/components/entities/Collider.hpp>
 #include <zg/components/entities/RigidBody.hpp>
 #include <zg/components/scenes/PhysicsScene.hpp>
+#include <zg/Registry.hpp>
 using namespace zg::components::entities;
 zg::components::entities::EntityComponentCreateInfo zg::components::entities::RigidBodyFactory(const RigidBodyInfo& info)
 {
@@ -10,7 +11,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 		.name = "RigidBody",
 		.onAttachedFunction = [&, info](auto& component)
 		{
-			auto& entity = *component.host;
+			auto& entity = Registry::getEntity(component.hostIDStack);
 			auto& physicsScene = component.make<zg::components::scenes::SceneComponent*>("PhysicsScene", nullptr);
 			try
 			{
@@ -42,7 +43,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 		.getDataFunctions = {
 			{"recreateJoltBody", [](auto& component)->std::any&
 			{
-				auto& entity = *component.host;
+				auto& entity = Registry::getEntity(component.hostIDStack);
 				auto& physicsScene = *component.getData<zg::components::scenes::SceneComponent*>("PhysicsScene");
 				auto& info = *component.make<RigidBodyInfo*>("Info");
 				auto& position = *component.make<glm::vec3*>("Position");

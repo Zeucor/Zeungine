@@ -1,47 +1,49 @@
 #include <zg/Window.hpp>
 #include <zg/vp/VML.hpp>
+#include <zg/Registry.hpp>
 zg::components::scenes::SceneComponentCreateInfo ViewMouseLookFactory()
 {
 	zg::components::scenes::SceneComponentCreateInfo info{
 		.name = "View Mouse Look",
 		.onAttachedFunction = [](auto& component)
 		{
-			auto scenePointer = component.host;
-			auto& scene = *scenePointer;
+			auto& scene = zg::Registry::getScene(component.hostIDStack);
 			auto& window = scene.window;
 			component.make<zg::UniqueIdentifier>("mouseMoveID",
 				window.addMouseMoveHandler(
-					[scenePointer](glm::vec2 coords)
+					[hostIDStack = component.hostIDStack](glm::vec2 coords)
 					{
-						if (scenePointer->window.justWarpedPointer)
+						auto& scene = zg::Registry::getScene(hostIDStack);
+						if (scene.window.justWarpedPointer)
 						{
-							scenePointer->window.justWarpedPointer = false;
+							scene.window.justWarpedPointer = false;
 							return;
 						}
-						if (!scenePointer->window.focused)
+						if (!scene.window.focused)
 							return;
-						glm::vec2 center = {scenePointer->window.windowWidth / 2, scenePointer->window.windowHeight / 2};
+						glm::vec2 center = {scene.window.windowWidth / 2, scene.window.windowHeight / 2};
 						auto diff = coords - center;
-						scenePointer->viewPointer->addPhiTheta(diff.x * 0.001f, -diff.y * 0.001f);
-						scenePointer->window.warpPointer(center);
+						scene.viewPointer->addPhiTheta(diff.x * 0.001f, -diff.y * 0.001f);
+						scene.window.warpPointer(center);
 					}
 				)
 			);
 			component.make<zg::UniqueIdentifier>("focusID",
 				window.addFocusHandler(
-					[scenePointer](bool focused)
+					[hostIDStack = component.hostIDStack](bool focused)
 					{
+						auto& scene = zg::Registry::getScene(hostIDStack);
 						if (focused)
-							scenePointer->window.iPlatformWindow->hidePointer();
+							scene.window.iPlatformWindow->hidePointer();
 						else
-							scenePointer->window.iPlatformWindow->showPointer();
+							scene.window.iPlatformWindow->showPointer();
 					}
 				)
 			);
 		},
 		.onDetachedFunction = [](auto& component)
 		{
-			auto& window = component.host->window;
+			auto& window = zg::Registry::getScene(component.hostIDStack).window;
 			window.removeMouseMoveHandler(component.getData<zg::UniqueIdentifier>("mouseMoveID"));
 			window.removeFocusHandler(component.getData<zg::UniqueIdentifier>("focusID"));
 		}

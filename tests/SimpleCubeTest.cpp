@@ -4,6 +4,7 @@
 #include <zg/entities/Cube.hpp>
 #include <zg/entities/Plane.hpp>
 #include <zg/vp/VML.hpp>
+#include <zg/Registry.hpp>
 using namespace zg;
 auto cubeCreateInfo = entities::CubeFactory("Basic Red Cube", {0, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, {2, 1, 3});
 auto planeAngle = glm::angleAxis(glm::radians(90.f), glm::vec3(1, 0, 0));
@@ -13,7 +14,8 @@ SceneCreateInfo ExampleSceneFactory();
 int main()
 {
 	WindowCreateInfo windowCreateInfo{.title = "Cube Test", .borderless = true, .vsync = false, .framerate = 144};
-	Window window(windowCreateInfo);
+	auto window_tuple = zg::Registry::addWindow(windowCreateInfo);
+	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
 	window.runOnThread(
 		[](auto& window)
 		{

@@ -3,14 +3,15 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include <zg/DataStorage.hpp>
 #include <zg/Events.hpp>
 namespace zg::interfaces
 {
-	template <typename HostT, typename ComponentT>
+	template <typename ComponentT>
 	struct IComponent : DataStorage<ComponentT>
 	{
-		HostT* host = 0;
+		std::vector<size_t> hostIDStack;
 		size_t ID = 0;
 		std::string NAME;
 		IComponent(const std::string& name,

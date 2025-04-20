@@ -8,6 +8,7 @@
 #include <zg/physics/OBB.hpp>
 #include <zg/physics/Plane.hpp>
 #include <zg/physics/Projection.hpp>
+#include <zg/Registry.hpp>
 using namespace zg::components::scenes;
 using zg::components::entities::BoxShapeData;
 using zg::components::entities::CapsuleShapeData;
@@ -108,7 +109,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 			auto& thread = component.getData<std::thread*>("thread");
 			if (thread->joinable())
 				thread->join();
-			auto& scene = *component.host;
+			auto& scene = Registry::getScene(component.hostIDStack);
 			auto entitiesSize = scene.entities.size();
 			auto entitiesData = scene.entities.data();
 			for (size_t index = 0; index < entitiesSize; ++index)

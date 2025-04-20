@@ -2,13 +2,14 @@
 #include <zg/physics/AABB.hpp>
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
+#include <zg/Registry.hpp>
 zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityThirdPersonCameraFactory(Entity& entity)
 {
     zg::components::scenes::SceneComponentCreateInfo info{
         .name = "EntityThirdPersonCamera",
         .onAttachedFunction = [&](auto& component)
         {
-            auto& scene = *component.host;
+            auto& scene = zg::Registry::getScene(component.hostIDStack);
             auto& focused = component.make<bool>("Focused", false);
             auto& mouseMoveID = component.make<UniqueIdentifier>("MouseMoveID", 0);
             auto& focusID = component.make<UniqueIdentifier>("FocusID", 0);
@@ -104,7 +105,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
         {
             auto& mouseMoveID = component.getData<UniqueIdentifier>("MouseMoveID");
             auto& focusID = component.getData<UniqueIdentifier>("FocusID");
-            auto& scene = *static_cast<zg::Scene*>(component.host);
+            auto& scene = Registry::getScene(component.hostIDStack);
             scene.window.removeMouseMoveHandler(mouseMoveID);
             scene.window.removeFocusHandler(focusID);
         },
@@ -114,7 +115,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             auto& verticalOffset = component.getData<float>("VerticalOffset");
             auto& currentYaw = component.getData<float>("CurrentYaw");
             auto& currentPitch = component.getData<float>("CurrentPitch");
-            auto& scene = *static_cast<zg::Scene*>(component.host);
+            auto& scene = Registry::getScene(component.hostIDStack);
 
             if (!scene.viewPointer)
                 return;
