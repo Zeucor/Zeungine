@@ -8,7 +8,7 @@
 #include <zg/components/scenes/ViewQuadKeyControl.hpp>
 using namespace zg;
 auto cubeCreateInfo = entities::CubeFactory("Basic Red Cube", {0, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, {2, 1, 3});
-auto planeAngle = glm::angleAxis(glm::radians(90.f), glm::vec3(1, 0, 0));
+auto planeAngle = glm::angleAxis(glm::radians(-90.f), glm::vec3(1, 0, 0));
 auto planeCreateInfo =
 	entities::PlaneFactory({0.3, 0.25, 0.35, 0.75}, "Basic Grey Plane", {0, -0.5, 0}, planeAngle, {1, 1, 1}, {100, 100});
 SceneCreateInfo ExampleSceneFactory();
