@@ -48,6 +48,7 @@ struct WindowCreateInfo;
 	struct Window : ComponentHolder<Window, components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>
 	{
 		size_t ID = 0;
+		size_t* INDEX = 0;
 		std::string title;
 		IPlatformWindow* iPlatformWindow;
 		IRenderer* iRenderer;
@@ -162,8 +163,8 @@ struct WindowCreateInfo;
 		void addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff);
 		void callPreSwapbuffersOnceoff();
 		// scene
-		Scene& addScene(const SceneCreateInfo& info);
-		bool removeScene(const Scene& scene);
+		KeyIDVector<std::string, Scene>::EmplaceBackTuple  addScene(const SceneCreateInfo& info);
+		bool removeScene(size_t sceneID);
 		// runnables
 		void runOnThread(const Runnable& runnable);
 		void runRunnables();

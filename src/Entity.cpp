@@ -57,10 +57,10 @@ void Entity::update()
 {
 	if (preUpdateFunction)
 		preUpdateFunction(*this);
-	for (auto& componentEntry : std::get<1>(m_components))
-	{
-		componentEntry.COMPONENT.onUpdate();
-	}
+	auto componentsData = m_components.data();
+	auto componentsSize = m_components.size();
+	for (size_t index = 0; index < componentsSize; ++index)
+		componentsData[index].onUpdate();
 	auto childrenData = children.data();
 	auto childrenSize = children.size();
 	for (size_t index = 0; index < childrenSize; ++index)
@@ -171,7 +171,10 @@ glm::mat4& Entity::getModelMatrix()
 size_t Entity::addChild(const EntityCreateInfo& childCreateInfo)
 {
 	auto child_tuple = children.emplace_back(childCreateInfo);
-	return std::get<KEY_ID_VECTOR_ID_INDEX>(child_tuple);
+	auto& childEntity = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(child_tuple);
+	childEntity.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(child_tuple);
+	childEntity.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(child_tuple);
+	return childEntity.ID;
 }
 void Entity::removeChild(size_t& ID)
 {

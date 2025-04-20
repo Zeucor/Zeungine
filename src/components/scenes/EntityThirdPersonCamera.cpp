@@ -9,7 +9,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
         .name = "EntityThirdPersonCamera",
         .onAttachedFunction = [&](auto& component)
         {
-            auto& scene = zg::Registry::getScene(component.hostIDStack);
+            auto& scene = zg::Registry::getScene(component.hostIndexStack);
             auto& focused = component.make<bool>("Focused", false);
             auto& mouseMoveID = component.make<UniqueIdentifier>("MouseMoveID", 0);
             auto& focusID = component.make<UniqueIdentifier>("FocusID", 0);
@@ -105,7 +105,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
         {
             auto& mouseMoveID = component.getData<UniqueIdentifier>("MouseMoveID");
             auto& focusID = component.getData<UniqueIdentifier>("FocusID");
-            auto& scene = Registry::getScene(component.hostIDStack);
+            auto& scene = Registry::getScene(component.hostIndexStack);
             scene.window.removeMouseMoveHandler(mouseMoveID);
             scene.window.removeFocusHandler(focusID);
         },
@@ -115,7 +115,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             auto& verticalOffset = component.getData<float>("VerticalOffset");
             auto& currentYaw = component.getData<float>("CurrentYaw");
             auto& currentPitch = component.getData<float>("CurrentPitch");
-            auto& scene = Registry::getScene(component.hostIDStack);
+            auto& scene = Registry::getScene(component.hostIndexStack);
 
             if (!scene.viewPointer)
                 return;

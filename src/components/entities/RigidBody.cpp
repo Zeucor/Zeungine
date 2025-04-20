@@ -11,7 +11,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 		.name = "RigidBody",
 		.onAttachedFunction = [&, info](auto& component)
 		{
-			auto& entity = Registry::getEntity(component.hostIDStack);
+			auto& entity = Registry::getEntity(component.hostIndexStack);
 			auto& physicsScene = component.make<zg::components::scenes::SceneComponent*>("PhysicsScene", nullptr);
 			try
 			{
@@ -43,7 +43,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 		.getDataFunctions = {
 			{"recreateJoltBody", [](auto& component)->std::any&
 			{
-				auto& entity = Registry::getEntity(component.hostIDStack);
+				auto& entity = Registry::getEntity(component.hostIndexStack);
 				auto& physicsScene = *component.getData<zg::components::scenes::SceneComponent*>("PhysicsScene");
 				auto& info = *component.make<RigidBodyInfo*>("Info");
 				auto& position = *component.make<glm::vec3*>("Position");

@@ -1,5 +1,5 @@
 #pragma once
-#include "./ComponentHolder.hpp"
+#include "ComponentHolder.hpp"
 #include "DataStorage.hpp"
 #include "components/entities/EntityComponent.hpp"
 #include "entities/TypeID.hpp"
@@ -42,6 +42,7 @@ namespace zg
 		Window& window;
 		Scene& scene;
 		size_t ID = 0;
+		size_t* INDEX = 0;
 		size_t VALUE = 0;
 		std::string typeName;
 		std::string name;

@@ -15,19 +15,12 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 1;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
-Window::Window(const WindowCreateInfo& info):
-	title(info.title),
-	childWindows([](auto& childWindow) { return childWindow.title; }),
-	windowWidth(info.windowWidth),
-	windowHeight(info.windowHeight),
-	windowX(info.windowX),
-	windowY(info.windowY),
-	scenes([](auto& scene) { return scene.name; }),
-	deltaTime(1.0 / info.framerate),
-	borderless(info.borderless),
-	framerate(info.framerate),
-	vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
-	framebudget(frameduration), systemFonts(*this)
+Window::Window(const WindowCreateInfo& info) :
+		title(info.title), childWindows([](auto& childWindow) { return childWindow.title; }), windowWidth(info.windowWidth),
+		windowHeight(info.windowHeight), windowX(info.windowX), windowY(info.windowY),
+		scenes([](auto& scene) { return scene.name; }), deltaTime(1.0 / info.framerate), borderless(info.borderless),
+		framerate(info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
+		framebudget(frameduration), systemFonts(*this)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -52,28 +45,17 @@ Window::Window(const WindowCreateInfo& info):
 		shaderContext = new ShaderContext;
 	}
 }
-Window::Window(const Window& other):
-	title(other.title),
-	childWindows(other.childWindows),
-	windowWidth(other.windowWidth),
-	windowHeight(other.windowHeight),
-	windowX(other.windowX),
-	windowY(other.windowY),
-	scenes(other.scenes),
-	deltaTime(1.0 / other.framerate),
-	borderless(other.borderless),
-	framerate(other.framerate),
-	vsync(other.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
-	framebudget(frameduration), systemFonts(*this)
+Window::Window(const Window& other) :
+		title(other.title), childWindows(other.childWindows), windowWidth(other.windowWidth),
+		windowHeight(other.windowHeight), windowX(other.windowX), windowY(other.windowY), scenes(other.scenes),
+		deltaTime(1.0 / other.framerate), borderless(other.borderless), framerate(other.framerate), vsync(other.vsync),
+		frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration), systemFonts(*this)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
 	shaderContext = new ShaderContext;
 }
-Window::~Window()
-{
-	detachAllComponents();
-}
+Window::~Window() { detachAllComponents(); }
 Window& Window::operator=(const Window& other)
 {
 	iPlatformWindow = other.iPlatformWindow;
@@ -138,6 +120,10 @@ void Window::run()
 }
 void Window::update()
 {
+	auto componentsData = m_components.data();
+	auto componentsSize = m_components.size();
+	for (size_t index = 0; index < componentsSize; ++index)
+		componentsData[index].onUpdate();
 	auto scenesData = scenes.data();
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
@@ -730,25 +716,28 @@ void Window::callPreSwapbuffersOnceoff()
 	preSwapbuffersOnceoffs.pop();
 	onceoff();
 }
-Scene& Window::addScene(const SceneCreateInfo& info)
+KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCreateInfo& info)
 {
 	auto usingInfo{info};
 	usingInfo.windowPointer = this;
 	auto scene_tuple = scenes.emplace_back(usingInfo);
 	auto& scene = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(scene_tuple);
-	auto ID = std::get<KEY_ID_VECTOR_ID_INDEX>(scene_tuple);
-	scene.ID = ID;
+	scene.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(scene_tuple);
+	scene.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(scene_tuple);
 	if (scene.onAttachedFunction)
 		scene.onAttachedFunction(scene);
-	return scene;
+	return scene_tuple;
 }
-bool Window::removeScene(const Scene& scene)
+bool Window::removeScene(size_t sceneID)
 {
-	auto iter = scenes.find_id(scene.ID);
+	auto iter = scenes.find_id(sceneID);
 	if (iter == scenes.end())
 	{
 		return false;
 	}
+	auto& scene = *iter;
+	if (scene.onDetachedFunction)
+		scene.onDetachedFunction(scene);
 	scenes.erase(iter);
 	return true;
 }

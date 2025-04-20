@@ -211,6 +211,10 @@ namespace zg
             m_IDIndexMap.clear();
             m_Values.clear();
         }
+        std::recursive_mutex& getMutex()
+        {
+            return *m_Mutex;
+        }
     private:
         ValueT& constructDefault(const KeyT& key)
         {

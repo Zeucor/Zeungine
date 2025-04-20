@@ -109,7 +109,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 			auto& thread = component.getData<std::thread*>("thread");
 			if (thread->joinable())
 				thread->join();
-			auto& scene = Registry::getScene(component.hostIDStack);
+			auto& scene = Registry::getScene(component.hostIndexStack);
 			auto entitiesSize = scene.entities.size();
 			auto entitiesData = scene.entities.data();
 			for (size_t index = 0; index < entitiesSize; ++index)

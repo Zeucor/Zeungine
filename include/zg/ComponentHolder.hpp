@@ -6,7 +6,8 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include "./Events.hpp"
+#include "Events.hpp"
+#include "KeyIDVector.hpp"
 namespace zg
 {
 	struct Entity;
@@ -15,50 +16,38 @@ namespace zg
 	template <typename HostT, typename ComponentT, typename ComponentInfoT>
 	struct ComponentHolder
 	{
-		struct ComponentEntry
-		{
-			size_t ID;
-			std::string NAME;
-			ComponentT COMPONENT;
-		};
-		typedef std::vector<ComponentEntry> ComponentContainer;
-		std::pair<UniqueIdentifier, ComponentContainer> m_components;
-		std::shared_ptr<std::mutex> m_componentMutex;
+		KeyIDVector<std::string, ComponentT> m_components;
 	
 		ComponentHolder():
-			m_componentMutex(std::make_shared<std::mutex>())
+			m_components([](auto& component) { return component.NAME; })
 		{}
 		ComponentHolder& operator=(const ComponentHolder& other)
 		{
 			m_components = other.m_components;
-			m_componentMutex = std::make_shared<std::mutex>();
 			return *this;
 		}
 		virtual ~ComponentHolder() = default;
 		void detachAllComponents()
 		{
-			std::lock_guard lock(*m_componentMutex);
-			auto& container = std::get<1>(m_components);
-			for (auto& entry : container)
-			{
-				entry.COMPONENT.onDetached();
-			}
-			container.clear();
+			std::lock_guard lock(m_components.getMutex());
+			auto componentsSize = m_components.size();
+			auto componentsData = m_components.data();
+			for (size_t index = 0; index < componentsSize; ++index)
+				componentsData[index].onDetached();
+			m_components.clear();
 		}
 		/**
 		 * @brief adds a component to m_components and returns it's unique id
 		 */
 		UniqueIdentifier attachComponent(const ComponentInfoT& info)
 		{
-			std::lock_guard lock(*m_componentMutex);
-			auto id = ++std::get<0>(m_components);
-			auto& components = std::get<1>(m_components);
-			auto& component = components.emplace_back(id, info.name, info).COMPONENT;
+			auto component_tuple = m_components.emplace_back(info);
+			auto& component = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(component_tuple);
 			auto& host = *dynamic_cast<HostT*>(this);
 			if constexpr (std::is_same_v<HostT, Entity>)
 			{
-				component.hostIDStack.push_back(host.scene.window.ID);
-				component.hostIDStack.push_back(host.scene.ID);
+				component.hostIndexStack.push_back(host.scene.window.INDEX);
+				component.hostIndexStack.push_back(host.scene.INDEX);
 				std::vector<size_t> parentEntityStack;
 				auto currentEntity = host.parentEntity;
 				while (currentEntity)
@@ -69,21 +58,22 @@ namespace zg
 				auto parentEntityStackData = parentEntityStack.data();
 				for (int i = parentEntityStack.size(); i >= 0; --i)
 				{
-					component.hostIDStack.push_back(parentEntityStackData[i]);
+					component.hostIndexStack.push_back(parentEntityStackData[i]);
 				}
-				component.hostIDStack.push_back(host.ID);
+				component.hostIndexStack.push_back(host.INDEX);
 			}
 			else if constexpr (std::is_same_v<HostT, Scene>)
 			{
-				component.hostIDStack.push_back(host.window.ID);
-				component.hostIDStack.push_back(host.ID);
+				component.hostIndexStack.push_back(host.window.INDEX);
+				component.hostIndexStack.push_back(host.INDEX);
 			}
 			else
 			{
-				component.hostIDStack.push_back(host.ID);
+				component.hostIndexStack.push_back(host.INDEX);
 			}
+			component.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(component_tuple);
 			component.onAttached();
-			return id;
+			return component.ID;
 		}
 		/**
 		 * @brief removes a component by id, returns false if the component does not exist, sets componentID to zero on
@@ -91,77 +81,41 @@ namespace zg
 		 */
 		bool detachComponent(UniqueIdentifier& id)
 		{
-			std::lock_guard lock(*m_componentMutex);
-			auto& components = std::get<1>(m_components);
-			auto componentsSize = components.size();
-			auto componentsData = components.data();
-			auto i = 0;
-			for (; i < componentsSize; i++)
-			{
-				if (componentsData[i].ID == id)
-				{
-					components.erase(components.begin()+i);
-					id = 0;
-					return true;
-				}
-			}
-			return false;
+			auto iter = m_components.find_id(id);
+			if (iter == m_components.end())
+				return false;
+			iter->onDetached();
+			m_components.erase(iter);
+			id = 0;
+			return true;
 		}
 		/**
 		 * @brief removes a component by name, returns false if the component does not exist
 		 */
 		bool detachComponent(const std::string& name)
 		{
-			std::lock_guard lock(*m_componentMutex);
-			auto& components = std::get<1>(m_components);
-			auto componentsSize = components.size();
-			auto componentsData = components.data();
-			auto i = 0;
-			for (; i < componentsSize; i++)
-			{
-				if (componentsData[i].NAME == name)
-				{
-					components.erase(components.begin() + i);
-					return true;
-				}
-			}
-			return false;
+			auto iter = m_components.find_key(name);
+			if (iter == m_components.end())
+				return false;
+			iter->onDetached();
+			m_components.erase(iter);
+			return true;
 		}
 
 		ComponentT& getComponentByID(size_t id)
 		{
-			std::lock_guard lock(*m_componentMutex);
-			auto& components = std::get<1>(m_components);
-			auto componentsSize = components.size();
-			auto componentsData = components.data();
-			auto i = 0;
-			for (; i < componentsSize; i++)
-			{
-				auto& entry = componentsData[i];
-				if (entry.ID == id)
-				{
-					return entry.COMPONENT;
-				}
-			}
-			throw std::runtime_error("Component not found with identifier");
+			auto iter = m_components.find_id(id);
+			if (iter == m_components.end())
+				throw std::runtime_error("Component not found with identifier");
+			return *iter;
 		}
 
 		ComponentT& getComponentByName(const std::string& name)
 		{
-			std::lock_guard lock(*m_componentMutex);
-			auto& components = std::get<1>(m_components);
-			auto componentsSize = components.size();
-			auto componentsData = components.data();
-			auto i = 0;
-			for (; i < componentsSize; i++)
-			{
-				auto& entry = componentsData[i];
-				if (entry.NAME == name)
-				{
-					return entry.COMPONENT;
-				}
-			}
-			throw std::runtime_error("Component not found with name");
+			auto iter = m_components.find_key(name);
+			if (iter == m_components.end())
+				throw std::runtime_error("Component not found with name");
+			return *iter;
 		}
 	};
 } // namespace zg

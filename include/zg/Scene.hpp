@@ -22,13 +22,13 @@ namespace zg
 	struct Scene : DataStorage<Scene>, ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>
 	{
 		size_t ID = 0;
+		size_t* INDEX = 0;
 		std::string name;
 		bool drawColorToWindowPlane;
 		Window& window;
 		glm::vec4 clearColor = glm::vec4(0);
 		std::shared_ptr<vp::Projection> projectionPointer;
 		KeyIDVector<std::string, Entity> entities;
-		size_t entitiesCount = 0;
 		std::vector<lights::PointLight> pointLights;
 		std::vector<lights::DirectionalLight> directionalLights;
 		std::vector<lights::SpotLight> spotLights;

@@ -71,7 +71,6 @@ Scene& Scene::operator=(const Scene& other)
 	clearColor = other.clearColor;
 	projectionPointer = other.projectionPointer;
 	entities = other.entities;
-	entitiesCount = other.entitiesCount;
 	pointLights = other.pointLights;
 	directionalLights = other.directionalLights;
 	spotLights = other.spotLights;
@@ -139,16 +138,16 @@ Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::
 }
 size_t Scene::addEntity(const EntityCreateInfo& info, bool callOnEntityAdded)
 {
-	auto id = ++entitiesCount;
 	auto usingInfo{info};
 	usingInfo.scenePointer = this;
 	auto entity_tuple = entities.emplace_back(usingInfo);
 	auto& entity = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(entity_tuple);
-	entity.ID = id;
-	postAddEntity(entity, {id});
+	entity.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(entity_tuple);
+	entity.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(entity_tuple);
+	postAddEntity(entity, {entity.ID});
 	if (callOnEntityAdded && window.onEntityAdded)
 		window.onEntityAdded(entity);
-	return id;
+	return entity.ID;
 }
 void Scene::removeEntity(const size_t& id)
 {
@@ -165,10 +164,10 @@ void Scene::update()
 	++updateNonce;
 	if (preUpdateFunction)
 		preUpdateFunction(*this);
-	for (auto& componentEntry : std::get<1>(m_components))
-	{
-		componentEntry.COMPONENT.onUpdate();
-	}
+	auto componentsData = m_components.data();
+	auto componentsSize = m_components.size();
+	for (size_t index = 0; index < componentsSize; ++index)
+		componentsData[index].onUpdate();
 	auto entitiesData = entities.data();
 	auto entitiesSize = entities.size();
 	for (size_t index = 0; index < entitiesSize; ++index)
@@ -527,7 +526,6 @@ Serial& serialize(Serial& serial, const Scene& scene)
 		auto serializeFunction = Entity::getSerialize(entity_typeName);
 		serializeFunction(serial, entity);
 	}
-	serial << scene.entitiesCount;
 
 	auto pointLightsSize = scene.pointLights.size();
 	serial << pointLightsSize;
@@ -596,7 +594,6 @@ Serial& deserialize(Serial& serial, Scene& scene)
 		if (scene.window.onEntityAdded)
 			scene.window.onEntityAdded(entity);
 	}
-	serial >> scene.entitiesCount;
 	auto pointLightsSize = scene.pointLights.size();
 	serial >> pointLightsSize;
 	scene.pointLights.resize(pointLightsSize);
