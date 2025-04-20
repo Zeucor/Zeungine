@@ -73,6 +73,7 @@ namespace zg
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
 		std::function<void(Entity&)> postRenderFunction;
+		std::recursive_mutex handlersMutex;
 
 	public:
 		Entity(const EntityCreateInfo& info);

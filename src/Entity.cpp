@@ -163,6 +163,7 @@ void Entity::removeChild(size_t& ID)
 // Mouse
 UniqueIdentifier Entity::addMousePressHandler(const Button& button, const MousePressHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlersPair = mousePressHandlers[button];
 	auto id = ++handlersPair.first;
 	handlersPair.second[id] = callback;
@@ -170,6 +171,7 @@ UniqueIdentifier Entity::addMousePressHandler(const Button& button, const MouseP
 }
 void Entity::removeMousePressHandler(const Button& button, UniqueIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlersPair = mousePressHandlers[button];
 	auto handlerIter = handlersPair.second.find(id);
 	if (handlerIter == handlersPair.second.end())
@@ -181,12 +183,14 @@ void Entity::removeMousePressHandler(const Button& button, UniqueIdentifier& id)
 }
 UniqueIdentifier Entity::addMouseMoveHandler(const MouseMoveHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto id = ++mouseMoveHandlers.first;
 	mouseMoveHandlers.second[id] = callback;
 	return id;
 }
 void Entity::removeMouseMoveHandler(UniqueIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlers = mouseMoveHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
@@ -198,12 +202,14 @@ void Entity::removeMouseMoveHandler(UniqueIdentifier& id)
 }
 UniqueIdentifier Entity::addMouseHoverHandler(const MouseHoverHandler& callback)
 {
+	std::lock_guard lock(handlersMutex);
 	auto id = ++mouseHoverHandlers.first;
 	mouseHoverHandlers.second[id] = callback;
 	return id;
 }
 void Entity::removeMouseHoverHandler(UniqueIdentifier& id)
 {
+	std::lock_guard lock(handlersMutex);
 	auto& handlers = mouseHoverHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
@@ -222,8 +228,11 @@ void Entity::callMousePressHandler(const Button& button, int pressed)
 			return;
 		auto& handlersMap = handlersIter->second.second;
 		std::vector<MousePressHandler> handlersCopy;
-		for (const auto& pair : handlersMap)
-			handlersCopy.push_back(pair.second);
+		{
+			std::lock_guard lock(handlersMutex);
+			for (const auto& pair : handlersMap)
+				handlersCopy.push_back(pair.second);
+		}
 		for (auto& handler : handlersCopy)
 		{
 			handler(!!pressed);
@@ -232,10 +241,13 @@ void Entity::callMousePressHandler(const Button& button, int pressed)
 }
 void Entity::callMouseMoveHandler(glm::vec2 coords)
 {
-	auto& handlersMap = mouseMoveHandlers.second;
 	std::vector<MouseMoveHandler> handlersCopy;
-	for (const auto& pair : handlersMap)
-		handlersCopy.push_back(pair.second);
+	{
+		auto& handlersMap = mouseMoveHandlers.second;
+		std::lock_guard lock(handlersMutex);
+		for (const auto& pair : handlersMap)
+			handlersCopy.push_back(pair.second);
+	}
 	for (auto& handler : handlersCopy)
 	{
 		handler(coords);
@@ -243,10 +255,13 @@ void Entity::callMouseMoveHandler(glm::vec2 coords)
 }
 void Entity::callMouseHoverHandler(bool hovered)
 {
-	auto& handlersMap = mouseHoverHandlers.second;
 	std::vector<MouseHoverHandler> handlersCopy;
-	for (const auto& pair : handlersMap)
-		handlersCopy.push_back(pair.second);
+	{
+		auto& handlersMap = mouseHoverHandlers.second;
+		std::lock_guard lock(handlersMutex);
+		for (const auto& pair : handlersMap)
+			handlersCopy.push_back(pair.second);
+	}
 	for (auto& handler : handlersCopy)
 	{
 		handler(hovered);
