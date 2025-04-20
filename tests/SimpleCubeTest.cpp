@@ -3,8 +3,9 @@
 #include <zg/Window.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/entities/Plane.hpp>
-#include <zg/vp/VML.hpp>
+#include <zg/components/scenes/ViewMouseControl.hpp>
 #include <zg/Registry.hpp>
+#include <zg/components/scenes/ViewQuadKeyControl.hpp>
 using namespace zg;
 auto cubeCreateInfo = entities::CubeFactory("Basic Red Cube", {0, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, {2, 1, 3});
 auto planeAngle = glm::angleAxis(glm::radians(90.f), glm::vec3(1, 0, 0));
@@ -65,7 +66,8 @@ SceneCreateInfo ExampleSceneFactory()
 																																							scene.window.close();
 																																					}));
 
-			scene.attachComponent(zg::components::scenes::ViewMouseLookFactory());
+			scene.attachComponent(zg::components::scenes::ViewMouseControlFactory());
+			scene.attachComponent(zg::components::scenes::ViewQuadKeyControlFactory(zg::components::scenes::KeyScheme::WSADSC, 3));
 			scene.make<float>("deltaTimeCounter", 0.f);
 		},
 		.onDetachedFunction =

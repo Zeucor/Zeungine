@@ -15,8 +15,6 @@
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/math/Rotations.hpp>
 #include <zg/physics/CollisionManifold.hpp>
-#include <zg/vp/VFBLR.hpp>
-#include <zg/vp/VML.hpp>
 // zg::shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
 // glm::vec3 windowVisualizerPosition(56.8, 42, 57);
 // struct PhysicsScene : zg::Scene

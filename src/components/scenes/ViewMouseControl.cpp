@@ -1,10 +1,10 @@
 #include <zg/Window.hpp>
-#include <zg/vp/VML.hpp>
+#include <zg/components/scenes/ViewMouseControl.hpp>
 #include <zg/Registry.hpp>
-zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewMouseLookFactory()
+zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewMouseControlFactory()
 {
 	zg::components::scenes::SceneComponentCreateInfo info{
-		.name = "View Mouse Look",
+		.name = "View Mouse Control",
 		.onAttachedFunction = [](auto& component)
 		{
 			auto& scene = zg::Registry::getScene(component.hostIndexStack);

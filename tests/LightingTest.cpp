@@ -11,8 +11,6 @@
 #include <zg/lights/DirectionalLight.hpp>
 #include <zg/lights/Lights.hpp>
 #include <zg/math/Rotations.hpp>
-#include <zg/vp/VFBLR.hpp>
-#include <zg/vp/VML.hpp>
 #include <zg/zgfilesystem/File.hpp>
 using namespace zg;
 // #define PI acos(-1)

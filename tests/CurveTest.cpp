@@ -1,8 +1,6 @@
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Curve.hpp>
-#include <zg/vp/VFBLR.hpp>
-#include <zg/vp/VML.hpp>
 #define PI acos(-1)
 // struct CurveScene : zg::Scene
 // {
