@@ -72,4 +72,4 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(textures::Texture& texture, std:
     };
     return info;
     // 		texturePointer(&texture), size(size)
-}
+}   
