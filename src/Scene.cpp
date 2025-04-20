@@ -408,10 +408,13 @@ Entity* Scene::findEntityByPrimID(const size_t& primID)
 		return 0;
 	auto& _bvh = *bvh;
 	auto& tri = _bvh.triangles[_bvh.bvh.prim_ids[primID]];
-	auto& userData = tri.userData;
-	if (!userData)
+	auto& entityID = tri.userData;
+	if (!entityID)
 		return 0;
-	return (Entity*&)userData;
+	auto iter = entities.find_id(entityID);
+	if (iter == entities.end())
+		return 0;
+	return &*iter;
 }
 void Scene::hookMouseEvents()
 {

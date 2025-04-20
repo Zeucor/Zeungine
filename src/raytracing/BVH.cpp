@@ -134,7 +134,7 @@ void BVH::addEntity(Entity& entity)
 		v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
 		v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
 		v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
-		addTriangle({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, &entity});
+		addTriangle({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, entity.ID});
 	}
 }
 void BVH::updateEntity(Entity& entity)
@@ -144,7 +144,7 @@ void BVH::updateEntity(Entity& entity)
 	auto trianglesSize = triangles.size();
 	for (size_t i = 0; i < trianglesSize; ++i)
 	{
-		if (triangles[i].userData == &entity)
+		if (triangles[i].userData == entity.ID)
 		{
 			++indicesCount;
 		}
@@ -152,7 +152,7 @@ void BVH::updateEntity(Entity& entity)
 	indices.reserve(indicesCount);
 	for (size_t i = 0; i < trianglesSize; ++i)
 	{
-		if (triangles[i].userData == &entity)
+		if (triangles[i].userData == entity.ID)
 		{
 			indices.push_back(i);
 		}
@@ -173,7 +173,7 @@ void BVH::updateEntity(Entity& entity)
 		v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
 		v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
 		v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
-		triangles[triangleID] = {{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, &entity};
+		triangles[triangleID] = {{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, entity.ID};
 	}
 	built = false;
 	changed = true;
@@ -184,11 +184,11 @@ void BVH::removeEntity(Scene& scene, Entity& entity)
 	if (entity.addToBVH)
 	{
 		size_t removalIndex = 0;
-		auto entityPointer = &entity;
+		auto entityID = entity.ID;
 		triangles.erase(std::remove_if(triangles.begin(), triangles.end(),
 																	 [&](const Tri& tri) -> bool
 																	 {
-																		 if (tri.userData == entityPointer)
+																		 if (tri.userData == entityID)
 																		 {
 																			 removalIndex++;
 																			 return true;

@@ -25,14 +25,14 @@ namespace zg::raytracing
 	using Scalar = float;
 	using Vec3 = bvh::v2::Vec<Scalar, 3>;
 	using BBox = bvh::v2::BBox<Scalar, 3>;
-	using Tri = bvh::v2::Tri<Scalar, 3, Entity>;
+	using Tri = bvh::v2::Tri<Scalar, 3, zg::UniqueIdentifier>;
 	using Node = bvh::v2::Node<Scalar, 3>;
 	using Bvh = bvh::v2::Bvh<Node>;
 	using Ray = bvh::v2::Ray<Scalar, 3>;
 	using ThreadPool = bvh::v2::ThreadPool;
 	using ParallelExecutor = bvh::v2::ParallelExecutor;
 	using Config = bvh::v2::DefaultBuilder<Node>::Config;
-	using PrecomputedTri = bvh::v2::PrecomputedTri<Scalar, Entity>;
+	using PrecomputedTri = bvh::v2::PrecomputedTri<Scalar, zg::UniqueIdentifier>;
 	using Builder = bvh::v2::DefaultBuilder<Node>;
 	struct BVH
 	{
