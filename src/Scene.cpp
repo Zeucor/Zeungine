@@ -97,7 +97,6 @@ Scene& Scene::operator=(const Scene& other)
 Scene::~Scene()
 {
 	unhookMouseEvents();
-	detachAllComponents();
 }
 std::vector<textures::Framebuffer::TextureAttachmentPair>
 Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::AttachmentType>& attachments)

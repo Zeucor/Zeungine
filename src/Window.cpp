@@ -250,6 +250,10 @@ _exit:
 	audioEngine.clearPipeline();
 	delete shaderContext;
 	childWindows.clear();
+	auto scenesSize = scenes.size();
+	auto scenesData = scenes.data();
+	for (size_t i = 0; i < scenesSize; ++i)
+		scenesData[i].detachAllComponents();
 	scenes.clear();
 	iRendererRef.destroy();
 	iPlatformWindowRef.destroy();
