@@ -9,10 +9,36 @@ Entity::Entity(const EntityCreateInfo& info) :
 		VAO(info.scenePointer->window.iRenderer, info.constants, info.indiceCount, info.vertexCount),
 		DataStorage<Entity>(info.getDataFunctionMap, info.setDataFunctionMap, info.dataMap),
 		window(info.scenePointer->window), scene(*info.scenePointer), indices(info.indices), vertices(info.vertices),
-		colors(info.colors), uv2s(info.uV2s), uv3s(info.uV3s), position(info.position), rotation(info.rotation),
+		colors(info.colors), uv2s(info.uv2s), uv3s(info.uv3s), position(info.position), rotation(info.rotation),
 		scale(info.scale), children([](const auto& entity) { return entity.name; }), name(info.name),
 		preUpdateFunction(info.preUpdateFunction), preRenderFunction(info.preRenderFunction),
 		postRenderFunction(info.postRenderFunction)
+{
+	computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
+	updateIndices(indices);
+	if (colors.size())
+		updateElements("Color", colors);
+	bool flipUVs = (window.iRenderer->renderer == RENDERER_VULKAN || window.iRenderer->renderer == RENDERER_METAL);
+	if (uv2s.size())
+	{
+		flipUVsY(uv2s);
+		updateElements("UV2", uv2s);
+	}
+	if (uv3s.size())
+	{
+		flipUVsY(uv3s);
+		updateElements("UV3", uv3s);
+	}
+	updateElements("Position", vertices);
+	updateElements("Normal", normals);
+}
+Entity::Entity(const Entity& other) :
+		VAO(other.window.iRenderer, other.constants, other.indiceCount, other.vertexCount),
+		DataStorage<Entity>(other.getDataFunctionMap, other.setDataFunctionMap, other.dataMap), window(other.window),
+		scene(other.scene), indices(other.indices), vertices(other.vertices), colors(other.colors), uv2s(other.uv2s),
+		uv3s(other.uv3s), position(other.position), rotation(other.rotation), scale(other.scale), children(other.children),
+		name(other.name), preUpdateFunction(other.preUpdateFunction), preRenderFunction(other.preRenderFunction),
+		postRenderFunction(other.postRenderFunction)
 {
 	computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
 	updateIndices(indices);
@@ -25,10 +51,7 @@ Entity::Entity(const EntityCreateInfo& info) :
 	updateElements("Position", vertices);
 	updateElements("Normal", normals);
 }
-Entity::~Entity()
-{
-	detachAllComponents();
-}
+Entity::~Entity() { detachAllComponents(); }
 Entity& Entity::operator=(const Entity& other) { return *this; }
 void Entity::update()
 {

@@ -77,6 +77,7 @@ namespace zg
 
 	public:
 		Entity(const EntityCreateInfo& info);
+		Entity(const Entity& other);
 		~Entity();
 		Entity& operator=(const Entity& other);
 		void update();
@@ -121,8 +122,8 @@ namespace zg
 		uint32_t vertexCount;
 		std::vector<glm::vec3> vertices;
 		std::vector<glm::vec4> colors;
-		std::vector<glm::vec2> uV2s;
-		std::vector<glm::vec3> uV3s;
+		std::vector<glm::vec2> uv2s;
+		std::vector<glm::vec3> uv3s;
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
 		std::function<void(Entity&)> postRenderFunction;
