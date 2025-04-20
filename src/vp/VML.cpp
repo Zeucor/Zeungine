@@ -1,7 +1,7 @@
 #include <zg/Window.hpp>
 #include <zg/vp/VML.hpp>
 #include <zg/Registry.hpp>
-zg::components::scenes::SceneComponentCreateInfo ViewMouseLookFactory()
+zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewMouseLookFactory()
 {
 	zg::components::scenes::SceneComponentCreateInfo info{
 		.name = "View Mouse Look",

@@ -65,7 +65,7 @@ SceneCreateInfo ExampleSceneFactory()
 																																							scene.window.close();
 																																					}));
 
-			scene.attachComponent(ViewMouseLookFactory());
+			scene.attachComponent(zg::components::scenes::ViewMouseLookFactory());
 			scene.make<float>("deltaTimeCounter", 0.f);
 		},
 		.onDetachedFunction =

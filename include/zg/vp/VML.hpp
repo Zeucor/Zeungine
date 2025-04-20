@@ -1,3 +1,6 @@
 #pragma once
 #include "../Scene.hpp"
-zg::components::scenes::SceneComponentCreateInfo ViewMouseLookFactory();
+namespace zg::components::scenes
+{
+    SceneComponentCreateInfo ViewMouseLookFactory();
+}
