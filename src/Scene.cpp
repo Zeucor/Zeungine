@@ -94,7 +94,11 @@ Scene& Scene::operator=(const Scene& other)
 	postPostRenderFunction = other.postPostRenderFunction;
 	return *this;
 };
-Scene::~Scene() { unhookMouseEvents(); }
+Scene::~Scene()
+{
+	unhookMouseEvents();
+	detachAllComponents();
+}
 std::vector<textures::Framebuffer::TextureAttachmentPair>
 Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::AttachmentType>& attachments)
 {

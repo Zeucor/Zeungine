@@ -45,7 +45,7 @@ namespace zg
 #define KEYCODE_SUPER 0x88
 #define LAST_UNDEFINED_ASCII_IN_RANGE 0x9F
 struct WindowCreateInfo;
-	struct Window : ComponentHolder<components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>
+	struct Window : ComponentHolder<Window, components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>
 	{
 		IPlatformWindow* iPlatformWindow;
 		IRenderer* iRenderer;
@@ -57,11 +57,11 @@ struct WindowCreateInfo;
 #if defined(_WIN32) || defined(__linux__)
 		std::shared_ptr<std::thread> windowThread;
 #endif
-		std::mutex runnablesMutex;
+		std::recursive_mutex runnablesMutex;
 		std::queue<Runnable> runnables;
 		std::unordered_map<Key, int> keys;
 		std::unordered_map<Button, int> buttons;
-		std::mutex handlersMutex;
+		std::recursive_mutex handlersMutex;
 		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyPressHandler>>> keyPressHandlers;
 		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyUpdateHandler>>>
 			keyUpdateHandlers;
@@ -110,6 +110,7 @@ struct WindowCreateInfo;
 
 		Window(const WindowCreateInfo& info);
 		Window(const Window& other);
+		~Window();
 		Window& operator=(const Window& other);
 		void run();
 		void update();

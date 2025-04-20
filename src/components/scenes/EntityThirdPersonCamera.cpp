@@ -6,9 +6,9 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
 {
     zg::components::scenes::SceneComponentCreateInfo info{
         .name = "EntityThirdPersonCamera",
-        .onAttachedFunction = [&](interfaces::IComponent& component)
+        .onAttachedFunction = [&](auto& component)
         {
-            auto& scene = *static_cast<zg::Scene*>(component.host);
+            auto& scene = *component.host;
             auto& focused = component.make<bool>("Focused", false);
             auto& mouseMoveID = component.make<UniqueIdentifier>("MouseMoveID", 0);
             auto& focusID = component.make<UniqueIdentifier>("FocusID", 0);

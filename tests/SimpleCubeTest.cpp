@@ -58,7 +58,7 @@ SceneCreateInfo ExampleSceneFactory()
 																																							scene.window.close();
 																																					}));
 
-			// vp::VML vml; // view mouse look
+			scene.attachComponent(ViewMouseLookFactory());
 			scene.make<float>("deltaTimeCounter", 0.f);
 		},
 		.onDetachedFunction =

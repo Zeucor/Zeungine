@@ -43,40 +43,40 @@ void Hotswapper::update()
 		}
 		if (requireLoad)
 		{
-			editorScene.gameWindowPointer->runOnThread(
-				[&](auto& _window)
-				{
-					if (editorScene.loaded)
-					{
-						{
-							std::lock_guard gameWindowLock(_window.renderMutex);
-							_window.scene.reset();
-						}
-						editorScene.loaded = false;
-						editorScene.OnLoad = 0;
-						libraryPointer.reset();
-					}
-					libraryPointer = std::make_unique<SharedLibrary>(directory / "build" / "libeditor-game.so");
-					auto& libraryRef = *libraryPointer;
-					try
-					{
-						editorScene.OnLoad = libraryRef.getProc<void (*)(Window&)>("OnLoad");
-					}
-					catch (const std::exception& e)
-					{
-						zg::Logger::print(zg::Logger::Error, e.what());
-					}
-					if (editorScene.OnLoad)
-					{
-						editorScene.OnLoad(_window);
-						editorScene.loaded = true;
-						if (_window.minimized)
-						{
-							_window.restore();
-						}
-					}
-					requireLoad = false;
-				});
+			// editorScene.gameWindowPointer->runOnThread(
+			// 	[&](auto& _window)
+			// 	{
+			// 		if (editorScene.loaded)
+			// 		{
+			// 			{
+			// 				std::lock_guard gameWindowLock(_window.renderMutex);
+			// 				_window.scene.reset();
+			// 			}
+			// 			editorScene.loaded = false;
+			// 			editorScene.OnLoad = 0;
+			// 			libraryPointer.reset();
+			// 		}
+			// 		libraryPointer = std::make_unique<SharedLibrary>(directory / "build" / "libeditor-game.so");
+			// 		auto& libraryRef = *libraryPointer;
+			// 		try
+			// 		{
+			// 			editorScene.OnLoad = libraryRef.getProc<void (*)(Window&)>("OnLoad");
+			// 		}
+			// 		catch (const std::exception& e)
+			// 		{
+			// 			zg::Logger::print(zg::Logger::Error, e.what());
+			// 		}
+			// 		if (editorScene.OnLoad)
+			// 		{
+			// 			editorScene.OnLoad(_window);
+			// 			editorScene.loaded = true;
+			// 			if (_window.minimized)
+			// 			{
+			// 				_window.restore();
+			// 			}
+			// 		}
+			// 		requireLoad = false;
+			// 	});
 		}
 		auto changes = directoryWatcher.update();
 		if (!changes.empty())
@@ -105,14 +105,14 @@ std::pair<bool, bool> Hotswapper::configure(bool& currentlyConfiguring, bool& re
 	}
 	if (requireConfigure)
 	{
-		editorScene.status->setTextColor({1, 1, 0, 1});
-		editorScene.status->setText("Configuring...");
-		idle = false;
-		auto currentWorkingDirectory = GET_WORKING_DIR();
-		SET_WORKING_DIR(zgfilesystem::File::toPlatformPath(directory.string()).c_str());
-		currentCommand = std::make_unique<Command>("cmake -B build .");
-		SET_WORKING_DIR(currentWorkingDirectory.c_str());
-		currentlyConfiguring = true;
+		// editorScene.status->setTextColor({1, 1, 0, 1});
+		// editorScene.status->setText("Configuring...");
+		// idle = false;
+		// auto currentWorkingDirectory = GET_WORKING_DIR();
+		// SET_WORKING_DIR(zgfilesystem::File::toPlatformPath(directory.string()).c_str());
+		// currentCommand = std::make_unique<Command>("cmake -B build .");
+		// SET_WORKING_DIR(currentWorkingDirectory.c_str());
+		// currentlyConfiguring = true;
 	}
 	if (requireConfigure)
 	{
@@ -141,17 +141,17 @@ std::pair<bool, bool> Hotswapper::build(bool& currentlyBuilding, bool& requireBu
 	}
 	if (requireBuild)
 	{
-		editorScene.status->setTextColor({1, 1, 0, 1});
-		editorScene.status->setText("Building...");
-		compiling = true;
-		compiled = false;
-		auto currentWorkingDirectory = GET_WORKING_DIR();
-		SET_WORKING_DIR(zgfilesystem::File::toPlatformPath(directory.string()).c_str());
-		if (currentCommand)
-			currentCommand->update();
-		currentCommand = std::make_unique<Command>("cmake --build build");
-		SET_WORKING_DIR(currentWorkingDirectory.c_str());
-		currentlyBuilding = true;
+		// editorScene.status->setTextColor({1, 1, 0, 1});
+		// editorScene.status->setText("Building...");
+		// compiling = true;
+		// compiled = false;
+		// auto currentWorkingDirectory = GET_WORKING_DIR();
+		// SET_WORKING_DIR(zgfilesystem::File::toPlatformPath(directory.string()).c_str());
+		// if (currentCommand)
+		// 	currentCommand->update();
+		// currentCommand = std::make_unique<Command>("cmake --build build");
+		// SET_WORKING_DIR(currentWorkingDirectory.c_str());
+		// currentlyBuilding = true;
 	}
 	if (requireBuild)
 	{
@@ -169,21 +169,21 @@ std::pair<bool, bool> Hotswapper::build(bool& currentlyBuilding, bool& requireBu
 		currentCommandRef.update();
 		currentCommand.reset();
 		currentlyBuilding = false;
-		if (exitCode)
-		{
-			compiling = false;
-			errored = true;
-			editorScene.status->setTextColor({1, 0, 0, 1});
-			editorScene.status->setText("Build Error");
-		}
-		else
-		{
-			compiling = false;
-			compiled = true;
-			editorScene.status->setTextColor({1, 1, 1, 1});
-			editorScene.status->setText("Idle");
-			idle = true;
-		}
+		// if (exitCode)
+		// {
+		// 	compiling = false;
+		// 	errored = true;
+		// 	editorScene.status->setTextColor({1, 0, 0, 1});
+		// 	editorScene.status->setText("Build Error");
+		// }
+		// else
+		// {
+		// 	compiling = false;
+		// 	compiled = true;
+		// 	editorScene.status->setTextColor({1, 1, 1, 1});
+		// 	editorScene.status->setText("Idle");
+		// 	idle = true;
+		// }
 	}
 	return {complete, !exitCode};
 };

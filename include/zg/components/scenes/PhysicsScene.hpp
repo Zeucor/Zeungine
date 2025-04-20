@@ -19,7 +19,7 @@ namespace zg::components::scenes
 	struct ZGContactListener;
 	struct GravityByVector;
 	struct GravityByAttraction;
-	using JoltIDComponentPair = std::pair<JPH::BodyID, interfaces::IComponent*>;
+	using JoltIDComponentPair = std::pair<JPH::BodyID, components::entities::EntityComponent*>;
 	components::scenes::SceneComponentCreateInfo PhysicsSceneFactory(long double deltaTime);
 	class ZGContactListener : public JPH::ContactListener
 	{
@@ -33,6 +33,6 @@ namespace zg::components::scenes
 
 	private:
 		SceneComponent& physicsScene;
-		physics::CollisionManifold constructManifold(interfaces::IComponent* ec1, interfaces::IComponent* ec2, const JPH::ContactManifold& inManifold);
+		physics::CollisionManifold constructManifold(components::entities::EntityComponent* ec1, components::entities::EntityComponent* ec2, const JPH::ContactManifold& inManifold);
 	};
 } // namespace zg::components::scenes

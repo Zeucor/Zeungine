@@ -1,54 +1,50 @@
 #include <zg/Window.hpp>
 #include <zg/vp/VML.hpp>
-using namespace zg::vp;
-VML::VML(Scene& scene) : scene(scene)
+zg::components::scenes::SceneComponentCreateInfo ViewMouseLookFactory()
 {
-	auto& window = scene.window;
-	mouseMoveID = window.addMouseMoveHandler(std::bind(&VML::mouseMoveHandler, this, std::placeholders::_1));
-	focusID = window.addFocusHandler(std::bind(&VML::focusHandler, this, std::placeholders::_1));
+	zg::components::scenes::SceneComponentCreateInfo info{
+		.name = "View Mouse Look",
+		.onAttachedFunction = [](auto& component)
+		{
+			auto scenePointer = component.host;
+			auto& scene = *scenePointer;
+			auto& window = scene.window;
+			component.make<zg::UniqueIdentifier>("mouseMoveID",
+				window.addMouseMoveHandler(
+					[scenePointer](glm::vec2 coords)
+					{
+						if (scenePointer->window.justWarpedPointer)
+						{
+							scenePointer->window.justWarpedPointer = false;
+							return;
+						}
+						if (!scenePointer->window.focused)
+							return;
+						glm::vec2 center = {scenePointer->window.windowWidth / 2, scenePointer->window.windowHeight / 2};
+						auto diff = coords - center;
+						scenePointer->viewPointer->addPhiTheta(diff.x * 0.001f, -diff.y * 0.001f);
+						scenePointer->window.warpPointer(center);
+					}
+				)
+			);
+			component.make<zg::UniqueIdentifier>("focusID",
+				window.addFocusHandler(
+					[scenePointer](bool focused)
+					{
+						if (focused)
+							scenePointer->window.iPlatformWindow->hidePointer();
+						else
+							scenePointer->window.iPlatformWindow->showPointer();
+					}
+				)
+			);
+		},
+		.onDetachedFunction = [](auto& component)
+		{
+			auto& window = component.host->window;
+			window.removeMouseMoveHandler(component.getData<zg::UniqueIdentifier>("mouseMoveID"));
+			window.removeFocusHandler(component.getData<zg::UniqueIdentifier>("focusID"));
+		}
+	};
+	return info;
 };
-VML::~VML()
-{
-	scene.window.removeMouseMoveHandler(mouseMoveID);
-	scene.window.removeFocusHandler(focusID);
-};
-void VML::mouseMoveHandler(glm::vec2 coords)
-{
-	if (scene.window.justWarpedPointer)
-	{
-		scene.window.justWarpedPointer = false;
-		return;
-	}
-	if (!scene.window.focused)
-		return;
-	glm::vec2 center = {scene.window.windowWidth / 2, scene.window.windowHeight / 2};
-	auto& currentWindow = (Window&)scene.window;
-	auto diff = coords - center;
-	scene.viewPointer->addPhiTheta(diff.x * 0.001f, -diff.y * 0.001f);
-	scene.window.warpPointer(center);
-}
-void VML::focusHandler(bool focused)
-{
-	if (focused)
-		scene.window.iPlatformWindow->hidePointer();
-	else
-		scene.window.iPlatformWindow->showPointer();
-}
-template<>
-Serial& serialize(Serial& serial, const std::shared_ptr<zg::vp::VML>& vmlPointer)
-{
-	auto& vml = *vmlPointer;
-	serial << true;
-	return serial;
-}
-template<>
-Serial& deserialize(Serial& serial, std::shared_ptr<zg::vp::VML>& vmlPointer)
-{
-	bool wroteBit = false;
-	serial >> wroteBit;
-	if (!wroteBit)
-		return serial; 
-	auto* scenePointer = (zg::Scene*)serial.getContextPointer("Scene");
-	vmlPointer = std::make_shared<zg::vp::VML>(*scenePointer);
-	return serial;
-}

@@ -9,7 +9,7 @@
 #include "./Events.hpp"
 namespace zg
 {
-	template <typename ComponentT, typename ComponentInfoT>
+	template <typename HostT, typename ComponentT, typename ComponentInfoT>
 	struct ComponentHolder
 	{
 		struct ComponentEntry
@@ -31,13 +31,15 @@ namespace zg
 			m_componentMutex = std::make_shared<std::mutex>();
 			return *this;
 		}
-		virtual ~ComponentHolder() { detachAllComponents(); }
+		virtual ~ComponentHolder() = default;
 		void detachAllComponents()
 		{
 			std::lock_guard lock(*m_componentMutex);
 			auto& container = std::get<1>(m_components);
 			for (auto& entry : container)
+			{
 				entry.COMPONENT.onDetached();
+			}
 			container.clear();
 		}
 		/**
@@ -49,7 +51,7 @@ namespace zg
 			auto id = ++std::get<0>(m_components);
 			auto& components = std::get<1>(m_components);
 			auto& component = components.emplace_back(id, info.name, info).COMPONENT;
-			component.host = this;
+			component.host = dynamic_cast<HostT*>(this);
 			component.onAttached();
 			return id;
 		}

@@ -13,16 +13,16 @@ namespace zg::components::windows
 		std::function<void(WindowComponent&)> onAttachedFunction;
 		std::function<void(WindowComponent&)> onDetachedFunction;
 		std::function<void(WindowComponent&)> onUpdateFunction;
-		interfaces::IComponent::GetDataFunctionMap getDataFunctions;
-		interfaces::IComponent::SetDataFunctionMap setDataFunctions;
+		interfaces::IComponent<Window, WindowComponent>::GetDataFunctionMap getDataFunctions;
+		interfaces::IComponent<Window, WindowComponent>::SetDataFunctionMap setDataFunctions;
     };
-	struct WindowComponent : interfaces::IComponent
+	struct WindowComponent : interfaces::IComponent<Window, WindowComponent>
 	{
 		std::function<void(WindowComponent&)> onAttachedFunction;
 		std::function<void(WindowComponent&)> onDetachedFunction;
 		std::function<void(WindowComponent&)> onUpdateFunction;
 		WindowComponent(const WindowComponentCreateInfo& info):
-			IComponent(info.name, info.getDataFunctions, info.setDataFunctions),
+			IComponent<Window, WindowComponent>(info.name, info.getDataFunctions, info.setDataFunctions),
 			onAttachedFunction(info.onAttachedFunction),
 			onDetachedFunction(info.onDetachedFunction),
 			onUpdateFunction(info.onUpdateFunction)

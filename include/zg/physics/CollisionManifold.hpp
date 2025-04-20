@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <zg/glm.hpp>
-
+#include <zg/components/entities/EntityComponent.hpp>
 namespace zg::components::entities
 {
 	struct RigidBody;
@@ -13,8 +13,8 @@ namespace zg::physics
 	// Simplified version without multiple contact points for now
 	struct CollisionManifold
 	{
-		interfaces::IComponent* ecA = nullptr;
-		interfaces::IComponent* ecB = nullptr;
+		components::entities::EntityComponent* ecA = nullptr;
+		components::entities::EntityComponent* ecB = nullptr;
 		glm::vec3 normal = glm::vec3(0.0f); // From B's perspective (points from B to A, i.e., push A along normal)
 		float penetrationDepth = 0.0f; // Minimum penetration depth along the normal
 		bool colliding = false;
@@ -23,6 +23,6 @@ namespace zg::physics
 		std::vector<glm::vec3> relativeContactPointsOnA;
 		std::vector<glm::vec3> relativeContactPointsOnB;
 		CollisionManifold() = default;
-		CollisionManifold(interfaces::IComponent* a, interfaces::IComponent* b) : ecA(a), ecB(b) {}
+		CollisionManifold(components::entities::EntityComponent* a, components::entities::EntityComponent* b) : ecA(a), ecB(b) {}
 	};
 } // namespace zg::physics

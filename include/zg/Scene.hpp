@@ -19,8 +19,7 @@
 namespace zg
 {
 	struct SceneCreateInfo;
-	struct Scene : ComponentHolder<components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>,
-		DataStorage<Scene>
+	struct Scene : DataStorage<Scene>, ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>
 	{
 		size_t ID = 0;
 		std::string name;

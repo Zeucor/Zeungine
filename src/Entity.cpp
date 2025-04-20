@@ -25,6 +25,10 @@ Entity::Entity(const EntityCreateInfo& info) :
 	updateElements("Position", vertices);
 	updateElements("Normal", normals);
 }
+Entity::~Entity()
+{
+	detachAllComponents();
+}
 Entity& Entity::operator=(const Entity& other) { return *this; }
 void Entity::update()
 {

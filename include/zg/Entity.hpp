@@ -19,7 +19,7 @@ namespace zg
 	struct Window;
 	struct Entity
 			: vaos::VAO,
-				ComponentHolder<zg::components::entities::EntityComponent, zg::components::entities::EntityComponentCreateInfo>,
+				ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>,
 				DataStorage<Entity>
 	{
 		friend Scene;
@@ -76,6 +76,7 @@ namespace zg
 
 	public:
 		Entity(const EntityCreateInfo& info);
+		~Entity();
 		Entity& operator=(const Entity& other);
 		void update();
 		shaders::Shader* addShader(shaders::Shader* setShader = 0);

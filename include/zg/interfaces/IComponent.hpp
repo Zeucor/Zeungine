@@ -7,15 +7,17 @@
 #include <zg/Events.hpp>
 namespace zg::interfaces
 {
-	struct IComponent : DataStorage<IComponent>
+	template <typename HostT, typename ComponentT>
+	struct IComponent : DataStorage<ComponentT>
 	{
-		void* host = 0;
+		HostT* host = 0;
 		size_t ID = 0;
 		std::string NAME;
-		IComponent(const std::string& name, const DataStorage<IComponent>::GetDataFunctionMap& getDataFunctionMap = {},
-							 const DataStorage<IComponent>::SetDataFunctionMap& setDataFunctionMap = {},
-							 const DataStorage<IComponent>::DataMap& dataMap = {}) :
-				DataStorage<IComponent>(getDataFunctionMap, setDataFunctionMap, dataMap), NAME(name) {};
+		IComponent(const std::string& name,
+							 const DataStorage<ComponentT>::GetDataFunctionMap& getDataFunctionMap = {},
+							 const DataStorage<ComponentT>::SetDataFunctionMap& setDataFunctionMap = {},
+							 const DataStorage<ComponentT>::DataMap& dataMap = {}) :
+				DataStorage<ComponentT>(getDataFunctionMap, setDataFunctionMap, dataMap), NAME(name) {};
 		virtual ~IComponent() = default;
 	};
 } // namespace zg::interfaces
