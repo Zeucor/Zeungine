@@ -13,13 +13,9 @@ namespace zg
 		using GetDataFunctionMap = std::unordered_map<std::string, GetDataFunction>;
 		using SetDataFunction = std::function<void(const std::any&, HostT&)>;
 		using SetDataFunctionMap = std::unordered_map<std::string, SetDataFunction>;
-
-	private:
 		DataMap dataMap;
 		GetDataFunctionMap getDataFunctionMap;
 		SetDataFunctionMap setDataFunctionMap;
-
-	public:
 		DataStorage(const GetDataFunctionMap& getDataFunctionMap = {}, const SetDataFunctionMap& setDataFunctionMap = {},
 								const DataMap& dataMap = {}) :
 				dataMap(dataMap), getDataFunctionMap(getDataFunctionMap), setDataFunctionMap(setDataFunctionMap) {};
