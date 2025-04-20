@@ -58,10 +58,11 @@ struct WindowCreateInfo;
 		std::shared_ptr<std::thread> windowThread;
 #endif
 		std::recursive_mutex runnablesMutex;
+		std::recursive_mutex handlersMutex;
+		std::recursive_mutex renderMutex;
 		std::queue<Runnable> runnables;
 		std::unordered_map<Key, int> keys;
 		std::unordered_map<Button, int> buttons;
-		std::recursive_mutex handlersMutex;
 		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyPressHandler>>> keyPressHandlers;
 		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyUpdateHandler>>>
 			keyUpdateHandlers;
@@ -83,7 +84,6 @@ struct WindowCreateInfo;
 		bool maximized = false;
 		bool focused = false;
 		OnEntityAddedFunction onEntityAdded;
-		std::recursive_mutex renderMutex;
 		std::string title;
 		int windowKeys[256];
 		int windowButtons[7];
