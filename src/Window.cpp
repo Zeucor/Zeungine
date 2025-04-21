@@ -20,7 +20,8 @@ Window::Window(const WindowCreateInfo& info) :
 		windowHeight(info.windowHeight), windowX(info.windowX), windowY(info.windowY),
 		scenes([](auto& scene) { return scene.name; }), deltaTime(1.0 / info.framerate), borderless(info.borderless),
 		framerate(info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
-		framebudget(frameduration), systemFonts(*this)
+		framebudget(frameduration), systemFonts(*this),
+		postProcessingPipeline(*this)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -49,7 +50,8 @@ Window::Window(const Window& other) :
 		title(other.title), childWindows(other.childWindows), windowWidth(other.windowWidth),
 		windowHeight(other.windowHeight), windowX(other.windowX), windowY(other.windowY), scenes(other.scenes),
 		deltaTime(1.0 / other.framerate), borderless(other.borderless), framerate(other.framerate), vsync(other.vsync),
-		frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration), systemFonts(*this)
+		frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration), systemFonts(*this),
+		postProcessingPipeline(*this)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));

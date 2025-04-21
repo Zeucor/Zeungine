@@ -13,6 +13,7 @@
 #include "./textures/Framebuffer.hpp"
 #include "audio/AudioEngine.hpp"
 #include "Scene.hpp"
+#include "PostProcessingPipeline.hpp"
 namespace zg
 {
 	namespace shaders
@@ -108,6 +109,7 @@ struct WindowCreateInfo;
 		NANOSECONDS_DURATION frameduration;
 		budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL> framebudget;
 		fonts::SystemFonts systemFonts;
+		PostProcessingPipeline postProcessingPipeline;
 		// when adding new members remember to add to operator=
 
 		Window(const WindowCreateInfo& info);
