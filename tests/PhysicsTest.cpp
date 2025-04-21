@@ -102,7 +102,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// 																				 glm::vec3(2000, 0.5, 2000), commonShaderConstants);
 // 		// 	auto floorRigidBodyID = floor->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& floorRigidBody = floor->getComponentByID(floorRigidBodyID);
-// 		// 	// floorRigidBody.getData<float>("Mass") = 1000000;
+// 		// 	// floorRigidBody.template getData<float>("Mass") = 1000000;
 // 		// 	floor->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
 // 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(2000, 0.5, 2000) / 2.f),
 // 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
@@ -153,7 +153,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// 																										glm::vec3(1), glm::vec3(1, 5, 20), commonShaderConstants);
 // 		// 	auto wall1RigidBodyID = wall1->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& wall1RigidBody = wall1->getComponentByID(wall1RigidBodyID);
-// 		// 	// wall1RigidBody.getData<float>("Mass") = 2;
+// 		// 	// wall1RigidBody.template getData<float>("Mass") = 2;
 // 		// 	wall1->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
 // 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1, 5, 20) / 2.f),
 // 		// 		components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
@@ -162,7 +162,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// 																										glm::vec3(1), glm::vec3(1, 5, 20), commonShaderConstants);
 // 		// 	auto wall2RigidBodyID = wall2->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& wall2RigidBody = wall2->getComponentByID(wall2RigidBodyID);
-// 		// 	// wall2RigidBody.getData<float>("Mass") = 2;
+// 		// 	// wall2RigidBody.template getData<float>("Mass") = 2;
 // 		// 	wall2->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
 // 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1, 5, 20) / 2.f),
 // 		// 		components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
@@ -171,7 +171,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// 																										glm::vec3(1), glm::vec3(20, 5, 1), commonShaderConstants);
 // 		// 	auto wall3RigidBodyID = wall3->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& wall3RigidBody = wall3->getComponentByID(wall3RigidBodyID);
-// 		// 	// wall3RigidBody.getData<float>("Mass") = 2;
+// 		// 	// wall3RigidBody.template getData<float>("Mass") = 2;
 // 		// 	wall3->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
 // 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(20, 5, 1) / 2.f),
 // 		// 		components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
@@ -180,7 +180,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// 																										glm::vec3(1), glm::vec3(20, 5, 1), commonShaderConstants);
 // 		// 	auto wall4RigidBodyID = wall4->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& wall4RigidBody = wall4->getComponentByID(wall4RigidBodyID);
-// 		// 	// wall4RigidBody.getData<float>("Mass") = 2;
+// 		// 	// wall4RigidBody.template getData<float>("Mass") = 2;
 // 		// 	wall4->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
 // 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(20, 5, 1) / 2.f),
 // 		// 		components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));

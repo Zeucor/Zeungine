@@ -308,7 +308,7 @@ void ZGContactListener::OnContactAdded(const JPH::Body& inBody1, const JPH::Body
 																			 const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
 	auto& joltIDRigidBodies =
-		physicsScene.getData<std::unordered_map<JPH::BodyID, components::entities::EntityComponent*>>("joltIDRigidBodies");
+		physicsScene.template getData<std::unordered_map<JPH::BodyID, components::entities::EntityComponent*>>("joltIDRigidBodies");
 	auto ec1 = joltIDRigidBodies[inBody1.GetID()];
 	auto ec2 = joltIDRigidBodies[inBody2.GetID()];
 	auto manifold = constructManifold(ec1, ec2, inManifold);
@@ -320,7 +320,7 @@ void ZGContactListener::OnContactPersisted(const JPH::Body& inBody1, const JPH::
 																					 const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
 	auto& joltIDRigidBodies =
-		physicsScene.getData<std::unordered_map<JPH::BodyID, components::entities::EntityComponent*>>("joltIDRigidBodies");
+		physicsScene.template getData<std::unordered_map<JPH::BodyID, components::entities::EntityComponent*>>("joltIDRigidBodies");
 	auto ec1 = joltIDRigidBodies[inBody1.GetID()];
 	auto ec2 = joltIDRigidBodies[inBody2.GetID()];
 	ec1->template setData<components::entities::EntityComponent*>("removeActiveManifold", ec2);
@@ -334,7 +334,7 @@ void ZGContactListener::OnContactPersisted(const JPH::Body& inBody1, const JPH::
 void ZGContactListener::OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair)
 {
 	auto& joltIDRigidBodies =
-		physicsScene.getData<std::unordered_map<JPH::BodyID, components::entities::EntityComponent*>>("joltIDRigidBodies");
+		physicsScene.template getData<std::unordered_map<JPH::BodyID, components::entities::EntityComponent*>>("joltIDRigidBodies");
 	auto ec1 = joltIDRigidBodies[inSubShapePair.GetBody1ID()];
 	auto ec2 = joltIDRigidBodies[inSubShapePair.GetBody2ID()];
 	ec1->template setData<components::entities::EntityComponent*>("removeActiveManifold", ec2);

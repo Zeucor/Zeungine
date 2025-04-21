@@ -73,15 +73,15 @@ SceneCreateInfo ExampleSceneFactory()
 		.onDetachedFunction =
 			[](auto& scene)
 		{
-			scene.window.removeKeyPressHandler('m', scene.getData<zg::UniqueIdentifier>("mPressID"));
-			scene.window.removeKeyPressHandler('n', scene.getData<zg::UniqueIdentifier>("nPressID"));
-			scene.window.removeKeyPressHandler('r', scene.getData<zg::UniqueIdentifier>("rPressID"));
-			scene.window.removeKeyPressHandler('q', scene.getData<zg::UniqueIdentifier>("qPressID"));
+			scene.window.removeKeyPressHandler('m', scene.template getData<zg::UniqueIdentifier>("mPressID"));
+			scene.window.removeKeyPressHandler('n', scene.template getData<zg::UniqueIdentifier>("nPressID"));
+			scene.window.removeKeyPressHandler('r', scene.template getData<zg::UniqueIdentifier>("rPressID"));
+			scene.window.removeKeyPressHandler('q', scene.template getData<zg::UniqueIdentifier>("qPressID"));
 		},
 		.preUpdateFunction =
 			[](auto& scene)
 		{
-			auto deltaTimeCounter = (scene.getData<float>("deltaTimeCounter") += scene.window.deltaTime);
+			auto deltaTimeCounter = (scene.template getData<float>("deltaTimeCounter") += scene.window.deltaTime);
 			scene.clearColor = {std::sin(deltaTimeCounter), std::cos(deltaTimeCounter), std::tan(deltaTimeCounter), 1};
 		}};
 	return info;

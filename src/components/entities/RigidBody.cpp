@@ -178,11 +178,11 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				if (!colliders.empty())
 				{
 					auto& collider0 = *colliders[0];
-					const auto& mat = collider0.getData<PhysicsMaterial>("PhysicsMaterial"); // Use first collider's material
+					const auto& mat = collider0.template getData<PhysicsMaterial>("PhysicsMaterial"); // Use first collider's material
 					bodySettings.mFriction = mat.friction;
 					bodySettings.mRestitution = mat.restitution;
 					// Sensor property - affects the whole body in Jolt unless using specific contact listener logic
-					bodySettings.mIsSensor = collider0.getData<bool>("IsSensor");
+					bodySettings.mIsSensor = collider0.template getData<bool>("IsSensor");
 				}
 				
 				bodySettings.mLinearDamping = info.linearDamping;
