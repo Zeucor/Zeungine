@@ -47,7 +47,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 				(component.make<NANOSECONDS_DURATION>("frameduration") = NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den));
 			// auto& framebudget = (component.emplace<budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION,
 			// LD_REAL>>( 											 "framebudget", frameduration, 1, false, false, "PhysicsSceneBudget"));
-			auto running = &component.make<bool>("running", true);
+			component.make<bool>("running", true);
 			auto& runningMutex = component.make<std::mutex*>("runningMutex", new std::mutex());
 			auto& mTempAllocator =
 				component.make<JPH::TempAllocatorImpl*>("mTempAllocator", new JPH::TempAllocatorImpl(10 * 1024 * 1024));
@@ -65,28 +65,32 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 													 *mBroadPhaseLayerInterface, *mObjectVsBroadPhaseLayerFilter, *mObjectLayerPairFilter);
 			if (gravity)
 				mPhysicsSystem->SetGravity(JPH::Vec3(0, 0, 0));
+			auto& componentHostIndexStack = component.hostIndexStack;
+			auto& componentID = component.ID;
 			auto& thread = component.make<std::thread*>(
 				"thread",
 				new std::thread(
-					[&, mPhysicsSystem, running, runningMutex, mTempAllocator, mJobSystem, deltaTime]() mutable
+					[componentHostIndexStack, componentID, deltaTime]() mutable
 					{
-						do
-						{
-							runningMutex->lock();
-							if (!*running)
-							{
-								runningMutex->unlock();
-								break;
-							}
-							// framebudget.begin();
-							// if (gravity)
-							// 	gravity->applyGravity(*this, deltaTime);
-							mPhysicsSystem->Update(deltaTime, 10, mTempAllocator, mJobSystem);
-							// framebudget.end();
-							runningMutex->unlock();
-							// framebudget.sleep();
-						}
-						while (true);
+						auto scenePointer = &Registry::getScene(componentHostIndexStack);
+						auto& component = scenePointer->getComponentByID(componentID);
+						// do
+						// {
+						// 	runningMutex->lock();
+						// 	if (!*runningPointer)
+						// 	{
+						// 		runningMutex->unlock();
+						// 		break;
+						// 	}
+						// 	framebudget.begin();
+						// 	// if (gravity)
+						// 	// 	gravity->applyGravity(*this, deltaTime);
+						// 	mPhysicsSystem->Update(deltaTime, 10, mTempAllocator, mJobSystem);
+						// 	framebudget.end();
+						// 	runningMutex->unlock();
+						// 	framebudget.sleep();
+						// }
+						// while (true);
 					}));
 		},
 		.onDetachedFunction =
