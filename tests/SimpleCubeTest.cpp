@@ -68,7 +68,7 @@ SceneCreateInfo ExampleSceneFactory()
 
 			scene.attachComponent(zg::components::scenes::ViewMouseControlFactory());
 			scene.attachComponent(zg::components::scenes::ViewQuadKeyControlFactory(zg::components::scenes::KeyScheme::WSADSC, 3));
-			scene.make<float>("deltaTimeCounter", 0.f);
+			scene.template make<float>("deltaTimeCounter", 0.f);
 		},
 		.onDetachedFunction =
 			[](auto& scene)

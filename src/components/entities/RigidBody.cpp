@@ -248,7 +248,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				// // Add the body to the simulation (activate it)
 				joltBodyInterface.AddBody(bodyID, JPH::EActivation::Activate);
 				
-				physicsScene.make<scenes::JoltIDComponentPair>("registerRigidBody", bodyID, &component);
+				physicsScene.template make<scenes::JoltIDComponentPair>("registerRigidBody", bodyID, &component);
 				return bodyIDAny;
 			}}
 		},
