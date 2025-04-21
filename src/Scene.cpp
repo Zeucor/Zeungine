@@ -136,7 +136,7 @@ Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::
 	}
 	return textureAttachmentPairs;
 }
-size_t Scene::addEntity(const EntityCreateInfo& info, bool callOnEntityAdded)
+KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const EntityCreateInfo& info, bool callOnEntityAdded)
 {
 	auto usingInfo{info};
 	usingInfo.scenePointer = this;
@@ -147,7 +147,7 @@ size_t Scene::addEntity(const EntityCreateInfo& info, bool callOnEntityAdded)
 	postAddEntity(entity, {entity.ID});
 	if (callOnEntityAdded && window.onEntityAdded)
 		window.onEntityAdded(entity);
-	return entity.ID;
+	return entity_tuple;
 }
 void Scene::removeEntity(const size_t& id)
 {

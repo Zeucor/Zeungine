@@ -15,169 +15,179 @@
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/math/Rotations.hpp>
 #include <zg/physics/CollisionManifold.hpp>
-// zg::shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
-// glm::vec3 windowVisualizerPosition(56.8, 42, 57);
-// struct PhysicsScene : zg::Scene
-// {
-// 	// std::shared_ptr<zg::components::scenes::EntityThirdPersonCamera> thirdPerson;
-// 	// zg::vp::VML vml;
-// 	// zg::vp::VFBLR vfblr;
-// 	// std::shared_ptr<zg::entities::Cube> floor;
-// 	// std::shared_ptr<zg::components::entities::RigidBody> floorRigidBody;
-// 	// std::shared_ptr<zg::entities::Cube> cube;
-// 	// std::shared_ptr<zg::components::entities::RigidBody> cubeRigidBody;
-// 	// std::shared_ptr<zg::entities::Cube> cube2;
-// 	// std::shared_ptr<zg::components::entities::RigidBody> cube2RigidBody;
-// 	// std::shared_ptr<zg::entities::Cube> cube3;
-// 	// std::shared_ptr<zg::components::entities::RigidBody> cube3RigidBody;
-// 	// std::shared_ptr<zg::entities::Cube> cube4;
-// 	// std::shared_ptr<zg::components::entities::RigidBody> cube4RigidBody;
-// 	// std::shared_ptr<zg::entities::Cube> wall1;
-// 	// std::shared_ptr<zg::components::entities::RigidBody> wall1RigidBody;
-// 	// std::shared_ptr<zg::entities::Cube> wall2;
-// 	// std::shared_ptr<zg::components::entities::RigidBody> wall2RigidBody;
-// 	// std::shared_ptr<zg::entities::Cube> wall3;
-// 	// std::shared_ptr<zg::components::entities::RigidBody> wall3RigidBody;
-// 	// std::shared_ptr<zg::entities::Cube> wall4;
-// 	// std::shared_ptr<zg::components::entities::RigidBody> wall4RigidBody;
-// 	// std::shared_ptr<zg::entities::NUVVolume<3, float>> cube5;
-// 	zg::UniqueIdentifier fID = 0;
-// 	zg::UniqueIdentifier bID = 0;
-// 	zg::UniqueIdentifier lID = 0;
-// 	zg::UniqueIdentifier rID = 0;
-// 	zg::UniqueIdentifier sID = 0;
-// 	int f = 0;
-// 	int b = 0;
-// 	int l = 0;
-// 	int r = 0;
-// 	int s = 0;
-// 	PhysicsScene(zg::Window& window) : Scene(window, {50, 50, 50}, {0, -1, 1}, 81.f)
-// 	// vml(*this),
-// 	// vfblr(*this, zg::vp::VFBLR::KeyScheme::WSADSC, 8.f)
-// 	{
-// 		clearColor = {0, 0, 1, 1};
-// 		{
-// 			// auto dldirection = glm::normalize(zg::math::Rotations::Vec3AroundVec3({0, 0, 1}, {0, 0, 0}, {90, 0, 0}));
-// 			// dldirection = glm::normalize(zg::math::Rotations::Vec3AroundVec3(dldirection, {0, 0, 0}, {0, 90, 90}));
-// 			// auto dlup = glm::normalize(zg::math::Rotations::Vec3AroundVec3({0, 1, 0}, {0, 0, 0}, {90, 0, 0}));
-// 			// dlup = glm::normalize(zg::math::Rotations::Vec3AroundVec3(dlup, {0, 0, 0}, {0, 90, 0}));
-// 			glm::vec3 dldirection{1, -1, 1};
-// 			dldirection = glm::normalize(dldirection);
-// 			glm::vec3 dlup{0, 1, 0};
-// 			directionalLights.push_back({
-// 				glm::vec3(20, 80, 20), // position
-// 				dldirection, // direction
-// 				dlup, // up
-// 				glm::vec3(1.f, 1.f, 1.f), // color
-// 				1.f, // intensity,
-// 				1.f, // nearcube5
-// 				364.f, // farcube5
-// 				0.4f // ambientFactor
-// 			});
-// 			auto& dl = directionalLights[0];
-// 			directionalLightShadows.emplace_back(window, directionalLights[0]);
-// 		}
-// 		// // attachComponent(std::make_shared<zg::components::scenes::GravityByAttraction>(0.000005f));
-// 		// attachComponent(zg::components::scenes::PhysicsSceneFactory((long double)(1.0L / 40.0L)));
-// 		// // attachComponent(std::make_shared<zg::components::scenes::GravityByVector>(*this, glm::vec3(0, -9.81, 0)));
-// 		// auto staticRigidBodyCreateInfo = zg::components::entities::RigidBodyFactory(
-// 		// 	zg::components::entities::RigidBodyInfo{zg::components::entities::BodyType::Static});
-// 		// auto cubeRigidBodyCreateInfo = zg::components::entities::RigidBodyFactory(
-// 		// 	zg::components::entities::RigidBodyInfo{zg::components::entities::BodyType::Dynamic, 1.0f, 0.85f, 0.7f,
+#include <zg/components/windows/FXAA.hpp>
+#include <zg/Registry.hpp>
+using namespace zg;
+shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
+glm::vec3 windowVisualizerPosition(56.8, 42, 57);
+SceneCreateInfo PhysicsSceneFactory();
+auto staticRigidBodyCreateInfo = components::entities::RigidBodyFactory(
+	components::entities::RigidBodyInfo{components::entities::BodyType::Static});
+auto floorCreateInfo = entities::CubeFactory("Floor", {50, 40, 50}, {1, 0, 0, 0}, {1, 1, 1}, {20000, 0.5, 20000}, {0.35, 0.45, 0.25, 1}, commonShaderConstants);
+int main()
+{
+	WindowCreateInfo windowCreateInfo{
+		.title = "Physics Test",
+		.windowWidth = 1920,
+		.windowHeight = 1080,
+		.windowX = 0,
+		.windowY = 0,
+		.borderless = true,
+		.vsync = false,
+		.framerate = 200,
+	};
+	auto window_tuple = Registry::addWindow(windowCreateInfo);
+	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
+	window.runOnThread([](auto& window) {
+		window.attachComponent(zg::components::windows::FXAAFactory());
+		auto sceneCreateInfo = PhysicsSceneFactory();
+		window.addScene(sceneCreateInfo);
+	 });
+	window.addKeyPressHandler(27,
+														[&](auto pressed)
+														{
+															if (pressed)
+																window.close();
+														});
+	window.run();
+	return 0;
+
+}
+SceneCreateInfo PhysicsSceneFactory()
+{
+	SceneCreateInfo info{
+		.name = "PhysicsScene",
+		.cameraPosition = {50, 50, 50},
+		.cameraDirection = {0, -1, 1},
+		.fov = 81.f,
+		.onAttachedFunction = [](auto& scene)
+		{
+			scene.clearColor = {0, 0, 1, 1};
+			glm::vec3 dldirection{1, -1, 1};
+			dldirection = glm::normalize(dldirection);
+			glm::vec3 dlup{0, 1, 0};
+			scene.directionalLights.push_back({
+				glm::vec3(20, 80, 20), // position
+				dldirection, // direction
+				dlup, // up
+				glm::vec3(1.f, 1.f, 1.f), // color
+				1.f, // intensity,
+				1.f, // nearcube5
+				364.f, // farcube5
+				0.4f // ambientFactor
+			});
+			auto& dl = scene.directionalLights[0];
+			scene.directionalLightShadows.emplace_back(scene.window, scene.directionalLights[0]);
+			// scene.attachComponent(components::scenes::GravityByAttractionFactory(0.000005f));
+			// scene.attachComponent(components::scenes::GravityByVectorFactory(glm::vec3(0, -9.81, 0)));
+			scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 40.0L)));\
+			auto floor_tuple = scene.addEntity(floorCreateInfo);
+			auto& floor = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_tuple);
+			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyCreateInfo);
+			auto& floor_rb = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_rb_tuple);
+			floor_rb.setData<float>("Mass", 1000000.0f);
+			// auto floorColliderCreateInfo = components::entities::ColliderFactory()
+			// floor.attachComponent(floorColliderCreateInfo);
+		}
+	};
+	return info;
+}
+// 		// auto cubeRigidBodyCreateInfo = components::entities::RigidBodyFactory(
+// 		// 	components::entities::RigidBodyInfo{components::entities::BodyType::Dynamic, 1.0f, 0.85f, 0.7f,
 // 		// 																					true, false, glm::vec<3, bool>(1, 0, 1), glm::vec<3, bool>(0)});
 // 		// //
 // 		// {
 // 		// 	auto floor =
-// 		// 		std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 40, 50), glm::quat(1, 0, 0, 0), glm::vec3(1),
+// 		// 		std::make_shared<entities::Cube>(window, *this, glm::vec3(50, 40, 50), glm::quat(1, 0, 0, 0), glm::vec3(1),
 // 		// 																				 glm::vec3(2000, 0.5, 2000), commonShaderConstants);
 // 		// 	auto floorRigidBodyID = floor->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& floorRigidBody = floor->getComponentByID(floorRigidBodyID);
 // 		// 	// floorRigidBody.getData<float>("Mass") = 1000000;
-// 		// 	floor->attachComponent(zg::components::entities::ColliderFactory(zg::components::entities::ColliderInfo{
-// 		// 		std::make_unique<zg::components::entities::BoxShapeData>(glm::vec3(2000, 0.5, 2000) / 2.f),
-// 		// 		zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+// 		// 	floor->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
+// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(2000, 0.5, 2000) / 2.f),
+// 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 // 		// 	addEntity(floor);
 // 		// }
 // 		// // cube
-// 		// 	auto cube = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::quat(1, 0, 0, 0),
+// 		// 	auto cube = std::make_shared<entities::Cube>(window, *this, glm::vec3(50, 47, 58), glm::quat(1, 0, 0, 0),
 // 		// 																									 glm::vec3(2), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
 // 		// 	cube->attachComponent(cubeRigidBodyCreateInfo);
-// 		// 	cube->attachComponent(zg::components::entities::ColliderFactory(zg::components::entities::ColliderInfo{
-// 		// 		// std::make_shared<zg::components::entities::MeshShapeData>(*cube),
-// 		// 		std::make_unique<zg::components::entities::BoxShapeData>(glm::vec3(3.0, 3.0, 3.0) / 2.f),
-// 		// 		zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+// 		// 	cube->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
+// 		// 		// std::make_shared<components::entities::MeshShapeData>(*cube),
+// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(3.0, 3.0, 3.0) / 2.f),
+// 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 // 		// 	addEntity(cube);
 // 		// 	{
 // 		// 	// cube2
-// 		// 	auto cube2 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(53, 47, 58), glm::quat(1, 0, 0, 0),
+// 		// 	auto cube2 = std::make_shared<entities::Cube>(window, *this, glm::vec3(53, 47, 58), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
 // 		// 	cube2->attachComponent(cubeRigidBodyCreateInfo);
-// 		// 	cube2->attachComponent(zg::components::entities::ColliderFactory(zg::components::entities::ColliderInfo{
-// 		// 		// std::make_shared<zg::components::entities::MeshShapeData>(*cube2),
-// 		// 		std::make_unique<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-// 		// 		zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+// 		// 	cube2->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
+// 		// 		// std::make_shared<components::entities::MeshShapeData>(*cube2),
+// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
+// 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 // 		// 	addEntity(cube2);
 // 		// 	// cube3
-// 		// 	auto cube3 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(47, 47, 58), glm::quat(1, 0, 0, 0),
+// 		// 	auto cube3 = std::make_shared<entities::Cube>(window, *this, glm::vec3(47, 47, 58), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
 // 		// 	cube3->attachComponent(cubeRigidBodyCreateInfo);
-// 		// 	cube3->attachComponent(zg::components::entities::ColliderFactory(zg::components::entities::ColliderInfo{
-// 		// 		// std::make_shared<zg::components::entities::MeshShapeData>(*cube3),
-// 		// 		std::make_unique<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-// 		// 		zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+// 		// 	cube3->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
+// 		// 		// std::make_shared<components::entities::MeshShapeData>(*cube3),
+// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
+// 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 // 		// 	addEntity(cube3);
 // 		// 	// cube4
-// 		// 	auto cube4 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 47, 54), glm::quat(1, 0, 0, 0),
+// 		// 	auto cube4 = std::make_shared<entities::Cube>(window, *this, glm::vec3(50, 47, 54), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(1.5, 1.5, 1.5), commonShaderConstants);
 // 		// 	cube4->attachComponent(cubeRigidBodyCreateInfo);
-// 		// 	cube4->attachComponent(zg::components::entities::ColliderFactory(zg::components::entities::ColliderInfo{
-// 		// 		// std::make_shared<zg::components::entities::MeshShapeData>(*cube4),
-// 		// 		std::make_unique<zg::components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-// 		// 		zg::components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+// 		// 	cube4->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
+// 		// 		// std::make_shared<components::entities::MeshShapeData>(*cube4),
+// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
+// 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 // 		// 	addEntity(cube4);
 // 		// }
 // 		// //
 // 		// // walls
 // 		// {
-// 		// 	auto wall1 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(40, 43, 50), glm::quat(1, 0, 0, 0),
+// 		// 	auto wall1 = std::make_shared<entities::Cube>(window, *this, glm::vec3(40, 43, 50), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(1, 5, 20), commonShaderConstants);
 // 		// 	auto wall1RigidBodyID = wall1->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& wall1RigidBody = wall1->getComponentByID(wall1RigidBodyID);
 // 		// 	// wall1RigidBody.getData<float>("Mass") = 2;
-// 		// 	wall1->attachComponent(zg::components::entities::ColliderFactory(zg::components::entities::ColliderInfo{
-// 		// 		std::make_unique<zg::components::entities::BoxShapeData>(glm::vec3(1, 5, 20) / 2.f),
-// 		// 		zg::components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+// 		// 	wall1->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
+// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1, 5, 20) / 2.f),
+// 		// 		components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 // 		// 	addEntity(wall1);
-// 		// 	auto wall2 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(60, 43, 50), glm::quat(1, 0, 0, 0),
+// 		// 	auto wall2 = std::make_shared<entities::Cube>(window, *this, glm::vec3(60, 43, 50), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(1, 5, 20), commonShaderConstants);
 // 		// 	auto wall2RigidBodyID = wall2->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& wall2RigidBody = wall2->getComponentByID(wall2RigidBodyID);
 // 		// 	// wall2RigidBody.getData<float>("Mass") = 2;
-// 		// 	wall2->attachComponent(zg::components::entities::ColliderFactory(zg::components::entities::ColliderInfo{
-// 		// 		std::make_unique<zg::components::entities::BoxShapeData>(glm::vec3(1, 5, 20) / 2.f),
-// 		// 		zg::components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+// 		// 	wall2->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
+// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1, 5, 20) / 2.f),
+// 		// 		components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 // 		// 	addEntity(wall2);
-// 		// 	auto wall3 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 43, 40), glm::quat(1, 0, 0, 0),
+// 		// 	auto wall3 = std::make_shared<entities::Cube>(window, *this, glm::vec3(50, 43, 40), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(20, 5, 1), commonShaderConstants);
 // 		// 	auto wall3RigidBodyID = wall3->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& wall3RigidBody = wall3->getComponentByID(wall3RigidBodyID);
 // 		// 	// wall3RigidBody.getData<float>("Mass") = 2;
-// 		// 	wall3->attachComponent(zg::components::entities::ColliderFactory(zg::components::entities::ColliderInfo{
-// 		// 		std::make_unique<zg::components::entities::BoxShapeData>(glm::vec3(20, 5, 1) / 2.f),
-// 		// 		zg::components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+// 		// 	wall3->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
+// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(20, 5, 1) / 2.f),
+// 		// 		components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 // 		// 	addEntity(wall3);
-// 		// 	auto wall4 = std::make_shared<zg::entities::Cube>(window, *this, glm::vec3(50, 43, 60), glm::quat(1, 0, 0, 0),
+// 		// 	auto wall4 = std::make_shared<entities::Cube>(window, *this, glm::vec3(50, 43, 60), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(20, 5, 1), commonShaderConstants);
 // 		// 	auto wall4RigidBodyID = wall4->attachComponent(staticRigidBodyCreateInfo);
 // 		// 	auto& wall4RigidBody = wall4->getComponentByID(wall4RigidBodyID);
 // 		// 	// wall4RigidBody.getData<float>("Mass") = 2;
-// 		// 	wall4->attachComponent(zg::components::entities::ColliderFactory(zg::components::entities::ColliderInfo{
-// 		// 		std::make_unique<zg::components::entities::BoxShapeData>(glm::vec3(20, 5, 1) / 2.f),
-// 		// 		zg::components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
+// 		// 	wall4->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
+// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(20, 5, 1) / 2.f),
+// 		// 		components::entities::PhysicsMaterial{}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
 // 		// 	addEntity(wall4);
 // 		// }
 // 		// // visualizers
-// 		// addEntity(std::make_shared<zg::entities::DeltaVisualizer>(
+// 		// addEntity(std::make_shared<entities::DeltaVisualizer>(
 // 		// 	window, *this, glm::vec2(5, 1), window.deltaTime, window.lastFrameDeltaTime, windowVisualizerPosition,
 // 		// 	glm::angleAxis(glm::radians(180.f), glm::vec3(0, 1, 0)), glm::vec3(1)));
 // 		// // volumes
@@ -200,7 +210,7 @@
 // 		// 	// x = a * exp(b*v) * cos(k*v) * cos(u)
 // 		// 	// y = a * exp(b*v) * cos(k*v) * sin(u)
 // 		// 	// z = a * exp(b*v) * sin(k*v)
-// 		// 	// auto seashell_volume = std::make_shared<zg::entities::NUVVolume<3, float>>(
+// 		// 	// auto seashell_volume = std::make_shared<entities::NUVVolume<3, float>>(
 // 		// 	// 	window, *this, glm::vec3(50, 45, 50), // Position
 // 		// 	// 	glm::quat(1, 0, 0, 0), // Rotation
 // 		// 	// 	glm::vec3(2.0f), // Scale
@@ -219,7 +229,7 @@
 // 		// 	// 	{"rz", 0.5}, // Radius/half-extent z
 // 		// 	// 	{"k", 10.0} // Sharpness factor (higher k = sharper edges)
 // 		// 	// };
-// 		// 	// cube5 = std::make_shared<zg::entities::NUVVolume<3, float>>(
+// 		// 	// cube5 = std::make_shared<entities::NUVVolume<3, float>>(
 // 		// 	// 	window, *this, glm::vec3(50, 43, 53), glm::quat(1, 0, 0, 0), glm::vec3(1), glm::vec4(1, 0, 1, 1),
 // 		// 	// 	commonShaderConstants, "Box Volume",
 // 		// 	// 	tanh_box_params, // Parameters map
@@ -239,7 +249,7 @@
 // 		// 	// 	{"r", 1.0} // Radius
 // 		// 	// };
 // 		// 	// auto sphere_volume =
-// 		// 	// 	std::make_shared<zg::entities::NUVVolume<3, float>>(window, *this, glm::vec3(53, 43, 53), glm::quat(1, 0, 0,
+// 		// 	// 	std::make_shared<entities::NUVVolume<3, float>>(window, *this, glm::vec3(53, 43, 53), glm::quat(1, 0, 0,
 // 		// 	// 0), 																											glm::vec3(1), glm::vec4(1.0, 0.0, 0.0, 1.0), // Red
 // 		// 	// color 																											commonShaderConstants, "Sphere Volume",
 // 		// 	// sphere_params,
@@ -267,7 +277,7 @@
 // 		// 	// 	"sin(u) * cos(v)",
 // 		// 	// 	"sin(v)"
 // 		// 	// };
-// 		// 	// auto torus_volume = std::make_shared<zg::entities::NUVVolume<3, float>>(
+// 		// 	// auto torus_volume = std::make_shared<entities::NUVVolume<3, float>>(
 // 		// 	// 	window, *this, glm::vec3(56, 43, 53), glm::quat(1, 0, 0, 0), glm::vec3(1),
 // 		// 	// 	glm::vec4(0.0, 1.0, 0.0, 1.0), // Green color
 // 		// 	// 	commonShaderConstants, "Torus Volume", torus_params,
@@ -287,7 +297,7 @@
 // 		// 	// 	{"rz", 0.7}, // Ellipsoid radii
 // 		// 	// 	{"k", 0.8} // Twist factor (radians per unit of v)
 // 		// 	// };
-// 		// 	// auto twist_volume = std::make_shared<zg::entities::NUVVolume<3, float>>(
+// 		// 	// auto twist_volume = std::make_shared<entities::NUVVolume<3, float>>(
 // 		// 	// 	window, *this, glm::vec3(47, 43, 53), glm::quat(1, 0, 0, 0), glm::vec3(1),
 // 		// 	// 	glm::vec4(0.0, 0.0, 1.0, 1.0), // Blue color
 // 		// 	// 	commonShaderConstants, "Twisted Ellipsoid Volume", twist_params,
@@ -311,7 +321,7 @@
 // 		// 	// 	{"height_factor", 2.0}, // How much z increases per unit of v
 // 		// 	// 	{"n", 8.0} // Frequency multiplier for cross-section rotation (aesthetic)
 // 		// 	// };
-// 		// 	// auto spiral_volume = std::make_shared<zg::entities::NUVVolume<3, float>>(
+// 		// 	// auto spiral_volume = std::make_shared<entities::NUVVolume<3, float>>(
 // 		// 	// 	window, *this, glm::vec3(44, 43, 53), glm::quat(1, 0, 0, 0), glm::vec3(1),
 // 		// 	// 	glm::vec4(1.0, 1.0, 0.0, 1.0), // Yellow color
 // 		// 	// 	commonShaderConstants, "Spiral Tube Volume", spiral_params,
@@ -335,7 +345,7 @@
 // 		// 	// 	{"n", 5.0}, // Frequency of ripples along u (longitude) - integer for closed loops
 // 		// 	// 	{"m", 4.0} // Frequency of ripples along v (latitude) - integer for closed loops
 // 		// 	// };
-// 		// 	// auto star_volume = std::make_shared<zg::entities::NUVVolume<3, float>>(
+// 		// 	// auto star_volume = std::make_shared<entities::NUVVolume<3, float>>(
 // 		// 	// 	window, *this, glm::vec3(50, 43, 49), glm::quat(1, 0, 0, 0), glm::vec3(1),
 // 		// 	// 	glm::vec4(1.0, 0.0, 1.0, 1.0), // Magenta color
 // 		// 	// 	commonShaderConstants, "Star Volume", star_params,
@@ -355,7 +365,7 @@
 // 		// 	// std::map<std::string, double> apple_params = {
 // 		// 	// 	{"a", 2.0} // Scale factor for the cardioid profile
 // 		// 	// };
-// 		// 	// auto apple_volume = std::make_shared<zg::entities::NUVVolume<3, float>>(
+// 		// 	// auto apple_volume = std::make_shared<entities::NUVVolume<3, float>>(
 // 		// 	// 	window, *this, glm::vec3(50, 43, 46), glm::quat(1, 0, 0, 0), glm::vec3(1),
 // 		// 	// 	glm::vec4(0.0, 1.0, 1.0, 1.0), // Cyan color
 // 		// 	// 	commonShaderConstants, "Apple Volume", apple_params,
@@ -384,7 +394,7 @@
 // 		// 	// std::function<void()> onRightTickFunction = [&]() { cubeRigidBody->applyLocalForceToCenter({-30, 0, 0}); };
 // 		// 	// std::function<void()> onSpaceTickFunction = [&]()
 // 		// 	// {
-// 		// 	// 	zg::physics::CollisionManifold* ManifoldPointer = 0;
+// 		// 	// 	physics::CollisionManifold* ManifoldPointer = 0;
 // 		// 	// 	if (cubeRigidBody->isTouching(*floorRigidBody, ManifoldPointer) ||
 // 		// 	// 			cubeRigidBody->isTouching(*cube2RigidBody, ManifoldPointer) ||
 // 		// 	// 			cubeRigidBody->isTouching(*cube3RigidBody, ManifoldPointer) ||
@@ -401,7 +411,7 @@
 // 		// 	// sID = window.addKeyUpdateHandler(s, onSpaceTickFunction);
 // 		// }
 // 		// //
-// 		// attachComponent(zg::components::scenes::EntityThirdPersonCameraFactory(*cube));
+// 		// attachComponent(components::scenes::EntityThirdPersonCameraFactory(*cube));
 // 	}
 // 	void preUpdate() override {}
 // 	~PhysicsScene()
@@ -413,16 +423,3 @@
 // 		detachAllComponents();
 // 	}
 // };
-int main()
-{
-	// zg::Window window("Physics Test", 1920, 1080, -1, -1, true, false, 60);
-	// window.runOnThread([](auto& window) { window.setScene(std::make_shared<PhysicsScene>(window)); });
-	// window.addKeyPressHandler(27,
-	// 													[&](auto pressed)
-	// 													{
-	// 														if (pressed)
-	// 															window.close();
-	// 													});
-	// window.run();
-	// return 0;
-}

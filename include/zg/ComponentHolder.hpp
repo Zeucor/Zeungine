@@ -39,7 +39,7 @@ namespace zg
 		/**
 		 * @brief adds a component to m_components and returns it's unique id
 		 */
-		UniqueIdentifier attachComponent(const ComponentInfoT& info)
+		KeyIDVector<std::string, ComponentT>::EmplaceBackTuple attachComponent(const ComponentInfoT& info)
 		{
 			auto component_tuple = m_components.emplace_back(info);
 			auto& component = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(component_tuple);
@@ -48,15 +48,15 @@ namespace zg
 			{
 				component.hostIndexStack.push_back(host.scene.window.INDEX);
 				component.hostIndexStack.push_back(host.scene.INDEX);
-				std::vector<size_t> parentEntityStack;
+				std::vector<size_t*> parentEntityStack;
 				auto currentEntity = host.parentEntity;
 				while (currentEntity)
 				{
-					parentEntityStack.push_back(currentEntity->ID);
-					currentEntity = currentEntity.parentEntity;
+					parentEntityStack.push_back(currentEntity->INDEX);
+					currentEntity = currentEntity->parentEntity;
 				}
 				auto parentEntityStackData = parentEntityStack.data();
-				for (int i = parentEntityStack.size(); i >= 0; --i)
+				for (int i = int(parentEntityStack.size()) - 1; i >= 0; --i)
 				{
 					component.hostIndexStack.push_back(parentEntityStackData[i]);
 				}
@@ -73,7 +73,7 @@ namespace zg
 			}
 			component.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(component_tuple);
 			component.onAttached();
-			return component.ID;
+			return component_tuple;
 		}
 		/**
 		 * @brief removes a component by id, returns false if the component does not exist, sets componentID to zero on

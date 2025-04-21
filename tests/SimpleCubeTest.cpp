@@ -35,8 +35,8 @@ SceneCreateInfo ExampleSceneFactory()
 			[](auto& scene)
 		{
 			scene.clearColor = {1, 0, 1, 1};
-			scene.setData<size_t>("CubeID", scene.addEntity(cubeCreateInfo));
-			scene.setData<size_t>("PlaneID", scene.addEntity(planeCreateInfo));
+			scene.setData<size_t>("CubeID", std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(cubeCreateInfo)));
+			scene.setData<size_t>("PlaneID", std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(planeCreateInfo)));
 			scene.setData<zg::UniqueIdentifier>("mPressID",
 																					scene.window.addKeyPressHandler('m',
 																																					[&](auto pressed)

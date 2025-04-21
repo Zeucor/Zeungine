@@ -60,7 +60,7 @@ namespace zg
 		~Scene();
 		std::vector<textures::Framebuffer::TextureAttachmentPair>
 		generateTexturesFromAttachments(const std::vector<textures::Framebuffer::AttachmentType>& attachments);
-		size_t addEntity(const EntityCreateInfo& info, bool callOnEntityAdded = true);
+		KeyIDVector<std::string, Entity>::EmplaceBackTuple addEntity(const EntityCreateInfo& info, bool callOnEntityAdded = true);
 		void removeEntity(const size_t& id);
 		void update();
 		void preRender();

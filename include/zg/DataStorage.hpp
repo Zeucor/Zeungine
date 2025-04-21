@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <stdexcept>
 namespace zg
 {
 	template <typename HostT>
