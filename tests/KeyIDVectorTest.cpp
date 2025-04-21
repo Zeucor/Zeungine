@@ -36,6 +36,7 @@ int main()
     // }
 
     KeyIDVector<float, std::string> floatingVector;
+    size_t* _6Index = 0, * _8Index = 0;
     for (size_t c = 1; c <= 10; c++)
     {
         std::string str;
@@ -43,13 +44,30 @@ int main()
         {
             str += (char)crypto::Random::value<uint16_t>(65, 92);
         }
-        floatingVector.emplace_back_key(crypto::Random::value<float>(1, 100), str);
+        auto emplace_tuple = floatingVector.emplace_back_key(crypto::Random::value<float>(1, 100), str);
+        if (c == 6)
+            _6Index = std::get<KEY_ID_VECTOR_INDEX_INDEX>(emplace_tuple);
+        else if (c == 8)
+            _8Index = std::get<KEY_ID_VECTOR_INDEX_INDEX>(emplace_tuple);
     }
     auto keyIter = floatingVector.key_begin();
     auto keyEnd = floatingVector.key_end();
+    std::cout << "Before Remove 5" << std::endl;
+    auto _6ValueIter = floatingVector.begin() + *_6Index;
+    std::cout << "_6IndexPointer: " << _6Index << ", _6Index: " << *_6Index << ", _6Val: " << *_6ValueIter << std::endl;
+    auto _8ValueIter = floatingVector.begin() + *_8Index;
+    std::cout << "_8IndexPointer: " << _8Index << ", _8Index: " << *_8Index << ", _8Val: " << *_8ValueIter << std::endl;
     while (keyIter != keyEnd)
     {
         std::cout << "Key: " << keyIter.key() << ", Value: " << *keyIter << std::endl;
         ++keyIter;
     }
+    for (auto c = 1; c <= 5; c++)
+        floatingVector.erase(floatingVector.id_begin());
+    std::cout << "After Remove 5" << std::endl;
+    _6ValueIter = floatingVector.begin() + *_6Index;
+    std::cout << "_6IndexPointer: " << _6Index << ", _6Index: " << *_6Index << ", _6Val: " << *_6ValueIter << std::endl;
+    _8ValueIter = floatingVector.begin() + *_8Index;
+    std::cout << "_8IndexPointer: " << _8Index << ", _8Index: " << *_8Index << ", _8Val: " << *_8ValueIter << std::endl;
+    return 0;
 }
