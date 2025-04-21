@@ -9,12 +9,12 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewQua
 		.name = "View Quad Key Control",
 		.onAttachedFunction = [keyScheme, force](auto& component)
 		{
-			auto& f = (component.make<char>("f", keyScheme == KeyScheme::UDLRSH ? KEYCODE_UP : 'w'));
-			auto& b = (component.make<char>("b", keyScheme == KeyScheme::UDLRSH ? KEYCODE_DOWN : 's'));
-			auto& l = (component.make<char>("l", keyScheme == KeyScheme::UDLRSH ? KEYCODE_LEFT : 'a'));
-			auto& r = (component.make<char>("r", keyScheme == KeyScheme::UDLRSH ? KEYCODE_RIGHT : 'd'));
+			auto& f = (component.template make<char>("f", keyScheme == KeyScheme::UDLRSH ? KEYCODE_UP : 'w'));
+			auto& b = (component.template make<char>("b", keyScheme == KeyScheme::UDLRSH ? KEYCODE_DOWN : 's'));
+			auto& l = (component.template make<char>("l", keyScheme == KeyScheme::UDLRSH ? KEYCODE_LEFT : 'a'));
+			auto& r = (component.template make<char>("r", keyScheme == KeyScheme::UDLRSH ? KEYCODE_RIGHT : 'd'));
 			auto& scene = zg::Registry::getScene(component.hostIndexStack);
-			component.make<zg::UniqueIdentifier>(
+			component.template make<zg::UniqueIdentifier>(
 				"fID",
 				scene.window.addKeyUpdateHandler(
 					f,
@@ -26,7 +26,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewQua
 						scene.viewPointer->position.z += scene.viewPointer->direction.z * force * scene.window.deltaTime;
 						scene.viewPointer->update();
 					}));
-			component.make<zg::UniqueIdentifier>(
+			component.template make<zg::UniqueIdentifier>(
 				"bID",
 				scene.window.addKeyUpdateHandler(
 					b,
@@ -38,7 +38,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewQua
 						scene.viewPointer->position.z -= scene.viewPointer->direction.z * force * scene.window.deltaTime;
 						scene.viewPointer->update();
 					}));
-			component.make<zg::UniqueIdentifier>(
+			component.template make<zg::UniqueIdentifier>(
 				"lID",
 				scene.window.addKeyUpdateHandler(l,
 																				 [hostIndexStack = component.hostIndexStack, force]()
@@ -54,7 +54,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewQua
 																					 scene.viewPointer->position.z -= right.z * force * scene.window.deltaTime;
 																					 scene.viewPointer->update();
 																				 }));
-			component.make<zg::UniqueIdentifier>(
+			component.template make<zg::UniqueIdentifier>(
 				"rID",
 				scene.window.addKeyUpdateHandler(r,
 																				 [hostIndexStack = component.hostIndexStack, force]()

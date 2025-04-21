@@ -9,7 +9,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewMou
 		{
 			auto& scene = zg::Registry::getScene(component.hostIndexStack);
 			auto& window = scene.window;
-			component.make<zg::UniqueIdentifier>("mouseMoveID",
+			component.template make<zg::UniqueIdentifier>("mouseMoveID",
 				window.addMouseMoveHandler(
 					[hostIndexStack = component.hostIndexStack](glm::vec2 coords)
 					{
@@ -28,7 +28,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewMou
 					}
 				)
 			);
-			component.make<zg::UniqueIdentifier>("focusID",
+			component.template make<zg::UniqueIdentifier>("focusID",
 				window.addFocusHandler(
 					[hostIndexStack = component.hostIndexStack](bool focused)
 					{
@@ -44,8 +44,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewMou
 		.onDetachedFunction = [](auto& component)
 		{
 			auto& window = zg::Registry::getScene(component.hostIndexStack).window;
-			window.removeMouseMoveHandler(component.getData<zg::UniqueIdentifier>("mouseMoveID"));
-			window.removeFocusHandler(component.getData<zg::UniqueIdentifier>("focusID"));
+			window.removeMouseMoveHandler(component.template getData<zg::UniqueIdentifier>("mouseMoveID"));
+			window.removeFocusHandler(component.template getData<zg::UniqueIdentifier>("focusID"));
 		}
 	};
 	return info;

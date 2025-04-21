@@ -12,7 +12,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 		.onAttachedFunction = [&, info](auto& component)
 		{
 			auto& entity = Registry::getEntity(component.hostIndexStack);
-			auto& physicsScene = component.make<zg::components::scenes::SceneComponent*>("PhysicsScene", nullptr);
+			auto& physicsScene = component.template make<zg::components::scenes::SceneComponent*>("PhysicsScene", nullptr);
 			try
 			{
 				physicsScene = &entity.scene.getComponentByName("PhysicsScene");
@@ -22,15 +22,15 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				throw std::runtime_error("RigidBody component must not be added to an entity before the scene the entity is in has "
 																	"an attached PhysicsScene component");
 			}
-			component.make<RigidBodyInfo*>("Info", new RigidBodyInfo{info});
-			component.make<glm::vec3*>("Position", &entity.position);
-			component.make<glm::quat*>("Rotation", &entity.rotation);
-			component.make<JPH::BodyID>("BodyID");
-			component.make<JPH::BodyInterface*>("BodyInterface", physicsScene->getData<JPH::BodyInterface*>("BodyInterface"));
-			component.make<JPH::Body*>("Body");
-			component.make<std::vector<components::entities::EntityComponent*>>("Colliders");
-			component.make<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("ActiveRigidBodyManifolds");
-			component.make<std::mutex*>("Mutex", new std::mutex());
+			component.template make<RigidBodyInfo*>("Info", new RigidBodyInfo{info});
+			component.template make<glm::vec3*>("Position", &entity.position);
+			component.template make<glm::quat*>("Rotation", &entity.rotation);
+			component.template make<JPH::BodyID>("BodyID");
+			component.template make<JPH::BodyInterface*>("BodyInterface", physicsScene->getData<JPH::BodyInterface*>("BodyInterface"));
+			component.template make<JPH::Body*>("Body");
+			component.template make<std::vector<components::entities::EntityComponent*>>("Colliders");
+			component.template make<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("ActiveRigidBodyManifolds");
+			component.template make<std::mutex*>("Mutex", new std::mutex());
 		},
 		.onDetachedFunction = [](auto& component)
 		{
@@ -44,14 +44,14 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			{"recreateJoltBody", [](auto& component)->std::any&
 			{
 				auto& entity = Registry::getEntity(component.hostIndexStack);
-				auto& physicsScene = *component.getData<zg::components::scenes::SceneComponent*>("PhysicsScene");
-				auto& info = *component.make<RigidBodyInfo*>("Info");
-				auto& position = *component.make<glm::vec3*>("Position");
-				auto& rotation = *component.make<glm::quat*>("Rotation");
+				auto& physicsScene = *component.template getData<zg::components::scenes::SceneComponent*>("PhysicsScene");
+				auto& info = *component.template make<RigidBodyInfo*>("Info");
+				auto& position = *component.template make<glm::vec3*>("Position");
+				auto& rotation = *component.template make<glm::quat*>("Rotation");
 				auto& bodyIDAny = component.getDataReturnAny("BodyID");
 				auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
-				auto& body = component.getData<JPH::Body*>("Body");
-				auto& joltBodyInterfacePointer = component.getData<JPH::BodyInterface*>("BodyInterface");
+				auto& body = component.template getData<JPH::Body*>("Body");
+				auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
 				if (!joltBodyInterfacePointer)
 				{
 					std::cerr << "RigidBody ERROR: Cannot recreate Jolt body, Jolt system not available for Entity [" << entity.ID
@@ -67,7 +67,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 					bodyID = JPH::BodyID();
 				}
 
-				auto& colliders = component.getData<std::vector<components::entities::EntityComponent*>>("Colliders");
+				auto& colliders = component.template getData<std::vector<components::entities::EntityComponent*>>("Colliders");
 				
 				// --- Check if there are any colliders ---
 				if (colliders.empty())
@@ -256,19 +256,19 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			{"attachCollider", [](const std::any& val, auto& component)->void
 			{
 				auto collider = std::any_cast<components::entities::EntityComponent*>(val);
-				auto& colliders = component.getData<std::vector<components::entities::EntityComponent*>>("Colliders");
+				auto& colliders = component.template getData<std::vector<components::entities::EntityComponent*>>("Colliders");
 				for (const auto* existing : colliders)
 				{
 					if (existing == collider)
 						return;
 				}
 				colliders.push_back(collider);
-				component.getData<JPH::BodyID>("recreateJoltBody");
+				component.template getData<JPH::BodyID>("recreateJoltBody");
 			}},
 			{"detachCollider", [](const std::any& val, auto& component)->void
 			{
 				auto collider = std::any_cast<components::entities::EntityComponent*>(val);
-				auto& colliders = component.getData<std::vector<components::entities::EntityComponent*>>("Colliders");
+				auto& colliders = component.template getData<std::vector<components::entities::EntityComponent*>>("Colliders");
 				bool changed = false;
 				for (auto iter = colliders.begin(), end = colliders.end(); iter != end; ++iter)
 				{
@@ -281,7 +281,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				}
 				if (changed)
 				{
-					component.getData<JPH::BodyID>("recreateJoltBody");
+					component.template getData<JPH::BodyID>("recreateJoltBody");
 				}
 			}
 		}}

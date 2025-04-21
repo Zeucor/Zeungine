@@ -85,7 +85,7 @@ SceneCreateInfo PhysicsSceneFactory()
 			auto& floor = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_tuple);
 			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyCreateInfo);
 			auto& floor_rb = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_rb_tuple);
-			floor_rb.setData<float>("Mass", 1000000.0f);
+			floor_rb.template setData<float>("Mass", 1000000.0f);
 			// auto floorColliderCreateInfo = components::entities::ColliderFactory()
 			// floor.attachComponent(floorColliderCreateInfo);
 		}

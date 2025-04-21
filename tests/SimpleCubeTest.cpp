@@ -35,30 +35,30 @@ SceneCreateInfo ExampleSceneFactory()
 			[](auto& scene)
 		{
 			scene.clearColor = {1, 0, 1, 1};
-			scene.setData<size_t>("CubeID", std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(cubeCreateInfo)));
-			scene.setData<size_t>("PlaneID", std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(planeCreateInfo)));
-			scene.setData<zg::UniqueIdentifier>("mPressID",
+			scene.template setData<size_t>("CubeID", std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(cubeCreateInfo)));
+			scene.template setData<size_t>("PlaneID", std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(planeCreateInfo)));
+			scene.template setData<zg::UniqueIdentifier>("mPressID",
 																					scene.window.addKeyPressHandler('m',
 																																					[&](auto pressed)
 																																					{
 																																						if (pressed)
 																																							scene.window.maximize();
 																																					}));
-			scene.setData<zg::UniqueIdentifier>("nPressID",
+			scene.template setData<zg::UniqueIdentifier>("nPressID",
 																					scene.window.addKeyPressHandler('n',
 																																					[&](auto pressed)
 																																					{
 																																						if (pressed)
 																																							scene.window.minimize();
 																																					}));
-			scene.setData<zg::UniqueIdentifier>("rPressID",
+			scene.template setData<zg::UniqueIdentifier>("rPressID",
 																					scene.window.addKeyPressHandler('r',
 																																					[&](auto pressed)
 																																					{
 																																						if (pressed)
 																																							scene.window.restore();
 																																					}));
-			scene.setData<zg::UniqueIdentifier>("qPressID",
+			scene.template setData<zg::UniqueIdentifier>("qPressID",
 																					scene.window.addKeyPressHandler('q',
 																																					[&](auto pressed)
 																																					{

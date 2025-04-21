@@ -10,18 +10,18 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
         .onAttachedFunction = [&](auto& component)
         {
             auto& scene = zg::Registry::getScene(component.hostIndexStack);
-            auto& focused = component.make<bool>("Focused", false);
-            auto& mouseMoveID = component.make<UniqueIdentifier>("MouseMoveID", 0);
-            auto& focusID = component.make<UniqueIdentifier>("FocusID", 0);
-            auto& distance = component.make<float>("Distance", 8.f);
-            auto& verticalOffset = component.make<float>("VerticalOffset", 1.5f);
-            auto& mouseSensitivity = component.make<float>("MouseSensitivity", 0.1f);
-            auto& currentYaw = component.make<float>("CurrentYaw", 0.0f);
-            auto& currentPitch = component.make<float>("CurrentPitch", -22.5f);
-            auto& minPitch = component.make<float>("MinPitch", -90.0f);
-            auto& maxPitch = component.make<float>("MaxPitch", -5.0f);
-            auto& lastPosition = component.make<glm::vec2>("LastPosition", 0.0f, 0.0f);
-            auto& deadZonePercent = component.make<float>("DeadZonePercent", 0.1f);
+            auto& focused = component.template make<bool>("Focused", false);
+            auto& mouseMoveID = component.template make<UniqueIdentifier>("MouseMoveID", 0);
+            auto& focusID = component.template make<UniqueIdentifier>("FocusID", 0);
+            auto& distance = component.template make<float>("Distance", 8.f);
+            auto& verticalOffset = component.template make<float>("VerticalOffset", 1.5f);
+            auto& mouseSensitivity = component.template make<float>("MouseSensitivity", 0.1f);
+            auto& currentYaw = component.template make<float>("CurrentYaw", 0.0f);
+            auto& currentPitch = component.template make<float>("CurrentPitch", -22.5f);
+            auto& minPitch = component.template make<float>("MinPitch", -90.0f);
+            auto& maxPitch = component.template make<float>("MaxPitch", -5.0f);
+            auto& lastPosition = component.template make<glm::vec2>("LastPosition", 0.0f, 0.0f);
+            auto& deadZonePercent = component.template make<float>("DeadZonePercent", 0.1f);
             mouseMoveID = scene.window.addMouseMoveHandler([&](glm::vec2 coords)
             	{
             		if (!scene.window.focused)
@@ -103,18 +103,18 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
         },
         .onDetachedFunction = [&](auto& component)
         {
-            auto& mouseMoveID = component.getData<UniqueIdentifier>("MouseMoveID");
-            auto& focusID = component.getData<UniqueIdentifier>("FocusID");
+            auto& mouseMoveID = component.template getData<UniqueIdentifier>("MouseMoveID");
+            auto& focusID = component.template getData<UniqueIdentifier>("FocusID");
             auto& scene = Registry::getScene(component.hostIndexStack);
             scene.window.removeMouseMoveHandler(mouseMoveID);
             scene.window.removeFocusHandler(focusID);
         },
         .onUpdateFunction = [&](auto& component)
         {
-            auto& distance = component.getData<float>("Distance");
-            auto& verticalOffset = component.getData<float>("VerticalOffset");
-            auto& currentYaw = component.getData<float>("CurrentYaw");
-            auto& currentPitch = component.getData<float>("CurrentPitch");
+            auto& distance = component.template getData<float>("Distance");
+            auto& verticalOffset = component.template getData<float>("VerticalOffset");
+            auto& currentYaw = component.template getData<float>("CurrentYaw");
+            auto& currentPitch = component.template getData<float>("CurrentPitch");
             auto& scene = Registry::getScene(component.hostIndexStack);
 
             if (!scene.viewPointer)
