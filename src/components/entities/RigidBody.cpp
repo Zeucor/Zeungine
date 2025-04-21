@@ -26,7 +26,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			component.template make<glm::vec3*>("Position", &entity.position);
 			component.template make<glm::quat*>("Rotation", &entity.rotation);
 			component.template make<JPH::BodyID>("BodyID");
-			component.template make<JPH::BodyInterface*>("BodyInterface", physicsScene->getData<JPH::BodyInterface*>("BodyInterface"));
+			component.template make<JPH::BodyInterface*>("BodyInterface", physicsScene->template getData<JPH::BodyInterface*>("BodyInterface"));
 			component.template make<JPH::Body*>("Body");
 			component.template make<std::vector<components::entities::EntityComponent*>>("Colliders");
 			component.template make<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("ActiveRigidBodyManifolds");
@@ -82,7 +82,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				{
 					// Single collider case
 					auto col = colliders[0];
-					auto& colInfo = *col->getData<ColliderInfo*>("Info");
+					auto& colInfo = *col->template getData<ColliderInfo*>("Info");
 					auto baseShape = colInfo.shapeData->createJoltShape();
 					if (!baseShape)
 					{

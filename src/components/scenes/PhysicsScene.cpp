@@ -240,7 +240,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 							"joltIDRigidBodies");
 					if (rigidBodyComponent)
 					{
-						auto& joltBodyID = rigidBodyComponent->getData<JPH::BodyID>("BodyID");
+						auto& joltBodyID = rigidBodyComponent->template getData<JPH::BodyID>("BodyID");
 						rigidBodiesJoltID.erase(rigidBodyComponent);
 						joltIDRigidBodies.erase(joltBodyID);
 					}
