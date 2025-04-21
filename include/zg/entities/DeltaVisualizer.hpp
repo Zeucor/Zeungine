@@ -6,7 +6,7 @@
 #include <zg/entities/Plane.hpp>
 #include <zg/entities/TypeID.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
-#include <zg/scene.hpp>
+#include <zg/Scene.hpp>
 #include <zg/zgfilesystem/File.hpp>
 namespace zg::entities
 {
