@@ -336,21 +336,4 @@ namespace zg
 		}
 
 	}; // class ChunkAllocator
-
-	// --- Equality for different types (needed by standard) ---
-	// If both are stateless ChunkAllocators, maybe they should compare true?
-	// But sticking to is_always_equal = false means identity comparison is safer.
-	template <typename T1, typename T2>
-	bool operator==(const ChunkAllocator<T1>& lhs, const ChunkAllocator<T2>& rhs) noexcept
-	{
-		return static_cast<const void*>(&lhs) == static_cast<const void*>(&rhs);
-	}
-
-	template <typename T1, typename T2>
-	bool operator!=(const ChunkAllocator<T1>& lhs, const ChunkAllocator<T2>& rhs) noexcept
-	{
-		return !(lhs == rhs);
-	}
-
-
 } // namespace zg

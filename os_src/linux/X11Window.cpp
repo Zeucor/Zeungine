@@ -354,9 +354,11 @@ bool X11Window::pollMessages()
 		auto &button = std::get<1>(buttonTuple);
 		auto &pressed = std::get<2>(buttonTuple);
 		bool hadChildFocus = false;
-		for (auto &childWindowPointer : renderWindowPointer->childWindows)
+		auto childWindowsSize = renderWindowPointer->childWindows.size();
+		auto childWindowsData = renderWindowPointer->childWindows.data();
+		for (size_t index = 0; index < childWindowsSize; ++index)
 		{
-			auto &childWindow = *childWindowPointer;
+			auto &childWindow = childWindowsData[index];
 			if (childWindow.minimized)
 				continue;
 			if (!childWindow.focused)
