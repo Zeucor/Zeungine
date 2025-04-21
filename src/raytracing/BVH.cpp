@@ -102,7 +102,7 @@ size_t BVH::trace(Ray& ray)
 																							 if (auto hit = precomputedTriangles[j].intersect(ray))
 																							 {
 																								 primID = i;
-																								 std::tie(u, v) = *hit;
+																								 std::tie(ray.tmax, u, v) = *hit;
 																							 }
 																						 }
 																						 return primID != invalidID;
