@@ -55,6 +55,12 @@ namespace zg
 		FRONT,
 		FRONTANDBACK
 	};
+	struct ShaderContext
+	{
+		std::unordered_map<uint32_t, std::shared_ptr<shaders::Shader>> shaders;
+		std::unordered_map<std::size_t, std::pair<uint32_t, std::shared_ptr<shaders::Shader>>> shadersByHash;
+		uint32_t shaderCount = 0;
+	};
 	struct Entity;
 	struct IRenderer
 	{
@@ -63,6 +69,8 @@ namespace zg
 		static constexpr FRONTFACE DEFAULTFRONTFACE = CLOCKWISE;
 		FRONTFACE frontFace = DEFAULTFRONTFACE;
 		CULLMODE cullMode = BACK;
+		ShaderContext* shaderContext = 0;
+		IRenderer();
 		virtual ~IRenderer() = default;
 		virtual void init() = 0;
 		virtual void createContext(IPlatformWindow *platformWindowPointer) = 0;
@@ -81,7 +89,7 @@ namespace zg
 								enums::EUniformType uniformType) = 0;
 		virtual void setBlock(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name, const void *pointer, size_t size) = 0;
 		virtual void deleteBuffer(uint32_t id) = 0;
-		virtual void bindShader(shaders::Shader &shader, Entity &entity) = 0;
+		virtual void bindShader(shaders::Shader& shader, vaos::VAO& vao) = 0;
 		virtual void unbindShader(shaders::Shader &shader) = 0;
 		virtual void addSSBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) = 0;
 		virtual void addUBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount = 1, bool isArray = false) = 0;
@@ -110,7 +118,7 @@ namespace zg
 		virtual void drawVAO(const vaos::VAO &vao) = 0;
 		virtual void generateVAO(vaos::VAO &vao) = 0;
 		virtual void destroyVAO(vaos::VAO &vao) = 0;
-		virtual void ensureEntity(shaders::Shader &shader, vaos::VAO &vao) = 0;
+		virtual void ensureVAO(shaders::Shader &shader, vaos::VAO &vao) = 0;
 		virtual void swapBuffers() = 0;
 		virtual void transitionDepthLayoutForWriting(const textures::Framebuffer& framebuffer) = 0;
 		virtual void transitionDepthLayoutForReading(const textures::Framebuffer& framebuffer) = 0;

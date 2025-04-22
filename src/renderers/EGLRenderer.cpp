@@ -256,7 +256,7 @@ void EGLRenderer::deleteBuffer(uint32_t id)
 	glDeleteBuffers(1, &id);
 	GLcheck(*this, "glDeleteBuffers");
 }
-void EGLRenderer::bindShader(shaders::Shader &shader, Entity &entity)
+void EGLRenderer::bindShader(shaders::Shader& shader, vaos::VAO& vao)
 {
 	auto &shaderImpl = *(shaders::GLShaderImpl *)shader.rendererData;
 	glUseProgram(shaderImpl.program);

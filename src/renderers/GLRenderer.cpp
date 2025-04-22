@@ -326,7 +326,7 @@ void GLRenderer::deleteBuffer(uint32_t id)
 	glContext->DeleteBuffers(1, &id);
 	GLcheck(*this, "glDeleteBuffers");
 }
-void GLRenderer::bindShader(shaders::Shader &shader, Entity &entity)
+void GLRenderer::bindShader(shaders::Shader& shader, vaos::VAO& vao)
 {
 	auto &shaderImpl = *(shaders::GLShaderImpl *)shader.rendererData;
 	glContext->UseProgram(shaderImpl.program);

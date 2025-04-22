@@ -1,46 +1,78 @@
 #include <iostream>
+#include <zg/renderers/GLRenderer.hpp>
+#include <zg/renderers/VulkanRenderer.hpp>
+#include <zg/shaders/Shader.hpp>
+#include <zg/shaders/ShaderManager.hpp>
 #include <zg/vaos/VAO.hpp>
 #include <zg/vaos/VAOFactory.hpp>
-#include <zg/renderers/GLRenderer.hpp>
+using namespace zg;
 using namespace zg::vaos;
-VAO::VAO(IRenderer* iRenderer, const RuntimeConstants &constants, uint32_t indiceCount, uint32_t vertexCount):
-  constants(constants),
-  indiceCount(indiceCount),
-  vertexCount(vertexCount),
-  stride(VAOFactory::getStride(constants)),
-	vaoIRenderer(iRenderer)
+VAO::VAO(IRenderer* iRenderer, const RuntimeConstants& constants, uint32_t indiceCount, uint32_t vertexCount) :
+		constants(constants), indiceCount(indiceCount), vertexCount(vertexCount), stride(VAOFactory::getStride(constants)),
+		vaoIRenderer(iRenderer)
 {
 	VAOFactory::generate(*this);
 }
-VAO::VAO(){};
+VAO::VAO() {};
 VAO& VAO::operator=(const VAO& other)
 {
-  constants = other.constants;
-  indiceCount = other.indiceCount;
-  vertexCount = other.vertexCount;
-  stride = other.stride;
-  vaoIRenderer = other.vaoIRenderer;
-  VAOFactory::generate(*this);
-  return *this;
+	constants = other.constants;
+	indiceCount = other.indiceCount;
+	vertexCount = other.vertexCount;
+	stride = other.stride;
+	vaoIRenderer = other.vaoIRenderer;
+	VAOFactory::generate(*this);
+	return *this;
 }
-VAO::~VAO()
+VAO::~VAO() { VAOFactory::destroy(*this); }
+void VAO::updateIndices(const std::vector<uint32_t>& indices) { vaoIRenderer->updateIndicesVAO(*this, indices); }
+template <typename T>
+void VAO::updateElements(const std::string_view constant, const std::vector<T>& elements) const
 {
-  VAOFactory::destroy(*this);
+	auto elementsAsChar = (uint8_t*)elements.data();
+	vaoIRenderer->updateElementsVAO(*this, constant, elementsAsChar);
 }
-void VAO::updateIndices(const std::vector<uint32_t> &indices)
+template void VAO::updateElements<glm::vec2>(const std::string_view, const std::vector<glm::vec2>&) const;
+template void VAO::updateElements<glm::vec3>(const std::string_view, const std::vector<glm::vec3>&) const;
+template void VAO::updateElements<glm::vec4>(const std::string_view, const std::vector<glm::vec4>&) const;
+void VAO::drawVAO() const { vaoIRenderer->drawVAO(*this); }
+void* VAO::getShaderData(IRenderer* iRenderer)
 {
-  vaoIRenderer->updateIndicesVAO(*this, indices);
+	void* data = 0;
+	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(iRenderer);
+	if (vulkanRenderer.currentFramebufferImpl)
+	{
+		data = vulkanRenderer.currentFramebufferImpl->renderPass;
+	}
+	else
+	{
+		data = vulkanRenderer.renderPass;
+	}
+	return data;
 }
-template<typename T>
-void VAO::updateElements(const std::string_view constant, const std::vector<T> &elements) const
+bool VAO::isEnsured()
 {
-  auto elementsAsChar = (uint8_t *)elements.data();
-  vaoIRenderer->updateElementsVAO(*this, constant, elementsAsChar);
+	auto data = getShaderData(vaoIRenderer);
+	return ensuredBools[data];
 }
-template void VAO::updateElements<glm::vec2>(const std::string_view , const std::vector<glm::vec2> &) const;
-template void VAO::updateElements<glm::vec3>(const std::string_view , const std::vector<glm::vec3> &) const;
-template void VAO::updateElements<glm::vec4>(const std::string_view , const std::vector<glm::vec4> &) const;
-void VAO::drawVAO() const
+void VAO::setEnsured()
 {
-  vaoIRenderer->drawVAO(*this);
+	auto data = getShaderData(vaoIRenderer);
+	ensuredBools[data] = true;
+}
+zg::shaders::Shader* VAO::addShader(zg::shaders::Shader* setShader)
+{
+	auto data = getShaderData(vaoIRenderer);
+	auto& shader = shaders[data];
+	if (shader)
+		return shader;
+	if (setShader)
+	{
+		shader = setShader;
+	}
+	else
+	{
+		shader = zg::shaders::ShaderManager::getShaderByConstants(vaoIRenderer, constants, data).second.get();
+	}
+	return shader;
 }

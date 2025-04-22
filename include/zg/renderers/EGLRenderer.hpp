@@ -31,7 +31,7 @@ namespace zg
 						enums::EUniformType uniformType) override;
 		void setBlock(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name, const void *pointer, size_t size) override;
 		void deleteBuffer(uint32_t id) override;
-		void bindShader(shaders::Shader &shader, Entity &entity) override;
+		void bindShader(shaders::Shader& shader, vaos::VAO& vao) override;
 		void unbindShader(shaders::Shader &shader) override;
 		void addSSBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) override;
 		void addUBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) override;
@@ -61,7 +61,7 @@ namespace zg
 		void drawVAO(const vaos::VAO &vao) override;
 		void generateVAO(vaos::VAO &vao) override;
 		void destroyVAO(vaos::VAO &vao) override;
-		void ensureEntity(shaders::Shader &shader, vaos::VAO &vao) override;
+		void ensureVAO(shaders::Shader &shader, vaos::VAO &vao) override;
 		void swapBuffers() override;
 		void transitionDepthLayoutForWriting(const textures::Framebuffer& framebuffer) override;
 		void transitionDepthLayoutForReading(const textures::Framebuffer& framebuffer) override;

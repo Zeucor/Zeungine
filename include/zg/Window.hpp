@@ -24,12 +24,6 @@ namespace zg
 	{
 		struct Plane;
 	}
-	struct ShaderContext
-	{
-		std::unordered_map<uint32_t, std::shared_ptr<shaders::Shader>> shaders;
-		std::unordered_map<std::size_t, std::pair<uint32_t, std::shared_ptr<shaders::Shader>>> shadersByHash;
-		uint32_t shaderCount = 0;
-	};
 	struct Scene;
 #define KEYCODE_UP 17
 #define KEYCODE_DOWN 18
@@ -97,7 +91,6 @@ struct WindowCreateInfo;
 		Window* parentWindow = 0;
 		Scene* parentScene = 0;
 		KeyIDVector<std::string, Window> childWindows;
-		ShaderContext* shaderContext = 0;
 		bool NDCFramebufferPlane;
 		std::shared_ptr<textures::Texture> framebufferTexture;
 		std::shared_ptr<textures::Texture> framebufferDepthTexture;

@@ -102,25 +102,6 @@ using namespace zg::entities;
 // 	updateElements("UV3", uvs);
 // 	updateElements("Position", vertices);
 // };
-// bool SkyBox::preRender()
-// {
-// #ifdef USE_GL
-// 	auto &glRenderer = *std::dynamic_pointer_cast<GLRenderer>(window.iRenderer);
-// 	glRenderer.glContext->DepthFunc(GL_LEQUAL);
-// 	GLcheck(glRenderer, "glDepthFunc");
-// 	glRenderer.glContext->BlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
-// 	GLcheck(glRenderer, "glBlendFunc");
-// #endif
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	auto view = glm::mat4(glm::mat3(scene.viewPointer->matrix));
-// 	shader->setBlock("View", *this, view);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setTexture("TextureCube", *this, texture, 0);
-// 	shader->unbind();
-// 	return true;
-// };
 // void SkyBox::postRender()
 // {
 // #ifdef USE_GL

@@ -36,7 +36,7 @@ void DirectionalLightShadow::addShader()
 		data = vulkanRenderer.renderPass;
 	}
 	shader = shaders::ShaderManager::getShaderByConstants(
-						 window, {"DepthMap", "Color", "Position", "Normal", "Model", "LightSpaceMatrix"}, data)
+						 window.iRenderer, {"DepthMap", "Color", "Position", "Normal", "Model", "LightSpaceMatrix"}, data)
 						 .second.get();
 }
 void DirectionalLightShadow::update()

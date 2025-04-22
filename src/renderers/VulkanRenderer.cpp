@@ -1276,14 +1276,14 @@ void VulkanRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std
 		return;
 	}
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto data = Entity::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderData(shader.iRenderer);
 	auto& uniformBuffersMapped = vaoImpl.getUniformBuffersMapped(data);
 	memcpy(uniformBuffersMapped[location], pointer, size);
 }
 int32_t VulkanRenderer::getUniformLocation(shaders::Shader& shader, vaos::VAO& vao, const std::string_view& name)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto data = Entity::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderData(shader.iRenderer);
 	auto& table = vaoImpl.getUniformLocationTable(data);
 	std::string stringName(name);
 	auto iter = table.find(stringName);
@@ -1294,15 +1294,15 @@ int32_t VulkanRenderer::getUniformLocation(shaders::Shader& shader, vaos::VAO& v
 	return iter->second;
 }
 void VulkanRenderer::deleteBuffer(uint32_t id) {}
-void VulkanRenderer::bindShader(shaders::Shader& shader, Entity& entity)
+void VulkanRenderer::bindShader(shaders::Shader& shader, vaos::VAO& vao)
 {
 	if (!shader.compiled)
 	{
 		compileProgram(shader);
 	}
-	if (!entity.isEnsured())
+	if (!vao.isEnsured())
 	{
-		ensureEntity(shader, entity);
+		ensureVAO(shader, vao);
 	}
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	_vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.graphicsPipeline);
@@ -1345,7 +1345,7 @@ void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shader
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
-	auto data = Entity::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderData(shader.iRenderer);
 	auto& ssboBindings = shaderImpl.getSsboBindings(data);
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	auto ssboIter = ssboBindings.find(stringName);
@@ -1375,7 +1375,7 @@ void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderT
 	std::string stringName(name);
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, (uint32_t)1,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	auto data = Entity::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderData(shader.iRenderer);
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	auto& uboStringBindings = shaderImpl.getUboStringBindings(data);
 	uboLayoutBindings.push_back(
@@ -1394,7 +1394,7 @@ void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, 
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 																								(uint32_t)descriptorCount,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	auto data = Entity::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderData(shader.iRenderer);
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	auto& textureBindings = shaderImpl.getTextureBindings(data);
 	uboLayoutBindings.push_back({{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding});
@@ -1410,7 +1410,7 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std:
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	std::string stringName(name);
-	auto data = Entity::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderData(shader.iRenderer);
 	auto& ssboBindings = shaderImpl.getSsboBindings(data);
 	auto ssboIter = ssboBindings.find(stringName);
 	if (ssboIter == ssboBindings.end())
@@ -1447,7 +1447,6 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std:
 	storageBufferInfo.range = size;
 	VkWriteDescriptorSet descriptorWrite{};
 	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	auto& entity = (Entity&)vao;
 	descriptorWrite.dstSet = vaoImpl.getDescriptorSet(data);
 	descriptorWrite.dstBinding = bindingIndex;
 	descriptorWrite.dstArrayElement = 0;
@@ -1463,8 +1462,7 @@ void VulkanRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const s
 	std::string stringName(name);
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	auto& entity = (Entity&)vao;
-	auto data = entity.getShaderData(entity.window.iRenderer);
+	auto data = vaos::VAO::getShaderData(vao.vaoIRenderer);
 	auto& textureBindings = shaderImpl.getTextureBindings(data);
 	auto& bindingIndex = textureBindings[stringName];
 	if (!bindingIndex)
@@ -1522,7 +1520,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	if (shader.compiled)
 		return true;
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	auto data = Entity::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderData(shader.iRenderer);
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 	for (auto& shaderPair : shaderImpl.shaders)
@@ -2536,9 +2534,8 @@ void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_v
 void VulkanRenderer::drawVAO(const vaos::VAO& vao)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto& entity = (Entity&)vao;
-	auto data = entity.getShaderData(entity.window.iRenderer);
-	auto& shader = *entity.addShader();
+	auto data = vaos::VAO::getShaderData(vao.vaoIRenderer);
+	auto& shader = *((vaos::VAO&)vao).addShader();
 	auto& shaderImpl = *(VulkanShaderImpl*)(shader.rendererData);
 	if (vaoImpl.vertexBuffer == VK_NULL_HANDLE)
 	{
@@ -2613,14 +2610,13 @@ void VulkanRenderer::destroyVAO(vaos::VAO& vao)
 		});
 	delete &vaoImpl;
 }
-void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
+void VulkanRenderer::ensureVAO(shaders::Shader& shader, vaos::VAO& vao)
 {
 	if (!shader.compiled)
 		return;
-	auto& entity = dynamic_cast<Entity&>(vao);
-	if (entity.isEnsured())
+	if (vao.isEnsured())
 		return;
-	auto data = entity.getShaderData(entity.window.iRenderer);
+	auto data = vaos::VAO::getShaderData(vao.vaoIRenderer);
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
@@ -2746,7 +2742,7 @@ void VulkanRenderer::ensureEntity(shaders::Shader& shader, vaos::VAO& vao)
 		descriptorWrite.pBufferInfo = &bufferInfoPair.second;
 		_vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, 0);
 	}
-	entity.setEnsured();
+	vao.setEnsured();
 };
 VkCommandBuffer VulkanRenderer::beginSingleTimeCommands()
 {

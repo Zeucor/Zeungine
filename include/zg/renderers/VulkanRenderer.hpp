@@ -330,7 +330,7 @@ namespace zg
 									size_t size) override;
 		int32_t getUniformLocation(shaders::Shader& shader, vaos::VAO& vao, const std::string_view& name);
 		void deleteBuffer(uint32_t id) override;
-		void bindShader(shaders::Shader& shader, Entity& entity) override;
+		void bindShader(shaders::Shader& shader, vaos::VAO& vao) override;
 		void unbindShader(shaders::Shader& shader) override;
 		void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
 								 uint32_t bindingIndex) override;
@@ -379,7 +379,7 @@ namespace zg
 		void drawVAO(const vaos::VAO& vao) override;
 		void generateVAO(vaos::VAO& vao) override;
 		void destroyVAO(vaos::VAO& vao) override;
-		void ensureEntity(shaders::Shader& shader, vaos::VAO& vao) override;
+		void ensureVAO(shaders::Shader& shader, vaos::VAO& vao) override;
 		void swapBuffers() override;
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);

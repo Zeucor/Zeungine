@@ -49,22 +49,6 @@ using namespace zg::entities;
 // }
 // uint32_t Frame::getIndiceCount() { return 8 * 3; }
 // uint32_t Frame::getvertexCount() { return 8; }
-// bool Frame::preRender()
-// {
-// 	const auto& model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this,
-// 									 projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	if (texturePointer)
-// 		shader->setTexture("Texture2D", *this, *texturePointer, 0);
-// 	shader->unbind();
-// 	return true;
-// };
 // void Frame::setColor(glm::vec4 color)
 // {
 // 	colors.resize(vertices.size());

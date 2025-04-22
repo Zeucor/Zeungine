@@ -27,7 +27,6 @@ Window::Window(const WindowCreateInfo& info) :
 	memset(windowButtons, 0, 7 * sizeof(int));
 	if (info.isChildWindow)
 	{
-		shaderContext = (ShaderContext*)info.parentWindowPointer->shaderContext;
 		NDCFramebufferPlane = info.NDCFramebufferPlane;
 		framebufferTexture = std::make_shared<textures::Texture>(
 			info.parentWindowPointer->iRenderer, glm::ivec4(info.windowWidth, info.windowHeight, 1, 0), (void*)0);
@@ -41,10 +40,6 @@ Window::Window(const WindowCreateInfo& info) :
 						Color} /*, {framebufferDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}*/}));
 		framebufferPlane->addToBVH = false;
 	}
-	else
-	{
-		shaderContext = new ShaderContext;
-	}
 }
 Window::Window(const Window& other) :
 		title(other.title), childWindows(other.childWindows), windowWidth(other.windowWidth),
@@ -55,7 +50,6 @@ Window::Window(const Window& other) :
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
-	shaderContext = new ShaderContext;
 }
 Window::~Window() { detachAllComponents(); }
 Window& Window::operator=(const Window& other)
@@ -100,7 +94,6 @@ Window& Window::operator=(const Window& other)
 	parentWindow = other.parentWindow;
 	parentScene = other.parentScene;
 	childWindows = other.childWindows;
-	shaderContext = other.shaderContext;
 	NDCFramebufferPlane = other.NDCFramebufferPlane;
 	framebufferTexture = other.framebufferTexture;
 	framebufferDepthTexture = other.framebufferDepthTexture;
@@ -226,16 +219,16 @@ _exit:
 	iPlatformWindowRef.enableKeyAutoRepeat();
 	audioEngine.stop();
 	audioEngine.clearPipeline();
-	delete shaderContext;
 	childWindows.clear();
 	auto scenesSize = scenes.size();
 	auto scenesData = scenes.data();
 	for (size_t i = 0; i < scenesSize; ++i)
 		scenesData[i].detachAllComponents();
 	scenes.clear();
-	iRendererRef.destroy();
-	iPlatformWindowRef.destroy();
+    delete iRenderer->shaderContext;
+    iRendererRef.destroy();
 	delete iRenderer;
+	iPlatformWindowRef.destroy();
 	delete iPlatformWindow;
 	zg::Entity::cleanupSerialize();
 }

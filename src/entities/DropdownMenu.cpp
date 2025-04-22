@@ -54,19 +54,6 @@ using namespace zg::entities;
 // 	}
 // 	setSize({sizeXMax, sizeYTotal});
 // };
-// bool DropdownMenu::preRender()
-// {
-// 	const auto &model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
-// };
 // void DropdownMenu::setColor(glm::vec4 color)
 // {
 // 	colors = {color, color, color, color};
@@ -159,19 +146,6 @@ using namespace zg::entities;
 // {
 // 	removeMouseHoverHandler(mouseHoverID);
 // 	removeMousePressHandler(0, mousePressID);
-// };
-// bool DropdownItem::preRender()
-// {
-// 	const auto &model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
 // };
 // void DropdownItem::setColor(glm::vec4 color)
 // {

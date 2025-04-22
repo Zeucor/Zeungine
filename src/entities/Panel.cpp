@@ -120,19 +120,6 @@ using namespace zg::entities;
 // 	}
 // 	return sizeYTotal;
 // }
-// bool PanelMenu::preRender()
-// {
-// 	const auto &model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
-// };
 // void PanelMenu::setColor(glm::vec4 color)
 // {
 // 	colors = {color, color, color, color};
@@ -230,19 +217,6 @@ using namespace zg::entities;
 // {
 // 	removeMouseHoverHandler(mouseHoverID);
 // 	removeMousePressHandler(0, mousePressID);
-// };
-// bool PanelItem::preRender()
-// {
-// 	const auto &model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
 // };
 // void PanelItem::setColor(glm::vec4 color)
 // {

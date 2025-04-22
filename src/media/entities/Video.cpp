@@ -72,16 +72,6 @@ using namespace zg::media::entities;
 // 	{
 // 		return false;
 // 	}
-// 	const auto& model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->setTexture("Texture2D", *this, *texturePointer, 0);
-// 	shader->unbind();
 // 	return true;
 // }
 // void Video::setSize(glm::vec3 newSize)

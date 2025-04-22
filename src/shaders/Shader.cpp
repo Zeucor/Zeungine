@@ -16,9 +16,9 @@ Shader::~Shader()
 {
   iRenderer->destroyShader(*this);
 }
-void Shader::bind(Entity &entity)
+void Shader::bind(vaos::VAO &vao)
 {
-  iRenderer->bindShader(*this, entity);
+  iRenderer->bindShader(*this, vao);
 }
 void Shader::unbind()
 {

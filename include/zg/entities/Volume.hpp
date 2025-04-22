@@ -359,23 +359,6 @@ namespace zg::entities
 	// 		updateElements("Position", this->vertices);
 	// 		updateElements("Normal", this->normals);
 	// 	}
-	// 	bool preRender() override
-	// 	{
-	// 		const auto& model = getModelMatrix();
-	// 		auto shader = addShader();
-	// 		shader->bind(*this);
-	// 		scene.entityPreRender(*this);
-	// 		shader->setBlock("Model", *this, model);
-	// 		shader->setBlock("View", *this,
-	// 										 viewPointer ? viewPointer->matrix
-	// 																 : (scene.viewPointer ? scene.viewPointer->matrix : glm::mat4(1.0f)));
-	// 		shader->setBlock("Projection", *this,
-	// 										 projectionPointer
-	// 											 ? projectionPointer->matrix
-	// 											 : (scene.projectionPointer ? scene.projectionPointer->matrix : glm::mat4(1.0f)));
-	// 		shader->setBlock("CameraPosition", *this, scene.viewPointer ? scene.viewPointer->position : glm::vec3(0.0f),
-	// 16); 		shader->unbind(); 		return true;
-	// 	}
 	// 	void updateColorBuffer() { updateElements("Color", this->colors); }
 	// 	void setColor(const glm::vec4& new_color)
 	// 	{

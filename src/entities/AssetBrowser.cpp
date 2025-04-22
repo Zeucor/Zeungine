@@ -44,19 +44,6 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 		glm::vec3(0), glm::vec3(1), nameScaledSize, *nameTexture);
 // 	addChild(namePlane);
 // }
-// bool Asset::preRender()
-// {
-// 	const auto& model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
-// }
 // std::filesystem::path Asset::determineIconPath(const std::filesystem::path& extension)
 // {
 // 	static std::unordered_map<std::string, std::filesystem::path> extIconMap(
@@ -100,19 +87,6 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 		glm::vec3(0), glm::vec3(1), nameScaledSize, *nameTexture);
 // 	addChild(namePlane);
 // }
-// bool Folder::preRender()
-// {
-// 	const auto& model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
-// }
 // std::filesystem::path Folder::determineIconPath()
 // {
 // 	return programDirectoryPath / "icons" / "Remix" / "Document" / "folder-3-line.svg";
@@ -131,19 +105,6 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 	font.stringSize("T", fontSize, lineHeight, glm::vec2(0));
 // 	setSize(glm::vec3(0));
 // 	setCurrentPath(rootPath);
-// }
-// bool Breadcrumbs::preRender()
-// {
-// 	const auto& model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
 // }
 // void Breadcrumbs::setCurrentPath(const std::filesystem::path& currentPath)
 // {
@@ -222,19 +183,6 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 	colors = {backgroundColor, backgroundColor, backgroundColor, backgroundColor};
 // 	updateElements("Color", colors);
 // 	setSize(glm::vec3(0));
-// }
-// bool AssetGrid::preRender()
-// {
-// 	const auto& model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
 // }
 // size_t AssetGrid::addAsset(const std::filesystem::path& assetPath, fonts::freetype::FreetypeFont& font)
 // {
@@ -334,19 +282,6 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 	for (auto& changePair : changes)
 // 	{
 // 	}
-// }
-// bool AssetBrowser::preRender()
-// {
-// 	const auto& model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
 // }
 // void AssetBrowser::setBackgroundColor(glm::vec4 newBackgroundColor)
 // {

@@ -80,20 +80,6 @@ using namespace zg::entities;
 // 	}
 // 	oldText = text;
 // }
-// bool TextView::preRender()
-// {
-// 	auto& model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this,
-// 									 projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->setUniform("TextColor", *this, textColor);
-// 	shader->unbind();
-// 	return true;
-// }
 // void TextView::setSize(glm::vec3 size)
 // {
 // 	this->size = size;

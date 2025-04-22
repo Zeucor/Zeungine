@@ -4,7 +4,6 @@
 #include "components/entities/EntityComponent.hpp"
 #include "entities/TypeID.hpp"
 #include "renderers/GLRenderer.hpp"
-#include "shaders/Shader.hpp"
 #include "vaos/VAO.hpp"
 #include "vp/Projection.hpp"
 #include "vp/View.hpp"
@@ -59,8 +58,6 @@ namespace zg
 		glm::mat4 model;
 		std::shared_ptr<vp::Projection> projectionPointer;
 		std::shared_ptr<vp::View> viewPointer;
-		std::unordered_map<void*, shaders::Shader*> shaders;
-		std::unordered_map<void*, bool> ensuredBools;
 		bool affectedByShadows = true;
 		KeyIDVector<std::string, Entity> children;
 		bool addToBVH = true;
@@ -82,10 +79,6 @@ namespace zg
 		~Entity();
 		Entity& operator=(const Entity& other);
 		void update();
-		shaders::Shader* addShader(shaders::Shader* setShader = 0);
-		bool isEnsured();
-		void setEnsured();
-		static void* getShaderData(IRenderer* iRenderer);
 		void render();
 		glm::mat4& getModelMatrix();
 		size_t addChild(const EntityCreateInfo& childInfo);

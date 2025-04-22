@@ -67,19 +67,6 @@ using namespace zg::entities;
 // 	addChild(textView);
 // 	addToBVH = false;
 // }
-// bool StatusText::preRender()
-// {
-// 	const auto &model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
-// }
 // void StatusText::setColor(glm::vec4 newColor)
 // {
 // 	colors = {newColor, newColor, newColor, newColor};

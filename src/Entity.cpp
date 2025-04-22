@@ -66,46 +66,6 @@ void Entity::update()
 	for (size_t index = 0; index < childrenSize; ++index)
 		childrenData[index].update();
 }
-shaders::Shader* Entity::addShader(shaders::Shader* setShader)
-{
-	auto data = getShaderData(window.iRenderer);
-	auto& shader = shaders[data];
-	if (shader)
-		return shader;
-	if (setShader)
-	{
-		shader = setShader;
-	}
-	else
-	{
-		shader = shaders::ShaderManager::getShaderByConstants(window, constants, data).second.get();
-	}
-	return shader;
-}
-bool Entity::isEnsured()
-{
-	auto data = getShaderData(window.iRenderer);
-	return ensuredBools[data];
-}
-void Entity::setEnsured()
-{
-	auto data = getShaderData(window.iRenderer);
-	ensuredBools[data] = true;
-}
-void* Entity::getShaderData(IRenderer* iRenderer)
-{
-	void* data = 0;
-	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(iRenderer);
-	if (vulkanRenderer.currentFramebufferImpl)
-	{
-		data = vulkanRenderer.currentFramebufferImpl->renderPass;
-	}
-	else
-	{
-		data = vulkanRenderer.renderPass;
-	}
-	return data;
-}
 void Entity::render()
 {
 	auto shader = addShader();

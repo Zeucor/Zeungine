@@ -80,19 +80,6 @@ using namespace zg::entities;
 // 	}
 // 	setSize(dialogSize);
 // };
-// bool Dialog::preRender()
-// {
-// 	const auto &model = getModelMatrix();
-// 	auto shader = addShader();
-// 	shader->bind(*this);
-// 	scene.entityPreRender(*this);
-// 	shader->setBlock("Model", *this, model);
-// 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-// 	shader->setBlock("Projection", *this, projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-// 	shader->setBlock("CameraPosition", *this, scene.viewPointer->position, 16);
-// 	shader->unbind();
-// 	return true;
-// };
 // void Dialog::setColor(glm::vec4 color)
 // {
 // 	colors = {color, color, color, color};
