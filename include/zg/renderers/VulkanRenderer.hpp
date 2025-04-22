@@ -52,6 +52,7 @@ namespace zg
 		VkImageView textureImageView;
 		VkSampler textureSampler;
 		VkImageLayout layout;
+		VkFormat format;
 	};
 	struct VulkanFramebufferImpl
 	{
@@ -245,6 +246,9 @@ namespace zg
 		std::vector<VkImage> swapChainImages;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
+		std::shared_ptr<textures::Texture> swapchainColorTexture;
+		std::shared_ptr<textures::Texture> depthTexture;
+		std::shared_ptr<textures::Framebuffer> swapchainFramebuffer;
 		std::vector<VkImageView> swapChainImageViews;
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
@@ -313,6 +317,8 @@ namespace zg
 		void preBeginRenderPass() override;
 		void beginRenderPass() override;
 		void postRenderPass() override;
+		void beginMainFramebuffer() override;
+		void postMainFramebuffer() override;
 		void clearColor(glm::vec4 color) override;
 		void clear() override;
 		void viewport(glm::ivec4 vp) const override;
@@ -356,6 +362,11 @@ namespace zg
 		VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
 																 VkFormatFeatureFlags features);
 		void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+		void prepareImageBarrier(VkCommandBuffer commandBuffer, VkImage image, VkFormat format,
+			VkImageLayout oldLayout, VkImageLayout newLayout,
+			VkImageAspectFlags aspectMask,
+			VkPipelineStageFlags& sourceStage, VkPipelineStageFlags& destinationStage,
+			VkImageMemoryBarrier& barrier);
 		void transitionImageLayout(VulkanTextureImpl& textureImpl, VkImage image, VkFormat format, VkImageLayout oldLayout,
 															 VkImageLayout newLayout, VkImageAspectFlags aspectMask);
 		void preInitTexture(textures::Texture& texture) override;
@@ -378,6 +389,8 @@ namespace zg
 		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
 											VkDeviceMemory& bufferMemory);
 		void getCurrentImageToBitmap();
+		void transitionDepthBufferForWriting(textures::Framebuffer& framebuffer) override;
+		void transitionDepthBufferForReading(textures::Framebuffer& framebuffer) override;
 	};
 	bool VKcheck(const char* fn, VkResult result);
 } // namespace zg

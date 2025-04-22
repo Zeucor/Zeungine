@@ -4,11 +4,11 @@
 using namespace zg::lights;
 SpotLightShadow::SpotLightShadow(Window& window, SpotLight& spotLight) :
 		window(window),
-		//  shader(*shaders::ShaderManager::getShaderByConstants(window, {"DepthMap", "Color", "Position", "Normal", "Model",
-		//  "LightSpaceMatrix"}).second),
+		//  shader(*shaders::ShaderManager::getShaderByConstants(window, {"DepthMap", "Color", "Position", "Normal",
+		//  "Model", "LightSpaceMatrix"}).second),
 		spotLight(spotLight),
-		texture(window.iRenderer, glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
-		framebuffer(window, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
+		texture(window.iRenderer, glm::ivec4(4096, 4096, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Nearest, true),
+		framebuffer(window.iRenderer, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
 {
 	float fov = glm::acos(glm::clamp(spotLight.outerCutoff, -1.0f, 1.0f)) * 2.0;
 	glm::mat4 lightProjection = glm::perspective(fov, 1.f, spotLight.nearPlane, spotLight.farPlane);

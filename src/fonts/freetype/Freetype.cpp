@@ -181,7 +181,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 		auto attachments = std::vector<textures::Framebuffer::TextureAttachmentPair>(
 			{{(textures::Texture*)texturePointer.get(), textures::Framebuffer::AttachmentType::Color}});
 		((std::shared_ptr<textures::Framebuffer>&)framebufferPointer) =
-			std::make_shared<textures::Framebuffer>(window, attachments);
+			std::make_shared<textures::Framebuffer>(window.iRenderer, attachments);
 	}
 	if (!scenePointer)
 	{

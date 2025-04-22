@@ -5,35 +5,39 @@
 #include <zg/interfaces/IRenderer.hpp>
 #include <zg/Window.hpp>
 using namespace zg::textures;
-Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const void *data, const Format &format, const Type &type, const FilterType &filterType) : iRenderer(iRenderer),
+Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const void *data, const Format &format, const Type &type, const FilterType &filterType, bool isFramebufferAttachment) : iRenderer(iRenderer),
                                                                                                                                                    size(size),
                                                                                                                                                    format(format),
                                                                                                                                                    type(type),
-                                                                                                                                                   filterType(filterType)
+                                                                                                                                                   filterType(filterType),
+                                                                                                                                                   isFramebufferAttachment(isFramebufferAttachment)
 {
   TextureFactory::initTexture(*this, data);
 }
-Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<void *> datas, const Format &format, const Type &type, const FilterType &filterType) : iRenderer(iRenderer),
+Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<void *> datas, const Format &format, const Type &type, const FilterType &filterType, bool isFramebufferAttachment) : iRenderer(iRenderer),
                                                                                                                                                    size(size),
                                                                                                                                                    format(format),
                                                                                                                                                    type(type),
-                                                                                                                                                   filterType(filterType)
+                                                                                                                                                   filterType(filterType),
+                                                                                                                                                   isFramebufferAttachment(isFramebufferAttachment)
 {
   TextureFactory::initTexture(*this, datas);
 }
-Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::string_view path, const Format &format, const Type &type, const FilterType &filterType) : iRenderer(iRenderer),
+Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::string_view path, const Format &format, const Type &type, const FilterType &filterType, bool isFramebufferAttachment) : iRenderer(iRenderer),
                                                                                                                                                               size(size),
                                                                                                                                                               format(format),
                                                                                                                                                               type(type),
-                                                                                                                                                              filterType(filterType)
+                                                                                                                                                              filterType(filterType),
+                                                                                                                                                              isFramebufferAttachment(isFramebufferAttachment)
 {
   TextureFactory::initTexture(*this, path);
 }
-Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<std::string_view> &paths, const Format &format, const Type &type, const FilterType &filterType) : iRenderer(iRenderer),
+Texture::Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<std::string_view> &paths, const Format &format, const Type &type, const FilterType &filterType, bool isFramebufferAttachment) : iRenderer(iRenderer),
                                                                                                                                                                              size(size),
                                                                                                                                                                              format(format),
                                                                                                                                                                              type(type),
-                                                                                                                                                                             filterType(filterType)
+                                                                                                                                                                             filterType(filterType),
+                                                                                                                                                                             isFramebufferAttachment(isFramebufferAttachment)
 {
   TextureFactory::initTexture(*this, paths);
 }

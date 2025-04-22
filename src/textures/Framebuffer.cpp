@@ -4,11 +4,11 @@
 #include <zg/textures/FramebufferFactory.hpp>
 #include <zg/textures/Texture.hpp>
 using namespace zg::textures;
-Framebuffer::Framebuffer(Window& window, const std::vector<TextureAttachmentPair>& textureAttachmentPairs) :
-		window(window), textureAttachmentPairs(textureAttachmentPairs)
+Framebuffer::Framebuffer(IRenderer* iRenderer, const std::vector<TextureAttachmentPair>& textureAttachmentPairs) :
+	iRenderer(iRenderer), textureAttachmentPairs(textureAttachmentPairs)
 {
 	FramebufferFactory::initFramebuffer(*this);
 }
 Framebuffer::~Framebuffer() { FramebufferFactory::destroyFramebuffer(*this); }
-void Framebuffer::bind() const { window.iRenderer->bindFramebuffer(*this); }
-void Framebuffer::unbind() { window.iRenderer->unbindFramebuffer(*this); }
+void Framebuffer::bind() const { iRenderer->bindFramebuffer(*this); }
+void Framebuffer::unbind() { iRenderer->unbindFramebuffer(*this); }

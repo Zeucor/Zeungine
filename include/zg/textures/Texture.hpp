@@ -41,16 +41,17 @@ namespace zg::textures
 		Type type;
 		FilterType filterType;
 		void *rendererData = 0;
+		bool isFramebufferAttachment = false;
 		explicit Texture(IRenderer *iRenderer, const glm::ivec4 &size, const void *data, const Format &format = RGBA8,
-						 const Type &type = UnsignedByte, const FilterType &filterType = Linear);
+						 const Type &type = UnsignedByte, const FilterType &filterType = Linear, bool isFramebufferAttachment = false);
 		explicit Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<void *> datas, const Format &format = RGBA8,
-						const Type &type = UnsignedByte, const FilterType &filterType = Linear);
+						const Type &type = UnsignedByte, const FilterType &filterType = Linear, bool isFramebufferAttachment = false);
 		explicit Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::string_view path,
 						 const Format &format = RGBA8, const Type &type = UnsignedByte,
-						 const FilterType &filterType = Linear);
+						 const FilterType &filterType = Linear, bool isFramebufferAttachment = false);
 		explicit Texture(IRenderer *iRenderer, const glm::ivec4 &size, const std::vector<std::string_view> &paths,
 						 const Format &format = RGBA8, const Type &type = UnsignedByte,
-						 const FilterType &filterType = Linear);
+						 const FilterType &filterType = Linear, bool isFramebufferAttachment = false);
 		~Texture();
 		void bind() const;
 		void unbind() const;

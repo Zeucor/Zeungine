@@ -1,32 +1,31 @@
+#include <iostream>
 #include <zg/lights/DirectionalLight.hpp>
-#include <zg/shaders/ShaderManager.hpp>
 #include <zg/renderers/VulkanRenderer.hpp>
+#include <zg/shaders/ShaderManager.hpp>
 #include <zg/vp/Projection.hpp>
 #include <zg/vp/View.hpp>
-#include <iostream>
 using namespace zg::lights;
-DirectionalLightShadow::DirectionalLightShadow(Window &window,
-											   DirectionalLight &directionalLight) : window(window),
-																					 directionalLight(directionalLight),
-																					 texture(window.iRenderer, glm::ivec4(8192, 8192, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float),
-																					 framebuffer(window, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
+DirectionalLightShadow::DirectionalLightShadow(Window& window, DirectionalLight& directionalLight) :
+		window(window), directionalLight(directionalLight),
+		texture(window.iRenderer, glm::ivec4(8192, 8192, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Nearest, true),
+		framebuffer(window.iRenderer, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
 {
 	update();
 }
 DirectionalLightShadow& DirectionalLightShadow::operator=(const DirectionalLightShadow& other)
 {
-    shader = other.shader;
-    texture = other.texture;
-    lightSpaceMatrix = other.lightSpaceMatrix;
-    lookAtSet = other.lookAtSet;
-    lookAt = other.lookAt;
+	shader = other.shader;
+	texture = other.texture;
+	lightSpaceMatrix = other.lightSpaceMatrix;
+	lookAtSet = other.lookAtSet;
+	lookAt = other.lookAt;
 	return *this;
 }
 void DirectionalLightShadow::addShader()
 {
 	if (shader)
 		return;
-	void* data = 0;	
+	void* data = 0;
 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(window.iRenderer);
 	if (vulkanRenderer.currentFramebufferImpl)
 	{
@@ -35,8 +34,10 @@ void DirectionalLightShadow::addShader()
 	else
 	{
 		data = vulkanRenderer.renderPass;
-	} 
-	shader = shaders::ShaderManager::getShaderByConstants(window, {"DepthMap", "Color", "Position", "Normal", "Model", "LightSpaceMatrix"}, data).second.get();
+	}
+	shader = shaders::ShaderManager::getShaderByConstants(
+						 window, {"DepthMap", "Color", "Position", "Normal", "Model", "LightSpaceMatrix"}, data)
+						 .second.get();
 }
 void DirectionalLightShadow::update()
 {

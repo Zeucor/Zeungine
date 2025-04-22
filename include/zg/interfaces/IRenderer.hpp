@@ -70,6 +70,8 @@ namespace zg
 		virtual void preBeginRenderPass() = 0;
 		virtual void beginRenderPass() = 0;
 		virtual void postRenderPass() = 0;
+		virtual void beginMainFramebuffer() = 0;
+		virtual void postMainFramebuffer() = 0;
 		virtual void clearColor(glm::vec4 color) = 0;
 		virtual void clear() = 0;
 		virtual void viewport(glm::ivec4 vp) const = 0;
@@ -110,6 +112,8 @@ namespace zg
 		virtual void destroyVAO(vaos::VAO &vao) = 0;
 		virtual void ensureEntity(shaders::Shader &shader, vaos::VAO &vao) = 0;
 		virtual void swapBuffers() = 0;
+		virtual void transitionDepthBufferForWriting(textures::Framebuffer& framebuffer) = 0;
+		virtual void transitionDepthBufferForReading(textures::Framebuffer& framebuffer) = 0;
 	};
 	IRenderer *createRenderer();
 } // namespace zg

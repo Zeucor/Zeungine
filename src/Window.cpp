@@ -5,6 +5,7 @@
 #include <zg/Logger.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Plane.hpp>
+#include <zg/renderers/VulkanRenderer.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/shaders/ShaderManager.hpp>
 #include <zg/textures/Texture.hpp>
@@ -20,8 +21,7 @@ Window::Window(const WindowCreateInfo& info) :
 		windowHeight(info.windowHeight), windowX(info.windowX), windowY(info.windowY),
 		scenes([](auto& scene) { return scene.name; }), deltaTime(1.0 / info.framerate), borderless(info.borderless),
 		framerate(info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
-		framebudget(frameduration), systemFonts(*this),
-		postProcessingPipeline(*this)
+		framebudget(frameduration), systemFonts(*this), postProcessingPipeline(*this)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -34,7 +34,7 @@ Window::Window(const WindowCreateInfo& info) :
 		framebufferDepthTexture = std::make_shared<textures::Texture>(
 			info.parentWindowPointer->iRenderer, glm::ivec4(info.windowWidth, info.windowHeight, 1, 0), (void*)0);
 		framebuffer = std::make_shared<textures::Framebuffer>(
-			*info.parentWindowPointer,
+			info.parentWindowPointer->iRenderer,
 			std::vector<textures::Framebuffer::TextureAttachmentPair>(
 				{{framebufferTexture.get(),
 					textures::Framebuffer::AttachmentType::
@@ -185,17 +185,11 @@ void Window::startWindow()
 			framebudget.sleep();
 			break;
 		}
-		framebudget.tick();
 		iRendererRef.preBeginRenderPass();
-		framebudget.tick();
 		runRunnables();
-		framebudget.tick();
 		updateKeyboard();
-		framebudget.tick();
 		updateMouse();
-		framebudget.tick();
 		update();
-		framebudget.tick();
 		auto childWindowsSize = childWindows.size();
 		auto childWindowsData = childWindows.data();
 		for (size_t index = 0; index < childWindowsSize; ++index)
@@ -207,11 +201,8 @@ void Window::startWindow()
 			framebudget.tick();
 		}
 		preRender();
-		framebudget.tick();
-		iRendererRef.beginRenderPass();
-		framebudget.tick();
+		iRendererRef.beginMainFramebuffer();
 		render();
-		framebudget.tick();
 		for (size_t index = 0; index < childWindowsSize; ++index)
 		{
 			auto& childWindow = childWindowsData[index];
@@ -220,13 +211,28 @@ void Window::startWindow()
 			framebudget.tick();
 			childWindow.framebufferPlane->render();
 		}
-		framebudget.tick();
+		iRendererRef.postMainFramebuffer();
+		VkMemoryBarrier memBarrier = {};
+		auto vulkanRenderer = dynamic_cast<VulkanRenderer*>(iRenderer);
+		memBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+		memBarrier.srcAccessMask =
+			VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; // Writes in Pass 1
+		memBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+			VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | // Reads/Writes in Pass 2
+			VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+		vulkanRenderer->_vkCmdPipelineBarrier(
+			*vulkanRenderer->commandBuffer,
+			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+				VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, // Stages where Pass 1 writes finish
+			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+				VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // Stages where Pass 2 reads/writes start
+			0, 1, &memBarrier, 0, nullptr, 0, nullptr);
+		iRendererRef.beginRenderPass();
+		render();
 		iRendererRef.postRenderPass();
-		framebudget.tick();
 		postRender();
-		framebudget.tick();
 		callPreSwapbuffersOnceoff();
-		framebudget.tick();
 		_now = framebudget.end();
 		updateDeltaTime(_now, true);
 		iRendererRef.swapBuffers();

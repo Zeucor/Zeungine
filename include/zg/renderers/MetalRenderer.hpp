@@ -15,6 +15,8 @@ namespace zg
 		void preBeginRenderPass() override;
 		void beginRenderPass() override;
 		void postRenderPass() override;
+		void beginMainFramebuffer() override;
+		void postMainFramebuffer() override;
 		void clearColor(glm::vec4 color) override;
 		void clear() override;
 		void viewport(glm::ivec4 vp) const override;
@@ -56,6 +58,8 @@ namespace zg
 		void destroyVAO(vaos::VAO &vao) override;
 		void ensureEntity(shaders::Shader &shader, vaos::VAO &vao) override;
 		void swapBuffers() override;
+		void transitionDepthBufferForWriting(textures::Framebuffer& framebuffer) override;
+		void transitionDepthBufferForReading(textures::Framebuffer& framebuffer) override;
 	};
 	bool VKcheck(const char *fn, VkResult result);
 } // namespace zg

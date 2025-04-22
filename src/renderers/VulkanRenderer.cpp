@@ -137,12 +137,12 @@ void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 	pickPhysicalDevice();
 	createLogicalDevice();
 	createSwapChain();
+	createCommandPool();
+	createCommandBuffers();
 	createImageViews();
 	createRenderPass();
 	createDepthResources();
 	createFramebuffers();
-	createCommandPool();
-	createCommandBuffers();
 	createSyncObjects();
 	if (fallbackToSwiftshader)
 		createImageStagingBuffer();
@@ -827,7 +827,7 @@ VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkS
 {
 	for (auto& availableFormat : availableFormats)
 	{
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM)
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB)
 		{
 			return availableFormat;
 		}
@@ -863,6 +863,13 @@ VkExtent2D VulkanRenderer::chooseSwapExtent(VkSurfaceCapabilitiesKHR capabilitie
 }
 void VulkanRenderer::createImageViews()
 {
+	swapchainColorTexture = std::make_shared<textures::Texture>(
+		this,
+		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+							 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+		(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
+		textures::Texture::FilterType::Nearest, true);
+
 	auto swapChainImagesSize = swapChainImages.size();
 	swapChainImageViews.resize(swapChainImagesSize);
 	for (uint32_t index = 0; index < swapChainImagesSize; index++)
@@ -943,12 +950,14 @@ void VulkanRenderer::createRenderPass()
 }
 void VulkanRenderer::createFramebuffers()
 {
+	std::vector<textures::Framebuffer::TextureAttachmentPair> attachments = {
+		{swapchainColorTexture.get(), textures::Framebuffer::AttachmentType::Color},
+		{depthTexture.get(), textures::Framebuffer::AttachmentType::Depth}};
+	swapchainFramebuffer = std::make_shared<textures::Framebuffer>(this, attachments);
 	auto swapChainImageViewsSize = swapChainImageViews.size();
 	swapChainFramebuffers.resize(swapChainImageViewsSize);
 	for (uint32_t index = 0; index < swapChainImageViewsSize; index++)
 	{
-	std:
-	vector:
 		std::vector<VkImageView> attachments({{swapChainImageViews[index], depthImageView}});
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -995,6 +1004,12 @@ void VulkanRenderer::createCommandBuffers()
 }
 void VulkanRenderer::createDepthResources()
 {
+	depthTexture =
+		std::make_shared<textures::Texture>(this,
+																				glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+																									 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+																				(const void*)0, textures::Texture::Format::Depth,
+																				textures::Texture::Type::Float, textures::Texture::FilterType::Nearest, true);
 	VkFormat depthFormat = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
 	createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL,
 							VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage,
@@ -1111,6 +1126,9 @@ void VulkanRenderer::destroy()
 }
 void VulkanRenderer::destroySwapChain()
 {
+	swapchainColorTexture.reset();
+	depthTexture.reset();
+	swapchainFramebuffer.reset();
 	for (auto framebuffer : swapChainFramebuffers)
 	{
 		_vkDestroyFramebuffer(device, framebuffer, 0);
@@ -1123,7 +1141,6 @@ void VulkanRenderer::destroySwapChain()
 	_vkDestroyImage(device, depthImage, 0);
 	_vkDestroyImageView(device, depthImageView, 0);
 	_vkFreeMemory(device, depthImageMemory, 0);
-
 }
 void VulkanRenderer::preBeginRenderPass()
 {
@@ -1162,12 +1179,13 @@ void VulkanRenderer::beginRenderPass()
 	if (currentFramebufferImpl)
 	{
 		renderPassInfo.renderPass = currentFramebufferImpl->renderPass;
+		renderPassInfo.framebuffer = currentFramebufferImpl->framebuffer;
 	}
 	else
 	{
 		renderPassInfo.renderPass = renderPass;
+		renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
 	}
-	renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
 	renderPassInfo.renderArea.offset = {0, 0};
 	renderPassInfo.renderArea.extent = swapChainExtent;
 	std::array<VkClearValue, 2> clearValues{};
@@ -1216,6 +1234,46 @@ void VulkanRenderer::postRenderPass()
 	}
 	callDestroyAtRenderPassEndOrDestroy();
 	return;
+}
+void VulkanRenderer::beginMainFramebuffer()
+{
+	auto offscreenColorTexture = swapchainFramebuffer->getColorTexture();
+	if (offscreenColorTexture && offscreenColorTexture->rendererData)
+	{
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(offscreenColorTexture->rendererData);
+		if (textureImpl.layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		{
+			VkImageMemoryBarrier colorBarrier = {};
+			VkPipelineStageFlags sourceStage;
+			VkPipelineStageFlags destinationStage;
+			prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
+													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+													VK_IMAGE_ASPECT_COLOR_BIT, sourceStage, destinationStage, colorBarrier);
+			vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &colorBarrier);
+			textureImpl.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		}
+		else if (textureImpl.layout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL &&
+						 textureImpl.layout != VK_IMAGE_LAYOUT_UNDEFINED)
+		{
+			std::cerr << "Warning: Offscreen color texture in unexpected layout (" << textureImpl.layout
+								<< ") before Pass 1.\n";
+		}
+	}
+	else
+	{
+		throw std::runtime_error("Offscreen color texture is invalid before Pass 1!");
+	}
+	swapchainFramebuffer->bind();
+}
+void VulkanRenderer::postMainFramebuffer()
+{
+	swapchainFramebuffer->unbind();
+	auto offscreenColorTexture = swapchainFramebuffer->getColorTexture();
+	if (offscreenColorTexture && offscreenColorTexture->rendererData)
+	{
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(offscreenColorTexture->rendererData);
+		textureImpl.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	}
 }
 #ifndef MACOS
 void VulkanRenderer::swapBuffers()
@@ -1662,24 +1720,6 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 		depthStencilState.back = {};
 		pipelineInfo.pDepthStencilState = &depthStencilState;
 	}
-	// VkSubpassDescription subpass{};
-	// bool hasColorAttachment = (!currentFramebufferImpl || (currentFramebufferImpl &&
-	// currentFramebufferImpl->zgFramebuffer->hasColorAttachment())); VkAttachmentReference colorAttachmentRef{};
-	// VkAttachmentReference depthAttachmentRef{};
-	// if (hasColorAttachment)
-	// {
-	// 	colorAttachmentRef.attachment = 0;
-	// 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	// 	subpass.pColorAttachments = &colorAttachmentRef;
-	// 	subpass.colorAttachmentCount = 1;
-	// }
-	// if (hasDepthAttachment)
-	// {
-	// 	depthAttachmentRef.attachment = 0;
-	// 	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-	// 	subpass.pDepthStencilAttachment = &depthAttachmentRef;
-	// }
-	// subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 	if (!VKcheck("vkCreateGraphicsPipelines",
@@ -1767,127 +1807,169 @@ void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
 	_vkCmdEndRenderPass(*commandBuffer);
 	currentFramebufferImpl = 0;
 }
-void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
+void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 {
-	framebuffer.rendererData = new VulkanFramebufferImpl();
-	auto& framebufferImpl = *(VulkanFramebufferImpl*)framebuffer.rendererData;
-	size_t renderPassHash = 0;
-	uint8_t shift = 0;
-	std::vector<VkAttachmentDescription> attachments;
-	for (auto& pair : framebuffer.textureAttachmentPairs)
+	if (framebuffer.rendererData)
 	{
+		throw std::runtime_error("Framebuffer already initialized!");
+	}
+
+	framebuffer.rendererData = new VulkanFramebufferImpl();
+	auto& framebufferImpl = *static_cast<VulkanFramebufferImpl*>(framebuffer.rendererData);
+	framebufferImpl.zgFramebuffer = &framebuffer;
+
+	size_t renderPassHash = 0;
+	auto combine_hash = [&](size_t seed, auto val)
+	{ return seed ^ (std::hash<decltype(val)>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2)); };
+
+	std::vector<VkAttachmentDescription> vkAttachments;
+	std::vector<VkAttachmentReference> colorAttachmentRefs;
+	VkAttachmentReference depthStencilRef = {};
+	bool hasDepthStencil = false;
+	uint32_t attachmentIndex = 0;
+
+	VkPipelineStageFlags inputSrcStageMask = 0;
+	VkPipelineStageFlags inputDstStageMask = 0;
+	VkAccessFlags inputDstAccessMask = 0;
+
+	VkPipelineStageFlags outputSrcStageMask = 0;
+	VkPipelineStageFlags outputDstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT; // Default next stage
+	VkAccessFlags outputSrcAccessMask = 0;
+	VkAccessFlags outputDstAccessMask = 0; // Default next access
+
+	for (const auto& pair : framebuffer.textureAttachmentPairs)
+	{
+		if (!pair.first || !pair.first->rendererData)
+		{
+			throw std::runtime_error("Framebuffer attachment texture is null or not initialized!");
+		}
+		auto& texture = *pair.first;
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(texture.rendererData);
 		VkAttachmentDescription attachment{};
+
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		renderPassHash ^= attachment.samples;
-		renderPassHash ^= (attachment.loadOp << ++shift);
-		renderPassHash ^= (attachment.storeOp << ++shift);
-		renderPassHash ^= (attachment.stencilLoadOp << ++shift);
-		renderPassHash ^= (attachment.stencilStoreOp << ++shift);
-		renderPassHash ^= (attachment.initialLayout << ++shift);
-		if (!framebufferImpl.width && !framebufferImpl.height)
+		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // Store results
+		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+		// --- Determine Size ---
+		if (framebufferImpl.width == 0 && framebufferImpl.height == 0 && texture.size.x > 0 && texture.size.y > 0)
 		{
-			auto& texture = *pair.first;
 			framebufferImpl.width = texture.size.x;
 			framebufferImpl.height = texture.size.y;
 		}
+		else if ((framebufferImpl.width != texture.size.x || framebufferImpl.height != texture.size.y) &&
+						 texture.size.x > 0 && texture.size.y > 0)
+		{
+			throw std::runtime_error("Framebuffer attachments have inconsistent dimensions!");
+		}
+
+		VkImageLayout subpassLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		attachment.format = textureImpl.format; // Use format stored during preInitTexture
+		if (attachment.format == VK_FORMAT_UNDEFINED)
+			throw std::runtime_error("Attachment format is undefined!");
+
+		// --- Set Initial/Final Layouts based on Type ---
+		// *** This function now ASSUMES the attachments were pre-initialized ***
+		// *** to their optimal ATTACHMENT layout by preInitTexture ***
 		switch (pair.second)
 		{
-		case textures::Framebuffer::AttachmentType::Depth:
-			attachment.format = VK_FORMAT_D32_SFLOAT;
-			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		case zg::textures::Framebuffer::AttachmentType::Color:
+			attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // Expect this layout
+			attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // Transition for sampling
+			subpassLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+			colorAttachmentRefs.push_back({attachmentIndex, subpassLayout});
+			inputSrcStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			inputDstStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			inputDstAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+			outputSrcStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			outputSrcAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			outputDstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; // Assume sampling is next
+			outputDstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 			break;
-		case textures::Framebuffer::AttachmentType::DepthStencil:
-			attachment.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
-			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+		case zg::textures::Framebuffer::AttachmentType::Depth:
+		case zg::textures::Framebuffer::AttachmentType::DepthStencil:
+		case zg::textures::Framebuffer::AttachmentType::Stencil:
+			if (hasDepthStencil)
+				throw std::runtime_error("Framebuffer cannot have multiple depth/stencil attachments!");
+			attachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // Expect this layout
+			// *** FIX: Align final layout with the swapchain render pass ***
+			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // Keep as attachment optimal
+			// attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // Old: Transition for sampling/reuse
+			subpassLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+			if (pair.second != zg::textures::Framebuffer::AttachmentType::Depth)
+			{
+				attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+				attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+			}
+
+			depthStencilRef = {attachmentIndex, subpassLayout};
+			hasDepthStencil = true;
+			inputSrcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			inputDstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			inputDstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+			outputSrcStageMask |= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			outputSrcAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			// Adjust output dependency if final layout is ATTACHMENT_OPTIMAL
+			// Next stage could still be early fragment tests if reused immediately
+			outputDstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			outputDstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 			break;
-		case textures::Framebuffer::AttachmentType::Color:
-			attachment.format = VK_FORMAT_R8G8B8A8_SRGB;
-			attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			break;
-		case textures::Framebuffer::AttachmentType::Stencil:
-			attachment.format = VK_FORMAT_R8_UINT;
-			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-			break;
+
 		default:
 			throw std::runtime_error("Unsupported attachment type");
 		}
-		renderPassHash ^= (attachment.format << ++shift);
-		renderPassHash ^= (attachment.finalLayout << ++shift);
-		attachments.push_back(attachment);
+		vkAttachments.push_back(attachment);
+
+		// --- Update Hash ---
+		renderPassHash = combine_hash(renderPassHash, attachment.flags);
+		renderPassHash = combine_hash(renderPassHash, attachment.format);
+		// ... hash other attachment fields ...
+		renderPassHash = combine_hash(renderPassHash, attachment.finalLayout);
+		attachmentIndex++;
 	}
-	std::vector<VkAttachmentReference> colorAttachmentRefs;
-	VkAttachmentReference depthAttachmentRef;
-	uint32_t attachmentIndex = 0;
+
+	// --- Define Subpass ---
 	VkSubpassDescription subpass{};
-	for (auto& pair : framebuffer.textureAttachmentPairs)
-	{
-		switch (pair.second)
-		{
-		case textures::Framebuffer::AttachmentType::DepthStencil:
-		case textures::Framebuffer::AttachmentType::Stencil:
-		case textures::Framebuffer::AttachmentType::Depth:
-			depthAttachmentRef.attachment = attachmentIndex++;
-			depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			subpass.pDepthStencilAttachment = &depthAttachmentRef;
-			renderPassHash ^= (depthAttachmentRef.layout << ++shift);
-			break;
-		case textures::Framebuffer::AttachmentType::Color:
-			{
-				VkAttachmentReference ref{};
-				ref.attachment = attachmentIndex++;
-				ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-				colorAttachmentRefs.push_back(ref);
-				renderPassHash ^= (ref.layout << ++shift);
-				break;
-			}
-		}
-	}
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass.colorAttachmentCount = colorAttachmentRefs.size();
-	subpass.pColorAttachments = colorAttachmentRefs.data();
-	VkSubpassDependency dependency{};
-	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependency.dstSubpass = 0;
-	dependency.srcStageMask = 0;
-	dependency.srcAccessMask = 0;
-	dependency.dstStageMask = 0;
-	for (auto& pair : framebuffer.textureAttachmentPairs)
+	subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
+	subpass.pColorAttachments = colorAttachmentRefs.empty() ? nullptr : colorAttachmentRefs.data();
+	subpass.pDepthStencilAttachment = hasDepthStencil ? &depthStencilRef : nullptr;
+
+	// --- Define Dependencies ---
+	std::array<VkSubpassDependency, 2> dependencies;
+	// Input Dependency (External -> 0)
+	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependencies[0].dstSubpass = 0;
+	dependencies[0].srcStageMask = inputSrcStageMask;
+	dependencies[0].dstStageMask = inputDstStageMask;
+	dependencies[0].srcAccessMask = 0;
+	dependencies[0].dstAccessMask = inputDstAccessMask;
+	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+	// Output Dependency (0 -> External)
+	dependencies[1].srcSubpass = 0;
+	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+	dependencies[1].srcStageMask = outputSrcStageMask;
+	dependencies[1].dstStageMask = outputDstStageMask; // Updated based on finalLayout
+	dependencies[1].srcAccessMask = outputSrcAccessMask;
+	dependencies[1].dstAccessMask = outputDstAccessMask; // Updated based on finalLayout
+	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+	// --- Update Hash with Dependencies ---
+	for (const auto& dep : dependencies)
 	{
-		switch (pair.second)
-		{
-		case textures::Framebuffer::AttachmentType::Stencil:
-		case textures::Framebuffer::AttachmentType::Depth:
-		case textures::Framebuffer::AttachmentType::DepthStencil:
-			dependency.srcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-			dependency.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			dependency.dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-			break;
-		case textures::Framebuffer::AttachmentType::Color:
-			dependency.srcStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			dependency.dstAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			dependency.dstStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			break;
-		}
+		renderPassHash = combine_hash(renderPassHash, dep.srcSubpass);
+		// ... hash other dependency fields ...
+		renderPassHash = combine_hash(renderPassHash, dep.dependencyFlags);
 	}
-	renderPassHash ^= (dependency.srcSubpass << ++shift);
-	renderPassHash ^= (dependency.dstSubpass << ++shift);
-	renderPassHash ^= (dependency.srcStageMask << ++shift);
-	renderPassHash ^= (dependency.srcAccessMask << ++shift);
-	renderPassHash ^= (dependency.dstStageMask << ++shift);
-	renderPassHash ^= (dependency.dstAccessMask << ++shift);
-	VkRenderPassCreateInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo.attachmentCount = attachments.size();
-	renderPassInfo.pAttachments = attachments.data();
-	renderPassInfo.subpassCount = 1;
-	renderPassInfo.pSubpasses = &subpass;
-	renderPassInfo.dependencyCount = 1;
-	renderPassInfo.pDependencies = &dependency;
+	renderPassHash = combine_hash(renderPassHash, subpass.pipelineBindPoint);
+	renderPassHash = combine_hash(renderPassHash, subpass.colorAttachmentCount);
+
+	// --- Create/Cache RenderPass ---
 	auto renderPassIter = renderPassMap.find(renderPassHash);
 	if (renderPassIter != renderPassMap.end())
 	{
@@ -1895,30 +1977,53 @@ void VulkanRenderer::initFramebuffer(textures::Framebuffer& framebuffer)
 	}
 	else
 	{
-		if (!VKcheck("vkCreateRenderPass", _vkCreateRenderPass(device, &renderPassInfo, 0, &framebufferImpl.renderPass)))
+		VkRenderPassCreateInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = static_cast<uint32_t>(vkAttachments.size());
+		renderPassInfo.pAttachments = vkAttachments.data();
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.pSubpasses = &subpass;
+		renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+		renderPassInfo.pDependencies = dependencies.data();
+
+		if (!VKcheck("vkCreateRenderPass",
+								 _vkCreateRenderPass(device, &renderPassInfo, nullptr, &framebufferImpl.renderPass)))
 		{
-			throw std::runtime_error("VulkanRenderer-framebufferCreate: failed to create render pass!");
+			delete static_cast<VulkanFramebufferImpl*>(framebuffer.rendererData);
+			framebuffer.rendererData = nullptr;
+			throw std::runtime_error("VulkanRenderer::initFramebuffer - failed to create render pass!");
 		}
 		renderPassMap[renderPassHash] = framebufferImpl.renderPass;
 	}
-	std::vector<VkImageView> imageViews;
-	for (auto& pair : framebuffer.textureAttachmentPairs)
+
+	// --- Create Framebuffer ---
+	std::vector<VkImageView> vkImageViews;
+	vkImageViews.reserve(framebuffer.textureAttachmentPairs.size());
+	for (const auto& pair : framebuffer.textureAttachmentPairs)
 	{
-		auto& texture = *pair.first;
-		auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
-		imageViews.push_back(textureImpl.textureImageView);
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(pair.first->rendererData);
+		if (textureImpl.textureImageView == VK_NULL_HANDLE)
+		{
+			throw std::runtime_error("Framebuffer attachment texture image view is null!");
+		}
+		vkImageViews.push_back(textureImpl.textureImageView);
 	}
+
 	VkFramebufferCreateInfo framebufferInfo{};
 	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	framebufferInfo.renderPass = framebufferImpl.renderPass;
-	framebufferInfo.attachmentCount = imageViews.size();
-	framebufferInfo.pAttachments = imageViews.data();
+	framebufferInfo.attachmentCount = static_cast<uint32_t>(vkImageViews.size());
+	framebufferInfo.pAttachments = vkImageViews.data();
 	framebufferInfo.width = framebufferImpl.width;
 	framebufferInfo.height = framebufferImpl.height;
 	framebufferInfo.layers = 1;
-	if (!VKcheck("vkCreateFramebuffer", _vkCreateFramebuffer(device, &framebufferInfo, 0, &framebufferImpl.framebuffer)))
+
+	if (!VKcheck("vkCreateFramebuffer",
+							 _vkCreateFramebuffer(device, &framebufferInfo, nullptr, &framebufferImpl.framebuffer)))
 	{
-		throw std::runtime_error("VulkanRenderer-framebufferCreate: failed to create framebuffer!");
+		delete static_cast<VulkanFramebufferImpl*>(framebuffer.rendererData);
+		framebuffer.rendererData = nullptr;
+		throw std::runtime_error("VulkanRenderer::initFramebuffer - failed to create framebuffer!");
 	}
 }
 void VulkanRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer)
@@ -2075,166 +2180,322 @@ bool hasStencilComponent(VkFormat format)
 {
 	return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
-void VulkanRenderer::transitionImageLayout(VulkanTextureImpl& textureImpl, VkImage image, VkFormat format,
-																					 VkImageLayout oldLayout, VkImageLayout newLayout,
-																					 VkImageAspectFlags aspectMask)
-{
-	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
-	VkImageMemoryBarrier barrier{};
+void VulkanRenderer::prepareImageBarrier(VkCommandBuffer commandBuffer, VkImage image, VkFormat format,
+																				 VkImageLayout oldLayout, VkImageLayout newLayout,
+																				 VkImageAspectFlags aspectMask, VkPipelineStageFlags& sourceStage,
+																				 VkPipelineStageFlags& destinationStage, VkImageMemoryBarrier& barrier)
+{
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	barrier.oldLayout = oldLayout;
 	barrier.newLayout = newLayout;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = image;
+	barrier.subresourceRange.aspectMask = aspectMask;
 	barrier.subresourceRange.baseMipLevel = 0;
 	barrier.subresourceRange.levelCount = 1;
 	barrier.subresourceRange.baseArrayLayer = 0;
 	barrier.subresourceRange.layerCount = 1;
-	if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-	{
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+	barrier.pNext = nullptr; // Initialize pNext
 
-		if (hasStencilComponent(format))
-		{
-			barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-		}
-	}
-	else
+	sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+	destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+
+	// Determine Source Access Mask and Stage based on oldLayout
+	switch (oldLayout)
 	{
-		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	case VK_IMAGE_LAYOUT_UNDEFINED:
+		barrier.srcAccessMask = 0;
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_PREINITIALIZED:
+		barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+		sourceStage = VK_PIPELINE_STAGE_HOST_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		sourceStage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+		sourceStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; // Or other relevant shader stage
+		break;
+	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
+		barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		sourceStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+		break;
+	default:
+		barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+		sourceStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+		break;
 	}
+
+	// Determine Destination Access Mask and Stage based on newLayout
+	switch (newLayout)
+	{
+	case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+		destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+		destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		break;
+	case VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT; // Or SHADER_READ
+		destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT; // Or FRAGMENT_SHADER
+		break;
+	case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; // Or other relevant shader stage
+		break;
+	case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
+		barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+		destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+		break;
+	default:
+		barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+		break;
+	}
+
+	// If transitioning from UNDEFINED, srcStage must be TOP_OF_PIPE_BIT
+	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+	{
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+	}
+}
+void VulkanRenderer::transitionImageLayout(VulkanTextureImpl& textureImpl, VkImage image, VkFormat format,
+																					 VkImageLayout oldLayout, VkImageLayout newLayout,
+																					 VkImageAspectFlags aspectMask)
+{
+	if (newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	{
+		newLayout = newLayout;
+	}
+	if (oldLayout == newLayout)
+	{
+		textureImpl.layout = newLayout; // Ensure tracked layout is correct
+		return;
+	}
+
+	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+	VkImageMemoryBarrier barrier;
 	VkPipelineStageFlags sourceStage;
 	VkPipelineStageFlags destinationStage;
 
-	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-	{
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	prepareImageBarrier(commandBuffer, image, format, oldLayout, newLayout, aspectMask, sourceStage, destinationStage,
+											barrier);
 
-		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-	{
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-	{
-		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-	{
-		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-		sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-	}
-	else
-	{
-		throw std::invalid_argument("unsupported layout transition!");
-	}
-
-	_vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, 0, 0, 0, 1, &barrier);
+	_vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage,
+												0, // No dependency flags
+												0, nullptr, // No memory barriers
+												0, nullptr, // No buffer memory barriers
+												1, &barrier); // One image memory barrier
 
 	endSingleTimeCommands(commandBuffer);
 
+	// Update the tracked layout *after* the command buffer is submitted and waited on
 	textureImpl.layout = newLayout;
 }
 void VulkanRenderer::preInitTexture(textures::Texture& texture)
 {
+	if (texture.rendererData)
+	{
+		throw std::runtime_error("Texture already initialized!");
+	}
+
+	// *** ASSUMPTION: zg::textures::Texture now has a member like: ***
+	// bool isFramebufferAttachment = false;
+	// You must set this boolean correctly when creating the Texture object.
+
 	texture.rendererData = new VulkanTextureImpl();
-	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
-	VkFormat format;
-	VkImageTiling tiling;
-	if (texture.format == textures::Texture::Format::RGBA8)
+	auto& textureImpl = *static_cast<VulkanTextureImpl*>(texture.rendererData);
+	textureImpl.layout = VK_IMAGE_LAYOUT_UNDEFINED; // Initialize tracked layout
+
+	VkFormat format = VK_FORMAT_UNDEFINED;
+	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+	VkImageUsageFlags usage = 0;
+	VkImageLayout initialTargetLayout = VK_IMAGE_LAYOUT_UNDEFINED; // Determined below
+	VkImageAspectFlags aspectMask = 0;
+
+	// --- Determine Format ---
+	auto formatIt = textureFormat_Format.find(texture.format);
+	if (formatIt != textureFormat_Format.end())
 	{
-		format = textureFormat_Format[texture.format];
-		tiling = VK_IMAGE_TILING_LINEAR;
+		format = formatIt->second;
 	}
-	else if (texture.format == textures::Texture::Format::Depth ||
-					 texture.format == textures::Texture::Format::DepthStencil)
+	else
 	{
-		format = findDepthFormat(texture.format);
-		tiling = VK_IMAGE_TILING_OPTIMAL;
+		delete static_cast<VulkanTextureImpl*>(texture.rendererData);
+		texture.rendererData = nullptr;
+		throw std::runtime_error("Unsupported texture format enum!");
 	}
-	VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	VkImageLayout newLayout;
+	textureImpl.format = format;
+
+	// --- Determine Aspect Mask ---
+	auto aspectIt = textureFormat_imageAspect.find(texture.format);
+	if (aspectIt != textureFormat_imageAspect.end())
+	{
+		aspectMask = aspectIt->second;
+	}
+	else
+	{
+		delete static_cast<VulkanTextureImpl*>(texture.rendererData);
+		texture.rendererData = nullptr;
+		throw std::runtime_error("Unsupported texture format enum for aspect mask!");
+	}
+
+	// --- Determine Usage Flags and Initial Target Layout based on Format and isFramebufferAttachment ---
+	// Base usage: Always allow sampling and transfer destination/source
+	usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+	// Determine based on format and intended use (framebuffer attachment or general texture)
 	switch (texture.format)
 	{
-	case textures::Texture::Format::RGBA8:
-		{
+	case zg::textures::Texture::Format::RGBA8:
+		tiling = VK_IMAGE_TILING_OPTIMAL;
+		if (texture.isFramebufferAttachment)
+		{ // Check the boolean flag
 			usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-			newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			break;
-		};
-	case textures::Texture::Format::Stencil:
-	case textures::Texture::Format::Depth:
-	case textures::Texture::Format::DepthStencil:
+			initialTargetLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		}
+		else
 		{
+			// Default for non-attachment: Ready for sampling after potential upload
+			initialTargetLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			// Ensure TRANSFER_DST is set for potential upload before sampling
+			// (already included in base usage)
+		}
+		break;
+
+	case zg::textures::Texture::Format::Depth:
+	case zg::textures::Texture::Format::DepthStencil:
+	case zg::textures::Texture::Format::Stencil:
+		tiling = VK_IMAGE_TILING_OPTIMAL; // Required for depth/stencil
+		if (texture.isFramebufferAttachment)
+		{ // Check the boolean flag
 			usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-			newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			break;
-		};
-	default:
+			initialTargetLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		}
+		else
 		{
-			break;
-		};
+			// Non-attachment depth maps might be sampled (e.g., shadow maps)
+			// Or transferred. Default to SHADER_READ_ONLY after potential transfer.
+			initialTargetLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			// Ensure TRANSFER_DST is set (already included)
+			// Note: Sampling depth often requires specific sampler/shader setup.
+		}
+		break;
+	default:
+		// Default for unknown formats: Assume general texture, ready for sampling
+		initialTargetLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		break;
 	}
-	// TODO: Vulkan: Implement createImage1D && createImage3D
+
+
+	// --- Create Image ---
 	createImage(texture.size.x, texture.size.y, format, tiling, usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 							textureImpl.textureImage, textureImpl.textureImageMemory);
-	auto aspectMask = textureFormat_imageAspect[texture.format];
-	textureImpl.textureImageView = createImageView(textureImpl.textureImage, format, aspectMask);
 
-	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_UNDEFINED, newLayout,
-												aspectMask);
-	// create sampler
-	VkPhysicalDeviceProperties properties{};
-	_vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-	VkSamplerCreateInfo samplerInfo{};
-	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	VkFilter filter;
-	VkSamplerMipmapMode mipmapMode;
-	switch (texture.filterType)
+	// --- Create Image View ---
+	textureImpl.textureImageView = createImageView(textureImpl.textureImage, format, aspectMask);
+	if (textureImpl.textureImageView == VK_NULL_HANDLE)
 	{
-	case textures::Texture::FilterType::Linear:
+		vkDestroyImage(device, textureImpl.textureImage, nullptr);
+		vkFreeMemory(device, textureImpl.textureImageMemory, nullptr);
+		delete static_cast<VulkanTextureImpl*>(texture.rendererData);
+		texture.rendererData = nullptr;
+		throw std::runtime_error("Failed to create texture image view!");
+	}
+
+	// --- Perform Initial Layout Transition ---
+	// Transition from UNDEFINED to the determined initial target layout.
+	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_UNDEFINED,
+												initialTargetLayout, // Use determined layout
+												aspectMask);
+	// textureImpl.layout is now updated by transitionImageLayout
+
+
+	// --- Create Sampler (if applicable) ---
+	if (usage & VK_IMAGE_USAGE_SAMPLED_BIT)
+	{
+		VkPhysicalDeviceProperties properties{};
+		_vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+
+		VkSamplerCreateInfo samplerInfo{};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		VkFilter filter;
+		VkSamplerMipmapMode mipmapMode;
+		switch (texture.filterType)
 		{
+		case zg::textures::Texture::FilterType::Linear:
 			filter = VK_FILTER_LINEAR;
 			mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 			break;
-		}
-	case textures::Texture::FilterType::Nearest:
-		{
+		case zg::textures::Texture::FilterType::Nearest:
+		default:
 			filter = VK_FILTER_NEAREST;
 			mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 			break;
 		}
+		samplerInfo.magFilter = filter;
+		samplerInfo.minFilter = filter;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.anisotropyEnable = VK_TRUE;
+		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = mipmapMode;
+		samplerInfo.mipLodBias = 0.0f;
+		samplerInfo.minLod = 0.0f;
+		samplerInfo.maxLod = 0.0f;
+
+
+		if (!VKcheck("vkCreateSampler", _vkCreateSampler(device, &samplerInfo, nullptr, &textureImpl.textureSampler)))
+		{
+			vkDestroyImageView(device, textureImpl.textureImageView, nullptr);
+			vkDestroyImage(device, textureImpl.textureImage, nullptr);
+			vkFreeMemory(device, textureImpl.textureImageMemory, nullptr);
+			delete static_cast<VulkanTextureImpl*>(texture.rendererData);
+			texture.rendererData = nullptr;
+			throw std::runtime_error("failed to create texture sampler!");
+		}
 	}
-	samplerInfo.magFilter = filter;
-	samplerInfo.minFilter = filter;
-	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.anisotropyEnable = VK_TRUE;
-	samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-	samplerInfo.unnormalizedCoordinates = VK_FALSE;
-	samplerInfo.compareEnable = VK_FALSE;
-	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-	samplerInfo.mipmapMode = mipmapMode;
-	if (!VKcheck("vkCreateSampler", _vkCreateSampler(device, &samplerInfo, 0, &textureImpl.textureSampler)))
+	else
 	{
-		throw std::runtime_error("failed to create texture sampler!");
+		textureImpl.textureSampler = VK_NULL_HANDLE;
 	}
 }
 void VulkanRenderer::midInitTexture(const textures::Texture& texture,
@@ -2363,7 +2624,7 @@ void VulkanRenderer::destroyVAO(vaos::VAO& vao)
 		{
 			for (auto& pair : ssboBuffers)
 			{
-				for (auto &pair2 : pair.second)
+				for (auto& pair2 : pair.second)
 				{
 					_vkDestroyBuffer(device, pair2.second.first, 0);
 					_vkFreeMemory(device, pair2.second.second, 0);
@@ -2687,17 +2948,224 @@ void VulkanRenderer::getCurrentImageToBitmap()
 }
 bool zg::VKcheck(const char* fn, VkResult result)
 {
+	if (result == VK_SUCCESS)
+	{
+		return true;
+	}
+
+	std::string resultString;
 	switch (result)
 	{
-	case VK_SUCCESS:
-		{
-			return true;
-		};
+	// Success Codes (should not normally be handled here unless logic changes)
+	// case VK_SUCCESS: resultString = "VK_SUCCESS"; break; // Handled above
+	case VK_NOT_READY:
+		resultString = "VK_NOT_READY";
+		break;
+	case VK_TIMEOUT:
+		resultString = "VK_TIMEOUT";
+		break;
+	case VK_EVENT_SET:
+		resultString = "VK_EVENT_SET";
+		break;
+	case VK_EVENT_RESET:
+		resultString = "VK_EVENT_RESET";
+		break;
+	case VK_INCOMPLETE:
+		resultString = "VK_INCOMPLETE";
+		break;
+	case VK_SUBOPTIMAL_KHR:
+		resultString = "VK_SUBOPTIMAL_KHR";
+		break; // Often needs special handling (like recreating swapchain) but is not a fatal error
+	case VK_PIPELINE_COMPILE_REQUIRED:
+		resultString = "VK_PIPELINE_COMPILE_REQUIRED";
+		break; // Or VK_PIPELINE_COMPILE_REQUIRED_EXT
+	case VK_THREAD_IDLE_KHR:
+		resultString = "VK_THREAD_IDLE_KHR";
+		break;
+	case VK_THREAD_DONE_KHR:
+		resultString = "VK_THREAD_DONE_KHR";
+		break;
+	case VK_OPERATION_DEFERRED_KHR:
+		resultString = "VK_OPERATION_DEFERRED_KHR";
+		break;
+	case VK_OPERATION_NOT_DEFERRED_KHR:
+		resultString = "VK_OPERATION_NOT_DEFERRED_KHR";
+		break;
+
+	// Error Codes
+	case VK_ERROR_OUT_OF_HOST_MEMORY:
+		resultString = "VK_ERROR_OUT_OF_HOST_MEMORY";
+		break;
+	case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+		resultString = "VK_ERROR_OUT_OF_DEVICE_MEMORY";
+		break;
+	case VK_ERROR_INITIALIZATION_FAILED:
+		resultString = "VK_ERROR_INITIALIZATION_FAILED";
+		break;
+	case VK_ERROR_DEVICE_LOST:
+		resultString = "VK_ERROR_DEVICE_LOST";
+		break;
+	case VK_ERROR_MEMORY_MAP_FAILED:
+		resultString = "VK_ERROR_MEMORY_MAP_FAILED";
+		break;
+	case VK_ERROR_LAYER_NOT_PRESENT:
+		resultString = "VK_ERROR_LAYER_NOT_PRESENT";
+		break;
+	case VK_ERROR_EXTENSION_NOT_PRESENT:
+		resultString = "VK_ERROR_EXTENSION_NOT_PRESENT";
+		break;
+	case VK_ERROR_FEATURE_NOT_PRESENT:
+		resultString = "VK_ERROR_FEATURE_NOT_PRESENT";
+		break;
+	case VK_ERROR_INCOMPATIBLE_DRIVER:
+		resultString = "VK_ERROR_INCOMPATIBLE_DRIVER";
+		break;
+	case VK_ERROR_TOO_MANY_OBJECTS:
+		resultString = "VK_ERROR_TOO_MANY_OBJECTS";
+		break;
+	case VK_ERROR_FORMAT_NOT_SUPPORTED:
+		resultString = "VK_ERROR_FORMAT_NOT_SUPPORTED";
+		break;
+	case VK_ERROR_FRAGMENTED_POOL:
+		resultString = "VK_ERROR_FRAGMENTED_POOL";
+		break;
+	case VK_ERROR_UNKNOWN:
+		resultString = "VK_ERROR_UNKNOWN";
+		break;
+	case VK_ERROR_OUT_OF_POOL_MEMORY:
+		resultString = "VK_ERROR_OUT_OF_POOL_MEMORY";
+		break; // Alias for VK_ERROR_OUT_OF_POOL_MEMORY_KHR
+	case VK_ERROR_INVALID_EXTERNAL_HANDLE:
+		resultString = "VK_ERROR_INVALID_EXTERNAL_HANDLE";
+		break; // Alias for VK_ERROR_INVALID_EXTERNAL_HANDLE_KHR
+	case VK_ERROR_FRAGMENTATION:
+		resultString = "VK_ERROR_FRAGMENTATION";
+		break; // Alias for VK_ERROR_FRAGMENTATION_EXT
+	case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
+		resultString = "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS";
+		break; // Alias for VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR
+	case VK_ERROR_SURFACE_LOST_KHR:
+		resultString = "VK_ERROR_SURFACE_LOST_KHR";
+		break;
+	case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
+		resultString = "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR";
+		break;
+	case VK_ERROR_OUT_OF_DATE_KHR:
+		resultString = "VK_ERROR_OUT_OF_DATE_KHR";
+		break; // Often needs special handling (recreating swapchain)
+	case VK_ERROR_INCOMPATIBLE_DISPLAY_KHR:
+		resultString = "VK_ERROR_INCOMPATIBLE_DISPLAY_KHR";
+		break;
+	case VK_ERROR_VALIDATION_FAILED_EXT:
+		resultString = "VK_ERROR_VALIDATION_FAILED_EXT";
+		break;
+	case VK_ERROR_INVALID_SHADER_NV:
+		resultString = "VK_ERROR_INVALID_SHADER_NV";
+		break;
+	case VK_ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR:
+		resultString = "VK_ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR";
+		break;
+	case VK_ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR:
+		resultString = "VK_ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR";
+		break;
+	case VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR:
+		resultString = "VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR";
+		break;
+	case VK_ERROR_VIDEO_PROFILE_FORMAT_NOT_SUPPORTED_KHR:
+		resultString = "VK_ERROR_VIDEO_PROFILE_FORMAT_NOT_SUPPORTED_KHR";
+		break;
+	case VK_ERROR_VIDEO_PROFILE_CODEC_NOT_SUPPORTED_KHR:
+		resultString = "VK_ERROR_VIDEO_PROFILE_CODEC_NOT_SUPPORTED_KHR";
+		break;
+	case VK_ERROR_VIDEO_STD_VERSION_NOT_SUPPORTED_KHR:
+		resultString = "VK_ERROR_VIDEO_STD_VERSION_NOT_SUPPORTED_KHR";
+		break;
+	case VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT:
+		resultString = "VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT";
+		break;
+	case VK_ERROR_NOT_PERMITTED_KHR:
+		resultString = "VK_ERROR_NOT_PERMITTED_KHR";
+		break; // Or VK_ERROR_NOT_PERMITTED_EXT
+	case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT:
+		resultString = "VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT";
+		break;
+	case VK_ERROR_COMPRESSION_EXHAUSTED_EXT:
+		resultString = "VK_ERROR_COMPRESSION_EXHAUSTED_EXT";
+		break;
+	case VK_ERROR_INCOMPATIBLE_SHADER_BINARY_EXT:
+		resultString = "VK_ERROR_INCOMPATIBLE_SHADER_BINARY_EXT";
+		break;
+		// Add other VkResult values as needed based on extensions you use
+
 	default:
+		resultString = "Unknown VkResult code: " + std::to_string(result);
+		break;
+	}
+
+	// Print error message to standard error stream
+	std::cerr << "Vulkan Error: Function '" << fn << "' failed with " << resultString << " (" << result << ")"
+						<< std::endl;
+
+	return false; // Indicate failure
+}
+// #endif
+void VulkanRenderer::transitionDepthBufferForWriting(textures::Framebuffer& framebuffer)
+{
+	auto shadowMapTexture = framebuffer.getDepthTexture();
+	if (shadowMapTexture && shadowMapTexture->rendererData)
+	{
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(shadowMapTexture->rendererData);
+		// Check if transition is needed (if it was left in READ_ONLY from previous frame)
+		if (textureImpl.layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL)
 		{
-			zg::Logger::print(zg::Logger::Blank, "VKcheck failed: ", result);
-			return false;
+			VkImageMemoryBarrier barrier;
+			VkPipelineStageFlags sourceStage;
+			VkPipelineStageFlags destinationStage;
+			prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
+													VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, // Old layout
+													VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // New layout for attachment use
+													VK_IMAGE_ASPECT_DEPTH_BIT, sourceStage, destinationStage, barrier);
+			vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+			textureImpl.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // Update tracked layout
+		}
+		else if (textureImpl.layout != VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+		{
+			// Warn if it's in some other unexpected state
+			std::cerr << "Warning: Directional shadow map in unexpected layout (" << textureImpl.layout
+								<< ") before shadow pass.\n";
 		}
 	}
 }
-// #endif
+void VulkanRenderer::transitionDepthBufferForReading(textures::Framebuffer& framebuffer)
+{
+	auto shadowMapTexture = framebuffer.getDepthTexture();
+	if (shadowMapTexture && shadowMapTexture->rendererData)
+	{
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(shadowMapTexture->rendererData);
+
+		// Ensure the layout we are transitioning *from* is correct
+		if (textureImpl.layout != VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+		{
+			// Log warning or throw? Indicates layout tracking might be off.
+			// For now, let's assume it *should* be ATTACHMENT_OPTIMAL here.
+			std::cerr << "Warning: Directional shadow map layout was not ATTACHMENT_OPTIMAL before transition!" << std::endl;
+		}
+
+		VkImageMemoryBarrier barrier;
+		VkPipelineStageFlags sourceStage;
+		VkPipelineStageFlags destinationStage;
+
+		// Prepare barrier details: ATTACHMENT_OPTIMAL -> READ_ONLY_OPTIMAL
+		prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
+												VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // Old layout
+												VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, // New layout for sampling
+												VK_IMAGE_ASPECT_DEPTH_BIT, // Assuming depth only
+												sourceStage, destinationStage, barrier);
+
+		// Record the barrier in the current command buffer
+		vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+		// Update tracked layout
+		textureImpl.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+	}
+}
