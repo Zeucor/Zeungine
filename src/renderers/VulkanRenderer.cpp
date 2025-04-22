@@ -1235,46 +1235,8 @@ void VulkanRenderer::postRenderPass()
 	callDestroyAtRenderPassEndOrDestroy();
 	return;
 }
-void VulkanRenderer::beginMainFramebuffer()
-{
-	auto offscreenColorTexture = swapchainFramebuffer->getColorTexture();
-	if (offscreenColorTexture && offscreenColorTexture->rendererData)
-	{
-		auto& textureImpl = *static_cast<VulkanTextureImpl*>(offscreenColorTexture->rendererData);
-		if (textureImpl.layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-		{
-			VkImageMemoryBarrier colorBarrier = {};
-			VkPipelineStageFlags sourceStage;
-			VkPipelineStageFlags destinationStage;
-			prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
-													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-													VK_IMAGE_ASPECT_COLOR_BIT, sourceStage, destinationStage, colorBarrier);
-			vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &colorBarrier);
-			textureImpl.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		}
-		else if (textureImpl.layout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL &&
-						 textureImpl.layout != VK_IMAGE_LAYOUT_UNDEFINED)
-		{
-			std::cerr << "Warning: Offscreen color texture in unexpected layout (" << textureImpl.layout
-								<< ") before Pass 1.\n";
-		}
-	}
-	else
-	{
-		throw std::runtime_error("Offscreen color texture is invalid before Pass 1!");
-	}
-	swapchainFramebuffer->bind();
-}
-void VulkanRenderer::postMainFramebuffer()
-{
-	swapchainFramebuffer->unbind();
-	auto offscreenColorTexture = swapchainFramebuffer->getColorTexture();
-	if (offscreenColorTexture && offscreenColorTexture->rendererData)
-	{
-		auto& textureImpl = *static_cast<VulkanTextureImpl*>(offscreenColorTexture->rendererData);
-		textureImpl.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	}
-}
+void VulkanRenderer::beginMainFramebuffer() { swapchainFramebuffer->bind(); }
+void VulkanRenderer::postMainFramebuffer() { swapchainFramebuffer->unbind(); }
 #ifndef MACOS
 void VulkanRenderer::swapBuffers()
 {
@@ -1761,6 +1723,8 @@ void VulkanRenderer::destroyShader(shaders::Shader& shader)
 }
 void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 {
+	transitionColorLayoutForWriting(framebuffer);
+	transitionDepthLayoutForWriting(framebuffer);
 	auto& framebufferImpl = *(const VulkanFramebufferImpl*)framebuffer.rendererData;
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1806,6 +1770,8 @@ void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
 {
 	_vkCmdEndRenderPass(*commandBuffer);
 	currentFramebufferImpl = 0;
+	transitionColorLayoutForReading(framebuffer);
+	transitionDepthLayoutForReading(framebuffer);
 }
 void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 {
@@ -3109,7 +3075,7 @@ bool zg::VKcheck(const char* fn, VkResult result)
 	return false; // Indicate failure
 }
 // #endif
-void VulkanRenderer::transitionDepthBufferForWriting(textures::Framebuffer& framebuffer)
+void VulkanRenderer::transitionDepthLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
 	auto shadowMapTexture = framebuffer.getDepthTexture();
 	if (shadowMapTexture && shadowMapTexture->rendererData)
@@ -3136,7 +3102,7 @@ void VulkanRenderer::transitionDepthBufferForWriting(textures::Framebuffer& fram
 		}
 	}
 }
-void VulkanRenderer::transitionDepthBufferForReading(textures::Framebuffer& framebuffer)
+void VulkanRenderer::transitionDepthLayoutForReading(const textures::Framebuffer& framebuffer)
 {
 	auto shadowMapTexture = framebuffer.getDepthTexture();
 	if (shadowMapTexture && shadowMapTexture->rendererData)
@@ -3167,5 +3133,39 @@ void VulkanRenderer::transitionDepthBufferForReading(textures::Framebuffer& fram
 
 		// Update tracked layout
 		textureImpl.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+	}
+}
+void VulkanRenderer::transitionColorLayoutForWriting(const textures::Framebuffer& framebuffer)
+{
+	auto offscreenColorTexture = framebuffer.getColorTexture();
+	if (offscreenColorTexture && offscreenColorTexture->rendererData)
+	{
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(offscreenColorTexture->rendererData);
+		if (textureImpl.layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		{
+			VkImageMemoryBarrier colorBarrier = {};
+			VkPipelineStageFlags sourceStage;
+			VkPipelineStageFlags destinationStage;
+			prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
+													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+													VK_IMAGE_ASPECT_COLOR_BIT, sourceStage, destinationStage, colorBarrier);
+			vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &colorBarrier);
+			textureImpl.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		}
+		else if (textureImpl.layout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL &&
+						 textureImpl.layout != VK_IMAGE_LAYOUT_UNDEFINED)
+		{
+			std::cerr << "Warning: Offscreen color texture in unexpected layout (" << textureImpl.layout
+								<< ") before Pass 1.\n";
+		}
+	}
+}
+void VulkanRenderer::transitionColorLayoutForReading(const textures::Framebuffer& framebuffer)
+{
+	auto offscreenColorTexture = framebuffer.getColorTexture();
+	if (offscreenColorTexture && offscreenColorTexture->rendererData)
+	{
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(offscreenColorTexture->rendererData);
+		textureImpl.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 }

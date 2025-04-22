@@ -38,7 +38,7 @@ namespace zg::textures
 				return pair.second == AttachmentType::Color;
 			}) != textureAttachmentPairs.end();
 		}
-		Texture* getColorTexture()
+		const Texture* getColorTexture() const
 		{
 			for (auto& pair : textureAttachmentPairs)
 			{
@@ -49,7 +49,7 @@ namespace zg::textures
 			}
 			return 0;
 		}
-		Texture* getDepthTexture()
+		const Texture* getDepthTexture() const
 		{
 			for (auto& pair : textureAttachmentPairs)
 			{

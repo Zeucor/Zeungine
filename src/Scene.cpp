@@ -192,7 +192,6 @@ void Scene::preRender()
 	auto entitiesSize = entities.size();
 	for (auto& directionaLightShadow : directionalLightShadows)
 	{
-		window.iRenderer->transitionDepthBufferForWriting(directionaLightShadow.framebuffer);
 		directionaLightShadow.framebuffer.bind();
 		directionaLightShadow.addShader();
 		iRenderer.clear();
@@ -211,11 +210,9 @@ void Scene::preRender()
 			directionaLightShadow.shader->unbind();
 		}
 		directionaLightShadow.framebuffer.unbind();
-		window.iRenderer->transitionDepthBufferForReading(directionaLightShadow.framebuffer);
 	}
 	for (auto& spotLightShadow : spotLightShadows)
 	{
-		window.iRenderer->transitionDepthBufferForWriting(spotLightShadow.framebuffer);
 		spotLightShadow.framebuffer.bind();
 		iRenderer.clear();
 		for (size_t index = 0; index < entitiesSize; ++index)
@@ -232,11 +229,9 @@ void Scene::preRender()
 			spotLightShadow.shader->unbind();
 		}
 		spotLightShadow.framebuffer.unbind();
-		window.iRenderer->transitionDepthBufferForReading(spotLightShadow.framebuffer);
 	}
 	for (auto& pointLightShadow : pointLightShadows)
 	{
-		window.iRenderer->transitionDepthBufferForWriting(pointLightShadow.framebuffer);
 		pointLightShadow.framebuffer.bind();
 		iRenderer.clear();
 		for (size_t index = 0; index < entitiesSize; ++index)
@@ -256,7 +251,6 @@ void Scene::preRender()
 			pointLightShadow.shader->unbind();
 		}
 		pointLightShadow.framebuffer.unbind();
-		window.iRenderer->transitionDepthBufferForReading(pointLightShadow.framebuffer);
 	}
 #if defined(USE_GL) || defined(USE_EGL)
 	// if (framebufferPointer != 0)

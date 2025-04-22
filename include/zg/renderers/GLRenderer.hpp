@@ -59,8 +59,10 @@ namespace zg
 		void destroyVAO(vaos::VAO &vao) override;
 		void ensureEntity(shaders::Shader &shader, vaos::VAO &vao) override;
 		void swapBuffers() override;
-		void transitionDepthBufferForWriting(textures::Framebuffer& framebuffer) override;
-		void transitionDepthBufferForReading(textures::Framebuffer& framebuffer) override;
+		void transitionDepthLayoutForWriting(const textures::Framebuffer& framebuffer) override;
+		void transitionDepthLayoutForReading(const textures::Framebuffer& framebuffer) override;
+		void transitionColorLayoutForWriting(const textures::Framebuffer& framebuffer) override;
+		void transitionColorLayoutForReading(const textures::Framebuffer& framebuffer) override;
 	};
 	const bool GLcheck(const GLRenderer &renderer, const char *fn, const bool egl = false);
 } // namespace zg
