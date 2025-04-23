@@ -17,8 +17,8 @@
 #ifdef MACOS
 #include <zg/windows/MacOSWindow.hpp>
 #endif
-#include <zg/crypto/vector.hpp>
 #include <zg/PostProcessingPipeline.hpp>
+#include <zg/crypto/vector.hpp>
 using namespace zg;
 bool VulkanRenderer::fallbackToSwiftshader = false;
 bool VulkanRenderer::attempedCoreVulkan = false;
@@ -1466,7 +1466,10 @@ void VulkanRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const s
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	auto data = vaos::VAO::getShaderData(vao.vaoIRenderer);
 	auto& textureBindings = shaderImpl.getTextureBindings(data);
-	auto& bindingIndex = textureBindings[stringName];
+	auto bindingIndexIter = textureBindings.find(stringName);
+	if (bindingIndexIter == textureBindings.end())
+		return;
+	auto& bindingIndex = bindingIndexIter->second;
 	if (!bindingIndex)
 		return;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
@@ -1769,9 +1772,9 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
 {
 	_vkCmdEndRenderPass(*commandBuffer);
-	currentFramebufferImpl = 0;
 	transitionColorLayoutForReading(framebuffer);
 	transitionDepthLayoutForReading(framebuffer);
+	currentFramebufferImpl = 0;
 }
 void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 {
@@ -1779,7 +1782,6 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 	{
 		throw std::runtime_error("Framebuffer already initialized!");
 	}
-
 	framebuffer.rendererData = new VulkanFramebufferImpl();
 	auto& framebufferImpl = *static_cast<VulkanFramebufferImpl*>(framebuffer.rendererData);
 	framebufferImpl.zgFramebuffer = &framebuffer;
@@ -2434,9 +2436,9 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 		}
 		samplerInfo.magFilter = filter;
 		samplerInfo.minFilter = filter;
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 		samplerInfo.anisotropyEnable = VK_TRUE;
 		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
