@@ -38,8 +38,17 @@ void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared
     	shader->bind(*this);
 	shader->setBlock("Model", *this, model);
     uint32_t unit = 0;
+    auto constantsBegin = constants.begin();
+    auto constantsEnd = constants.end();
     for (auto& pair : inputTextures)
-        shader->setTexture(pair.first, *this, *pair.second, unit++);
+    {
+        auto found_iter = std::find_if(constantsBegin, constantsEnd, [&](auto& val)
+        {
+            return val == pair.first;
+        });
+        if (found_iter != constantsEnd)
+            shader->setTexture(pair.first, *this, *pair.second, unit++);
+    }
 	drawVAO();
 	shader->unbind();
 }
