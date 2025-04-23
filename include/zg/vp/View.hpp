@@ -33,5 +33,6 @@ namespace zg::vp
     UniqueIdentifier addResizeHandler(const ViewResizeHandler &callback);
     void removeResizeHandler(UniqueIdentifier &id);
     void callResizeHandler(glm::vec2 newSize);
+    void setDirty();
   };
 }

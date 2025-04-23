@@ -24,7 +24,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewQua
 						scene.viewPointer->position.x += scene.viewPointer->direction.x * force * scene.window.deltaTime;
 						scene.viewPointer->position.y += scene.viewPointer->direction.y * force * scene.window.deltaTime;
 						scene.viewPointer->position.z += scene.viewPointer->direction.z * force * scene.window.deltaTime;
-						scene.viewPointer->update();
+						scene.viewPointer->setDirty();
 					}));
 			component.template make<zg::UniqueIdentifier>(
 				"bID",
@@ -36,7 +36,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewQua
 						scene.viewPointer->position.x -= scene.viewPointer->direction.x * force * scene.window.deltaTime;
 						scene.viewPointer->position.y -= scene.viewPointer->direction.y * force * scene.window.deltaTime;
 						scene.viewPointer->position.z -= scene.viewPointer->direction.z * force * scene.window.deltaTime;
-						scene.viewPointer->update();
+						scene.viewPointer->setDirty();
 					}));
 			component.template make<zg::UniqueIdentifier>(
 				"lID",
@@ -52,7 +52,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewQua
 																					 scene.viewPointer->position.x -= right.x * force * scene.window.deltaTime;
 																					 scene.viewPointer->position.y -= right.y * force * scene.window.deltaTime;
 																					 scene.viewPointer->position.z -= right.z * force * scene.window.deltaTime;
-																					 scene.viewPointer->update();
+																					 scene.viewPointer->setDirty();
 																				 }));
 			component.template make<zg::UniqueIdentifier>(
 				"rID",
@@ -68,7 +68,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewQua
 																					 scene.viewPointer->position.x += right.x * force * scene.window.deltaTime;
 																					 scene.viewPointer->position.y += right.y * force * scene.window.deltaTime;
 																					 scene.viewPointer->position.z += right.z * force * scene.window.deltaTime;
-																					 scene.viewPointer->update();
+																					 scene.viewPointer->setDirty();
 																				 }));
 		}};
 	return info;

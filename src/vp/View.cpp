@@ -123,3 +123,11 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::vp::View>& viewPointer)
 	viewPointer = std::make_shared<zg::vp::View>(position, direction, up, lookAtSet, lookAt);
 	return serial;
 }
+void View::setDirty()
+{
+	{
+		std::unique_lock lock(updateMutex);
+		dirty = true;
+	}
+	updateCV.notify_one();
+}
