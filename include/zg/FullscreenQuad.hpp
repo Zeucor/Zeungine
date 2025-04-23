@@ -9,6 +9,6 @@ namespace zg
     {
         glm::mat4 model = glm::mat4(1.0f);
         FullscreenQuad(IRenderer* iRenderer, const shaders::RuntimeConstants& constants);
-        void render(const std::vector<std::pair<std::string, std::shared_ptr<zg::textures::Texture>>>& inputTextures);
+        void render(const std::vector<std::pair<std::string, std::shared_ptr<zg::textures::Texture>>>& inputTextures, bool shaderAlreadyBound = false);
     };
 }

@@ -131,7 +131,7 @@ Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::
 		}
 		sceneTextures.push_back(
 			std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0),
-																					(const void*)0, format, type, textures::Texture::FilterType::Nearest));
+																					(const void*)0, format, type, textures::Texture::FilterType::Linear));
 		textureAttachmentPairs.push_back({sceneTextures[sceneTextures.size() - 1].get(), attachment});
 	}
 	return textureAttachmentPairs;

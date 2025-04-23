@@ -15,7 +15,9 @@ void TextureOutputRegistry::deregisterOutput(float floatingIndex, const std::str
 	map.erase(iter);
 }
 PostProcessingStage::PostProcessingStage(const PostProcessingStageCreateInfo& info) :
-		name(info.name), inputs(info.inputs), outputs(info.outputs), constants(info.constants)
+		name(info.name), inputs(info.inputs), outputs(info.outputs), constants(info.constants),
+        setShaderConstants(info.setShaderConstants),
+        staticOnAttached(info.staticOnAttached), staticOnDetached(info.staticOnDetached)
 {
 }
 PostProcessingPipeline::PostProcessingPipeline(Window& window) : window(window) {}
@@ -50,7 +52,7 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
 				break;
 			};
 		}
-		auto textureFilterType = textures::Texture::FilterType::Nearest;
+		auto textureFilterType = textures::Texture::FilterType::Linear;
 		auto texture =
 			std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0),
 																					(const void*)0, textureFormat, textureType, textureFilterType, true);
@@ -61,6 +63,14 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
         stage.constants.push_back(input);
 	framebuffers.emplace_back_key(floatingIndex, new textures::Framebuffer(window.iRenderer, attachments));
     fullscreenQuads.emplace_back_key(floatingIndex, window.iRenderer, stage.constants);
+    if (!calledStaticOnAttached[stage.name])
+    {
+        if (stage.staticOnAttached)
+        {
+            stage.staticOnAttached();
+            calledStaticOnAttached[stage.name] = true;
+        }
+    }
 	return emplace_tuple;
 }
 bool PostProcessingPipeline::removeStage(size_t id)
@@ -68,6 +78,15 @@ bool PostProcessingPipeline::removeStage(size_t id)
 	auto iter = stages.find_id(id);
 	if (iter == stages.end())
 		return false;
+    auto& stage = *iter;
+    if (!calledStaticOnDetached[stage.name])
+    {
+        if (stage.staticOnDetached)
+        {
+            stage.staticOnDetached();
+            calledStaticOnDetached[stage.name] = true;
+        }
+    }
 	stages.erase(iter);
 	return true;
 }
@@ -120,8 +139,15 @@ std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> PostProc
         auto& framebuffer = **framebufferIter;
         auto fullscreenQuadIter = fullscreenQuads.find_key(stage.floatingIndex);
         assert(fullscreenQuadIter != fullscreenQuads.end());
+        auto& fullscreenQuad = *fullscreenQuadIter;
         framebuffer.bind();
-        fullscreenQuadIter->render(inputTextures);
+        auto& shader = *fullscreenQuad.addShader();
+        shader.bind(fullscreenQuad);
+        if (stage.setShaderConstants)
+        {
+            stage.setShaderConstants(shader, fullscreenQuad);
+        }
+        fullscreenQuad.render(inputTextures, true);
         framebuffer.unbind();
         ++key_iter;
         while (texturePairIter != textureMapEnd)

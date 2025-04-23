@@ -7,7 +7,7 @@
 using namespace zg::lights;
 DirectionalLightShadow::DirectionalLightShadow(Window& window, DirectionalLight& directionalLight) :
 		window(window), directionalLight(directionalLight),
-		texture(window.iRenderer, glm::ivec4(8192, 8192, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Nearest, true),
+		texture(window.iRenderer, glm::ivec4(8192, 8192, 1, 0), 0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Linear, true),
 		framebuffer(window.iRenderer, {{&texture, textures::Framebuffer::AttachmentType::Depth}})
 {
 	update();
@@ -44,5 +44,12 @@ void DirectionalLightShadow::update()
 	static glm::vec2 projectionDimensions = {128, 128};
 	vp::Projection projection(window, projectionDimensions, directionalLight.nearPlane, directionalLight.farPlane);
 	vp::View view(directionalLight.position, directionalLight.direction, directionalLight.up, lookAtSet, lookAt);
+	{
+		std::unique_lock lock(view.updateMutex);
+		view.updateCV.wait(lock, [&]
+		{
+			return !view.dirty;
+		});
+	}
 	lightSpaceMatrix = projection.matrix * view.matrix;
 }

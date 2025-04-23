@@ -89,6 +89,7 @@ Window& Window::operator=(const Window& other)
 	title = other.title;
 	mouseMoved = other.mouseMoved;
 	mouseCoords = other.mouseCoords;
+	newMouseCoords = other.newMouseCoords;
 	mod = other.mod;
 	isChildWindow = other.isChildWindow;
 	parentWindow = other.parentWindow;
@@ -270,7 +271,7 @@ void Window::updateMouse()
 	}
 	if (mouseMoved)
 	{
-		callMouseMoveHandler(mouseCoords);
+		callMouseMoveHandler(newMouseCoords);
 		mouseMoved = false;
 	}
 }
@@ -559,6 +560,9 @@ void Window::callMousePressHandler(Button button, int pressed)
 }
 void Window::callMouseMoveHandler(glm::vec2 coords)
 {
+	if (coords == mouseCoords)
+		return;
+	mouseCoords = coords;
 	std::vector<MouseMoveHandler> handlersCopy;
 	{
 		// std::lock_guard lock(handlersMutex);
@@ -586,14 +590,14 @@ void Window::handleMouseMove(uint32_t x, uint32_t y)
 			continue;
 		auto childX = x - childWindow.windowX;
 		auto childY = childWindow.windowHeight - (window.windowHeight - y - childWindow.windowY);
-		childWindow.mouseCoords.x = childX, childWindow.mouseCoords.y = childY;
+		childWindow.newMouseCoords.x = childX, childWindow.newMouseCoords.y = childY;
 		childWindow.mouseMoved = true;
 		hadChildFocus = true;
 		break;
 	}
 	if (!hadChildFocus)
 	{
-		window.mouseCoords.y = y, window.mouseCoords.x = x;
+		window.newMouseCoords.y = y, window.newMouseCoords.x = x;
 		window.mouseMoved = true;
 	}
 }

@@ -4,40 +4,56 @@ using namespace zg;
 using namespace zg::vp;
 View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up) : position(_position),
 														direction(glm::normalize(_direction)),
-														up(_up)
+														up(_up),
+														phi(atan2(direction.z, direction.x)),
+														theta(acos(glm::clamp(direction.y, -1.0f, 1.0f))),
+														updateThread(&View::update, this)
 {
-	phi = atan2(direction.z, direction.x);
-	theta = acos(glm::clamp(direction.y, -1.0f, 1.0f));
-	update();
 }
 View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up, bool _lookAtSet, glm::vec3 _lookAt) : position(_position),
 														direction(glm::normalize(_direction)),
 														up(_up),
+														phi(atan2(direction.z, direction.x)),
+														theta(acos(glm::clamp(direction.y, -1.0f, 1.0f))),
 														lookAtSet(_lookAtSet),
-														lookAt(_lookAt)
+														lookAt(_lookAt),
+														updateThread(&View::update, this)
+{}
+View::~View()
 {
-	phi = atan2(direction.z, direction.x);
-	theta = acos(glm::clamp(direction.y, -1.0f, 1.0f));
-	update();
+	{
+		std::unique_lock lock(updateMutex);
+		running = false;
+	}
+	updateCV.notify_one();
+	if (updateThread.joinable())
+		updateThread.join();
 }
 void View::update()
 {
-	if (lookAtSet)
-		matrix = glm::lookAt(position, lookAt, up);
-	else
+	while (true)
 	{
-		auto _direction_ = direction;
-		_setMatrix:
-		if (std::isnan(direction.x) || std::isnan(direction.y) || std::isnan(direction.z))
 		{
-			return;
+			std::unique_lock lock(updateMutex);
+			updateCV.wait(lock, [&]()
+			{
+				return dirty || !running;
+			});
 		}
-		matrix = glm::lookAt(position, position + _direction_, up);
-		if (std::isnan(matrix[0][0]))
+		if (!running)
+			break;
+		if (lookAtSet)
+			matrix = glm::lookAt(position, lookAt, up);
+		else
 		{
-			_direction_ += 0.000004;
-			goto _setMatrix;
+			auto _direction_ = direction;
+			matrix = glm::lookAt(position, position + _direction_, up);
 		}
+		{
+			std::unique_lock lock(updateMutex);
+			dirty = false;
+		}
+		updateCV.notify_one();
 	}
 }
 void View::addPhiTheta(float addPhi, float addTheta)
@@ -50,7 +66,11 @@ void View::addPhiTheta(float addPhi, float addTheta)
 	newDirection.y = cos(theta);
 	newDirection.z = sin(theta) * sin(phi);
 	direction = newDirection;
-	update();
+	{
+		std::unique_lock lock(updateMutex);
+		dirty = true;
+	}
+	updateCV.notify_one();
 }
 UniqueIdentifier View::addResizeHandler(const ViewResizeHandler &callback)
 {

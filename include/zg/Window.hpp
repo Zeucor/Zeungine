@@ -87,6 +87,7 @@ struct WindowCreateInfo;
 		int windowButtons[7];
 		bool mouseMoved = false;
 		glm::vec2 mouseCoords;
+		glm::vec2 newMouseCoords;
 		int mod = 0;
 		bool isChildWindow = false;
 		Window* parentWindow = 0;

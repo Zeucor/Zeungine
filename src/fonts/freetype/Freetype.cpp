@@ -83,7 +83,7 @@ FreetypeCharacter::FreetypeCharacter(Window& window, const FreetypeFont& freeTyp
 		}
 		texturePointer.reset(new textures::Texture(window.iRenderer, {size.x, size.y, 1, 0}, rgbaImgPointer,
 																							 textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
-																							 textures::Texture::FilterType::Nearest));
+																							 textures::Texture::FilterType::Linear));
 	}
 _setAdvance:
 	advance = face->glyph->advance.x;
@@ -174,7 +174,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 	{
 		texturePointer.reset(new textures::Texture(window.iRenderer, glm::ivec4(scaledSize.x, scaledSize.y, 1, 0), 0,
 																							 textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
-																							 textures::Texture::FilterType::Nearest));
+																							 textures::Texture::FilterType::Linear));
 	}
 	if (!framebufferPointer)
 	{

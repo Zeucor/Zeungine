@@ -869,7 +869,7 @@ void VulkanRenderer::createImageViews()
 		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
 							 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
 		(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
-		textures::Texture::FilterType::Nearest, true);
+		textures::Texture::FilterType::Linear, true);
 	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", swapchainColorTexture);
 	auto swapChainImagesSize = swapChainImages.size();
 	swapChainImageViews.resize(swapChainImagesSize);
@@ -1010,7 +1010,7 @@ void VulkanRenderer::createDepthResources()
 																				glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
 																									 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
 																				(const void*)0, textures::Texture::Format::Depth,
-																				textures::Texture::Type::Float, textures::Texture::FilterType::Nearest, true);
+																				textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true);
 	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", depthTexture);
 	VkFormat depthFormat = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
 	createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL,
@@ -1521,7 +1521,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 {
 	if (shader.compiled)
 		return true;
-	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	auto& shaderImpl = *static_cast<VulkanShaderImpl*>(shader.rendererData);
 	auto data = vaos::VAO::getShaderData(shader.iRenderer);
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;

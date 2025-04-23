@@ -31,10 +31,11 @@ FullscreenQuad::FullscreenQuad(IRenderer* iRenderer, const shaders::RuntimeConst
     zg::Entity::flipUVsY(uv2s);
     updateElements("UV2", uv2s);
 }
-void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared_ptr<zg::textures::Texture>>>& inputTextures)
+void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared_ptr<zg::textures::Texture>>>& inputTextures, bool shaderAlreadyBound)
 {
 	auto shader = addShader();
-	shader->bind(*this);
+    if (!shaderAlreadyBound)
+    	shader->bind(*this);
 	shader->setBlock("Model", *this, model);
     uint32_t unit = 0;
     for (auto& pair : inputTextures)

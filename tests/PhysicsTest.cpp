@@ -16,6 +16,8 @@
 #include <zg/math/Rotations.hpp>
 #include <zg/physics/CollisionManifold.hpp>
 #include <zg/components/windows/FXAA.hpp>
+#include <zg/components/scenes/ViewMouseControl.hpp>
+#include <zg/components/scenes/ViewQuadKeyControl.hpp>
 #include <zg/Registry.hpp>
 using namespace zg;
 shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
@@ -39,7 +41,7 @@ int main()
 	auto window_tuple = Registry::addWindow(windowCreateInfo);
 	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
 	window.runOnThread([](auto& window) {
-		window.attachComponent(zg::components::windows::FXAAFactory());
+		window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
 		auto sceneCreateInfo = PhysicsSceneFactory();
 		window.addScene(sceneCreateInfo);
 	 });
@@ -80,7 +82,9 @@ SceneCreateInfo PhysicsSceneFactory()
 			scene.directionalLightShadows.emplace_back(scene.window, scene.directionalLights[0]);
 			// scene.attachComponent(components::scenes::GravityByAttractionFactory(0.000005f));
 			// scene.attachComponent(components::scenes::GravityByVectorFactory(glm::vec3(0, -9.81, 0)));
-			scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 40.0L)));\
+			scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 40.0L)));
+			scene.attachComponent(components::scenes::ViewMouseControlFactory());
+			// scene.attachComponent(components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 5));
 			auto floor_tuple = scene.addEntity(floorCreateInfo);
 			auto& floor = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_tuple);
 			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyCreateInfo);

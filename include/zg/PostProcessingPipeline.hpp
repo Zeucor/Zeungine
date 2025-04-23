@@ -7,6 +7,8 @@
 #include <zg/KeyIDVector.hpp>
 #include <zg/textures/Framebuffer.hpp>
 #include <zg/FullscreenQuad.hpp>
+#include <zg/shaders/Shader.hpp>
+#include <zg/vaos/VAO.hpp>
 namespace std
 {
 	template <>
@@ -32,6 +34,9 @@ namespace zg
         std::vector<std::string> inputs;
         std::vector<std::pair<std::string, textures::Framebuffer::AttachmentType>> outputs;
         shaders::RuntimeConstants constants;
+        std::function<void(zg::shaders::Shader&, zg::vaos::VAO&)> setShaderConstants;
+        std::function<void()> staticOnAttached;
+        std::function<void()> staticOnDetached;
     };
     struct PostProcessingStage
     {
@@ -40,6 +45,9 @@ namespace zg
         std::vector<std::string> inputs;
         std::vector<std::pair<std::string, textures::Framebuffer::AttachmentType>> outputs;
         shaders::RuntimeConstants constants;
+        std::function<void(zg::shaders::Shader&, zg::vaos::VAO&)> setShaderConstants;
+        std::function<void()> staticOnAttached;
+        std::function<void()> staticOnDetached;
         PostProcessingStage(const PostProcessingStageCreateInfo& info);
     };
     struct Window;
@@ -49,6 +57,8 @@ namespace zg
         KeyIDVector<float, PostProcessingStage> stages;
         KeyIDVector<float, textures::Framebuffer*> framebuffers;
         KeyIDVector<float, FullscreenQuad> fullscreenQuads;
+        std::unordered_map<std::string, bool> calledStaticOnAttached;
+        std::unordered_map<std::string, bool> calledStaticOnDetached;
         bool dirty = false;
         PostProcessingPipeline(Window& window);
         KeyIDVector<float, PostProcessingStage>::EmplaceBackTuple addStage(float floatingIndex, const PostProcessingStageCreateInfo& info);

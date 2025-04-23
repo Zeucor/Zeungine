@@ -1060,35 +1060,42 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](shaders::Shader& shader, const auto& constants)-> std::string
                 {
-                  std::string string(
-                      "float calculateDirectionalLightShadowFactor(in vec4 lightSpacePosition, in sampler2D shadowMap, in vec3 normal, in vec3 lightDir, float near, float far){\n");
-                  string += "  vec2 projCoords = lightSpacePosition.xy;//  / lightSpacePosition.w;\n";
-                  if (shader.iRenderer->renderer == RENDERER::RENDERER_VULKAN)
-                  {
-                    string += "  projCoords.xy = projCoords.xy * 0.5 + 0.5;\n";
-                              // "  projCoords.y = 1.0 - projCoords.y;\n";
-                  }
-                  else
-                  {
-                    string += "  projCoords = projCoords * 0.5 + 0.5;\n";
-                  }
-                  string += "  float closestDepth = texture(shadowMap, projCoords.xy).r;\n"
-                            "  closestDepth = closestDepth;"
-                            "  float currentDepth = (lightSpacePosition.z / lightSpacePosition.w);\n";
-                  if (shader.iRenderer->renderer == RENDERER::RENDERER_VULKAN)
-                  {
-                    string += "  float currentLinearDepth = near * far / (far - currentDepth * (far - near));\n"
-                              "  float closestLinearDepth = near * far / (far - (1.0 - closestDepth) * (far - near));\n"
-                              "  float bias = max(0.003 * (1.0 - dot(normal, lightDir)), 0.003);\n"
-                              "  float shadow = (currentDepth - bias) > closestDepth ? 1.0 : 0.0;//currentDepth;//closestDepth;\n";
-                  }
-                  else
-                  {
-                    string += "  float shadow = (currentDepth) > closestDepth ? 1.0 : 0.0;\n";
-                  }
-                  string += "  return shadow;\n"
-                            "}";
-                  return string;
+                  // Start building the GLSL function string
+                  std::string string = R"(
+                    float calculateDirectionalLightShadowFactor(
+                        in vec4 lightSpacePosition,
+                        in sampler2D shadowMap,
+                        in vec3 normal,
+                        in vec3 lightDir,
+                        in float nearPlane,
+                        in float farPlane
+                    ) {
+                        vec3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;
+                    )";
+                    if (shader.iRenderer->renderer == RENDERER_VULKAN) {
+                        string += "    projCoords.xy = projCoords.xy * 0.5 + 0.5;\n";
+                    } else {
+                        string += "    projCoords = projCoords * 0.5 + 0.5;\n";
+                    }
+                    string += R"(
+                        float currentDepth = projCoords.z;
+                        float shadowFactor = 0.0;
+                        vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
+                        float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.001);
+                        int kernelSize = 1;
+                        int radius = (kernelSize - 1) / 2;
+                        for(int x = -radius; x <= radius; ++x) {
+                            for(int y = -radius; y <= radius; ++y) {
+                                vec2 offsetCoords = projCoords.xy + vec2(x, y) * texelSize;
+                                float closestDepth = texture(shadowMap, offsetCoords).r;
+                                shadowFactor += (currentDepth - bias) > closestDepth ? 1.0 : 0.0;
+                            }
+                        }
+                        shadowFactor /= float(kernelSize * kernelSize);
+                        return clamp(shadowFactor, 0.0, 1.0);
+                    }
+                    )";
+                    return string;
                 }
               }
             }
