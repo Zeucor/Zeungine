@@ -93,7 +93,7 @@ namespace zg
 		void callMouseMoveHandler(glm::vec2 coords);
 		void callMouseHoverHandler(bool hovered);
 		template <typename T>
-		void flipUVsY(std::vector<T>& uvs)
+		static void flipUVsY(std::vector<T>& uvs)
 		{
 			for (auto& uv : uvs)
 			{

@@ -167,6 +167,7 @@ void Window::startWindow()
 	iRendererRef.createContext(&iPlatformWindowRef);
 	iRendererRef.init();
 	iPlatformWindowRef.postInit();
+	fullscreenQuad = std::make_unique<FullscreenQuad>(iRenderer, zg::shaders::RuntimeConstants({"ColorTexture"}));
 	runRunnables();
 	iPlatformWindowRef.disableKeyAutoRepeat();
 	while (true)
@@ -205,8 +206,9 @@ void Window::startWindow()
 			childWindow.framebufferPlane->render();
 		}
 		iRendererRef.postMainFramebuffer();
+		auto finalInputs = postProcessingPipeline.postProcess();
 		iRendererRef.beginRenderPass();
-		render();
+		fullscreenQuad->render(finalInputs);
 		iRendererRef.postRenderPass();
 		postRender();
 		callPreSwapbuffersOnceoff();
@@ -225,6 +227,8 @@ _exit:
 	for (size_t i = 0; i < scenesSize; ++i)
 		scenesData[i].detachAllComponents();
 	scenes.clear();
+	fullscreenQuad.reset();
+	postProcessingPipeline.cleanup();
     delete iRenderer->shaderContext;
     iRendererRef.destroy();
 	delete iRenderer;

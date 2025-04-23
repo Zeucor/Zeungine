@@ -62,7 +62,7 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(textures::Texture& texture, std:
         .rotation = rotation,
         .scale = scale,
         .constants = zg::mergeVectors<std::string>(
-			{{"UV2", "Position", "Normal", "Texture2D", "View", "Projection", "Model", "CameraPosition"}}, constants),
+			{{"UV2", "Position", "Normal", "ColorTexture", "View", "Projection", "Model", "CameraPosition"}}, constants),
         .name = name,
         .indiceCount = 6,
         .indices = indices,

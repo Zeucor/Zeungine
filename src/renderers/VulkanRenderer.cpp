@@ -18,6 +18,7 @@
 #include <zg/windows/MacOSWindow.hpp>
 #endif
 #include <zg/crypto/vector.hpp>
+#include <zg/PostProcessingPipeline.hpp>
 using namespace zg;
 bool VulkanRenderer::fallbackToSwiftshader = false;
 bool VulkanRenderer::attempedCoreVulkan = false;
@@ -869,7 +870,7 @@ void VulkanRenderer::createImageViews()
 							 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
 		(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
 		textures::Texture::FilterType::Nearest, true);
-
+	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", swapchainColorTexture);
 	auto swapChainImagesSize = swapChainImages.size();
 	swapChainImageViews.resize(swapChainImagesSize);
 	for (uint32_t index = 0; index < swapChainImagesSize; index++)
@@ -1010,6 +1011,7 @@ void VulkanRenderer::createDepthResources()
 																									 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
 																				(const void*)0, textures::Texture::Format::Depth,
 																				textures::Texture::Type::Float, textures::Texture::FilterType::Nearest, true);
+	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", depthTexture);
 	VkFormat depthFormat = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
 	createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL,
 							VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage,

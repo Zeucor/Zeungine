@@ -14,6 +14,7 @@
 #include "audio/AudioEngine.hpp"
 #include "Scene.hpp"
 #include "PostProcessingPipeline.hpp"
+#include "FullscreenQuad.hpp"
 namespace zg
 {
 	namespace shaders
@@ -103,6 +104,7 @@ struct WindowCreateInfo;
 		budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL> framebudget;
 		fonts::SystemFonts systemFonts;
 		PostProcessingPipeline postProcessingPipeline;
+		std::unique_ptr<FullscreenQuad> fullscreenQuad;
 		// when adding new members remember to add to operator=
 
 		Window(const WindowCreateInfo& info);

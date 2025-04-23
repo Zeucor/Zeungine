@@ -689,15 +689,15 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
             }
           },
           {
-            "Texture2D", {
+            "ColorTexture", {
                     {
                       ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                       {
                         std::string string("layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
                           ") out vec4 FragColor;\n");
                         auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                        shader.addTexture(bindingIndex, ShaderType::Fragment, "Texture2D");
-                        string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D Texture2D;";
+                        shader.addTexture(bindingIndex, ShaderType::Fragment, "ColorTexture");
+                        string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D ColorTexture;";
                         return string;
                       }
                     }
@@ -836,11 +836,11 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
             }
           },
           {
-            "Texture2D", {
+            "ColorTexture", {
                 {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
-                    std::string string("  vec4 sampled = texture(Texture2D, inUV);\n");
+                    std::string string("  vec4 sampled = texture(ColorTexture, inUV);\n");
                   	if (std::find(constants.begin(), constants.end(), "TextColor") != constants.end())
                   	{
 											string += "  FragColor = vec4(textColor.value.r, textColor.value.g, textColor.value.b, sampled.a * textColor.value.a);";
