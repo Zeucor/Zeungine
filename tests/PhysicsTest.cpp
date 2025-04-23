@@ -16,6 +16,7 @@
 #include <zg/math/Rotations.hpp>
 #include <zg/physics/CollisionManifold.hpp>
 #include <zg/components/windows/FXAA.hpp>
+#include <zg/components/windows/SMAA.hpp>
 #include <zg/components/scenes/ViewMouseControl.hpp>
 #include <zg/components/scenes/ViewQuadKeyControl.hpp>
 #include <zg/Registry.hpp>
@@ -41,7 +42,8 @@ int main()
 	auto window_tuple = Registry::addWindow(windowCreateInfo);
 	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
 	window.runOnThread([](auto& window) {
-		window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
+		// window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
+		// window.attachComponent(zg::components::windows::SMAAFactory(0.0f, 64, 64, 128));
 		auto sceneCreateInfo = PhysicsSceneFactory();
 		window.addScene(sceneCreateInfo);
 	 });
