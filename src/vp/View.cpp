@@ -5,16 +5,16 @@ using namespace zg::vp;
 View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up) : position(_position),
 														direction(glm::normalize(_direction)),
 														up(_up),
-														phi(atan2(direction.z, direction.x)),
-														theta(acos(glm::clamp(direction.y, -1.0f, 1.0f))),
+														phi(atan2(this->direction.z, this->direction.x)),
+														theta(acos(glm::clamp(this->direction.y, -1.0f, 1.0f))),
 														updateThread(&View::update, this)
 {
 }
 View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up, bool _lookAtSet, glm::vec3 _lookAt) : position(_position),
 														direction(glm::normalize(_direction)),
 														up(_up),
-														phi(atan2(direction.z, direction.x)),
-														theta(acos(glm::clamp(direction.y, -1.0f, 1.0f))),
+														phi(atan2(this->direction.z, this->direction.x)),
+														theta(acos(glm::clamp(this->direction.y, -1.0f, 1.0f))),
 														lookAtSet(_lookAtSet),
 														lookAt(_lookAt),
 														updateThread(&View::update, this)
@@ -58,10 +58,12 @@ void View::update()
 }
 void View::addPhiTheta(float addPhi, float addTheta)
 {
+	static auto _pi_ = glm::pi<float>();
+	addPhi = glm::clamp(addPhi, -_pi_, _pi_ * 2);
 	phi += addPhi;
 	theta += addTheta;
-	theta = glm::clamp(theta, 0.001f, glm::pi<float>() - 0.001f);
-	glm::dvec3 newDirection;
+	theta = glm::clamp(theta, 0.001f, _pi_ - 0.001f);
+	glm::vec3 newDirection;
 	newDirection.x = sin(theta) * cos(phi);
 	newDirection.y = cos(theta);
 	newDirection.z = sin(theta) * sin(phi);
