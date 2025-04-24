@@ -30,6 +30,15 @@ Uses CMake for it's build system and comes with some included tests
  - [harfbuzz](https://harfbuzz.github.io/)
  - [png](http://www.libpng.org/pub/png/libpng.html)
 
+### Features
+
+ - Simple Entity/Scene/Window hierarchy with hot pluggable Component system 
+ - Runtime Programmable Shader Pipeline
+ - MSAA (HW Accelerated)
+ - Lightweight Event Loop
+ - Directional, Point & Spot Lights and Shadows
+ - Runtime Programmable Post Processing Pipeline
+
 ### Cloning
 
 ```bash
@@ -38,44 +47,13 @@ git clone git@github.com:Zeungine/Zeungine.git
 
 ### Releases
 
-Releases are available on GitHub, see [here](https://github.com/Zeucor/Zeungine/releases), for development you'll need either static or shared dependencies and zeungine library, as well as headers. I recommend static builds for shipping production binaries as all dependencies will be bundled into your final game executable. 
+Releases are available on GitHub, see [here](https://github.com/Zeucor/Zeungine/releases). Zeungine comes as an all=in-one installer. Debug & Release binaries are packaged as well as headers for zg and many of the libraries listed above.
 
 ### Builing from Source
 
-If ultimately you want a installed copy of Zeungine and dependencies then you'll be best off using...
+If you want a latest copy of Zeungine and dependencies then consider analyzing [`win-package.bat` or `unx-package.sh`] for their configure, compile, install and package commands
 
-`win-package.bat` or `unx-package.sh`
-
-You can analyze these files for their configure, compile, install and package commands
-
-###### All platforms
-
-The following programs must be available in your PATH 
- - `cmake`
- - `make`
- - `bash` (on windows you can add `C:\Program Files\Git\bin` to your PATH)
- - `nasm`
-
-###### Windows
-
- - `Visual Studio 2022` or newer for MSVC
- - [msys2](https://www.msys2.org/)
- - `C:\\msys64\\msys2_shell.cmd -defterm -no-start -mingw64 -here -use-full-path -c "pacman -S --noconfirm make diffutils"`
- - `choco install dos2unix ninja`
- - run all commands from Command Prompt (cmd.exe) as Administrator (for install/package)
-
-###### Linux
-
-```bash
-apt install nasm libvulkan-dev libx11-dev uuid-dev libglx-dev libgl1-mesa-dev libxfixes-dev libxrandr-dev libxkbcommon-dev libxcb-keysyms1-dev libdrm-dev ninja-build libwayland-client0 libwayland-server0 libwayland-dev libxfixes-dev libxcb-xfixes0-dev libxrender-dev libxrandr-dev libxcb-util-dev libdrm-dev libgtkmm-3.0-dev
-```
-
-apt packages for zeungine coming soon
-
-###### MacOS
-
- - *XCode* for `clang` compiler
- - `brew install cmake`
+You'll also need to analyze one of the workflows in `.github/workflows` for specific platform dependencies required
 
 ### Testing
 
@@ -85,74 +63,21 @@ ctest --test-dir build --rerun-failed -VV -C Debug
 
 ### Usage
 
-###### zedit
+Once installed, you can include in cmake projects using the following cmake code:
 
-Create and load projects using `zedit` (scene, hotreloader) (should be in path)
-
-###### some sample codes
-
-Cube Demo
-```cpp
-#include <zg/Window.hpp>
-#include <zg/Scene.hpp>
-#include <zg/vp/VML.hpp>
-#include <zg/entities/Cube.hpp>
-using namespace zg;
-struct ExampleScene : Scene
-{
-    vp::VML vml; // view mouse look
-    ExampleScene(Window &window):
-        Scene(window,
-              {0, 10, 10}, // camera position
-              glm::normalize(glm::vec3(0, -1, -1)), //camera direction
-              81.f // fov
-        ),
-        vml(*this)
-    {
-        addEntity(std::make_shared<entities::Cube>(
-            window, // reference to window
-            *this, // reference to scene
-            glm::vec3(0, 0, 0), // position
-            glm::vec3(0, 0, 0), // rotation
-            glm::vec3(1, 1, 1), // scale
-            glm::vec3(2, 1, 4), // cube size
-            shaders::RuntimeConstants() // additional shader constants
-        ));
-    };
-};
-int main()
-{
-    Window window("Cube Window", 640, 480, -1, -1);
-    window.runOnThread([](auto &window)
-    {
-        window.setScene(std::make_shared<ExampleScene>(window));
-    });
-    window.run();
-}
+```cmake
+... (add_library(...))
+find_package(Zeungine REQUIRED)
+target_link_libraries(my-app PRIVATE ${Zeungine_LIBRARIES})
+target_include_directories(my-app PRIVATE ${Zeungine_INCLUDE_DIR})
 ```
 
-###### event on update (whilepressed@winloop) window keypresses and move an entity
+###### Some good example Tests
 
-```cpp
-zg::UniqueIdentifier leftKeyPressID = window.addKeyUpdateHandler(20, [&]{
-    view.position.x -= 1.f * window.deltaTime;
-    view.update(); });
-zg::UniqueIdentifier rightKeyPressID = window.addKeyUpdateHandler(19, [&]{
-    view.position.x += 1.f * window.deltaTime;
-    view.update(); });
-zg::UniqueIdentifier downKeyPressID = window.addKeyUpdateHandler(18, [&](){
-    view.position.y -= 1.f * window.deltaTime;
-    view.update(); });
-zg::UniqueIdentifier upKeyPressID = window.addKeyUpdateHandler(17, [&](){
-    view.position.y += 1.f * window.deltaTime;
-    view.update(); });
-// store IDs
-// later ...
-window.removeKeyUpdateHandler(20, leftKeyPressID);
-window.removeKeyUpdateHandler(19, rightKeyPressID);
-window.removeKeyUpdateHandler(18, downKeyPressID);
-window.removeKeyUpdateHandler(17, upKeyPressID);
-```
+[Simple Window & Scene](/tests/SimpleWindowTest.cpp)
+[Simple Cube](/tests/SimpleCubeTest.cpp)
+[Video](/tests/VideoTest.cpp)
+[Physics](/tests/PhysicsTest.cpp)
 
 See [tests](/tests) for more usage examples
 
