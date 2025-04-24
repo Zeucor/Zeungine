@@ -243,10 +243,7 @@ namespace zg
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
 		VkSwapchainKHR swapChain;
-		VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
-		VkImage colorImage;
-		VkDeviceMemory colorImageMemory;
-		VkImageView colorImageView;
+		VkSampleCountFlagBits maxMSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		std::vector<VkImage> swapChainImages;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
@@ -312,7 +309,6 @@ namespace zg
 		void createFramebuffers();
 		void createCommandPool();
 		void createCommandBuffers();
-		void createColorResources();
 		void createDepthResources();
 		void createSyncObjects();
 		void createImageStagingBuffer();
