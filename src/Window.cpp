@@ -9,7 +9,17 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/shaders/ShaderManager.hpp>
 #include <zg/textures/Texture.hpp>
+#if defined(MACOS)
+#include <zg/windows/MacOSWindow.hpp>
+#elif defined(_linux__)
+#include <zg/windows/WaylandWindow.hpp>
+#include <zg/windows/X11Window.hpp>
+#include <zg/windows/XCBWindow.hpp>
+#elif defined(_WIN32)
+#include <zg/windows/WIN32Window.hpp>
+#endif
 using namespace zg;
+	#include <zg/windows/WIN32Window.hpp>
 #ifdef _WIN32
 extern "C" {
 __declspec(dllexport) DWORD NvOptimusEnablement = 1;
@@ -780,6 +790,18 @@ void Window::registerOnEntityAddedFunction(const OnEntityAddedFunction& function
 {
 	onEntityAdded = function;
 	return;
+}
+uint32_t Window::getScreenRefreshRate(uint32_t screenNum)
+{
+	auto modes =
+#if defined(_WIN32)
+	WIN32Window::getCurrentScreenModes();
+#elif defined(__linux__)
+	XCBWindow::getCurrentScreenModes();
+#elif defined(MACOS)
+	MacOSWindow::getCurrentScreenModes();
+#endif
+	return modes.size() >= screenNum ? modes[screenNum - 1].refreshRate : 60;
 }
 
 void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& indices,

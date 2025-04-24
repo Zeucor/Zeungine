@@ -2,15 +2,38 @@
 #include <memory>
 #include <zg/glm.hpp>
 #include "./IRenderer.hpp"
+#include <zg/Standard.hpp>
 namespace zg
 {
 	struct Window;
+#if defined(__linux__)
+	typedef short RefreshRate_t;
+	typedef uint64_t ScreenModeIndex_t;
+	typedef uint32_t ScreenMode_t;
+#elif defined(_WIN32)
+	typedef FLOAT RefreshRate_t;
+	typedef DWORD ScreenModeIndex_t;
+	typedef DEVMODE ScreenMode_t;
+#else
+	typedef float RefreshRate_t;
+	typedef uint64_t ScreenModeIndex_t;
+	typedef uint32_t ScreenMode_t;
+#endif
+	struct ScreenMode
+	{
+		glm::ivec2 size = glm::ivec2(0, 0);
+		RefreshRate_t refreshRate = 0;
+		ScreenModeIndex_t index = -1;
+	};
 	struct IPlatformWindow
 	{
-		Window *renderWindowPointer = nullptr;
+		ScreenMode_t lastMode;
+		ScreenMode_t currentMode;
+		bool isModeChanged = false;
+		Window* renderWindowPointer = nullptr;
 		uint8_t windowType = 0;
 		virtual ~IPlatformWindow() = default;
-		virtual void init(Window &renderWindow) = 0;
+		virtual void init(Window& renderWindow) = 0;
 		virtual void postInit() = 0;
 		virtual bool pollMessages() = 0;
 		virtual void destroy() = 0;
@@ -26,6 +49,8 @@ namespace zg
 		virtual void mouseCapture(bool capture) = 0;
 		virtual void enableKeyAutoRepeat() = 0;
 		virtual void disableKeyAutoRepeat() = 0;
+		virtual void setScreenMode(const ScreenMode& screenMode) = 0;
+		virtual void restoreScreenMode() = 0;
 	};
 	inline static constexpr uint8_t WINDOW_TYPE_WIN32 = 1;
 	inline static constexpr uint8_t WINDOW_TYPE_MACOS = 2;
@@ -61,5 +86,5 @@ namespace zg
 		}
 #endif
 		return selected; })();
-	IPlatformWindow *createPlatformWindow();
-}
+	IPlatformWindow* createPlatformWindow();
+} // namespace zg

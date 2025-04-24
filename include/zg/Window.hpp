@@ -169,6 +169,7 @@ struct WindowCreateInfo;
 		void updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTime);
 		void resize(glm::vec2 newSize);
 		void registerOnEntityAddedFunction(const OnEntityAddedFunction& function);
+		static uint32_t getScreenRefreshRate(uint32_t screenNum);
 	};
 	void computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& indices,
 											const std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& normals);

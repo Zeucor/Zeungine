@@ -27,6 +27,10 @@ namespace zg
 		void mouseCapture(bool capture) override;
 		void enableKeyAutoRepeat() override;
 		void disableKeyAutoRepeat() override;
+		static std::vector<ScreenMode> getCurrentScreenModes();
+		static std::vector<ScreenMode> getAvailableScreenModes();
+		void setScreenMode(const ScreenMode& screenMode) override;
+		void restoreScreenMode() override;
 	};
 }
 #endif

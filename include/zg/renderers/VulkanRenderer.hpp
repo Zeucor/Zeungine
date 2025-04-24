@@ -243,12 +243,17 @@ namespace zg
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
 		VkSwapchainKHR swapChain;
+		VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+		VkImage colorImage;
+		VkDeviceMemory colorImageMemory;
+		VkImageView colorImageView;
 		std::vector<VkImage> swapChainImages;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
-		std::shared_ptr<textures::Texture> swapchainColorTexture;
-		std::shared_ptr<textures::Texture> depthTexture;
-		std::shared_ptr<textures::Framebuffer> swapchainFramebuffer;
+		std::shared_ptr<textures::Texture> mainColorTexture;
+		std::shared_ptr<textures::Texture> mainColorResolveTexture;
+		std::shared_ptr<textures::Texture> mainDepthTexture;
+		std::shared_ptr<textures::Framebuffer> mainFramebuffer;
 		std::vector<VkImageView> swapChainImageViews;
 		VkImage depthImage;
 		VkDeviceMemory depthImageMemory;
@@ -291,6 +296,7 @@ namespace zg
 		void setupDebugMessenger();
 #endif
 		void createSurface();
+		VkSampleCountFlagBits getMaxUsableSampleCount();
 		void pickPhysicalDevice();
 		uint32_t rateDeviceSuitability(VkPhysicalDevice device);
 		bool isDeviceSuitable(VkPhysicalDevice device);
@@ -306,6 +312,7 @@ namespace zg
 		void createFramebuffers();
 		void createCommandPool();
 		void createCommandBuffers();
+		void createColorResources();
 		void createDepthResources();
 		void createSyncObjects();
 		void createImageStagingBuffer();
@@ -355,7 +362,7 @@ namespace zg
 		void destroyFramebuffer(textures::Framebuffer& framebuffer) override;
 		void bindTexture(const textures::Texture& texture) override;
 		void unbindTexture(const textures::Texture& texture) override;
-		void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+		void createImage(uint32_t width, uint32_t height, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
 										 VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 		VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 		VkFormat findDepthFormat(uint32_t format);
@@ -389,10 +396,12 @@ namespace zg
 		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
 											VkDeviceMemory& bufferMemory);
 		void getCurrentImageToBitmap();
-		void transitionDepthLayoutForWriting(const textures::Framebuffer& framebuffer) override;
-		void transitionDepthLayoutForReading(const textures::Framebuffer& framebuffer) override;
-		void transitionColorLayoutForWriting(const textures::Framebuffer& framebuffer) override;
-		void transitionColorLayoutForReading(const textures::Framebuffer& framebuffer) override;
+		void transitionDepthLayoutForWriting(const textures::Framebuffer& framebuffer);
+		void transitionDepthLayoutForReading(const textures::Framebuffer& framebuffer);
+		void transitionColorLayoutForWriting(const textures::Framebuffer& framebuffer);
+		void transitionColorLayoutForReading(const textures::Framebuffer& framebuffer);
+		void transitionColorResolveLayoutForWriting(const textures::Framebuffer& framebuffer);
+		void transitionColorResolveLayoutForReading(const textures::Framebuffer& framebuffer);
 	};
 	bool VKcheck(const char* fn, VkResult result);
 } // namespace zg

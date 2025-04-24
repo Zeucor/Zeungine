@@ -43,12 +43,12 @@ int main()
 		.windowY = 0,
 		.borderless = true,
 		.vsync = false,
-		.framerate = 200,
+		.framerate = Window::getScreenRefreshRate(1),
 	};
 	auto window_tuple = Registry::addWindow(windowCreateInfo);
 	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
 	window.runOnThread([](auto& window){
-		window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
+		// window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
 		// window.attachComponent(zg::components::windows::SMAAFactory(0.0f, 64, 64, 128));
 		auto sceneCreateInfo = PhysicsSceneFactory();
 		window.addScene(sceneCreateInfo);

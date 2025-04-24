@@ -120,10 +120,6 @@ namespace zg
 		virtual void destroyVAO(vaos::VAO &vao) = 0;
 		virtual void ensureVAO(shaders::Shader &shader, vaos::VAO &vao) = 0;
 		virtual void swapBuffers() = 0;
-		virtual void transitionDepthLayoutForWriting(const textures::Framebuffer& framebuffer) = 0;
-		virtual void transitionDepthLayoutForReading(const textures::Framebuffer& framebuffer) = 0;
-		virtual void transitionColorLayoutForWriting(const textures::Framebuffer& framebuffer) = 0;
-		virtual void transitionColorLayoutForReading(const textures::Framebuffer& framebuffer) = 0;
 	};
 	IRenderer *createRenderer();
 } // namespace zg

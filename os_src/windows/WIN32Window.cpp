@@ -386,3 +386,111 @@ void WIN32Window::mouseCapture(bool capture)
 void WIN32Window::enableKeyAutoRepeat() {}
 void WIN32Window::disableKeyAutoRepeat() {}
 #endif
+BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData)
+{
+	MONITORINFOEX miex;
+	miex.cbSize = sizeof(miex);
+	if (GetMonitorInfo(hMonitor, &miex))
+	{
+		DEVMODE dm;
+		ZeroMemory(&dm, sizeof(dm));
+		dm.dmSize = sizeof(dm);
+		if (EnumDisplaySettings(miex.szDevice, ENUM_CURRENT_SETTINGS, &dm))
+		{
+			auto& tuple = *reinterpret_cast<std::tuple<std::vector<ScreenMode>, std::vector<ScreenMode>>*>(dwData);
+			auto& currentScreenModes = std::get<0>(tuple);
+			auto& availableScreenModes = std::get<1>(tuple);
+			ScreenMode* foundScreenModePointer = 0;
+			glm::ivec2 size(dm.dmPelsWidth, dm.dmPelsHeight);
+			RefreshRate_t refreshRate = static_cast<RefreshRate_t>(dm.dmDisplayFrequency);
+			auto availableModeIter = std::find_if(
+				availableScreenModes.begin(),
+				availableScreenModes.end(), 
+				[&](const auto& availableScreenMode) {
+					return availableScreenMode.size == size &&
+							availableScreenMode.refreshRate == refreshRate;
+				}
+			);
+			if (availableModeIter != availableScreenModes.end())
+			{
+				currentScreenModes.push_back({ size, refreshRate, availableModeIter->index });
+			}
+		}
+	}
+	return TRUE; // Continue enumeration
+};
+std::vector<ScreenMode> WIN32Window::getCurrentScreenModes()
+{
+	auto availableScreenModes = getAvailableScreenModes();
+	std::tuple<std::vector<ScreenMode>, std::vector<ScreenMode>> tuple({}, availableScreenModes);
+	EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, reinterpret_cast<LPARAM>(&tuple));
+	return std::get<0>(tuple);
+};
+/*
+ */
+std::vector<ScreenMode> WIN32Window::getAvailableScreenModes()
+{
+	std::vector<ScreenMode> availableScreenModes;
+	DEVMODE devMode;
+	ZeroMemory(&devMode, sizeof(DEVMODE));
+	devMode.dmSize = sizeof(DEVMODE);
+	int modeIndex = 0;
+	while (EnumDisplaySettings(NULL, modeIndex, &devMode))
+	{
+		glm::ivec2 screenSize(devMode.dmPelsWidth, devMode.dmPelsHeight);
+		RefreshRate_t refreshRate = static_cast<RefreshRate_t>(devMode.dmDisplayFrequency);
+
+		bool modeExists = false;
+		for (auto& mode : availableScreenModes)
+		{
+			if (mode.size == screenSize &&
+				mode.refreshRate == refreshRate)
+			{
+				modeExists = true;
+				break;
+			}
+		}
+
+		if (!modeExists)
+		{
+			availableScreenModes.push_back({ screenSize, refreshRate, static_cast<DWORD>(modeIndex) });
+		}
+
+		modeIndex++;
+	}
+	return availableScreenModes;
+};
+/*
+ */
+void WIN32Window::setScreenMode(const ScreenMode& screenMode)
+{
+	DEVMODE dm;
+	ZeroMemory(&dm, sizeof(dm));
+	dm.dmSize = sizeof(dm);
+	dm.dmPelsWidth = screenMode.size.x;
+	dm.dmPelsHeight = screenMode.size.y;
+	dm.dmDisplayFrequency = static_cast<DWORD>(screenMode.refreshRate);
+	dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY;
+	EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &lastMode);
+	isModeChanged = true;
+	LONG result = ChangeDisplaySettings(&dm, CDS_FULLSCREEN);
+	currentMode = dm;
+	if (result != DISP_CHANGE_SUCCESSFUL)
+	{
+		std::cerr << "Display change failed, error code: " << result << std::endl;
+	}
+};
+/*
+ */
+void WIN32Window::restoreScreenMode()
+{
+	if (isModeChanged)
+	{
+		LONG result = ChangeDisplaySettings(&lastMode, 0);
+		if (result != DISP_CHANGE_SUCCESSFUL)
+		{
+			std::cerr << "Failed to restore original display settings, error code: " << result << std::endl;
+		}
+		isModeChanged = false;
+	}
+};
