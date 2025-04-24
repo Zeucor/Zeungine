@@ -74,10 +74,10 @@ target_include_directories(my-app PRIVATE ${Zeungine_INCLUDE_DIR})
 
 ###### Some good example Tests
 
-[Simple Window & Scene](/tests/SimpleWindowTest.cpp)
-[Simple Cube](/tests/SimpleCubeTest.cpp)
-[Video](/tests/VideoTest.cpp)
-[Physics](/tests/PhysicsTest.cpp)
+ - [Simple Window & Scene](/tests/SimpleWindowTest.cpp)
+ - [Simple Cube](/tests/SimpleCubeTest.cpp)
+ - [Video](/tests/VideoTest.cpp)
+ - [Physics](/tests/PhysicsTest.cpp)
 
 See [tests](/tests) for more usage examples
 
