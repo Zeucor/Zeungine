@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <zg/ChunkAllocator.hpp>
+// #include <zg/ChunkAllocator.hpp>
 namespace zg
 {
 #define KEY_ID_VECTOR_KEY_INDEX 0
@@ -18,13 +18,14 @@ namespace zg
 	template <typename KeyT, typename ValueT>
 	struct KeyIDVector
 	{
-		using ValueVector = std::vector<ValueT, zg::ChunkAllocator<ValueT>>;
-		using KeyIndexMap = std::map<KeyT, size_t*, std::less<KeyT>, zg::ChunkAllocator<std::pair<const KeyT, size_t*>>>;
-		using IDKeyMap = std::unordered_map<size_t, KeyT, std::hash<size_t>, std::equal_to<size_t>, zg::ChunkAllocator<std::pair<const size_t, KeyT>>>;
-		using IDIndexMap = std::unordered_map<size_t, size_t, std::hash<size_t>, std::equal_to<size_t>, zg::ChunkAllocator<std::pair<const size_t, size_t>>>;
-		using IndexIDMap = std::unordered_map<size_t, size_t, std::hash<size_t>, std::equal_to<size_t>, zg::ChunkAllocator<std::pair<const size_t, size_t>>>;
+		using ValueVector = std::vector<ValueT>;
+		using KeyIndexMap = std::map<KeyT, size_t*, std::less<KeyT>>;
+		using IDKeyMap = std::unordered_map<size_t, KeyT, std::hash<size_t>>;
+		using IDIndexMap = std::unordered_map<size_t, size_t, std::hash<size_t>, std::equal_to<size_t>>;
+		using IndexIDMap = std::unordered_map<size_t, size_t, std::hash<size_t>, std::equal_to<size_t>>;
 		using EmplaceBackTuple = std::tuple<KeyT, size_t, size_t*, ValueT*>;
 		using GetKeyFunction = std::function<KeyT(const ValueT&)>;
+		using DuplicateKeyFunction = std::function<KeyT(const KeyT&)>;
 		using ValueIndexIterator = ValueVector::iterator;
 		using ConstValueIndexIterator = ValueVector::const_iterator;
 
@@ -37,10 +38,17 @@ namespace zg
 		ValueVector m_Values;
 		std::shared_ptr<std::recursive_mutex> m_Mutex;
 		GetKeyFunction m_GetKeyFunction;
+		DuplicateKeyFunction m_DuplicateKeyFunction;
+		bool m_GetKeyFunctionSet = false;
+		bool m_DuplicateKeyFunctionSet = false;
+	public:
+		size_t DuplicateKeyReKeyAttemps = 1;
 
 	public:
-		KeyIDVector(const GetKeyFunction& getKeyFunction = {}) :
-				m_Mutex(std::make_shared<std::recursive_mutex>()), m_GetKeyFunction(getKeyFunction) {};
+		KeyIDVector(const GetKeyFunction& getKeyFunction = {}, const DuplicateKeyFunction& duplicateKeyFunction = {}) :
+				m_Mutex(std::make_shared<std::recursive_mutex>()), m_GetKeyFunction(getKeyFunction),
+				m_DuplicateKeyFunction(duplicateKeyFunction), m_GetKeyFunctionSet(m_GetKeyFunction),
+				m_DuplicateKeyFunctionSet(m_DuplicateKeyFunction) {};
 		KeyIDVector(const KeyIDVector& other)
 		{
 			std::lock_guard lock_other(*other.m_Mutex);
@@ -48,6 +56,9 @@ namespace zg
 			m_Values = other.m_Values;
 			m_IDKeyMap = other.m_IDKeyMap;
 			m_GetKeyFunction = other.m_GetKeyFunction;
+			m_DuplicateKeyFunction = other.m_DuplicateKeyFunction;
+			m_GetKeyFunctionSet = other.m_GetKeyFunctionSet;
+			m_DuplicateKeyFunctionSet = other.m_DuplicateKeyFunctionSet;
 			m_Mutex = std::make_shared<std::recursive_mutex>();
 			m_IDIndexMap.clear();
 			m_KeyIndexMap.clear();
@@ -78,6 +89,9 @@ namespace zg
 			m_Values = other.m_Values;
 			m_IDKeyMap = other.m_IDKeyMap;
 			m_GetKeyFunction = other.m_GetKeyFunction;
+			m_DuplicateKeyFunction = other.m_DuplicateKeyFunction;
+			m_GetKeyFunctionSet = other.m_GetKeyFunctionSet;
+			m_DuplicateKeyFunctionSet = other.m_DuplicateKeyFunctionSet;
 			m_IDIndexMap.clear();
 			m_KeyIndexMap.clear();
 			m_IndexIDMap.clear();
@@ -114,35 +128,28 @@ namespace zg
 		template <typename... Args>
 		EmplaceBackTuple emplace_back(const Args&... args)
 		{
-			if (!m_GetKeyFunction)
+			if (!m_GetKeyFunctionSet)
 				throw std::logic_error("KeyIDVector::emplace_back: GetKeyFunction is not set.");
 			std::lock_guard lock(*m_Mutex);
 			ValueT& value = m_Values.emplace_back(args...);
-			KeyT key = m_GetKeyFunction(value);
+			KeyT key = FindNextKey_locked(value);
+_id:
 			size_t id = ++m_Count;
 			size_t index = m_Values.size() - 1;
 			auto id_indexit = m_IDIndexMap.emplace(id, index);
 			size_t& indexRef = id_indexit.first->second;
 			auto key_indexit = m_KeyIndexMap.emplace(key, &indexRef);
-			if (!key_indexit.second)
-			{
-				m_Values.pop_back();
-				m_IDIndexMap.erase(id_indexit.first);
-				throw std::runtime_error("KeyIDVector::emplace_back: Key already exists.");
-			}
 			m_IDKeyMap.emplace(id, key);
 			m_IndexIDMap[index] = id;
 			return {key, id, &indexRef, &value};
 		}
 		template <typename... Args>
-		EmplaceBackTuple emplace_back_key(const KeyT& key, const Args&... args)
+		EmplaceBackTuple emplace_back_key(KeyT key, const Args&... args)
 		{
 			std::lock_guard lock(*m_Mutex);
 			size_t id = ++m_Count;
 			size_t index = m_Values.size();
-			auto key_test_it = m_KeyIndexMap.find(key);
-			if (key_test_it != m_KeyIndexMap.end())
-				throw std::runtime_error("KeyIDVector::emplace_back_key: Key already exists.");
+			key = FindNextKey_locked_withKey(key);
 			ValueT& value = m_Values.emplace_back(args...);
 			auto id_indexit = m_IDIndexMap.emplace(id, index);
 			size_t& indexRef = id_indexit.first->second;
@@ -150,6 +157,50 @@ namespace zg
 			m_IDKeyMap.emplace(id, key);
 			m_IndexIDMap[index] = id;
 			return {key, id, &indexRef, &value};
+		}
+
+		KeyT FindNextKey_locked(const ValueT& value)
+		{
+			KeyT key = m_GetKeyFunction(value);
+			if (m_KeyIndexMap.find(key) != m_KeyIndexMap.end())
+			{
+				if (m_DuplicateKeyFunctionSet)
+				{
+					size_t count = 0;
+					while (count < DuplicateKeyReKeyAttemps)
+					{
+						key = m_DuplicateKeyFunction(key);
+						if (m_KeyIndexMap.find(key) == m_KeyIndexMap.end())
+							goto _return_key;
+						count++;
+					}
+				}
+				m_Values.pop_back();
+				throw std::runtime_error("KeyIDVector::emplace_back: Key already exists.");
+			}
+_return_key:
+			return key;
+		}
+
+		KeyT FindNextKey_locked_withKey(KeyT key)
+		{
+			if (m_KeyIndexMap.find(key) != m_KeyIndexMap.end())
+			{
+				if (m_DuplicateKeyFunctionSet)
+				{
+					size_t count = 0;
+					while (count < DuplicateKeyReKeyAttemps)
+					{
+						key = m_DuplicateKeyFunction(key);
+						if (m_KeyIndexMap.find(key) == m_KeyIndexMap.end())
+							goto _return_key;
+						count++;
+					}
+				}
+				throw std::runtime_error("KeyIDVector::emplace_back: Key already exists.");
+			}
+_return_key:
+			return key;
 		}
 
 		template <typename IteratorT>
@@ -410,7 +461,7 @@ namespace zg
 			};
 			friend bool operator!=(const const_key_iterator& a, const const_key_iterator& b) { return !(a == b); };
 		};
-		
+
 		struct id_iterator
 		{
 			using iterator_category = std::forward_iterator_tag;
@@ -434,17 +485,15 @@ namespace zg
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
 			}
-			size_t index() const
-			{
-				return map_iter->second;
-			}
+			size_t index() const { return map_iter->second; }
 			size_t id() const
 			{
 				auto _index = index();
 				auto indexIDIter = kiv_ptr->m_IndexIDMap.find(_index);
 				if (indexIDIter == kiv_ptr->m_IndexIDMap.end())
 					throw std::logic_error("index has no ID!");
-				return indexIDIter->second;;
+				return indexIDIter->second;
+				;
 			}
 
 			reference operator*() const
@@ -519,17 +568,15 @@ namespace zg
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
 			}
-			size_t index() const
-			{
-				return map_iter->second;
-			}
+			size_t index() const { return map_iter->second; }
 			size_t id() const
 			{
 				auto _index = index();
 				auto indexIDIter = kiv_ptr->m_IndexIDMap.find(_index);
 				if (indexIDIter == kiv_ptr->m_IndexIDMap.end())
 					throw std::logic_error("index has no ID!");
-				return indexIDIter->second;;
+				return indexIDIter->second;
+				;
 			}
 
 			reference operator*() const
@@ -579,7 +626,7 @@ namespace zg
 			};
 			friend bool operator!=(const const_id_iterator& a, const const_id_iterator& b) { return !(a == b); };
 		};
-		
+
 		struct value_iterator
 		{
 			using iterator_category = std::forward_iterator_tag;
@@ -603,17 +650,15 @@ namespace zg
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
 			}
-			size_t index() const
-			{
-				return std::distance(kiv_ptr->m_Values.begin(), map_iter);
-			}
+			size_t index() const { return std::distance(kiv_ptr->m_Values.begin(), map_iter); }
 			size_t id() const
 			{
 				auto _index = index();
 				auto indexIDIter = kiv_ptr->m_IndexIDVector.find(_index);
 				if (indexIDIter == kiv_ptr->m_IndexIDVector.end())
 					throw std::logic_error("index has no ID!");
-				return indexIDIter->second;;
+				return indexIDIter->second;
+				;
 			}
 
 			reference operator*() const
@@ -688,17 +733,15 @@ namespace zg
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
 			}
-			size_t index() const
-			{
-				return std::distance(kiv_ptr->m_Values.begin(), map_iter);
-			}
+			size_t index() const { return std::distance(kiv_ptr->m_Values.begin(), map_iter); }
 			size_t id() const
 			{
 				auto _index = index();
 				auto indexIDIter = kiv_ptr->m_IndexIDVector.find(_index);
 				if (indexIDIter == kiv_ptr->m_IndexIDVector.end())
 					throw std::logic_error("index has no ID!");
-				return indexIDIter->second;;
+				return indexIDIter->second;
+				;
 			}
 
 			reference operator*() const
@@ -750,7 +793,7 @@ namespace zg
 		};
 
 		// --- erase constexpr ---
-		template<typename IteratorT>
+		template <typename IteratorT>
 		IteratorT erase(IteratorT iter)
 		{
 			if constexpr (std::is_same_v<IteratorT, ValueIndexIterator> || std::is_same_v<IteratorT, ConstValueIndexIterator>)
@@ -758,8 +801,8 @@ namespace zg
 				return eraseValueIterator(iter);
 			}
 			else if constexpr (std::is_same_v<key_iterator, IteratorT> || std::is_same_v<const_key_iterator, IteratorT> ||
-								std::is_same_v<id_iterator, IteratorT> || std::is_same_v<const_id_iterator, IteratorT> ||
-								std::is_same_v<value_iterator, IteratorT> || std::is_same_v<const_value_iterator, IteratorT>)
+												 std::is_same_v<id_iterator, IteratorT> || std::is_same_v<const_id_iterator, IteratorT> ||
+												 std::is_same_v<value_iterator, IteratorT> || std::is_same_v<const_value_iterator, IteratorT>)
 			{
 				KeyT nextKey = KeyT();
 				size_t nextID = 0;
@@ -780,11 +823,13 @@ namespace zg
 				if constexpr (std::is_same_v<key_iterator, IteratorT>)
 					return key_iterator(this, nextIsEnd ? m_KeyIndexMap.end() : m_KeyIndexMap.find(nextKey));
 				else if constexpr (std::is_same_v<const_key_iterator, IteratorT>)
-					return key_iterator(this, nextIsEnd ? m_KeyIndexMap.cend() : ((const KeyIndexMap&)m_KeyIndexMap).find(nextKey));
+					return key_iterator(this,
+															nextIsEnd ? m_KeyIndexMap.cend() : ((const KeyIndexMap&)m_KeyIndexMap).find(nextKey));
 				if constexpr (std::is_same_v<id_iterator, IteratorT>)
 					return id_iterator(this, (nextIsEnd || !nextID) ? m_IDIndexMap.end() : m_IDIndexMap.find(nextID));
 				else if constexpr (std::is_same_v<const_id_iterator, IteratorT>)
-					return id_iterator(this, (nextIsEnd || !nextID) ? m_IDIndexMap.cend() : ((const IDIndexMap&)m_IDIndexMap).find(nextID));
+					return id_iterator(
+						this, (nextIsEnd || !nextID) ? m_IDIndexMap.cend() : ((const IDIndexMap&)m_IDIndexMap).find(nextID));
 				if constexpr (std::is_same_v<value_iterator, IteratorT>)
 					return value_iterator(this, (index < m_Values.size() ? m_Values.end() : m_Values.begin() + index));
 				else if constexpr (std::is_same_v<const_value_iterator, IteratorT>)
@@ -801,7 +846,7 @@ namespace zg
 		key_iterator key_end() { return key_iterator(this, m_KeyIndexMap.end()); }
 		const_key_iterator key_end() const { return const_key_iterator(this, m_KeyIndexMap.cend()); }
 		const_key_iterator ckey_end() const { return const_key_iterator(this, m_KeyIndexMap.cend()); }
-		
+
 		id_iterator id_begin() { return id_iterator(this, m_IDIndexMap.begin()); }
 		const_id_iterator id_begin() const { return const_id_iterator(this, m_IDIndexMap.cbegin()); }
 		const_id_iterator cid_begin() const { return const_id_iterator(this, m_IDIndexMap.cbegin()); }

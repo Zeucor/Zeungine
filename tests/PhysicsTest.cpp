@@ -31,7 +31,8 @@ auto cubeRigidBodyCreateInfo = components::entities::RigidBodyFactory(
 																			glm::vec<3, bool>(1, 0, 1), glm::vec<3, bool>(0)});
 auto floorCreateInfo = entities::CubeFactory("Floor", {50, 40, 50}, {1, 0, 0, 0}, {1, 1, 1}, {20000, 0.5, 20000},
 																						 {0.35, 0.45, 0.25, 1}, commonShaderConstants);
-auto cubeCreateInfo = entities::CubeFactory("Cube", {50, 47, 58}, {1, 0, 0, 0}, glm::vec3(2), glm::vec3(1.5), {0, 0, 1, 1}, commonShaderConstants);
+auto toxyCreateInfo = entities::CubeFactory("Toxy", {50, 47, 58}, {1, 0, 0, 0}, glm::vec3(2), glm::vec3(1), {0, 0, 1, 1}, commonShaderConstants);
+auto cubeCreateInfo = entities::CubeFactory("Cube", {53, 47, 58}, {1, 0, 0, 0}, glm::vec3(1), glm::vec3(1), {0.01, 1, 0.2, 1}, commonShaderConstants);
 int main()
 {
 	WindowCreateInfo windowCreateInfo{
@@ -46,109 +47,69 @@ int main()
 	};
 	auto window_tuple = Registry::addWindow(windowCreateInfo);
 	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
-	window.runOnThread(
-		[](auto& window)
-		{
-			// window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
-			// window.attachComponent(zg::components::windows::SMAAFactory(0.0f, 64, 64, 128));
-			auto sceneCreateInfo = PhysicsSceneFactory();
-			window.addScene(sceneCreateInfo);
-		});
-	window.addKeyPressHandler(27,
-														[&](auto pressed)
-														{
-															if (pressed)
-																window.close();
-														});
+	window.runOnThread([](auto& window){
+		window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
+		// window.attachComponent(zg::components::windows::SMAAFactory(0.0f, 64, 64, 128));
+		auto sceneCreateInfo = PhysicsSceneFactory();
+		window.addScene(sceneCreateInfo);
+	});
+	window.addKeyPressHandler(27, [&](auto pressed) {
+		if (pressed)
+			window.close();
+	});
 	window.run();
 	return 0;
 }
 SceneCreateInfo PhysicsSceneFactory()
 {
-	SceneCreateInfo info{.name = "PhysicsScene",
-											 .cameraPosition = {50, 50, 50},
-											 .cameraDirection = {0, -1, 1},
-											 .fov = 81.f,
-											 .onAttachedFunction = [](auto& scene)
-											 {
-												 scene.clearColor = {0, 0, 1, 1};
-												 glm::vec3 dldirection{1, -1, 1};
-												 dldirection = glm::normalize(dldirection);
-												 glm::vec3 dlup{0, 1, 0};
-												 scene.directionalLights.push_back({
-													 glm::vec3(20, 80, 20), // position
-													 dldirection, // direction
-													 dlup, // up
-													 glm::vec3(1.f, 1.f, 1.f), // color
-													 1.f, // intensity,
-													 1.f, // nearcube5
-													 364.f, // farcube5
-													 0.4f // ambientFactor
-												 });
-												 auto& dl = scene.directionalLights[0];
-												 scene.directionalLightShadows.emplace_back(scene.window, scene.directionalLights[0]);
-												 // scene.attachComponent(components::scenes::GravityByAttractionFactory(0.000005f));
-												 // scene.attachComponent(components::scenes::GravityByVectorFactory(glm::vec3(0, -9.81, 0)));
-												 scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 40.0L)));
-												 scene.attachComponent(components::scenes::ViewMouseControlFactory());
-												 scene.attachComponent(
-													 components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 5));
-												 auto floor_tuple = scene.addEntity(floorCreateInfo);
-												 auto& floor = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_tuple);
-												 auto floor_rb_tuple = floor.attachComponent(staticRigidBodyCreateInfo);
-												 auto& floor_rb = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_rb_tuple);
-												 floor_rb.template setData<float>("Mass", 1000000.0f);
-												 // auto floorColliderCreateInfo = components::entities::ColliderFactory()
-												 // floor.attachComponent(floorColliderCreateInfo);
-												 auto cube_tuple = scene.addEntity(cubeCreateInfo);
-											 }};
+	SceneCreateInfo info{
+		.name = "PhysicsScene",
+		.cameraPosition = {50, 50, 50},
+		.cameraDirection = {0, -1, 1},
+		.fov = 81.f,
+		.onAttachedFunction = [](auto& scene)
+		{
+			scene.clearColor = {0, 0, 1, 1};
+			glm::vec3 dldirection{1, -1, 1};
+			dldirection = glm::normalize(dldirection);
+			glm::vec3 dlup{0, 1, 0};
+			scene.directionalLights.push_back({
+				glm::vec3(20, 80, 20), // position
+				dldirection, // direction
+				dlup, // up
+				glm::vec3(1.f, 1.f, 1.f), // color
+				1.f, // intensity,
+				1.f, // nearcube5
+				364.f, // farcube5
+				0.4f // ambientFactor
+			});
+			auto& dl = scene.directionalLights[0];
+			scene.directionalLightShadows.emplace_back(scene.window, scene.directionalLights[0]);
+			// scene.attachComponent(components::scenes::GravityByAttractionFactory(0.000005f));
+			// scene.attachComponent(components::scenes::GravityByVectorFactory(glm::vec3(0, -9.81, 0)));
+			scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 40.0L)));
+			scene.attachComponent(components::scenes::ViewMouseControlFactory());
+			scene.attachComponent(
+				components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 5));
+			auto floor_tuple = scene.addEntity(floorCreateInfo);
+			auto& floor = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_tuple);
+			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyCreateInfo);
+			auto& floor_rb = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_rb_tuple);
+			floor_rb.template setData<float>("Mass", 1000000.0f);
+			// auto floorColliderCreateInfo = components::entities::ColliderFactory();
+			// floor.attachComponent(floorColliderCreateInfo);
+			auto toxy_tuple = scene.addEntity(toxyCreateInfo);
+			auto cube1_tuple = scene.addEntity(cubeCreateInfo);
+			// cubeCreateInfo.position = {47, 47, 58};
+			// auto cube2_tuple = scene.addEntity(cubeCreateInfo);
+			// cubeCreateInfo.position = {50, 47, 54};
+			// auto cube3_tuple = scene.addEntity(cubeCreateInfo);
+		}
+	};
 	return info;
 }
 // 		// //
-// 		// {
-// 		// 	auto floor =
-// 		// 		std::make_shared<entities::Cube>(window, *this, glm::vec3(50, 40, 50), glm::quat(1, 0, 0, 0), glm::vec3(1),
-// 		// 																				 glm::vec3(2000, 0.5, 2000), commonShaderConstants);
-// 		// 	auto floorRigidBodyID = floor->attachComponent(staticRigidBodyCreateInfo);
-// 		// 	auto& floorRigidBody = floor->getComponentByID(floorRigidBodyID);
-// 		// 	// floorRigidBody.template getData<float>("Mass") = 1000000;
-// 		// 	floor->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
-// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(2000, 0.5, 2000) / 2.f),
-// 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
-// 		// 	addEntity(floor);
-// 		// }
-// 		// // cube
-// 		// 	auto cube = std::make_shared<entities::Cube>(window, *this, );
-// 		// 	cube->attachComponent(cubeRigidBodyCreateInfo);
-// 		// 	cube->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
-// 		// 		// std::make_shared<components::entities::MeshShapeData>(*cube),
-// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(3.0, 3.0, 3.0) / 2.f),
-// 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
-// 		// 	addEntity(cube);
 // 		// 	{
-// 		// 	// cube2
-// 		// 	auto cube2 = std::make_shared<entities::Cube>(window, *this, glm::vec3(53, 47, 58), glm::quat(1, 0, 0, 0),
-// 		// 																										glm::vec3(1), glm::vec3(1.5, 1.5, 1.5),
-// commonShaderConstants);
-// 		// 	cube2->attachComponent(cubeRigidBodyCreateInfo);
-// 		// 	cube2->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
-// 		// 		// std::make_shared<components::entities::MeshShapeData>(*cube2),
-// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-// 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
-// 		// 	addEntity(cube2);
-// 		// 	// cube3
-// 		// 	auto cube3 = std::make_shared<entities::Cube>(window, *this, glm::vec3(47, 47, 58), glm::quat(1, 0, 0, 0),
-// 		// 																										glm::vec3(1), glm::vec3(1.5, 1.5, 1.5),
-// commonShaderConstants);
-// 		// 	cube3->attachComponent(cubeRigidBodyCreateInfo);
-// 		// 	cube3->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
-// 		// 		// std::make_shared<components::entities::MeshShapeData>(*cube3),
-// 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
-// 		// 		components::entities::PhysicsMaterial{0.30f, 0.7f}, glm::vec3(0), glm::quat(1, 0, 0, 0), false}));
-// 		// 	addEntity(cube3);
-// 		// 	// cube4
-// 		// 	auto cube4 = std::make_shared<entities::Cube>(window, *this, glm::vec3(50, 47, 54), glm::quat(1, 0, 0, 0),
-// 		// 																										glm::vec3(1), glm::vec3(1.5, 1.5, 1.5),
 // commonShaderConstants);
 // 		// 	cube4->attachComponent(cubeRigidBodyCreateInfo);
 // 		// 	cube4->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{

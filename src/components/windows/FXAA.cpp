@@ -65,7 +65,7 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAA
                                 "layout(binding = " + std::to_string(bindingIndex) + ") uniform InverseScreenSize {\n" +
                                 "  vec2 size;\n" +
                                 "} inverseScreenSize;\n";
-                            string += "float rgb2luma(vec3 rgb);";
+                            string += "float rgb2luma(vec4 rgba);";
                             return string;
                         }
                     );
@@ -74,23 +74,23 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAA
                         "postPostInMain",
                         "FXAA",
                         [](auto& shader, const auto& constants) -> std::string {
-                            return  "vec3 colorCenter = texture(ColorTexture, inUV).rgb;\n"
+                            return  "vec4 colorCenter = texture(ColorTexture, inUV);\n"
                                     "float lumaCenter = rgb2luma(colorCenter);\n"
-                                    "float lumaNorth = rgb2luma(texture(ColorTexture, inUV + vec2(0.0, inverseScreenSize.size.y)).rgb);\n"
-                                    "float lumaSouth = rgb2luma(texture(ColorTexture, inUV - vec2(0.0, inverseScreenSize.size.y)).rgb);\n"
-                                    "float lumaWest  = rgb2luma(texture(ColorTexture, inUV - vec2(inverseScreenSize.size.x, 0.0)).rgb);\n"
-                                    "float lumaEast  = rgb2luma(texture(ColorTexture, inUV + vec2(inverseScreenSize.size.x, 0.0)).rgb);\n"
+                                    "float lumaNorth = rgb2luma(texture(ColorTexture, inUV + vec2(0.0, inverseScreenSize.size.y)));\n"
+                                    "float lumaSouth = rgb2luma(texture(ColorTexture, inUV - vec2(0.0, inverseScreenSize.size.y)));\n"
+                                    "float lumaWest  = rgb2luma(texture(ColorTexture, inUV - vec2(inverseScreenSize.size.x, 0.0)));\n"
+                                    "float lumaEast  = rgb2luma(texture(ColorTexture, inUV + vec2(inverseScreenSize.size.x, 0.0)));\n"
                                     "float lumaMin = min(lumaCenter, min(min(lumaNorth, lumaSouth), min(lumaWest, lumaEast)));\n"
                                     "float lumaMax = max(lumaCenter, max(max(lumaNorth, lumaSouth), max(lumaWest, lumaEast)));\n"
                                     "float lumaRange = lumaMax - lumaMin;\n"
                                     "if (lumaRange < max(fxaaValues.edgeThresholdMin, lumaMax * fxaaValues.edgeThreshold)) {\n"
-                                    "  FragColor = vec4(colorCenter, 1.0);\n"
+                                    "  FragColor = colorCenter;\n"
                                     "  return;\n"
                                     "}\n"
-                                    "float lumaNW = rgb2luma(texture(ColorTexture, inUV + vec2(-inverseScreenSize.size.x,  inverseScreenSize.size.y)).rgb);\n"
-                                    "float lumaNE = rgb2luma(texture(ColorTexture, inUV + vec2( inverseScreenSize.size.x,  inverseScreenSize.size.y)).rgb);\n"
-                                    "float lumaSW = rgb2luma(texture(ColorTexture, inUV + vec2(-inverseScreenSize.size.x, -inverseScreenSize.size.y)).rgb);\n"
-                                    "float lumaSE = rgb2luma(texture(ColorTexture, inUV + vec2( inverseScreenSize.size.x, -inverseScreenSize.size.y)).rgb);\n"
+                                    "float lumaNW = rgb2luma(texture(ColorTexture, inUV + vec2(-inverseScreenSize.size.x,  inverseScreenSize.size.y)));\n"
+                                    "float lumaNE = rgb2luma(texture(ColorTexture, inUV + vec2( inverseScreenSize.size.x,  inverseScreenSize.size.y)));\n"
+                                    "float lumaSW = rgb2luma(texture(ColorTexture, inUV + vec2(-inverseScreenSize.size.x, -inverseScreenSize.size.y)));\n"
+                                    "float lumaSE = rgb2luma(texture(ColorTexture, inUV + vec2( inverseScreenSize.size.x, -inverseScreenSize.size.y)));\n"
                                     "float edgeHorizontal = abs((lumaNW + lumaNE) - (lumaSW + lumaSE)) * 2.0 + abs((lumaNorth - lumaSouth) * 2.0);\n"
                                     "float edgeVertical   = abs((lumaNW + lumaSW) - (lumaNE + lumaSE)) * 2.0 + abs((lumaWest - lumaEast) * 2.0);\n"
                                     "bool isHorizontal = (edgeHorizontal >= edgeVertical);\n"
@@ -103,7 +103,7 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAA
                                     "float lumaEndP = lumaCenter;\n"
                                     "for(int i = 0; i < fxaaValues.edgeSearchSteps; i++) {\n"
                                     "  posP += step;\n"
-                                    "  float luma = rgb2luma(texture(ColorTexture, posP).rgb);\n"
+                                    "  float luma = rgb2luma(texture(ColorTexture, posP));\n"
                                     "  if(abs(luma - lumaCenter) > gradientScaled) break;\n"
                                     "  lumaEndP = luma;\n"
                                     "}\n"
@@ -112,7 +112,7 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAA
                                     "float lumaEndN = lumaCenter;\n"
                                     "for(int i = 0; i < fxaaValues.edgeSearchSteps; i++) {\n"
                                     "    posN -= step;\n"
-                                    "    float luma = rgb2luma(texture(ColorTexture, posN).rgb);\n"
+                                    "    float luma = rgb2luma(texture(ColorTexture, posN));\n"
                                     "    if(abs(luma - lumaCenter) > gradientScaled) break;\n"
                                     "    lumaEndN = luma;\n"
                                     "}\n"
@@ -124,7 +124,7 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAA
                                     "float pixelOffset = -gradient / (lumaMax - lumaMin + 1e-5);\n"
                                     "pixelOffset = clamp(pixelOffset * fxaaValues.subpixQuality + 0.5, 0.0, 1.0);\n"
                                     "vec2 finalTexCoord = inUV + (isDirectionP ? dirP : dirN) * pixelOffset * dist * inverseScreenSize.size;\n"
-                                    "FragColor = vec4(texture(ColorTexture, finalTexCoord).rgb, 1.0);";
+                                    "FragColor = texture(ColorTexture, finalTexCoord);";
                         }
                     );
                     shaders::ShaderFactory::addHook(
@@ -132,8 +132,8 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAA
                         "postMain",
                         "FXAA",
                         [](auto& shader, const auto& constants) -> std::string {
-                            return "float rgb2luma(vec3 rgb) {\n"
-                                   "  return sqrt(dot(rgb, vec3(0.299, 0.587, 0.114)));\n"
+                            return "float rgb2luma(vec4 rgba) {\n"
+                                   "  return sqrt(dot(rgba, vec4(0.299, 0.587, 0.114, 1.0)));\n"
                                    "}";
                         }
                     );

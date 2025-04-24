@@ -3,12 +3,19 @@ set(glm_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/glm-
 set(freetype_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/freetype-src")
 set(bvh_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/bvh-src")
 set(lunasvg_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/lunasvg-src")
+set(plutovg_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/plutovg-src")
 set(stb_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/stb-src")
 set(miniaudio_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/miniaudio-src")
 set(openssl_INC_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/openssl-build/include")
 set(exprtk_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/exprtk-src")
 set(boost_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/boost-src")
 set(jolt_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/jolt-src")
+
+# svg
+install(FILES ${lunasvg_SOURCE_DIR}/include/lunasvg.h ${plutovg_SOURCE_DIR}/include/plutovg.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    COMPONENT headers)
 
 # jolt includes
 install(DIRECTORY ${jolt_SOURCE_DIR}/Jolt

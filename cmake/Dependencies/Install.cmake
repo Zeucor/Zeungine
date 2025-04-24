@@ -39,6 +39,7 @@ set(ZG_TARGETS_TO_INSTALL
     freetype png harfbuzz brotlidec brotlicommon
     glm jolt
     zlib bzip2 lzma zstd
+    miniaudio glsl svg
 )
 set(TARGET_ARTIFACT_FILES_TO_INSTALL "")
 foreach(TGT ${ZG_TARGETS_TO_INSTALL})

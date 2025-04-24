@@ -1,37 +1,22 @@
 #pragma once
-
-#include <algorithm> // std::max
-#include <atomic> // std::atomic (for potential future thread-safe init flag)
-#include <cassert> // assert
-#include <cstddef> // size_t, std::ptrdiff_t, std::max_align_t
-#include <limits> // std::numeric_limits
-#include <list> // std::list
-#include <memory> // std::pointer_traits
-#include <mutex> // std::mutex, std::lock_guard
-#include <new> // ::operator new, std::bad_alloc, std::align_val_t
-#include <stdexcept> // std::runtime_error, std::invalid_argument
-#include <string> // std::string (for exceptions)
-#include <type_traits> // std::true_type, std::false_type, std::is_same
-#include <utility> // std::move
-#include <vector> // std::vector (for usage examples)
-
-
-// Note on Thread Safety:
-// - GlobalAllocatorManager uses a mutex for thread-safe block requests.
-// - ChunkAllocator<T> instances themselves are NOT inherently thread-safe if the
-//   same instance is used across threads. Each thread should ideally use its
-//   own ChunkAllocator<T> instance, which will then safely request blocks
-//   from the global manager when needed.
-
+#include <algorithm>
+#include <atomic>
+#include <cassert>
+#include <cstddef>
+#include <limits>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <new>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 namespace zg
 {
 	// Default size for chunks allocated by the global manager
-	constexpr size_t GLOBAL_MANAGER_CHUNK_SIZE = 1024 * 1024; // 1 MiB
-	// REMOVED: ALLOCATOR_DEFAULT_BLOCK_REQUEST_SIZE
-
-
-	// --- Global Raw Chunk Structure (Managed by GlobalAllocatorManager) ---
-	// [ Unchanged from previous version - Keeping for context ]
+	constexpr size_t GLOBAL_MANAGER_CHUNK_SIZE = 1024 * 1024;
 	struct GlobalChunk
 	{
 		char* memory = nullptr;
@@ -42,6 +27,7 @@ namespace zg
 			if (size == 0)
 				throw std::invalid_argument("GlobalChunk size cannot be zero.");
 			memory = static_cast<char*>(::operator new(size, std::align_val_t{alignof(std::max_align_t)}));
+			memset(memory, 0, size);
 		}
 
 		~GlobalChunk()
@@ -52,7 +38,6 @@ namespace zg
 			}
 		}
 
-		// Non-copyable, Movable
 		GlobalChunk(const GlobalChunk&) = delete;
 		GlobalChunk& operator=(const GlobalChunk&) = delete;
 		GlobalChunk(GlobalChunk&& other) noexcept : memory(other.memory), size(other.size)
@@ -75,12 +60,9 @@ namespace zg
 		}
 	};
 
-	// --- Global Allocator Manager (Static Class) ---
-	// [ Unchanged from previous version - Keeping for context ]
 	class GlobalAllocatorManager
 	{
 	private:
-		// Initialize the global pool (call once at startup)
 		static bool initialize(size_t initial_chunk_size = GLOBAL_MANAGER_CHUNK_SIZE)
 		{
 			std::lock_guard<std::mutex> lock(s_mutex);
@@ -88,46 +70,43 @@ namespace zg
 			{
 				if (s_initialized)
 					throw std::runtime_error("GlobalAllocatorManager already initialized.");
-				// Reset state if previously shut down before re-initializing
 				if (s_shutdown)
 				{
 					s_global_chunks.clear();
 					s_current_pos = nullptr;
 					s_remaining_size = 0;
-					s_shutdown = false; // Allow re-initialization
+					s_shutdown = false;
 				}
 			}
 			try
 			{
 				allocate_new_global_chunk(initial_chunk_size);
-				s_initialized = true; // Set initialized flag here
+				s_initialized = true;
 				return true;
 			}
 			catch (...)
 			{
-				// Ensure cleanup if initial allocation fails
 				s_global_chunks.clear();
 				s_current_pos = nullptr;
 				s_remaining_size = 0;
-				s_initialized = false; // Ensure not marked as initialized
+				s_initialized = false;
 				s_shutdown = false;
-				throw; // Re-throw exception
+				throw;
 			}
 		}
-		// Shutdown the global pool (call once at teardown)
 		static void shutdown()
 		{
 			std::lock_guard<std::mutex> lock(s_mutex);
-			if (!s_initialized && !s_shutdown) // Only return if never initialized and not already shutdown
+			if (!s_initialized && !s_shutdown)
 				return;
 
-			s_global_chunks.clear(); // Destructors of GlobalChunk free memory
+			s_global_chunks.clear();
 			s_current_pos = nullptr;
 			s_remaining_size = 0;
 			s_initialized = false;
 			s_shutdown = true;
 		}
-		// Static members holding the global state
+
 		inline static std::list<GlobalChunk> s_global_chunks = {};
 		inline static char* s_current_pos = 0;
 		inline static size_t s_remaining_size = 0;
@@ -139,7 +118,6 @@ namespace zg
 		inline static bool s_shutdown = false;
 		using size_type = size_t;
 
-		// Private helper to align pointers
 		static inline char* align_global_ptr(char* ptr) noexcept
 		{
 			const size_t alignment = alignof(std::max_align_t);
@@ -160,12 +138,9 @@ namespace zg
 		}
 
 	public:
-		// Deleted constructor/destructor - static class
 		GlobalAllocatorManager() = delete;
 		~GlobalAllocatorManager() = delete;
 
-		// Request a block of raw memory from the global pool (thread-safe)
-		// Returns the start pointer and the actual size allocated.
 		static std::pair<char*, size_t> request_block(size_t requested_size)
 		{
 			if (requested_size == 0)
@@ -180,10 +155,10 @@ namespace zg
 
 			char* aligned_ptr = nullptr;
 			size_t padding = 0;
-			size_t total_needed = 0; // requested_size + padding
+			size_t total_needed = 0;
 
 			while (true)
-			{ // Loop until allocation succeeds or throws
+			{
 				if (s_current_pos)
 				{
 					aligned_ptr = align_global_ptr(s_current_pos);
@@ -197,51 +172,35 @@ namespace zg
 					// Check for overflow when adding padding
 					if (requested_size > (std::numeric_limits<size_type>::max)() - padding)
 					{
-						throw std::bad_alloc(); // Request too large with padding
+						throw std::bad_alloc();
 					}
 					total_needed = requested_size + padding;
 
 					if (total_needed <= s_remaining_size)
 					{
-						// Found space in the current global chunk
 						char* result_ptr = aligned_ptr;
-						s_current_pos = aligned_ptr + requested_size; // Advance past allocated block
-						s_remaining_size -= total_needed; // Decrease remaining
-						return {result_ptr, requested_size}; // Return aligned ptr and the size *requested*
+						s_current_pos = aligned_ptr + requested_size;
+						s_remaining_size -= total_needed;
+						return {result_ptr, requested_size};
 					}
 				}
 
-				// Need a new global chunk (or first allocation)
-				// Allocate a chunk large enough for this request + alignment padding
-				// Ensure minimum size calculation doesn't overflow
 				size_t min_needed_for_chunk = 0;
 				size_t align_max = alignof(std::max_align_t);
 				if (requested_size > (std::numeric_limits<size_type>::max)() - (align_max - 1))
 				{
-					throw std::bad_alloc(); // Cannot calculate minimum chunk size needed
+					throw std::bad_alloc();
 				}
 				min_needed_for_chunk = requested_size + align_max - 1;
 				allocate_new_global_chunk(min_needed_for_chunk);
-				// Loop will retry allocation from the new chunk
 			}
 		}
 	};
 
-	// --- ChunkAllocator (Uses Global Manager Directly for Each Allocation) ---
-	// *** MODIFIED: Removed BlockRequestSize template parameter ***
 	template <typename T>
 	class ChunkAllocator
 	{
-	private:
-		// *** MODIFIED: Removed all local block state members ***
-		// char* m_current_block_start = nullptr;
-		// char* m_current_pos = nullptr;
-		// size_t m_remaining_in_block = 0;
-
-		// *** MODIFIED: Removed acquire_new_block helper ***
-
 	public:
-		// --- Standard Allocator Typedefs ---
 		using value_type = T;
 		using pointer = T*;
 		using const_pointer = const T*;
@@ -253,7 +212,6 @@ namespace zg
 		template <typename U>
 		struct rebind
 		{
-			// *** MODIFIED: Removed BlockRequestSize ***
 			using other = ChunkAllocator<U>;
 		};
 
@@ -264,72 +222,48 @@ namespace zg
 		using propagate_on_container_swap = std::false_type;
 		using is_always_equal = std::false_type;
 
-		// --- Constructors ---
-		// Allocator is now effectively stateless regarding memory blocks.
 		ChunkAllocator() noexcept = default;
-		ChunkAllocator(const ChunkAllocator&) noexcept = default; // Copy is trivial
-		ChunkAllocator(ChunkAllocator&&) noexcept = default; // Move is trivial
+		ChunkAllocator(const ChunkAllocator&) noexcept = default;
+		ChunkAllocator(ChunkAllocator&&) noexcept = default;
 
-		// Templated constructor (for rebinding): Creates a new, independent instance.
 		template <typename U>
 		ChunkAllocator(const ChunkAllocator<U>& /*other*/) noexcept
 		{
-			// No state to copy or share.
 		}
 
-		// --- Assignment Operators ---
-		// Also trivial now.
 		ChunkAllocator& operator=(const ChunkAllocator&) noexcept = default;
 		ChunkAllocator& operator=(ChunkAllocator&&) noexcept = default;
 
-		// Destructor: Default is fine. Memory belongs to Global Manager.
 		~ChunkAllocator() = default;
 
-
-		// --- Core Allocation/Deallocation ---
 		[[nodiscard]] pointer allocate(size_type n)
 		{
 			if (n == 0)
 				return nullptr;
 			if (n > (std::numeric_limits<size_type>::max)() / sizeof(T))
 			{
-				throw std::bad_alloc(); // Request size overflow
+				throw std::bad_alloc();
 			}
 			const size_type bytes_needed = n * sizeof(T);
-			// const size_type alignment = alignof(T); // Alignment handled globally
-
-			// *** MODIFIED: Directly request exact size from Global Manager ***
-			// The Global Manager returns memory aligned to at least alignof(std::max_align_t).
-			// This is sufficient for T if alignof(T) <= alignof(std::max_align_t).
-			// If T is over-aligned, this allocator will not provide correct alignment.
 			std::pair<char*, size_t> result_block = GlobalAllocatorManager::request_block(bytes_needed);
-
-			// request_block throws on failure or if not initialized/shutdown.
-			// It returns {nullptr, 0} only if requested_size was 0, handled above.
 			assert(result_block.first != nullptr);
-			assert(result_block.second >= bytes_needed); // Manager returns at least requested size
-
+			assert(result_block.second >= bytes_needed);
 			return reinterpret_cast<pointer>(result_block.first);
 		}
 
-		// Deallocate remains a no-op (memory managed globally)
 		void deallocate(pointer p, size_type n) noexcept
 		{
 			(void)p;
 			(void)n;
 		}
 
-		// --- Comparison Operators ---
-		template <typename U> // *** MODIFIED: Removed BlockRequestSize ***
+		template <typename U>
 		bool operator==(const ChunkAllocator<U>& other) const noexcept
 		{
-			// Stateless allocators can be considered equal, but standard practice
-			// for non-always-equal allocators is identity for non-shared state.
-			// Let's keep identity comparison for consistency with is_always_equal = false.
 			return this == &other;
 		}
 
-		template <typename U> // *** MODIFIED: Removed BlockRequestSize ***
+		template <typename U>
 		bool operator!=(const ChunkAllocator<U>& other) const noexcept
 		{
 			return !(*this == other);

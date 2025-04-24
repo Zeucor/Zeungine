@@ -1,7 +1,7 @@
 
 # Dependencies
 include(FetchContent)
-set(FETCHCONTENT_QUIET OFF)
+# set(FETCHCONTENT_QUIET OFF)
 set(SKIP_INSTALL_ALL ON)
 
 if(ANDROID)
@@ -13,6 +13,150 @@ else()
 endif()
 
 #New Dependency Declarations to the top!
+
+# miniaudio
+message(STATUS "FetchContent: miniaudio")
+FetchContent_Declare(
+    miniaudio
+    GIT_REPOSITORY https://github.com/mackron/miniaudio.git
+    GIT_TAG master)
+FetchContent_GetProperties(miniaudio)
+if(NOT miniaudio_POPULATED)
+    FetchContent_Populate(miniaudio)
+endif()
+
+set(MINIAUDIO_SOURCES ${miniaudio_SOURCE_DIR}/miniaudio.c)
+add_library(miniaudio STATIC ${MINIAUDIO_SOURCES})
+target_include_directories(miniaudio PRIVATE ${miniaudio_SOURCE_DIR})
+
+# lunasvg & plutovg combined lib
+message(STATUS "FetchContent: lunasvg")
+FetchContent_Declare(lunasvg
+    GIT_REPOSITORY https://github.com/ZeunO8/lunasvg.git
+    GIT_TAG master)
+FetchContent_GetProperties(lunasvg)
+if(NOT lunasvg_POPULATED)
+    FetchContent_Populate(lunasvg)
+endif()
+
+file(GLOB LUNASVG_SOURCES ${lunasvg_SOURCE_DIR}/source/*.cpp)
+
+message(STATUS "FetchContent: plutovg")
+FetchContent_Declare(plutovg
+    GIT_REPOSITORY https://github.com/ZeunO8/plutovg.git
+    GIT_TAG main)
+FetchContent_GetProperties(plutovg)
+if(NOT plutovg_POPULATED)
+    FetchContent_Populate(plutovg)
+endif()
+
+file(GLOB PLUTOVG_SOURCES ${plutovg_SOURCE_DIR}/source/*.c)
+
+add_library(svg STATIC ${LUNASVG_SOURCES} ${PLUTOVG_SOURCES})
+target_include_directories(svg PRIVATE ${lunasvg_SOURCE_DIR}/include)
+target_include_directories(svg PRIVATE ${plutovg_SOURCE_DIR}/include)
+target_compile_definitions(svg PRIVATE LUNASVG_BUILD_STATIC)
+target_compile_definitions(svg PRIVATE PLUTOVG_BUILD_STATIC)
+
+# combined spirvheaders, spirv-tools, glslang & shaderc
+message(STATUS "FetchContent: sprivheaders")
+FetchContent_Declare(spirvheaders
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
+    GIT_TAG 54a521dd130ae1b2f38fef79b09515702d135bdd)
+FetchContent_GetProperties(spirvheaders)
+if(NOT spirvheaders_POPULATED)
+    FetchContent_Populate(spirvheaders)
+endif()
+
+# spriv-tools
+message(STATUS "FetchContent: spirvtools")
+FetchContent_Declare(spirvtools
+    GIT_REPOSITORY https://github.com/ZeunO8/SPIRV-Tools.git
+    GIT_TAG fixes)
+FetchContent_GetProperties(spirvtools)
+if(NOT spirvtools_POPULATED)
+    FetchContent_Populate(spirvtools)
+endif()
+
+file(GLOB SPIRV_TOOLS_SOURCES
+    "${spirvtools_SOURCE_DIR}/source/diff/*.cpp"
+    "${spirvtools_SOURCE_DIR}/source/link/*.cpp"
+    "${spirvtools_SOURCE_DIR}/source/lint/*.cpp"
+    "${spirvtools_SOURCE_DIR}/source/opt/*.cpp"
+    "${spirvtools_SOURCE_DIR}/source/reduce/*.cpp"
+    "${spirvtools_SOURCE_DIR}/source/util/*.cpp"
+    "${spirvtools_SOURCE_DIR}/source/val/*.cpp"
+    "${spirvtools_SOURCE_DIR}/source/*.cpp")
+
+# glslang
+message(STATUS "FetchContent: glslang")
+FetchContent_Declare(glslang
+    GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
+    GIT_TAG 2b2523fb951f63f072cfba514c26f2feea5f4329)
+FetchContent_GetProperties(glslang)
+if(NOT glslang_POPULATED)
+    FetchContent_Populate(glslang)
+endif()
+
+if(LINUX OR MACOS)
+    set(GL_OS Unix)
+elseif(WINDOWS)
+    set(GL_OS Windows)
+elseif(EMSCRIPTEN)
+    set(GL_OS Web)
+endif()
+file(GLOB GLSLANG_SOURCES
+    "${glslang_SOURCE_DIR}/glslang/CInterface/*.cpp"
+    "${glslang_SOURCE_DIR}/glslang/HLSL/*.cpp"
+    "${glslang_SOURCE_DIR}/glslang/GenericCodeGen/*.cpp"
+    "${glslang_SOURCE_DIR}/glslang/MachineIndependent/*.cpp"
+    "${glslang_SOURCE_DIR}/glslang/MachineIndependent/preprocessor/*.cpp"
+    "${glslang_SOURCE_DIR}/glslang/HLSL/*.cpp"
+    "${glslang_SOURCE_DIR}/glslang/OSDependent/${GL_OS}/*.cpp"
+    "${glslang_SOURCE_DIR}/OGLCompilersDLL/*.cpp"
+    "${glslang_SOURCE_DIR}/SPIRV/*.cpp"
+    "${glslang_SOURCE_DIR}/SPIRV/CInterface*.cpp")
+
+# shaderc
+message(STATUS "FetchContent: shaderc")
+FetchContent_Declare(shaderc
+    GIT_REPOSITORY https://github.com/ZeunO8/shaderc.git
+    GIT_TAG win_x86_64
+    GIT_SUBMODULES "")
+FetchContent_GetProperties(shaderc)
+if(NOT shaderc_POPULATED)
+    FetchContent_Populate(shaderc)
+endif()
+
+file(GLOB SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/*.c" "${shaderc_SOURCE_DIR}/libshaderc/src/*.cc")
+list(REMOVE_ITEM SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/shaderc_test.cc")
+list(REMOVE_ITEM SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/shaderc_c_smoke_test.c")
+list(REMOVE_ITEM SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/shaderc_cpp_test.cc")
+list(REMOVE_ITEM SHADERC_SOURCES "${shaderc_SOURCE_DIR}/libshaderc/src/shaderc_private_test.cc")
+
+file(GLOB SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/*.c" "${shaderc_SOURCE_DIR}/libshaderc_util/src/*.cc")
+list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/compiler_test.cc")
+list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/counting_includer_test.cc")
+list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/file_finder_test.cc")
+list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/format_test.cc")
+list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/io_shaderc_test.cc")
+list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/message_test.cc")
+list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/mutex_test.cc")
+list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/string_piece_test.cc")
+list(REMOVE_ITEM SHADERC_UTIL_SOURCES "${shaderc_SOURCE_DIR}/libshaderc_util/src/version_profile_test.cc")
+
+add_library(glsl STATIC ${SPIRV_TOOLS_SOURCES} ${SHADERC_SOURCES} ${SHADERC_UTIL_SOURCES} ${GLSLANG_SOURCES})
+target_include_directories(glsl PRIVATE ${shaderc_SOURCE_DIR}/libshaderc/include)
+target_include_directories(glsl PRIVATE ${shaderc_SOURCE_DIR}/libshaderc_util/include)
+target_include_directories(glsl PRIVATE ${spirvtools_SOURCE_DIR}/include)
+target_include_directories(glsl PRIVATE ${spirvtools_SOURCE_DIR})
+target_include_directories(glsl PRIVATE ${spirvheaders_SOURCE_DIR}/include)
+target_include_directories(glsl PRIVATE ${glslang_SOURCE_DIR})
+target_include_directories(glsl PRIVATE ${glslang_SOURCE_DIR}/OGLCompilersDLL)
+target_include_directories(glsl PRIVATE include)
+target_include_directories(glsl PRIVATE include/spirv)
+target_compile_definitions(glsl PRIVATE ENABLE_HLSL)
+target_compile_definitions(glsl PRIVATE ENABLE_OPT)
 
 # Jolt
 message(STATUS "FetchContent: jolt")
@@ -422,16 +566,6 @@ if(NOT MACOS)
         WORKING_DIRECTORY ${openssl_SOURCE_DIR}
         COMMENT "Building OpenSSL"
     )
-endif()
-
-# miniaudio
-FetchContent_Declare(
-    miniaudio
-    GIT_REPOSITORY https://github.com/mackron/miniaudio.git
-    GIT_TAG master)
-FetchContent_GetProperties(miniaudio)
-if(NOT miniaudio_POPULATED)
-    FetchContent_Populate(miniaudio)
 endif()
 
 # # swiftshader
