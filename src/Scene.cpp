@@ -9,10 +9,29 @@
 #include <zg/textures/TextureFactory.hpp>
 #include <zg/vaos/VAO.hpp>
 using namespace zg;
+std::unordered_map<std::string, size_t> entityKeyCounts;
 Scene::Scene(const SceneCreateInfo& info) :
 		name(info.name), drawColorToWindowPlane(info.drawColorToWindowPlane), window(*info.windowPointer),
 		viewPointer(std::make_shared<vp::View>(info.cameraPosition, info.cameraDirection, info.cameraUp)),
-		useBVH(info.useBVH), entities([](const auto& entity) { return entity.name; }),
+		useBVH(info.useBVH),
+		entities(
+			[](const auto& entity) { return entity.name; },
+			[](const std::string& key) {
+				auto _key = key;
+				auto keySize = _key.size(); 
+				if (!keySize)
+				{
+					_key = std::string("Unknown");
+				}
+				auto entityKeyCountsIter = entityKeyCounts.find(_key);
+				if (entityKeyCountsIter == entityKeyCounts.end())
+				{
+					entityKeyCounts[_key] = 1;
+					entityKeyCountsIter = entityKeyCounts.find(_key);
+				}
+				return _key + " " + std::to_string(++entityKeyCountsIter->second);
+			}
+		),
 		onAttachedFunction(info.onAttachedFunction),
 		onDetachedFunction(info.onDetachedFunction),
 		preUpdateFunction(info.preUpdateFunction),

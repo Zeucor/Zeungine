@@ -41,6 +41,7 @@ namespace zg
 		DuplicateKeyFunction m_DuplicateKeyFunction;
 		bool m_GetKeyFunctionSet = false;
 		bool m_DuplicateKeyFunctionSet = false;
+
 	public:
 		size_t DuplicateKeyReKeyAttemps = 1;
 
@@ -133,7 +134,7 @@ namespace zg
 			std::lock_guard lock(*m_Mutex);
 			ValueT& value = m_Values.emplace_back(args...);
 			KeyT key = FindNextKey_locked(value);
-_id:
+		_id:
 			size_t id = ++m_Count;
 			size_t index = m_Values.size() - 1;
 			auto id_indexit = m_IDIndexMap.emplace(id, index);
@@ -178,7 +179,7 @@ _id:
 				m_Values.pop_back();
 				throw std::runtime_error("KeyIDVector::emplace_back: Key already exists.");
 			}
-_return_key:
+		_return_key:
 			return key;
 		}
 
@@ -199,7 +200,7 @@ _return_key:
 				}
 				throw std::runtime_error("KeyIDVector::emplace_back: Key already exists.");
 			}
-_return_key:
+		_return_key:
 			return key;
 		}
 
@@ -915,6 +916,16 @@ _return_key:
 				}
 			}
 			throw std::runtime_error("key not found with iter index [" + std::to_string(length) + "]");
+		}
+
+	public:
+
+		void reserve(size_t n)
+		{
+			m_Values.reserve(n);
+			m_IDIndexMap.reserve(n);
+			m_IDKeyMap.reserve(n);
+			m_IndexIDMap.reserve(n);
 		}
 	};
 } // namespace zg

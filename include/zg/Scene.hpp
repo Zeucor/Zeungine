@@ -4,6 +4,7 @@
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
 #include "ComponentHolder.hpp"
+#include "DataStorage.hpp"
 #include "Entity.hpp"
 #include "KeyIDVector.hpp"
 #include "components/scenes/SceneComponent.hpp"
@@ -15,11 +16,12 @@
 #include "textures/Framebuffer.hpp"
 #include "vp/Projection.hpp"
 #include "vp/View.hpp"
-#include "DataStorage.hpp"
 namespace zg
 {
 	struct SceneCreateInfo;
-	struct Scene : DataStorage<Scene>, ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>
+	struct Scene
+			: DataStorage<Scene>,
+				ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>
 	{
 		size_t ID = 0;
 		size_t* INDEX = 0;
@@ -60,7 +62,28 @@ namespace zg
 		~Scene();
 		std::vector<textures::Framebuffer::TextureAttachmentPair>
 		generateTexturesFromAttachments(const std::vector<textures::Framebuffer::AttachmentType>& attachments);
-		KeyIDVector<std::string, Entity>::EmplaceBackTuple addEntity(const EntityCreateInfo& info, bool callOnEntityAdded = true);
+		KeyIDVector<std::string, Entity>::EmplaceBackTuple addEntity(const EntityCreateInfo& info,
+																																 bool callOnEntityAdded = true);
+		template <typename... Args>
+		std::array<KeyIDVector<std::string, Entity>::EmplaceBackTuple, sizeof...(Args) + 1>
+		addEntities(bool callOnEntityAdded, const EntityCreateInfo& info, const Args&... args)
+		{
+			std::array<KeyIDVector<std::string, Entity>::EmplaceBackTuple, sizeof...(Args) + 1> arr;
+			entities.reserve(entities.size() + sizeof...(Args) + 1);
+			size_t index = 0;
+			addEntitiesHelper<sizeof...(Args) + 1>(callOnEntityAdded, index, arr, info, args...);
+		};
+		template <size_t N, typename... Args>
+		void addEntities(bool callOnEntityAdded, size_t& index,
+										 std::array<KeyIDVector<std::string, Entity>::EmplaceBackTuple, N>& arr,
+										 const EntityCreateInfo& info, const Args&... args)
+		{
+			arr[index] = addEntity(info, callOnEntityAdded);
+			addEntitiesHelper<N>(callOnEntityAdded, index, arr, args...);
+		};
+		template <size_t N, typename... Args>
+		void addEntities(bool callOnEntityAdded, size_t& index,
+										 std::array<KeyIDVector<std::string, Entity>::EmplaceBackTuple, N>& arr) {};
 		void removeEntity(const size_t& id);
 		void update();
 		void preRender();
@@ -84,9 +107,10 @@ namespace zg
 		glm::vec3 cameraDirection = glm::normalize(glm::vec3(0, -1, 1));
 		glm::vec3 cameraUp = glm::vec3(0, 1, 0);
 		vp::Projection::TYPE projectionType = vp::Projection::TYPE::Perspective;
-		glm::vec2 orthoSize = glm::vec2(2,2);
+		glm::vec2 orthoSize = glm::vec2(2, 2);
 		float fov = 81.f;
-		int framebufferCreateInt = 0; // 0 = don't use framebuffer, 1 = use framebufferPointer, 2 = create from framebufferAttachments
+		int framebufferCreateInt =
+			0; // 0 = don't use framebuffer, 1 = use framebufferPointer, 2 = create from framebufferAttachments
 		std::shared_ptr<textures::Framebuffer> framebufferPointer = {};
 		std::vector<textures::Framebuffer::AttachmentType> frameBufferAttachments = {};
 		std::function<void(Scene&)> onAttachedFunction = {};

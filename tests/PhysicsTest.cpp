@@ -88,9 +88,10 @@ SceneCreateInfo PhysicsSceneFactory()
 			// scene.attachComponent(components::scenes::GravityByAttractionFactory(0.000005f));
 			// scene.attachComponent(components::scenes::GravityByVectorFactory(glm::vec3(0, -9.81, 0)));
 			scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 40.0L)));
-			scene.attachComponent(components::scenes::ViewMouseControlFactory());
-			scene.attachComponent(
-				components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 5));
+			// scene.attachComponent(components::scenes::ViewMouseControlFactory());
+			// scene.attachComponent(
+			// 	components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 5));
+			scene.entities.reserve(5);
 			auto floor_tuple = scene.addEntity(floorCreateInfo);
 			auto& floor = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_tuple);
 			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyCreateInfo);
@@ -100,10 +101,12 @@ SceneCreateInfo PhysicsSceneFactory()
 			// floor.attachComponent(floorColliderCreateInfo);
 			auto toxy_tuple = scene.addEntity(toxyCreateInfo);
 			auto cube1_tuple = scene.addEntity(cubeCreateInfo);
-			// cubeCreateInfo.position = {47, 47, 58};
-			// auto cube2_tuple = scene.addEntity(cubeCreateInfo);
-			// cubeCreateInfo.position = {50, 47, 54};
-			// auto cube3_tuple = scene.addEntity(cubeCreateInfo);
+			cubeCreateInfo.position = {47, 47, 58};
+			auto cube2_tuple = scene.addEntity(cubeCreateInfo);
+			cubeCreateInfo.position = {50, 47, 54};
+			auto cube3_tuple = scene.addEntity(cubeCreateInfo);
+
+			scene.attachComponent(components::scenes::EntityThirdPersonCameraFactory(*std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple)));
 		}
 	};
 	return info;

@@ -136,7 +136,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             offset = yawQuat * pitchQuat * offset;
             viewPosition = lookAtTarget + offset;
             viewDirection = glm::normalize(lookAtTarget - viewPosition);
-            view.update();
+            view.setDirty();
 
             // --- Update Entity Yaw Rotation ---
             glm::vec3 horizontalOffset =
