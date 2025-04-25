@@ -37,7 +37,8 @@ Uses CMake for it's build system and comes with some included tests
  - MSAA (HW Accelerated)
  - Lightweight Event Loop
  - Directional, Point & Spot Lights and Shadows
- - Runtime Programmable Post Processing Pipeline
+ - Runtime Programmable Post Processing Pipeline (P3)
+ - Included P3 components such as Bloom
 
 ### Cloning
 
