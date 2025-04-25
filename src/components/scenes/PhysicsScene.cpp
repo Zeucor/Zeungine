@@ -73,7 +73,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 			mPhysicsSystem->Init(JOLT_MAX_BODIES, JOLT_NUM_BODY_MUTEXES, JOLT_MAX_BODY_PAIRS, JOLT_MAX_CONTACT_CONSTRAINTS,
 													 *mBroadPhaseLayerInterface, *mObjectVsBroadPhaseLayerFilter, *mObjectLayerPairFilter);
 			// if (gravity)
-			mPhysicsSystem->SetGravity(JPH::Vec3(0, -2.f, 0));
+			mPhysicsSystem->SetGravity(JPH::Vec3(0, -9.81f, 0));
 			auto& componentHostIndexStack = component.hostIndexStack;
 			auto& componentID = component.ID;
 			auto& thread = component.template make<std::thread*>(
