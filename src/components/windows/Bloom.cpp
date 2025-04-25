@@ -16,7 +16,11 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::Bloo
             auto& bloomColorMultiplier = component.template make<float>("bloomColorMultiplier", 1.00f);
             auto& bloomCoefficients = component.template make<glm::vec3>("bloomCoefficients", glm::vec3(0.2126, 0.7152, 0.0722));
             auto& bloomThreshold = component.template make<float>("bloomThreshold", 0.7f);
-            auto& intensity = component.template make<float>("intensity", 0.7f);
+            auto& intensity = component.template make<float>("intensity", 0.8f);
+            auto& Pi2 = component.template make<float>("Pi2", 6.28318530718f);
+            auto& Directions = component.template make<float>("Directions", 16.0f);
+            auto& Quality = component.template make<float>("Quality", 5.0f);
+            auto& Size = component.template make<float>("Size", 88.0f);
             zg::PostProcessingStageCreateInfo bloomBrightExtractStageCreateInfo{
                 .name = "BloomBrightExtract",
                 .inputs = {"ColorTexture"},
@@ -81,9 +85,26 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::Bloo
                 .inputs = {"BrightTexture"},
                 .outputs = {{"BlurTexture", zg::textures::Framebuffer::AttachmentType::Color}},
                 .constants = {"BloomBlur"},
-                .setShaderConstants = [](Shader& shader, auto& vao)
+                .setShaderConstants = [
+                    hostIndexStack = component.hostIndexStack,
+                    componentID = component.ID
+                ](Shader& shader, auto& vao)
                 {
-                    shader.setBlock("ScreenSize", vao, glm::vec2(shader.iRenderer->platformWindowPointer->renderWindowPointer->windowWidth, shader.iRenderer->platformWindowPointer->renderWindowPointer->windowHeight));
+                    auto& window = Registry::getWindow(hostIndexStack);
+                    auto& component = window.getComponentByID(componentID);
+                    auto& Pi2 = component.template getData<float>("Pi2");
+                    auto& Directions = component.template getData<float>("Directions");
+                    auto& Quality = component.template getData<float>("Quality");
+                    auto& Size = component.template getData<float>("Size");
+                    float blur[6] = {
+                        shader.iRenderer->platformWindowPointer->renderWindowPointer->windowWidth,
+                        shader.iRenderer->platformWindowPointer->renderWindowPointer->windowHeight,
+                        Pi2,
+                        Directions,
+                        Quality,
+                        Size
+                    };
+                    shader.setBlock("Blur", vao, blur);
                 },
                 .staticOnAttached = []()
                 {
@@ -93,16 +114,17 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::Bloo
                         "BloomBlur",
                         [](Shader& shader, const auto& constants) -> std::string {
                             uint32_t bindingIndex = shaders::ShaderFactory::currentBindingIndex++;
-                            shader.addUBO(shaders::ShaderType::Fragment, "ScreenSize", bindingIndex, sizeof(glm::vec2));
+                            shader.addUBO(shaders::ShaderType::Fragment, "Blur", bindingIndex, sizeof(float) * 6);
                             std::string string;
                             string +=
-                                "layout(binding = " + std::to_string(bindingIndex) + ") uniform ScreenSize {\n" +
-                                "  vec2 size;\n" +
-                                "} screenSize;\n";
-                            string += R"(float Pi2 = 6.28318530718;
-float Directions = 16.0;
-float Quality = 5.0;
-float Size = 88.0;
+                                "layout(binding = " + std::to_string(bindingIndex) + ") uniform Blur {\n" +
+                                "  vec2 screenSize;\n"
+                                "  float Pi2;\n"
+                                "  float Directions;\n"
+                                "  float Quality;\n"
+                                "  float Size;\n"
+                                "} blur;\n";
+                            string += R"(
 )";
                             return string;
                         }
@@ -132,12 +154,12 @@ float Size = 88.0;
                         "BloomBlur",
                         [](auto& shader, const auto& constants) -> std::string {
                             return R"(
-    vec2 Radius = Size / screenSize.size;
+    vec2 Radius = blur.Size / blur.screenSize;
     vec4 bloomColor = texture(BrightTexture, inUV);
-    for (float d = 0.0; d < Pi2; d += Pi2 / Directions)
-        for (float i = 1.0 / Quality; i <= 1.0; i += 1.0 / Quality)
+    for (float d = 0.0; d < blur.Pi2; d += blur.Pi2 / blur.Directions)
+        for (float i = 1.0 / blur.Quality; i <= 1.0; i += 1.0 / blur.Quality)
             bloomColor += texture(BrightTexture, inUV + vec2(cos(d), sin(d)) * Radius * i);
-    bloomColor /= Quality * Directions - 15.0;
+    bloomColor /= blur.Quality * blur.Directions - 15.0;
     BlurColor = bloomColor;)";
                         }
                     );
