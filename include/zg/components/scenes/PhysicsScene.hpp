@@ -24,7 +24,7 @@ namespace zg::components::scenes
 	class ZGContactListener : public JPH::ContactListener
 	{
 	public:
-		ZGContactListener(SceneComponent& physicsScene);
+		ZGContactListener(const std::vector<size_t*>& sceneIndexStack, size_t physicsSceneID);
 		void OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold,
 												JPH::ContactSettings& ioSettings) override;
 		void OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold,
@@ -32,7 +32,8 @@ namespace zg::components::scenes
 		void OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair) override;
 
 	private:
-		SceneComponent& physicsScene;
+		std::vector<size_t*> sceneIndexStack;
+		size_t physicsSceneID;
 		physics::CollisionManifold constructManifold(components::entities::EntityComponent* ec1, components::entities::EntityComponent* ec2, const JPH::ContactManifold& inManifold);
 	};
 } // namespace zg::components::scenes

@@ -25,15 +25,36 @@ using namespace zg;
 shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
 glm::vec3 windowVisualizerPosition(56.8, 42, 57);
 SceneCreateInfo PhysicsSceneFactory();
-auto staticRigidBodyCreateInfo =
+auto staticRigidBodyInfo =
 	components::entities::RigidBodyFactory(components::entities::RigidBodyInfo{components::entities::BodyType::Static});
-auto cubeRigidBodyCreateInfo = components::entities::RigidBodyFactory(
+auto cubeRigidBodyInfo = components::entities::RigidBodyFactory(
 	components::entities::RigidBodyInfo{components::entities::BodyType::Dynamic, 1.0f, 0.85f, 0.7f, true, false,
 																			glm::vec<3, bool>(1, 0, 1), glm::vec<3, bool>(0)});
 auto floorCreateInfo = entities::CubeFactory("Floor", {50, 40, 50}, {1, 0, 0, 0}, {1, 1, 1}, {20000, 0.5, 20000},
 																						 {0.35, 0.45, 0.25, 1}, commonShaderConstants);
+auto floorColliderInfo = components::entities::ColliderFactory(
+	components::entities::ColliderInfo(
+		std::make_shared<components::entities::BoxShapeData>(glm::vec3(20000, 0.5, 20000) / 2.f),
+		components::entities::PhysicsMaterial{.friction=0.7f, .restitution=0.33f},
+		false
+	)
+);
 auto toxyCreateInfo = entities::CubeFactory("Toxy", {50, 47, 58}, {1, 0, 0, 0}, glm::vec3(2), glm::vec3(1), {0, 0, 1, 1}, commonShaderConstants);
+auto toxyColliderInfo = components::entities::ColliderFactory(
+	components::entities::ColliderInfo(
+		std::make_shared<components::entities::BoxShapeData>(glm::vec3(2, 2, 2) / 2.f),
+		components::entities::PhysicsMaterial{.friction=0.8f, .restitution=0.11f},
+		false
+	)
+);
 auto cubeCreateInfo = entities::CubeFactory("Cube", {53, 47, 58}, {1, 0, 0, 0}, glm::vec3(1), glm::vec3(1), {0.01, 1, 0.2, 1}, commonShaderConstants);
+auto cubeColliderInfo = components::entities::ColliderFactory(
+	components::entities::ColliderInfo(
+		std::make_shared<components::entities::BoxShapeData>(glm::vec3(1, 1, 1) / 2.f),
+		components::entities::PhysicsMaterial{.friction=0.21f, .restitution=0.55f},
+		false
+	)
+);
 int main()
 {
 	WindowCreateInfo windowCreateInfo{
@@ -96,17 +117,30 @@ SceneCreateInfo PhysicsSceneFactory()
 			scene.entities.reserve(5);
 			auto floor_tuple = scene.addEntity(floorCreateInfo);
 			auto& floor = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_tuple);
-			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyCreateInfo);
+			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyInfo);
 			auto& floor_rb = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_rb_tuple);
 			floor_rb.template setData<float>("Mass", 1000000.0f);
+			floor.attachComponent(floorColliderInfo);
 			// auto floorColliderCreateInfo = components::entities::ColliderFactory();
 			// floor.attachComponent(floorColliderCreateInfo);
 			auto toxy_tuple = scene.addEntity(toxyCreateInfo);
+			auto& toxy = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple);
+			toxy.attachComponent(cubeRigidBodyInfo);
+			toxy.attachComponent(toxyColliderInfo);
 			auto cube1_tuple = scene.addEntity(cubeCreateInfo);
+			auto& cube1 = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(cube1_tuple);
+			cube1.attachComponent(cubeRigidBodyInfo);
+			cube1.attachComponent(cubeColliderInfo);
 			cubeCreateInfo.position = {47, 47, 58};
 			auto cube2_tuple = scene.addEntity(cubeCreateInfo);
+			auto& cube2 = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(cube2_tuple);
+			cube2.attachComponent(cubeRigidBodyInfo);
+			cube2.attachComponent(cubeColliderInfo);
 			cubeCreateInfo.position = {50, 47, 54};
 			auto cube3_tuple = scene.addEntity(cubeCreateInfo);
+			auto& cube3 = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(cube3_tuple);
+			cube3.attachComponent(cubeRigidBodyInfo);
+			cube3.attachComponent(cubeColliderInfo);
 
 			scene.attachComponent(components::scenes::EntityThirdPersonCameraFactory(*std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple)));
 		}
@@ -116,7 +150,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// //
 // 		// 	{
 // commonShaderConstants);
-// 		// 	cube4->attachComponent(cubeRigidBodyCreateInfo);
+// 		// 	cube4->attachComponent(cubeRigidBodyInfo);
 // 		// 	cube4->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
 // 		// 		// std::make_shared<components::entities::MeshShapeData>(*cube4),
 // 		// 		std::make_unique<components::entities::BoxShapeData>(glm::vec3(1.5, 1.5, 1.5) / 2.f),
@@ -128,7 +162,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// {
 // 		// 	auto wall1 = std::make_shared<entities::Cube>(window, *this, glm::vec3(40, 43, 50), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(1, 5, 20), commonShaderConstants);
-// 		// 	auto wall1RigidBodyID = wall1->attachComponent(staticRigidBodyCreateInfo);
+// 		// 	auto wall1RigidBodyID = wall1->attachComponent(staticRigidBodyInfo);
 // 		// 	auto& wall1RigidBody = wall1->getComponentByID(wall1RigidBodyID);
 // 		// 	// wall1RigidBody.template getData<float>("Mass") = 2;
 // 		// 	wall1->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
@@ -137,7 +171,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// 	addEntity(wall1);
 // 		// 	auto wall2 = std::make_shared<entities::Cube>(window, *this, glm::vec3(60, 43, 50), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(1, 5, 20), commonShaderConstants);
-// 		// 	auto wall2RigidBodyID = wall2->attachComponent(staticRigidBodyCreateInfo);
+// 		// 	auto wall2RigidBodyID = wall2->attachComponent(staticRigidBodyInfo);
 // 		// 	auto& wall2RigidBody = wall2->getComponentByID(wall2RigidBodyID);
 // 		// 	// wall2RigidBody.template getData<float>("Mass") = 2;
 // 		// 	wall2->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
@@ -146,7 +180,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// 	addEntity(wall2);
 // 		// 	auto wall3 = std::make_shared<entities::Cube>(window, *this, glm::vec3(50, 43, 40), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(20, 5, 1), commonShaderConstants);
-// 		// 	auto wall3RigidBodyID = wall3->attachComponent(staticRigidBodyCreateInfo);
+// 		// 	auto wall3RigidBodyID = wall3->attachComponent(staticRigidBodyInfo);
 // 		// 	auto& wall3RigidBody = wall3->getComponentByID(wall3RigidBodyID);
 // 		// 	// wall3RigidBody.template getData<float>("Mass") = 2;
 // 		// 	wall3->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{
@@ -155,7 +189,7 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// 	addEntity(wall3);
 // 		// 	auto wall4 = std::make_shared<entities::Cube>(window, *this, glm::vec3(50, 43, 60), glm::quat(1, 0, 0, 0),
 // 		// 																										glm::vec3(1), glm::vec3(20, 5, 1), commonShaderConstants);
-// 		// 	auto wall4RigidBodyID = wall4->attachComponent(staticRigidBodyCreateInfo);
+// 		// 	auto wall4RigidBodyID = wall4->attachComponent(staticRigidBodyInfo);
 // 		// 	auto& wall4RigidBody = wall4->getComponentByID(wall4RigidBodyID);
 // 		// 	// wall4RigidBody.template getData<float>("Mass") = 2;
 // 		// 	wall4->attachComponent(components::entities::ColliderFactory(components::entities::ColliderInfo{

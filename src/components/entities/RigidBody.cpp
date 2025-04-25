@@ -29,7 +29,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			component.template make<JPH::BodyInterface*>("BodyInterface", physicsScene->template getData<JPH::BodyInterface*>("BodyInterface"));
 			component.template make<JPH::Body*>("Body");
 			component.template make<std::vector<components::entities::EntityComponent*>>("Colliders");
-			component.template make<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("ActiveRigidBodyManifolds");
+			component.template make<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("activeRigidBodyManifolds");
 			component.template make<std::mutex*>("Mutex", new std::mutex());
 		},
 		.onDetachedFunction = [](auto& component)
@@ -45,9 +45,9 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			{
 				auto& entity = Registry::getEntity(component.hostIndexStack);
 				auto& physicsScene = *component.template getData<zg::components::scenes::SceneComponent*>("PhysicsScene");
-				auto& info = *component.template make<RigidBodyInfo*>("Info");
-				auto& position = *component.template make<glm::vec3*>("Position");
-				auto& rotation = *component.template make<glm::quat*>("Rotation");
+				auto& info = *component.template getData<RigidBodyInfo*>("Info");
+				auto& position = *component.template getData<glm::vec3*>("Position");
+				auto& rotation = *component.template getData<glm::quat*>("Rotation");
 				auto& bodyIDAny = component.getDataReturnAny("BodyID");
 				auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
 				auto& body = component.template getData<JPH::Body*>("Body");
@@ -82,7 +82,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				{
 					// Single collider case
 					auto col = colliders[0];
-					auto& colInfo = *col->template getData<ColliderInfo*>("Info");
+					auto& colInfo = col->template getData<ColliderInfo>("Info");
 					auto baseShape = colInfo.shapeData->createJoltShape();
 					if (!baseShape)
 					{
@@ -91,20 +91,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 						return bodyIDAny;
 					}
 			
-					// Apply offset and rotation if necessary
-					bool hasOffset = glm::length2(colInfo.offset) > 1e-6f;
-					// Check if rotation is not identity
-					bool hasRotation = glm::abs(glm::dot(colInfo.rotationOffset, glm::quat(1.f, 0.f, 0.f, 0.f))) < (1.f - 1e-6f);
-			
-					if (hasOffset || hasRotation)
-					{
-						finalShape = new JPH::RotatedTranslatedShape(ToJolt<glm::vec3, JPH::Vec3>(colInfo.offset),
-																													ToJolt<glm::quat, JPH::Quat>(colInfo.rotationOffset), baseShape);
-					}
-					else
-					{
-						finalShape = baseShape;
-					}
+					finalShape = baseShape;
 				}
 				else
 				{
@@ -248,7 +235,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				// // Add the body to the simulation (activate it)
 				joltBodyInterface.AddBody(bodyID, JPH::EActivation::Activate);
 				
-				physicsScene.template make<scenes::JoltIDComponentPair>("registerRigidBody", bodyID, &component);
+				physicsScene.template setData<scenes::JoltIDComponentPair>("attachRigidBody", scenes::JoltIDComponentPair(bodyID, &component));
 				return bodyIDAny;
 			}}
 		},
@@ -279,12 +266,48 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 						break;
 					}
 				}
-				if (changed)
+				if (changed && colliders.size())
 				{
 					component.template getData<JPH::BodyID>("recreateJoltBody");
 				}
 			}
+		},
+		// {"isTouching", [](const std::any& val, auto& component)->void
+		// 	{
+		// 		// std::lock_guard lock(mutex);
+		// 		// auto iter = activeRigidBodyManifolds.find(&rigidBody);
+		// 		// if (iter == activeRigidBodyManifolds.end())
+		// 		// {
+		// 		// 	return false;
+		// 		// }
+		// 		// ManifoldPointer = &iter->second;
+		// 		// return true;
+		// 	}
+		// },
+		{"addActiveManifold", [](const std::any& val, auto& component)->void {
+			auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
+			auto& mutex = *mutexPointer;
+			auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("activeRigidBodyManifolds");
+			auto manifold = std::any_cast<physics::CollisionManifold>(val);
+			std::lock_guard lock(mutex);
+			auto rigidBodyComponentPointer = (&component == manifold.ecA) ? manifold.ecB : manifold.ecA;
+			activeRigidBodyManifolds[rigidBodyComponentPointer] = manifold;
+			return;
+		}},
+		{"removeActiveManifold", [](const std::any& val, auto& component)->void {
+			auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
+			auto& mutex = *mutexPointer;
+			auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("activeRigidBodyManifolds");
+			std::lock_guard lock(mutex);
+			auto otherRb = std::any_cast<components::entities::EntityComponent*>(val);
+			auto iter = activeRigidBodyManifolds.find(otherRb);
+			if (iter == activeRigidBodyManifolds.end())
+			{
+				return;
+			}
+			activeRigidBodyManifolds.erase(iter);
 		}}
+		}
 	};
 	return createInfo;
 }
@@ -439,35 +462,3 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 // bool RigidBody::isKinematic() const { return info.bodyType == BodyType::Kinematic; }
 // bool RigidBody::isDynamic() const { return info.bodyType == BodyType::Dynamic; }
 // glm::vec3 RigidBody::getCenterAtTime(float t) const { return *position + getLinearVelocity() * t; }
-// bool RigidBody::isTouching(RigidBody& rigidBody, physics::CollisionManifold*& ManifoldPointer)
-// {
-// 	std::lock_guard lock(mutex);
-// 	auto iter = activeRigidBodyManifolds.find(&rigidBody);
-// 	if (iter == activeRigidBodyManifolds.end())
-// 	{
-// 		return false;
-// 	}
-// 	ManifoldPointer = &iter->second;
-// 	return true;
-// }
-// void RigidBody::addActiveManifold(const physics::CollisionManifold& manifold)
-// {
-// 	std::lock_guard lock(mutex);
-// 	auto rigidBodyPointer = (this == manifold.bodyA) ? manifold.bodyB : manifold.bodyA;
-// 	activeRigidBodyManifolds[rigidBodyPointer] = manifold;
-// }
-// void RigidBody::removeActiveManifold(RigidBody& otherRb)
-// {
-// 	std::lock_guard lock(mutex);
-// 	auto iter = activeRigidBodyManifolds.find(&otherRb);
-// 	if (iter == activeRigidBodyManifolds.end())
-// 	{
-// 		return;
-// 	}
-// 	activeRigidBodyManifolds.erase(iter);
-// }
-// void RigidBody::clearActiveManifolds()
-// {
-// 	std::lock_guard lock(mutex);
-// 	activeRigidBodyManifolds.clear();
-// }

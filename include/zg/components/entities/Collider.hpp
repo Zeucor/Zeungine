@@ -78,11 +78,12 @@ namespace zg::components::entities
 	};
 	struct ColliderInfo
 	{
-		std::unique_ptr<ShapeData> shapeData;
+		std::shared_ptr<ShapeData> shapeData;
 		PhysicsMaterial material;
-		glm::vec3 offset = {0, 0, 0};
-		glm::quat rotationOffset = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 		bool isSensor = false;
+		ColliderInfo(const std::shared_ptr<ShapeData>& shapeData, const PhysicsMaterial& material, bool isSensor);
+		ColliderInfo(const ColliderInfo& other);
+		ColliderInfo& operator=(const ColliderInfo& other);
 	};
 	// struct Collider : components::entities::EntityComponent
 	// {
