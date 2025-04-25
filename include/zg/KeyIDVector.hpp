@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <zg/GlobalUID.hpp>
 // #include <zg/ChunkAllocator.hpp>
 namespace zg
 {
@@ -30,7 +31,6 @@ namespace zg
 		using ConstValueIndexIterator = ValueVector::const_iterator;
 
 	private:
-		size_t m_Count = 0;
 		KeyIndexMap m_KeyIndexMap;
 		IDKeyMap m_IDKeyMap;
 		IDIndexMap m_IDIndexMap;
@@ -53,7 +53,6 @@ namespace zg
 		KeyIDVector(const KeyIDVector& other)
 		{
 			std::lock_guard lock_other(*other.m_Mutex);
-			m_Count = other.m_Count;
 			m_Values = other.m_Values;
 			m_IDKeyMap = other.m_IDKeyMap;
 			m_GetKeyFunction = other.m_GetKeyFunction;
@@ -86,7 +85,6 @@ namespace zg
 			std::lock(*m_Mutex, *other.m_Mutex);
 			std::lock_guard lock_this(*m_Mutex, std::adopt_lock);
 			std::lock_guard lock_other(*other.m_Mutex, std::adopt_lock);
-			m_Count = other.m_Count;
 			m_Values = other.m_Values;
 			m_IDKeyMap = other.m_IDKeyMap;
 			m_GetKeyFunction = other.m_GetKeyFunction;
@@ -135,7 +133,7 @@ namespace zg
 			ValueT& value = m_Values.emplace_back(args...);
 			KeyT key = FindNextKey_locked(value);
 		_id:
-			size_t id = ++m_Count;
+			size_t id = GlobalUID::GetNew();
 			size_t index = m_Values.size() - 1;
 			auto id_indexit = m_IDIndexMap.emplace(id, index);
 			size_t& indexRef = id_indexit.first->second;
@@ -148,7 +146,7 @@ namespace zg
 		EmplaceBackTuple emplace_back_key(KeyT key, const Args&... args)
 		{
 			std::lock_guard lock(*m_Mutex);
-			size_t id = ++m_Count;
+			size_t id = GlobalUID::GetNew();
 			size_t index = m_Values.size();
 			key = FindNextKey_locked_withKey(key);
 			ValueT& value = m_Values.emplace_back(args...);
@@ -273,7 +271,6 @@ namespace zg
 		void clear()
 		{
 			std::lock_guard lock(*m_Mutex);
-			m_Count = 0;
 			m_KeyIndexMap.clear();
 			m_IDKeyMap.clear();
 			m_IDIndexMap.clear();
@@ -285,7 +282,7 @@ namespace zg
 	private:
 		ValueT& constructDefault(const KeyT& key)
 		{
-			size_t id = ++m_Count;
+			size_t id = GlobalUID::GetNew();
 			size_t index = m_Values.size();
 			ValueT& value = m_Values.emplace_back();
 			auto id_indexit = m_IDIndexMap.emplace(id, index);
