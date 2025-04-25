@@ -1328,7 +1328,19 @@ void VulkanRenderer::postRenderPass()
 	callDestroyAtRenderPassEndOrDestroy();
 	return;
 }
-void VulkanRenderer::beginMainFramebuffer() { mainFramebuffer->bind(); }
+void VulkanRenderer::beginMainFramebuffer()
+{
+	auto& mainFramebufferRef = *mainFramebuffer;
+	if (platformWindowPointer->renderWindowPointer->scenes.size())
+	{
+		auto& scene = *platformWindowPointer->renderWindowPointer->scenes.begin();
+		if (mainFramebufferRef.scenePointer != &scene)
+		{
+			mainFramebufferRef.scenePointer = &scene;
+		}
+	}
+	mainFramebuffer->bind();
+}
 void VulkanRenderer::postMainFramebuffer() { mainFramebuffer->unbind(); }
 #ifndef MACOS
 void VulkanRenderer::swapBuffers()
