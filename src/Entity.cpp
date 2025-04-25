@@ -264,16 +264,24 @@ void Entity::callMouseHoverHandler(bool hovered)
 void Entity::setPosition(glm::vec3 newPosition)
 {
 	position = newPosition;
-	// auto rigidBodyComponent =
-	// std::dynamic_pointer_cast<zg::components::entities::RigidBody>(getComponentByName("RigidBody")); if
-	// (rigidBodyComponent) 	rigidBodyComponent->setPosition(position);
+	try
+	{
+		auto& rb = getComponentByName("RigidBody");
+		rb.template setData<glm::vec3>("setPosition", position);
+	}
+	catch(...)
+	{}
 	return;
 }
 void Entity::setOrientation(glm::quat newOrientation)
 {
 	rotation = newOrientation;
-	// auto rigidBodyComponent =
-	// std::dynamic_pointer_cast<zg::components::entities::RigidBody>(getComponentByName("RigidBody")); if
-	// (rigidBodyComponent) 	rigidBodyComponent->setOrientation(rotation);
+	try
+	{
+		auto& rb = getComponentByName("RigidBody");
+		rb.template setData<glm::quat>("setOrientation", rotation);
+	}
+	catch(...)
+	{}
 	return;
 }

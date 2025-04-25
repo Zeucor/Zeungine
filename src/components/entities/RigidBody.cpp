@@ -306,52 +306,69 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				return;
 			}
 			activeRigidBodyManifolds.erase(iter);
+		}},
+		{"applyForce", [](const auto& val, auto& component)->void {
+			auto& worldForcePointPair = std::any_cast<const std::pair<glm::vec3, glm::vec3>&>(val);
+			auto& worldForce = worldForcePointPair.first;
+			auto& worldPoint = worldForcePointPair.second;
+			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
+			auto& bodyInterface = *joltBodyInterfacePointer;
+			auto& bodyIDAny = component.getDataReturnAny("BodyID");
+			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
+			bodyInterface.AddForce(bodyID, ToJolt<glm::vec3, JPH::Vec3>(worldForce),
+															ToJolt<glm::vec3, JPH::Vec3>(worldPoint));
+			bodyInterface.ActivateBody(bodyID);
+		}},
+		{"applyLocalForceToCenter", [](const auto& val, auto& component)->void {
+			auto& localForce = std::any_cast<const glm::vec3&>(val);
+			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
+			auto& bodyInterface = *joltBodyInterfacePointer;
+			auto& bodyIDAny = component.getDataReturnAny("BodyID");
+			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
+			auto bodyRotation = bodyInterface.GetRotation(bodyID);
+			auto worldForce = bodyRotation * ToJolt<glm::vec3, JPH::Vec3>(localForce);
+			bodyInterface.AddForce(bodyID, worldForce);
+			bodyInterface.ActivateBody(bodyID);
+		}},
+		{"applyForceToCenter", [](const auto& val, auto& component)->void {
+			auto& force = std::any_cast<const glm::vec3&>(val);
+			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
+			auto& bodyInterface = *joltBodyInterfacePointer;
+			auto& bodyIDAny = component.getDataReturnAny("BodyID");
+			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
+			bodyInterface.AddForce(bodyID, ToJolt<glm::vec3, JPH::Vec3>(force));
+			bodyInterface.ActivateBody(bodyID);
+		}},
+		{"applyTorque", [](const auto& val, auto& component)->void {
+			auto& torque = std::any_cast<const glm::vec3&>(val);
+			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
+			auto& bodyInterface = *joltBodyInterfacePointer;
+			auto& bodyIDAny = component.getDataReturnAny("BodyID");
+			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
+			bodyInterface.AddTorque(bodyID, ToJolt<glm::vec3, JPH::Vec3>(torque));
+			bodyInterface.ActivateBody(bodyID);
+		}},
+		{"setPosition", [](const auto& val, auto& component)->void {
+			auto& newPosition = std::any_cast<const glm::vec3&>(val);
+			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
+			auto& bodyInterface = *joltBodyInterfacePointer;
+			auto& bodyIDAny = component.getDataReturnAny("BodyID");
+			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
+			bodyInterface.SetPosition(bodyID, ToJolt<glm::vec3, JPH::Vec3>(newPosition), JPH::EActivation::Activate);
+			
+		}},
+		{"setOrientation", [](const auto& val, auto& component)->void {
+			auto& newOrientation = std::any_cast<const glm::quat&>(val);
+			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
+			auto& bodyInterface = *joltBodyInterfacePointer;
+			auto& bodyIDAny = component.getDataReturnAny("BodyID");
+			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
+			bodyInterface.SetRotation(bodyID, ToJolt<glm::quat, JPH::Quat>(newOrientation).Normalized(), JPH::EActivation::Activate);
 		}}
-		}
-	};
+	}};
 	return createInfo;
 }
 
-// void RigidBody::recreateJoltBody()
-// {
-// };
-// void RigidBody::onAttached()
-// {
-// 	std::cout << "RigidBody attached." << std::endl;
-// }
-// void RigidBody::onUpdate() {}
-// void RigidBody::onDetached()
-// {
-// 	physicsScene->unregisterRigidBody(this);
-// 	physicsScene = 0;
-// }
-// void RigidBody::applyForce(glm::vec3 worldForce, glm::vec3 worldPoint)
-// {
-// 	auto& bodyInterface = physicsScene->GetBodyInterface();
-// 	bodyInterface.AddForce(joltBodyID, ToJolt<glm::vec3, JPH::Vec3>(worldForce),
-// 												 ToJolt<glm::vec3, JPH::Vec3>(worldPoint));
-// 	bodyInterface.ActivateBody(joltBodyID);
-// }
-// void RigidBody::applyLocalForceToCenter(glm::vec3 localForce)
-// {
-// 	auto& bodyInterface = physicsScene->GetBodyInterface();
-// 	auto bodyRotation = bodyInterface.GetRotation(joltBodyID);
-// 	auto worldForce = bodyRotation * ToJolt<glm::vec3, JPH::Vec3>(localForce);
-// 	bodyInterface.AddForce(joltBodyID, worldForce);
-// 	bodyInterface.ActivateBody(joltBodyID);
-// }
-// void RigidBody::applyForceToCenter(glm::vec3 force)
-// {
-// 	auto& bodyInterface = physicsScene->GetBodyInterface();
-// 	bodyInterface.AddForce(joltBodyID, ToJolt<glm::vec3, JPH::Vec3>(force));
-// 	bodyInterface.ActivateBody(joltBodyID);
-// }
-// void RigidBody::applyTorque(glm::vec3 torque)
-// {
-// 	auto& bodyInterface = physicsScene->GetBodyInterface();
-// 	bodyInterface.AddTorque(joltBodyID, ToJolt<glm::vec3, JPH::Vec3>(torque));
-// 	bodyInterface.ActivateBody(joltBodyID);
-// }
 // void RigidBody::clearForces()
 // {
 // 	auto& bodyInterface = physicsScene->GetBodyInterface();
@@ -359,17 +376,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 // 	bodyInterface.SetAngularVelocity(joltBodyID, JPH::Vec3::sZero());
 // }
 // const glm::vec3& RigidBody::getPosition() const { return *position; }
-// void RigidBody::setPosition(glm::vec3 newPosition)
-// {
-// 	physicsScene->GetBodyInterface().SetPosition(joltBodyID, ToJolt<glm::vec3, JPH::Vec3>(newPosition),
-// 																							 JPH::EActivation::Activate);
-// }
 // const glm::quat& RigidBody::getOrientation() const { return *rotation; }
-// void RigidBody::setOrientation(glm::quat newOrientation)
-// {
-// 	physicsScene->GetBodyInterface().SetRotation(joltBodyID, ToJolt<glm::quat, JPH::Quat>(newOrientation).Normalized(),
-// 																							 JPH::EActivation::Activate);
-// }
 // const glm::vec3 RigidBody::getLinearVelocity() const
 // {
 // 	auto& bodyInterface = physicsScene->GetBodyInterface();

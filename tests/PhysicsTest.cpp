@@ -85,6 +85,11 @@ int main()
 	window.run();
 	return 0;
 }
+auto f = KEYCODE_UP;
+auto b = KEYCODE_DOWN;
+auto l = KEYCODE_LEFT;
+auto r = KEYCODE_RIGHT;
+auto s = 32;
 SceneCreateInfo PhysicsSceneFactory()
 {
 	SceneCreateInfo info{
@@ -127,7 +132,9 @@ SceneCreateInfo PhysicsSceneFactory()
 			// floor.attachComponent(floorColliderCreateInfo);
 			auto toxy_tuple = scene.addEntity(toxyCreateInfo);
 			auto& toxy = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple);
-			toxy.attachComponent(cubeRigidBodyInfo);
+			auto toxy_index_stack = toxy.INDEX_STACK;
+			auto toxy_rb_tuple = toxy.attachComponent(cubeRigidBodyInfo);
+			auto toxy_rb_ID = std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_rb_tuple)->ID;
 			toxy.attachComponent(toxyColliderInfo);
 			auto cube1_tuple = scene.addEntity(cubeCreateInfo);
 			auto& cube1 = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(cube1_tuple);
@@ -145,6 +152,57 @@ SceneCreateInfo PhysicsSceneFactory()
 			cube3.attachComponent(cubeColliderInfo);
 
 			scene.attachComponent(components::scenes::EntityThirdPersonCameraFactory(*std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple)));
+
+			scene.attachComponent(components::scenes::DepthFogFactory());
+			// cube controls
+			{
+				std::function<void()> onFrontTickFunction = [toxy_index_stack, toxy_rb_ID]()
+				{
+					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
+					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, 30));
+				};
+				std::function<void()> onBackTickFunction = [toxy_index_stack, toxy_rb_ID]()
+				{
+					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
+					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, -30));
+				};
+				std::function<void()> onLeftTickFunction = [toxy_index_stack, toxy_rb_ID]()
+				{
+					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
+					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(30, 0, 0));
+				};
+				std::function<void()> onRightTickFunction = [toxy_index_stack, toxy_rb_ID]()
+				{
+					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
+					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(-30, 0, 0));
+				};
+				/*fID = */scene.window.addKeyUpdateHandler(f, onFrontTickFunction);
+				/*bID = */scene.window.addKeyUpdateHandler(b, onBackTickFunction);
+				/*lID = */scene.window.addKeyUpdateHandler(l, onLeftTickFunction);
+				/*rID = */scene.window.addKeyUpdateHandler(r, onRightTickFunction);
+				// /*sID = */scene.window.addKeyUpdateHandler(s, onSpaceTickFunction);
+				// std::function<void()> onSpaceTickFunction = [&]()
+				// {
+				// 	physics::CollisionManifold* ManifoldPointer = 0;
+				// 	if (cubeRigidBody->isTouching(*floorRigidBody, ManifoldPointer) ||
+				// 			cubeRigidBody->isTouching(*cube2RigidBody, ManifoldPointer) ||
+				// 			cubeRigidBody->isTouching(*cube3RigidBody, ManifoldPointer) ||
+				// 			cubeRigidBody->isTouching(*cube4RigidBody, ManifoldPointer))
+				// 	{
+				// 		cubeRigidBody->applyLocalForceToCenter({0, 500, 0});
+				// 	}
+				// };
+				// //
+				// fID = window.addKeyUpdateHandler(f, onFrontTickFunction);
+				// bID = window.addKeyUpdateHandler(b, onBackTickFunction);
+				// lID = window.addKeyUpdateHandler(l, onLeftTickFunction);
+				// rID = window.addKeyUpdateHandler(r, onRightTickFunction);
+				// sID = window.addKeyUpdateHandler(s, onSpaceTickFunction);
+			}
 		}
 	};
 	return info;
@@ -395,35 +453,6 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		// 	// 	"(a * (1.0 - cos(v))) * sin(v)" // z = (profile_radius) * profile_z_component
 // 		// 	// );
 // 		// 	// addEntity(apple_volume);
-// 		// }
-// 		// // cube controls
-// 		// {
-// 		// 	f = KEYCODE_UP;
-// 		// 	b = KEYCODE_DOWN;
-// 		// 	l = KEYCODE_LEFT;
-// 		// 	r = KEYCODE_RIGHT;
-// 		// 	s = 32;
-// 		// 	// std::function<void()> onFrontTickFunction = [&]() { cubeRigidBody->applyLocalForceToCenter({0, 0, 30}); };
-// 		// 	// std::function<void()> onBackTickFunction = [&]() { cubeRigidBody->applyLocalForceToCenter({0, 0, -30}); };
-// 		// 	// std::function<void()> onLeftTickFunction = [&]() { cubeRigidBody->applyLocalForceToCenter({30, 0, 0}); };
-// 		// 	// std::function<void()> onRightTickFunction = [&]() { cubeRigidBody->applyLocalForceToCenter({-30, 0, 0}); };
-// 		// 	// std::function<void()> onSpaceTickFunction = [&]()
-// 		// 	// {
-// 		// 	// 	physics::CollisionManifold* ManifoldPointer = 0;
-// 		// 	// 	if (cubeRigidBody->isTouching(*floorRigidBody, ManifoldPointer) ||
-// 		// 	// 			cubeRigidBody->isTouching(*cube2RigidBody, ManifoldPointer) ||
-// 		// 	// 			cubeRigidBody->isTouching(*cube3RigidBody, ManifoldPointer) ||
-// 		// 	// 			cubeRigidBody->isTouching(*cube4RigidBody, ManifoldPointer))
-// 		// 	// 	{
-// 		// 	// 		cubeRigidBody->applyLocalForceToCenter({0, 500, 0});
-// 		// 	// 	}
-// 		// 	// };
-// 		// 	// //
-// 		// 	// fID = window.addKeyUpdateHandler(f, onFrontTickFunction);
-// 		// 	// bID = window.addKeyUpdateHandler(b, onBackTickFunction);
-// 		// 	// lID = window.addKeyUpdateHandler(l, onLeftTickFunction);
-// 		// 	// rID = window.addKeyUpdateHandler(r, onRightTickFunction);
-// 		// 	// sID = window.addKeyUpdateHandler(s, onSpaceTickFunction);
 // 		// }
 // 		// //
 // 		// attachComponent(components::scenes::EntityThirdPersonCameraFactory(*cube));
