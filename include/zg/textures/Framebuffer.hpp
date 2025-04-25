@@ -17,7 +17,8 @@ namespace zg::textures
 			Depth,
 			DepthStencil,
 			Stencil,
-			ColorResolve
+			ColorResolve,
+			DepthResolve
 		};
 		using TextureAttachmentPair = std::pair<Texture*, AttachmentType>;
 		IRenderer* iRenderer = 0;
@@ -44,6 +45,13 @@ namespace zg::textures
 			return std::find_if(textureAttachmentPairs.begin(), textureAttachmentPairs.end(), [](const auto& pair)
 			{
 				return pair.second == AttachmentType::ColorResolve;
+			}) != textureAttachmentPairs.end();
+		}
+		bool hasDepthResolveAttachment() const
+		{
+			return std::find_if(textureAttachmentPairs.begin(), textureAttachmentPairs.end(), [](const auto& pair)
+			{
+				return pair.second == AttachmentType::DepthResolve;
 			}) != textureAttachmentPairs.end();
 		}
 		const Texture* getColorTexture() const
@@ -73,6 +81,17 @@ namespace zg::textures
 			for (auto& pair : textureAttachmentPairs)
 			{
 				if (pair.second == AttachmentType::Depth)
+				{
+					return pair.first;
+				}
+			}
+			return 0;
+		}
+		const Texture* getDepthResolveTexture() const
+		{
+			for (auto& pair : textureAttachmentPairs)
+			{
+				if (pair.second == AttachmentType::DepthResolve)
 				{
 					return pair.first;
 				}

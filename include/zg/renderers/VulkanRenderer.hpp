@@ -250,6 +250,7 @@ namespace zg
 		std::shared_ptr<textures::Texture> mainColorTexture;
 		std::shared_ptr<textures::Texture> mainColorResolveTexture;
 		std::shared_ptr<textures::Texture> mainDepthTexture;
+		std::shared_ptr<textures::Texture> mainDepthResolveTexture;
 		std::shared_ptr<textures::Framebuffer> mainFramebuffer;
 		std::vector<VkImageView> swapChainImageViews;
 		VkImage depthImage;
@@ -398,6 +399,8 @@ namespace zg
 		void transitionColorLayoutForReading(const textures::Framebuffer& framebuffer);
 		void transitionColorResolveLayoutForWriting(const textures::Framebuffer& framebuffer);
 		void transitionColorResolveLayoutForReading(const textures::Framebuffer& framebuffer);
+		void transitionDepthResolveLayoutForWriting(const textures::Framebuffer& framebuffer);
+		void transitionDepthResolveLayoutForReading(const textures::Framebuffer& framebuffer);
 	};
 	bool VKcheck(const char* fn, VkResult result);
 } // namespace zg

@@ -928,14 +928,14 @@ void VulkanRenderer::createImageViews()
 		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
 							 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
 		(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
-		textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x8);
-	mainColorResolveTexture = std::make_shared<textures::Texture>(
-		this,
-		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
-								platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
-		(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
 		textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorResolveTexture);
+	// mainColorResolveTexture = std::make_shared<textures::Texture>(
+	// 	this,
+	// 	glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+	// 							platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+	// 	(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
+	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorTexture);
 	auto swapChainImagesSize = swapChainImages.size();
 	swapChainImageViews.resize(swapChainImagesSize);
 	for (uint32_t index = 0; index < swapChainImagesSize; index++)
@@ -1031,8 +1031,12 @@ void VulkanRenderer::createFramebuffers()
 {
 	std::vector<textures::Framebuffer::TextureAttachmentPair> attachments = {
 		{mainColorTexture.get(), textures::Framebuffer::AttachmentType::Color},
-		{mainDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth},
-		{mainColorResolveTexture.get(), textures::Framebuffer::AttachmentType::ColorResolve}};
+		{mainDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}
+		// ,
+		// {mainColorResolveTexture.get(), textures::Framebuffer::AttachmentType::ColorResolve}
+		// ,
+		// {mainDepthResolveTexture.get(), textures::Framebuffer::AttachmentType::DepthResolve}
+	};
 	mainFramebuffer = std::make_shared<textures::Framebuffer>(this, attachments);
 	auto swapChainImageViewsSize = swapChainImageViews.size();
 	swapChainFramebuffers.resize(swapChainImageViewsSize);
@@ -1089,7 +1093,13 @@ void VulkanRenderer::createDepthResources()
 																				glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
 																									 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
 																				(const void*)0, textures::Texture::Format::Depth,
-																				textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x8);
+																				textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	// mainDepthResolveTexture = std::make_shared<textures::Texture>(
+	// 	this,
+	// 	glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+	// 							platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+	// 	(const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float,
+	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
 	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthTexture);
 	VkFormat depthFormat = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
 	createImage(swapChainExtent.width, swapChainExtent.height, VK_SAMPLE_COUNT_1_BIT/*maxMSAASamples*/, depthFormat, VK_IMAGE_TILING_OPTIMAL,
@@ -1208,7 +1218,8 @@ void VulkanRenderer::destroy()
 void VulkanRenderer::destroySwapChain()
 {
 	mainColorTexture.reset();
-	mainColorResolveTexture.reset();
+	// mainColorResolveTexture.reset();
+	// mainDepthResolveTexture.reset();
 	mainDepthTexture.reset();
 	mainFramebuffer.reset();
 	for (auto framebuffer : swapChainFramebuffers)
@@ -1824,6 +1835,7 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 	transitionColorLayoutForWriting(framebuffer);
 	transitionDepthLayoutForWriting(framebuffer);
 	transitionColorResolveLayoutForWriting(framebuffer);
+	transitionDepthResolveLayoutForWriting(framebuffer);
 	auto& framebufferImpl = *(const VulkanFramebufferImpl*)framebuffer.rendererData;
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1871,6 +1883,7 @@ void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
 	transitionColorLayoutForReading(framebuffer);
 	transitionDepthLayoutForReading(framebuffer);
 	transitionColorResolveLayoutForReading(framebuffer);
+	transitionDepthResolveLayoutForReading(framebuffer);
 	currentFramebufferImpl = 0;
 }
 void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
@@ -1882,29 +1895,24 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 	framebuffer.rendererData = new VulkanFramebufferImpl();
 	auto& framebufferImpl = *static_cast<VulkanFramebufferImpl*>(framebuffer.rendererData);
 	framebufferImpl.zgFramebuffer = &framebuffer;
-
 	size_t renderPassHash = 0;
 	auto combine_hash = [&](size_t seed, auto val)
 	{ return seed ^ (std::hash<decltype(val)>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2)); };
-
 	std::vector<VkAttachmentDescription> vkAttachments;
 	std::vector<VkAttachmentReference> colorAttachmentRefs;
-	std::vector<VkAttachmentReference> colorResolveAttachmentRefs;
+	std::vector<VkAttachmentReference> resolveAttachmentRefs;
 	VkAttachmentReference depthStencilRef = {};
 	bool hasDepthStencil = false;
 	uint32_t attachmentIndex = 0;
-
 	VkPipelineStageFlags inputSrcStageMask = 0;
 	VkPipelineStageFlags inputDstStageMask = 0;
 	VkAccessFlags inputDstAccessMask = 0;
-
 	VkPipelineStageFlags outputSrcStageMask = 0;
-	VkPipelineStageFlags outputDstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT; // Default next stage
+	VkPipelineStageFlags outputDstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 	VkAccessFlags outputSrcAccessMask = 0;
-	VkAccessFlags outputDstAccessMask = 0; // Default next access
+	VkAccessFlags outputDstAccessMask = 0;
 	std::vector<VkImageView> vkImageViews;
 	vkImageViews.reserve(framebuffer.textureAttachmentPairs.size());
-
 	for (const auto& pair : framebuffer.textureAttachmentPairs)
 	{
 		if (!pair.first || !pair.first->rendererData)
@@ -1919,13 +1927,10 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 		}
 		vkImageViews.push_back(textureImpl.textureImageView);
 		VkAttachmentDescription attachment{};
-
 		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // Store results
 		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
-		// --- Determine Size ---
 		if (framebufferImpl.width == 0 && framebufferImpl.height == 0 && texture.size.x > 0 && texture.size.y > 0)
 		{
 			framebufferImpl.width = texture.size.x;
@@ -1936,15 +1941,10 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 		{
 			throw std::runtime_error("Framebuffer attachments have inconsistent dimensions!");
 		}
-
 		VkImageLayout subpassLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachment.format = textureImpl.format; // Use format stored during preInitTexture
+		attachment.format = textureImpl.format;
 		if (attachment.format == VK_FORMAT_UNDEFINED)
 			throw std::runtime_error("Attachment format is undefined!");
-
-		// --- Set Initial/Final Layouts based on Type ---
-		// *** This function now ASSUMES the attachments were pre-initialized ***
-		// *** to their optimal ATTACHMENT layout by preInitTexture ***
 		switch (pair.second)
 		{
 		case zg::textures::Framebuffer::AttachmentType::ColorResolve:
@@ -1952,23 +1952,29 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 			attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			subpassLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			colorResolveAttachmentRefs.push_back({attachmentIndex, subpassLayout});
+			resolveAttachmentRefs.push_back({attachmentIndex, subpassLayout});
+			break;
+		case zg::textures::Framebuffer::AttachmentType::DepthResolve:
+			attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+			attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			subpassLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			resolveAttachmentRefs.push_back({attachmentIndex, subpassLayout});
 			break;
 		case zg::textures::Framebuffer::AttachmentType::Color:
 			attachment.samples = TextureMultisamplingToSampleCountBit(texture.multisampling);
 			if (attachment.samples > maxMSAASamples)
 				attachment.samples = maxMSAASamples;
-			attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // Expect this layout
+			attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			attachment.finalLayout = (framebuffer.hasColorResolveAttachment() ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			subpassLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
 			colorAttachmentRefs.push_back({attachmentIndex, subpassLayout});
 			inputSrcStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 			inputDstStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 			inputDstAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
 			outputSrcStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 			outputSrcAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			outputDstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; // Assume sampling is next
+			outputDstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 			outputDstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 			break;
 
@@ -1980,18 +1986,14 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 			attachment.samples = TextureMultisamplingToSampleCountBit(texture.multisampling);
 			if (attachment.samples > maxMSAASamples)
 				attachment.samples = maxMSAASamples;
-			attachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // Expect this layout
-			// *** FIX: Align final layout with the swapchain render pass ***
-			attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // Keep as attachment optimal
-			// attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // Old: Transition for sampling/reuse
+			attachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			attachment.finalLayout = (framebuffer.hasDepthResolveAttachment() ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			subpassLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
 			if (pair.second != zg::textures::Framebuffer::AttachmentType::Depth)
 			{
 				attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 				attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 			}
-
 			depthStencilRef = {attachmentIndex, subpassLayout};
 			hasDepthStencil = true;
 			inputSrcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
@@ -2024,7 +2026,7 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 	subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
 	subpass.pColorAttachments = colorAttachmentRefs.empty() ? nullptr : colorAttachmentRefs.data();
 	subpass.pDepthStencilAttachment = hasDepthStencil ? &depthStencilRef : nullptr;
-	subpass.pResolveAttachments = colorResolveAttachmentRefs.data();
+	subpass.pResolveAttachments = resolveAttachmentRefs.data();
 
 	// --- Define Dependencies ---
 	std::array<VkSubpassDependency, 2> dependencies;
@@ -3217,13 +3219,22 @@ void VulkanRenderer::transitionDepthLayoutForReading(const textures::Framebuffer
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(shadowMapTexture->rendererData);
 
+		if (!framebuffer.hasDepthResolveAttachment())
+		{
+			textureImpl.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		}
+
 		// Ensure the layout we are transitioning *from* is correct
-		if (textureImpl.layout != VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+		if (textureImpl.layout != VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL &&
+			textureImpl.layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 		{
 			// Log warning or throw? Indicates layout tracking might be off.
 			// For now, let's assume it *should* be ATTACHMENT_OPTIMAL here.
 			std::cerr << "Warning: Directional shadow map layout was not ATTACHMENT_OPTIMAL before transition!" << std::endl;
 		}
+
+		VkImageLayout oldLayout = textureImpl.layout;
+		VkImageLayout newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
 		VkImageMemoryBarrier barrier;
 		VkPipelineStageFlags sourceStage;
@@ -3231,8 +3242,8 @@ void VulkanRenderer::transitionDepthLayoutForReading(const textures::Framebuffer
 
 		// Prepare barrier details: ATTACHMENT_OPTIMAL -> READ_ONLY_OPTIMAL
 		prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
-												VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // Old layout
-												VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, // New layout for sampling
+												oldLayout, // Old layout
+												newLayout, // New layout for sampling
 												VK_IMAGE_ASPECT_DEPTH_BIT, // Assuming depth only
 												sourceStage, destinationStage, barrier);
 
@@ -3240,7 +3251,7 @@ void VulkanRenderer::transitionDepthLayoutForReading(const textures::Framebuffer
 		vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
 		// Update tracked layout
-		textureImpl.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		textureImpl.layout = newLayout;
 	}
 }
 void VulkanRenderer::transitionColorLayoutForWriting(const textures::Framebuffer& framebuffer)
@@ -3277,7 +3288,6 @@ void VulkanRenderer::transitionColorLayoutForReading(const textures::Framebuffer
 		textureImpl.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 }
-
 void VulkanRenderer::transitionColorResolveLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
 	auto colorResolveTexture = framebuffer.getColorResolveTexture();
@@ -3310,22 +3320,69 @@ void VulkanRenderer::transitionColorResolveLayoutForReading(const textures::Fram
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(colorResolveTexture->rendererData);
 		textureImpl.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		// if (textureImpl.layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-		// {
-		// 	VkImageMemoryBarrier colorBarrier = {};
-		// 	VkPipelineStageFlags sourceStage;
-		// 	VkPipelineStageFlags destinationStage;
-		// 	prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
-		// 											VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-		// 											VK_IMAGE_ASPECT_COLOR_BIT, sourceStage, destinationStage, colorBarrier);
-		// 		vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &colorBarrier);
-		// 	textureImpl.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		// }
-		// else if (textureImpl.layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL &&
-		// 				 textureImpl.layout != VK_IMAGE_LAYOUT_UNDEFINED)
-		// {
-		// 	std::cerr << "Warning: Offscreen color resolve texture in unexpected layout (" << textureImpl.layout
-		// 						<< ") before Pass 1.\n";
-		// }
+	}
+}
+void VulkanRenderer::transitionDepthResolveLayoutForWriting(const textures::Framebuffer& framebuffer)
+{
+	auto depthResolveTexture = framebuffer.getDepthResolveTexture();
+	if (depthResolveTexture && depthResolveTexture->rendererData)
+	{
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(depthResolveTexture->rendererData);
+		if (textureImpl.layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		{
+			VkImageMemoryBarrier depthBarrier = {};
+			VkPipelineStageFlags sourceStage;
+			VkPipelineStageFlags destinationStage;
+			prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
+													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+													VK_IMAGE_ASPECT_DEPTH_BIT, sourceStage, destinationStage, depthBarrier);
+			vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &depthBarrier);
+			textureImpl.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		}
+		else if (textureImpl.layout != VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL &&
+						 textureImpl.layout != VK_IMAGE_LAYOUT_UNDEFINED)
+		{
+			std::cerr << "Warning: Offscreen depth texture in unexpected layout (" << textureImpl.layout
+								<< ") before Pass 1.\n";
+		}
+	}
+}
+void VulkanRenderer::transitionDepthResolveLayoutForReading(const textures::Framebuffer& framebuffer)
+{
+	auto depthResolveTexture = framebuffer.getDepthResolveTexture();
+	if (depthResolveTexture && depthResolveTexture->rendererData)
+	{
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(depthResolveTexture->rendererData);
+
+		textureImpl.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+		// Ensure the layout we are transitioning *from* is correct
+		if (textureImpl.layout != VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL &&
+			textureImpl.layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		{
+			// Log warning or throw? Indicates layout tracking might be off.
+			// For now, let's assume it *should* be ATTACHMENT_OPTIMAL here.
+			std::cerr << "Warning: Directional shadow map layout was not ATTACHMENT_OPTIMAL before transition!" << std::endl;
+		}
+
+		VkImageLayout oldLayout = textureImpl.layout;
+		VkImageLayout newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+		VkImageMemoryBarrier barrier;
+		VkPipelineStageFlags sourceStage;
+		VkPipelineStageFlags destinationStage;
+
+		// Prepare barrier details: ATTACHMENT_OPTIMAL -> READ_ONLY_OPTIMAL
+		prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
+												oldLayout, // Old layout
+												newLayout, // New layout for sampling
+												VK_IMAGE_ASPECT_DEPTH_BIT, // Assuming depth only
+												sourceStage, destinationStage, barrier);
+
+		// Record the barrier in the current command buffer
+		vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+		// Update tracked layout
+		textureImpl.layout = newLayout;
 	}
 }
