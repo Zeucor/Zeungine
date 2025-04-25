@@ -134,6 +134,14 @@ size_t Entity::addChild(const EntityCreateInfo& childCreateInfo)
 	auto& childEntity = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(child_tuple);
 	childEntity.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(child_tuple);
 	childEntity.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(child_tuple);
+	auto INDEX_STACK_size = INDEX_STACK.size();
+	auto INDEX_STACK_data = INDEX_STACK.data();
+	childEntity.INDEX_STACK.resize(INDEX_STACK_size + 1);
+	auto childEntity_INDEX_STACK_data = childEntity.INDEX_STACK.data();
+	size_t index = 0;
+	for (; index < INDEX_STACK_size; ++index)
+		childEntity_INDEX_STACK_data[index] = INDEX_STACK_data[index];
+	childEntity_INDEX_STACK_data[index] = childEntity.INDEX;
 	return childEntity.ID;
 }
 void Entity::removeChild(size_t& ID)

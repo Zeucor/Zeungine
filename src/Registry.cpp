@@ -25,6 +25,7 @@ zg::Registry::WindowKeyIDVector::EmplaceBackTuple zg::Registry::addWindow(const 
     auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
     window.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(window_tuple);
     window.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(window_tuple);
+	window.INDEX_STACK = {window.INDEX};
     return window_tuple;
 }
 /**

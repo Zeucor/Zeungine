@@ -42,6 +42,7 @@ namespace zg
 		Scene& scene;
 		size_t ID = 0;
 		size_t* INDEX = 0;
+		std::vector<size_t*> INDEX_STACK;
 		size_t VALUE = 0;
 		std::string typeName;
 		std::string name;

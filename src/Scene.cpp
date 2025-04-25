@@ -163,6 +163,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 	auto& entity = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(entity_tuple);
 	entity.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(entity_tuple);
 	entity.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(entity_tuple);
+	entity.INDEX_STACK = {INDEX_STACK[0], INDEX_STACK[1], entity.INDEX};
 	postAddEntity(entity, {entity.ID});
 	if (callOnEntityAdded && window.onEntityAdded)
 		window.onEntityAdded(entity);

@@ -727,6 +727,7 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCr
 	auto& scene = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(scene_tuple);
 	scene.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(scene_tuple);
 	scene.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(scene_tuple);
+	scene.INDEX_STACK = {INDEX, scene.INDEX};
 	if (scene.onAttachedFunction)
 		scene.onAttachedFunction(scene);
 	return scene_tuple;

@@ -45,6 +45,7 @@ struct WindowCreateInfo;
 	{
 		size_t ID = 0;
 		size_t* INDEX = 0;
+		std::vector<size_t*> INDEX_STACK;
 		std::string title;
 		IPlatformWindow* iPlatformWindow;
 		IRenderer* iRenderer;
