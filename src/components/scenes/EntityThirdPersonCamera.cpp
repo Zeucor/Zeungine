@@ -3,13 +3,14 @@
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/Registry.hpp>
+using zg::Registry;
 zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityThirdPersonCameraFactory(Entity& entity)
 {
     zg::components::scenes::SceneComponentCreateInfo info{
         .name = "EntityThirdPersonCamera",
-        .onAttachedFunction = [&](auto& component)
+        .onAttachedFunction = [entityIndexStack = entity.INDEX_STACK](auto& component)
         {
-            auto& scene = zg::Registry::getScene(component.hostIndexStack);
+            auto& scene = Registry::getScene(component.hostIndexStack);
             auto& focused = component.template make<bool>("Focused", false);
             auto& mouseMoveID = component.template make<UniqueIdentifier>("MouseMoveID", 0);
             auto& focusID = component.template make<UniqueIdentifier>("FocusID", 0);
@@ -22,12 +23,23 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             auto& maxPitch = component.template make<float>("MaxPitch", -5.0f);
             auto& lastPosition = component.template make<glm::vec2>("LastPosition", 0.0f, 0.0f);
             auto& deadZonePercent = component.template make<float>("DeadZonePercent", 0.1f);
-            mouseMoveID = scene.window.addMouseMoveHandler([&](glm::vec2 coords)
+            mouseMoveID = scene.window.addMouseMoveHandler([hostIndexStack = component.hostIndexStack, componentID = component.ID](glm::vec2 coords)
             	{
+                    auto& scene = Registry::getScene(hostIndexStack);
+                    auto& component = scene.getComponentByID(componentID);
             		if (!scene.window.focused)
             		{
             			return;
             		}
+                    auto& distance = component.template getData<float>("Distance");
+                    auto& verticalOffset = component.template getData<float>("VerticalOffset");
+                    auto& mouseSensitivity = component.template getData<float>("MouseSensitivity");
+                    auto& currentYaw = component.template getData<float>("CurrentYaw");
+                    auto& currentPitch = component.template getData<float>("CurrentPitch");
+                    auto& minPitch = component.template getData<float>("MinPitch");
+                    auto& maxPitch = component.template getData<float>("MaxPitch");
+                    auto& lastPosition = component.template getData<glm::vec2>("LastPosition");
+                    auto& deadZonePercent = component.template getData<float>("DeadZonePercent");
             		glm::vec2 delta = coords - lastPosition;
         
             		// Update Camera Yaw/Pitch
@@ -59,10 +71,16 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             		}
             	});
             focusID =
-                scene.window.addFocusHandler([&](bool focused)
+                scene.window.addFocusHandler([entityIndexStack, hostIndexStack = component.hostIndexStack, componentID = component.ID](bool focused)
                 	{
+                        auto& scene = Registry::getScene(hostIndexStack);
+                        auto& component = scene.getComponentByID(componentID);
+                        auto& entity = Registry::getEntity(entityIndexStack);
                 		if (focused)
                 		{
+                            auto& currentYaw = component.template getData<float>("CurrentYaw");
+                            auto& currentPitch = component.template getData<float>("CurrentPitch");
+                            auto& lastPosition = component.template getData<glm::vec2>("LastPosition");
                 			// Sync camera yaw FROM entity when gaining focus
                 			glm::quat currentEntityRot = entity.rotation;
             
@@ -101,7 +119,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
                 
                 );
         },
-        .onDetachedFunction = [&](auto& component)
+        .onDetachedFunction = [](auto& component)
         {
             auto& mouseMoveID = component.template getData<UniqueIdentifier>("MouseMoveID");
             auto& focusID = component.template getData<UniqueIdentifier>("FocusID");
@@ -109,14 +127,14 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             scene.window.removeMouseMoveHandler(mouseMoveID);
             scene.window.removeFocusHandler(focusID);
         },
-        .onUpdateFunction = [&](auto& component)
+        .onUpdateFunction = [entityIndexStack = entity.INDEX_STACK](auto& component)
         {
             auto& distance = component.template getData<float>("Distance");
             auto& verticalOffset = component.template getData<float>("VerticalOffset");
             auto& currentYaw = component.template getData<float>("CurrentYaw");
             auto& currentPitch = component.template getData<float>("CurrentPitch");
             auto& scene = Registry::getScene(component.hostIndexStack);
-
+            auto& entity = Registry::getEntity(entityIndexStack);
             if (!scene.viewPointer)
                 return;
 
