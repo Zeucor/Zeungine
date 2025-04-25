@@ -11,6 +11,7 @@
 #include <zg/components/scenes/ViewQuadKeyControl.hpp>
 #include <zg/components/windows/FXAA.hpp>
 #include <zg/components/windows/SMAA.hpp>
+#include <zg/components/windows/Bloom.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/entities/Curve.hpp>
 #include <zg/entities/DeltaVisualizer.hpp>
@@ -50,6 +51,7 @@ int main()
 	window.runOnThread([](auto& window){
 		// window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
 		// window.attachComponent(zg::components::windows::SMAAFactory(0.0f, 64, 64, 128));
+		window.attachComponent(zg::components::windows::BloomFactory());
 		auto sceneCreateInfo = PhysicsSceneFactory();
 		window.addScene(sceneCreateInfo);
 	});
