@@ -13,6 +13,15 @@ VAO::VAO(IRenderer* iRenderer, const RuntimeConstants& constants, uint32_t indic
 {
 	VAOFactory::generate(*this);
 }
+VAO::VAO(const VAO& other):
+	constants(other.constants),
+	indiceCount(other.indiceCount),
+	vertexCount(other.vertexCount),
+	stride(other.stride),
+	vaoIRenderer(other.vaoIRenderer)
+{
+	VAOFactory::generate(*this);
+}
 VAO::VAO() {};
 VAO& VAO::operator=(const VAO& other)
 {

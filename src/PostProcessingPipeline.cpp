@@ -31,6 +31,7 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
 	for (auto& outputPair : stage.outputs)
 	{
 		auto& key = outputPair.first;
+        stage.constants.push_back(key);
 		auto& type = outputPair.second;
 		textures::Texture::Format textureFormat;
 		textures::Texture::Type textureType;
@@ -61,6 +62,21 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
 	}
     for (auto& input : stage.inputs)
         stage.constants.push_back(input);
+    auto stageConstantsSize = stage.constants.size();
+    auto stageConstantsData = stage.constants.data();
+    for (size_t i = 0; i < stageConstantsSize; ++i)
+    {
+        for (size_t j = i + 1; j < stageConstantsSize; ++j)
+        {
+            if (stageConstantsData[i] == stageConstantsData[j])
+            {
+                stage.constants.erase(stage.constants.begin() + j);
+                stageConstantsSize = stage.constants.size();
+                stageConstantsData = stage.constants.data();
+                j--;
+            }
+        }
+    }
 	framebuffers.emplace_back_key(floatingIndex, new textures::Framebuffer(window.iRenderer, attachments));
     fullscreenQuads.emplace_back_key(floatingIndex, window.iRenderer, stage.constants);
     if (!calledStaticOnAttached[stage.name])
@@ -108,7 +124,7 @@ std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> PostProc
     auto key_end = stages.key_end();
     auto& textureMap = TextureOutputRegistry::map;
     auto texturePairIter = textureMap.begin();
-    auto textureMapEnd = textureMap.end();
+    auto textureMapEnd = textureMap.end(), textureMapBegin = texturePairIter;
     while (key_iter != key_end)
     {
         auto& stage = *key_iter;
@@ -116,6 +132,7 @@ std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> PostProc
         auto& inputs = stage.inputs;
         auto inputsSize = inputs.size();
         std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> inputTextures;
+        auto prevTexturePairIter = texturePairIter;
         while (inputTextures.size() < inputsSize)
         {
             auto& texturePair = texturePairIter->first;
@@ -128,11 +145,59 @@ std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> PostProc
                 {
                     inputTextures.push_back({*found_iter, texturePairIter->second});
                 }
+                ++texturePairIter;
+                if (texturePairIter == textureMapEnd)
+                {
+                    break;
+                }
             }
-            ++texturePairIter;
-            if (texturePairIter == textureMapEnd)
+            else
             {
                 break;
+            }
+        }
+        while (inputTextures.size() < inputsSize)
+        {
+            bool breakThisIteration = (prevTexturePairIter == textureMapBegin);
+            auto& texturePair = prevTexturePairIter->first;
+            auto existingInputIter = std::find_if(inputTextures.begin(), inputTextures.end(), [&](std::pair<std::string, std::shared_ptr<textures::Texture>>& pair)
+            {
+                return pair.first == texturePair.second;
+            });
+            if (existingInputIter == inputTextures.end() && texturePair.first < floatingIndex)
+            {
+                auto found_iter = std::find_if(inputs.begin(), inputs.end(), [&](auto& val) {
+                    return val == texturePair.second;
+                });
+                if (found_iter != inputs.end())
+                {
+                    inputTextures.push_back({*found_iter, prevTexturePairIter->second});
+                }
+            }
+            if (breakThisIteration)
+            {
+                break;
+            }
+            --prevTexturePairIter;
+        }
+        auto inputTexturesSize = inputTextures.size();
+        auto inputTexturesData = inputTextures.data();
+        auto inputsData = inputs.data();
+        auto swap = [&](size_t i, size_t j)
+        {
+            auto s = inputTexturesData[i];
+            inputTexturesData[i] = inputTexturesData[j];
+            inputTexturesData[j] = s;
+        };
+        for (size_t i = 0; i < inputTexturesSize; ++i)
+        {
+            for (size_t j = i + 1; j < inputsSize; j++)
+            {
+                if (inputsData[j] == inputTexturesData[i].first)
+                {
+                    swap(i, j);
+                    break;
+                }
             }
         }
         auto framebufferIter = framebuffers.find_key(stage.floatingIndex);

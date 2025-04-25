@@ -2,11 +2,25 @@
 #include <zg/utilities.hpp>
 #include <zg/Entity.hpp>
 using namespace zg;
+FullscreenQuad::FullscreenQuad(const FullscreenQuad& other):
+    vaos::VAO(other.vaoIRenderer, other.constants, other.indiceCount, other.vertexCount)
+{
+    generateQuad();
+};
 FullscreenQuad::FullscreenQuad(IRenderer* iRenderer, const shaders::RuntimeConstants& constants):
-    vaos::VAO(iRenderer, zg::mergeVectors(constants, { "UV2", "Position", "Model" }), 6, 4)
+    vaos::VAO(iRenderer, zg::mergeVectors({ "UV2", "Position", "Model" }, constants), 6, 4)
+{
+    generateQuad();
+}
+// FullscreenQuad& FullscreenQuad::operator=(const FullscreenQuad& other)
+// {
+
+//     return *this;
+// }
+void FullscreenQuad::generateQuad()
 {
     std::vector<uint32_t> indices;
-	if (iRenderer->frontFace == zg::COUNTERCLOCKWISE)
+	if (vaoIRenderer->frontFace == zg::COUNTERCLOCKWISE)
 		indices = {
 			2,	1,	0,	0,	3,	2, // Front face
 		};
@@ -27,7 +41,7 @@ FullscreenQuad::FullscreenQuad(IRenderer* iRenderer, const shaders::RuntimeConst
         {1, 0},
         {0, 0}
     });
-	bool flipUVs = (iRenderer->renderer == RENDERER_VULKAN || iRenderer->renderer == RENDERER_METAL);
+	bool flipUVs = (vaoIRenderer->renderer == RENDERER_VULKAN || vaoIRenderer->renderer == RENDERER_METAL);
     zg::Entity::flipUVsY(uv2s);
     updateElements("UV2", uv2s);
 }

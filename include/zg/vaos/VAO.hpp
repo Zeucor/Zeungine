@@ -17,6 +17,7 @@ namespace zg::vaos
 		std::unordered_map<void*, shaders::Shader*> shaders;
 		std::unordered_map<void*, bool> ensuredBools;
 		VAO();
+		VAO(const VAO& other);
 		VAO(IRenderer* iRenderer, const RuntimeConstants& constants, uint32_t indiceCount, uint32_t vertexCount);
 		VAO& operator=(const VAO& other);
 		virtual ~VAO();
