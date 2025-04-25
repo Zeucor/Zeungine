@@ -40,19 +40,21 @@ Uses CMake for it's build system and comes with some included tests
  - Runtime Programmable Post Processing Pipeline (P3)
  - Included P3 components such as Bloom
 
+### Releases
+
+Releases are available on GitHub, see [here](https://github.com/Zeucor/Zeungine/releases). Zeungine comes as an all=in-one installer. Debug & Release binaries are packaged as well as headers for zg and many of the libraries listed above.
+
 ### Cloning
+
+If you'd prefer cloning from a specfic branch or tag you can always grab the source
 
 ```bash
 git clone git@github.com:Zeungine/Zeungine.git
 ```
 
-### Releases
-
-Releases are available on GitHub, see [here](https://github.com/Zeucor/Zeungine/releases). Zeungine comes as an all=in-one installer. Debug & Release binaries are packaged as well as headers for zg and many of the libraries listed above.
-
 ### Builing from Source
 
-If you want a latest copy of Zeungine and dependencies then consider analyzing [`win-package.bat` or `unx-package.sh`] for their configure, compile, install and package commands
+To build Zeungine and dependencies, consider analyzing [`win-package.bat` or `unx-package.sh`] for their configure, compile, install and package commands
 
 You'll also need to analyze one of the workflows in `.github/workflows` for specific platform dependencies required
 
@@ -75,12 +77,34 @@ target_include_directories(my-app PRIVATE ${Zeungine_INCLUDE_DIR})
 
 ###### Some good example Tests
 
- - [Simple Window & Scene](/tests/SimpleWindowTest.cpp)
- - [Simple Cube](/tests/SimpleCubeTest.cpp)
- - [Video](/tests/VideoTest.cpp)
- - [Physics](/tests/PhysicsTest.cpp)
+<ul>
+    <li>
+        <div>
+            <a href="tests/SimpleWindowTest.cpp">Simple Window & Scene</a>
+        </div>
+    </li>
+    <li>
+        <div>
+            <a href="tests/SimpleCubeTest.cpp">Simple Cube</a>
+            <br />
+            <img src="images/simple-cube.png" width="128" height="96" />
+        </div>
+    </li>
+    <li>
+        <div>
+            <a href="tests/VideoTest.cpp">Video</a>
+        </div>
+    </li>
+    <li>
+        <div>
+            <a href="tests/PhysicsTest.cpp">Physics</a>
+            <br />
+            <img src="images/bloom-cube.png" width="240" height="135" />
+        </div>
+    </li>
+</ul>
 
-See [tests](/tests) for more usage examples
+See [tests](tests) for more usage examples
 
 ## License
 
