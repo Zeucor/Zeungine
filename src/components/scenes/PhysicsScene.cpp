@@ -90,18 +90,18 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 						}
 						do
 						{
-							runningMutex->lock();
-							if (!*runningPointer)
 							{
-								runningMutex->unlock();
-								break;
+								framebudget->begin();
+								std::lock_guard lock(*runningMutex);
+								if (!*runningPointer)
+								{
+									break;
+								}
+								// if (gravity)
+								// 	gravity->applyGravity(*this, deltaTime);
+								mPhysicsSystem->Update(deltaTime, 10, mTempAllocator, mJobSystem);
+								framebudget->end();
 							}
-							framebudget->begin();
-							// if (gravity)
-							// 	gravity->applyGravity(*this, deltaTime);
-							mPhysicsSystem->Update(deltaTime, 10, mTempAllocator, mJobSystem);
-							framebudget->end();
-							runningMutex->unlock();
 							framebudget->sleep();
 						}
 						while (true);
