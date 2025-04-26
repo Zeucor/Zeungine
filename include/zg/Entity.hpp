@@ -73,6 +73,8 @@ namespace zg
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
 		std::function<void(Entity&)> postRenderFunction;
+		std::function<void(Entity&)> onAddedToSceneFunction;
+		std::function<void(Entity&)> onRemovedFromSceneFunction;
 		std::recursive_mutex handlersMutex;
 
 	public:
@@ -124,6 +126,8 @@ namespace zg
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
 		std::function<void(Entity&)> postRenderFunction;
+		std::function<void(Entity&)> onAddedToSceneFunction;
+		std::function<void(Entity&)> onRemovedFromSceneFunction;
 		DataStorage<Entity>::DataMap dataMap;
 		DataStorage<Entity>::GetDataFunctionMap getDataFunctionMap;
 		DataStorage<Entity>::SetDataFunctionMap setDataFunctionMap;

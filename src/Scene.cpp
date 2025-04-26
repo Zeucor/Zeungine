@@ -165,6 +165,8 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 	entity.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(entity_tuple);
 	entity.INDEX_STACK = {INDEX_STACK[0], INDEX_STACK[1], entity.INDEX};
 	postAddEntity(entity, {entity.ID});
+	if (entity.onAddedToSceneFunction)
+		entity.onAddedToSceneFunction(entity);
 	if (callOnEntityAdded && window.onEntityAdded)
 		window.onEntityAdded(entity);
 	return entity_tuple;
@@ -175,6 +177,8 @@ void Scene::removeEntity(const size_t& id)
 	if (entityIter == entities.end())
 		return;
 	auto& entity = *entityIter;
+	if (entity.onRemovedFromSceneFunction)
+		entity.onRemovedFromSceneFunction(entity);
 	preRemoveEntity(entity, {id});
 	entity.ID = 0;
 	entities.erase(entityIter);

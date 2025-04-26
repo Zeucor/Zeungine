@@ -13,7 +13,9 @@ Entity::Entity(const EntityCreateInfo& info) :
 		position(info.position), rotation(info.rotation),
 		scale(info.scale), children([](const auto& entity) { return entity.name; }), name(info.name),
 		preUpdateFunction(info.preUpdateFunction), preRenderFunction(info.preRenderFunction),
-		postRenderFunction(info.postRenderFunction)
+		postRenderFunction(info.postRenderFunction),
+		onAddedToSceneFunction(info.onAddedToSceneFunction),
+		onRemovedFromSceneFunction(info.onRemovedFromSceneFunction)
 {
 	computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
 	updateIndices(indices);
