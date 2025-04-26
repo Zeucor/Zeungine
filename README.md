@@ -29,6 +29,7 @@ Uses CMake for it's build system and comes with some included tests
  - [glm](https://github.com/icaven/glm)
  - [harfbuzz](https://harfbuzz.github.io/)
  - [png](http://www.libpng.org/pub/png/libpng.html)
+ - [JoltPhysics](https://github.com/jrouwe/JoltPhysics)
 
 ### Features
 
@@ -38,7 +39,7 @@ Uses CMake for it's build system and comes with some included tests
  - Lightweight Event Loop
  - Directional, Point & Spot Lights and Shadows
  - Runtime Programmable Post Processing Pipeline (P3)
- - Included P3 components such as Bloom
+ - Included P3 components such as Bloom, Depth Fog, Edge Detection
 
 ### Releases
 
