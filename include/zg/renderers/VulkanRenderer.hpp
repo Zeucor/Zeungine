@@ -253,9 +253,6 @@ namespace zg
 		std::shared_ptr<textures::Texture> mainDepthResolveTexture;
 		std::shared_ptr<textures::Framebuffer> mainFramebuffer;
 		std::vector<VkImageView> swapChainImageViews;
-		VkImage depthImage;
-		VkDeviceMemory depthImageMemory;
-		VkImageView depthImageView;
 		std::vector<VkFramebuffer> swapChainFramebuffers;
 		VkRenderPass renderPass;
 		VkCommandPool commandPool;
