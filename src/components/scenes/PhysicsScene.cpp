@@ -235,7 +235,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 													}}},
 		.setDataFunctions =
 			{{"attachRigidBody",
-				[](const std::any& val, auto& component) -> void
+				[](const std::any& val, auto& component) -> std::any
 				{
 					auto& rigidBodiesJoltID =
 						component.template getData<std::unordered_map<components::entities::EntityComponent*, JPH::BodyID>>(
@@ -246,8 +246,9 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 					const auto& valPair = std::any_cast<const JoltIDComponentPair&>(val);
 					rigidBodiesJoltID[valPair.second] = valPair.first;
 					joltIDRigidBodies[valPair.first] = valPair.second;
+					return {};
 				}},
-			 {"detachRgidBody", [](const std::any& val, auto& component) -> void
+			 {"detachRgidBody", [](const std::any& val, auto& component) -> std::any
 				{
 					auto rigidBodyComponent = std::any_cast<components::entities::EntityComponent*>(val);
 					auto& rigidBodiesJoltID =
@@ -262,6 +263,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 						rigidBodiesJoltID.erase(rigidBodyComponent);
 						joltIDRigidBodies.erase(joltBodyID);
 					}
+					return {};
 				}}}};
 	return info;
 }

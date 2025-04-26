@@ -29,7 +29,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			component.template make<JPH::BodyInterface*>("BodyInterface", physicsScene->template getData<JPH::BodyInterface*>("BodyInterface"));
 			component.template make<JPH::Body*>("Body");
 			component.template make<std::vector<components::entities::EntityComponent*>>("Colliders");
-			component.template make<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("activeRigidBodyManifolds");
+			component.template make<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
 			component.template make<std::mutex*>("Mutex", new std::mutex());
 		},
 		.onDetachedFunction = [](auto& component)
@@ -240,19 +240,20 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			}}
 		},
 		.setDataFunctions = {
-			{"attachCollider", [](const std::any& val, auto& component)->void
+			{"attachCollider", [](const std::any& val, auto& component)->std::any
 			{
 				auto collider = std::any_cast<components::entities::EntityComponent*>(val);
 				auto& colliders = component.template getData<std::vector<components::entities::EntityComponent*>>("Colliders");
 				for (const auto* existing : colliders)
 				{
 					if (existing == collider)
-						return;
+						return {};
 				}
 				colliders.push_back(collider);
 				component.template getData<JPH::BodyID>("recreateJoltBody");
+				return {};
 			}},
-			{"detachCollider", [](const std::any& val, auto& component)->void
+			{"detachCollider", [](const std::any& val, auto& component)->std::any
 			{
 				auto collider = std::any_cast<components::entities::EntityComponent*>(val);
 				auto& colliders = component.template getData<std::vector<components::entities::EntityComponent*>>("Colliders");
@@ -270,44 +271,62 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				{
 					component.template getData<JPH::BodyID>("recreateJoltBody");
 				}
+				return {};
 			}
 		},
-		// {"isTouching", [](const std::any& val, auto& component)->void
-		// 	{
-		// 		// std::lock_guard lock(mutex);
-		// 		// auto iter = activeRigidBodyManifolds.find(&rigidBody);
-		// 		// if (iter == activeRigidBodyManifolds.end())
-		// 		// {
-		// 		// 	return false;
-		// 		// }
-		// 		// ManifoldPointer = &iter->second;
-		// 		// return true;
-		// 	}
-		// },
-		{"addActiveManifold", [](const std::any& val, auto& component)->void {
+		{"isTouching", [](const std::any& val, auto& component)->std::any
+			{
+				auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
+				auto& mutex = *mutexPointer;
+				auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
+				auto otherRb = std::any_cast<components::entities::EntityComponent*>(val);
+				auto iter = activeRigidBodyManifolds.find(otherRb->ID);
+				if (iter == activeRigidBodyManifolds.end())
+				{
+					return {false};
+				}
+				return {true};
+			}
+		},
+		{"getTouchingManifold", [](const std::any& val, auto& component)->std::any
+			{
+				auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
+				auto& mutex = *mutexPointer;
+				auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
+				auto otherRb = std::any_cast<components::entities::EntityComponent*>(val);
+				auto iter = activeRigidBodyManifolds.find(otherRb->ID);
+				if (iter == activeRigidBodyManifolds.end())
+				{
+					throw std::runtime_error("RigidBody is not touching other RigidBody");
+				}
+				return {iter->second};
+			}
+		},
+		{"addActiveManifold", [](const std::any& val, auto& component)->std::any {
 			auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
 			auto& mutex = *mutexPointer;
-			auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("activeRigidBodyManifolds");
+			auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
 			auto manifold = std::any_cast<physics::CollisionManifold>(val);
 			std::lock_guard lock(mutex);
 			auto rigidBodyComponentPointer = (&component == manifold.ecA) ? manifold.ecB : manifold.ecA;
-			activeRigidBodyManifolds[rigidBodyComponentPointer] = manifold;
-			return;
+			activeRigidBodyManifolds[rigidBodyComponentPointer->ID] = manifold;
+			return {};
 		}},
-		{"removeActiveManifold", [](const std::any& val, auto& component)->void {
+		{"removeActiveManifold", [](const std::any& val, auto& component)->std::any {
 			auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
 			auto& mutex = *mutexPointer;
-			auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<components::entities::EntityComponent*, physics::CollisionManifold>>("activeRigidBodyManifolds");
+			auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
 			std::lock_guard lock(mutex);
 			auto otherRb = std::any_cast<components::entities::EntityComponent*>(val);
-			auto iter = activeRigidBodyManifolds.find(otherRb);
+			auto iter = activeRigidBodyManifolds.find(otherRb->ID);
 			if (iter == activeRigidBodyManifolds.end())
 			{
-				return;
+				return {};
 			}
 			activeRigidBodyManifolds.erase(iter);
+			return {};
 		}},
-		{"applyForce", [](const auto& val, auto& component)->void {
+		{"applyForce", [](const auto& val, auto& component)->std::any {
 			auto& worldForcePointPair = std::any_cast<const std::pair<glm::vec3, glm::vec3>&>(val);
 			auto& worldForce = worldForcePointPair.first;
 			auto& worldPoint = worldForcePointPair.second;
@@ -318,8 +337,9 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			bodyInterface.AddForce(bodyID, ToJolt<glm::vec3, JPH::Vec3>(worldForce),
 															ToJolt<glm::vec3, JPH::Vec3>(worldPoint));
 			bodyInterface.ActivateBody(bodyID);
+			return {};
 		}},
-		{"applyLocalForceToCenter", [](const auto& val, auto& component)->void {
+		{"applyLocalForceToCenter", [](const auto& val, auto& component)->std::any {
 			auto& localForce = std::any_cast<const glm::vec3&>(val);
 			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
 			auto& bodyInterface = *joltBodyInterfacePointer;
@@ -329,8 +349,9 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			auto worldForce = bodyRotation * ToJolt<glm::vec3, JPH::Vec3>(localForce);
 			bodyInterface.AddForce(bodyID, worldForce);
 			bodyInterface.ActivateBody(bodyID);
+			return {};
 		}},
-		{"applyForceToCenter", [](const auto& val, auto& component)->void {
+		{"applyForceToCenter", [](const auto& val, auto& component)->std::any {
 			auto& force = std::any_cast<const glm::vec3&>(val);
 			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
 			auto& bodyInterface = *joltBodyInterfacePointer;
@@ -338,8 +359,9 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
 			bodyInterface.AddForce(bodyID, ToJolt<glm::vec3, JPH::Vec3>(force));
 			bodyInterface.ActivateBody(bodyID);
+			return {};
 		}},
-		{"applyTorque", [](const auto& val, auto& component)->void {
+		{"applyTorque", [](const auto& val, auto& component)->std::any {
 			auto& torque = std::any_cast<const glm::vec3&>(val);
 			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
 			auto& bodyInterface = *joltBodyInterfacePointer;
@@ -347,23 +369,26 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
 			bodyInterface.AddTorque(bodyID, ToJolt<glm::vec3, JPH::Vec3>(torque));
 			bodyInterface.ActivateBody(bodyID);
+			return {};
 		}},
-		{"setPosition", [](const auto& val, auto& component)->void {
+		{"setPosition", [](const auto& val, auto& component)->std::any {
 			auto& newPosition = std::any_cast<const glm::vec3&>(val);
 			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
 			auto& bodyInterface = *joltBodyInterfacePointer;
 			auto& bodyIDAny = component.getDataReturnAny("BodyID");
 			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
 			bodyInterface.SetPosition(bodyID, ToJolt<glm::vec3, JPH::Vec3>(newPosition), JPH::EActivation::Activate);
+			return {};
 			
 		}},
-		{"setOrientation", [](const auto& val, auto& component)->void {
+		{"setOrientation", [](const auto& val, auto& component)->std::any {
 			auto& newOrientation = std::any_cast<const glm::quat&>(val);
 			auto& joltBodyInterfacePointer = component.template getData<JPH::BodyInterface*>("BodyInterface");
 			auto& bodyInterface = *joltBodyInterfacePointer;
 			auto& bodyIDAny = component.getDataReturnAny("BodyID");
 			auto& bodyID = std::any_cast<JPH::BodyID&>(bodyIDAny);
 			bodyInterface.SetRotation(bodyID, ToJolt<glm::quat, JPH::Quat>(newOrientation).Normalized(), JPH::EActivation::Activate);
+			return {};
 		}}
 	}};
 	return createInfo;

@@ -12,7 +12,7 @@ namespace zg
 		using DataMap = std::unordered_map<std::string, std::any>;
 		using GetDataFunction = std::function<std::any&(HostT&)>;
 		using GetDataFunctionMap = std::unordered_map<std::string, GetDataFunction>;
-		using SetDataFunction = std::function<void(const std::any&, HostT&)>;
+		using SetDataFunction = std::function<std::any(const std::any&, HostT&)>;
 		using SetDataFunctionMap = std::unordered_map<std::string, SetDataFunction>;
 		DataMap dataMap;
 		GetDataFunctionMap getDataFunctionMap;
@@ -67,17 +67,16 @@ namespace zg
 			throw std::runtime_error("Could not find data with name");
 		}
 		template <typename T>
-		void setData(const std::string& name, const T& value)
+		std::any setData(const std::string& name, const T& value)
 		{
 			auto iter = setDataFunctionMap.find(name);
 			if (iter != setDataFunctionMap.end())
 			{
-				iter->second(std::any(value), dynamic_cast<HostT&>(*this));
-				return;
+				return iter->second(std::any(value), dynamic_cast<HostT&>(*this));
 			}
 			auto& any = dataMap[name];
 			any.emplace<T>(value);
-			return;
+			return any;
 		}
 		template <typename T, typename... Args>
 		T& make(const std::string& name, Args&&... args)

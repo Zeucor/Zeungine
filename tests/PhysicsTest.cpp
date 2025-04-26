@@ -125,8 +125,10 @@ SceneCreateInfo PhysicsSceneFactory()
 			scene.entities.reserve(5);
 			auto floor_tuple = scene.addEntity(floorCreateInfo);
 			auto& floor = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_tuple);
+			auto floor_index_stack = floor.INDEX_STACK;
 			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyInfo);
 			auto& floor_rb = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_rb_tuple);
+			auto floor_rb_ID = floor_rb.ID;
 			floor_rb.template setData<float>("Mass", 1000000.0f);
 			floor.attachComponent(floorColliderInfo);
 			// auto floorColliderCreateInfo = components::entities::ColliderFactory();
@@ -161,48 +163,43 @@ SceneCreateInfo PhysicsSceneFactory()
 				{
 					auto& toxy = Registry::getEntity(toxy_index_stack);
 					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
-					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, 30));
+					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, 20));
 				};
 				std::function<void()> onBackTickFunction = [toxy_index_stack, toxy_rb_ID]()
 				{
 					auto& toxy = Registry::getEntity(toxy_index_stack);
 					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
-					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, -30));
+					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, -20));
 				};
 				std::function<void()> onLeftTickFunction = [toxy_index_stack, toxy_rb_ID]()
 				{
 					auto& toxy = Registry::getEntity(toxy_index_stack);
 					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
-					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(30, 0, 0));
+					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(20, 0, 0));
 				};
 				std::function<void()> onRightTickFunction = [toxy_index_stack, toxy_rb_ID]()
 				{
 					auto& toxy = Registry::getEntity(toxy_index_stack);
 					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
-					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(-30, 0, 0));
+					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(-20, 0, 0));
+				};
+				std::function<void()> onSpaceTickFunction = [toxy_index_stack, floor_index_stack, floor_rb_ID, toxy_rb_ID]()
+				{
+					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID);
+					auto& floor = Registry::getEntity(floor_index_stack);
+					auto& floor_rb = floor.getComponentByID(floor_rb_ID);
+					physics::CollisionManifold* ManifoldPointer = 0;
+					if (std::any_cast<bool>(toxy_rb.template setData<components::entities::EntityComponent*>("isTouching", &floor_rb)))
+					{
+						toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 150, 0));
+					}
 				};
 				/*fID = */scene.window.addKeyUpdateHandler(f, onFrontTickFunction);
 				/*bID = */scene.window.addKeyUpdateHandler(b, onBackTickFunction);
 				/*lID = */scene.window.addKeyUpdateHandler(l, onLeftTickFunction);
 				/*rID = */scene.window.addKeyUpdateHandler(r, onRightTickFunction);
-				// /*sID = */scene.window.addKeyUpdateHandler(s, onSpaceTickFunction);
-				// std::function<void()> onSpaceTickFunction = [&]()
-				// {
-				// 	physics::CollisionManifold* ManifoldPointer = 0;
-				// 	if (cubeRigidBody->isTouching(*floorRigidBody, ManifoldPointer) ||
-				// 			cubeRigidBody->isTouching(*cube2RigidBody, ManifoldPointer) ||
-				// 			cubeRigidBody->isTouching(*cube3RigidBody, ManifoldPointer) ||
-				// 			cubeRigidBody->isTouching(*cube4RigidBody, ManifoldPointer))
-				// 	{
-				// 		cubeRigidBody->applyLocalForceToCenter({0, 500, 0});
-				// 	}
-				// };
-				// //
-				// fID = window.addKeyUpdateHandler(f, onFrontTickFunction);
-				// bID = window.addKeyUpdateHandler(b, onBackTickFunction);
-				// lID = window.addKeyUpdateHandler(l, onLeftTickFunction);
-				// rID = window.addKeyUpdateHandler(r, onRightTickFunction);
-				// sID = window.addKeyUpdateHandler(s, onSpaceTickFunction);
+				/*sID = */scene.window.addKeyUpdateHandler(s, onSpaceTickFunction);
 			}
 		}
 	};
