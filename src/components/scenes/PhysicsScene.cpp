@@ -86,6 +86,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 							auto& scene = Registry::getScene(hostIndexStack);
 							if (scene.updateNonce > 5)
 								break;
+							std::this_thread::sleep_for(std::chrono::milliseconds(10));
 						}
 						do
 						{
