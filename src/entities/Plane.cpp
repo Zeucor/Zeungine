@@ -34,7 +34,7 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string nam
     };
     return info;
 }
-zg::EntityCreateInfo zg::entities::PlaneFactory(textures::Texture& texture, std::string name, glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec2 size,
+zg::EntityCreateInfo zg::entities::PlaneFactory(const std::shared_ptr<textures::Texture>& texture, std::string name, glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec2 size,
     const shaders::RuntimeConstants& constants, zg::FRONTFACE frontFace)
 {
 	std::vector<glm::vec2> uv2s({
@@ -68,7 +68,10 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(textures::Texture& texture, std:
         .indices = indices,
         .vertexCount = 4,
         .vertices = vertices,
-        .uv2s = uv2s
+        .uv2s = uv2s,
+        .keyedTextures = {
+            {"ColorTexture", texture}
+        }
     };
     return info;
     // 		texturePointer(&texture), size(size)
