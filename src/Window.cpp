@@ -9,6 +9,7 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/shaders/ShaderManager.hpp>
 #include <zg/textures/Texture.hpp>
+#include <zg/Registry.hpp>
 #if defined(MACOS)
 #include <zg/windows/MacOSWindow.hpp>
 #elif defined(_linux__)
@@ -61,7 +62,6 @@ Window::Window(const Window& other) :
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
 }
-Window::~Window() { detachAllComponents(); }
 Window& Window::operator=(const Window& other)
 {
 	iPlatformWindow = other.iPlatformWindow;
@@ -240,12 +240,24 @@ _exit:
 	scenes.clear();
 	fullscreenQuad.reset();
 	postProcessingPipeline.cleanup();
+	detachAllComponents();
     delete iRenderer->shaderContext;
     iRendererRef.destroy();
 	delete iRenderer;
 	iPlatformWindowRef.destroy();
 	delete iPlatformWindow;
 	zg::Entity::cleanupSerialize();
+	if (Registry::idWindows)
+	{
+		auto& idWindowsRef = *Registry::idWindows;
+		if (!idWindowsRef.size())
+			return;
+		auto idIter = idWindowsRef.find(ID);
+		if (idIter != idWindowsRef.end())
+		{
+			idWindowsRef.erase(idIter);
+		}
+	}
 }
 void Window::updateKeyboard()
 {
@@ -730,11 +742,12 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCr
 	scene.INDEX_STACK = {INDEX, scene.INDEX};
 	if (scene.onAttachedFunction)
 		scene.onAttachedFunction(scene);
+	(*Registry::idScenes)[scene.ID] = scene.INDEX_STACK;
 	return scene_tuple;
 }
-bool Window::removeScene(size_t sceneID)
+bool Window::removeScene(size_t& ID)
 {
-	auto iter = scenes.find_id(sceneID);
+	auto iter = scenes.find_id(ID);
 	if (iter == scenes.end())
 	{
 		return false;
@@ -743,6 +756,12 @@ bool Window::removeScene(size_t sceneID)
 	if (scene.onDetachedFunction)
 		scene.onDetachedFunction(scene);
 	scenes.erase(iter);
+	auto& idScenesRef = *Registry::idScenes;
+	auto idIter = idScenesRef.find(ID);
+	if (idIter != idScenesRef.end())
+	{
+		idScenesRef.erase(idIter);
+	}
 	return true;
 }
 void Window::runOnThread(const Runnable& runnable)

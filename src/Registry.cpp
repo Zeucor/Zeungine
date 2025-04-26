@@ -1,10 +1,14 @@
 #include <zg/Registry.hpp>
 #include <string>
-zg::Registry::WindowKeyIDVector zg::Registry::windows([](auto& window) { return window.title; });
+using namespace zg;
+Registry::WindowKeyIDVector Registry::windows([](auto& window) { return window.title; });
+std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idWindows = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
+std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idScenes = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
+std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idEntities = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
 /**
  * Gets a Window from the registry by the Window ID
  */
-zg::Window& zg::Registry::getWindow(const std::vector<size_t*>& indexStack)
+Window& Registry::getWindow(const std::vector<size_t*>& indexStack)
 {
     auto indexStackData = indexStack.data();
     if (indexStack.size() < 1)
@@ -14,18 +18,28 @@ zg::Window& zg::Registry::getWindow(const std::vector<size_t*>& indexStack)
         throw std::runtime_error("Window not found with indexStack[0] = " + std::to_string(*indexStackData[0]));
     return *iter;
 }
+Window& Registry::getWindow(size_t ID)
+{
+    auto& idWindowsRef = *idWindows;
+    auto idIter = idWindowsRef.find(ID);
+    if (idIter == idWindowsRef.end())
+        throw std::runtime_error("Window not found with ID: " + std::to_string(ID));
+    auto& stack = idIter->second;
+    return getWindow(stack);
+}
 /**
  * Emplaces a Window at the back of the Windows' key/id vector, returning the tuple containing key/id/*index/*value
  * 
  * *value can become degenerate if adding multiple windows/scenes/entities, so use ID (stacks) instead
  */
-zg::Registry::WindowKeyIDVector::EmplaceBackTuple zg::Registry::addWindow(const WindowCreateInfo& createInfo)
+Registry::WindowKeyIDVector::EmplaceBackTuple Registry::addWindow(const WindowCreateInfo& createInfo)
 {
     auto window_tuple = windows.emplace_back(createInfo);
     auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
     window.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(window_tuple);
     window.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(window_tuple);
 	window.INDEX_STACK = {window.INDEX};
+    (*idWindows)[window.ID] = window.INDEX_STACK;
     return window_tuple;
 }
 /**
@@ -33,7 +47,7 @@ zg::Registry::WindowKeyIDVector::EmplaceBackTuple zg::Registry::addWindow(const 
  *   up window @ indexStack[0],
  *   then window.scenes[indexStack[1]]
  */
-zg::Scene& zg::Registry::getScene(const std::vector<size_t*>& indexStack)
+Scene& Registry::getScene(const std::vector<size_t*>& indexStack)
 {
     auto indexStackData = indexStack.data();
     if (indexStack.size() < 2)
@@ -44,6 +58,15 @@ zg::Scene& zg::Registry::getScene(const std::vector<size_t*>& indexStack)
         throw std::runtime_error("Scene not found with indexStack[1] = " + std::to_string(*indexStackData[1]));
     return *sceneIter;
 }
+Scene& Registry::getScene(size_t ID)
+{
+    auto& idScenesRef = *idScenes;
+    auto idIter = idScenesRef.find(ID);
+    if (idIter == idScenesRef.end())
+        throw std::runtime_error("Scene not found with ID: " + std::to_string(ID));
+    auto& stack = idIter->second;
+    return getScene(stack);
+}
 /**
  * Gets an Entity from the registry by looking up..
  *   window @ indexStack[0],
@@ -51,7 +74,7 @@ zg::Scene& zg::Registry::getScene(const std::vector<size_t*>& indexStack)
  *   then scenes.entities[indexStack[3]] = &Entity
  *   of (if needbe) [...entity.children[indexStack[4..n-1]]] = &Entity
  */
-zg::Entity& zg::Registry::getEntity(const std::vector<size_t*>& indexStack)
+Entity& Registry::getEntity(const std::vector<size_t*>& indexStack)
 {
     auto& scene = getScene(indexStack);
     if (indexStack.size() < 3)
@@ -72,4 +95,13 @@ zg::Entity& zg::Registry::getEntity(const std::vector<size_t*>& indexStack)
         currentEntity = &*childIter;
     }
     return *currentEntity;
+}
+Entity& Registry::getEntity(size_t ID)
+{
+    auto& idEntitiesRef = *idEntities;
+    auto idIter = idEntitiesRef.find(ID);
+    if (idIter == idEntitiesRef.end())
+        throw std::runtime_error("Entity not found with ID: " + std::to_string(ID));
+    auto& stack = idIter->second;
+    return getEntity(stack);
 }

@@ -8,6 +8,7 @@
 #include <zg/textures/FramebufferFactory.hpp>
 #include <zg/textures/TextureFactory.hpp>
 #include <zg/vaos/VAO.hpp>
+#include <zg/Registry.hpp>
 using namespace zg;
 std::unordered_map<std::string, size_t> entityKeyCounts;
 Scene::Scene(const SceneCreateInfo& info) :
@@ -164,6 +165,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 	entity.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(entity_tuple);
 	entity.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(entity_tuple);
 	entity.INDEX_STACK = {INDEX_STACK[0], INDEX_STACK[1], entity.INDEX};
+	(*Registry::idEntities)[entity.ID] = entity.INDEX_STACK;
 	postAddEntity(entity, {entity.ID});
 	if (entity.onAddedToSceneFunction)
 		entity.onAddedToSceneFunction(entity);
@@ -171,17 +173,25 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 		window.onEntityAdded(entity);
 	return entity_tuple;
 }
-void Scene::removeEntity(const size_t& id)
+bool Scene::removeEntity(size_t& ID)
 {
-	auto entityIter = entities.find_id(id);
+	auto entityIter = entities.find_id(ID);
 	if (entityIter == entities.end())
-		return;
+		return false;
 	auto& entity = *entityIter;
 	if (entity.onRemovedFromSceneFunction)
 		entity.onRemovedFromSceneFunction(entity);
-	preRemoveEntity(entity, {id});
+	preRemoveEntity(entity, {ID});
 	entity.ID = 0;
 	entities.erase(entityIter);
+	auto& idEntitiesRef = *Registry::idEntities;
+	auto idIter = idEntitiesRef.find(ID);
+	if (idIter != idEntitiesRef.end())
+	{
+		idEntitiesRef.erase(idIter);
+	}
+	ID = 0;
+	return true;
 }
 void Scene::update()
 {

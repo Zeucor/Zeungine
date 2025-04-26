@@ -4,6 +4,7 @@
 #include <zg/components/entities/RigidBody.hpp>
 #include <zg/renderers/VulkanRenderer.hpp>
 #include <zg/shaders/ShaderManager.hpp>
+#include <zg/Registry.hpp>
 using namespace zg;
 Entity::Entity(const EntityCreateInfo& info) :
 		VAO(info.scenePointer->window.iRenderer, info.constants, info.indiceCount, info.vertexCount),
@@ -149,16 +150,23 @@ size_t Entity::addChild(const EntityCreateInfo& childCreateInfo)
 	for (; index < INDEX_STACK_size; ++index)
 		childEntity_INDEX_STACK_data[index] = INDEX_STACK_data[index];
 	childEntity_INDEX_STACK_data[index] = childEntity.INDEX;
+	(*Registry::idEntities)[childEntity.ID] = childEntity.INDEX_STACK;
 	return childEntity.ID;
 }
 void Entity::removeChild(size_t& ID)
 {
-	auto iter = children.find_id(ID);
-	if (iter == children.end())
+	auto childIter = children.find_id(ID);
+	if (childIter == children.end())
 	{
 		return;
 	}
-	children.erase(iter);
+	children.erase(childIter);
+	auto& idEntitiesRef = *Registry::idEntities;
+	auto idIter = idEntitiesRef.find(ID);
+	if (idIter != idEntitiesRef.end())
+	{
+		idEntitiesRef.erase(idIter);
+	}
 	ID = 0;
 }
 // Mouse

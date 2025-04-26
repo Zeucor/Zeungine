@@ -111,7 +111,6 @@ struct WindowCreateInfo;
 
 		Window(const WindowCreateInfo& info);
 		Window(const Window& other);
-		~Window();
 		Window& operator=(const Window& other);
 		void run();
 		void update();
@@ -163,7 +162,7 @@ struct WindowCreateInfo;
 		void callPreSwapbuffersOnceoff();
 		// scene
 		KeyIDVector<std::string, Scene>::EmplaceBackTuple  addScene(const SceneCreateInfo& info);
-		bool removeScene(size_t sceneID);
+		bool removeScene(size_t& ID);
 		// runnables
 		void runOnThread(const Runnable& runnable);
 		void runRunnables();

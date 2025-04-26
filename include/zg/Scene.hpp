@@ -85,7 +85,7 @@ namespace zg
 		template <size_t N, typename... Args>
 		void addEntities(bool callOnEntityAdded, size_t& index,
 										 std::array<KeyIDVector<std::string, Entity>::EmplaceBackTuple, N>& arr) {};
-		void removeEntity(const size_t& id);
+		bool removeEntity(size_t& id);
 		void update();
 		void preRender();
 		void render();
