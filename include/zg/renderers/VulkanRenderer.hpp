@@ -126,7 +126,7 @@ namespace zg
 		TextureBindings& getTextureBindings(void* data) { return textureBindings[data]; }
 	};
 	static inline std::unordered_map<size_t, VkRenderPass> renderPassMap = {};
-	constexpr int MAX_FRAMES_IN_FLIGHT = 1;
+	constexpr int MAX_FRAMES_IN_FLIGHT = 3;
 #define GET_PROC_ADDR_MEMBER(NAME) PFN_vkVoidFunction (*NAME)(VkInstance instance, const char* pName)
 #define VK_GLOBAL(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(0, NAME)
 #define VK_INSTANCE(N, PFN, NAME) N = (PFN)VulkanRenderer::getProcAddr(instance, NAME)
