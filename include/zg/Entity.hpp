@@ -53,6 +53,7 @@ namespace zg
 		std::vector<glm::vec4> colors;
 		std::vector<glm::vec2> uv2s;
 		std::vector<glm::vec3> uv3s;
+		std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> keyedTextures;
 		glm::vec3 position;
 		glm::quat rotation;
 		glm::vec3 scale;
@@ -119,6 +120,7 @@ namespace zg
 		std::vector<glm::vec4> colors;
 		std::vector<glm::vec2> uv2s;
 		std::vector<glm::vec3> uv3s;
+		std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> keyedTextures;
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
 		std::function<void(Entity&)> postRenderFunction;

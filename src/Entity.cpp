@@ -9,7 +9,8 @@ Entity::Entity(const EntityCreateInfo& info) :
 		VAO(info.scenePointer->window.iRenderer, info.constants, info.indiceCount, info.vertexCount),
 		DataStorage<Entity>(info.getDataFunctionMap, info.setDataFunctionMap, info.dataMap),
 		window(info.scenePointer->window), scene(*info.scenePointer), indices(info.indices), vertices(info.vertices),
-		colors(info.colors), uv2s(info.uv2s), uv3s(info.uv3s), position(info.position), rotation(info.rotation),
+		colors(info.colors), uv2s(info.uv2s), uv3s(info.uv3s), keyedTextures(info.keyedTextures),
+		position(info.position), rotation(info.rotation),
 		scale(info.scale), children([](const auto& entity) { return entity.name; }), name(info.name),
 		preUpdateFunction(info.preUpdateFunction), preRenderFunction(info.preRenderFunction),
 		postRenderFunction(info.postRenderFunction)
@@ -79,6 +80,10 @@ void Entity::render()
 	shader->setBlock("Projection", *this,
 									 projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
 	shader->setBlock("CameraPosition", *this, viewPointer ? viewPointer->position : scene.viewPointer->position, 16);
+	auto keyedTexturesSize = keyedTextures.size();
+	auto keyedTexturesData = keyedTextures.data();
+	for (size_t unit = 0; unit < keyedTexturesSize; ++unit)
+		shader->setTexture(keyedTexturesData[unit].first, *this, *keyedTexturesData[unit].second, unit);
 	drawVAO();
 	shader->unbind();
 	auto childrenData = children.data();
