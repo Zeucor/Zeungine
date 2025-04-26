@@ -975,18 +975,18 @@ void VulkanRenderer::createRenderPass()
 	VkAttachmentReference colorAttachmentRef{};
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	VkAttachmentDescription depthAttachment{};
-	depthAttachment.format = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
-	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;//maxMSAASamples;
-	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-	VkAttachmentReference depthAttachmentRef{};
-	depthAttachmentRef.attachment = 1;
-	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	// VkAttachmentDescription depthAttachment{};
+	// depthAttachment.format = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
+	// depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;//maxMSAASamples;
+	// depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	// depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	// depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	// depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	// depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	// depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	// VkAttachmentReference depthAttachmentRef{};
+	// depthAttachmentRef.attachment = 1;
+	// depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 	// VkAttachmentDescription colorAttachmentResolve{};
 	// colorAttachmentResolve.format = swapChainImageFormat;
 	// colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -1003,7 +1003,7 @@ void VulkanRenderer::createRenderPass()
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &colorAttachmentRef;
-	subpass.pDepthStencilAttachment = &depthAttachmentRef;
+	// subpass.pDepthStencilAttachment = &depthAttachmentRef;
 	// subpass.pResolveAttachments = &colorAttachmentResolveRef;
 	VkSubpassDependency dependency{};
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -1012,7 +1012,7 @@ void VulkanRenderer::createRenderPass()
 	dependency.srcAccessMask = 0;
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment/*, colorAttachmentResolve*/};
+	std::array<VkAttachmentDescription, 1> attachments = {colorAttachment/*, depthAttachment*//*, colorAttachmentResolve*/};
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassInfo.attachmentCount = attachments.size();
@@ -1042,7 +1042,7 @@ void VulkanRenderer::createFramebuffers()
 	swapChainFramebuffers.resize(swapChainImageViewsSize);
 	for (uint32_t index = 0; index < swapChainImageViewsSize; index++)
 	{
-		std::vector<VkImageView> attachments({{swapChainImageViews[index], depthImageView}});
+		std::vector<VkImageView> attachments({{swapChainImageViews[index]/*, depthImageView*/}});
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferInfo.renderPass = renderPass;
@@ -1101,11 +1101,11 @@ void VulkanRenderer::createDepthResources()
 	// 	(const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float,
 	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
 	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthTexture);
-	VkFormat depthFormat = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
-	createImage(swapChainExtent.width, swapChainExtent.height, VK_SAMPLE_COUNT_1_BIT/*maxMSAASamples*/, depthFormat, VK_IMAGE_TILING_OPTIMAL,
-							VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage,
-							depthImageMemory);
-	depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+	// VkFormat depthFormat = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
+	// createImage(swapChainExtent.width, swapChainExtent.height, VK_SAMPLE_COUNT_1_BIT/*maxMSAASamples*/, depthFormat, VK_IMAGE_TILING_OPTIMAL,
+	// 						VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage,
+	// 						depthImageMemory);
+	// depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 void VulkanRenderer::createSyncObjects()
 {
@@ -1231,9 +1231,9 @@ void VulkanRenderer::destroySwapChain()
 		_vkDestroyImageView(device, imageView, 0);
 	}
 	_vkDestroySwapchainKHR(device, swapChain, 0);
-	_vkDestroyImage(device, depthImage, 0);
-	_vkDestroyImageView(device, depthImageView, 0);
-	_vkFreeMemory(device, depthImageMemory, 0);
+	// _vkDestroyImage(device, depthImage, 0);
+	// _vkDestroyImageView(device, depthImageView, 0);
+	// _vkFreeMemory(device, depthImageMemory, 0);
 }
 void VulkanRenderer::preBeginRenderPass()
 {
