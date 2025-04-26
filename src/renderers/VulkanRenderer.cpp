@@ -340,6 +340,7 @@ void VulkanRenderer::setupPFNs()
 							"vkGetPhysicalDeviceSurfacePresentModesKHR");
 	VK_INSTANCE(_vkCreateImageView, PFN_vkCreateImageView, "vkCreateImageView");
 	VK_INSTANCE(_vkCreateRenderPass, PFN_vkCreateRenderPass, "vkCreateRenderPass");
+	VK_INSTANCE(_vkCreateRenderPass2, PFN_vkCreateRenderPass2, "vkCreateRenderPass2");
 	VK_INSTANCE(_vkCreateFramebuffer, PFN_vkCreateFramebuffer, "vkCreateFramebuffer");
 	VK_INSTANCE(_vkCreateCommandPool, PFN_vkCreateCommandPool, "vkCreateCommandPool");
 	VK_INSTANCE(_vkAllocateCommandBuffers, PFN_vkAllocateCommandBuffers, "vkAllocateCommandBuffers");
@@ -928,14 +929,14 @@ void VulkanRenderer::createImageViews()
 		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
 							 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
 		(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
+		textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x8);
+	mainColorResolveTexture = std::make_shared<textures::Texture>(
+		this,
+		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+								platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+		(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
 		textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	// mainColorResolveTexture = std::make_shared<textures::Texture>(
-	// 	this,
-	// 	glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
-	// 							platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
-	// 	(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
-	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorTexture);
+	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorResolveTexture);
 	auto swapChainImagesSize = swapChainImages.size();
 	swapChainImageViews.resize(swapChainImagesSize);
 	for (uint32_t index = 0; index < swapChainImagesSize; index++)
@@ -963,7 +964,8 @@ void VulkanRenderer::createImageViews()
 }
 void VulkanRenderer::createRenderPass()
 {
-	VkAttachmentDescription colorAttachment{};
+	VkAttachmentDescription2 colorAttachment{};
+	colorAttachment.sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2;
 	colorAttachment.format = swapChainImageFormat;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;//maxMSAASamples;
 	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -972,7 +974,8 @@ void VulkanRenderer::createRenderPass()
 	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	VkAttachmentReference colorAttachmentRef{};
+	VkAttachmentReference2 colorAttachmentRef{};
+	colorAttachmentRef.sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2;
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 	// VkAttachmentDescription depthAttachment{};
@@ -999,29 +1002,31 @@ void VulkanRenderer::createRenderPass()
 	// VkAttachmentReference colorAttachmentResolveRef{};
 	// colorAttachmentResolveRef.attachment = 2;
 	// colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	VkSubpassDescription subpass{};
+	VkSubpassDescription2 subpass{};
+	subpass.sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2;
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &colorAttachmentRef;
 	// subpass.pDepthStencilAttachment = &depthAttachmentRef;
 	// subpass.pResolveAttachments = &colorAttachmentResolveRef;
-	VkSubpassDependency dependency{};
+	VkSubpassDependency2 dependency{};
+	dependency.sType = VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2;
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependency.dstSubpass = 0;
 	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	dependency.srcAccessMask = 0;
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	std::array<VkAttachmentDescription, 1> attachments = {colorAttachment/*, depthAttachment*//*, colorAttachmentResolve*/};
-	VkRenderPassCreateInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	std::array<VkAttachmentDescription2, 1> attachments = {colorAttachment/*, depthAttachment*//*, colorAttachmentResolve*/};
+	VkRenderPassCreateInfo2 renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2;
 	renderPassInfo.attachmentCount = attachments.size();
 	renderPassInfo.pAttachments = attachments.data();
 	renderPassInfo.subpassCount = 1;
 	renderPassInfo.pSubpasses = &subpass;
 	renderPassInfo.dependencyCount = 1;
 	renderPassInfo.pDependencies = &dependency;
-	if (!VKcheck("vkCreateRenderPass", _vkCreateRenderPass(device, &renderPassInfo, 0, &renderPass)))
+	if (!VKcheck("vkCreateRenderPass2", _vkCreateRenderPass2(device, &renderPassInfo, 0, &renderPass)))
 	{
 		throw std::runtime_error("VulkanRenderer-createRenderPass: failed to create render pass!");
 	}
@@ -1031,11 +1036,9 @@ void VulkanRenderer::createFramebuffers()
 {
 	std::vector<textures::Framebuffer::TextureAttachmentPair> attachments = {
 		{mainColorTexture.get(), textures::Framebuffer::AttachmentType::Color},
-		{mainDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}
-		// ,
-		// {mainColorResolveTexture.get(), textures::Framebuffer::AttachmentType::ColorResolve}
-		// ,
-		// {mainDepthResolveTexture.get(), textures::Framebuffer::AttachmentType::DepthResolve}
+		{mainDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth},
+		{mainColorResolveTexture.get(), textures::Framebuffer::AttachmentType::ColorResolve},
+		{mainDepthResolveTexture.get(), textures::Framebuffer::AttachmentType::DepthResolve}
 	};
 	mainFramebuffer = std::make_shared<textures::Framebuffer>(this, attachments);
 	auto swapChainImageViewsSize = swapChainImageViews.size();
@@ -1090,22 +1093,17 @@ void VulkanRenderer::createDepthResources()
 {
 	mainDepthTexture =
 		std::make_shared<textures::Texture>(this,
-																				glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
-																									 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
-																				(const void*)0, textures::Texture::Format::Depth,
-																				textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	// mainDepthResolveTexture = std::make_shared<textures::Texture>(
-	// 	this,
-	// 	glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
-	// 							platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
-	// 	(const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float,
-	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthTexture);
-	// VkFormat depthFormat = findDepthFormat((uint32_t)textures::Texture::Format::Depth);
-	// createImage(swapChainExtent.width, swapChainExtent.height, VK_SAMPLE_COUNT_1_BIT/*maxMSAASamples*/, depthFormat, VK_IMAGE_TILING_OPTIMAL,
-	// 						VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage,
-	// 						depthImageMemory);
-	// depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+								platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+		(const void*)0, textures::Texture::Format::Depth,
+		textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x8);
+	mainDepthResolveTexture = std::make_shared<textures::Texture>(
+		this,
+		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+								platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+		(const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float,
+		textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthResolveTexture);
 }
 void VulkanRenderer::createSyncObjects()
 {
@@ -1218,8 +1216,8 @@ void VulkanRenderer::destroy()
 void VulkanRenderer::destroySwapChain()
 {
 	mainColorTexture.reset();
-	// mainColorResolveTexture.reset();
-	// mainDepthResolveTexture.reset();
+	mainColorResolveTexture.reset();
+	mainDepthResolveTexture.reset();
 	mainDepthTexture.reset();
 	mainFramebuffer.reset();
 	for (auto framebuffer : swapChainFramebuffers)
@@ -1910,10 +1908,15 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 	size_t renderPassHash = 0;
 	auto combine_hash = [&](size_t seed, auto val)
 	{ return seed ^ (std::hash<decltype(val)>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2)); };
-	std::vector<VkAttachmentDescription> vkAttachments;
-	std::vector<VkAttachmentReference> colorAttachmentRefs;
-	std::vector<VkAttachmentReference> resolveAttachmentRefs;
-	VkAttachmentReference depthStencilRef = {};
+	std::vector<VkAttachmentDescription2> vkAttachments;
+	std::vector<VkAttachmentReference2> colorAttachmentRefs;
+	std::vector<VkAttachmentReference2> resolveAttachmentRefs;
+	VkAttachmentReference2 depthStencilRef{};
+	VkSubpassDescriptionDepthStencilResolve subpassDepthStencilResolve{};
+	bool requiresDepthResolve = false;
+	subpassDepthStencilResolve.sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE;
+	VkAttachmentReference2 depthResolveRef{};
+	depthStencilRef.sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2;
 	bool hasDepthStencil = false;
 	uint32_t attachmentIndex = 0;
 	VkPipelineStageFlags inputSrcStageMask = 0;
@@ -1938,7 +1941,8 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 			throw std::runtime_error("Framebuffer attachment texture image view is null!");
 		}
 		vkImageViews.push_back(textureImpl.textureImageView);
-		VkAttachmentDescription attachment{};
+		VkAttachmentDescription2 attachment{};
+		attachment.sType = VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2;
 		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // Store results
 		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -1960,27 +1964,45 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 		switch (pair.second)
 		{
 		case zg::textures::Framebuffer::AttachmentType::ColorResolve:
+		{
 			attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 			attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			subpassLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			resolveAttachmentRefs.push_back({attachmentIndex, subpassLayout});
+			VkAttachmentReference2 _ref_{};
+			_ref_.sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2;
+			_ref_.attachment = attachmentIndex;
+			_ref_.layout = subpassLayout;
+			resolveAttachmentRefs.push_back(_ref_);
 			break;
+		}
 		case zg::textures::Framebuffer::AttachmentType::DepthResolve:
+		{
 			attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 			attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			subpassLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			resolveAttachmentRefs.push_back({attachmentIndex, subpassLayout});
+			depthResolveRef.sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2;
+			depthResolveRef.attachment = attachmentIndex;
+			depthResolveRef.layout = subpassLayout;
+			subpassDepthStencilResolve.depthResolveMode = VK_RESOLVE_MODE_AVERAGE_BIT;
+			subpassDepthStencilResolve.pDepthStencilResolveAttachment = &depthResolveRef;
+			requiresDepthResolve = true;
 			break;
+		}
 		case zg::textures::Framebuffer::AttachmentType::Color:
+		{
 			attachment.samples = TextureMultisamplingToSampleCountBit(texture.multisampling);
 			if (attachment.samples > maxMSAASamples)
 				attachment.samples = maxMSAASamples;
 			attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			attachment.finalLayout = (framebuffer.hasColorResolveAttachment() ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			subpassLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			colorAttachmentRefs.push_back({attachmentIndex, subpassLayout});
+			VkAttachmentReference2 _ref_{};
+			_ref_.sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2;
+			_ref_.attachment = attachmentIndex;
+			_ref_.layout = subpassLayout;
+			colorAttachmentRefs.push_back(_ref_);
 			inputSrcStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 			inputDstStageMask |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 			inputDstAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
@@ -1989,10 +2011,12 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 			outputDstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 			outputDstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 			break;
+		}
 
 		case zg::textures::Framebuffer::AttachmentType::Depth:
 		case zg::textures::Framebuffer::AttachmentType::DepthStencil:
 		case zg::textures::Framebuffer::AttachmentType::Stencil:
+		{
 			if (hasDepthStencil)
 				throw std::runtime_error("Framebuffer cannot have multiple depth/stencil attachments!");
 			attachment.samples = TextureMultisamplingToSampleCountBit(texture.multisampling);
@@ -2006,7 +2030,11 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 				attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 				attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 			}
-			depthStencilRef = {attachmentIndex, subpassLayout};
+			VkAttachmentReference2 _ref_{};
+			_ref_.sType = VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2;
+			_ref_.attachment = attachmentIndex;
+			_ref_.layout = subpassLayout;
+			depthStencilRef = _ref_;
 			hasDepthStencil = true;
 			inputSrcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 			inputDstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
@@ -2018,6 +2046,7 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 			outputDstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 			outputDstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 			break;
+		}
 
 		default:
 			throw std::runtime_error("Unsupported attachment type");
@@ -2033,16 +2062,21 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 	}
 
 	// --- Define Subpass ---
-	VkSubpassDescription subpass{};
+	VkSubpassDescription2 subpass{};
+	subpass.sType = VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2;
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentRefs.size());
 	subpass.pColorAttachments = colorAttachmentRefs.empty() ? nullptr : colorAttachmentRefs.data();
 	subpass.pDepthStencilAttachment = hasDepthStencil ? &depthStencilRef : nullptr;
 	subpass.pResolveAttachments = resolveAttachmentRefs.data();
+	if (requiresDepthResolve)
+		subpass.pNext = &subpassDepthStencilResolve;
 
 	// --- Define Dependencies ---
-	std::array<VkSubpassDependency, 2> dependencies;
+	std::array<VkSubpassDependency2, 2> dependencies;
+	memset(dependencies.data(), 0, sizeof(VkSubpassDependency2) * 2);
 	// Input Dependency (External -> 0)
+	dependencies[0].sType = VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2;
 	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependencies[0].dstSubpass = 0;
 	dependencies[0].srcStageMask = inputSrcStageMask;
@@ -2051,6 +2085,7 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 	dependencies[0].dstAccessMask = inputDstAccessMask;
 	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 	// Output Dependency (0 -> External)
+	dependencies[1].sType = VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2;
 	dependencies[1].srcSubpass = 0;
 	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
 	dependencies[1].srcStageMask = outputSrcStageMask;
@@ -2077,8 +2112,8 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 	}
 	else
 	{
-		VkRenderPassCreateInfo renderPassInfo{};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		VkRenderPassCreateInfo2 renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2;
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(vkAttachments.size());
 		renderPassInfo.pAttachments = vkAttachments.data();
 		renderPassInfo.subpassCount = 1;
@@ -2086,8 +2121,8 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 		renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
 		renderPassInfo.pDependencies = dependencies.data();
 
-		if (!VKcheck("vkCreateRenderPass",
-								 _vkCreateRenderPass(device, &renderPassInfo, nullptr, &framebufferImpl.renderPass)))
+		if (!VKcheck("vkCreateRenderPass2",
+								 _vkCreateRenderPass2(device, &renderPassInfo, nullptr, &framebufferImpl.renderPass)))
 		{
 			delete static_cast<VulkanFramebufferImpl*>(framebuffer.rendererData);
 			framebuffer.rendererData = nullptr;

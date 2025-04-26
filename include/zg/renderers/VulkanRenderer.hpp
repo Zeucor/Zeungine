@@ -169,6 +169,7 @@ namespace zg
 		PFN_vkGetPhysicalDeviceSurfacePresentModesKHR _vkGetPhysicalDeviceSurfacePresentModesKHR;
 		PFN_vkCreateImageView _vkCreateImageView;
 		PFN_vkCreateRenderPass _vkCreateRenderPass;
+		PFN_vkCreateRenderPass2 _vkCreateRenderPass2;
 		PFN_vkCreateFramebuffer _vkCreateFramebuffer;
 		PFN_vkCreateCommandPool _vkCreateCommandPool;
 		PFN_vkAllocateCommandBuffers _vkAllocateCommandBuffers;
