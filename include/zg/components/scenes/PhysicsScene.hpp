@@ -20,7 +20,7 @@ namespace zg::components::scenes
 	struct GravityByVector;
 	struct GravityByAttraction;
 	using JoltIDComponentPair = std::pair<JPH::BodyID, components::entities::EntityComponent*>;
-	components::scenes::SceneComponentCreateInfo PhysicsSceneFactory(long double deltaTime);
+	components::scenes::SceneComponentCreateInfo PhysicsSceneFactory();
 	class ZGContactListener : public JPH::ContactListener
 	{
 	public:

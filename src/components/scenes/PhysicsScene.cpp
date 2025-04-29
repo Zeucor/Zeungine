@@ -27,12 +27,12 @@ using zg::physics::Projection;
 #define JOLT_NUM_BODY_MUTEXES 10000
 #define JOLT_MAX_BODY_PAIRS 1000
 #define JOLT_MAX_CONTACT_CONSTRAINTS 1000
-zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::PhysicsSceneFactory(long double deltaTime)
+zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::PhysicsSceneFactory()
 {
 	zg::components::scenes::SceneComponentCreateInfo info{
 		.name = "PhysicsScene",
 		.onAttachedFunction =
-			[deltaTime](auto& component)
+			[](auto& component)
 		{
 			JPH::RegisterDefaultAllocator();
 			JPH::Factory::sInstance = new JPH::Factory();
@@ -43,21 +43,6 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 				component.template make<std::unordered_map<JPH::BodyID, size_t>>("joltIDRigidBodies");
 			auto& collisionContacts = component.template make<std::vector<physics::CollisionManifold>>("collisionContacts");
 			auto& contactListener = component.template make<ZGContactListener*>("contactListener", new ZGContactListener(component.HOST_INDEX_STACK, component.ID));
-			auto& deltaTimeRef = component.template make<long double>("deltaTime", deltaTime);
-			auto& frameduration =
-				(component.template make<NANOSECONDS_DURATION>("frameduration") = NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den));
-			auto& framebudget = component.template make<budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL>*>(
-				"framebudget",
-				new budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL>(
-					frameduration,
-					1,
-					false,
-					false,
-					"PhysicsSceneBudget"
-				)
-			);
-			auto runningPointer = component.template make<bool*>("running", new bool(true));
-			auto& runningMutex = component.template make<std::mutex*>("runningMutex", new std::mutex());
 			auto& mTempAllocator =
 				component.template make<JPH::TempAllocatorImpl*>("mTempAllocator", new JPH::TempAllocatorImpl(10 * 1024 * 1024));
 			auto& mJobSystem = component.template make<JPH::JobSystemThreadPool*>(
@@ -74,38 +59,6 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 													 *mBroadPhaseLayerInterface, *mObjectVsBroadPhaseLayerFilter, *mObjectLayerPairFilter);
 			// if (gravity)
 			mPhysicsSystem->SetGravity(JPH::Vec3(0, -9.81f, 0));
-			auto& componentHostIndexStack = component.HOST_INDEX_STACK;
-			auto& componentID = component.ID;
-			auto& thread = component.template make<std::thread*>(
-				"thread",
-				new std::thread(
-					[HOST_INDEX_STACK = component.HOST_INDEX_STACK, componentID = component.ID, runningMutex, mPhysicsSystem, mTempAllocator, mJobSystem, framebudget, runningPointer, deltaTime]() mutable
-					{
-						while (true)
-						{
-							auto& scene = Registry::getScene(HOST_INDEX_STACK);
-							if (scene.updateNonce > 5)
-								break;
-							std::this_thread::sleep_for(std::chrono::milliseconds(10));
-						}
-						do
-						{
-							{
-								framebudget->begin();
-								std::lock_guard lock(*runningMutex);
-								if (!*runningPointer)
-								{
-									break;
-								}
-								// if (gravity)
-								// 	gravity->applyGravity(*this, deltaTime);
-								mPhysicsSystem->Update(deltaTime, 10, mTempAllocator, mJobSystem);
-								framebudget->end();
-							}
-							framebudget->sleep();
-						}
-						while (true);
-					}));
 		},
 		.onDetachedFunction =
 			[&](auto& component)
@@ -115,21 +68,10 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 				component.template getData<std::unordered_map<size_t, JPH::BodyID>>("rigidBodiesJoltID");
 			auto& joltIDRigidBodies =
 				component.template getData<std::unordered_map<JPH::BodyID, size_t>>("joltIDRigidBodies");
-			auto& runningPointer = component.template getData<bool*>("running");
-			auto& framebudget = component.template getData<budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL>*>("framebudget");
 			auto& contactListener = component.template getData<ZGContactListener*>("contactListener");
 			auto& mTempAllocator = component.template getData<JPH::TempAllocatorImpl*>("mTempAllocator");
 			auto& mJobSystem = component.template getData<JPH::JobSystemThreadPool*>("mJobSystem");
 			auto& mPhysicsSystem = component.template getData<JPH::PhysicsSystem*>("mPhysicsSystem");
-			auto& runningMutex = *component.template getData<std::mutex*>("runningMutex");
-			{
-				std::lock_guard lock(runningMutex);
-				*runningPointer = false;
-			}
-			auto& thread = component.template getData<std::thread*>("thread");
-			if (thread->joinable())
-				thread->join();
-			delete runningPointer;
 			auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
 			auto entitiesSize = scene.entities.size();
 			auto entitiesData = scene.entities.data();
@@ -152,7 +94,14 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 		.onUpdateFunction =
 			[&](auto& component)
 		{
+			// auto& runningMutex = *component.template getData<std::mutex*>("runningMutex");
+			// std::lock_guard lock(runningMutex);
+			auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+			auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
 			auto& mPhysicsSystem = component.template getData<JPH::PhysicsSystem*>("mPhysicsSystem");
+			auto& mTempAllocator = component.template getData<JPH::TempAllocatorImpl*>("mTempAllocator");
+			auto& mJobSystem = component.template getData<JPH::JobSystemThreadPool*>("mJobSystem");
+			mPhysicsSystem->Update(window.deltaTime, 1, mTempAllocator, mJobSystem);
 
 			auto& rigidBodiesJoltID =
 				component.template getData<std::unordered_map<size_t, JPH::BodyID>>("rigidBodiesJoltID");
@@ -188,26 +137,15 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 					if (lock.Succeeded()) // Important: Check if lock was successful
 					{
 						const auto& body = lock.GetBody();
-						
-						// Only update transforms for non-static bodies
 						if (!body.IsStatic())
 						{
 							auto& rb = Registry::getEntityComponent(rbID);
-							// Get world position and rotation from Jolt
 							auto position = body.GetPosition();
 							auto rotation = body.GetRotation();
-
-							// Update the Zeungine TransformComponent
 							auto& entity = Registry::getEntity(rb.HOST_INDEX_STACK);
 							entity.position = ToJolt<JPH::Vec3, glm::vec3>(position);
 							entity.rotation = ToJolt<JPH::Quat, glm::quat>(rotation);
-
-							// Optional: Update linear/angular velocity in RigidBodyComponent if needed
-							// RigidBodyComponent* rbComp = Zeungine::GetComponent<RigidBodyComponent>(entity);
-							// if (rbComp) {
-							// rbComp->linearVelocity = FromJoltVec3(body.GetLinearVelocity());
-							// rbComp->angularVelocity = FromJoltVec3(body.GetAngularVelocity());
-							// }
+							entity.getModelMatrix();
 						}
 					}
 					else
@@ -269,35 +207,6 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 				}}}};
 	return info;
 }
-// void PhysicsScene::registerRigidBody(RigidBody* rigidBody)
-// {
-// 	auto joltBodyID = rigidBody->getJoltBodyID();
-// 	rigidBodiesJoltID[rigidBody] = joltBodyID;
-// 	joltIDRigidBodies[joltBodyID] = rigidBody;
-// 	// std::cout << "Registered RigidBody." << std::endl;
-// }
-// void PhysicsScene::unregisterRigidBody(RigidBody* rigidBody)
-// {
-// }
-// JPH::PhysicsSystem& PhysicsScene::GetJoltPhysicsSystem() { return *mPhysicsSystem; }
-// const JPH::BodyLockInterface& PhysicsScene::GetBodyLockInterface()
-// {
-// 	return mPhysicsSystem->GetBodyLockInterfaceNoLock();
-// }
-// void PhysicsScene::setGravity(IGravity* gravityPointer)
-// {
-// 	gravity = gravityPointer;
-// }
-// void PhysicsScene::loop()
-// {
-// }
-// void PhysicsScene::stepSimulation(float dt)
-// {
-// }
-// void PhysicsScene::synchronize()
-// {
-// }
-
 
 ZGContactListener::ZGContactListener(const std::vector<size_t*>& sceneIndexStack, size_t physicsSceneID) :
 	sceneIndexStack(sceneIndexStack), physicsSceneID(physicsSceneID)

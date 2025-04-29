@@ -295,7 +295,6 @@ void Scene::preRender()
 {
 	if (prePreRenderFunction)
 		prePreRenderFunction(*this);
-	update();
 	auto entitiesData = entities.data();
 	auto entitiesSize = entities.size();
 	for (auto& directionaLightShadow : directionalLightShadows)
@@ -311,8 +310,8 @@ void Scene::preRender()
 			directionaLightShadow.shader->bind(entity);
 			directionaLightShadow.shader->setBlock("LightSpaceMatrix", entity, directionaLightShadow.lightSpaceMatrix,
 																						 sizeof(glm::mat4));
-			const auto& model = entity.getModelMatrix();
-			directionaLightShadow.shader->setBlock("Model", entity, model);
+			// const auto& model = entity.getModelMatrix();
+			directionaLightShadow.shader->setBlock("Model", entity, entity.getModelMatrix());
 			iRenderer->bindShader(*entity.addShader(directionaLightShadow.shader), entity);
 			entity.drawVAO();
 			directionaLightShadow.shader->unbind();
@@ -331,8 +330,8 @@ void Scene::preRender()
 			spotLightShadow.shader->bind(entity);
 			spotLightShadow.shader->setBlock("LightSpaceMatrix", entity, spotLightShadow.lightSpaceMatrix,
 																			 sizeof(glm::mat4));
-			const auto& model = entity.getModelMatrix();
-			spotLightShadow.shader->setBlock("Model", entity, model);
+			// const auto& model = entity.getModelMatrix();
+			spotLightShadow.shader->setBlock("Model", entity, entity.getModelMatrix());
 			entity.drawVAO();
 			spotLightShadow.shader->unbind();
 		}
@@ -353,8 +352,8 @@ void Scene::preRender()
 			pointLightShadow.shader->setUniform("nearPlane", entity, pointLightShadow.pointLight.nearPlane);
 			pointLightShadow.shader->setUniform("farPlane", entity, pointLightShadow.pointLight.farPlane);
 			pointLightShadow.shader->setUniform("lightPos", entity, pointLightShadow.pointLight.position);
-			const auto& model = entity.getModelMatrix();
-			pointLightShadow.shader->setBlock("Model", entity, model);
+			// const auto& model = entity.getModelMatrix();
+			pointLightShadow.shader->setBlock("Model", entity, entity.getModelMatrix());
 			entity.drawVAO();
 			pointLightShadow.shader->unbind();
 		}

@@ -93,7 +93,8 @@ Entity::Entity(const Entity& other) :
 	postRenderFunction(other.postRenderFunction),
 	onAddedFunction(other.onAddedFunction),
 	onRemovedFunction(other.onRemovedFunction)
-{}
+{
+}
 Entity::~Entity()
 {
 	for (auto& child : children)
@@ -157,15 +158,14 @@ void Entity::render()
 	if (preRenderFunction && !preRenderFunction(*this))
 		return;
 	shader->bind(*this);
-	const auto& model = getModelMatrix();
 	auto& scene = Registry::getScene(INDEX_STACK);
-	scene.entityPreRender(*this);
-	shader->setBlock("Model", *this, model);
 	{
 		if (viewPointer)
 			viewPointer->updateMutex.lock();
 		else
 			scene.viewPointer->updateMutex.lock();
+		scene.entityPreRender(*this);
+		shader->setBlock("Model", *this, getModelMatrix());
 		shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
 		shader->setBlock("CameraPosition", *this, viewPointer ? viewPointer->position : scene.viewPointer->position, 16);
 		if (viewPointer)
@@ -189,41 +189,22 @@ void Entity::render()
 glm::mat4& Entity::getModelMatrix()
 {
 	auto& scene = Registry::getScene(INDEX_STACK);
-	// Ensure model is only recomputed once per update nonce
-	// Also handles the initial case where updateNonce might be 0 and scene.updateNonce is > 0
 	if (updateNonce == scene.updateNonce && updateNonce != 0)
 	{
 		return model;
 	}
-	updateNonce = scene.updateNonce; // Mark as updated for this cycle
-
-	// --- Calculate local transformation: Translate * Rotate * Scale ---
-
-	// 1. Start with identity matrix
+	updateNonce = scene.updateNonce;
 	glm::mat4 identity = glm::mat4(1.0f);
-
-	// 2. Create Scale matrix
 	glm::mat4 scaleMat = glm::scale(identity, scale);
-
-	// 3. Create Rotation matrix from quaternion
 	glm::mat4 rotMat = glm::mat4_cast(rotation);
-
-	// 4. Create Translation matrix
 	glm::mat4 transMat = glm::translate(identity, position);
-
-	// 5. Combine transformations: T * R * S
 	glm::mat4 localModel = transMat * rotMat * scaleMat;
-
 	model = localModel;
-	// --- Apply parent transformation ---
 	Entity* parentEntity = 0;
 	if (Registry::getNthParentEntity(INDEX_STACK, parentEntity))
 	{
-		// Multiply by the parent's world matrix
-		// Parent's world transform * Our local transform
 		model = parentEntity->getModelMatrix() * model;
 	}
-
 	return model;
 }
 KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const EntityCreateInfo& childCreateInfo)
@@ -380,13 +361,14 @@ void Entity::setPosition(glm::vec3 newPosition)
 }
 void Entity::setOrientation(glm::quat newOrientation)
 {
-	rotation = newOrientation;
 	try
 	{
 		auto& rb = getComponentByName("RigidBody");
-		rb.template setData<glm::quat>("setOrientation", rotation);
+		rb.template setData<glm::quat>("setOrientation", newOrientation);
 	}
 	catch(...)
-	{}
+	{
+		rotation = newOrientation;
+	}
 	return;
 }

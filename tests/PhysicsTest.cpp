@@ -120,44 +120,44 @@ SceneCreateInfo PhysicsSceneFactory()
 			scene.directionalLightShadows.emplace_back(scene.INDEX_STACK, 0);
 			// scene.attachComponent(components::scenes::GravityByAttractionFactory(0.000005f));
 			// scene.attachComponent(components::scenes::GravityByVectorFactory(glm::vec3(0, -9.81, 0)));
-			scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 60.0L)));
 			// scene.attachComponent(components::scenes::ViewMouseControlFactory());
 			// scene.attachComponent(
 			// 	components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 5));
 			scene.entities.reserve(5);
 			auto floor_tuple = scene.addEntity(floorCreateInfo);
-			auto& floor = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_tuple);
+			// auto floorColliderCreateInfo = components::entities::ColliderFactory();
+			// floor.attachComponent(floorColliderCreateInfo);
+			auto toxy_tuple = scene.addEntity(toxyCreateInfo);
+			auto cube1_tuple = scene.addEntity(cubeCreateInfo);
+			cubeCreateInfo.position = {47, 47, 58};
+			auto cube2_tuple = scene.addEntity(cubeCreateInfo);
+			cubeCreateInfo.position = {50, 47, 54};
+			auto cube3_tuple = scene.addEntity(cubeCreateInfo);
+
+			scene.attachComponent(components::scenes::EntityThirdPersonCameraFactory(*std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple)));
+
+			scene.attachComponent(components::scenes::PhysicsSceneFactory());
+			auto& floor = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(floor_tuple));
 			auto floor_index_stack = floor.INDEX_STACK;
 			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyInfo);
 			auto& floor_rb = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_rb_tuple);
 			auto floor_rb_ID = floor_rb.ID;
 			floor_rb.template setData<float>("Mass", 1000000.0f);
 			floor.attachComponent(floorColliderInfo);
-			// auto floorColliderCreateInfo = components::entities::ColliderFactory();
-			// floor.attachComponent(floorColliderCreateInfo);
-			auto toxy_tuple = scene.addEntity(toxyCreateInfo);
-			auto& toxy = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple);
+			auto& toxy = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(toxy_tuple));
 			auto toxy_index_stack = toxy.INDEX_STACK;
 			auto toxy_rb_tuple = toxy.attachComponent(cubeRigidBodyInfo);
 			auto toxy_rb_ID = std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_rb_tuple)->ID;
 			toxy.attachComponent(toxyColliderInfo);
-			auto cube1_tuple = scene.addEntity(cubeCreateInfo);
-			auto& cube1 = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(cube1_tuple);
+			auto& cube1 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube1_tuple));
 			cube1.attachComponent(cubeRigidBodyInfo);
 			cube1.attachComponent(cubeColliderInfo);
-			cubeCreateInfo.position = {47, 47, 58};
-			auto cube2_tuple = scene.addEntity(cubeCreateInfo);
-			auto& cube2 = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(cube2_tuple);
+			auto& cube2 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube2_tuple));
 			cube2.attachComponent(cubeRigidBodyInfo);
 			cube2.attachComponent(cubeColliderInfo);
-			cubeCreateInfo.position = {50, 47, 54};
-			auto cube3_tuple = scene.addEntity(cubeCreateInfo);
-			auto& cube3 = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(cube3_tuple);
+			auto& cube3 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube3_tuple));
 			cube3.attachComponent(cubeRigidBodyInfo);
 			cube3.attachComponent(cubeColliderInfo);
-
-			scene.attachComponent(components::scenes::EntityThirdPersonCameraFactory(*std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple)));
-
 			// scene.attachComponent(components::scenes::DepthFogFactory());
 			// cube controls
 			{
