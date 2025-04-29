@@ -20,7 +20,7 @@ namespace zg::textures
 			ColorResolve,
 			DepthResolve
 		};
-		using TextureAttachmentPair = std::pair<Texture*, AttachmentType>;
+		using TextureAttachmentPair = std::pair<std::shared_ptr<Texture>, AttachmentType>;
 		IRenderer* iRenderer = 0;
 		std::vector<TextureAttachmentPair> textureAttachmentPairs;
 		glm::vec4 clearColor = glm::vec4(0);
@@ -60,7 +60,7 @@ namespace zg::textures
 			{
 				if (pair.second == AttachmentType::Color)
 				{
-					return pair.first;
+					return pair.first.get();
 				}
 			}
 			return 0;
@@ -71,7 +71,7 @@ namespace zg::textures
 			{
 				if (pair.second == AttachmentType::ColorResolve)
 				{
-					return pair.first;
+					return pair.first.get();
 				}
 			}
 			return 0;
@@ -82,7 +82,7 @@ namespace zg::textures
 			{
 				if (pair.second == AttachmentType::Depth)
 				{
-					return pair.first;
+					return pair.first.get();
 				}
 			}
 			return 0;
@@ -93,7 +93,7 @@ namespace zg::textures
 			{
 				if (pair.second == AttachmentType::DepthResolve)
 				{
-					return pair.first;
+					return pair.first.get();
 				}
 			}
 			return 0;

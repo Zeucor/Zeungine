@@ -117,6 +117,7 @@ namespace zg
 		virtual void updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) = 0;
 		virtual void drawVAO(const vaos::VAO &vao) = 0;
 		virtual void generateVAO(vaos::VAO &vao) = 0;
+		virtual void copyVAO(vaos::VAO &dest, const vaos::VAO &src) = 0;
 		virtual void destroyVAO(vaos::VAO &vao) = 0;
 		virtual void ensureVAO(shaders::Shader &shader, vaos::VAO &vao) = 0;
 		virtual void swapBuffers() = 0;

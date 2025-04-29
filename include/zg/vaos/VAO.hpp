@@ -12,13 +12,14 @@ namespace zg::vaos
 		uint32_t indiceCount;
 		uint32_t vertexCount;
 		uint32_t stride;
+		std::vector<size_t*> VAO_INDEX_STACK;
 		IRenderer* vaoIRenderer = 0;
 		void* rendererData = 0;
 		std::unordered_map<void*, shaders::Shader*> shaders;
 		std::unordered_map<void*, bool> ensuredBools;
 		VAO();
 		VAO(const VAO& other);
-		VAO(IRenderer* iRenderer, const RuntimeConstants& constants, uint32_t indiceCount, uint32_t vertexCount);
+		VAO(const std::vector<size_t*>& VAO_INDEX_STACK, const RuntimeConstants& constants, uint32_t indiceCount, uint32_t vertexCount);
 		VAO& operator=(const VAO& other);
 		virtual ~VAO();
 		void updateIndices(const std::vector<uint32_t>& indices);

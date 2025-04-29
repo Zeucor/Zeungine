@@ -10,7 +10,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
         .name = "EntityThirdPersonCamera",
         .onAttachedFunction = [entityIndexStack = entity.INDEX_STACK](auto& component)
         {
-            auto& scene = Registry::getScene(component.hostIndexStack);
+            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
             auto& focused = component.template make<bool>("Focused", false);
             auto& mouseMoveID = component.template make<UniqueIdentifier>("MouseMoveID", 0);
             auto& focusID = component.template make<UniqueIdentifier>("FocusID", 0);
@@ -23,11 +23,13 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             auto& maxPitch = component.template make<float>("MaxPitch", -5.0f);
             auto& lastPosition = component.template make<glm::vec2>("LastPosition", 0.0f, 0.0f);
             auto& deadZonePercent = component.template make<float>("DeadZonePercent", 0.1f);
-            mouseMoveID = scene.window.addMouseMoveHandler([hostIndexStack = component.hostIndexStack, componentID = component.ID](glm::vec2 coords)
+            auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+            mouseMoveID = window.addMouseMoveHandler([HOST_INDEX_STACK = component.HOST_INDEX_STACK, componentID = component.ID](glm::vec2 coords)
             	{
-                    auto& scene = Registry::getScene(hostIndexStack);
+                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                    auto& window = Registry::getWindow(HOST_INDEX_STACK);
                     auto& component = scene.getComponentByID(componentID);
-            		if (!scene.window.focused)
+            		if (!window.focused)
             		{
             			return;
             		}
@@ -54,15 +56,15 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             		currentPitch = std::clamp(currentPitch, minPitch, maxPitch);
         
             		// Conditional Warp Logic
-            		glm::vec2 center = {scene.window.windowWidth / 2.0f, scene.window.windowHeight / 2.0f};
-            		float boxHalfWidth = scene.window.windowWidth * (deadZonePercent * 0.5f);
-            		float boxHalfHeight = scene.window.windowHeight * (deadZonePercent * 0.5f);
+            		glm::vec2 center = {window.windowWidth / 2.0f, window.windowHeight / 2.0f};
+            		float boxHalfWidth = window.windowWidth * (deadZonePercent * 0.5f);
+            		float boxHalfHeight = window.windowHeight * (deadZonePercent * 0.5f);
             		zg::physics::AABB<2> centerBox(glm::vec2(center.x - boxHalfWidth, center.y - boxHalfHeight),
             																	 glm::vec2(center.x + boxHalfWidth, center.y + boxHalfHeight));
         
             		if (!centerBox.isPointInside(coords))
             		{
-            			scene.window.warpPointer(center);
+            			window.warpPointer(center);
             			lastPosition = center;
             		}
             		else
@@ -71,9 +73,10 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             		}
             	});
             focusID =
-                scene.window.addFocusHandler([entityIndexStack, hostIndexStack = component.hostIndexStack, componentID = component.ID](bool focused)
+                window.addFocusHandler([entityIndexStack, HOST_INDEX_STACK = component.HOST_INDEX_STACK, componentID = component.ID](bool focused)
                 	{
-                        auto& scene = Registry::getScene(hostIndexStack);
+                        auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                        auto& window = Registry::getWindow(HOST_INDEX_STACK);
                         auto& component = scene.getComponentByID(componentID);
                         auto& entity = Registry::getEntity(entityIndexStack);
                 		if (focused)
@@ -102,18 +105,18 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
                 				currentYaw += 360.0f;
                 			}
             
-                			if (scene.window.iPlatformWindow)
-                				scene.window.iPlatformWindow->hidePointer();
+                			if (window.iPlatformWindow)
+                				window.iPlatformWindow->hidePointer();
             
                 			// Initialize lastPosition and warp pointer
-                			glm::vec2 center = {scene.window.windowWidth / 2.0f, scene.window.windowHeight / 2.0f};
+                			glm::vec2 center = {window.windowWidth / 2.0f, window.windowHeight / 2.0f};
                 			lastPosition = center;
-                			scene.window.warpPointer(center);
+                			window.warpPointer(center);
                 		}
                 		else
                 		{
-                			if (scene.window.iPlatformWindow)
-                				scene.window.iPlatformWindow->showPointer();
+                			if (window.iPlatformWindow)
+                				window.iPlatformWindow->showPointer();
                 		}
                 	}
                 
@@ -123,9 +126,10 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
         {
             auto& mouseMoveID = component.template getData<UniqueIdentifier>("MouseMoveID");
             auto& focusID = component.template getData<UniqueIdentifier>("FocusID");
-            auto& scene = Registry::getScene(component.hostIndexStack);
-            scene.window.removeMouseMoveHandler(mouseMoveID);
-            scene.window.removeFocusHandler(focusID);
+            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+            auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+            window.removeMouseMoveHandler(mouseMoveID);
+            window.removeFocusHandler(focusID);
         },
         .onUpdateFunction = [entityIndexStack = entity.INDEX_STACK](auto& component)
         {
@@ -133,7 +137,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             auto& verticalOffset = component.template getData<float>("VerticalOffset");
             auto& currentYaw = component.template getData<float>("CurrentYaw");
             auto& currentPitch = component.template getData<float>("CurrentPitch");
-            auto& scene = Registry::getScene(component.hostIndexStack);
+            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
             auto& entity = Registry::getEntity(entityIndexStack);
             if (!scene.viewPointer)
                 return;

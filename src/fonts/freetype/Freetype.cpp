@@ -164,23 +164,23 @@ const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fo
 	return size;
 };
 void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 color, float fontSize, float& lineHeight,
-																	 glm::vec2 textureSize, std::shared_ptr<textures::Texture>& texturePointer,
+																	 glm::vec2 textureSize, std::shared_ptr<textures::Texture>& pTexture,
 																	 const int64_t& cursorIndex, glm::vec3& cursorPosition, enums::EBreakStyle breakStyle,
-																	 const std::shared_ptr<textures::Framebuffer>& framebufferPointer,
+																	 const std::shared_ptr<textures::Framebuffer>& pFramebuffer,
 																	 const std::shared_ptr<Scene>& scenePointer)
 {
 	glm::ivec2 scaledSize = textureSize * textureScale;
-	if (!texturePointer || texturePointer->size.x != scaledSize.x || texturePointer->size.y != scaledSize.y)
+	if (!pTexture || pTexture->size.x != scaledSize.x || pTexture->size.y != scaledSize.y)
 	{
-		texturePointer.reset(new textures::Texture(window.iRenderer, glm::ivec4(scaledSize.x, scaledSize.y, 1, 0), 0,
+		pTexture.reset(new textures::Texture(window.iRenderer, glm::ivec4(scaledSize.x, scaledSize.y, 1, 0), 0,
 																							 textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
 																							 textures::Texture::FilterType::Linear));
 	}
-	if (!framebufferPointer)
+	if (!pFramebuffer)
 	{
 		auto attachments = std::vector<textures::Framebuffer::TextureAttachmentPair>(
-			{{(textures::Texture*)texturePointer.get(), textures::Framebuffer::AttachmentType::Color}});
-		((std::shared_ptr<textures::Framebuffer>&)framebufferPointer) =
+			{{pTexture, textures::Framebuffer::AttachmentType::Color}});
+		((std::shared_ptr<textures::Framebuffer>&)pFramebuffer) =
 			std::make_shared<textures::Framebuffer>(window.iRenderer, attachments);
 	}
 	if (!scenePointer)
@@ -190,7 +190,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 																		.cameraDirection = glm::vec3(0, 0, -1),
 																		.projectionType = vp::Projection::TYPE::Orthographic,
 																		.orthoSize = glm::vec2(scaledSize),
-																		.framebufferPointer = framebufferPointer,
+																		.framebuffer = pFramebuffer,
 																		.drawColorToWindowPlane = false,
 																		.useBVH = false};
 		((std::shared_ptr<Scene>&)scenePointer) = std::make_shared<Scene>(sceneCreateInfo);
@@ -246,7 +246,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 					(characterPointer->size.y / 2.f);
 				// scene.addEntity(std::make_shared<entities::Plane>(window, scene, characterPosition, glm::vec3(0, 0, 0),
 				// 																									glm::vec3(1, 1, 1), characterPointer->size,
-				// 																									*characterPointer->texturePointer),
+				// 																									*characterPointer->pTexture),
 				// 								false);
 			}
 			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX, 1);
@@ -274,7 +274,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 position, glm::vec4 color,
 																 glm::quat _rotation, glm::vec3 _scale, float fontSize, float& lineHeight,
 																 glm::vec2 bounds, enums::EBreakStyle breakStyle, Scene& scene,
-																 std::vector<Entity*>& existingAndUpdatedGlyphs, int64_t cursorIndex, Entity*& cursor)
+																 std::vector<size_t>& existingAndUpdatedGlyphIDs, int64_t cursorIndex, size_t& cursor)
 {
 	strings::Utf8Iterator iterator(string, 0);
 	const uint64_t& stringSize = string.size();
@@ -300,11 +300,11 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 		// cursor = std::make_shared<entities::Plane>(window, scene, glm::vec3(0), glm::vec3(0), glm::vec3(1),
 		// 																					 glm::vec2(3, lineHeight), color);
 	}
-	auto& cursorRef = *cursor;
-	if (cursorIndex == 0)
-	{
-		cursorRef.position = currentPosition;
-	}
+	// auto& cursorRef = Registry::getEntity(cursor);
+	// if (cursorIndex == 0)
+	// {
+	// 	cursorRef.position = currentPosition;
+	// }
 	for (; iterator.index < stringSize;)
 	{
 		advanceX = 0;
@@ -332,85 +332,88 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 				characterPosition.y =
 					(currentPosition.y - ((characterPointer->size.y - characterPointer->bearing.y) * _scale.y)) +
 					((characterPointer->size.y / 2.f) * _scale.y);
-				if (iterator.index < existingAndUpdatedGlyphs.size())
+				if (iterator.index < existingAndUpdatedGlyphIDs.size())
 				{
-					auto& glyph = existingAndUpdatedGlyphs[iterator.index];
-					// if (!glyph)
-					// {
-					// 	// glyph = std::make_shared<entities::Plane>(window, scene, characterPosition, _rotation, glm::vec3(1),
-					// 	// 																					glm::vec2(characterPointer->size) * glm::vec2(_scale),
-					// *characterPointer->texturePointer);
-					// 	// scene.addEntity(glyph);
-					// 	glyph->VALUE = codepoint;
-					// }
-					// else if (glyph->VALUE != codepoint)
-					// {
-					// 	glyph->position = characterPosition;
-					// 	glyph->setSize(glm::vec3(glm::vec2(characterPointer->size) * glm::vec2(_scale), 0));
-					// 	glyph->texturePointer = characterPointer->texturePointer.get();
-					// 	glyph->VALUE = codepoint;
-					// }
-					// if (glyph->position != characterPosition)
-					// {
-					// 	glyph->position = characterPosition;
-					// }
+					auto& glyphID = existingAndUpdatedGlyphIDs[iterator.index];
+					if (!glyphID)
+					{
+						goto _addGlyph;
+					}
+					else 
+					{
+						auto& glyph = Registry::getEntity(glyphID);
+						if (glyph.VALUE != codepoint)
+						{
+							glyph.position = characterPosition;
+							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
+							glyph.keyedTextures[0].second = characterPointer->texturePointer;
+							glyph.VALUE = codepoint;
+						}
+						if (glyph.position != characterPosition)
+						{
+							glyph.position = characterPosition;
+						}
+					}
 				}
 				else
 				{
-					// auto glyph = std::make_shared<entities::Plane>(window, scene, characterPosition, _rotation, glm::vec3(1),
-					// 																							 glm::vec2(characterPointer->size) * glm::vec2(_scale),
-					// *characterPointer->texturePointer); scene.addEntity(glyph); existingAndUpdatedGlyphs.push_back(glyph);
-					// glyph->VALUE = codepoint;
+_addGlyph:
+					auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale, glm::vec2(1));
+					auto glyph_tuple = scene.addEntity(glyphCreateInfo);
+					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
+					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
+					glyph.VALUE = codepoint;
 				}
 			}
-			else if (iterator.index >= existingAndUpdatedGlyphs.size())
+			else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
 			{
-				existingAndUpdatedGlyphs.push_back({});
+				existingAndUpdatedGlyphIDs.push_back(0);
 			}
 			else
 			{
-				auto& glyph = existingAndUpdatedGlyphs[iterator.index];
-				if (glyph)
+				auto& glyphID = existingAndUpdatedGlyphIDs[iterator.index];
+				if (glyphID)
 				{
-					scene.removeEntity(glyph->ID);
-					glyph = {};
+					scene.removeEntity(glyphID);
+					glyphID = 0;
 				}
 			}
 			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX, _scale.x);
 		}
-		else if (iterator.index >= existingAndUpdatedGlyphs.size())
+		else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
 		{
-			existingAndUpdatedGlyphs.push_back({});
+			existingAndUpdatedGlyphIDs.push_back(0);
 		}
 	_advance:
 		currentPosition.x += advanceX;
 		codepointIndex = iterator.getCurrentCodepointIndex();
-		if (cursorIndex == codepointIndex + 1)
-		{
-			cursorRef.position = currentPosition;
-			cursorRef.position /= textureScale;
-		}
+		// if (cursorIndex == codepointIndex + 1)
+		// {
+		// 	cursorRef.position = currentPosition;
+		// 	cursorRef.position /= textureScale;
+		// }
 		++iterator;
 	}
 	codepointIndex = iterator.getCurrentCodepointIndex();
-	for (auto i = existingAndUpdatedGlyphs.size() - 1; i >= codepointIndex; i--)
+	for (auto i = existingAndUpdatedGlyphIDs.size() - 1; i >= codepointIndex; i--)
 	{
-		auto& entity = *existingAndUpdatedGlyphs.back();
+		auto& entityID = existingAndUpdatedGlyphIDs.back();
+		auto& entity = Registry::getEntity(entityID);
 		scene.bvh->removeEntity(scene, entity);
-		scene.removeEntity(entity.ID);
-		existingAndUpdatedGlyphs.erase(existingAndUpdatedGlyphs.end() - 1);
+		scene.removeEntity(entityID);
+		existingAndUpdatedGlyphIDs.erase(existingAndUpdatedGlyphIDs.end() - 1);
 	}
-	if (cursorIndex == codepointIndex + 1)
-	{
-		cursorRef.position = currentPosition;
-		cursorRef.position /= textureScale;
-	}
+	// if (cursorIndex == codepointIndex + 1)
+	// {
+	// 	cursorRef.position = currentPosition;
+	// 	cursorRef.position /= textureScale;
+	// }
 	return;
 }
 void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 position, glm::vec4 color,
 																	glm::quat _rotation, glm::vec3 _scale, float fontSize, float& lineHeight,
 																	glm::vec2 bounds, enums::EBreakStyle breakStyle, Scene& scene, Entity& entity,
-																	std::vector<Entity*>& existingAndUpdatedGlyphs, int64_t cursorIndex, Entity*& cursor)
+																	std::vector<size_t>& existingAndUpdatedGlyphIDs, int64_t cursorIndex, size_t& cursor)
 {
 	strings::Utf8Iterator iterator(string, 0);
 	const uint64_t& stringSize = string.size();
@@ -433,14 +436,15 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 	uint64_t codepointIndex = 0;
 	if (!cursor)
 	{
+
 		// cursor = std::make_shared<entities::Plane>(window, scene, glm::vec3(0), glm::vec3(0), glm::vec3(1),
 		// 																					 glm::vec2(3, lineHeight), color);
 	}
-	auto& cursorRef = *cursor;
-	if (cursorIndex == 0)
-	{
-		cursorRef.position = currentPosition;
-	}
+	// auto& cursorRef = Registry::getEntity(cursor);
+	// if (cursorIndex == 0)
+	// {
+	// 	cursorRef.position = currentPosition;
+	// }
 	for (; iterator.index < stringSize;)
 	{
 		advanceX = 0;
@@ -468,75 +472,79 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 				characterPosition.y =
 					(currentPosition.y - ((characterPointer->size.y - characterPointer->bearing.y) * _scale.y)) +
 					((characterPointer->size.y / 2.f) * _scale.y);
-				if (iterator.index < existingAndUpdatedGlyphs.size())
+				if (iterator.index < existingAndUpdatedGlyphIDs.size())
 				{
-					auto& glyph = existingAndUpdatedGlyphs[iterator.index];
-					// if (!glyph)
-					// {
-					// 	glyph = std::make_shared<entities::Plane>(window, scene, characterPosition, _rotation, glm::vec3(1),
-					// 																						glm::vec2(characterPointer->size) * glm::vec2(_scale),
-					// *characterPointer->texturePointer); 	entity.addChild(glyph); 	glyph->VALUE = codepoint;
-					// }
-					// else if (glyph->VALUE != codepoint)
-					// {
-					// 	glyph->position = characterPosition;
-					// 	glyph->setSize(glm::vec3(glm::vec2(characterPointer->size) * glm::vec2(_scale), 0));
-					// 	glyph->texturePointer = characterPointer->texturePointer.get();
-					// 	glyph->VALUE = codepoint;
-					// }
-					// if (glyph->position != characterPosition)
-					// {
-					// 	glyph->position = characterPosition;
-					// }
+					auto& glyphID = existingAndUpdatedGlyphIDs[iterator.index];
+					if (!glyphID)
+					{
+						goto _addGlyph;
+					}
+					else 
+					{
+						auto& glyph = Registry::getEntity(glyphID);
+						if (glyph.VALUE != codepoint)
+						{
+							glyph.position = characterPosition;
+							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
+							glyph.keyedTextures[0].second = characterPointer->texturePointer;
+							glyph.VALUE = codepoint;
+						}
+						if (glyph.position != characterPosition)
+						{
+							glyph.position = characterPosition;
+						}
+					}
 				}
 				else
 				{
-					// auto glyph = std::make_shared<entities::Plane>(window, scene, characterPosition, _rotation, glm::vec3(1),
-					// 																							 glm::vec2(characterPointer->size) * glm::vec2(_scale),
-					// *characterPointer->texturePointer); entity.addChild(glyph); existingAndUpdatedGlyphs.push_back(glyph);
-					// glyph->VALUE = codepoint;
+_addGlyph:
+					auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale, glm::vec2(1));
+					auto glyph_tuple = entity.addChild(glyphCreateInfo);
+					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
+					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
+					glyph.VALUE = codepoint;
 				}
 			}
-			else if (iterator.index >= existingAndUpdatedGlyphs.size())
+			else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
 			{
-				existingAndUpdatedGlyphs.push_back({});
+				existingAndUpdatedGlyphIDs.push_back(0);
 			}
 			else
 			{
-				auto& glyph = existingAndUpdatedGlyphs[iterator.index];
-				if (glyph)
+				auto& glyphID = existingAndUpdatedGlyphIDs[iterator.index];
+				if (glyphID)
 				{
-					entity.removeChild(glyph->ID);
-					glyph = {};
+					entity.removeChild(glyphID);
+					glyphID = 0;
 				}
 			}
 			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX, _scale.x);
 		}
-		else if (iterator.index >= existingAndUpdatedGlyphs.size())
+		else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
 		{
-			existingAndUpdatedGlyphs.push_back({});
+			existingAndUpdatedGlyphIDs.push_back(0);
 		}
 	_advance:
 		currentPosition.x += advanceX;
 		codepointIndex = iterator.getCurrentCodepointIndex();
-		if (cursorIndex == codepointIndex + 1)
-		{
-			cursorRef.position = currentPosition;
-			cursorRef.position /= textureScale;
-		}
+		// if (cursorIndex == codepointIndex + 1)
+		// {
+		// 	cursorRef.position = currentPosition;
+		// 	cursorRef.position /= textureScale;
+		// }
 		++iterator;
 	}
 	codepointIndex = iterator.getCurrentCodepointIndex();
-	for (auto i = existingAndUpdatedGlyphs.size() - 1; i >= codepointIndex; i--)
+	for (auto i = existingAndUpdatedGlyphIDs.size() - 1; i >= codepointIndex; i--)
 	{
-		entity.removeChild(existingAndUpdatedGlyphs.back()->ID);
-		existingAndUpdatedGlyphs.erase(existingAndUpdatedGlyphs.end() - 1);
+		entity.removeChild(existingAndUpdatedGlyphIDs.back());
+		existingAndUpdatedGlyphIDs.erase(existingAndUpdatedGlyphIDs.end() - 1);
 	}
-	if (cursorIndex == codepointIndex + 1)
-	{
-		cursorRef.position = currentPosition;
-		cursorRef.position /= textureScale;
-	}
+	// if (cursorIndex == codepointIndex + 1)
+	// {
+	// 	cursorRef.position = currentPosition;
+	// 	cursorRef.position /= textureScale;
+	// }
 	return;
 }
 FreetypeCharacter& FreetypeFont::getCharacter(float codepoint, float fontSize)

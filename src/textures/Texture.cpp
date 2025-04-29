@@ -44,7 +44,17 @@ void Texture::update(const void* data) {}
 void Texture::update(const std::string_view path) {}
 void Texture::update(const std::vector<std::string_view>& paths) {}
 template <>
-Serial& serialize(Serial& serial, const std::shared_ptr<zg::textures::Texture>& texturePointer)
+Serial& serialize(Serial& serial, const std::pair<std::string, std::shared_ptr<Texture>>& pair)
+{
+	return serial << pair.first << pair.second;
+};
+template <>
+Serial& deserialize(Serial& serial, std::pair<std::string, std::shared_ptr<Texture>>& pair)
+{
+	return serial >> pair.first >> pair.second;
+};
+template <>
+Serial& serialize(Serial& serial, const std::shared_ptr<Texture>& texturePointer)
 {
 	auto& texture = *texturePointer;
 	serial << true;
@@ -59,7 +69,7 @@ Serial& serialize(Serial& serial, const std::shared_ptr<zg::textures::Texture>& 
 	return serial;
 }
 template <>
-Serial& deserialize(Serial& serial, std::shared_ptr<zg::textures::Texture>& texturePointer)
+Serial& deserialize(Serial& serial, std::shared_ptr<Texture>& texturePointer)
 {
 	bool wroteBit = false;
 	serial >> wroteBit;
@@ -79,12 +89,12 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::textures::Texture>& text
 		serial.readBytes(data, datasize);
 		datas.push_back(data);
 	}
-	zg::textures::Texture::Format format;
-	zg::textures::Texture::Type type;
-	zg::textures::Texture::FilterType filterType;
+	Texture::Format format;
+	Texture::Type type;
+	Texture::FilterType filterType;
 	serial >> format >> type >> filterType;
 	auto windowPointer = (zg::Window*)serial.getContextPointer("Window");
 	texturePointer =
-		std::make_shared<zg::textures::Texture>(windowPointer->iRenderer, size, datas, format, type, filterType);
+		std::make_shared<Texture>(windowPointer->iRenderer, size, datas, format, type, filterType);
 	return serial;
 }

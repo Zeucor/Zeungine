@@ -1,20 +1,22 @@
 #include <zg/Registry.hpp>
-#include <zg/components/windows/EdgeDetection.hpp>
+#include <zg/components/scenes/EdgeDetection.hpp>
 #include <zg/shaders/Shader.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
+#include <zg/Window.hpp>
 #include <glm/glm.hpp> // Ensure glm is included
 
-using namespace zg::components::windows;
+using namespace zg;
+using namespace zg::components::scenes;
 using zg::Registry;
 using zg::shaders::Shader;
 using zg::shaders::ShaderFactory;
 using zg::shaders::ShaderType;
 
-WindowComponentCreateInfo zg::components::windows::EdgeDetectionFactory() {
-    WindowComponentCreateInfo info{
+SceneComponentCreateInfo components::scenes::EdgeDetectionFactory() {
+    SceneComponentCreateInfo info{
         .name = "EdgeDetection",
         .onAttachedFunction = [](auto& component) {
-            auto& window = zg::Registry::getWindow(component.hostIndexStack);
+            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
             component.template make<glm::vec4>("edgeColor", 0.0f, 0.0f, 0.0f, 1.0f);
             component.template make<glm::vec4>("backgroundColor", 1.0f, 1.0f, 1.0f, 0.0f);
             component.template make<float>("combinedThreshold", 0.3f);
@@ -24,17 +26,17 @@ WindowComponentCreateInfo zg::components::windows::EdgeDetectionFactory() {
             component.template make<float>("internal_depthSensitivity", 0.01f);
 
 
-            zg::PostProcessingStageCreateInfo edgeDetectionStageCreateInfo{
+            PostProcessingStageCreateInfo edgeDetectionStageCreateInfo{
                 .name = "EdgeDetection",
                 .inputs = {"ColorTexture", "DepthTexture"},
-                .outputs = {{"ColorTexture", zg::textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"ColorTexture", textures::Framebuffer::AttachmentType::Color}},
                 .constants = {"EdgeDetection"},
                 .setShaderConstants = [
-                    hostIndexStack = component.hostIndexStack,
+                    HOST_INDEX_STACK = component.HOST_INDEX_STACK,
                     componentID = component.ID
                 ](auto& shader, auto& vao) {
-                    auto& window = Registry::getWindow(hostIndexStack);
-                    auto& component = window.getComponentByID(componentID);
+                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                    auto& component = scene.getComponentByID(componentID);
 
                     auto& edgeColor = component.template getData<glm::vec4>("edgeColor");
                     auto& backgroundColor = component.template getData<glm::vec4>("backgroundColor");
@@ -189,10 +191,10 @@ WindowComponentCreateInfo zg::components::windows::EdgeDetectionFactory() {
                 } // end staticOnAttached
             }; // end edgeDetectionStageCreateInfo
 
-            window.postProcessingPipeline.addStage(40.f, edgeDetectionStageCreateInfo);
+            scene.postProcessingPipeline.addStage(40.f, edgeDetectionStageCreateInfo);
 
         } // end onAttachedFunction
-    }; // end WindowComponentCreateInfo
+    }; // end SceneComponentCreateInfo
 
     return info;
 }

@@ -1,7 +1,6 @@
 #include <zg/PostProcessingPipeline.hpp>
 #include <zg/Window.hpp>
 using namespace zg;
-std::map<std::pair<float, std::string>, std::shared_ptr<textures::Texture>> TextureOutputRegistry::map;
 void TextureOutputRegistry::registerOutput(float floatingIndex, const std::string& key,
 																					 const std::shared_ptr<textures::Texture>& texture)
 {
@@ -20,10 +19,11 @@ PostProcessingStage::PostProcessingStage(const PostProcessingStageCreateInfo& in
         staticOnAttached(info.staticOnAttached), staticOnDetached(info.staticOnDetached)
 {
 }
-PostProcessingPipeline::PostProcessingPipeline(Window& window) : window(window) {}
+PostProcessingPipeline::PostProcessingPipeline(const std::vector<size_t*>& INDEX_STACK) : INDEX_STACK(INDEX_STACK) {}
 KeyIDVector<float, PostProcessingStage>::EmplaceBackTuple
 PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageCreateInfo& info)
 {
+    auto& window = Registry::getWindow(INDEX_STACK);
 	auto emplace_tuple = stages.emplace_back_key(floatingIndex, info);
 	auto& stage = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(emplace_tuple);
     stage.floatingIndex = floatingIndex;
@@ -57,8 +57,8 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
 		auto texture =
 			std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0),
 																					(const void*)0, textureFormat, textureType, textureFilterType, true);
-		TextureOutputRegistry::registerOutput(floatingIndex, key, texture);
-		attachments.push_back({texture.get(), attachmentType});
+        textureRegistry.registerOutput(floatingIndex, key, texture);
+		attachments.push_back({texture, attachmentType});
 	}
     for (auto& input : stage.inputs)
         stage.constants.push_back(input);
@@ -78,7 +78,7 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
         }
     }
 	framebuffers.emplace_back_key(floatingIndex, new textures::Framebuffer(window.iRenderer, attachments));
-    fullscreenQuads.emplace_back_key(floatingIndex, window.iRenderer, stage.constants);
+    fullscreenQuads.emplace_back_key(floatingIndex, window.INDEX_STACK, stage.constants);
     if (!calledStaticOnAttached[stage.name])
     {
         if (stage.staticOnAttached)
@@ -108,7 +108,7 @@ bool PostProcessingPipeline::removeStage(size_t id)
 }
 void PostProcessingPipeline::cleanup()
 {
-    TextureOutputRegistry::map.clear();
+    textureRegistry.map.clear();
 	auto framebuffersSize = framebuffers.size();
 	auto framebuffersData = framebuffers.data();
 	for (size_t index = 0; index < framebuffersSize; ++index)
@@ -122,7 +122,7 @@ std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> PostProc
 {
     auto key_iter = stages.key_begin();
     auto key_end = stages.key_end();
-    auto& textureMap = TextureOutputRegistry::map;
+    auto& textureMap = textureRegistry.map;
     auto texturePairIter = textureMap.begin();
     auto textureMapEnd = textureMap.end(), textureMapBegin = texturePairIter;
     while (key_iter != key_end)

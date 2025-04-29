@@ -8,6 +8,7 @@
 #include <mutex>
 #include "Events.hpp"
 #include "KeyIDVector.hpp"
+#include "Registry.hpp"
 namespace zg
 {
 	struct Entity;
@@ -20,6 +21,9 @@ namespace zg
 	
 		ComponentHolder():
 			m_components([](auto& component) { return component.NAME; })
+		{}
+		ComponentHolder(const ComponentHolder& other):
+			m_components(other.m_components)
 		{}
 		ComponentHolder& operator=(const ComponentHolder& other)
 		{
@@ -44,34 +48,20 @@ namespace zg
 			auto component_tuple = m_components.emplace_back(info);
 			auto& component = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(component_tuple);
 			auto& host = *dynamic_cast<HostT*>(this);
+			component.HOST_INDEX_STACK = host.INDEX_STACK;
+			component.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(component_tuple);
 			if constexpr (std::is_same_v<HostT, Entity>)
 			{
-				component.hostIndexStack.push_back(host.scene.window.INDEX);
-				component.hostIndexStack.push_back(host.scene.INDEX);
-				std::vector<size_t*> parentEntityStack;
-				auto currentEntity = host.parentEntity;
-				while (currentEntity)
-				{
-					parentEntityStack.push_back(currentEntity->INDEX);
-					currentEntity = currentEntity->parentEntity;
-				}
-				auto parentEntityStackData = parentEntityStack.data();
-				for (int i = int(parentEntityStack.size()) - 1; i >= 0; --i)
-				{
-					component.hostIndexStack.push_back(parentEntityStackData[i]);
-				}
-				component.hostIndexStack.push_back(host.INDEX);
+				Registry::idEntityComponents[component.ID] = component.HOST_INDEX_STACK;
 			}
 			else if constexpr (std::is_same_v<HostT, Scene>)
 			{
-				component.hostIndexStack.push_back(host.window.INDEX);
-				component.hostIndexStack.push_back(host.INDEX);
+				Registry::idSceneComponents[component.ID] = component.HOST_INDEX_STACK;
 			}
-			else
+			else if constexpr (std::is_same_v<HostT, Window>)
 			{
-				component.hostIndexStack.push_back(host.INDEX);
+				Registry::idWindowComponents[component.ID] = component.HOST_INDEX_STACK;
 			}
-			component.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(component_tuple);
 			component.onAttached();
 			return component_tuple;
 		}
@@ -85,6 +75,18 @@ namespace zg
 			if (iter == m_components.end())
 				return false;
 			iter->onDetached();
+			if constexpr (std::is_same_v<HostT, Entity>)
+			{
+				Registry::idEntityComponents.erase(iter->ID);
+			}
+			else if constexpr (std::is_same_v<HostT, Scene>)
+			{
+				Registry::idSceneComponents.erase(iter->ID);
+			}
+			else if constexpr (std::is_same_v<HostT, Window>)
+			{
+				Registry::idWindowComponents.erase(iter->ID);
+			}
 			m_components.erase(iter);
 			id = 0;
 			return true;

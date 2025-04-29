@@ -1,10 +1,14 @@
 #include <zg/Registry.hpp>
+#include <zg/Window.hpp>
 #include <string>
 using namespace zg;
-Registry::WindowKeyIDVector Registry::windows([](auto& window) { return window.title; });
+std::unique_ptr<Registry::WindowKeyIDVector> Registry::windows = std::make_unique<Registry::WindowKeyIDVector>([](auto& window) { return window.title; });
 std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idWindows = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
 std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idScenes = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
 std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idEntities = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
+std::map<size_t, std::vector<size_t*>> Registry::idEntityComponents;
+std::map<size_t, std::vector<size_t*>> Registry::idSceneComponents;
+std::map<size_t, std::vector<size_t*>> Registry::idWindowComponents;
 /**
  * Gets a Window from the registry by the Window ID
  */
@@ -12,9 +16,10 @@ Window& Registry::getWindow(const std::vector<size_t*>& indexStack)
 {
     auto indexStackData = indexStack.data();
     if (indexStack.size() < 1)
-        throw std::runtime_error("Cannot find a Scene with a stack size of less than 1");
-    auto iter = (windows.begin() + *indexStackData[0]);
-    if (iter == windows.end())
+        throw std::runtime_error("Cannot find a Window with a stack size of less than 1");
+    auto& windowsRef = *windows;
+    auto iter = (windowsRef.begin() + *indexStackData[0]);
+    if (iter == windowsRef.end())
         throw std::runtime_error("Window not found with indexStack[0] = " + std::to_string(*indexStackData[0]));
     return *iter;
 }
@@ -34,13 +39,23 @@ Window& Registry::getWindow(size_t ID)
  */
 Registry::WindowKeyIDVector::EmplaceBackTuple Registry::addWindow(const WindowCreateInfo& createInfo)
 {
-    auto window_tuple = windows.emplace_back(createInfo);
-    auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
-    window.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(window_tuple);
-    window.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(window_tuple);
-	window.INDEX_STACK = {window.INDEX};
+    auto usingInfo = createInfo;
+    auto& windowsRef = *windows;
+    auto transaction = windowsRef.startTransaction();
+    usingInfo.INDEX_STACK = {transaction.index};
+    auto& window = windowsRef.commitTransaction(transaction, usingInfo);
+    window.ID = transaction.id;
+    window.INDEX = transaction.index;
     (*idWindows)[window.ID] = window.INDEX_STACK;
-    return window_tuple;
+    return {transaction.key, transaction.id, transaction.index, &window};
+}
+components::windows::WindowComponent& Registry::getWindowComponent(size_t ID)
+{
+    auto indexStackIter = idWindowComponents.find(ID);
+    if (indexStackIter == idWindowComponents.end())
+        throw std::runtime_error("Window Component not found with ID: "+ std::to_string(ID));
+    auto& host = getWindow(indexStackIter->second);
+    return host.getComponentByID(ID);
 }
 /**
  * Gets a Scene from the registry by looking
@@ -66,6 +81,14 @@ Scene& Registry::getScene(size_t ID)
         throw std::runtime_error("Scene not found with ID: " + std::to_string(ID));
     auto& stack = idIter->second;
     return getScene(stack);
+}
+components::scenes::SceneComponent& Registry::getSceneComponent(size_t ID)
+{
+    auto indexStackIter = idSceneComponents.find(ID);
+    if (indexStackIter == idSceneComponents.end())
+        throw std::runtime_error("Scene Component not found with ID: "+ std::to_string(ID));
+    auto& host = getScene(indexStackIter->second);
+    return host.getComponentByID(ID);
 }
 /**
  * Gets an Entity from the registry by looking up..
@@ -104,4 +127,21 @@ Entity& Registry::getEntity(size_t ID)
         throw std::runtime_error("Entity not found with ID: " + std::to_string(ID));
     auto& stack = idIter->second;
     return getEntity(stack);
+}
+bool Registry::getNthParentEntity(const std::vector<size_t*>& INDEX_STACK, Entity*& pointer, size_t n)
+{
+    if (INDEX_STACK.size() < 3 + n)
+        return false;
+    auto parent_INDEX_STACK = INDEX_STACK;
+    parent_INDEX_STACK.erase(parent_INDEX_STACK.begin() + (parent_INDEX_STACK.size() - n), parent_INDEX_STACK.end());
+    pointer = &getEntity(parent_INDEX_STACK);
+    return true;
+}
+components::entities::EntityComponent& Registry::getEntityComponent(size_t ID)
+{
+    auto indexStackIter = idEntityComponents.find(ID);
+    if (indexStackIter == idEntityComponents.end())
+        throw std::runtime_error("Entity Component not found with ID: "+ std::to_string(ID));
+    auto& host = getEntity(indexStackIter->second);
+    return host.getComponentByID(ID);
 }

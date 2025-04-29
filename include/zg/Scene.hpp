@@ -16,6 +16,8 @@
 #include "textures/Framebuffer.hpp"
 #include "vp/Projection.hpp"
 #include "vp/View.hpp"
+#include "FullscreenQuad.hpp"
+#include "PostProcessingPipeline.hpp"
 namespace zg
 {
 	struct SceneCreateInfo;
@@ -26,9 +28,8 @@ namespace zg
 		size_t ID = 0;
 		size_t* INDEX = 0;
 		std::vector<size_t*> INDEX_STACK;
+		IRenderer* iRenderer = 0;
 		std::string name;
-		bool drawColorToWindowPlane;
-		Window& window;
 		glm::vec4 clearColor = glm::vec4(0);
 		std::shared_ptr<vp::Projection> projectionPointer;
 		KeyIDVector<std::string, Entity> entities;
@@ -38,9 +39,10 @@ namespace zg
 		std::vector<lights::SpotLightShadow> spotLightShadows;
 		std::vector<lights::PointLightShadow> pointLightShadows;
 		std::vector<lights::DirectionalLightShadow> directionalLightShadows;
-		std::vector<std::shared_ptr<textures::Texture>> sceneTextures;
-		std::shared_ptr<textures::Framebuffer> framebufferPointer;
-		Entity* windowPlane;
+		std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> keyedTextures;
+		std::shared_ptr<textures::Framebuffer> framebuffer;
+		std::shared_ptr<FullscreenQuad> fsq;
+		PostProcessingPipeline postProcessingPipeline;
 		std::unique_ptr<raytracing::BVH> bvh;
 		std::array<UniqueIdentifier, 7 - 0 + 1> mousePressIDs;
 		UniqueIdentifier mouseMoveID;
@@ -111,8 +113,8 @@ namespace zg
 		glm::vec2 orthoSize = glm::vec2(2, 2);
 		float fov = 81.f;
 		int framebufferCreateInt =
-			0; // 0 = don't use framebuffer, 1 = use framebufferPointer, 2 = create from framebufferAttachments
-		std::shared_ptr<textures::Framebuffer> framebufferPointer = {};
+			0; // 0 = creates standard color/depth framebuffer, 1 = use framebuffer, 2 = create from framebufferAttachments
+		std::shared_ptr<textures::Framebuffer> framebuffer = {};
 		std::vector<textures::Framebuffer::AttachmentType> frameBufferAttachments = {};
 		std::function<void(Scene&)> onAttachedFunction = {};
 		std::function<void(Scene&)> onDetachedFunction = {};
@@ -121,6 +123,6 @@ namespace zg
 		std::function<void(Scene&)> postPostRenderFunction = {};
 		bool drawColorToWindowPlane = true;
 		bool useBVH = true;
-		Window* windowPointer = 0;
+		std::vector<size_t*> INDEX_STACK;
 	};
 } // namespace zg

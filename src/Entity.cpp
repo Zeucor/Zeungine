@@ -6,57 +6,138 @@
 #include <zg/shaders/ShaderManager.hpp>
 #include <zg/Registry.hpp>
 using namespace zg;
+std::unordered_map<std::string, size_t> childKeyCounts;
 Entity::Entity(const EntityCreateInfo& info) :
-		VAO(info.scenePointer->window.iRenderer, info.constants, info.indiceCount, info.vertexCount),
+		VAO(info.INDEX_STACK, info.constants, info.indiceCount(*this), info.vertexCount(*this)),
 		DataStorage<Entity>(info.getDataFunctionMap, info.setDataFunctionMap, info.dataMap),
-		window(info.scenePointer->window), scene(*info.scenePointer), indices(info.indices), vertices(info.vertices),
-		colors(info.colors), uv2s(info.uv2s), uv3s(info.uv3s), keyedTextures(info.keyedTextures),
+		INDEX_STACK(info.INDEX_STACK),
+		keyedTextures(info.keyedTextures),
 		position(info.position), rotation(info.rotation),
-		scale(info.scale), children([](const auto& entity) { return entity.name; }), name(info.name),
+		scale(info.scale),
+		indiceCount(info.indiceCount),
+		indices(info.indices),
+		vertexCount(info.vertexCount),
+		vertices(info.vertices),
+		colorCount(info.colorCount),
+		colors(info.colors),
+		uv2Count(info.uv2Count),
+		uv2s(info.uv2s),
+		uv3Count(info.uv3Count),
+		uv3s(info.uv3s),
+		children(
+			[](const auto& entity) { return entity.name; },
+			[](const std::string& key) {
+				auto _key = key;
+				auto keySize = _key.size(); 
+				if (!keySize)
+				{
+					_key = std::string("Unknown");
+				}
+				auto childKeyCountsIter = childKeyCounts.find(_key);
+				if (childKeyCountsIter == childKeyCounts.end())
+				{
+					childKeyCounts[_key] = 1;
+					childKeyCountsIter = childKeyCounts.find(_key);
+				}
+				return _key + " " + std::to_string(++childKeyCountsIter->second);
+			}
+		),
+		name(info.name),
 		preUpdateFunction(info.preUpdateFunction), preRenderFunction(info.preRenderFunction),
 		postRenderFunction(info.postRenderFunction),
-		onAddedToSceneFunction(info.onAddedToSceneFunction),
-		onRemovedFromSceneFunction(info.onRemovedFromSceneFunction)
+		onAddedFunction(info.onAddedFunction),
+		onRemovedFunction(info.onRemovedFunction)
 {
-	computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
-	updateIndices(indices);
-	if (colors.size())
-		updateElements("Color", colors);
+	auto& window = Registry::getWindow(INDEX_STACK);
+	auto _indices_ = indices(*this);
+	auto _vertices_ = vertices(*this);
+	std::vector<glm::vec3> normals;
+	computeNormals(window.iRenderer->frontFace, _indices_, _vertices_, normals);
+	updateIndices(_indices_);
+	if (colorCount && colorCount(*this))
+		updateElements("Color", colors(*this));
 	bool flipUVs = (window.iRenderer->renderer == RENDERER_VULKAN || window.iRenderer->renderer == RENDERER_METAL);
-	if (uv2s.size())
+	if (uv2Count && uv2Count(*this))
 	{
-		flipUVsY(uv2s);
-		updateElements("UV2", uv2s);
+		auto _uv2s_ = uv2s(*this);
+		flipUVsY(_uv2s_);
+		updateElements("UV2", _uv2s_);
 	}
-	if (uv3s.size())
+	if (uv3Count && uv3Count(*this))
 	{
-		flipUVsY(uv3s);
-		updateElements("UV3", uv3s);
+		auto _uv3s_ = uv3s(*this);
+		flipUVsY(_uv3s_);
+		updateElements("UV3", _uv3s_);
 	}
-	updateElements("Position", vertices);
+	updateElements("Position", _vertices_);
 	updateElements("Normal", normals);
 }
 Entity::Entity(const Entity& other) :
-		VAO(other.window.iRenderer, other.constants, other.indiceCount, other.vertexCount),
-		DataStorage<Entity>(other.getDataFunctionMap, other.setDataFunctionMap, other.dataMap), window(other.window),
-		scene(other.scene), indices(other.indices), vertices(other.vertices), colors(other.colors), uv2s(other.uv2s),
-		uv3s(other.uv3s), position(other.position), rotation(other.rotation), scale(other.scale), children(other.children),
-		name(other.name), preUpdateFunction(other.preUpdateFunction), preRenderFunction(other.preRenderFunction),
-		postRenderFunction(other.postRenderFunction)
+	VAO(other),
+	ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>(other),
+	DataStorage<Entity>(other),
+	INDEX_STACK(other.INDEX_STACK),
+	keyedTextures(other.keyedTextures), position(other.position), rotation(other.rotation), scale(other.scale),
+	indiceCount(other.indiceCount),
+	indices(other.indices),
+	vertexCount(other.vertexCount),
+	vertices(other.vertices),
+	colorCount(other.colorCount),
+	colors(other.colors),
+	uv2Count(other.uv2Count),
+	uv2s(other.uv2s),
+	uv3Count(other.uv3Count),
+	uv3s(other.uv3s),
+	children(other.children),
+	name(other.name), preUpdateFunction(other.preUpdateFunction), preRenderFunction(other.preRenderFunction),
+	postRenderFunction(other.postRenderFunction),
+	onAddedFunction(other.onAddedFunction),
+	onRemovedFunction(other.onRemovedFunction)
+{}
+Entity::~Entity()
 {
-	computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
-	updateIndices(indices);
-	if (colors.size())
-		updateElements("Color", colors);
-	if (uv2s.size())
-		updateElements("UV2", uv2s);
-	if (uv3s.size())
-		updateElements("UV3", uv3s);
-	updateElements("Position", vertices);
-	updateElements("Normal", normals);
+	for (auto& child : children)
+		if (child.onRemovedFunction)
+			child.onRemovedFunction(child);
+	children.clear();
+	detachAllComponents();
 }
-Entity::~Entity() { detachAllComponents(); }
-Entity& Entity::operator=(const Entity& other) { return *this; }
+Entity& Entity::operator=(const Entity& other)
+{
+	((vaos::VAO&)*this) = other;
+	((ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>&)*this) = other;
+	((DataStorage<Entity>&)*this) = other;
+	ID = other.ID;
+	INDEX = other.INDEX;
+	INDEX_STACK = other.INDEX_STACK;
+	keyedTextures = other.keyedTextures;
+	position = other.position;
+	rotation = other.rotation;
+	scale = other.scale;
+	indiceCount = other.indiceCount;
+	indices = other.indices;
+	vertexCount = other.vertexCount;
+	vertices = other.vertices;
+	colorCount = other.colorCount;
+	colors = other.colors;
+	uv2Count = other.uv2Count;
+	uv2s = other.uv2s;
+	uv3Count = other.uv3Count;
+	uv3s = other.uv3s;
+	children = other.children;
+	name = other.name;
+	preUpdateFunction = other.preUpdateFunction;
+	preRenderFunction = other.preRenderFunction;
+	postRenderFunction = other.postRenderFunction;
+	onAddedFunction = other.onAddedFunction;
+	onRemovedFunction = other.onRemovedFunction;
+	return *this;
+}
+void Entity::refreshVertices()
+{
+	auto _vertices_ = vertices(*this);
+	updateElements("Position", _vertices_);
+}
 void Entity::update()
 {
 	if (preUpdateFunction)
@@ -77,6 +158,7 @@ void Entity::render()
 		return;
 	shader->bind(*this);
 	const auto& model = getModelMatrix();
+	auto& scene = Registry::getScene(INDEX_STACK);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
 	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
@@ -96,6 +178,7 @@ void Entity::render()
 }
 glm::mat4& Entity::getModelMatrix()
 {
+	auto& scene = Registry::getScene(INDEX_STACK);
 	// Ensure model is only recomputed once per update nonce
 	// Also handles the initial case where updateNonce might be 0 and scene.updateNonce is > 0
 	if (updateNonce == scene.updateNonce && updateNonce != 0)
@@ -121,37 +204,31 @@ glm::mat4& Entity::getModelMatrix()
 	// 5. Combine transformations: T * R * S
 	glm::mat4 localModel = transMat * rotMat * scaleMat;
 
+	model = localModel;
 	// --- Apply parent transformation ---
-	if (parentEntity)
+	Entity* parentEntity = 0;
+	if (Registry::getNthParentEntity(INDEX_STACK, parentEntity))
 	{
 		// Multiply by the parent's world matrix
 		// Parent's world transform * Our local transform
-		model = parentEntity->getModelMatrix() * localModel;
-	}
-	else
-	{
-		// No parent, the local model IS the world model
-		model = localModel;
+		model = parentEntity->getModelMatrix() * model;
 	}
 
 	return model;
 }
-size_t Entity::addChild(const EntityCreateInfo& childCreateInfo)
+KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const EntityCreateInfo& childCreateInfo)
 {
-	auto child_tuple = children.emplace_back(childCreateInfo);
-	auto& childEntity = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(child_tuple);
-	childEntity.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(child_tuple);
-	childEntity.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(child_tuple);
-	auto INDEX_STACK_size = INDEX_STACK.size();
-	auto INDEX_STACK_data = INDEX_STACK.data();
-	childEntity.INDEX_STACK.resize(INDEX_STACK_size + 1);
-	auto childEntity_INDEX_STACK_data = childEntity.INDEX_STACK.data();
-	size_t index = 0;
-	for (; index < INDEX_STACK_size; ++index)
-		childEntity_INDEX_STACK_data[index] = INDEX_STACK_data[index];
-	childEntity_INDEX_STACK_data[index] = childEntity.INDEX;
+	auto usingInfo = childCreateInfo;
+	auto transaction = children.startTransaction();
+	usingInfo.INDEX_STACK = {INDEX_STACK.begin(), INDEX_STACK.end()};
+	usingInfo.INDEX_STACK.push_back(transaction.index);
+	auto& childEntity = children.commitTransaction(transaction, usingInfo);
+	childEntity.ID = transaction.id;
+	childEntity.INDEX = transaction.index;
 	(*Registry::idEntities)[childEntity.ID] = childEntity.INDEX_STACK;
-	return childEntity.ID;
+	if (childEntity.onAddedFunction)
+		childEntity.onAddedFunction(childEntity);
+	return {transaction.key, transaction.id, transaction.index, &childEntity};
 }
 void Entity::removeChild(size_t& ID)
 {
@@ -160,6 +237,9 @@ void Entity::removeChild(size_t& ID)
 	{
 		return;
 	}
+	auto& child = *childIter;
+	if (child.onRemovedFunction)
+		child.onRemovedFunction(child);
 	children.erase(childIter);
 	auto& idEntitiesRef = *Registry::idEntities;
 	auto idIter = idEntitiesRef.find(ID);

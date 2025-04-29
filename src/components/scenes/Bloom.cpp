@@ -1,18 +1,19 @@
 #include <zg/Registry.hpp>
-#include <zg/components/windows/Bloom.hpp>
+#include <zg/components/scenes/Bloom.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/Window.hpp>
-using namespace zg::components::windows;
+using namespace zg;
+using namespace zg::components::scenes;
 using zg::shaders::Shader;
 using zg::shaders::ShaderType;
 using zg::shaders::ShaderFactory;
-zg::components::windows::WindowComponentCreateInfo zg::components::windows::BloomFactory()
+SceneComponentCreateInfo zg::components::scenes::BloomFactory()
 {
-	WindowComponentCreateInfo info{
+	SceneComponentCreateInfo info{
         .name = "Bloom",
         .onAttachedFunction = [](auto& component)
         {
-            auto& window = zg::Registry::getWindow(component.hostIndexStack);
+            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
             auto& bloomColorMultiplier = component.template make<float>("bloomColorMultiplier", 1.00f);
             auto& bloomCoefficients = component.template make<glm::vec3>("bloomCoefficients", glm::vec3(0.2126, 0.7152, 0.0722));
             auto& bloomThreshold = component.template make<float>("bloomThreshold", 0.7f);
@@ -21,18 +22,18 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::Bloo
             auto& Directions = component.template make<float>("Directions", 16.0f);
             auto& Quality = component.template make<float>("Quality", 5.0f);
             auto& Size = component.template make<float>("Size", 88.0f);
-            zg::PostProcessingStageCreateInfo bloomBrightExtractStageCreateInfo{
+            PostProcessingStageCreateInfo bloomBrightExtractStageCreateInfo{
                 .name = "BloomBrightExtract",
                 .inputs = {"ColorTexture"},
-                .outputs = {{"BrightTexture", zg::textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"BrightTexture", textures::Framebuffer::AttachmentType::Color}},
                 .constants = {"BloomBrightExtract"},
                 .setShaderConstants = [
-                    hostIndexStack = component.hostIndexStack,
+                    HOST_INDEX_STACK = component.HOST_INDEX_STACK,
                     componentID = component.ID
                 ](Shader& shader, auto& vao)
                 {
-                    auto& window = Registry::getWindow(hostIndexStack);
-                    auto& component = window.getComponentByID(componentID);
+                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                    auto& component = scene.getComponentByID(componentID);
                     auto& bloomColorMultiplier = component.template getData<float>("bloomColorMultiplier");
                     auto& bloomCoefficients = component.template getData<glm::vec3>("bloomCoefficients");
                     auto& bloomThreshold = component.template getData<float>("bloomThreshold");
@@ -80,18 +81,18 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::Bloo
                     );
                 }
             };
-            zg::PostProcessingStageCreateInfo bloomBlurStageCreateInfo{
+            PostProcessingStageCreateInfo bloomBlurStageCreateInfo{
                 .name = "BloomBlur",
                 .inputs = {"BrightTexture"},
-                .outputs = {{"BlurTexture", zg::textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"BlurTexture", textures::Framebuffer::AttachmentType::Color}},
                 .constants = {"BloomBlur"},
                 .setShaderConstants = [
-                    hostIndexStack = component.hostIndexStack,
+                    HOST_INDEX_STACK = component.HOST_INDEX_STACK,
                     componentID = component.ID
                 ](Shader& shader, auto& vao)
                 {
-                    auto& window = Registry::getWindow(hostIndexStack);
-                    auto& component = window.getComponentByID(componentID);
+                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                    auto& component = scene.getComponentByID(componentID);
                     auto& Pi2 = component.template getData<float>("Pi2");
                     auto& Directions = component.template getData<float>("Directions");
                     auto& Quality = component.template getData<float>("Quality");
@@ -165,18 +166,18 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::Bloo
                     );
                 }
             };
-            zg::PostProcessingStageCreateInfo bloomCombineStageCreateInfo{
+            PostProcessingStageCreateInfo bloomCombineStageCreateInfo{
                 .name = "BloomCombine",
                 .inputs = {"ColorTexture", "BlurTexture"},
-                .outputs = {{"ColorTexture", zg::textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"ColorTexture", textures::Framebuffer::AttachmentType::Color}},
                 .constants = {"BloomCombine"},
                 .setShaderConstants = [
-                    hostIndexStack = component.hostIndexStack,
+                    HOST_INDEX_STACK = component.HOST_INDEX_STACK,
                     componentID = component.ID
                 ](Shader& shader, auto& vao)
                 {
-                    auto& window = Registry::getWindow(hostIndexStack);
-                    auto& component = window.getComponentByID(componentID);
+                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                    auto& component = scene.getComponentByID(componentID);
                     auto& intensity = component.template getData<float>("intensity");
                     float bloomCombine[1] = {
             intensity
@@ -220,9 +221,9 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::Bloo
                     );
                 }
             };
-            window.postProcessingPipeline.addStage(50.f, bloomBrightExtractStageCreateInfo);
-            window.postProcessingPipeline.addStage(51.f, bloomBlurStageCreateInfo);
-            window.postProcessingPipeline.addStage(52.f, bloomCombineStageCreateInfo);
+            scene.postProcessingPipeline.addStage(50.f, bloomBrightExtractStageCreateInfo);
+            scene.postProcessingPipeline.addStage(51.f, bloomBlurStageCreateInfo);
+            scene.postProcessingPipeline.addStage(52.f, bloomCombineStageCreateInfo);
         }
     };
 	return info;

@@ -24,9 +24,9 @@ namespace zg
 {
     struct TextureOutputRegistry
     {
-        static std::map<std::pair<float, std::string>, std::shared_ptr<textures::Texture>> map;
-        static void registerOutput(float floatingIndex, const std::string& key, const std::shared_ptr<textures::Texture>& texture);
-        static void deregisterOutput(float floatingIndex, const std::string& key);
+        std::map<std::pair<float, std::string>, std::shared_ptr<textures::Texture>> map;
+        void registerOutput(float floatingIndex, const std::string& key, const std::shared_ptr<textures::Texture>& texture);
+        void deregisterOutput(float floatingIndex, const std::string& key);
     };
     struct PostProcessingStageCreateInfo
     {
@@ -53,14 +53,15 @@ namespace zg
     struct Window;
     struct PostProcessingPipeline
     {
-        Window& window;
+        TextureOutputRegistry textureRegistry;
+        std::vector<size_t*> INDEX_STACK;
         KeyIDVector<float, PostProcessingStage> stages;
         KeyIDVector<float, textures::Framebuffer*> framebuffers;
         KeyIDVector<float, FullscreenQuad> fullscreenQuads;
         std::unordered_map<std::string, bool> calledStaticOnAttached;
         std::unordered_map<std::string, bool> calledStaticOnDetached;
         bool dirty = false;
-        PostProcessingPipeline(Window& window);
+        PostProcessingPipeline(const std::vector<size_t*>& INDEX_STACK);
         KeyIDVector<float, PostProcessingStage>::EmplaceBackTuple addStage(float floatingIndex, const PostProcessingStageCreateInfo& info);
         bool removeStage(size_t id);
         void cleanup();

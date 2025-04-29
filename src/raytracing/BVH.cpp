@@ -119,9 +119,11 @@ size_t BVH::addTriangle(const Tri& tri)
 }
 void BVH::addEntity(Entity& entity)
 {
-	auto& indiceCount = entity.indiceCount;
-	auto indicesData = entity.indices.data();
-	auto verticesData = entity.vertices.data();
+	auto indiceCount = entity.indiceCount(entity);
+	auto indices = entity.indices(entity);
+	auto vertices = entity.vertices(entity);
+	auto indicesData = indices.data();
+	auto verticesData = vertices.data();
 	auto& model = entity.getModelMatrix();
 	for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
 	{
@@ -157,9 +159,11 @@ void BVH::updateEntity(Entity& entity)
 			indices.push_back(i);
 		}
 	}
-	auto& indiceCount = entity.indiceCount;
-	auto indicesData = entity.indices.data();
-	auto verticesData = entity.vertices.data();
+	auto indiceCount = entity.indiceCount(entity);
+	auto entityIndices = entity.indices(entity);
+	auto entityVertices = entity.vertices(entity);
+	auto indicesData = entityIndices.data();
+	auto verticesData = entityVertices.data();
 	auto& model = entity.getModelMatrix();
 	for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
 	{

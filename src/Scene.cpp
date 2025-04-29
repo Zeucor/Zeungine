@@ -12,33 +12,37 @@
 using namespace zg;
 std::unordered_map<std::string, size_t> entityKeyCounts;
 Scene::Scene(const SceneCreateInfo& info) :
-		name(info.name), drawColorToWindowPlane(info.drawColorToWindowPlane), window(*info.windowPointer),
-		viewPointer(std::make_shared<vp::View>(info.cameraPosition, info.cameraDirection, info.cameraUp)),
-		useBVH(info.useBVH),
-		entities(
-			[](const auto& entity) { return entity.name; },
-			[](const std::string& key) {
-				auto _key = key;
-				auto keySize = _key.size(); 
-				if (!keySize)
-				{
-					_key = std::string("Unknown");
-				}
-				auto entityKeyCountsIter = entityKeyCounts.find(_key);
-				if (entityKeyCountsIter == entityKeyCounts.end())
-				{
-					entityKeyCounts[_key] = 1;
-					entityKeyCountsIter = entityKeyCounts.find(_key);
-				}
-				return _key + " " + std::to_string(++entityKeyCountsIter->second);
+	INDEX_STACK(info.INDEX_STACK),
+	iRenderer(Registry::getWindow(INDEX_STACK).iRenderer),
+	name(info.name),
+	viewPointer(std::make_shared<vp::View>(info.cameraPosition, info.cameraDirection, info.cameraUp)),
+	useBVH(info.useBVH),
+	entities(
+		[](const auto& entity) { return entity.name; },
+		[](const std::string& key) {
+			auto _key = key;
+			auto keySize = _key.size(); 
+			if (!keySize)
+			{
+				_key = std::string("Unknown");
 			}
-		),
-		onAttachedFunction(info.onAttachedFunction),
-		onDetachedFunction(info.onDetachedFunction),
-		preUpdateFunction(info.preUpdateFunction),
-		prePreRenderFunction(info.prePreRenderFunction),
-		postPostRenderFunction(info.postPostRenderFunction)
+			auto entityKeyCountsIter = entityKeyCounts.find(_key);
+			if (entityKeyCountsIter == entityKeyCounts.end())
+			{
+				entityKeyCounts[_key] = 1;
+				entityKeyCountsIter = entityKeyCounts.find(_key);
+			}
+			return _key + " " + std::to_string(++entityKeyCountsIter->second);
+		}
+	),
+	postProcessingPipeline(INDEX_STACK),
+	onAttachedFunction(info.onAttachedFunction),
+	onDetachedFunction(info.onDetachedFunction),
+	preUpdateFunction(info.preUpdateFunction),
+	prePreRenderFunction(info.prePreRenderFunction),
+	postPostRenderFunction(info.postPostRenderFunction)
 {
+	auto& window = Registry::getWindow(INDEX_STACK);
 	switch (info.projectionType)
 	{
 	case vp::Projection::TYPE::Perspective:
@@ -55,26 +59,86 @@ Scene::Scene(const SceneCreateInfo& info) :
 	switch (info.framebufferCreateInt)
 	{
 	case 0:
+		keyedTextures = {
+			{"ColorTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true)},
+			{"DepthTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true)}
+		};
+		{
+			std::vector<textures::Framebuffer::TextureAttachmentPair> attachments{
+				{keyedTextures[0].second, textures::Framebuffer::AttachmentType::Color},
+				{keyedTextures[1].second, textures::Framebuffer::AttachmentType::Depth}
+			};
+			framebuffer = std::make_shared<textures::Framebuffer>(window.iRenderer, attachments);
+		}
 		break;
 	case 1:
-		framebufferPointer = info.framebufferPointer;
+		framebuffer = info.framebuffer;
+		for (auto& pair : framebuffer->textureAttachmentPairs)
+		{
+			std::string key;
+			switch (pair.first->format)
+			{
+			case textures::Texture::Format::Depth:
+				key = "DepthTexture";
+				break;
+			case textures::Texture::Format::RGB8:
+			case textures::Texture::Format::RGBA8:
+			case textures::Texture::Format::RGBA32F:
+			case textures::Texture::Format::Integer32:
+				key = "ColorTexture";
+				break;
+			case textures::Texture::Format::DepthStencil:
+				key = "DepthStencilTexture";
+				break;
+			case textures::Texture::Format::Stencil:
+				key = "StencilTexture";
+				break;
+			}
+			keyedTextures.push_back({key, pair.first});
+		}
 		break;
 	case 2:
-		framebufferPointer =
-			std::make_shared<textures::Framebuffer>(window.iRenderer, generateTexturesFromAttachments(info.frameBufferAttachments));
+		framebuffer =
+			std::make_shared<textures::Framebuffer>(iRenderer, generateTexturesFromAttachments(info.frameBufferAttachments));
 		break;
 	}
+	shaders::RuntimeConstants fsqconstants;
+	for (auto& pair : keyedTextures)
+	{
+		fsqconstants.push_back(pair.first);
+		postProcessingPipeline.textureRegistry.registerOutput((std::numeric_limits<float>::lowest)(), pair.first, pair.second);
+	}
+	fsq = std::make_shared<FullscreenQuad>(INDEX_STACK, fsqconstants);
 	hookMouseEvents();
 }
 Scene::Scene(const Scene& other) :
-		name(other.name), drawColorToWindowPlane(other.drawColorToWindowPlane), window(other.window),
-		viewPointer(other.viewPointer), projectionPointer(other.projectionPointer), useBVH(other.useBVH),
-		entities(other.entities),
-		onAttachedFunction(other.onAttachedFunction),
-		onDetachedFunction(other.onDetachedFunction),
-		preUpdateFunction(other.preUpdateFunction),
-		prePreRenderFunction(other.prePreRenderFunction),
-		postPostRenderFunction(other.postPostRenderFunction)
+	DataStorage<Scene>(other),
+	ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>(other),
+	ID(other.ID),
+	INDEX(other.INDEX),
+	INDEX_STACK(other.INDEX_STACK),
+	iRenderer(other.iRenderer),
+	name(other.name),
+	clearColor(other.clearColor),
+	projectionPointer(other.projectionPointer), entities(other.entities),
+	pointLights(other.pointLights), directionalLights(other.directionalLights),
+	spotLights(other.spotLights), spotLightShadows(other.spotLightShadows),
+	pointLightShadows(other.pointLightShadows), directionalLightShadows(other.directionalLightShadows),
+	keyedTextures(other.keyedTextures),
+	framebuffer(other.framebuffer),
+	fsq(other.fsq),
+	postProcessingPipeline(other.postProcessingPipeline),
+	// bvh(other.bvh)
+	mousePressIDs(other.mousePressIDs),
+	mouseMoveID(other.mouseMoveID),
+	viewPointer(other.viewPointer),
+	useBVH(other.useBVH),
+	updateNonce(other.updateNonce),
+	onAttachedFunction(other.onAttachedFunction),
+	onDetachedFunction(other.onDetachedFunction),
+	preUpdateFunction(other.preUpdateFunction),
+	prePreRenderFunction(other.prePreRenderFunction),
+	postPostRenderFunction(other.postPostRenderFunction)
 {
 	if (useBVH)
 	{
@@ -84,10 +148,13 @@ Scene::Scene(const Scene& other) :
 }
 Scene& Scene::operator=(const Scene& other)
 {
+	((DataStorage<Scene>&)*this) = other;
+	((ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>&)*this) = other;
 	ID = other.ID;
+	INDEX = other.INDEX;
+	INDEX_STACK = other.INDEX_STACK;
+	iRenderer = other.iRenderer;
 	name = other.name;
-	drawColorToWindowPlane = other.drawColorToWindowPlane;
-	window = other.window;
 	clearColor = other.clearColor;
 	projectionPointer = other.projectionPointer;
 	entities = other.entities;
@@ -97,9 +164,10 @@ Scene& Scene::operator=(const Scene& other)
 	spotLightShadows = other.spotLightShadows;
 	pointLightShadows = other.pointLightShadows;
 	directionalLightShadows = other.directionalLightShadows;
-	sceneTextures = other.sceneTextures;
-	framebufferPointer = other.framebufferPointer;
-	windowPlane = other.windowPlane;
+	keyedTextures = other.keyedTextures;
+	framebuffer = other.framebuffer;
+	fsq = other.fsq;
+	postProcessingPipeline = other.postProcessingPipeline;
 	mousePressIDs = other.mousePressIDs;
 	mouseMoveID = other.mouseMoveID;
 	currentHoveredEntity = other.currentHoveredEntity;
@@ -115,11 +183,16 @@ Scene& Scene::operator=(const Scene& other)
 };
 Scene::~Scene()
 {
+	for (auto& entity : entities)
+		if (entity.onRemovedFunction)
+			entity.onRemovedFunction(entity);
+	entities.clear();
 	unhookMouseEvents();
 }
 std::vector<textures::Framebuffer::TextureAttachmentPair>
 Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::AttachmentType>& attachments)
 {
+	auto& window = Registry::getWindow(INDEX_STACK);
 	std::vector<textures::Framebuffer::TextureAttachmentPair> textureAttachmentPairs;
 	for (auto& attachment : attachments)
 	{
@@ -129,49 +202,55 @@ Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::
 		auto isStencil = attachment == textures::Framebuffer::AttachmentType::Stencil;
 		textures::Texture::Format format;
 		textures::Texture::Type type;
+		std::string key;
 		if (isDepthStencil)
 		{
+			key = "DepthStencilTexture";
 			format = textures::Texture::Format::DepthStencil;
 			type = textures::Texture::Type::Float;
 		}
 		else if (isDepth)
 		{
+			key = "DepthTexture";
 			format = textures::Texture::Format::Depth;
 			type = textures::Texture::Type::Float;
 		}
 		else if (isColor)
 		{
+			key = "ColorTexture";
 			format = textures::Texture::Format::RGBA8;
 			type = textures::Texture::Type::UnsignedByte;
 		}
 		else if (isStencil)
 		{
+			key = "StencilTexture";
 			format = textures::Texture::Format::Stencil;
 			type = textures::Texture::Type::UnsignedByte;
 		}
-		sceneTextures.push_back(
-			std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0),
-																					(const void*)0, format, type, textures::Texture::FilterType::Linear));
-		textureAttachmentPairs.push_back({sceneTextures[sceneTextures.size() - 1].get(), attachment});
+		keyedTextures.push_back({key,
+			std::make_shared<textures::Texture>(iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0),
+																					(const void*)0, format, type, textures::Texture::FilterType::Linear)});
+		textureAttachmentPairs.push_back({keyedTextures[keyedTextures.size() - 1].second, attachment});
 	}
 	return textureAttachmentPairs;
 }
 KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const EntityCreateInfo& info, bool callOnEntityAdded)
 {
 	auto usingInfo{info};
-	usingInfo.scenePointer = this;
-	auto entity_tuple = entities.emplace_back(usingInfo);
-	auto& entity = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(entity_tuple);
-	entity.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(entity_tuple);
-	entity.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(entity_tuple);
-	entity.INDEX_STACK = {INDEX_STACK[0], INDEX_STACK[1], entity.INDEX};
+	auto transaction = entities.startTransaction();
+	usingInfo.INDEX_STACK = {INDEX_STACK.begin(), INDEX_STACK.end()};
+	usingInfo.INDEX_STACK.push_back(transaction.index);
+	auto& entity = entities.commitTransaction(transaction, usingInfo);
+	entity.ID = transaction.id;
+	entity.INDEX = transaction.index;
 	(*Registry::idEntities)[entity.ID] = entity.INDEX_STACK;
 	postAddEntity(entity, {entity.ID});
-	if (entity.onAddedToSceneFunction)
-		entity.onAddedToSceneFunction(entity);
+	if (entity.onAddedFunction)
+		entity.onAddedFunction(entity);
+	auto& window = Registry::getWindow(INDEX_STACK);
 	if (callOnEntityAdded && window.onEntityAdded)
 		window.onEntityAdded(entity);
-	return entity_tuple;
+	return {transaction.key, transaction.id, transaction.index, &entity};
 }
 bool Scene::removeEntity(size_t& ID)
 {
@@ -179,17 +258,15 @@ bool Scene::removeEntity(size_t& ID)
 	if (entityIter == entities.end())
 		return false;
 	auto& entity = *entityIter;
-	if (entity.onRemovedFromSceneFunction)
-		entity.onRemovedFromSceneFunction(entity);
+	if (entity.onRemovedFunction)
+		entity.onRemovedFunction(entity);
 	preRemoveEntity(entity, {ID});
 	entity.ID = 0;
 	entities.erase(entityIter);
 	auto& idEntitiesRef = *Registry::idEntities;
 	auto idIter = idEntitiesRef.find(ID);
 	if (idIter != idEntitiesRef.end())
-	{
 		idEntitiesRef.erase(idIter);
-	}
 	ID = 0;
 	return true;
 }
@@ -205,9 +282,7 @@ void Scene::update()
 	auto entitiesData = entities.data();
 	auto entitiesSize = entities.size();
 	for (size_t index = 0; index < entitiesSize; ++index)
-	{
 		entitiesData[index].update();
-	}
 	if (useBVH)
 	{
 		if (bvh->changed)
@@ -221,14 +296,13 @@ void Scene::preRender()
 	if (prePreRenderFunction)
 		prePreRenderFunction(*this);
 	update();
-	auto& iRenderer = *window.iRenderer;
 	auto entitiesData = entities.data();
 	auto entitiesSize = entities.size();
 	for (auto& directionaLightShadow : directionalLightShadows)
 	{
-		directionaLightShadow.framebuffer.bind();
+		directionaLightShadow.framebuffer->bind();
 		directionaLightShadow.addShader();
-		iRenderer.clear();
+		iRenderer->clear();
 		for (size_t index = 0; index < entitiesSize; ++index)
 		{
 			auto& entity = entitiesData[index];
@@ -239,16 +313,16 @@ void Scene::preRender()
 																						 sizeof(glm::mat4));
 			const auto& model = entity.getModelMatrix();
 			directionaLightShadow.shader->setBlock("Model", entity, model);
-			iRenderer.bindShader(*entity.addShader(directionaLightShadow.shader), entity);
+			iRenderer->bindShader(*entity.addShader(directionaLightShadow.shader), entity);
 			entity.drawVAO();
 			directionaLightShadow.shader->unbind();
 		}
-		directionaLightShadow.framebuffer.unbind();
+		directionaLightShadow.framebuffer->unbind();
 	}
 	for (auto& spotLightShadow : spotLightShadows)
 	{
-		spotLightShadow.framebuffer.bind();
-		iRenderer.clear();
+		spotLightShadow.framebuffer->bind();
+		iRenderer->clear();
 		for (size_t index = 0; index < entitiesSize; ++index)
 		{
 			auto& entity = entitiesData[index];
@@ -262,12 +336,12 @@ void Scene::preRender()
 			entity.drawVAO();
 			spotLightShadow.shader->unbind();
 		}
-		spotLightShadow.framebuffer.unbind();
+		spotLightShadow.framebuffer->unbind();
 	}
 	for (auto& pointLightShadow : pointLightShadows)
 	{
-		pointLightShadow.framebuffer.bind();
-		iRenderer.clear();
+		pointLightShadow.framebuffer->bind();
+		iRenderer->clear();
 		for (size_t index = 0; index < entitiesSize; ++index)
 		{
 			auto& entity = entitiesData[index];
@@ -284,41 +358,35 @@ void Scene::preRender()
 			entity.drawVAO();
 			pointLightShadow.shader->unbind();
 		}
-		pointLightShadow.framebuffer.unbind();
+		pointLightShadow.framebuffer->unbind();
 	}
 #if defined(USE_GL) || defined(USE_EGL)
-	// if (framebufferPointer != 0)
+	// if (framebuffer != 0)
 	// {
-	// 	auto &framebuffer = *framebufferPointer;
-	// 	iRenderer.viewPointerport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
+	// 	auto &framebuffer = *framebuffer;
+	// 	iRenderer->viewPointerport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
 	// }
 	// else
-	// 	iRenderer.viewPointerport({0, 0, window.windowWidth, window.windowHeight});
-	// iRenderer.clearColor(clearColor);
-	// iRenderer.clear();
+	// 	iRenderer->viewPointerport({0, 0, window.windowWidth, window.windowHeight});
+	// iRenderer->clearColor(clearColor);
+	// iRenderer->clear();
 #endif
-	if (framebufferPointer)
-		renderEntities();
 }
 void Scene::render()
 {
-	if (!framebufferPointer)
-		renderEntities();
-	else if (drawColorToWindowPlane)
-		windowPlane->render();
+	renderEntities();
 }
 void Scene::renderEntities()
 {
-	if (framebufferPointer)
-		framebufferPointer->bind();
+	auto& framebufferRef = *framebuffer;
+	framebufferRef.bind();
 	auto entitiesData = entities.data();
 	auto entitiesSize = entities.size();
 	for (size_t index = 0; index < entitiesSize; ++index)
 	{
 		entitiesData[index].render();
 	}
-	if (framebufferPointer)
-		framebufferPointer->unbind();
+	framebufferRef.unbind();
 }
 void Scene::postRender()
 {
@@ -327,7 +395,7 @@ void Scene::postRender()
 }
 void Scene::entityPreRender(Entity& entity)
 {
-	auto data = entity.getShaderData(window.iRenderer);
+	auto data = entity.getShaderData(iRenderer);
 	auto shader = entity.shaders[data];
 	uint32_t index = 0;
 	glm::mat4 directionalLightSpaceMatrices[4];
@@ -351,7 +419,7 @@ void Scene::entityPreRender(Entity& entity)
 	for (auto& directionalLightShadow : directionalLightShadows)
 	{
 		shader->setTexture("directionalLightSamplers[" + std::to_string(index) + "]", entity,
-											 directionalLightShadow.texture, unit);
+											 *directionalLightShadow.texture, unit);
 		++unit;
 		--unitRemaining;
 	}
@@ -362,7 +430,7 @@ void Scene::entityPreRender(Entity& entity)
 	unitRemaining = 4;
 	for (auto& spotLightShadow : spotLightShadows)
 	{
-		shader->setTexture("spotLightSamplers[" + std::to_string(index) + "]", entity, spotLightShadow.texture, unit);
+		shader->setTexture("spotLightSamplers[" + std::to_string(index) + "]", entity, *spotLightShadow.texture, unit);
 		++unit;
 		--unitRemaining;
 	}
@@ -372,7 +440,7 @@ void Scene::entityPreRender(Entity& entity)
 	unitRemaining = 4;
 	for (auto& pointLightShadow : pointLightShadows)
 	{
-		shader->setTexture("pointLightSamplers[" + std::to_string(index) + "]", entity, pointLightShadow.texture, unit);
+		shader->setTexture("pointLightSamplers[" + std::to_string(index) + "]", entity, *pointLightShadow.texture, unit);
 		++unit;
 		--unitRemaining;
 	}
@@ -383,16 +451,16 @@ void Scene::resize(glm::vec2 newSize)
 	viewPointer->callResizeHandler(newSize);
 	// projectionPointer->orthoSize = newSize;
 	// projectionPointer->update();
-	if (framebufferPointer)
+	if (framebuffer)
 	{
-		for (auto& pair : framebufferPointer->textureAttachmentPairs)
+		for (auto& pair : framebuffer->textureAttachmentPairs)
 		{
 			auto& texture = *pair.first;
 			texture.size = {newSize.x, newSize.y, 1, 0};
-			textures::FramebufferFactory::destroyFramebuffer(*framebufferPointer);
+			textures::FramebufferFactory::destroyFramebuffer(*framebuffer);
 			textures::TextureFactory::destroyTexture(texture);
 			textures::TextureFactory::initTexture(texture, 0);
-			textures::FramebufferFactory::initFramebuffer(*framebufferPointer);
+			textures::FramebufferFactory::initFramebuffer(*framebuffer);
 		}
 	}
 }
@@ -440,6 +508,7 @@ Entity* Scene::findEntityByPrimID(const size_t& primID)
 }
 void Scene::hookMouseEvents()
 {
+	auto& window = Registry::getWindow(INDEX_STACK);
 	for (unsigned int button = MinMouseButton; button <= MaxMouseButton; ++button)
 	{
 		mousePressIDs[button] = window.addMousePressHandler(
@@ -491,29 +560,10 @@ void Scene::hookMouseEvents()
 			}
 			foundEntity->callMouseMoveHandler(coords);
 		});
-	if (drawColorToWindowPlane && framebufferPointer)
-	{
-		// also, side quest to create windowPlane
-		auto colorAttachmentIter =
-			std::find_if(framebufferPointer->textureAttachmentPairs.begin(), framebufferPointer->textureAttachmentPairs.end(),
-									 [](const auto& pair) { return pair.second == textures::Framebuffer::AttachmentType::Color; });
-		if (colorAttachmentIter != framebufferPointer->textureAttachmentPairs.end())
-		{
-			auto xRatio = window.windowWidth / window.windowHeight;
-			auto yRatio = window.windowHeight / window.windowWidth;
-			auto xRatio2 = 1 / yRatio;
-			auto x = xRatio * 2;
-			auto x2 = yRatio * x;
-			// windowPlane = std::make_shared<entities::Plane>(window, *this, glm::vec3(0), glm::vec3(0, 180, 0),
-			// glm::vec3(1), 																								glm::vec2(2, 2), *colorAttachmentIter->first);
-			// auto& windowPlaneRef = *windowPlane; windowPlaneRef.projectionPointer =
-			// std::make_shared<vp::Projection>(window, glm::vec2(2, 2)); windowPlaneRef.viewPointer =
-			// 	std::make_shared<vp::View>(glm::vec3(0, 0, -1), glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
-		}
-	}
 }
 void Scene::unhookMouseEvents()
 {
+	auto& window = Registry::getWindow(INDEX_STACK);
 	for (unsigned int button = MinMouseButton; button <= MaxMouseButton; ++button)
 	{
 		window.removeMousePressHandler(button, mousePressIDs[button]);
@@ -537,7 +587,7 @@ zg::Entity& Scene::getEntityByID(const size_t& id)
 template <>
 Serial& serialize(Serial& serial, const Scene& scene)
 {
-	serial << true << scene.drawColorToWindowPlane << scene.clearColor << scene.projectionPointer;
+	serial << true << scene.clearColor << scene.projectionPointer;
 	auto entitiesSize = scene.entities.size();
 	serial << entitiesSize;
 	auto entitiesData = scene.entities.data();
@@ -569,34 +619,35 @@ Serial& serialize(Serial& serial, const Scene& scene)
 	{
 		serial << spotLight;
 	}
-	auto texturesSize = scene.sceneTextures.size();
+	auto texturesSize = scene.keyedTextures.size();
 	serial << texturesSize;
-	for (auto& texturePointer : scene.sceneTextures)
+	for (auto& texturePointer : scene.keyedTextures)
 	{
 		serial << texturePointer;
 	}
-	bool framebuffer = !!scene.framebufferPointer;
+	bool framebuffer = !!scene.framebuffer;
 	serial << framebuffer;
 	if (framebuffer)
 	{
-		auto textureAttachmentSize = scene.framebufferPointer->textureAttachmentPairs.size();
+		auto textureAttachmentSize = scene.framebuffer->textureAttachmentPairs.size();
 		serial << textureAttachmentSize;
-		for (auto& textureAttachment : scene.framebufferPointer->textureAttachmentPairs)
+		for (auto& textureAttachment : scene.framebuffer->textureAttachmentPairs)
 		{
 			serial << textureAttachment.second;
 		}
 	}
-	serial << scene.windowPlane << scene.viewPointer;
+	serial << scene.fsq << scene.viewPointer;
 	return serial;
 }
 template <>
 Serial& deserialize(Serial& serial, Scene& scene)
 {
+	auto& window = Registry::getWindow(scene.INDEX_STACK);
 	bool wroteBit = false;
 	serial >> wroteBit;
 	if (!wroteBit)
 		return serial;
-	serial >> scene.drawColorToWindowPlane >> scene.clearColor >> scene.projectionPointer;
+	serial >> scene.clearColor >> scene.projectionPointer;
 	auto entitiesSize = scene.entities.size();
 	serial >> entitiesSize;
 	for (size_t i = 0; i < entitiesSize; i++)
@@ -609,14 +660,16 @@ Serial& deserialize(Serial& serial, Scene& scene)
 		std::string entity_typeName;
 		serial >> ID >> entity_typeName;
 		auto deserializeFunction = Entity::getDeserialize(entity_typeName);
-		zg::EntityCreateInfo entityCreateInfo{.scenePointer = &scene};
+		zg::EntityCreateInfo entityCreateInfo{};
 		deserializeFunction(serial, entityCreateInfo);
-		auto entity_tuple = scene.entities.emplace_back(entityCreateInfo);
-		auto& entity = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(entity_tuple);
+		auto transaction = scene.entities.startTransaction();
+		entityCreateInfo.INDEX_STACK = {scene.INDEX_STACK.begin(), scene.INDEX_STACK.end()};
+		entityCreateInfo.INDEX_STACK.push_back(transaction.index);
+		auto& entity = scene.entities.commitTransaction(transaction, entityCreateInfo);
 		entity.ID = ID;
 		scene.postAddEntity(entity, {ID});
-		if (scene.window.onEntityAdded)
-			scene.window.onEntityAdded(entity);
+		if (window.onEntityAdded)
+			window.onEntityAdded(entity);
 	}
 	auto pointLightsSize = scene.pointLights.size();
 	serial >> pointLightsSize;
@@ -627,7 +680,7 @@ Serial& deserialize(Serial& serial, Scene& scene)
 	}
 	for (auto& pointLight : scene.pointLights)
 	{
-		scene.pointLightShadows.emplace_back(scene.window, pointLight);
+		scene.pointLightShadows.emplace_back(window, pointLight);
 	}
 	auto directionalLightsSize = scene.directionalLights.size();
 	serial >> directionalLightsSize;
@@ -636,9 +689,10 @@ Serial& deserialize(Serial& serial, Scene& scene)
 	{
 		serial >> directionalLight;
 	}
+	auto index = 0;
 	for (auto& directionalLight : scene.directionalLights)
 	{
-		scene.directionalLightShadows.emplace_back(scene.window, directionalLight);
+		scene.directionalLightShadows.emplace_back(scene.INDEX_STACK, index++);
 	}
 	auto spotLightsSize = scene.spotLights.size();
 	serial >> spotLightsSize;
@@ -649,12 +703,12 @@ Serial& deserialize(Serial& serial, Scene& scene)
 	}
 	for (auto& spotLight : scene.spotLights)
 	{
-		scene.spotLightShadows.emplace_back(scene.window, spotLight);
+		scene.spotLightShadows.emplace_back(window, spotLight);
 	}
-	auto texturesSize = scene.sceneTextures.size();
+	auto texturesSize = scene.keyedTextures.size();
 	serial >> texturesSize;
-	scene.sceneTextures.resize(texturesSize);
-	for (auto& texturePointer : scene.sceneTextures)
+	scene.keyedTextures.resize(texturesSize);
+	for (auto& texturePointer : scene.keyedTextures)
 	{
 		serial >> texturePointer;
 	}
@@ -669,10 +723,10 @@ Serial& deserialize(Serial& serial, Scene& scene)
 		{
 			zg::textures::Framebuffer::AttachmentType attachmentType;
 			serial >> attachmentType;
-			textureAttachmentPairs.emplace_back((zg::textures::Texture*)scene.sceneTextures[i].get(), attachmentType);
+			textureAttachmentPairs.emplace_back(scene.keyedTextures[i].second, attachmentType);
 		}
-		scene.framebufferPointer = std::make_shared<zg::textures::Framebuffer>(scene.window.iRenderer, textureAttachmentPairs);
+		scene.framebuffer = std::make_shared<zg::textures::Framebuffer>(scene.iRenderer, textureAttachmentPairs);
 	}
-	serial >> scene.windowPlane >> scene.viewPointer;
+	serial >> scene.fsq >> scene.viewPointer;
 	return serial;
 }

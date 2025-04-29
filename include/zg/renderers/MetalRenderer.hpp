@@ -54,6 +54,7 @@ namespace zg
 		void updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t> &indices) override;
 		void updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) override;
 		void drawVAO(const vaos::VAO &vao) override;
+		void copyVAO(vaos::VAO &dest, const vaos::VAO &src) override;
 		void generateVAO(vaos::VAO &vao) override;
 		void destroyVAO(vaos::VAO &vao) override;
 		void ensureVAO(shaders::Shader &shader, vaos::VAO &vao) override;

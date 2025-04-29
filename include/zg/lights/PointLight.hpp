@@ -14,8 +14,8 @@ namespace zg::lights
     Window &window;
     shaders::Shader *shader = 0;
     PointLight &pointLight;
-    textures::Texture texture;
-    textures::Framebuffer framebuffer;
+    std::shared_ptr<textures::Texture> texture;
+    std::shared_ptr<textures::Framebuffer> framebuffer;
     glm::mat4 shadowTransforms[6];
     PointLightShadow(Window &window, PointLight &pointLight);
     PointLightShadow& operator=(const PointLightShadow& other);

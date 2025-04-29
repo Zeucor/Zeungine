@@ -20,6 +20,11 @@ namespace zg
 		DataStorage(const GetDataFunctionMap& getDataFunctionMap = {}, const SetDataFunctionMap& setDataFunctionMap = {},
 								const DataMap& dataMap = {}) :
 				dataMap(dataMap), getDataFunctionMap(getDataFunctionMap), setDataFunctionMap(setDataFunctionMap) {};
+		DataStorage(const DataStorage& other):
+			dataMap(other.dataMap),
+			getDataFunctionMap(other.getDataFunctionMap),
+			setDataFunctionMap(other.setDataFunctionMap)
+		{}
 		DataStorage& operator=(const DataStorage& other)
 		{
 			dataMap = other.dataMap;

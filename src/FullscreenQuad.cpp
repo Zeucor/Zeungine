@@ -1,22 +1,24 @@
 #include <zg/FullscreenQuad.hpp>
 #include <zg/utilities.hpp>
-#include <zg/Entity.hpp>
+#include <zg/Window.hpp>
 using namespace zg;
 FullscreenQuad::FullscreenQuad(const FullscreenQuad& other):
-    vaos::VAO(other.vaoIRenderer, other.constants, other.indiceCount, other.vertexCount)
+    vaos::VAO(other.VAO_INDEX_STACK, other.constants, other.indiceCount, other.vertexCount),
+    model(other.model)
 {
     generateQuad();
 };
-FullscreenQuad::FullscreenQuad(IRenderer* iRenderer, const shaders::RuntimeConstants& constants):
-    vaos::VAO(iRenderer, zg::mergeVectors({ "UV2", "Position", "Model" }, constants), 6, 4)
+FullscreenQuad::FullscreenQuad(const std::vector<size_t*>& INDEX_STACK, const shaders::RuntimeConstants& constants):
+    vaos::VAO(INDEX_STACK, zg::mergeVectors({ "UV2", "Position", "Model" }, constants), 6, 4),
+    model(glm::translate(glm::vec3(0, 0, -(0.1 * (INDEX_STACK.size() > 1 ? *INDEX_STACK[1] : *INDEX_STACK[0])))))
 {
     generateQuad();
 }
-// FullscreenQuad& FullscreenQuad::operator=(const FullscreenQuad& other)
-// {
-
-//     return *this;
-// }
+FullscreenQuad& FullscreenQuad::operator=(const FullscreenQuad& other)
+{
+    model = other.model;
+    return *this;
+}
 void FullscreenQuad::generateQuad()
 {
     std::vector<uint32_t> indices;
@@ -65,4 +67,24 @@ void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared
     }
 	drawVAO();
 	shader->unbind();
+}
+template <>
+Serial& serialize(Serial& serial, const std::shared_ptr<FullscreenQuad>& fsq)
+{
+    return serial << fsq->constants;
+}
+template <>
+Serial& deserialize(Serial& serial, std::shared_ptr<FullscreenQuad>& fsq)
+{
+    auto windowPointer = (Window*)serial.getContextPointer("Window");
+    auto scenePointer = (Scene*)serial.getContextPointer("Scene");
+    std::vector<size_t*> INDEX_STACK;
+    if (scenePointer)
+        INDEX_STACK = scenePointer->INDEX_STACK;
+    if (windowPointer)
+        INDEX_STACK = windowPointer->INDEX_STACK;
+    shaders::RuntimeConstants constants;
+    serial >> constants;
+    fsq = std::make_shared<FullscreenQuad>(INDEX_STACK, constants);
+    return serial;
 }

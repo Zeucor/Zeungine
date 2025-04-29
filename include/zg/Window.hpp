@@ -105,6 +105,9 @@ struct WindowCreateInfo;
 		NANOSECONDS_DURATION frameduration;
 		budget::ZBudget<SYS_CLOCK, NANO_TIMEPOINT, NANOSECONDS_DURATION, LD_REAL> framebudget;
 		fonts::SystemFonts systemFonts;
+		std::shared_ptr<textures::Texture> mainColorTexture;
+		// std::shared_ptr<textures::Texture> mainDepthTexture;
+		std::shared_ptr<textures::Framebuffer> mainFramebuffer;
 		PostProcessingPipeline postProcessingPipeline;
 		std::unique_ptr<FullscreenQuad> fullscreenQuad;
 		// when adding new members remember to add to operator=
@@ -184,8 +187,7 @@ struct WindowCreateInfo;
 		bool vsync = true;
 		uint32_t framerate = 60;
 		bool isChildWindow = false;
-		Window* parentWindowPointer = 0;
-		Scene* parentScenePointer = 0;
 		bool NDCFramebufferPlane = false;
+		std::vector<size_t*> INDEX_STACK;
 	};
 } // namespace zg

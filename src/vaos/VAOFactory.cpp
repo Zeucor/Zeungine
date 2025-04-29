@@ -14,6 +14,7 @@ VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {{"Indice", {3, sizeof(u
 VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
 	{"Indice", false}, {"Color", true}, {"Position", true}, {"Normal", true}, {"UV2", true}, {"UV3", true}, {"View", false}, {"Projection", false}, {"Model", false}, {"CameraPosition", false}, {"Fog", false}, {"Lighting", false}, {"LightSpaceMatrix", false}};
 void VAOFactory::generate(VAO &vao) { vao.vaoIRenderer->generateVAO(vao); };
+void VAOFactory::copy(VAO &dest, const VAO& src) { src.vaoIRenderer->copyVAO(dest, src); };
 size_t VAOFactory::getStride(const RuntimeConstants &constants)
 {
 	size_t stride = 0;

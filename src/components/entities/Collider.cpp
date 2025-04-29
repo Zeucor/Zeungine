@@ -69,7 +69,7 @@ zg::components::entities::ColliderFactory(const ColliderInfo& colliderInfo)
 		.name = "Collider",
 		.onAttachedFunction = [colliderInfo](auto& component)
 		{
-			auto& entity = Registry::getEntity(component.hostIndexStack);
+			auto& entity = Registry::getEntity(component.HOST_INDEX_STACK);
 			EntityComponent* rigidBodyComponentPointer = 0;
 			try
 			{
@@ -85,7 +85,7 @@ zg::components::entities::ColliderFactory(const ColliderInfo& colliderInfo)
 		},
 		.onDetachedFunction = [](auto& component)
 		{
-			auto& entity = Registry::getEntity(component.hostIndexStack);
+			auto& entity = Registry::getEntity(component.HOST_INDEX_STACK);
 			EntityComponent* rigidBodyComponentPointer = 0;
 			try
 			{

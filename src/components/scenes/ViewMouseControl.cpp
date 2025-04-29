@@ -3,24 +3,25 @@
 #include <zg/Registry.hpp>
 #include <zg/physics/AABB.hpp>
 #include <chrono>
-zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewMouseControlFactory()
+using namespace zg;
+components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseControlFactory()
 {
-	zg::components::scenes::SceneComponentCreateInfo info{
+	components::scenes::SceneComponentCreateInfo info{
 		.name = "View Mouse Control",
 		.onAttachedFunction = [](auto& component)
 		{
-			auto& scene = zg::Registry::getScene(component.hostIndexStack);
-			auto& window = scene.window;
+			auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+			auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
 			auto iRenderer = window.iRenderer;
             auto& deadZonePercent = component.template make<float>("DeadZonePercent", 0.1f);
             auto& lastPosition = component.template make<glm::vec2>("LastPosition", 0.0f, 0.0f);
-			glm::vec2 center = {scene.window.windowWidth / 2.0f, scene.window.windowHeight / 2.0f};
-			float boxHalfWidth = scene.window.windowWidth * (deadZonePercent * 0.5f);
-			float boxHalfHeight = scene.window.windowHeight * (deadZonePercent * 0.5f);
-			zg::physics::AABB<2> centerBox(glm::vec2(center.x - boxHalfWidth, center.y - boxHalfHeight),
+			glm::vec2 center = {window.windowWidth / 2.0f, window.windowHeight / 2.0f};
+			float boxHalfWidth = window.windowWidth * (deadZonePercent * 0.5f);
+			float boxHalfHeight = window.windowHeight * (deadZonePercent * 0.5f);
+			physics::AABB<2> centerBox(glm::vec2(center.x - boxHalfWidth, center.y - boxHalfHeight),
 																		glm::vec2(center.x + boxHalfWidth, center.y + boxHalfHeight));
 			int* count = new int();
-			component.template make<zg::UniqueIdentifier>("mouseMoveID",
+			component.template make<UniqueIdentifier>("mouseMoveID",
 				window.addMouseMoveHandler(
 					[&, centerBox, center, count](glm::vec2 coords)mutable
 					{
@@ -30,7 +31,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewMou
 						scene.viewPointer->addPhiTheta(diff.x * 0.001f, -diff.y * 0.001f);
 						if (!centerBox.isPointInside(coords))
 						{
-							scene.window.warpPointer(center);
+							window.warpPointer(center);
 							lastPosition = center;
 						}
 						else
@@ -40,24 +41,24 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::ViewMou
 					}
 				)
 			);
-			component.template make<zg::UniqueIdentifier>("focusID",
+			component.template make<UniqueIdentifier>("focusID",
 				window.addFocusHandler(
-					[hostIndexStack = component.hostIndexStack](bool focused)
+					[HOST_INDEX_STACK = component.HOST_INDEX_STACK](bool focused)
 					{
-						auto& scene = zg::Registry::getScene(hostIndexStack);
+						auto& window = Registry::getWindow(HOST_INDEX_STACK);
 						if (focused)
-							scene.window.iPlatformWindow->hidePointer();
+							window.iPlatformWindow->hidePointer();
 						else
-							scene.window.iPlatformWindow->showPointer();
+							window.iPlatformWindow->showPointer();
 					}
 				)
 			);
 		},
 		.onDetachedFunction = [](auto& component)
 		{
-			auto& window = zg::Registry::getScene(component.hostIndexStack).window;
-			window.removeMouseMoveHandler(component.template getData<zg::UniqueIdentifier>("mouseMoveID"));
-			window.removeFocusHandler(component.template getData<zg::UniqueIdentifier>("focusID"));
+			auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+			window.removeMouseMoveHandler(component.template getData<UniqueIdentifier>("mouseMoveID"));
+			window.removeFocusHandler(component.template getData<UniqueIdentifier>("focusID"));
 		}
 	};
 	return info;

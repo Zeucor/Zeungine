@@ -14,8 +14,8 @@ namespace zg::lights
 		Window& window;
 		shaders::Shader* shader = 0;
 		SpotLight& spotLight;
-		textures::Texture texture;
-		textures::Framebuffer framebuffer;
+		std::shared_ptr<textures::Texture> texture;
+		std::shared_ptr<textures::Framebuffer> framebuffer;
 		glm::mat4 lightSpaceMatrix;
 		SpotLightShadow(Window& window, SpotLight& spotLight);
 		SpotLightShadow& operator=(const SpotLightShadow& other);

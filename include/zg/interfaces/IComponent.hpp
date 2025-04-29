@@ -11,7 +11,7 @@ namespace zg::interfaces
 	template <typename ComponentT>
 	struct IComponent : DataStorage<ComponentT>
 	{
-		std::vector<size_t*> hostIndexStack;
+		std::vector<size_t*> HOST_INDEX_STACK;
 		size_t ID = 0;
 		std::string NAME;
 		IComponent(const std::string& name,

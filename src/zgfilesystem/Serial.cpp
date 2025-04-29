@@ -18,3 +18,22 @@ Serial& serialize(Serial& serial, const std::string& str)
     serial.writeBytes(str.c_str(), size);
     return serial;
 }
+template <>
+Serial& deserialize(Serial& serial, std::vector<std::string>& vec)
+{
+    auto size = vec.size();
+    serial >> size;
+    vec.resize(size);
+    for (auto i = 0; i < size; ++i)
+        serial >> vec[i];
+    return serial;
+}
+template <>
+Serial& serialize(Serial& serial, const std::vector<std::string>& vec)
+{
+    auto size = vec.size();
+    serial << size;
+    for (auto i = 0; i < size; ++i)
+        serial << vec[i];
+    return serial;
+}

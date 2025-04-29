@@ -28,42 +28,49 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
 Window::Window(const WindowCreateInfo& info) :
+	INDEX_STACK(info.INDEX_STACK),
 		title(info.title), childWindows([](auto& childWindow) { return childWindow.title; }), windowWidth(info.windowWidth),
 		windowHeight(info.windowHeight), windowX(info.windowX), windowY(info.windowY),
 		scenes([](auto& scene) { return scene.name; }), deltaTime(1.0 / info.framerate), borderless(info.borderless),
 		framerate(info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
-		framebudget(frameduration), systemFonts(*this), postProcessingPipeline(*this)
+		framebudget(frameduration), systemFonts(*this), postProcessingPipeline(INDEX_STACK)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
-	if (info.isChildWindow)
-	{
-		NDCFramebufferPlane = info.NDCFramebufferPlane;
-		framebufferTexture = std::make_shared<textures::Texture>(
-			info.parentWindowPointer->iRenderer, glm::ivec4(info.windowWidth, info.windowHeight, 1, 0), (void*)0);
-		framebufferDepthTexture = std::make_shared<textures::Texture>(
-			info.parentWindowPointer->iRenderer, glm::ivec4(info.windowWidth, info.windowHeight, 1, 0), (void*)0);
-		framebuffer = std::make_shared<textures::Framebuffer>(
-			info.parentWindowPointer->iRenderer,
-			std::vector<textures::Framebuffer::TextureAttachmentPair>(
-				{{framebufferTexture.get(),
-					textures::Framebuffer::AttachmentType::
-						Color} /*, {framebufferDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}*/}));
-		framebufferPlane->addToBVH = false;
-	}
+	// if (info.isChildWindow)
+	// {
+	// 	NDCFramebufferPlane = info.NDCFramebufferPlane;
+	// 	framebufferTexture = std::make_shared<textures::Texture>(
+	// 		info.parentWindowPointer->iRenderer, glm::ivec4(info.windowWidth, info.windowHeight, 1, 0), (void*)0);
+	// 	framebufferDepthTexture = std::make_shared<textures::Texture>(
+	// 		info.parentWindowPointer->iRenderer, glm::ivec4(info.windowWidth, info.windowHeight, 1, 0), (void*)0);
+	// 	framebuffer = std::make_shared<textures::Framebuffer>(
+	// 		info.parentWindowPointer->iRenderer,
+	// 		std::vector<textures::Framebuffer::TextureAttachmentPair>(
+	// 			{{framebufferTexture.get(),
+	// 				textures::Framebuffer::AttachmentType::
+	// 					Color} /*, {framebufferDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth}*/}));
+	// 	framebufferPlane->addToBVH = false;
+	// }
 }
 Window::Window(const Window& other) :
+	INDEX_STACK(other.INDEX_STACK),
 		title(other.title), childWindows(other.childWindows), windowWidth(other.windowWidth),
 		windowHeight(other.windowHeight), windowX(other.windowX), windowY(other.windowY), scenes(other.scenes),
 		deltaTime(1.0 / other.framerate), borderless(other.borderless), framerate(other.framerate), vsync(other.vsync),
 		frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration), systemFonts(*this),
-		postProcessingPipeline(*this)
+		postProcessingPipeline(INDEX_STACK),
+		mainColorTexture(other.mainColorTexture),// mainDepthTexture(other.mainDepthTexture),
+		mainFramebuffer(other.mainFramebuffer)
 {
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
 }
 Window& Window::operator=(const Window& other)
 {
+	ID = other.ID;
+	INDEX = other.INDEX;
+	INDEX_STACK = other.INDEX_STACK;
 	iPlatformWindow = other.iPlatformWindow;
 	iRenderer = other.iRenderer;
 	windowWidth = other.windowWidth;
@@ -113,6 +120,9 @@ Window& Window::operator=(const Window& other)
 	oldXY = other.oldXY;
 	vsync = other.vsync;
 	frameduration = other.frameduration;
+	mainColorTexture = other.mainColorTexture;
+	// mainDepthTexture = other.mainDepthTexture;
+	mainFramebuffer = other.mainFramebuffer;
 	return *this;
 }
 void Window::run()
@@ -178,9 +188,18 @@ void Window::startWindow()
 	iRendererRef.createContext(&iPlatformWindowRef);
 	iRendererRef.init();
 	iPlatformWindowRef.postInit();
-	fullscreenQuad = std::make_unique<FullscreenQuad>(iRenderer, zg::shaders::RuntimeConstants({"ColorTexture"}));
+	fullscreenQuad = std::make_unique<FullscreenQuad>(INDEX_STACK, zg::shaders::RuntimeConstants({"ColorTexture"}));
+	mainColorTexture = std::make_shared<textures::Texture>(iRenderer, glm::ivec4(windowWidth, windowHeight, 0, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	// mainDepthTexture = std::make_shared<textures::Texture>(iRenderer, glm::ivec4(windowWidth, windowHeight, 0, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	mainFramebuffer = std::make_shared<textures::Framebuffer>(iRenderer, std::vector<textures::Framebuffer::TextureAttachmentPair>{
+		{mainColorTexture, textures::Framebuffer::AttachmentType::Color}//,
+		// {mainDepthTexture, textures::Framebuffer::AttachmentType::Depth}
+	});
+	postProcessingPipeline.textureRegistry.registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorTexture);
+	// postProcessingPipeline.textureRegistry.registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthTexture);
 	runRunnables();
 	iPlatformWindowRef.disableKeyAutoRepeat();
+	std::vector<std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>>> ppOutputs;
 	while (true)
 	{
 		auto _now = framebudget.begin();
@@ -195,28 +214,37 @@ void Window::startWindow()
 		updateKeyboard();
 		updateMouse();
 		update();
-		auto childWindowsSize = childWindows.size();
-		auto childWindowsData = childWindows.data();
-		for (size_t index = 0; index < childWindowsSize; ++index)
-		{
-			auto& childWindow = childWindowsData[index];
-			if (childWindow.minimized)
-				continue;
-			childWindow.render();
-			framebudget.tick();
-		}
+		// auto childWindowsSize = childWindows.size();
+		// auto childWindowsData = childWindows.data();
+		// for (size_t index = 0; index < childWindowsSize; ++index)
+		// {
+		// 	auto& childWindow = childWindowsData[index];
+		// 	if (childWindow.minimized)
+		// 		continue;
+		// 	childWindow.render();
+		// 	framebudget.tick();
+		// }
 		preRender();
-		iRendererRef.beginMainFramebuffer();
+		// iRendererRef.beginMainFramebuffer();
 		render();
-		for (size_t index = 0; index < childWindowsSize; ++index)
-		{
-			auto& childWindow = childWindowsData[index];
-			if (childWindow.minimized)
-				continue;
-			framebudget.tick();
-			childWindow.framebufferPlane->render();
-		}
-		iRendererRef.postMainFramebuffer();
+		// for (size_t index = 0; index < childWindowsSize; ++index)
+		// {
+		// 	auto& childWindow = childWindowsData[index];
+		// 	if (childWindow.minimized)
+		// 		continue;
+		// 	framebudget.tick();
+		// 	childWindow.framebufferPlane->render();
+		// }
+		// iRendererRef.postMainFramebuffer();
+		ppOutputs.resize(scenes.size());
+		auto index = 0;
+		for (auto& scene : scenes)
+			ppOutputs[index++] = scene.postProcessingPipeline.postProcess();
+		index = 0;
+		mainFramebuffer->bind();
+		for (auto& scene : scenes)
+			scene.fsq->render(ppOutputs[index++]);
+		mainFramebuffer->unbind();
 		auto finalInputs = postProcessingPipeline.postProcess();
 		iRendererRef.beginRenderPass();
 		fullscreenQuad->render(finalInputs);
@@ -238,7 +266,11 @@ _exit:
 	for (size_t i = 0; i < scenesSize; ++i)
 		scenesData[i].detachAllComponents();
 	scenes.clear();
+	mainColorTexture.reset();
+	// mainDepthTexture.reset();
+	mainFramebuffer.reset();
 	fullscreenQuad.reset();
+	ppOutputs.clear();
 	postProcessingPipeline.cleanup();
 	detachAllComponents();
     delete iRenderer->shaderContext;
@@ -734,16 +766,17 @@ void Window::callPreSwapbuffersOnceoff()
 KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCreateInfo& info)
 {
 	auto usingInfo{info};
-	usingInfo.windowPointer = this;
-	auto scene_tuple = scenes.emplace_back(usingInfo);
-	auto& scene = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(scene_tuple);
-	scene.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(scene_tuple);
-	scene.INDEX = std::get<KEY_ID_VECTOR_INDEX_INDEX>(scene_tuple);
+	auto transaction = scenes.startTransaction();
+	usingInfo.INDEX_STACK = {INDEX_STACK.begin(), INDEX_STACK.end()};
+	usingInfo.INDEX_STACK.push_back(transaction.index);
+	auto& scene = scenes.commitTransaction(transaction, usingInfo);
+	scene.ID = transaction.id;
+	scene.INDEX = transaction.index;
 	scene.INDEX_STACK = {INDEX, scene.INDEX};
 	if (scene.onAttachedFunction)
 		scene.onAttachedFunction(scene);
 	(*Registry::idScenes)[scene.ID] = scene.INDEX_STACK;
-	return scene_tuple;
+	return {transaction.key, transaction.id, transaction.index, &scene};
 }
 bool Window::removeScene(size_t& ID)
 {

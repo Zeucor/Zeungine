@@ -38,26 +38,27 @@ namespace zg
 		static void cleanupSerialize();
 
 	public:
-		Window& window;
-		Scene& scene;
 		size_t ID = 0;
 		size_t* INDEX = 0;
 		std::vector<size_t*> INDEX_STACK;
 		size_t VALUE = 0;
 		std::string typeName;
 		std::string name;
-		Entity* parentEntity = 0;
-		std::vector<uint32_t> indices;
-		std::vector<glm::vec3> vertices;
-		std::vector<glm::vec3> normals;
-		std::vector<glm::vec4> colors;
-		std::vector<glm::vec2> uv2s;
-		std::vector<glm::vec3> uv3s;
 		std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> keyedTextures;
 		glm::vec3 position;
 		glm::quat rotation;
 		glm::vec3 scale;
 		glm::mat4 model;
+		std::function<uint32_t(Entity&)> indiceCount;
+		std::function<std::vector<uint32_t>(Entity&)> indices;
+		std::function<uint32_t(Entity&)> vertexCount;
+		std::function<std::vector<glm::vec3>(Entity&)> vertices;
+		std::function<uint32_t(Entity&)> colorCount;
+		std::function<std::vector<glm::vec4>(Entity&)> colors;
+		std::function<uint32_t(Entity&)> uv2Count;
+		std::function<std::vector<glm::vec2>(Entity&)> uv2s;
+		std::function<uint32_t(Entity&)> uv3Count;
+		std::function<std::vector<glm::vec3>(Entity&)> uv3s;
 		std::shared_ptr<vp::Projection> projectionPointer;
 		std::shared_ptr<vp::View> viewPointer;
 		bool affectedByShadows = true;
@@ -73,8 +74,8 @@ namespace zg
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
 		std::function<void(Entity&)> postRenderFunction;
-		std::function<void(Entity&)> onAddedToSceneFunction;
-		std::function<void(Entity&)> onRemovedFromSceneFunction;
+		std::function<void(Entity&)> onAddedFunction;
+		std::function<void(Entity&)> onRemovedFunction;
 		std::recursive_mutex handlersMutex;
 
 	public:
@@ -82,10 +83,11 @@ namespace zg
 		Entity(const Entity& other);
 		~Entity();
 		Entity& operator=(const Entity& other);
+		void refreshVertices();
 		void update();
 		void render();
 		glm::mat4& getModelMatrix();
-		size_t addChild(const EntityCreateInfo& childInfo);
+		KeyIDVector<std::string, Entity>::EmplaceBackTuple addChild(const EntityCreateInfo& childInfo);
 		void removeChild(size_t& ID);
 		UniqueIdentifier addMousePressHandler(const Button& button, const MousePressHandler& callback);
 		void removeMousePressHandler(const Button& button, UniqueIdentifier& id);
@@ -115,22 +117,25 @@ namespace zg
 		glm::vec3 scale;
 		shaders::RuntimeConstants constants;
 		std::string name;
-		uint32_t indiceCount;
-		std::vector<uint32_t> indices;
-		uint32_t vertexCount;
-		std::vector<glm::vec3> vertices;
-		std::vector<glm::vec4> colors;
-		std::vector<glm::vec2> uv2s;
-		std::vector<glm::vec3> uv3s;
+		std::function<uint32_t(Entity&)> indiceCount;
+		std::function<std::vector<uint32_t>(Entity&)> indices;
+		std::function<uint32_t(Entity&)> vertexCount;
+		std::function<std::vector<glm::vec3>(Entity&)> vertices;
+		std::function<uint32_t(Entity&)> colorCount;
+		std::function<std::vector<glm::vec4>(Entity&)> colors;
+		std::function<uint32_t(Entity&)> uv2Count;
+		std::function<std::vector<glm::vec2>(Entity&)> uv2s;
+		std::function<uint32_t(Entity&)> uv3Count;
+		std::function<std::vector<glm::vec3>(Entity&)> uv3s;
 		std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> keyedTextures;
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
 		std::function<void(Entity&)> postRenderFunction;
-		std::function<void(Entity&)> onAddedToSceneFunction;
-		std::function<void(Entity&)> onRemovedFromSceneFunction;
+		std::function<void(Entity&)> onAddedFunction;
+		std::function<void(Entity&)> onRemovedFunction;
 		DataStorage<Entity>::DataMap dataMap;
 		DataStorage<Entity>::GetDataFunctionMap getDataFunctionMap;
 		DataStorage<Entity>::SetDataFunctionMap setDataFunctionMap;
-		Scene* scenePointer = 0;
+		std::vector<size_t*> INDEX_STACK;
 	};
 } // namespace zg

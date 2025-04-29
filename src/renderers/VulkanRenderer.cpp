@@ -924,19 +924,19 @@ VkExtent2D VulkanRenderer::chooseSwapExtent(VkSurfaceCapabilitiesKHR capabilitie
 }
 void VulkanRenderer::createImageViews()
 {
-	mainColorTexture = std::make_shared<textures::Texture>(
-		this,
-		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
-							 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
-		(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
-		textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x8);
-	mainColorResolveTexture = std::make_shared<textures::Texture>(
-		this,
-		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
-								platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
-		(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
-		textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorResolveTexture);
+	// mainColorTexture = std::make_shared<textures::Texture>(
+	// 	this,
+	// 	glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+	// 						 platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+	// 	(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
+	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x8);
+	// mainColorResolveTexture = std::make_shared<textures::Texture>(
+	// 	this,
+	// 	glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+	// 							platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+	// 	(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
+	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	// TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorResolveTexture);
 	auto swapChainImagesSize = swapChainImages.size();
 	swapChainImageViews.resize(swapChainImagesSize);
 	for (uint32_t index = 0; index < swapChainImagesSize; index++)
@@ -1034,13 +1034,13 @@ void VulkanRenderer::createRenderPass()
 }
 void VulkanRenderer::createFramebuffers()
 {
-	std::vector<textures::Framebuffer::TextureAttachmentPair> attachments = {
-		{mainColorTexture.get(), textures::Framebuffer::AttachmentType::Color},
-		{mainDepthTexture.get(), textures::Framebuffer::AttachmentType::Depth},
-		{mainColorResolveTexture.get(), textures::Framebuffer::AttachmentType::ColorResolve},
-		{mainDepthResolveTexture.get(), textures::Framebuffer::AttachmentType::DepthResolve}
-	};
-	mainFramebuffer = std::make_shared<textures::Framebuffer>(this, attachments);
+	// std::vector<textures::Framebuffer::TextureAttachmentPair> attachments = {
+	// 	{mainColorTexture, textures::Framebuffer::AttachmentType::Color},
+	// 	{mainDepthTexture, textures::Framebuffer::AttachmentType::Depth},
+	// 	{mainColorResolveTexture, textures::Framebuffer::AttachmentType::ColorResolve},
+	// 	{mainDepthResolveTexture, textures::Framebuffer::AttachmentType::DepthResolve}
+	// };
+	// mainFramebuffer = std::make_shared<textures::Framebuffer>(this, attachments);
 	auto swapChainImageViewsSize = swapChainImageViews.size();
 	swapChainFramebuffers.resize(swapChainImageViewsSize);
 	for (uint32_t index = 0; index < swapChainImageViewsSize; index++)
@@ -1091,19 +1091,19 @@ void VulkanRenderer::createCommandBuffers()
 }
 void VulkanRenderer::createDepthResources()
 {
-	mainDepthTexture =
-		std::make_shared<textures::Texture>(this,
-		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
-								platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
-		(const void*)0, textures::Texture::Format::Depth,
-		textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x8);
-	mainDepthResolveTexture = std::make_shared<textures::Texture>(
-		this,
-		glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
-								platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
-		(const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float,
-		textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthResolveTexture);
+	// mainDepthTexture =
+	// 	std::make_shared<textures::Texture>(this,
+	// 	glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+	// 							platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+	// 	(const void*)0, textures::Texture::Format::Depth,
+	// 	textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x8);
+	// mainDepthResolveTexture = std::make_shared<textures::Texture>(
+	// 	this,
+	// 	glm::ivec4(platformWindowPointer->renderWindowPointer->windowWidth,
+	// 							platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
+	// 	(const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float,
+	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	// TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthResolveTexture);
 }
 void VulkanRenderer::createSyncObjects()
 {
@@ -1215,11 +1215,11 @@ void VulkanRenderer::destroy()
 }
 void VulkanRenderer::destroySwapChain()
 {
-	mainColorTexture.reset();
-	mainColorResolveTexture.reset();
-	mainDepthResolveTexture.reset();
-	mainDepthTexture.reset();
-	mainFramebuffer.reset();
+	// mainColorTexture.reset();
+	// mainColorResolveTexture.reset();
+	// mainDepthResolveTexture.reset();
+	// mainDepthTexture.reset();
+	// mainFramebuffer.reset();
 	for (auto framebuffer : swapChainFramebuffers)
 	{
 		_vkDestroyFramebuffer(device, framebuffer, 0);
@@ -1328,18 +1328,21 @@ void VulkanRenderer::postRenderPass()
 }
 void VulkanRenderer::beginMainFramebuffer()
 {
-	auto& mainFramebufferRef = *mainFramebuffer;
-	if (platformWindowPointer->renderWindowPointer->scenes.size())
-	{
-		auto& scene = *platformWindowPointer->renderWindowPointer->scenes.begin();
-		if (mainFramebufferRef.scenePointer != &scene)
-		{
-			mainFramebufferRef.scenePointer = &scene;
-		}
-	}
-	mainFramebuffer->bind();
+	// auto& mainFramebufferRef = *mainFramebuffer;
+	// if (platformWindowPointer->renderWindowPointer->scenes.size())
+	// {
+	// 	auto& scene = *platformWindowPointer->renderWindowPointer->scenes.begin();
+	// 	if (mainFramebufferRef.scenePointer != &scene)
+	// 	{
+	// 		mainFramebufferRef.scenePointer = &scene;
+	// 	}
+	// }
+	// mainFramebuffer->bind();
 }
-void VulkanRenderer::postMainFramebuffer() { mainFramebuffer->unbind(); }
+void VulkanRenderer::postMainFramebuffer()
+{
+	// mainFramebuffer->unbind();
+}
 #ifndef MACOS
 void VulkanRenderer::swapBuffers()
 {
@@ -2652,9 +2655,12 @@ void VulkanRenderer::midInitTexture(const textures::Texture& texture,
 	_vkMapMemory(device, _stagingBufferMemory, 0, imageSize, 0, &data);
 	memcpy(data, bytes, static_cast<size_t>(imageSize));
 	_vkUnmapMemory(device, _stagingBufferMemory);
+	transitionImageLayout(textureImpl, textureImpl.textureImage, format, textureImpl.layout,
+												VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+												textureFormat_imageAspect[texture.format]);
 	copyBufferToImage(_stagingBuffer, textureImpl.textureImage, static_cast<uint32_t>(texture.size.x),
 										static_cast<uint32_t>(texture.size.y));
-	transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+	transitionImageLayout(textureImpl, textureImpl.textureImage, format, textureImpl.layout,
 												textureFormat_descriptor_imageLayout[texture.format],
 												textureFormat_imageAspect[texture.format]);
 	_vkDestroyBuffer(device, _stagingBuffer, 0);
@@ -2736,6 +2742,33 @@ void VulkanRenderer::generateVAO(vaos::VAO& vao)
 	ensureBuffer(vaoImpl.indiceBuffer, vaoImpl.indiceBufferMemory, vaoImpl.indiceData, vaoImpl.indiceBufferSize,
 							 indiceBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 	return;
+}
+void VulkanRenderer::copyVAO(vaos::VAO &dest, const vaos::VAO &src)
+{
+	auto& srcImpl = *(VulkanVAOImpl*)src.rendererData;
+	if (!dest.rendererData)
+		dest.rendererData = new VulkanVAOImpl();
+	auto& destImpl = *(VulkanVAOImpl*)dest.rendererData;
+	auto stride = vaos::VAOFactory::getStride(src.constants);
+	VkDeviceSize vertexBufferSize = stride * src.vertexCount;
+	if (!vertexBufferSize)
+	{
+		return;
+	}
+	auto& constantSize = vaos::VAOFactory::constantSizes["Indice"];
+	VkDeviceSize indiceBufferSize = src.indiceCount * std::get<1>(constantSize);
+	if (!indiceBufferSize)
+	{
+		return;
+	}
+	if (!destImpl.vertexData)
+		ensureBuffer(destImpl.vertexBuffer, destImpl.vertexBufferMemory, destImpl.vertexData, destImpl.vertexBufferSize,
+								vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+	if (!destImpl.indiceData)
+		ensureBuffer(destImpl.indiceBuffer, destImpl.indiceBufferMemory, destImpl.indiceData, destImpl.indiceBufferSize,
+								indiceBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+	memcpy(destImpl.vertexData, srcImpl.vertexData, vertexBufferSize);
+	memcpy(destImpl.indiceData, srcImpl.indiceData, indiceBufferSize);
 }
 void VulkanRenderer::destroyVAO(vaos::VAO& vao)
 {

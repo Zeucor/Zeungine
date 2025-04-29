@@ -1,16 +1,17 @@
 #include <zg/Registry.hpp>
-#include <zg/components/windows/FXAA.hpp>
+#include <zg/components/scenes/FXAA.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/Window.hpp>
-using namespace zg::components::windows;
-zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAAFactory(
+using namespace zg;
+using namespace zg::components::scenes;
+zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::FXAAFactory(
     float edgeThresholdMin,
 	float edgeThreshold,
 	float edgeSearchSteps,
 	float subpixQuality
 )
 {
-	WindowComponentCreateInfo info{
+	SceneComponentCreateInfo info{
         .name = "FXAA",
         .onAttachedFunction = [
             edgeThresholdMin,
@@ -19,7 +20,7 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAA
             subpixQuality
         ](auto& component)
         {
-            auto& window = zg::Registry::getWindow(component.hostIndexStack);
+            auto& scene = zg::Registry::getScene(component.HOST_INDEX_STACK);
             zg::PostProcessingStageCreateInfo fxaaStageCreateInfo{
                 .name = "FXAA",
                 .inputs = {"ColorTexture"},
@@ -30,7 +31,7 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAA
                     edgeThreshold,
                     edgeSearchSteps,
                     subpixQuality
-                ](shaders::Shader& shader, auto& vao)
+                ](auto& shader, auto& vao)
                 {
                     float values[4] = {
                         edgeThresholdMin,
@@ -139,7 +140,7 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::FXAA
                     );
                 }
             };
-            window.postProcessingPipeline.addStage(100.f, fxaaStageCreateInfo);
+            scene.postProcessingPipeline.addStage(100.f, fxaaStageCreateInfo);
         }
     };
 	return info;

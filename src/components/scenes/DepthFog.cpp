@@ -26,10 +26,10 @@ SceneComponentCreateInfo zg::components::scenes::DepthFogFactory() {
                 .outputs = {{"ColorTexture", zg::textures::Framebuffer::AttachmentType::Color}},
                 .constants = {"DepthFog", "LinearizeDepthUtil"},
                 .setShaderConstants = [
-                    hostIndexStack = component.hostIndexStack,
+                    HOST_INDEX_STACK = component.HOST_INDEX_STACK,
                     componentID = component.ID
                 ](auto& shader, auto& vao) {
-                    auto& scene = Registry::getScene(hostIndexStack);
+                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
                     auto& component = scene.getComponentByID(componentID);
                     auto& fogColor = component.template getData<glm::vec4>("fogColor");
                     auto& fogStartDistance = component.template getData<float>("fogStartDistance");
@@ -154,8 +154,8 @@ float linearizeDepth(float depthSample, float near, float far) {)";
 
             // Add the stage to the window's post-processing pipeline
             // Place it after most effects, but potentially before UI/final tonemapping
-            auto& window = Registry::getWindow(component.hostIndexStack);
-            window.postProcessingPipeline.addStage(70.f, depthFogStageCreateInfo);
+            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+            scene.postProcessingPipeline.addStage(70.f, depthFogStageCreateInfo);
 
         } // end onAttachedFunction
     }; // end WindowComponentCreateInfo

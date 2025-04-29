@@ -1,16 +1,17 @@
 #include <zg/Registry.hpp>
-#include <zg/components/windows/SMAA.hpp>
+#include <zg/components/scenes/SMAA.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/Window.hpp>
-using namespace zg::components::windows;
-zg::components::windows::WindowComponentCreateInfo zg::components::windows::SMAAFactory(
+using namespace zg;
+using namespace zg::components::scenes;
+zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::SMAAFactory(
     float threshold,
     float maxSearchSteps,
     float maxSearchStepsDiag,
     float cornerRounding
 )
 {
-	WindowComponentCreateInfo info{
+	SceneComponentCreateInfo info{
         .name = "SMAA",
         .onAttachedFunction = [
             threshold,
@@ -19,11 +20,11 @@ zg::components::windows::WindowComponentCreateInfo zg::components::windows::SMAA
             cornerRounding
         ](auto& component)
         {
-            auto& window = zg::Registry::getWindow(component.hostIndexStack);
-            zg::PostProcessingStageCreateInfo smaaStageCreateInfo{
+            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+            PostProcessingStageCreateInfo smaaStageCreateInfo{
                 .name = "SMAA",
                 .inputs = {"ColorTexture"},
-                .outputs = {{"ColorTexture", zg::textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"ColorTexture", textures::Framebuffer::AttachmentType::Color}},
                 .constants = {"SMAA"},
                 .setShaderConstants = [
                     threshold,
@@ -307,7 +308,7 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 weights) {
                     );
                 }
             };
-            window.postProcessingPipeline.addStage(100.f, smaaStageCreateInfo);
+            scene.postProcessingPipeline.addStage(100.f, smaaStageCreateInfo);
         }
     };
 	return info;

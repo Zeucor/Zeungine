@@ -9,10 +9,11 @@
 #include <zg/components/scenes/PhysicsScene.hpp>
 #include <zg/components/scenes/ViewMouseControl.hpp>
 #include <zg/components/scenes/ViewQuadKeyControl.hpp>
-#include <zg/components/windows/FXAA.hpp>
-#include <zg/components/windows/SMAA.hpp>
-#include <zg/components/windows/Bloom.hpp>
-#include <zg/components/windows/EdgeDetection.hpp>
+#include <zg/components/scenes/FXAA.hpp>
+#include <zg/components/scenes/SMAA.hpp>
+#include <zg/components/scenes/Bloom.hpp>
+#include <zg/components/scenes/EdgeDetection.hpp>
+#include <zg/components/scenes/DepthFog.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/entities/Curve.hpp>
 #include <zg/entities/DeltaVisualizer.hpp>
@@ -22,11 +23,11 @@
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/math/Rotations.hpp>
 #include <zg/physics/CollisionManifold.hpp>
-#include <zg/components/scenes/DepthFog.hpp>
 using namespace zg;
 shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
 glm::vec3 windowVisualizerPosition(56.8, 42, 57);
 SceneCreateInfo PhysicsSceneFactory();
+SceneCreateInfo HUDSceneFactory();
 auto staticRigidBodyInfo =
 	components::entities::RigidBodyFactory(components::entities::RigidBodyInfo{components::entities::BodyType::Static});
 auto cubeRigidBodyInfo = components::entities::RigidBodyFactory(
@@ -67,17 +68,17 @@ int main()
 		.windowY = 0,
 		.borderless = true,
 		.vsync = false,
-		.framerate = Window::getScreenRefreshRate(1),
+		.framerate = 60,//Window::getScreenRefreshRate(1),
 	};
 	auto window_tuple = Registry::addWindow(windowCreateInfo);
 	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
 	window.runOnThread([](auto& window){
 		// window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
 		// window.attachComponent(zg::components::windows::SMAAFactory(0.0f, 64, 64, 128));
-		window.attachComponent(zg::components::windows::EdgeDetectionFactory());
-		window.attachComponent(zg::components::windows::BloomFactory());
-		auto sceneCreateInfo = PhysicsSceneFactory();
-		window.addScene(sceneCreateInfo);
+		// window.attachComponent(zg::components::windows::EdgeDetectionFactory());
+		// window.attachComponent(zg::components::windows::BloomFactory());
+		window.addScene(PhysicsSceneFactory());
+		window.addScene(HUDSceneFactory());
 	});
 	window.addKeyPressHandler(27, [&](auto pressed) {
 		if (pressed)
@@ -100,6 +101,7 @@ SceneCreateInfo PhysicsSceneFactory()
 		.fov = 81.f,
 		.onAttachedFunction = [](auto& scene)
 		{
+			auto& window = Registry::getWindow(scene.INDEX_STACK);
 			scene.clearColor = {0, 0, 1, 1};
 			glm::vec3 dldirection{1, -1, 1};
 			dldirection = glm::normalize(dldirection);
@@ -114,8 +116,8 @@ SceneCreateInfo PhysicsSceneFactory()
 				364.f, // farcube5
 				0.4f // ambientFactor
 			});
-			auto& dl = scene.directionalLights[0];
-			scene.directionalLightShadows.emplace_back(scene.window, scene.directionalLights[0]);
+			// auto& dl = scene.directionalLights[0];
+			scene.directionalLightShadows.emplace_back(scene.INDEX_STACK, 0);
 			// scene.attachComponent(components::scenes::GravityByAttractionFactory(0.000005f));
 			// scene.attachComponent(components::scenes::GravityByVectorFactory(glm::vec3(0, -9.81, 0)));
 			scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 40.0L)));
@@ -156,7 +158,7 @@ SceneCreateInfo PhysicsSceneFactory()
 
 			scene.attachComponent(components::scenes::EntityThirdPersonCameraFactory(*std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple)));
 
-			scene.attachComponent(components::scenes::DepthFogFactory());
+			// scene.attachComponent(components::scenes::DepthFogFactory());
 			// cube controls
 			{
 				std::function<void()> onFrontTickFunction = [toxy_index_stack, toxy_rb_ID]()
@@ -195,11 +197,11 @@ SceneCreateInfo PhysicsSceneFactory()
 						toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 150, 0));
 					}
 				};
-				/*fID = */scene.window.addKeyUpdateHandler(f, onFrontTickFunction);
-				/*bID = */scene.window.addKeyUpdateHandler(b, onBackTickFunction);
-				/*lID = */scene.window.addKeyUpdateHandler(l, onLeftTickFunction);
-				/*rID = */scene.window.addKeyUpdateHandler(r, onRightTickFunction);
-				/*sID = */scene.window.addKeyUpdateHandler(s, onSpaceTickFunction);
+				/*fID = */window.addKeyUpdateHandler(f, onFrontTickFunction);
+				/*bID = */window.addKeyUpdateHandler(b, onBackTickFunction);
+				/*lID = */window.addKeyUpdateHandler(l, onLeftTickFunction);
+				/*rID = */window.addKeyUpdateHandler(r, onRightTickFunction);
+				/*sID = */window.addKeyUpdateHandler(s, onSpaceTickFunction);
 			}
 		}
 	};
@@ -465,3 +467,21 @@ SceneCreateInfo PhysicsSceneFactory()
 // 		detachAllComponents();
 // 	}
 // };
+SceneCreateInfo HUDSceneFactory()
+{
+	SceneCreateInfo info{
+		.name = "HUD",
+		.cameraPosition = {0, 0, -1},
+		.cameraDirection = {0, 0, 1},
+		.cameraUp = {0, 1, 0},
+		.projectionType = zg::vp::Projection::TYPE::Orthographic,
+		.orthoSize = {2, 2},
+		.onAttachedFunction = [](auto& scene)
+		{
+			auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto angle = glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
+			scene.addEntity(entities::DeltaVisualizerFactory(glm::vec2(0.5, 0.5), window.deltaTime, window.lastFrameDeltaTime, glm::vec3(-0.75, 0.75, 0), angle));
+		}
+	};
+	return info;
+}

@@ -30,46 +30,50 @@ SceneCreateInfo ExampleSceneFactory()
 		.cameraDirection = glm::normalize(glm::vec3(0, -1, -1)),
 		.onAttachedFunction = [](auto& scene)
 		{
+			auto& window = Registry::getWindow(scene.INDEX_STACK);
 			scene.clearColor = {1, 0, 1, 1};
 			scene.template setData<size_t>("CubeID", std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(cubeCreateInfo)));
 			scene.template setData<size_t>("PlaneID", std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(planeCreateInfo)));
-			scene.template setData<zg::UniqueIdentifier>(
-				"mPressID",
-				scene.window.addKeyPressHandler('m',
-					[&](auto pressed)
-					{
-						if (pressed)
-							scene.window.maximize();
-					}
-				)
-			);
-			scene.template setData<zg::UniqueIdentifier>(
-				"nPressID",
-				scene.window.addKeyPressHandler('n',
-					[&](auto pressed)
-					{
-						if (pressed)
-							scene.window.minimize();
-					}
-				)
-			);
-			scene.template setData<zg::UniqueIdentifier>(
-				"rPressID",
-				scene.window.addKeyPressHandler('r',
-					[&](auto pressed)
-					{
-						if (pressed)
-							scene.window.restore();
-					}
-				)
-			);
+			// scene.template setData<zg::UniqueIdentifier>(
+			// 	"mPressID",
+			// 	window.addKeyPressHandler('m',
+			// 		[&](auto pressed)
+			// 		{
+			// 			if (pressed)
+			// 				window.maximize();
+			// 		}
+			// 	)
+			// );
+			// scene.template setData<zg::UniqueIdentifier>(
+			// 	"nPressID",
+			// 	window.addKeyPressHandler('n',
+			// 		[&](auto pressed)
+			// 		{
+			// 			if (pressed)
+			// 				window.minimize();
+			// 		}
+			// 	)
+			// );
+			// scene.template setData<zg::UniqueIdentifier>(
+			// 	"rPressID",
+			// 	window.addKeyPressHandler('r',
+			// 		[&](auto pressed)
+			// 		{
+			// 			if (pressed)
+			// 				window.restore();
+			// 		}
+			// 	)
+			// );
 			scene.template setData<zg::UniqueIdentifier>(
 				"qPressID",
-				scene.window.addKeyPressHandler('q',
-					[&](auto pressed)
+				window.addKeyPressHandler('q',
+					[INDEX_STACK = scene.INDEX_STACK](auto pressed)
 					{
 						if (pressed)
-							scene.window.close();
+						{
+							auto& window = Registry::getWindow(INDEX_STACK);
+							window.close();
+						}
 					}
 				)
 			);
@@ -79,14 +83,16 @@ SceneCreateInfo ExampleSceneFactory()
 		},
 		.onDetachedFunction = [](auto& scene)
 		{
-			scene.window.removeKeyPressHandler('m', scene.template getData<zg::UniqueIdentifier>("mPressID"));
-			scene.window.removeKeyPressHandler('n', scene.template getData<zg::UniqueIdentifier>("nPressID"));
-			scene.window.removeKeyPressHandler('r', scene.template getData<zg::UniqueIdentifier>("rPressID"));
-			scene.window.removeKeyPressHandler('q', scene.template getData<zg::UniqueIdentifier>("qPressID"));
+			auto& window = Registry::getWindow(scene.INDEX_STACK);
+			window.removeKeyPressHandler('m', scene.template getData<zg::UniqueIdentifier>("mPressID"));
+			window.removeKeyPressHandler('n', scene.template getData<zg::UniqueIdentifier>("nPressID"));
+			window.removeKeyPressHandler('r', scene.template getData<zg::UniqueIdentifier>("rPressID"));
+			window.removeKeyPressHandler('q', scene.template getData<zg::UniqueIdentifier>("qPressID"));
 		},
 		.preUpdateFunction = [](auto& scene)
 		{
-			auto deltaTimeCounter = (scene.template getData<float>("deltaTimeCounter") += scene.window.deltaTime);
+			auto& window = Registry::getWindow(scene.INDEX_STACK);
+			auto deltaTimeCounter = (scene.template getData<float>("deltaTimeCounter") += window.deltaTime);
 			scene.clearColor = {std::sin(deltaTimeCounter), std::cos(deltaTimeCounter), std::tan(deltaTimeCounter), 1};
 		}};
 	return info;

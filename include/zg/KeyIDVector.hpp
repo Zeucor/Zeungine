@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 #include <zg/GlobalUID.hpp>
-// #include <zg/ChunkAllocator.hpp>
+#include <cassert>
 namespace zg
 {
 #define KEY_ID_VECTOR_KEY_INDEX 0
@@ -22,13 +22,78 @@ namespace zg
 		using ValueVector = std::vector<ValueT>;
 		using KeyIndexMap = std::map<KeyT, size_t*, std::less<KeyT>>;
 		using IDKeyMap = std::unordered_map<size_t, KeyT, std::hash<size_t>>;
-		using IDIndexMap = std::unordered_map<size_t, size_t, std::hash<size_t>, std::equal_to<size_t>>;
+		using IDIndexMap = std::map<size_t, std::shared_ptr<size_t>>;
 		using IndexIDMap = std::unordered_map<size_t, size_t, std::hash<size_t>, std::equal_to<size_t>>;
 		using EmplaceBackTuple = std::tuple<KeyT, size_t, size_t*, ValueT*>;
 		using GetKeyFunction = std::function<KeyT(const ValueT&)>;
 		using DuplicateKeyFunction = std::function<KeyT(const KeyT&)>;
 		using ValueIndexIterator = ValueVector::iterator;
 		using ConstValueIndexIterator = ValueVector::const_iterator;
+
+	public:
+		struct Transaction
+		{
+			friend KeyIDVector;
+			size_t* index;
+			size_t id;
+			KeyT key;
+
+		protected:
+			bool committed = false;
+			bool rolledback = false;
+		};
+		Transaction startTransaction()
+		{
+			m_Mutex->lock();
+			size_t id = GlobalUID::GetNew();
+			size_t index = m_Values.size();
+			auto id_indexit = m_IDIndexMap.emplace(id, std::make_shared<size_t>(index));
+			auto& indexRef = *id_indexit.first->second;
+			m_IndexIDMap[index] = id;
+			Transaction t;
+			t.index = &indexRef;
+			t.id = id;
+			return t;
+		}
+		template <typename... Args>
+		ValueT& commitTransaction(Transaction& transaction, const Args&... args)
+		{
+			if (transaction.committed)
+			{
+				m_Mutex->unlock();
+				throw std::runtime_error("Cannot commit a transaction more than once");
+			}
+			if (transaction.rolledback)
+			{
+				m_Mutex->unlock();
+				throw std::runtime_error("Cannot commit a transaction after it has been rolled back");
+			}
+			auto& value = m_Values.emplace_back(args...);
+			assert(m_Values.size() - 1 == *transaction.index);
+			transaction.key = FindNextKey_locked(value);
+			m_IDKeyMap.emplace(transaction.id, transaction.key);
+			auto key_indexit = m_KeyIndexMap.emplace(transaction.key, transaction.index);
+			transaction.committed = true;
+			m_Mutex->unlock();
+			return value;
+		}
+		void rollback(Transaction& transaction)
+		{
+			if (transaction.committed)
+			{
+				m_Mutex->unlock();
+				throw std::runtime_error("unable to rollback committed transactions, use erase instead!");
+			}
+			if (transaction.rolledback)
+			{
+				m_Mutex->unlock();
+				throw std::runtime_error("unable to rollback transaction more than once!");
+			}
+			m_IDIndexMap.erase(transaction.id);
+			m_IndexIDMap.erase(*transaction.index);
+			transaction.rolledback = true;
+			m_Mutex->unlock();
+		}
 
 	private:
 		KeyIndexMap m_KeyIndexMap;
@@ -60,22 +125,9 @@ namespace zg
 			m_GetKeyFunctionSet = other.m_GetKeyFunctionSet;
 			m_DuplicateKeyFunctionSet = other.m_DuplicateKeyFunctionSet;
 			m_Mutex = std::make_shared<std::recursive_mutex>();
-			m_IDIndexMap.clear();
-			m_KeyIndexMap.clear();
-			m_IndexIDMap.clear();
-			for (const auto& pair : other.m_IDIndexMap)
-			{
-				size_t id = pair.first;
-				size_t index = pair.second;
-				auto& index_ref = (m_IDIndexMap[id] = index);
-				m_IndexIDMap[index] = id;
-				auto id_key_it = other.m_IDKeyMap.find(id);
-				if (id_key_it != other.m_IDKeyMap.end())
-				{
-					const KeyT& key = id_key_it->second;
-					m_KeyIndexMap.emplace(key, &index_ref);
-				}
-			}
+			m_IDIndexMap = other.m_IDIndexMap;
+			m_KeyIndexMap = other.m_KeyIndexMap;
+			m_IndexIDMap = other.m_IndexIDMap;
 		}
 		KeyIDVector& operator=(const KeyIDVector& other)
 		{
@@ -91,22 +143,9 @@ namespace zg
 			m_DuplicateKeyFunction = other.m_DuplicateKeyFunction;
 			m_GetKeyFunctionSet = other.m_GetKeyFunctionSet;
 			m_DuplicateKeyFunctionSet = other.m_DuplicateKeyFunctionSet;
-			m_IDIndexMap.clear();
-			m_KeyIndexMap.clear();
-			m_IndexIDMap.clear();
-			for (const auto& pair : other.m_IDIndexMap)
-			{
-				size_t id = pair.first;
-				size_t index = pair.second;
-				auto& index_ref = (m_IDIndexMap[id] = index);
-				m_IndexIDMap[index] = id;
-				auto id_key_it = other.m_IDKeyMap.find(id);
-				if (id_key_it != other.m_IDKeyMap.end())
-				{
-					const KeyT& key = id_key_it->second;
-					m_KeyIndexMap.emplace(key, &index_ref);
-				}
-			}
+			m_IDIndexMap = other.m_IDIndexMap;
+			m_KeyIndexMap = other.m_KeyIndexMap;
+			m_IndexIDMap = other.m_IndexIDMap;
 			return *this;
 		}
 		ValueT* data() { return m_Values.data(); }
@@ -130,13 +169,13 @@ namespace zg
 			if (!m_GetKeyFunctionSet)
 				throw std::logic_error("KeyIDVector::emplace_back: GetKeyFunction is not set.");
 			std::lock_guard lock(*m_Mutex);
-			ValueT& value = m_Values.emplace_back(args...);
+			auto& value = m_Values.emplace_back(args...);
 			KeyT key = FindNextKey_locked(value);
 		_id:
 			size_t id = GlobalUID::GetNew();
 			size_t index = m_Values.size() - 1;
-			auto id_indexit = m_IDIndexMap.emplace(id, index);
-			size_t& indexRef = id_indexit.first->second;
+			auto id_indexit = m_IDIndexMap.emplace(id, std::make_shared<size_t>(index));
+			auto& indexRef = *id_indexit.first->second;
 			auto key_indexit = m_KeyIndexMap.emplace(key, &indexRef);
 			m_IDKeyMap.emplace(id, key);
 			m_IndexIDMap[index] = id;
@@ -149,9 +188,9 @@ namespace zg
 			size_t id = GlobalUID::GetNew();
 			size_t index = m_Values.size();
 			key = FindNextKey_locked_withKey(key);
-			ValueT& value = m_Values.emplace_back(args...);
-			auto id_indexit = m_IDIndexMap.emplace(id, index);
-			size_t& indexRef = id_indexit.first->second;
+			auto& value = m_Values.emplace_back(args...);
+			auto id_indexit = m_IDIndexMap.emplace(id, std::make_shared<size_t>(index));
+			auto& indexRef = *id_indexit.first->second;
 			m_KeyIndexMap.emplace(key, &indexRef);
 			m_IDKeyMap.emplace(id, key);
 			m_IndexIDMap[index] = id;
@@ -248,9 +287,9 @@ namespace zg
 				auto moved_id_idx_it = m_IDIndexMap.find(last_id);
 				if (moved_id_idx_it == m_IDIndexMap.end())
 					throw std::logic_error("KeyIDVector::erase: Inconsistent state - No ID->Index map entry for moved element.");
-				moved_id_idx_it->second = erased_index;
+				*moved_id_idx_it->second = erased_index;
 				m_IndexIDMap[erased_index] = last_id;
-				m_IDIndexMap[last_id] = erased_index;
+				*m_IDIndexMap[last_id] = erased_index;
 				m_IndexIDMap.erase(last_idx_id_it);
 			}
 			else
@@ -284,9 +323,9 @@ namespace zg
 		{
 			size_t id = GlobalUID::GetNew();
 			size_t index = m_Values.size();
-			ValueT& value = m_Values.emplace_back();
-			auto id_indexit = m_IDIndexMap.emplace(id, index);
-			size_t& indexRef = id_indexit.first->second;
+			auto& value = m_Values.emplace_back();
+			auto id_indexit = m_IDIndexMap.emplace(id, std::make_shared<size_t>(index));
+			auto& indexRef = *id_indexit.first->second;
 			m_KeyIndexMap.emplace(key, &indexRef);
 			m_IDKeyMap.emplace(id, key);
 			m_IndexIDMap[index] = id;
@@ -483,7 +522,7 @@ namespace zg
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
 			}
-			size_t index() const { return map_iter->second; }
+			size_t index() const { return *map_iter->second; }
 			size_t id() const
 			{
 				auto _index = index();
@@ -566,7 +605,7 @@ namespace zg
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
 			}
-			size_t index() const { return map_iter->second; }
+			size_t index() const { return *map_iter->second; }
 			size_t id() const
 			{
 				auto _index = index();
@@ -887,7 +926,7 @@ namespace zg
 			{
 				return end();
 			}
-			auto& index = id_iter->second;
+			auto& index = *id_iter->second;
 			return {this, m_Values.begin() + index};
 		}
 		const const_value_iterator find_id(size_t id) const
@@ -898,7 +937,7 @@ namespace zg
 			{
 				return end();
 			}
-			auto& index = id_iter->second;
+			auto& index = *id_iter->second;
 			return {this, m_Values.begin() + index};
 		}
 		KeyT getKey(value_iterator iter)
@@ -916,11 +955,9 @@ namespace zg
 		}
 
 	public:
-
 		void reserve(size_t n)
 		{
 			m_Values.reserve(n);
-			m_IDIndexMap.reserve(n);
 			m_IDKeyMap.reserve(n);
 			m_IndexIDMap.reserve(n);
 		}
