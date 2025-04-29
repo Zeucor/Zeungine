@@ -192,7 +192,7 @@ SceneCreateInfo PhysicsSceneFactory()
 					auto& floor = Registry::getEntity(floor_index_stack);
 					auto& floor_rb = floor.getComponentByID(floor_rb_ID);
 					physics::CollisionManifold* ManifoldPointer = 0;
-					if (std::any_cast<bool>(toxy_rb.template setData<components::entities::EntityComponent*>("isTouching", &floor_rb)))
+					if (toxy_rb.template getData<size_t>("CollidingMask") == 1)
 					{
 						toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 150, 0));
 					}

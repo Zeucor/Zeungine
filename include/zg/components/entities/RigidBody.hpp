@@ -21,7 +21,7 @@ namespace zg::components::entities
 	};
 	struct RigidBodyInfo
 	{
-		BodyType bodyType;
+		BodyType bodyType = BodyType::Dynamic;
 		float mass = 1.0f;
 		float linearDamping = 0.8f;
 		float angularDamping = 0.8f;
@@ -29,6 +29,20 @@ namespace zg::components::entities
 		bool isKinematicInitially = false;
 		glm::vec<3, bool> freezeRotationAxes = {false, false, false};
 		glm::vec<3, bool> freezeVelocityAxes = {false, false, false};
+		size_t collisionMask = 1;
+		RigidBodyInfo() = default;
+		RigidBodyInfo(
+			BodyType bodyType,
+			float mass = 1.0f,
+			float linearDamping = 0.8f,
+			float angularDamping = 0.8f,
+			bool useGravity = true,
+			bool isKinematicInitially = false,
+			glm::vec<3, bool> freezeRotationAxes = {false, false, false},
+			glm::vec<3, bool> freezeVelocityAxes = {false, false, false},
+			size_t collisionMask = 1);
+		RigidBodyInfo(const RigidBodyInfo& other);
+		RigidBodyInfo& operator=(const RigidBodyInfo& other);
 	};
 	components::entities::EntityComponentCreateInfo RigidBodyFactory(const RigidBodyInfo& info);
 	// struct RigidBody : components::entities::EntityComponent
