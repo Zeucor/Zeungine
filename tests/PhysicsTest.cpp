@@ -481,7 +481,8 @@ SceneCreateInfo HUDSceneFactory()
 			auto& window = Registry::getWindow(scene.INDEX_STACK);
             auto angle = glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
 			scene.addEntity(entities::DeltaVisualizerFactory(glm::vec2(0.5, 0.5), window.deltaTime, window.lastFrameDeltaTime, glm::vec3(-0.75, 0.75, 0), angle));
-		}
+		},
+		.useBVH = false
 	};
 	return info;
 }
