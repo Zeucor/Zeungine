@@ -68,7 +68,7 @@ int main()
 		.windowY = 0,
 		.borderless = true,
 		.vsync = false,
-		.framerate = 60,//Window::getScreenRefreshRate(1),
+		.framerate = 60, //Window::getScreenRefreshRate(1),
 	};
 	auto window_tuple = Registry::addWindow(windowCreateInfo);
 	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
