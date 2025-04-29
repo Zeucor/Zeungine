@@ -120,7 +120,7 @@ SceneCreateInfo PhysicsSceneFactory()
 			scene.directionalLightShadows.emplace_back(scene.INDEX_STACK, 0);
 			// scene.attachComponent(components::scenes::GravityByAttractionFactory(0.000005f));
 			// scene.attachComponent(components::scenes::GravityByVectorFactory(glm::vec3(0, -9.81, 0)));
-			scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 40.0L)));
+			scene.attachComponent(components::scenes::PhysicsSceneFactory((long double)(1.0L / 60.0L)));
 			// scene.attachComponent(components::scenes::ViewMouseControlFactory());
 			// scene.attachComponent(
 			// 	components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 5));
