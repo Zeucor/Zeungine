@@ -161,10 +161,20 @@ void Entity::render()
 	auto& scene = Registry::getScene(INDEX_STACK);
 	scene.entityPreRender(*this);
 	shader->setBlock("Model", *this, model);
-	shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+	{
+		if (viewPointer)
+			viewPointer->updateMutex.lock();
+		else
+			scene.viewPointer->updateMutex.lock();
+		shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
+		shader->setBlock("CameraPosition", *this, viewPointer ? viewPointer->position : scene.viewPointer->position, 16);
+		if (viewPointer)
+			viewPointer->updateMutex.unlock();
+		else
+			scene.viewPointer->updateMutex.unlock();
+	}
 	shader->setBlock("Projection", *this,
-									 projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-	shader->setBlock("CameraPosition", *this, viewPointer ? viewPointer->position : scene.viewPointer->position, 16);
+									projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
 	auto keyedTexturesSize = keyedTextures.size();
 	auto keyedTexturesData = keyedTextures.data();
 	for (size_t unit = 0; unit < keyedTexturesSize; ++unit)

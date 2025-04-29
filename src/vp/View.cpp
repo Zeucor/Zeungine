@@ -42,15 +42,17 @@ void View::update()
 		}
 		if (!running)
 			break;
+		glm::mat4 newMatrix;
 		if (lookAtSet)
-			matrix = glm::lookAt(position, lookAt, up);
+			newMatrix = glm::lookAt(position, lookAt, up);
 		else
 		{
 			auto _direction_ = direction;
-			matrix = glm::lookAt(position, position + _direction_, up);
+			newMatrix = glm::lookAt(position, position + _direction_, up);
 		}
 		{
 			std::unique_lock lock(updateMutex);
+			matrix = newMatrix;
 			dirty = false;
 		}
 		updateCV.notify_one();
