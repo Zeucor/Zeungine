@@ -98,10 +98,6 @@ zg::components::entities::ColliderFactory(const ColliderInfo& colliderInfo)
 			}
 			rigidBodyComponentPointer->template setData<EntityComponent*>("detachCollider", &component);
 		},
-		.onUpdateFunction = [](auto& component)
-		{
-
-		},
 		.getDataFunctions = {
 			{"Info", [colliderInfo](auto& component)->std::any&
 			{

@@ -73,10 +73,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 		},
 		.onDetachedFunction = [](auto& component)
 		{
-		},
-		.onUpdateFunction = [](auto& component)
-		{
-
+			delete component.template getData<std::mutex*>("Mutex");
 		},
 		.getDataFunctions = {
 			{"recreateJoltBody", [](auto& component)->std::any&
