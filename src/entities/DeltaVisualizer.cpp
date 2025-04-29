@@ -71,6 +71,8 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
             auto& targetDelta = *entity.template getData<long double*>("targetDelta");
             auto& averageDeltaSum = entity.template getData<long double>("averageDeltaSum");
 			{
+                averageDeltaSum += currentDelta;
+				curveFrameOffset++;
 				if (!curveID)
 				{
 					std::vector<glm::vec2> curvePoints(maxpoints, glm::vec2(0));
@@ -79,22 +81,22 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
 						curvePoints);
 					auto curve_tuple = entity.addChild(curveInfo);
                     curveID = std::get<KEY_ID_VECTOR_ID_INDEX>(curve_tuple);
+                    return;
 				}
                 auto& curve = Registry::getEntity(curveID);
                 auto& curvePoints = curve.template getData<std::vector<glm::vec2>>("Points");
-                averageDeltaSum += currentDelta;
 				if (curveFrameOffset > 0)
 				{
-					curveFrameOffset++;
 					if (curveFrameOffset == 10)
 					{
 						curveFrameOffset = 0;
+                        goto _nextPoint;
 					}
 					return;
 				}
-                auto _currentDelta = averageDeltaSum / 11;
+            _nextPoint:
+                auto _currentDelta = averageDeltaSum / 10;
                 averageDeltaSum = 0.0L;
-				curveFrameOffset++;
 				auto curvePointsData = curvePoints.data();
 				if (curvePointsIndex >= maxpoints)
 				{
