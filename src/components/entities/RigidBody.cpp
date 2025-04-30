@@ -68,12 +68,8 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			component.template make<JPH::Body*>("Body");
 			component.template make<std::vector<components::entities::EntityComponent*>>("Colliders");
 			component.template make<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
-			component.template make<std::mutex*>("Mutex", new std::mutex());
+			component.template make<std::shared_ptr<std::mutex>>("Mutex", std::make_shared<std::mutex>());
 			component.template make<std::map<size_t, size_t>>("CollidingMaskCounts");
-		},
-		.onDetachedFunction = [](auto& component)
-		{
-			delete component.template getData<std::mutex*>("Mutex");
 		},
 		.getDataFunctions = {
 			{"recreateJoltBody", [](auto& component)->std::any&
@@ -339,7 +335,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 		},
 			{"isTouching", [](const std::any& val, auto& component)->std::any
 				{
-					auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
+					auto& mutexPointer = component.template getData<std::shared_ptr<std::mutex>>("Mutex");
 					auto& mutex = *mutexPointer;
 					auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
 					auto otherRb = std::any_cast<components::entities::EntityComponent*>(val);
@@ -353,7 +349,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 			},
 			{"getTouchingManifold", [](const std::any& val, auto& component)->std::any
 				{
-					auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
+					auto& mutexPointer = component.template getData<std::shared_ptr<std::mutex>>("Mutex");
 					auto& mutex = *mutexPointer;
 					auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
 					auto otherRb = std::any_cast<components::entities::EntityComponent*>(val);
@@ -366,7 +362,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				}
 			},
 			{"addActiveManifold", [](const std::any& val, auto& component)->std::any {
-				auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
+				auto& mutexPointer = component.template getData<std::shared_ptr<std::mutex>>("Mutex");
 				auto& mutex = *mutexPointer;
 				auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
 				auto manifold = std::any_cast<physics::CollisionManifold>(val);
@@ -379,7 +375,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				return {};
 			}},
 			{"removeActiveManifold", [](const std::any& val, auto& component)->std::any {
-				auto& mutexPointer = component.template getData<std::mutex*>("Mutex");
+				auto& mutexPointer = component.template getData<std::shared_ptr<std::mutex>>("Mutex");
 				auto& mutex = *mutexPointer;
 				auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
 				std::lock_guard lock(mutex);
