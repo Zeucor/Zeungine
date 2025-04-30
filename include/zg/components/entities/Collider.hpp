@@ -6,6 +6,9 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 namespace zg
 {
 	struct Entity;
@@ -27,7 +30,7 @@ namespace zg::components::entities
 		virtual ~ShapeData() = default;
 		virtual ShapeType getType() const = 0;
 		virtual glm::vec3 getHalfExtents() const = 0;
-		virtual JPH::ShapeRefC createJoltShape() const = 0;
+		virtual JPH::ShapeRefC createJoltShape(Entity& entity) const = 0;
 		physics::AABB<3> getLocalAABB()
 		{
 			auto he = getHalfExtents();
@@ -40,14 +43,14 @@ namespace zg::components::entities
 		BoxShapeData(glm::vec3 halfExtents);
 		ShapeType getType() const override { return ShapeType::Box; }
 		glm::vec3 getHalfExtents() const { return halfExtents; }
-		JPH::ShapeRefC createJoltShape() const override;
+		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct SphereShapeData : ShapeData
 	{
 		float radius;
 		ShapeType getType() const override { return ShapeType::Sphere; }
 		glm::vec3 getHalfExtents() const { return glm::vec3(radius); }
-		JPH::ShapeRefC createJoltShape() const override;
+		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct CapsuleShapeData : ShapeData
 	{
@@ -55,21 +58,21 @@ namespace zg::components::entities
 		float height; // Height of the cylindrical part
 		ShapeType getType() const override { return ShapeType::Capsule; }
 		glm::vec3 getHalfExtents() const { return glm::vec3(radius, (height / 2.f) + radius, radius); }
-		JPH::ShapeRefC createJoltShape() const override;
+		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct MeshShapeData : ShapeData
 	{
-		Entity& entity;
-		MeshShapeData(Entity& entity);
+		MeshShapeData() = default;
 		ShapeType getType() const override { return ShapeType::Mesh; }
 		glm::vec3 getHalfExtents() const { /* TODO: Find half extents */ return glm::vec3(1); }
-		JPH::ShapeRefC createJoltShape() const override;
+		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct ConvexHullShapeData : ShapeData
 	{
+		ConvexHullShapeData() = default;
 		ShapeType getType() const override { return ShapeType::ConvexHull; }
 		glm::vec3 getHalfExtents() const { /* TODO: Find half extents */ return glm::vec3(1); }
-		JPH::ShapeRefC createJoltShape() const override;
+		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct PhysicsMaterial
 	{

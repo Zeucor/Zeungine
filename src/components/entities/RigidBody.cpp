@@ -118,15 +118,21 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 					// Single collider case
 					auto col = colliders[0];
 					auto& colInfo = col->template getData<ColliderInfo>("Info");
-					auto baseShape = colInfo.shapeData->createJoltShape();
+					auto baseShape = colInfo.shapeData->createJoltShape(entity);
 					if (!baseShape)
 					{
 						std::cerr << "RigidBody ERROR: Failed to create base Jolt shape for Entity [" << entity.ID << "]."
 											<< std::endl;
 						return bodyIDAny;
 					}
-			
-					finalShape = baseShape;
+					JPH::ScaledShapeSettings scaledSettings(baseShape, ToJolt<glm::vec3, JPH::Vec3>(entity.scale));
+					auto result = scaledSettings.Create();
+					if (result.HasError())
+					{
+						std::cerr << "Error creating Jolt ScaledShape: " << result.GetError().c_str() << std::endl;
+						finalShape = nullptr;
+					}
+					finalShape = result.Get();
 				}
 				else
 				{
@@ -136,7 +142,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 					// for (const Collider* col : colliders)
 					// {
 					// 	const auto& colInfo = col->getColliderInfo();
-					// 	JPH::ShapeRefC baseShape = colInfo.shapeData->createJoltShape();
+					// 	JPH::ShapeRefC baseShape = colInfo.shapeData->createJoltShape(entity);
 					// 	if (baseShape)
 					// 	{
 					// 		compoundSettings.AddShape(ToJolt<glm::vec3, JPH::Quat>(colInfo.offset),

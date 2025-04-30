@@ -45,7 +45,7 @@ auto floorColliderInfo = components::entities::ColliderFactory(
 auto toxyCreateInfo = entities::CubeFactory("Toxy", {50, 47, 58}, {1, 0, 0, 0}, glm::vec3(2), glm::vec3(1), {0, 0, 1, 1}, commonShaderConstants);
 auto toxyColliderInfo = components::entities::ColliderFactory(
 	components::entities::ColliderInfo(
-		std::make_shared<components::entities::BoxShapeData>(glm::vec3(2, 2, 2) / 2.f),
+		std::make_shared<components::entities::ConvexHullShapeData>(),
 		components::entities::PhysicsMaterial{.friction=0.8f, .restitution=0.11f},
 		false
 	)

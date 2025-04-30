@@ -7,7 +7,7 @@
 using namespace zg::components::entities;
 using zg::physics::AABB;
 BoxShapeData::BoxShapeData(glm::vec3 halfExtents) : halfExtents(halfExtents) {}
-JPH::ShapeRefC BoxShapeData::createJoltShape() const
+JPH::ShapeRefC BoxShapeData::createJoltShape(Entity& entity) const
 {
 	JPH::BoxShapeSettings settings(JPH::Vec3(halfExtents.x, halfExtents.y, halfExtents.z));
 	// Optional: Add convex radius for better stability/performance trade-off
@@ -20,7 +20,7 @@ JPH::ShapeRefC BoxShapeData::createJoltShape() const
 	}
 	return result.Get();
 }
-JPH::ShapeRefC SphereShapeData::createJoltShape() const
+JPH::ShapeRefC SphereShapeData::createJoltShape(Entity& entity) const
 {
 	JPH::SphereShapeSettings settings(radius);
 	auto result = settings.Create();
@@ -31,22 +31,74 @@ JPH::ShapeRefC SphereShapeData::createJoltShape() const
 	}
 	return result.Get();
 }
-MeshShapeData::MeshShapeData(Entity& entity) : entity(entity) {}
-JPH::ShapeRefC MeshShapeData::createJoltShape() const
+JPH::ShapeRefC MeshShapeData::createJoltShape(Entity& entity) const
 {
-	std::cerr << "Jolt WARNING: MeshShape creation not implemented!" << std::endl;
-	// Placeholder: Create a small box instead
-	return BoxShapeData({0.1f, 0.1f, 0.1f}).createJoltShape();
-	// --- Actual Implementation ---
-	// 1. Get vertex and index data (e.g., from entity's MeshComponent)
-	// JPH::VertexList vertices;
-	// JPH::IndexedTriangleList triangles;
-	// // ... populate vertices and triangles ...
-	// JPH::MeshShapeSettings settings(vertices, triangles);
-	// settings.SetEmbedded(); // Embed data in shape if desired
-	// auto result = settings.Create();
-	// if (result.HasError()) { /* handle error */ return nullptr; }
-	// return result.Get();
+	std::vector<glm::vec3> entityVertices = entity.vertices(entity);
+	std::vector<uint32_t> entityIndices = entity.indices(entity);
+    if (entityIndices.size() % 3 != 0)
+    {
+        std::cerr << "Error: Index count (" << entityIndices.size() << ") is not a multiple of 3 for entity " << entity.ID << std::endl;
+        return nullptr;
+    }
+    JPH::VertexList vertices;
+    vertices.reserve(entityVertices.size());
+    for (const auto& v : entityVertices)
+    {
+        vertices.emplace_back(v.x, v.y, v.z);
+    }
+    JPH::IndexedTriangleList triangles;
+    size_t numTriangles = entityIndices.size() / 3;
+    triangles.reserve(numTriangles);
+    for (size_t i = 0; i < entityIndices.size(); i += 3)
+    {
+        auto i0 = entityIndices[i];
+        auto i1 = entityIndices[i + 1];
+        auto i2 = entityIndices[i + 2];
+        if (i0 >= vertices.size() || i1 >= vertices.size() || i2 >= vertices.size())
+		{
+             std::cerr << "Error: Vertex index out of bounds for entity " << entity.ID << std::endl;
+             return nullptr;
+        }
+        triangles.emplace_back(i0, i1, i2, 0);
+    }
+    JPH::MeshShapeSettings settings(vertices, triangles);
+    settings.SetEmbedded();
+    auto result = settings.Create();
+    if (result.HasError())
+    {
+        std::cerr << "Error creating Jolt MeshShape for entity " << entity.ID << ": " << result.GetError().c_str() << std::endl;
+        return nullptr;
+    }
+    return result.Get();
+}
+
+JPH::ShapeRefC ConvexHullShapeData::createJoltShape(Entity& entity) const
+{
+	std::vector<glm::vec3> entityVertices = entity.vertices(entity);
+	if (entityVertices.empty())
+	{
+		std::cerr << "Error: Cannot create convex hull with zero vertices." << std::endl;
+		return nullptr;
+	}
+    if (entityVertices.size() < 4)
+	{
+		std::cerr << "Warning: Trying to create a convex hull with fewer than 4 vertices (" << entityVertices.size() << ")." << std::endl;
+		return nullptr;
+	}
+	JPH::Array<JPH::Vec3> joltVertices;
+	joltVertices.reserve(entityVertices.size());
+	for (const auto& v : entityVertices)
+	{
+		joltVertices.push_back(JPH::Vec3(v.x, v.y, v.z));
+	}
+	JPH::ConvexHullShapeSettings settings(joltVertices);
+	auto result = settings.Create();
+	if (result.HasError())
+	{
+		std::cerr << "Error creating Jolt ConvexHullShape: " << result.GetError().c_str() << std::endl;
+		return nullptr;
+	}
+	return result.Get();
 }
 
 ColliderInfo::ColliderInfo(const std::shared_ptr<ShapeData>& shapeData, const PhysicsMaterial& material, bool isSensor) :
