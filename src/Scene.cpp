@@ -187,6 +187,7 @@ Scene::~Scene()
 		if (entity.onRemovedFunction)
 			entity.onRemovedFunction(entity);
 	entities.clear();
+	postProcessingPipeline.cleanup();
 	unhookMouseEvents();
 }
 std::vector<textures::Framebuffer::TextureAttachmentPair>

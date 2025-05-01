@@ -56,7 +56,7 @@ namespace zg
         TextureOutputRegistry textureRegistry;
         std::vector<size_t*> INDEX_STACK;
         KeyIDVector<float, PostProcessingStage> stages;
-        KeyIDVector<float, textures::Framebuffer*> framebuffers;
+        KeyIDVector<float, std::shared_ptr<textures::Framebuffer>> framebuffers;
         KeyIDVector<float, FullscreenQuad> fullscreenQuads;
         std::unordered_map<std::string, bool> calledStaticOnAttached;
         std::unordered_map<std::string, bool> calledStaticOnDetached;

@@ -23,6 +23,7 @@
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/math/Rotations.hpp>
 #include <zg/physics/CollisionManifold.hpp>
+#include <zg/fonts/ttf2mesh/TTF2Mesh.hpp>
 using namespace zg;
 shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
 glm::vec3 windowVisualizerPosition(56.8, 42, 57);
@@ -75,7 +76,6 @@ int main()
 	window.runOnThread([](auto& window){
 		// window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
 		// window.attachComponent(zg::components::windows::SMAAFactory(0.0f, 64, 64, 128));
-		// window.attachComponent(zg::components::windows::EdgeDetectionFactory());
 		// window.attachComponent(zg::components::windows::BloomFactory());
 		window.addScene(PhysicsSceneFactory());
 		window.addScene(HUDSceneFactory());
@@ -128,11 +128,11 @@ SceneCreateInfo PhysicsSceneFactory()
 			// auto floorColliderCreateInfo = components::entities::ColliderFactory();
 			// floor.attachComponent(floorColliderCreateInfo);
 			auto toxy_tuple = scene.addEntity(toxyCreateInfo);
-			auto cube1_tuple = scene.addEntity(cubeCreateInfo);
-			cubeCreateInfo.position = {47, 47, 58};
-			auto cube2_tuple = scene.addEntity(cubeCreateInfo);
-			cubeCreateInfo.position = {50, 47, 54};
-			auto cube3_tuple = scene.addEntity(cubeCreateInfo);
+			// auto cube1_tuple = scene.addEntity(cubeCreateInfo);
+			// cubeCreateInfo.position = {47, 47, 58};
+			// auto cube2_tuple = scene.addEntity(cubeCreateInfo);
+			// cubeCreateInfo.position = {50, 47, 54};
+			// auto cube3_tuple = scene.addEntity(cubeCreateInfo);
 
 			scene.attachComponent(components::scenes::EntityThirdPersonCameraFactory(*std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple)));
 
@@ -149,15 +149,15 @@ SceneCreateInfo PhysicsSceneFactory()
 			auto toxy_rb_tuple = toxy.attachComponent(cubeRigidBodyInfo);
 			auto toxy_rb_ID = std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_rb_tuple)->ID;
 			toxy.attachComponent(toxyColliderInfo);
-			auto& cube1 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube1_tuple));
-			cube1.attachComponent(cubeRigidBodyInfo);
-			cube1.attachComponent(cubeColliderInfo);
-			auto& cube2 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube2_tuple));
-			cube2.attachComponent(cubeRigidBodyInfo);
-			cube2.attachComponent(cubeColliderInfo);
-			auto& cube3 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube3_tuple));
-			cube3.attachComponent(cubeRigidBodyInfo);
-			cube3.attachComponent(cubeColliderInfo);
+			// auto& cube1 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube1_tuple));
+			// cube1.attachComponent(cubeRigidBodyInfo);
+			// cube1.attachComponent(cubeColliderInfo);
+			// auto& cube2 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube2_tuple));
+			// cube2.attachComponent(cubeRigidBodyInfo);
+			// cube2.attachComponent(cubeColliderInfo);
+			// auto& cube3 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube3_tuple));
+			// cube3.attachComponent(cubeRigidBodyInfo);
+			// cube3.attachComponent(cubeColliderInfo);
 			// scene.attachComponent(components::scenes::DepthFogFactory());
 			// cube controls
 			{
@@ -203,6 +203,29 @@ SceneCreateInfo PhysicsSceneFactory()
 				/*rID = */window.addKeyUpdateHandler(r, onRightTickFunction);
 				/*sID = */window.addKeyUpdateHandler(s, onSpaceTickFunction);
 			}
+            zgfilesystem::File robotoFile(
+				zgfilesystem::File::getProgramDirectoryPath() / "fonts" / "Paul" / "Paul.ttf",
+				zg::enums::EFileLocation::Absolute,
+				"r"
+			);
+			fonts::ttf2mesh::TTF2MeshFont robotoFont(window.iRenderer, robotoFile);
+			std::string zgString("Zeungine");
+			float zgFontSize = 42;
+			float zgLineHeight = 0;
+			auto zgSize = robotoFont.stringSize(zgString, zgFontSize, zgLineHeight, glm::vec2(0), enums::EBreakStyle::None);
+			std::vector<size_t> zgEntities;
+			size_t zgCursor;
+			int64_t zgCursorIndex = -1;
+			glm::vec3 zgScale(1/6.f, 1/6.f, 1);
+			glm::vec4 zgColor{1, 0.2, 0.4, 1};
+			robotoFont.stringToScene(zgString, toxy.position, zgColor, {1, 0, 0, 0}, zgScale, zgFontSize, zgLineHeight, zgSize, enums::EBreakStyle::None, scene, zgEntities, zgCursorIndex, zgCursor, commonShaderConstants);
+			for (auto& ID : zgEntities)
+			{
+				auto& entity = Registry::getEntity(ID);
+				entity.attachComponent(cubeRigidBodyInfo);
+				entity.attachComponent(toxyColliderInfo);
+			}
+			scene.attachComponent(zg::components::scenes::EdgeDetectionFactory());
 		}
 	};
 	return info;

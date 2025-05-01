@@ -14,6 +14,38 @@ endif()
 
 #New Dependency Declarations to the top!
 
+message(STATUS "FetchContent: assimp")
+set(BUILD_SHARED_LIBS OFF)
+set(ASSIMP_INSTALL OFF)
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_BUILD_SAMPLES OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_INJECT_DEBUG_POSTFIX OFF)
+FetchContent_Declare(
+    assimp
+    GIT_REPOSITORY https://github.com/assimp/assimp.git
+    GIT_TAG v5.4.3
+)
+FetchContent_MakeAvailable(assimp)
+SET_TARGET_PROPERTIES(assimp PROPERTIES OUTPUT_NAME assimp)
+set_target_properties(assimp PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(assimp PROPERTIES RELEASE_POSTFIX "")
+
+message(STATUS "FetchContent: ttf2mesh")
+FetchContent_Declare(
+    ttf2mesh
+    GIT_REPOSITORY https://github.com/fetisov/ttf2mesh.git
+    GIT_TAG master
+)
+FetchContent_GetProperties(ttf2mesh)
+if(NOT ttf2mesh_POPULATED)
+    FetchContent_Populate(ttf2mesh)
+endif()
+
+set(TTF2MESH_SOURCES ${ttf2mesh_SOURCE_DIR}/ttf2mesh.c)
+add_library(ttf2mesh STATIC ${TTF2MESH_SOURCES})
+target_include_directories(ttf2mesh PRIVATE ${ttf2mesh_SOURCE_DIR})
+
 # miniaudio
 message(STATUS "FetchContent: miniaudio")
 FetchContent_Declare(

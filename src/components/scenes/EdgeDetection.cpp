@@ -20,10 +20,10 @@ SceneComponentCreateInfo components::scenes::EdgeDetectionFactory() {
             component.template make<glm::vec4>("edgeColor", 0.0f, 0.0f, 0.0f, 1.0f);
             component.template make<glm::vec4>("backgroundColor", 1.0f, 1.0f, 1.0f, 0.0f);
             component.template make<float>("combinedThreshold", 0.3f);
-            component.template make<float>("lineThickness", 3.0f);
+            component.template make<float>("lineThickness", 0.5f);
             component.template make<float>("internal_colorSensitivity", 0.38f);
             // Adjusted depth sensitivity for Laplacian - might need tuning
-            component.template make<float>("internal_depthSensitivity", 0.01f);
+            component.template make<float>("internal_depthSensitivity", 0.1f);
 
 
             PostProcessingStageCreateInfo edgeDetectionStageCreateInfo{

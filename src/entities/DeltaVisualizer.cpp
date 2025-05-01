@@ -6,6 +6,7 @@
 #include <zg/zgfilesystem/File.hpp>
 #include <zg/utilities.hpp>
 #include <zg/Registry.hpp>
+#include <zg/Window.hpp>
 using namespace zg;
 zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long double& targetDelta, long double& currentDelta,
     glm::vec3 position, glm::quat rotation, glm::vec3 scale,
@@ -177,7 +178,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
             auto& robotoRegularPointer = entity.template make<zg::fonts::freetype::FreetypeFont*>(
                 "RobotoRegularFont",
                 new zg::fonts::freetype::FreetypeFont(
-                    window,
+                    window.iRenderer,
                     *robotoFilePointer
                 )
             );

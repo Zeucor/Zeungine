@@ -77,7 +77,7 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
             }
         }
     }
-	framebuffers.emplace_back_key(floatingIndex, new textures::Framebuffer(window.iRenderer, attachments));
+	framebuffers.emplace_back_key(floatingIndex, std::make_shared<textures::Framebuffer>(window.iRenderer, attachments));
     fullscreenQuads.emplace_back_key(floatingIndex, window.INDEX_STACK, stage.constants);
     if (!calledStaticOnAttached[stage.name])
     {
@@ -109,12 +109,6 @@ bool PostProcessingPipeline::removeStage(size_t id)
 void PostProcessingPipeline::cleanup()
 {
     textureRegistry.map.clear();
-	auto framebuffersSize = framebuffers.size();
-	auto framebuffersData = framebuffers.data();
-	for (size_t index = 0; index < framebuffersSize; ++index)
-	{
-		delete framebuffersData[index];
-	}
 	framebuffers.clear();
     fullscreenQuads.clear();
 }

@@ -7,6 +7,12 @@ zg_setup_target(svg STATIC
 zg_setup_target(miniaudio STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" miniaudio miniaudio "${STATIC_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(ttf2mesh STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ZG_LIB_PREFIX}" ttf2mesh ttf2mesh "${STATIC_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(assimp STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ZG_LIB_PREFIX}" assimp assimp "${STATIC_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(jolt STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" jolt jolt "${STATIC_ZG_LIB_SUFFIX}" ON)

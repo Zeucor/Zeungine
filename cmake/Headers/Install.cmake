@@ -6,10 +6,28 @@ set(lunasvg_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/
 set(plutovg_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/plutovg-src")
 set(stb_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/stb-src")
 set(miniaudio_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/miniaudio-src")
-set(openssl_INC_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/openssl-build/include")
+set(openssl_INC_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/openssl-build/include")
 set(exprtk_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/exprtk-src")
-set(boost_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/boost-src")
-set(jolt_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-debug/_deps/jolt-src")
+set(boost_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/boost-src")
+set(jolt_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/jolt-src")
+set(ttf2mesh_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/ttf2mesh-src")
+set(assimp_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/assimp-src")
+
+# assimp
+install(DIRECTORY ${assimp_SOURCE_DIR}/include/assimp
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    COMPONENT headers
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.inl"
+    PATTERN "*.inc")
+
+# ttf2mesh
+install(FILES ${ttf2mesh_SOURCE_DIR}/ttf2mesh.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    COMPONENT headers)
 
 # svg
 install(FILES ${lunasvg_SOURCE_DIR}/include/lunasvg.h ${plutovg_SOURCE_DIR}/include/plutovg.h

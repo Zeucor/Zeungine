@@ -40,6 +40,7 @@ set(ZG_TARGETS_TO_INSTALL
     glm jolt
     zlib bzip2 lzma zstd
     miniaudio glsl svg
+    ttf2mesh assimp
 )
 set(TARGET_ARTIFACT_FILES_TO_INSTALL "")
 foreach(TGT ${ZG_TARGETS_TO_INSTALL})
