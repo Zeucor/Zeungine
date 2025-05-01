@@ -34,6 +34,9 @@ auto staticRigidBodyInfo =
 auto cubeRigidBodyInfo = components::entities::RigidBodyFactory(
 	components::entities::RigidBodyInfo{components::entities::BodyType::Dynamic, 1.0f, 0.85f, 0.7f, true, false,
 																			glm::vec<3, bool>(1, 0, 1), glm::vec<3, bool>(0)});
+auto glyphRigidBodyInfo = components::entities::RigidBodyFactory(
+	components::entities::RigidBodyInfo{components::entities::BodyType::Dynamic, 1.0f, 0.85f, 0.7f, true, false,
+																			glm::vec<3, bool>(1, 0, 0), glm::vec<3, bool>(0)});
 auto floorCreateInfo = entities::CubeFactory("Floor", {50, 40, 50}, {1, 0, 0, 0}, {1, 1, 1}, {20000, 0.5, 20000},
 																						 {0.35, 0.45, 0.25, 1}, commonShaderConstants);
 auto floorColliderInfo = components::entities::ColliderFactory(
@@ -203,26 +206,26 @@ SceneCreateInfo PhysicsSceneFactory()
 				/*rID = */window.addKeyUpdateHandler(r, onRightTickFunction);
 				/*sID = */window.addKeyUpdateHandler(s, onSpaceTickFunction);
 			}
-            zgfilesystem::File robotoFile(
-				zgfilesystem::File::getProgramDirectoryPath() / "fonts" / "Paul" / "Paul.ttf",
+            zgfilesystem::File fontFile(
+				zgfilesystem::File::getProgramDirectoryPath() / "fonts" / "Cal Sans" / "CalSans-Regular.ttf",
 				zg::enums::EFileLocation::Absolute,
 				"r"
 			);
-			fonts::ttf2mesh::TTF2MeshFont robotoFont(window.iRenderer, robotoFile);
+			fonts::ttf2mesh::TTF2MeshFont meshFont(window.iRenderer, fontFile);
 			std::string zgString("Zeungine");
 			float zgFontSize = 42;
 			float zgLineHeight = 0;
-			auto zgSize = robotoFont.stringSize(zgString, zgFontSize, zgLineHeight, glm::vec2(0), enums::EBreakStyle::None);
+			auto zgSize = meshFont.stringSize(zgString, zgFontSize, zgLineHeight, glm::vec2(0), enums::EBreakStyle::None);
 			std::vector<size_t> zgEntities;
 			size_t zgCursor;
 			int64_t zgCursorIndex = -1;
 			glm::vec3 zgScale(1/6.f, 1/6.f, 1);
 			glm::vec4 zgColor{1, 0.2, 0.4, 1};
-			robotoFont.stringToScene(zgString, toxy.position, zgColor, {1, 0, 0, 0}, zgScale, zgFontSize, zgLineHeight, zgSize, enums::EBreakStyle::None, scene, zgEntities, zgCursorIndex, zgCursor, commonShaderConstants);
+			meshFont.stringToScene(zgString, toxy.position, zgColor, {1, 0, 0, 0}, zgScale, zgFontSize, zgLineHeight, zgSize, enums::EBreakStyle::None, scene, zgEntities, zgCursorIndex, zgCursor, commonShaderConstants);
 			for (auto& ID : zgEntities)
 			{
 				auto& entity = Registry::getEntity(ID);
-				entity.attachComponent(cubeRigidBodyInfo);
+				entity.attachComponent(glyphRigidBodyInfo);
 				entity.attachComponent(toxyColliderInfo);
 			}
 			scene.attachComponent(zg::components::scenes::EdgeDetectionFactory());

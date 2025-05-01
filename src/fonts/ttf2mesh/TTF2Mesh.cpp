@@ -62,7 +62,7 @@ TTF2MeshGlyph::TTF2MeshGlyph(IRenderer* iRenderer, const TTF2MeshFont& ttf2MeshF
     entityCreateInfo.constants = {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}};
     entityCreateInfo.position = {0, 0, 0};
     entityCreateInfo.rotation = {1, 0, 0, 0};
-    entityCreateInfo.scale = {1, 1, 1};
+    entityCreateInfo.scale = {fontSize, fontSize, 1};
 };
 TTF2MeshGlyph::TTF2MeshGlyph(const TTF2MeshGlyph& other):
     glyphIndex(other.glyphIndex),
@@ -266,7 +266,7 @@ void TTF2MeshFont::stringToScene(const std::string_view string, glm::vec3 positi
 _addGlyph:
                     auto info = characterPointer->entityCreateInfo;
                     info.position = characterPosition;
-                    info.scale = _scale * 2.f * glm::vec3(characterPointer->size, 1);
+                    info.scale *= _scale;
 					info.constants = zg::mergeVectors<std::string>(info.constants, constants);
 					std::vector<glm::vec4> colors(characterPointer->vertexCount, color);
 					info.colors = [colors](auto&)
@@ -417,7 +417,7 @@ void TTF2MeshFont::stringToEntity(const std::string_view string, glm::vec3 posit
 _addGlyph:
                     auto info = characterPointer->entityCreateInfo;
                     info.position = characterPosition;
-                    info.scale = _scale;
+                    info.scale *= _scale;
 					info.constants = zg::mergeVectors<std::string>(info.constants, constants);
                     auto glyph_tuple = entity.addChild(info);
 					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
