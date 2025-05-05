@@ -314,6 +314,7 @@ void Scene::preRender()
 			for (auto& meshID : entity.meshIDs)
 			{
 				auto& mesh = Registry::getMesh(meshID);
+				mesh.uid = entity.ID;
 				directionaLightShadow.shader->bind(mesh);
 				directionaLightShadow.shader->setBlock("LightSpaceMatrix", mesh, directionaLightShadow.lightSpaceMatrix,
 																							 sizeof(glm::mat4));
@@ -338,6 +339,7 @@ void Scene::preRender()
 			for (auto& meshID : entity.meshIDs)
 			{
 				auto& mesh = Registry::getMesh(meshID);
+				mesh.uid = entity.ID;
 				spotLightShadow.shader->bind(mesh);
 				spotLightShadow.shader->setBlock("LightSpaceMatrix", mesh, spotLightShadow.lightSpaceMatrix,
 																				 sizeof(glm::mat4));
@@ -361,6 +363,7 @@ void Scene::preRender()
 			for (auto& meshID : entity.meshIDs)
 			{
 				auto& mesh = Registry::getMesh(meshID);
+				mesh.uid = entity.ID;
 				pointLightShadow.shader->bind(mesh);
 				pointLightShadow.shader->setBlock("PointLightSpaceMatrix", mesh, pointLightShadow.shadowTransforms,
 																					sizeof(glm::mat4) * 6);
