@@ -2719,11 +2719,11 @@ void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_v
 		memcpy((char*)vaoImpl.vertexData + index, &elementsAsChar[elementIndex], elementStride);
 	}
 }
-void VulkanRenderer::drawVAO(const vaos::VAO& vao)
+void VulkanRenderer::drawVAO(const vaos::VAO &vao, shaders::Shader* shaderPointer)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	auto vaoHash = vao.getVAOuHash();
-	auto& shader = *((vaos::VAO&)vao).addShader();
+	auto& shader = *((vaos::VAO&)vao).addShader(shaderPointer);
 	auto& shaderImpl = *(VulkanShaderImpl*)(shader.rendererData);
 	if (vaoImpl.vertexBuffer == VK_NULL_HANDLE)
 	{

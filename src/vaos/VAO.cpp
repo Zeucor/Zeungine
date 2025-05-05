@@ -51,9 +51,9 @@ void VAO::updateElements(const std::string_view constant, const std::vector<T>& 
 template void VAO::updateElements<glm::vec2>(const std::string_view, const std::vector<glm::vec2>&) const;
 template void VAO::updateElements<glm::vec3>(const std::string_view, const std::vector<glm::vec3>&) const;
 template void VAO::updateElements<glm::vec4>(const std::string_view, const std::vector<glm::vec4>&) const;
-void VAO::drawVAO() const
+void VAO::drawVAO(shaders::Shader* shader) const
 {
-	vaoIRenderer->drawVAO(*this);
+	vaoIRenderer->drawVAO(*this, shader);
 }
 void* VAO::getShaderUHash(IRenderer* iRenderer)
 {
@@ -91,16 +91,16 @@ void VAO::setEnsured()
 {
 	ensuredBools[getVAOuHash()] = true;
 }
-zg::shaders::Shader* VAO::addShader(zg::shaders::Shader* setShader)
+zg::shaders::Shader* VAO::addShader(zg::shaders::Shader* useShader)
 {
+	if (useShader)
+	{
+		return useShader;
+	}
 	auto data = getShaderUHash(vaoIRenderer);
 	auto& shader = shaders[data];
 	if (shader)
 		return shader;
-	if (setShader)
-	{
-		shader = setShader;
-	}
 	else
 	{
 		shader = zg::shaders::ShaderManager::getShaderByConstants(vaoIRenderer, constants, data).second.get();

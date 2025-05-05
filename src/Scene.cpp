@@ -301,31 +301,42 @@ void Scene::preRender()
 		prePreRenderFunction(*this);
 	auto entitiesData = entities.data();
 	auto entitiesSize = entities.size();
-	for (auto& directionaLightShadow : directionalLightShadows)
+	std::function<void(Entity&, shaders::Shader&, const std::function<void(Mesh&, shaders::Shader&)>)> drawEntity;
+	drawEntity = [&](auto& entity, auto& shader, auto setShader)
 	{
-		directionaLightShadow.framebuffer->bind();
-		directionaLightShadow.addShader();
+		if (!entity.affectedByShadows)
+			return;
+		for (auto& meshID : entity.meshIDs)
+		{
+			auto& mesh = Registry::getMesh(meshID);
+			mesh.uid = entity.ID;
+			shader.bind(mesh);
+			setShader(mesh, shader);
+			shader.setBlock("Model", mesh, entity.getModelMatrix());
+			mesh.drawVAO(&shader);
+			shader.unbind();
+		}
+		for (auto& child : entity.children)
+			drawEntity(child, shader, setShader);
+	};
+	for (auto& directionalLightShadow : directionalLightShadows)
+	{
+		directionalLightShadow.framebuffer->bind();
+		directionalLightShadow.addShader();
 		iRenderer->clear();
 		for (size_t index = 0; index < entitiesSize; ++index)
 		{
 			auto& entity = entitiesData[index];
-			if (!entity.affectedByShadows)
-				continue;
-			for (auto& meshID : entity.meshIDs)
-			{
-				auto& mesh = Registry::getMesh(meshID);
-				mesh.uid = entity.ID;
-				directionaLightShadow.shader->bind(mesh);
-				directionaLightShadow.shader->setBlock("LightSpaceMatrix", mesh, directionaLightShadow.lightSpaceMatrix,
-																							 sizeof(glm::mat4));
-				// const auto& model = mesh.getModelMatrix();
-				directionaLightShadow.shader->setBlock("Model", mesh, entity.getModelMatrix());
-				iRenderer->bindShader(*mesh.addShader(directionaLightShadow.shader), mesh);
-				mesh.drawVAO();
-				directionaLightShadow.shader->unbind();
-			}
+			drawEntity(entity, *directionalLightShadow.shader, [&](auto& mesh, auto& shader) {
+				shader.setBlock(
+					"LightSpaceMatrix",
+					mesh,
+					directionalLightShadow.lightSpaceMatrix,
+					sizeof(glm::mat4)
+				);
+			});
 		}
-		directionaLightShadow.framebuffer->unbind();
+		directionalLightShadow.framebuffer->unbind();
 	}
 	for (auto& spotLightShadow : spotLightShadows)
 	{
@@ -334,20 +345,14 @@ void Scene::preRender()
 		for (size_t index = 0; index < entitiesSize; ++index)
 		{
 			auto& entity = entitiesData[index];
-			if (!entity.affectedByShadows)
-				continue;
-			for (auto& meshID : entity.meshIDs)
-			{
-				auto& mesh = Registry::getMesh(meshID);
-				mesh.uid = entity.ID;
-				spotLightShadow.shader->bind(mesh);
-				spotLightShadow.shader->setBlock("LightSpaceMatrix", mesh, spotLightShadow.lightSpaceMatrix,
-																				 sizeof(glm::mat4));
-				// const auto& model = mesh.getModelMatrix();
-				spotLightShadow.shader->setBlock("Model", mesh, entity.getModelMatrix());
-				mesh.drawVAO();
-				spotLightShadow.shader->unbind();
-			}
+			drawEntity(entity, *spotLightShadow.shader, [&](auto& mesh, auto& shader) {
+				shader.setBlock(
+					"LightSpaceMatrix",
+					mesh,
+					spotLightShadow.lightSpaceMatrix,
+					sizeof(glm::mat4)
+				);
+			});
 		}
 		spotLightShadow.framebuffer->unbind();
 	}
@@ -358,23 +363,17 @@ void Scene::preRender()
 		for (size_t index = 0; index < entitiesSize; ++index)
 		{
 			auto& entity = entitiesData[index];
-			if (!entity.affectedByShadows)
-				continue;
-			for (auto& meshID : entity.meshIDs)
-			{
-				auto& mesh = Registry::getMesh(meshID);
-				mesh.uid = entity.ID;
-				pointLightShadow.shader->bind(mesh);
-				pointLightShadow.shader->setBlock("PointLightSpaceMatrix", mesh, pointLightShadow.shadowTransforms,
-																					sizeof(glm::mat4) * 6);
-				pointLightShadow.shader->setUniform("nearPlane", mesh, pointLightShadow.pointLight.nearPlane);
-				pointLightShadow.shader->setUniform("farPlane", mesh, pointLightShadow.pointLight.farPlane);
-				pointLightShadow.shader->setUniform("lightPos", mesh, pointLightShadow.pointLight.position);
-				// const auto& model = mesh.getModelMatrix();
-				pointLightShadow.shader->setBlock("Model", mesh, entity.getModelMatrix());
-				mesh.drawVAO();
-				pointLightShadow.shader->unbind();
-			}
+			drawEntity(entity, *pointLightShadow.shader, [&](auto& mesh, auto& shader) {
+				shader.setBlock(
+					"PointLightSpaceMatrix",
+					mesh,
+					pointLightShadow.shadowTransforms,
+					sizeof(glm::mat4) * 6
+				);
+				shader.setUniform("nearPlane", mesh, pointLightShadow.pointLight.nearPlane);
+				shader.setUniform("farPlane", mesh, pointLightShadow.pointLight.farPlane);
+				shader.setUniform("lightPos", mesh, pointLightShadow.pointLight.position);
+			});
 		}
 		pointLightShadow.framebuffer->unbind();
 	}

@@ -27,7 +27,7 @@ namespace zg::vaos
 		void updateIndices(const std::vector<uint32_t>& indices);
 		template <typename T>
 		void updateElements(const std::string_view constant, const std::vector<T>& elements) const;
-		void drawVAO() const;
+		void drawVAO(shaders::Shader* shader = 0) const;
 		static void* getShaderUHash(IRenderer* iRenderer);
 		size_t getVAOuHash() const;
 		bool isEnsured();

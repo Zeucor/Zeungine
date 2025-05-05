@@ -72,7 +72,7 @@ void MetalRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uin
 void MetalRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
 }
-void MetalRenderer::drawVAO(const vaos::VAO& vao) {}
+void MetalRenderer::drawVAO(const vaos::VAO &vao, shaders::Shader* shader) {}
 void MetalRenderer::generateVAO(vaos::VAO& vao) {}
 void MetalRenderer::destroyVAO(vaos::VAO& vao) {}
 // change void* result to the result type of a Metal call?

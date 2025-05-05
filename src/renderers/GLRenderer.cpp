@@ -686,7 +686,7 @@ void GLRenderer::updateElementsVAO(const vaos::VAO &vao, const std::string_view 
 	glContext->BindVertexArray(0);
 	GLcheck(*this, "glBindVertexArray");
 }
-void GLRenderer::drawVAO(const vaos::VAO &vao)
+void GLRenderer::drawVAO(const vaos::VAO &vao, shaders::Shader* shader)
 {
 	auto &vaoImpl = *(vaos::GLVAOImpl *)vao.rendererData;
 	glContext->BindVertexArray(vaoImpl.vao);

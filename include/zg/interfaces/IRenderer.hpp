@@ -115,7 +115,7 @@ namespace zg
 		virtual void destroyTexture(textures::Texture &texture) = 0;
 		virtual void updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t> &indices) = 0;
 		virtual void updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) = 0;
-		virtual void drawVAO(const vaos::VAO &vao) = 0;
+		virtual void drawVAO(const vaos::VAO &vao, shaders::Shader* shader) = 0;
 		virtual void generateVAO(vaos::VAO &vao) = 0;
 		virtual void copyVAO(vaos::VAO &dest, const vaos::VAO &src) = 0;
 		virtual void destroyVAO(vaos::VAO &vao) = 0;
