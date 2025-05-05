@@ -9,7 +9,7 @@ using namespace zg::lights;
 DirectionalLightShadow::DirectionalLightShadow(const std::vector<size_t*>& INDEX_STACK, size_t directionalLightIndex) :
 		INDEX_STACK(INDEX_STACK), directionalLightIndex(directionalLightIndex),
 		iRenderer(Registry::getWindow(INDEX_STACK).iRenderer),
-		texture(std::make_shared<textures::Texture>(iRenderer, glm::ivec4(8192, 8192, 1, 0), (const void*)0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Linear, true)),
+		texture(std::make_shared<textures::Texture>(iRenderer, glm::ivec4(8192, 8192, 1, 0), (const void*)0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1, textures::Texture::AddressMode::ClampToEdge)),
 		framebuffer(std::make_shared<textures::Framebuffer>(iRenderer, std::vector<textures::Framebuffer::TextureAttachmentPair>{{texture, textures::Framebuffer::AttachmentType::Depth}}))
 {
 	update();

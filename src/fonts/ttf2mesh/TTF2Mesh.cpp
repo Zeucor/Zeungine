@@ -26,6 +26,7 @@ TTF2MeshGlyph::TTF2MeshGlyph(IRenderer* iRenderer, const TTF2MeshFont& ttf2MeshF
         return;
     entityCreateInfo.typeName = "TTF2MeshGlyph";
     entityCreateInfo.name = "Glyph " + std::string(1, (char)codepoint);
+	MeshCreateInfo meshInfo;
     vertexCount = mesh->nvert;
 	auto _vertexCount = vertexCount;
     std::vector<glm::vec3> vertices(vertexCount);
@@ -53,16 +54,17 @@ TTF2MeshGlyph::TTF2MeshGlyph(IRenderer* iRenderer, const TTF2MeshFont& ttf2MeshF
 			indices[index * 3 + 2] = face.v3;
 		}
 	}
-    entityCreateInfo.indiceCount = [indiceCount](auto&) { return indiceCount; };
-    entityCreateInfo.indices = [indices](auto&) { return indices; };
-    entityCreateInfo.vertexCount = [_vertexCount](auto&) { return _vertexCount; };
-    entityCreateInfo.vertices = [vertices](auto&) { return vertices; };
-    entityCreateInfo.colorCount = [_vertexCount](auto&) { return _vertexCount; };
-    entityCreateInfo.colors = [colors](auto&) { return colors; };
-    entityCreateInfo.constants = {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}};
+    meshInfo.indiceCount = [indiceCount](auto&) { return indiceCount; };
+    meshInfo.indices = [indices](auto&) { return indices; };
+    meshInfo.vertexCount = [_vertexCount](auto&) { return _vertexCount; };
+    meshInfo.vertices = [vertices](auto&) { return vertices; };
+    meshInfo.colorCount = [_vertexCount](auto&) { return _vertexCount; };
+    meshInfo.colors = [colors](auto&) { return colors; };
+    meshInfo.constants = {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}};
     entityCreateInfo.position = {0, 0, 0};
     entityCreateInfo.rotation = {1, 0, 0, 0};
     entityCreateInfo.scale = {fontSize, fontSize, 1};
+	entityCreateInfo.meshInfos = {meshInfo};
 };
 TTF2MeshGlyph::TTF2MeshGlyph(const TTF2MeshGlyph& other):
     glyphIndex(other.glyphIndex),
@@ -267,9 +269,10 @@ _addGlyph:
                     auto info = characterPointer->entityCreateInfo;
                     info.position = characterPosition;
                     info.scale *= _scale;
-					info.constants = zg::mergeVectors<std::string>(info.constants, constants);
+					auto& meshInfo = info.meshInfos[0];
+					meshInfo.constants = zg::mergeVectors<std::string>(meshInfo.constants, constants);
 					std::vector<glm::vec4> colors(characterPointer->vertexCount, color);
-					info.colors = [colors](auto&)
+					meshInfo.colors = [colors](auto&)
 					{
 						return colors;
 					};
@@ -277,8 +280,6 @@ _addGlyph:
 					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
 					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
 					glyph.VALUE = codepoint;
-					// auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale, glm::vec2(1));
-					// auto glyph_tuple = scene.addEntity(glyphCreateInfo);
 				}
 			}
 			else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
@@ -415,10 +416,16 @@ void TTF2MeshFont::stringToEntity(const std::string_view string, glm::vec3 posit
 				else
 				{
 _addGlyph:
-                    auto info = characterPointer->entityCreateInfo;
-                    info.position = characterPosition;
-                    info.scale *= _scale;
-					info.constants = zg::mergeVectors<std::string>(info.constants, constants);
+					auto info = characterPointer->entityCreateInfo;
+					info.position = characterPosition;
+					info.scale *= _scale;
+					auto& meshInfo = info.meshInfos[0];
+					meshInfo.constants = zg::mergeVectors<std::string>(meshInfo.constants, constants);
+					std::vector<glm::vec4> colors(characterPointer->vertexCount, color);
+					meshInfo.colors = [colors](auto&)
+					{
+						return colors;
+					};
                     auto glyph_tuple = entity.addChild(info);
 					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
 					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);

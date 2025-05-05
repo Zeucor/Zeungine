@@ -351,8 +351,10 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 						{
 							glyph.position = characterPosition;
 							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
-							glyph.keyedTextures[0].second = characterPointer->texturePointer;
+							assert(glyph.meshInfos.size());
+							glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
 							glyph.VALUE = codepoint;
+							glyph.refreshMeshes();
 						}
 						if (glyph.position != characterPosition)
 						{
@@ -365,14 +367,14 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 _addGlyph:
 					auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale, glm::vec2(1));
 					auto glyph_tuple = scene.addEntity(glyphCreateInfo);
-					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
+					existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + iterator.getCurrentCodepointIndex(), std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
 					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
 					glyph.VALUE = codepoint;
 				}
 			}
 			else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
 			{
-				existingAndUpdatedGlyphIDs.push_back(0);
+				existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + iterator.getCurrentCodepointIndex(), 0);
 			}
 			else
 			{
@@ -387,7 +389,7 @@ _addGlyph:
 		}
 		else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
 		{
-			existingAndUpdatedGlyphIDs.push_back(0);
+			existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + iterator.getCurrentCodepointIndex(), 0);
 		}
 	_advance:
 		currentPosition.x += advanceX;
@@ -452,6 +454,7 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 	// }
 	for (; iterator.index < stringSize;)
 	{
+		codepointIndex = iterator.getCurrentCodepointIndex();
 		advanceX = 0;
 		characterPointer = 0;
 		uint64_t codepoint = *iterator;
@@ -491,8 +494,10 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 						{
 							glyph.position = characterPosition;
 							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
-							glyph.keyedTextures[0].second = characterPointer->texturePointer;
+							assert(glyph.meshInfos.size());
+							glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
 							glyph.VALUE = codepoint;
+							glyph.refreshMeshes();
 						}
 						if (glyph.position != characterPosition)
 						{
@@ -505,14 +510,14 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 _addGlyph:
 					auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale, glm::vec2(1));
 					auto glyph_tuple = entity.addChild(glyphCreateInfo);
-					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
+					existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + codepointIndex, std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
 					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
 					glyph.VALUE = codepoint;
 				}
 			}
 			else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
 			{
-				existingAndUpdatedGlyphIDs.push_back(0);
+				existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + codepointIndex, 0);
 			}
 			else
 			{
@@ -527,11 +532,10 @@ _addGlyph:
 		}
 		else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
 		{
-			existingAndUpdatedGlyphIDs.push_back(0);
+			existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + codepointIndex, 0);
 		}
 	_advance:
 		currentPosition.x += advanceX;
-		codepointIndex = iterator.getCurrentCodepointIndex();
 		// if (cursorIndex == codepointIndex + 1)
 		// {
 		// 	cursorRef.position = currentPosition;

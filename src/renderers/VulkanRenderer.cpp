@@ -1150,6 +1150,8 @@ void VulkanRenderer::createImageStagingBuffer()
 	{
 		throw std::runtime_error("failed to allocate buffer memory!");
 	}
+
+	allocatedMemoryBytes += memRequirements.size;
 	if (!VKcheck("vkBindBufferMemory", _vkBindBufferMemory(device, stagingBuffer, stagingBufferMemory, 0)))
 	{
 		throw std::runtime_error("VulkanRenderer-vkBindBufferMemory failed");
@@ -1281,12 +1283,7 @@ void VulkanRenderer::beginRenderPass()
 	renderPassInfo.renderArea.extent = swapChainExtent;
 	std::array<VkClearValue, 2> clearValues{};
 	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
-	glm::vec4 clearColor(0, 0, 0, 1);
-	if (renderWindow.scenes.size())
-	{
-		clearColor = renderWindow.scenes.data()[0].clearColor;
-	}
-	clearValues[0].color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
+	clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
 	clearValues[1].depthStencil = {1.0f, 0};
 	renderPassInfo.clearValueCount = clearValues.size();
 	renderPassInfo.pClearValues = clearValues.data();
@@ -1382,14 +1379,14 @@ void VulkanRenderer::setBlock(shaders::Shader& shader, vaos::VAO& vao, const std
 		return;
 	}
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto data = vaos::VAO::getShaderData(shader.iRenderer);
+	auto data = vao.getVAOuHash();
 	auto& uniformBuffersMapped = vaoImpl.getUniformBuffersMapped(data);
 	memcpy(uniformBuffersMapped[location], pointer, size);
 }
 int32_t VulkanRenderer::getUniformLocation(shaders::Shader& shader, vaos::VAO& vao, const std::string_view& name)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto data = vaos::VAO::getShaderData(shader.iRenderer);
+	auto data = vao.getVAOuHash();
 	auto& table = vaoImpl.getUniformLocationTable(data);
 	std::string stringName(name);
 	auto iter = table.find(stringName);
@@ -1451,7 +1448,7 @@ void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shader
 {
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	std::string stringName(name);
-	auto data = vaos::VAO::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderUHash(shader.iRenderer);
 	auto& ssboBindings = shaderImpl.getSsboBindings(data);
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	auto ssboIter = ssboBindings.find(stringName);
@@ -1481,7 +1478,7 @@ void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderT
 	std::string stringName(name);
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, (uint32_t)1,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	auto data = vaos::VAO::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderUHash(shader.iRenderer);
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	auto& uboStringBindings = shaderImpl.getUboStringBindings(data);
 	uboLayoutBindings.push_back(
@@ -1500,7 +1497,7 @@ void VulkanRenderer::addTexture(shaders::Shader& shader, uint32_t bindingIndex, 
 	VkDescriptorSetLayoutBinding layoutBinding = {(uint32_t)bindingIndex, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 																								(uint32_t)descriptorCount,
 																								(VkShaderStageFlags)stageStageFlag[shaderType], 0};
-	auto data = vaos::VAO::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderUHash(shader.iRenderer);
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	auto& textureBindings = shaderImpl.getTextureBindings(data);
 	uboLayoutBindings.push_back({{ELayoutBindingType::ImageSampler, 0, "", bindingIndex, false}, layoutBinding});
@@ -1516,14 +1513,15 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std:
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	std::string stringName(name);
-	auto data = vaos::VAO::getShaderData(shader.iRenderer);
-	auto& ssboBindings = shaderImpl.getSsboBindings(data);
+	auto shaderHash = vaos::VAO::getShaderUHash(shader.iRenderer);
+	auto vaoHash = vao.getVAOuHash();
+	auto& ssboBindings = shaderImpl.getSsboBindings(shaderHash);
 	auto ssboIter = ssboBindings.find(stringName);
 	if (ssboIter == ssboBindings.end())
 	{
 		return;
 	}
-	auto& ssboBuffers = vaoImpl.getSsboBuffers(data);
+	auto& ssboBuffers = vaoImpl.getSsboBuffers(vaoHash);
 	auto ssboBufferIter = ssboBuffers.find(stringName);
 	if (ssboBufferIter == ssboBuffers.end())
 	{
@@ -1553,7 +1551,7 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std:
 	storageBufferInfo.range = size;
 	VkWriteDescriptorSet descriptorWrite{};
 	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = vaoImpl.getDescriptorSet(data);
+	descriptorWrite.dstSet = vaoImpl.getDescriptorSet(vaoHash);
 	descriptorWrite.dstBinding = bindingIndex;
 	descriptorWrite.dstArrayElement = 0;
 	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
@@ -1568,8 +1566,9 @@ void VulkanRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const s
 	std::string stringName(name);
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
-	auto data = vaos::VAO::getShaderData(vao.vaoIRenderer);
-	auto& textureBindings = shaderImpl.getTextureBindings(data);
+	auto shaderHash = vaos::VAO::getShaderUHash(vao.vaoIRenderer);
+	auto vaoHash = vao.getVAOuHash();
+	auto& textureBindings = shaderImpl.getTextureBindings(shaderHash);
 	auto bindingIndexIter = textureBindings.find(stringName);
 	if (bindingIndexIter == textureBindings.end())
 		return;
@@ -1579,7 +1578,7 @@ void VulkanRenderer::setTexture(shaders::Shader& shader, vaos::VAO& vao, const s
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	VkWriteDescriptorSet descriptorWrite{};
 	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = vaoImpl.getDescriptorSet(data);
+	descriptorWrite.dstSet = vaoImpl.getDescriptorSet(vaoHash);
 	descriptorWrite.dstBinding = bindingIndex;
 	descriptorWrite.dstArrayElement = 0;
 	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1629,7 +1628,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	if (shader.compiled)
 		return true;
 	auto& shaderImpl = *static_cast<VulkanShaderImpl*>(shader.rendererData);
-	auto data = vaos::VAO::getShaderData(shader.iRenderer);
+	auto data = vaos::VAO::getShaderUHash(shader.iRenderer);
 	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 	for (auto& shaderPair : shaderImpl.shaders)
@@ -1654,7 +1653,10 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	{
 		if (!vaos::VAOFactory::isVAOConstant(constant))
 			continue;
-		auto& constantSize = vaos::VAOFactory::constantSizes[constant];
+		auto constantIter = vaos::VAOFactory::constantSizes.find(constant);
+		if (constantIter == vaos::VAOFactory::constantSizes.end())
+			continue;
+		auto& constantSize = constantIter->second;
 		VkVertexInputAttributeDescription vertexInputAttributeDescription;
 		vertexInputAttributeDescription.location = attribIndex;
 		vertexInputAttributeDescription.binding = 0;
@@ -1874,9 +1876,10 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 		case textures::Framebuffer::AttachmentType::Color:
 			{
 				glm::vec4 clearColor = framebuffer.clearColor;
-				if (framebuffer.scenePointer)
+				if (framebuffer.sceneID)
 				{
-					clearColor = framebuffer.scenePointer->clearColor;
+					auto& scene = Registry::getScene(framebuffer.sceneID);
+					clearColor = scene.clearColor;
 				}
 				clearValue.color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
 				break;
@@ -2216,6 +2219,8 @@ void VulkanRenderer::createImage(uint32_t width, uint32_t height, VkSampleCountF
 	{
 		throw std::runtime_error("failed to allocate image memory!");
 	}
+
+	allocatedMemoryBytes += memRequirements.size;
 
 	_vkBindImageMemory(device, image, imageMemory, 0);
 }
@@ -2596,9 +2601,22 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 		}
 		samplerInfo.magFilter = filter;
 		samplerInfo.minFilter = filter;
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		VkSamplerAddressMode addressMode;
+		switch (texture.addressMode)
+		{
+			case textures::Texture::AddressMode::ClampToEdge:
+				addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+				break;
+			case textures::Texture::AddressMode::ClampToBorder:
+				addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+				break;
+			case textures::Texture::AddressMode::Repeat:
+				addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+				break;
+		}
+		samplerInfo.addressModeU = addressMode;
+		samplerInfo.addressModeV = addressMode;
+		samplerInfo.addressModeW = addressMode;
 		samplerInfo.anisotropyEnable = VK_TRUE;
 		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
 		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
@@ -2689,7 +2707,10 @@ void VulkanRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<ui
 void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto& constantSize = vaos::VAOFactory::constantSizes[constant];
+	auto constantIter = vaos::VAOFactory::constantSizes.find(constant);
+	if (constantIter == vaos::VAOFactory::constantSizes.end())
+		return;
+	auto& constantSize = constantIter->second;
 	auto offset = vaos::VAOFactory::getOffset(vao.constants, constant);
 	auto elementStride = std::get<0>(constantSize) * std::get<1>(constantSize);
 	for (size_t index = offset, c = 1, elementIndex = 0; c <= vao.vertexCount;
@@ -2701,7 +2722,7 @@ void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_v
 void VulkanRenderer::drawVAO(const vaos::VAO& vao)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto data = vaos::VAO::getShaderData(vao.vaoIRenderer);
+	auto vaoHash = vao.getVAOuHash();
 	auto& shader = *((vaos::VAO&)vao).addShader();
 	auto& shaderImpl = *(VulkanShaderImpl*)(shader.rendererData);
 	if (vaoImpl.vertexBuffer == VK_NULL_HANDLE)
@@ -2713,7 +2734,7 @@ void VulkanRenderer::drawVAO(const vaos::VAO& vao)
 	_vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
 	_vkCmdBindIndexBuffer(*commandBuffer, vaoImpl.indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
 	_vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
-													 &vaoImpl.getDescriptorSet(data), 0, 0);
+													 &vaoImpl.getDescriptorSet(vaoHash), 0, 0);
 	auto& indices = vao.indiceCount;
 	if (!indices)
 	{
@@ -2810,11 +2831,12 @@ void VulkanRenderer::ensureVAO(shaders::Shader& shader, vaos::VAO& vao)
 		return;
 	if (vao.isEnsured())
 		return;
-	auto data = vaos::VAO::getShaderData(vao.vaoIRenderer);
+	auto shaderHash = vaos::VAO::getShaderUHash(vao.vaoIRenderer);
+	auto vaoHash = vao.getVAOuHash();
 	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(data);
-	auto& ssboBindings = shaderImpl.getSsboBindings(data);
+	auto& uboLayoutBindings = shaderImpl.getUboLayoutBindings(shaderHash);
+	auto& ssboBindings = shaderImpl.getSsboBindings(shaderHash);
 	std::vector<VkDescriptorPoolSize> poolSizes;
 	auto getPoolSize = [&](auto type) -> VkDescriptorPoolSize&
 	{
@@ -2846,16 +2868,16 @@ void VulkanRenderer::ensureVAO(shaders::Shader& shader, vaos::VAO& vao)
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = uboLayoutBindings.size() + ssboBindings.size();
 
-	auto& descriptorPool = vaoImpl.getDescriptorPool(data);
+	auto& descriptorPool = vaoImpl.getDescriptorPool(vaoHash);
 
 	if (!VKcheck("vkCreateDescriptorPool", _vkCreateDescriptorPool(device, &poolInfo, 0, &descriptorPool)))
 	{
 		throw std::runtime_error("Failed to create descriptor pool!");
 	}
 
-	auto& descriptorSet = vaoImpl.getDescriptorSet(data);
+	auto& descriptorSet = vaoImpl.getDescriptorSet(vaoHash);
 
-	std::vector<VkDescriptorSetLayout> layouts(1, shaderImpl.getDescriptorSetLayout(data));
+	std::vector<VkDescriptorSetLayout> layouts(1, shaderImpl.getDescriptorSetLayout(shaderHash));
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = descriptorPool;
@@ -2867,11 +2889,11 @@ void VulkanRenderer::ensureVAO(shaders::Shader& shader, vaos::VAO& vao)
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 
-	auto& bufferInfos = vaoImpl.getBufferInfos(data);
-	auto& uniformBuffers = vaoImpl.getUniformBuffers(data);
-	auto& uniformBuffersMemory = vaoImpl.getUniformBuffersMemory(data);
-	auto& uniformBuffersMapped = vaoImpl.getUniformBuffersMapped(data);
-	auto& uniformLocationTable = vaoImpl.getUniformLocationTable(data);
+	auto& bufferInfos = vaoImpl.getBufferInfos(vaoHash);
+	auto& uniformBuffers = vaoImpl.getUniformBuffers(vaoHash);
+	auto& uniformBuffersMemory = vaoImpl.getUniformBuffersMemory(vaoHash);
+	auto& uniformBuffersMapped = vaoImpl.getUniformBuffersMapped(vaoHash);
+	auto& uniformLocationTable = vaoImpl.getUniformLocationTable(vaoHash);
 	for (auto uboLayoutBindingPair : uboLayoutBindings)
 	{
 		if (std::get<0>(uboLayoutBindingPair.first) != ELayoutBindingType::UniformBuffer)
@@ -3047,6 +3069,8 @@ void VulkanRenderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, V
 	{
 		throw std::runtime_error("failed to allocate buffer memory!");
 	}
+
+	allocatedMemoryBytes += memRequirements.size;
 
 	_vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }

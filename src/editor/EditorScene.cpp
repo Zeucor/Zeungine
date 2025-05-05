@@ -256,9 +256,9 @@ zg::SceneCreateInfo EditorSceneFactory()
 // 	// 																					 if (pressed)
 // 	// 																					 {
 // 	// 																						 gameWindowPointer->focused = true;
-// 	// 																						 if (currentHoveredEntity)
+// 	// 																						 if (currentHoveredEntityID)
 // 	// 																						 {
-// 	// 																							 currentHoveredEntity = 0;
+// 	// 																							 currentHoveredEntityID = 0;
 // 	// 																						 }
 // 	// 																						 gameWindowBorder->setColor(gameWindowActiveBorderColor);
 // 	// 																					 }

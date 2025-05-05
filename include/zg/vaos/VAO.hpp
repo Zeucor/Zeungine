@@ -3,6 +3,7 @@
 #include <zg/shaders/RuntimeConstants.hpp>
 #include <zg/interfaces/IRenderer.hpp>
 #include <zg/shaders/Shader.hpp>
+#include <zg/GlobalUID.hpp>
 namespace zg::vaos
 {
 	using namespace shaders;
@@ -15,8 +16,9 @@ namespace zg::vaos
 		std::vector<size_t*> VAO_INDEX_STACK;
 		IRenderer* vaoIRenderer = 0;
 		void* rendererData = 0;
+		size_t uid = GlobalUID::GetNew();
 		std::unordered_map<void*, shaders::Shader*> shaders;
-		std::unordered_map<void*, bool> ensuredBools;
+		std::unordered_map<size_t, bool> ensuredBools;
 		VAO();
 		VAO(const VAO& other);
 		VAO(const std::vector<size_t*>& VAO_INDEX_STACK, const RuntimeConstants& constants, uint32_t indiceCount, uint32_t vertexCount);
@@ -26,7 +28,8 @@ namespace zg::vaos
 		template <typename T>
 		void updateElements(const std::string_view constant, const std::vector<T>& elements) const;
 		void drawVAO() const;
-		static void* getShaderData(IRenderer* iRenderer);
+		static void* getShaderUHash(IRenderer* iRenderer);
+		size_t getVAOuHash() const;
 		bool isEnsured();
 		void setEnsured();
 		shaders::Shader* addShader(shaders::Shader* setShader = 0);

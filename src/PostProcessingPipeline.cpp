@@ -55,7 +55,7 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
 		}
 		auto textureFilterType = textures::Texture::FilterType::Linear;
 		auto texture =
-			std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0),
+			std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 1, 0),
 																					(const void*)0, textureFormat, textureType, textureFilterType, true);
         textureRegistry.registerOutput(floatingIndex, key, texture);
 		attachments.push_back({texture, attachmentType});
@@ -77,7 +77,8 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
             }
         }
     }
-	framebuffers.emplace_back_key(floatingIndex, std::make_shared<textures::Framebuffer>(window.iRenderer, attachments));
+    auto framebuffer = std::make_shared<textures::Framebuffer>(window.iRenderer, attachments);
+	framebuffers.emplace_back_key(floatingIndex, framebuffer);
     fullscreenQuads.emplace_back_key(floatingIndex, window.INDEX_STACK, stage.constants);
     if (!calledStaticOnAttached[stage.name])
     {

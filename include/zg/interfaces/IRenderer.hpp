@@ -68,7 +68,7 @@ namespace zg
 		RENDERER renderer;
 		static constexpr FRONTFACE DEFAULTFRONTFACE = CLOCKWISE;
 		FRONTFACE frontFace = DEFAULTFRONTFACE;
-		CULLMODE cullMode = BACK;
+		CULLMODE cullMode = NOCULL;
 		ShaderContext* shaderContext = 0;
 		IRenderer();
 		virtual ~IRenderer() = default;

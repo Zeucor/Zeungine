@@ -12,8 +12,14 @@ set(boost_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/bo
 set(jolt_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/jolt-src")
 set(ttf2mesh_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/ttf2mesh-src")
 set(assimp_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/assimp-src")
+set(vhacd_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/vhacd-src")
 
 # assimp
+install(FILES ${vhacd_SOURCE_DIR}/include/VHACD.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    COMPONENT headers)
+
 install(DIRECTORY ${assimp_SOURCE_DIR}/include/assimp
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     COMPONENT headers

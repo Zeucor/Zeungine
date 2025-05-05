@@ -1,6 +1,7 @@
 #include <zg/FullscreenQuad.hpp>
 #include <zg/utilities.hpp>
 #include <zg/Window.hpp>
+#include <zg/Mesh.hpp>
 using namespace zg;
 FullscreenQuad::FullscreenQuad(const FullscreenQuad& other):
     vaos::VAO(other.VAO_INDEX_STACK, other.constants, other.indiceCount, other.vertexCount),
@@ -44,7 +45,7 @@ void FullscreenQuad::generateQuad()
         {0, 0}
     });
 	bool flipUVs = (vaoIRenderer->renderer == RENDERER_VULKAN || vaoIRenderer->renderer == RENDERER_METAL);
-    zg::Entity::flipUVsY(uv2s);
+    zg::Mesh::flipUVsY(uv2s);
     updateElements("UV2", uv2s);
 }
 void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared_ptr<zg::textures::Texture>>>& inputTextures, bool shaderAlreadyBound)

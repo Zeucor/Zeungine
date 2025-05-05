@@ -24,6 +24,7 @@
 #include <zg/math/Rotations.hpp>
 #include <zg/physics/CollisionManifold.hpp>
 #include <zg/fonts/ttf2mesh/TTF2Mesh.hpp>
+#include <zg/entities/Model.hpp>
 using namespace zg;
 shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
 glm::vec3 windowVisualizerPosition(56.8, 42, 57);
@@ -36,7 +37,7 @@ auto cubeRigidBodyInfo = components::entities::RigidBodyFactory(
 																			glm::vec<3, bool>(1, 0, 1), glm::vec<3, bool>(0)});
 auto glyphRigidBodyInfo = components::entities::RigidBodyFactory(
 	components::entities::RigidBodyInfo{components::entities::BodyType::Dynamic, 1.0f, 0.85f, 0.7f, true, false,
-																			glm::vec<3, bool>(1, 0, 0), glm::vec<3, bool>(0)});
+																			glm::vec<3, bool>(1, 0, 1), glm::vec<3, bool>(0), 2});
 auto floorCreateInfo = entities::CubeFactory("Floor", {50, 40, 50}, {1, 0, 0, 0}, {1, 1, 1}, {20000, 0.5, 20000},
 																						 {0.35, 0.45, 0.25, 1}, commonShaderConstants);
 auto floorColliderInfo = components::entities::ColliderFactory(
@@ -46,7 +47,7 @@ auto floorColliderInfo = components::entities::ColliderFactory(
 		false
 	)
 );
-auto toxyCreateInfo = entities::CubeFactory("Toxy", {50, 47, 58}, {1, 0, 0, 0}, glm::vec3(2), glm::vec3(1), {0, 0, 1, 1}, commonShaderConstants);
+auto toxyCreateInfo = entities::CubeFactory("Toxy", {50, 47, 62}, {1, 0, 0, 0}, glm::vec3(0.5), glm::vec3(1), {0, 0, 1, 1}, commonShaderConstants);
 auto toxyColliderInfo = components::entities::ColliderFactory(
 	components::entities::ColliderInfo(
 		std::make_shared<components::entities::ConvexHullShapeData>(),
@@ -105,7 +106,7 @@ SceneCreateInfo PhysicsSceneFactory()
 		.onAttachedFunction = [](auto& scene)
 		{
 			auto& window = Registry::getWindow(scene.INDEX_STACK);
-			scene.clearColor = {0, 0, 1, 1};
+			scene.clearColor = {1, 0, 0, 1};
 			glm::vec3 dldirection{1, -1, 1};
 			dldirection = glm::normalize(dldirection);
 			glm::vec3 dlup{0, 1, 0};
@@ -147,11 +148,13 @@ SceneCreateInfo PhysicsSceneFactory()
 			auto floor_rb_ID = floor_rb.ID;
 			floor_rb.template setData<float>("Mass", 1000000.0f);
 			floor.attachComponent(floorColliderInfo);
+			auto floorPosition = floor.position;
 			auto& toxy = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(toxy_tuple));
 			auto toxy_index_stack = toxy.INDEX_STACK;
 			auto toxy_rb_tuple = toxy.attachComponent(cubeRigidBodyInfo);
 			auto toxy_rb_ID = std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_rb_tuple)->ID;
 			toxy.attachComponent(toxyColliderInfo);
+			auto toxyPosition = toxy.position;
 			// auto& cube1 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube1_tuple));
 			// cube1.attachComponent(cubeRigidBodyInfo);
 			// cube1.attachComponent(cubeColliderInfo);
@@ -195,9 +198,10 @@ SceneCreateInfo PhysicsSceneFactory()
 					auto& floor = Registry::getEntity(floor_index_stack);
 					auto& floor_rb = floor.getComponentByID(floor_rb_ID);
 					physics::CollisionManifold* ManifoldPointer = 0;
-					if (toxy_rb.template getData<size_t>("CollidingMask") == 1)
+					auto collidingMask = toxy_rb.template getData<size_t>("CollidingMask");
+					if (collidingMask & 1 || collidingMask & 2)
 					{
-						toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 150, 0));
+						toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 250, 0));
 					}
 				};
 				/*fID = */window.addKeyUpdateHandler(f, onFrontTickFunction);
@@ -228,7 +232,14 @@ SceneCreateInfo PhysicsSceneFactory()
 				entity.attachComponent(glyphRigidBodyInfo);
 				entity.attachComponent(toxyColliderInfo);
 			}
-			scene.attachComponent(zg::components::scenes::EdgeDetectionFactory());
+			// scene.attachComponent(zg::components::scenes::EdgeDetectionFactory());
+            // zgfilesystem::File modelFile(
+			// 	std::filesystem::path("C:\\") / "main1_sponza" / "sponza.glb",
+			// 	zg::enums::EFileLocation::Absolute,
+			// 	"r"
+			// );
+			// auto modelInfo = entities::ModelFactory(modelFile, "Sponza", floorPosition + glm::vec3(0, 0.3, 0), {1, 0, 0, 0}, {1, 1, 1}, commonShaderConstants, window.iRenderer);
+			// scene.addEntity(modelInfo);
 		}
 	};
 	return info;

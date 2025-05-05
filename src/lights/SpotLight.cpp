@@ -7,7 +7,7 @@ SpotLightShadow::SpotLightShadow(Window& window, SpotLight& spotLight) :
 		//  shader(*shaders::ShaderManager::getShaderByConstants(window, {"DepthMap", "Color", "Position", "Normal",
 		//  "Model", "LightSpaceMatrix"}).second),
 		spotLight(spotLight),
-		texture(std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(4096, 4096, 1, 0), (const void*)0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Linear, true)),
+		texture(std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(4096, 4096, 1, 0), (const void*)0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1, textures::Texture::AddressMode::ClampToEdge)),
 		framebuffer(std::make_shared<textures::Framebuffer>(window.iRenderer, std::vector<textures::Framebuffer::TextureAttachmentPair>{{texture, textures::Framebuffer::AttachmentType::Depth}}))
 {
 	float fov = glm::acos(glm::clamp(spotLight.outerCutoff, -1.0f, 1.0f)) * 2.0;

@@ -6,34 +6,43 @@
 #include <zg/textures/TextureFactory.hpp>
 using namespace zg::textures;
 Texture::Texture(IRenderer* iRenderer, const glm::ivec4& size, const void* data, const Format& format, const Type& type,
-								 const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling) :
+								 const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling,
+								 AddressMode addressMode) :
 		iRenderer(iRenderer), size(size), format(format), type(type), filterType(filterType),
 		isFramebufferAttachment(isFramebufferAttachment),
-    multisampling(multisampling)
+    multisampling(multisampling),
+	addressMode(addressMode)
 {
 	TextureFactory::initTexture(*this, data);
+	isTransparent = testIsTransparent(data); // TODO: run this check in other constructors
 }
 Texture::Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::vector<void*> datas, const Format& format,
-								 const Type& type, const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling) :
+								 const Type& type, const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling,
+								 AddressMode addressMode) :
 		iRenderer(iRenderer), size(size), format(format), type(type), filterType(filterType),
 		isFramebufferAttachment(isFramebufferAttachment),
-    multisampling(multisampling)
+    multisampling(multisampling),
+	addressMode(addressMode)
 {
 	TextureFactory::initTexture(*this, datas);
 }
 Texture::Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::string_view path, const Format& format,
-								 const Type& type, const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling) :
+								 const Type& type, const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling,
+								 AddressMode addressMode) :
 		iRenderer(iRenderer), size(size), format(format), type(type), filterType(filterType),
 		isFramebufferAttachment(isFramebufferAttachment),
-    multisampling(multisampling)
+    multisampling(multisampling),
+	addressMode(addressMode)
 {
 	TextureFactory::initTexture(*this, path);
 }
 Texture::Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::vector<std::string_view>& paths,
-								 const Format& format, const Type& type, const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling) :
+								 const Format& format, const Type& type, const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling,
+								 AddressMode addressMode) :
 		iRenderer(iRenderer), size(size), format(format), type(type), filterType(filterType),
 		isFramebufferAttachment(isFramebufferAttachment),
-    multisampling(multisampling)
+    multisampling(multisampling),
+	addressMode(addressMode)
 {
 	TextureFactory::initTexture(*this, paths);
 }
@@ -97,4 +106,17 @@ Serial& deserialize(Serial& serial, std::shared_ptr<Texture>& texturePointer)
 	texturePointer =
 		std::make_shared<Texture>(windowPointer->iRenderer, size, datas, format, type, filterType);
 	return serial;
+}
+bool Texture::testIsTransparent(const void* data)
+{
+	if (!data)
+		return false;
+	using uvec = glm::vec<4, unsigned char>;
+	auto colors = (uvec*)data;
+	size_t n = size.x * size.y;
+	for (size_t i = 0; i < n; ++i)
+		// std::cout << "colors[" << i << "]: " << glm::to_string(colors[i]) << std::endl; 
+		if (colors[i].a < 255)
+			return true;
+	return false;
 }

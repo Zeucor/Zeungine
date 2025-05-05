@@ -56,7 +56,7 @@ namespace zg
 			return t;
 		}
 		template <typename... Args>
-		ValueT& commitTransaction(Transaction& transaction, const Args&... args)
+		ValueT& commitTransaction(Transaction& transaction, Args&... args)
 		{
 			if (transaction.committed)
 			{
@@ -164,7 +164,7 @@ namespace zg
 			return m_Values[indexRef];
 		}
 		template <typename... Args>
-		EmplaceBackTuple emplace_back(const Args&... args)
+		EmplaceBackTuple emplace_back(Args&... args)
 		{
 			if (!m_GetKeyFunctionSet)
 				throw std::logic_error("KeyIDVector::emplace_back: GetKeyFunction is not set.");
@@ -182,7 +182,7 @@ namespace zg
 			return {key, id, &indexRef, &value};
 		}
 		template <typename... Args>
-		EmplaceBackTuple emplace_back_key(KeyT key, const Args&... args)
+		EmplaceBackTuple emplace_back_key(KeyT key, Args&... args)
 		{
 			std::lock_guard lock(*m_Mutex);
 			size_t id = GlobalUID::GetNew();
@@ -691,8 +691,8 @@ namespace zg
 			size_t id() const
 			{
 				auto _index = index();
-				auto indexIDIter = kiv_ptr->m_IndexIDVector.find(_index);
-				if (indexIDIter == kiv_ptr->m_IndexIDVector.end())
+				auto indexIDIter = kiv_ptr->m_IndexIDMap.find(_index);
+				if (indexIDIter == kiv_ptr->m_IndexIDMap.end())
 					throw std::logic_error("index has no ID!");
 				return indexIDIter->second;
 				;
@@ -774,8 +774,8 @@ namespace zg
 			size_t id() const
 			{
 				auto _index = index();
-				auto indexIDIter = kiv_ptr->m_IndexIDVector.find(_index);
-				if (indexIDIter == kiv_ptr->m_IndexIDVector.end())
+				auto indexIDIter = kiv_ptr->m_IndexIDMap.find(_index);
+				if (indexIDIter == kiv_ptr->m_IndexIDMap.end())
 					throw std::logic_error("index has no ID!");
 				return indexIDIter->second;
 				;

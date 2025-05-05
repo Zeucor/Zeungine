@@ -79,22 +79,22 @@ namespace zg
 		VkDeviceMemory indiceBufferMemory = 0;
 		void* indiceData = 0;
 		uint32_t indiceBufferSize;
-		std::unordered_map<void*, VkDescriptorPool> descriptorPools;
-		std::unordered_map<void*, VkDescriptorSet> descriptorSets;
-		std::unordered_map<void*, SSBOBuffers> ssboBuffers;
-		std::unordered_map<void*, UniformBuffers> uniformBuffers;
-		std::unordered_map<void*, UniformBuffersMemory> uniformBuffersMemory;
-		std::unordered_map<void*, UniformBuffersMapped> uniformBuffersMapped;
-		std::unordered_map<void*, BufferInfos> bufferInfos;
-		std::unordered_map<void*, UniformLocationTable> uniformLocationTable;
-		VkDescriptorPool& getDescriptorPool(void* data) { return descriptorPools[data]; }
-		VkDescriptorSet& getDescriptorSet(void* data) { return descriptorSets[data]; }
-		SSBOBuffers& getSsboBuffers(void* data) { return ssboBuffers[data]; }
-		UniformBuffers& getUniformBuffers(void* data) { return uniformBuffers[data]; }
-		UniformBuffersMemory& getUniformBuffersMemory(void* data) { return uniformBuffersMemory[data]; }
-		UniformBuffersMapped& getUniformBuffersMapped(void* data) { return uniformBuffersMapped[data]; }
-		BufferInfos& getBufferInfos(void* data) { return bufferInfos[data]; }
-		UniformLocationTable& getUniformLocationTable(void* data) { return uniformLocationTable[data]; }
+		std::unordered_map<size_t, VkDescriptorPool> descriptorPools;
+		std::unordered_map<size_t, VkDescriptorSet> descriptorSets;
+		std::unordered_map<size_t, SSBOBuffers> ssboBuffers;
+		std::unordered_map<size_t, UniformBuffers> uniformBuffers;
+		std::unordered_map<size_t, UniformBuffersMemory> uniformBuffersMemory;
+		std::unordered_map<size_t, UniformBuffersMapped> uniformBuffersMapped;
+		std::unordered_map<size_t, BufferInfos> bufferInfos;
+		std::unordered_map<size_t, UniformLocationTable> uniformLocationTable;
+		VkDescriptorPool& getDescriptorPool(size_t data) { return descriptorPools[data]; }
+		VkDescriptorSet& getDescriptorSet(size_t data) { return descriptorSets[data]; }
+		SSBOBuffers& getSsboBuffers(size_t data) { return ssboBuffers[data]; }
+		UniformBuffers& getUniformBuffers(size_t data) { return uniformBuffers[data]; }
+		UniformBuffersMemory& getUniformBuffersMemory(size_t data) { return uniformBuffersMemory[data]; }
+		UniformBuffersMapped& getUniformBuffersMapped(size_t data) { return uniformBuffersMapped[data]; }
+		BufferInfos& getBufferInfos(size_t data) { return bufferInfos[data]; }
+		UniformLocationTable& getUniformLocationTable(size_t data) { return uniformLocationTable[data]; }
 	};
 	struct VulkanShaderImpl
 	{
@@ -235,6 +235,7 @@ namespace zg
 		PFN_vkDestroyRenderPass _vkDestroyRenderPass;
 		PFN_vkDeviceWaitIdle _vkDeviceWaitIdle;
 		PFN_vkDestroyShaderModule _vkDestroyShaderModule;
+		size_t allocatedMemoryBytes = 0;
 		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 		VkInstance instance;
 		VkDebugUtilsMessengerEXT debugMessenger;

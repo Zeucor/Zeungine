@@ -1,17 +1,11 @@
 #include <zg/entities/Plane.hpp>
+#include <zg/Mesh.hpp>
 #include <zg/utilities.hpp>
 using namespace zg;
 zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string name, glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec2 size,
     const shaders::RuntimeConstants& constants, zg::FRONTFACE frontFace)
 {
-    zg::EntityCreateInfo info{
-        .typeName = "Plane",
-        .position = position,
-        .rotation = rotation,
-        .scale = scale,
-        .constants = zg::mergeVectors<std::string>(
-			{{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
-        .name = name,
+    zg::MeshCreateInfo meshInfo{
         .indiceCount = [](auto&) { return 6; },
         .indices = [frontFace](auto&) -> std::vector<uint32_t>
         {
@@ -39,9 +33,21 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string nam
             auto& color = entity.template getData<glm::vec4>("Color");
             return {4, color};
         },
+        .constants = zg::mergeVectors<std::string>(
+            {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
+    };
+    zg::EntityCreateInfo info{
+        .typeName = "Plane",
+        .position = position,
+        .rotation = rotation,
+        .scale = scale,
+        .name = name,
         .dataMap = {
             {"Color", color},
             {"Size", size}
+        },
+        .meshInfos = {
+            meshInfo
         }
     };
     return info;
@@ -49,14 +55,7 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string nam
 zg::EntityCreateInfo zg::entities::PlaneFactory(const std::shared_ptr<textures::Texture>& texture, std::string name, glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec2 size,
     const shaders::RuntimeConstants& constants, zg::FRONTFACE frontFace)
 {
-    zg::EntityCreateInfo info{
-        .typeName = "Plane",
-        .position = position,
-        .rotation = rotation,
-        .scale = scale,
-        .constants = zg::mergeVectors<std::string>(
-			{{"UV2", "Position", "Normal", "ColorTexture", "View", "Projection", "Model", "CameraPosition"}}, constants),
-        .name = name,
+    zg::MeshCreateInfo meshInfo{
         .indiceCount = [](auto&) { return 6; },
         .indices = [frontFace](auto&) -> std::vector<uint32_t>
         {
@@ -91,8 +90,20 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(const std::shared_ptr<textures::
         .keyedTextures = {
             {"ColorTexture", texture}
         },
+        .constants = zg::mergeVectors<std::string>(
+			{{"UV2", "Position", "Normal", "ColorTexture", "View", "Projection", "Model", "CameraPosition"}}, constants)
+    };
+    zg::EntityCreateInfo info{
+        .typeName = "Plane",
+        .position = position,
+        .rotation = rotation,
+        .scale = scale,
+        .name = name,
         .dataMap = {
             {"Size", size}
+        },
+        .meshInfos = {
+            meshInfo
         }
     };
     return info;

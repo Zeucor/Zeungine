@@ -1,6 +1,5 @@
 #include <zg/Entity.hpp>
 #include <zg/Scene.hpp>
-#include <zg/Window.hpp>
 #include <zg/components/entities/RigidBody.hpp>
 #include <zg/renderers/VulkanRenderer.hpp>
 #include <zg/shaders/ShaderManager.hpp>
@@ -8,92 +7,70 @@
 using namespace zg;
 std::unordered_map<std::string, size_t> childKeyCounts;
 Entity::Entity(const EntityCreateInfo& info) :
-		VAO(info.INDEX_STACK, info.constants, info.indiceCount(*this), info.vertexCount(*this)),
-		DataStorage<Entity>(info.getDataFunctionMap, info.setDataFunctionMap, info.dataMap),
-		INDEX_STACK(info.INDEX_STACK),
-		keyedTextures(info.keyedTextures),
-		position(info.position), rotation(info.rotation),
-		scale(info.scale),
-		indiceCount(info.indiceCount),
-		indices(info.indices),
-		vertexCount(info.vertexCount),
-		vertices(info.vertices),
-		colorCount(info.colorCount),
-		colors(info.colors),
-		uv2Count(info.uv2Count),
-		uv2s(info.uv2s),
-		uv3Count(info.uv3Count),
-		uv3s(info.uv3s),
-		children(
-			[](const auto& entity) { return entity.name; },
-			[](const std::string& key) {
-				auto _key = key;
-				auto keySize = _key.size(); 
-				if (!keySize)
-				{
-					_key = std::string("Unknown");
-				}
-				auto childKeyCountsIter = childKeyCounts.find(_key);
-				if (childKeyCountsIter == childKeyCounts.end())
-				{
-					childKeyCounts[_key] = 1;
-					childKeyCountsIter = childKeyCounts.find(_key);
-				}
-				return _key + " " + std::to_string(++childKeyCountsIter->second);
+	DataStorage<Entity>(info.getDataFunctionMap, info.setDataFunctionMap, info.dataMap),
+	ID(info.ID),
+	INDEX(info.INDEX),
+	INDEX_STACK(info.INDEX_STACK),
+	typeName(info.typeName),
+	name(info.name),
+	position(info.position),
+	rotation(info.rotation),
+	scale(info.scale),
+	meshInfos(info.meshInfos),
+	children(
+		[](const auto& entity) { return entity.name; },
+		[](const std::string& key) {
+			auto _key = key;
+			auto keySize = _key.size(); 
+			if (!keySize)
+			{
+				_key = std::string("Unknown");
 			}
-		),
-		name(info.name),
-		preUpdateFunction(info.preUpdateFunction), preRenderFunction(info.preRenderFunction),
-		postRenderFunction(info.postRenderFunction),
-		onAddedFunction(info.onAddedFunction),
-		onRemovedFunction(info.onRemovedFunction)
+			auto childKeyCountsIter = childKeyCounts.find(_key);
+			if (childKeyCountsIter == childKeyCounts.end())
+			{
+				childKeyCounts[_key] = 1;
+				childKeyCountsIter = childKeyCounts.find(_key);
+			}
+			return _key + " " + std::to_string(++childKeyCountsIter->second);
+		}
+	),
+	preUpdateFunction(info.preUpdateFunction), preRenderFunction(info.preRenderFunction),
+	postRenderFunction(info.postRenderFunction),
+	onAddedFunction(info.onAddedFunction),
+	onRemovedFunction(info.onRemovedFunction)
 {
-	auto& window = Registry::getWindow(INDEX_STACK);
-	auto _indices_ = indices(*this);
-	auto _vertices_ = vertices(*this);
-	std::vector<glm::vec3> normals;
-	computeNormals(window.iRenderer->frontFace, _indices_, _vertices_, normals);
-	updateIndices(_indices_);
-	if (colorCount && colorCount(*this))
-		updateElements("Color", colors(*this));
-	bool flipUVs = (window.iRenderer->renderer == RENDERER_VULKAN || window.iRenderer->renderer == RENDERER_METAL);
-	if (uv2Count && uv2Count(*this))
-	{
-		auto _uv2s_ = uv2s(*this);
-		flipUVsY(_uv2s_);
-		updateElements("UV2", _uv2s_);
-	}
-	if (uv3Count && uv3Count(*this))
-	{
-		auto _uv3s_ = uv3s(*this);
-		flipUVsY(_uv3s_);
-		updateElements("UV3", _uv3s_);
-	}
-	updateElements("Position", _vertices_);
-	updateElements("Normal", normals);
+	for (auto& meshInfo : info.meshInfos)
+		meshIDs.push_back(Registry::addMesh(meshInfo, *this));
+	for (auto& childInfo : info.childrenInfos)
+		addChild(childInfo);
 }
 Entity::Entity(const Entity& other) :
-	VAO(other),
 	ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>(other),
 	DataStorage<Entity>(other),
+	ID(other.ID),
+	INDEX(other.INDEX),
 	INDEX_STACK(other.INDEX_STACK),
-	keyedTextures(other.keyedTextures), position(other.position), rotation(other.rotation), scale(other.scale),
-	indiceCount(other.indiceCount),
-	indices(other.indices),
-	vertexCount(other.vertexCount),
-	vertices(other.vertices),
-	colorCount(other.colorCount),
-	colors(other.colors),
-	uv2Count(other.uv2Count),
-	uv2s(other.uv2s),
-	uv3Count(other.uv3Count),
-	uv3s(other.uv3s),
+	VALUE(other.VALUE),
+	typeName(other.typeName),
+	name(other.name),
+	position(other.position),
+	rotation(other.rotation),
+	scale(other.scale),
+	meshIDs(other.meshIDs),
+	meshInfos(other.meshInfos),
 	children(other.children),
-	name(other.name), preUpdateFunction(other.preUpdateFunction), preRenderFunction(other.preRenderFunction),
+	preUpdateFunction(other.preUpdateFunction),
+	preRenderFunction(other.preRenderFunction),
 	postRenderFunction(other.postRenderFunction),
 	onAddedFunction(other.onAddedFunction),
 	onRemovedFunction(other.onRemovedFunction)
 {
+	{
+		std::lock_guard meshIDLock(Registry::meshIDMutex);
+		for (auto& meshID : meshIDs)
+			Registry::meshIDRefCounts[meshID]++;
+	}
 }
 Entity::~Entity()
 {
@@ -101,32 +78,31 @@ Entity::~Entity()
 		if (child.onRemovedFunction)
 			child.onRemovedFunction(child);
 	children.clear();
+	for (auto& meshID : meshIDs)
+		Registry::deRefMesh(meshID);
 	detachAllComponents();
 }
 Entity& Entity::operator=(const Entity& other)
 {
-	((vaos::VAO&)*this) = other;
 	((ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>&)*this) = other;
 	((DataStorage<Entity>&)*this) = other;
 	ID = other.ID;
 	INDEX = other.INDEX;
 	INDEX_STACK = other.INDEX_STACK;
-	keyedTextures = other.keyedTextures;
+	VALUE = other.VALUE;
+	typeName = other.typeName;
+	name = other.name;
 	position = other.position;
 	rotation = other.rotation;
 	scale = other.scale;
-	indiceCount = other.indiceCount;
-	indices = other.indices;
-	vertexCount = other.vertexCount;
-	vertices = other.vertices;
-	colorCount = other.colorCount;
-	colors = other.colors;
-	uv2Count = other.uv2Count;
-	uv2s = other.uv2s;
-	uv3Count = other.uv3Count;
-	uv3s = other.uv3s;
+	meshIDs = other.meshIDs;
+	{
+		std::lock_guard meshIDLock(Registry::meshIDMutex);
+		for (auto& meshID : meshIDs)
+			Registry::meshIDRefCounts[meshID]++;
+	}
+	meshInfos = other.meshInfos;
 	children = other.children;
-	name = other.name;
 	preUpdateFunction = other.preUpdateFunction;
 	preRenderFunction = other.preRenderFunction;
 	postRenderFunction = other.postRenderFunction;
@@ -134,10 +110,29 @@ Entity& Entity::operator=(const Entity& other)
 	onRemovedFunction = other.onRemovedFunction;
 	return *this;
 }
-void Entity::refreshVertices()
+void Entity::refreshMeshes()
 {
-	auto _vertices_ = vertices(*this);
-	updateElements("Position", _vertices_);
+	auto meshInfosSize = meshInfos.size();
+	auto meshInfosData = meshInfos.data();
+	auto meshIDsSize = meshIDs.size();
+	auto meshIDsData = meshIDs.data();
+	for (size_t index = 0; index < meshInfosSize; ++index)
+	{
+		auto meshID = index < meshIDsSize ? meshIDsData[index] : 0;
+		auto& meshInfo = meshInfosData[index];
+		auto newSubMeshID = Registry::addMesh(meshInfo, *this);
+		if (meshID != 0 && meshID != newSubMeshID)
+		{
+			Registry::deRefMesh(meshID);
+			meshIDsData[index] = newSubMeshID;
+		}
+		else if (meshID == 0)
+		{
+			meshIDs.insert(meshIDs.begin() + index, newSubMeshID);
+			meshIDsSize = meshIDs.size();
+			meshIDsData = meshIDs.data();
+		}
+	}
 }
 void Entity::update()
 {
@@ -154,37 +149,23 @@ void Entity::update()
 }
 void Entity::render()
 {
-	auto shader = addShader();
 	if (preRenderFunction && !preRenderFunction(*this))
 		return;
-	shader->bind(*this);
-	auto& scene = Registry::getScene(INDEX_STACK);
+	for (auto& meshID : meshIDs)
 	{
-		if (viewPointer)
-			viewPointer->updateMutex.lock();
-		else
-			scene.viewPointer->updateMutex.lock();
-		scene.entityPreRender(*this);
-		shader->setBlock("Model", *this, getModelMatrix());
-		shader->setBlock("View", *this, viewPointer ? viewPointer->matrix : scene.viewPointer->matrix);
-		shader->setBlock("CameraPosition", *this, viewPointer ? viewPointer->position : scene.viewPointer->position, 16);
-		if (viewPointer)
-			viewPointer->updateMutex.unlock();
-		else
-			scene.viewPointer->updateMutex.unlock();
+		auto& mesh = Registry::getMesh(meshID);
+		mesh.uid = ID;
+		mesh.render(*this);
 	}
-	shader->setBlock("Projection", *this,
-									projectionPointer ? projectionPointer->matrix : scene.projectionPointer->matrix);
-	auto keyedTexturesSize = keyedTextures.size();
-	auto keyedTexturesData = keyedTextures.data();
-	for (size_t unit = 0; unit < keyedTexturesSize; ++unit)
-		shader->setTexture(keyedTexturesData[unit].first, *this, *keyedTexturesData[unit].second, unit);
-	drawVAO();
-	shader->unbind();
-	auto childrenData = children.data();
-	auto childrenSize = children.size();
-	for (size_t index = 0; index < childrenSize; ++index)
-		childrenData[index].render();
+	// auto childrenData = children.data();
+	// auto childrenSize = children.size();
+	// for (size_t index = 0; index < childrenSize; ++index)
+	// 	childrenData[index].render();
+}
+void Entity::postRender()
+{
+	// for (auto& meshID : meshIDs)
+	// 	Registry::getMesh(meshID).setTexturesThisPass = false;
 }
 glm::mat4& Entity::getModelMatrix()
 {
@@ -213,9 +194,9 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const Entity
 	auto transaction = children.startTransaction();
 	usingInfo.INDEX_STACK = {INDEX_STACK.begin(), INDEX_STACK.end()};
 	usingInfo.INDEX_STACK.push_back(transaction.index);
+	usingInfo.ID = transaction.id;
+	usingInfo.INDEX = transaction.index;
 	auto& childEntity = children.commitTransaction(transaction, usingInfo);
-	childEntity.ID = transaction.id;
-	childEntity.INDEX = transaction.index;
 	(*Registry::idEntities)[childEntity.ID] = childEntity.INDEX_STACK;
 	if (childEntity.onAddedFunction)
 		childEntity.onAddedFunction(childEntity);
@@ -299,7 +280,7 @@ void Entity::removeMouseHoverHandler(UniqueIdentifier& id)
 	handlers.erase(handlerIter);
 	id = 0;
 }
-void Entity::callMousePressHandler(const Button& button, int pressed)
+void Entity::callMousePressHandler(const Button& button, bool pressed)
 {
 	buttons[button] = pressed;
 	{

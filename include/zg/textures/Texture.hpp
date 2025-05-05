@@ -44,6 +44,12 @@ namespace zg::textures
 			x32,
 			x64
 		};
+		enum AddressMode
+		{
+			ClampToEdge,
+			ClampToBorder,
+			Repeat
+		};
 		IRenderer* iRenderer = 0;
 		glm::ivec4 size;
 		std::vector<std::pair<size_t, std::shared_ptr<char>>> datas;
@@ -53,27 +59,34 @@ namespace zg::textures
 		void* rendererData = 0;
 		bool isFramebufferAttachment = false;
 		Multisampling multisampling;
+		bool isTransparent = false;
+		AddressMode addressMode;
 		explicit Texture(IRenderer* iRenderer, const glm::ivec4& size, const void* data, const Format& format = RGBA8,
 										 const Type& type = UnsignedByte, const FilterType& filterType = Linear,
-										 bool isFramebufferAttachment = false, Multisampling multisampling = x1);
+										 bool isFramebufferAttachment = false, Multisampling multisampling = x1,
+										 AddressMode addressMode = AddressMode::Repeat);
 		explicit Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::vector<void*> datas,
 										 const Format& format = RGBA8, const Type& type = UnsignedByte,
 										 const FilterType& filterType = Linear, bool isFramebufferAttachment = false,
-										 Multisampling multisampling = x1);
+										 Multisampling multisampling = x1,
+										 AddressMode addressMode = AddressMode::Repeat);
 		explicit Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::string_view path,
 										 const Format& format = RGBA8, const Type& type = UnsignedByte,
 										 const FilterType& filterType = Linear, bool isFramebufferAttachment = false,
-										 Multisampling multisampling = x1);
+										 Multisampling multisampling = x1,
+										 AddressMode addressMode = AddressMode::Repeat);
 		explicit Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::vector<std::string_view>& paths,
 										 const Format& format = RGBA8, const Type& type = UnsignedByte,
 										 const FilterType& filterType = Linear, bool isFramebufferAttachment = false,
-										 Multisampling multisampling = x1);
+										 Multisampling multisampling = x1,
+										 AddressMode addressMode = AddressMode::Repeat);
 		~Texture();
 		void bind() const;
 		void unbind() const;
 		void update(const void* data);
 		void update(const std::string_view path);
 		void update(const std::vector<std::string_view>& paths);
+		bool testIsTransparent(const void* data);
 	};
 #if defined(USE_GL) || defined(USE_EGL)
 	struct GLTextureImpl

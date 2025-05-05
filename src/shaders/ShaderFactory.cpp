@@ -841,6 +841,9 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
                     std::string string("  vec4 sampled = texture(ColorTexture, inUV);\n");
+//                     string += R"(  if(sampled.a < 0.8)
+//     discard;
+// )";
                   	if (std::find(constants.begin(), constants.end(), "TextColor") != constants.end())
                   	{
 											string += "  FragColor = vec4(textColor.value.r, textColor.value.g, textColor.value.b, sampled.a * textColor.value.a);";

@@ -12,7 +12,7 @@ VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {{"Indice", {3, sizeof(u
 														 {"UV2", {2, sizeof(float), ZG_FLOAT2}},
 														 {"UV3", {3, sizeof(float), ZG_FLOAT3}}};
 VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
-	{"Indice", false}, {"Color", true}, {"Position", true}, {"Normal", true}, {"UV2", true}, {"UV3", true}, {"View", false}, {"Projection", false}, {"Model", false}, {"CameraPosition", false}, {"Fog", false}, {"Lighting", false}, {"LightSpaceMatrix", false}};
+	{"Color", true}, {"Position", true}, {"Normal", true}, {"UV2", true}, {"UV3", true}};
 void VAOFactory::generate(VAO &vao) { vao.vaoIRenderer->generateVAO(vao); };
 void VAOFactory::copy(VAO &dest, const VAO& src) { src.vaoIRenderer->copyVAO(dest, src); };
 size_t VAOFactory::getStride(const RuntimeConstants &constants)
@@ -22,7 +22,10 @@ size_t VAOFactory::getStride(const RuntimeConstants &constants)
 	{
 		if (!isVAOConstant(constant))
 			continue;
-		auto &constantSize = constantSizes[constant];
+		auto constantIter = constantSizes.find(constant);
+		if (constantIter == constantSizes.end())
+			continue;
+		auto &constantSize = constantIter->second;
 		stride += std::get<0>(constantSize) * std::get<1>(constantSize);
 	};
 	return stride;
@@ -36,10 +39,17 @@ size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::strin
 			continue;
 		if (constant == offsetConstant)
 			return stride;
-		auto &constantSize = constantSizes[constant];
+		auto constantIter = constantSizes.find(constant);
+		if (constantIter == constantSizes.end())
+			continue;
+		auto &constantSize = constantIter->second;
 		stride += std::get<0>(constantSize) * std::get<1>(constantSize);
 	};
 	throw std::runtime_error("No such constant");
 };
-bool VAOFactory::isVAOConstant(const std::string_view constant) { return VAOConstants[constant]; }
+bool VAOFactory::isVAOConstant(const std::string_view constant)
+{
+	auto iter = VAOConstants.find(constant);
+	return (iter != VAOConstants.end());
+}
 void VAOFactory::destroy(VAO &vao) { vao.vaoIRenderer->destroyVAO(vao); };

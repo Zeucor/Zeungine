@@ -4,6 +4,10 @@
 #include <zg/components/entities/RigidBody.hpp>
 #include <zg/components/scenes/PhysicsScene.hpp>
 #include <zg/physics/AABB.hpp>
+#undef min
+#undef max
+#define ENABLE_VHACD_IMPLEMENTATION 1
+#include <VHACD.h>
 using namespace zg::components::entities;
 using zg::physics::AABB;
 BoxShapeData::BoxShapeData(glm::vec3 halfExtents) : halfExtents(halfExtents) {}
@@ -33,72 +37,149 @@ JPH::ShapeRefC SphereShapeData::createJoltShape(Entity& entity) const
 }
 JPH::ShapeRefC MeshShapeData::createJoltShape(Entity& entity) const
 {
-	std::vector<glm::vec3> entityVertices = entity.vertices(entity);
-	std::vector<uint32_t> entityIndices = entity.indices(entity);
-    if (entityIndices.size() % 3 != 0)
-    {
-        std::cerr << "Error: Index count (" << entityIndices.size() << ") is not a multiple of 3 for entity " << entity.ID << std::endl;
-        return nullptr;
-    }
-    JPH::VertexList vertices;
-    vertices.reserve(entityVertices.size());
-    for (const auto& v : entityVertices)
-    {
-        vertices.emplace_back(v.x, v.y, v.z);
-    }
-    JPH::IndexedTriangleList triangles;
-    size_t numTriangles = entityIndices.size() / 3;
-    triangles.reserve(numTriangles);
-    for (size_t i = 0; i < entityIndices.size(); i += 3)
-    {
-        auto i0 = entityIndices[i];
-        auto i1 = entityIndices[i + 1];
-        auto i2 = entityIndices[i + 2];
-        if (i0 >= vertices.size() || i1 >= vertices.size() || i2 >= vertices.size())
+	JPH::StaticCompoundShapeSettings compoundSettings;
+	for (auto& meshID : entity.meshIDs)
+	{
+		auto& mesh = Registry::getMesh(meshID);
+		std::vector<glm::vec3> entityVertices = mesh.vertices(entity);
+		std::vector<uint32_t> entityIndices = mesh.indices(entity);
+		if (entityIndices.size() % 3 != 0)
 		{
-             std::cerr << "Error: Vertex index out of bounds for entity " << entity.ID << std::endl;
-             return nullptr;
-        }
-        triangles.emplace_back(i0, i1, i2, 0);
-    }
-    JPH::MeshShapeSettings settings(vertices, triangles);
-    settings.SetEmbedded();
-    auto result = settings.Create();
-    if (result.HasError())
-    {
-        std::cerr << "Error creating Jolt MeshShape for entity " << entity.ID << ": " << result.GetError().c_str() << std::endl;
+			std::cerr << "Error: Index count (" << entityIndices.size() << ") is not a multiple of 3 for entity " << entity.ID << std::endl;
+			return nullptr;
+		}
+		JPH::VertexList vertices;
+		vertices.reserve(entityVertices.size());
+		for (const auto& v : entityVertices)
+		{
+			vertices.emplace_back(v.x, v.y, v.z);
+		}
+		JPH::IndexedTriangleList triangles;
+		size_t numTriangles = entityIndices.size() / 3;
+		triangles.reserve(numTriangles);
+		for (size_t i = 0; i < entityIndices.size(); i += 3)
+		{
+			auto i0 = entityIndices[i];
+			auto i1 = entityIndices[i + 1];
+			auto i2 = entityIndices[i + 2];
+			if (i0 >= vertices.size() || i1 >= vertices.size() || i2 >= vertices.size())
+			{
+				 std::cerr << "Error: Vertex index out of bounds for entity " << entity.ID << std::endl;
+				 return nullptr;
+			}
+			triangles.emplace_back(i0, i1, i2, 0);
+		}
+		JPH::MeshShapeSettings settings(vertices, triangles);
+		settings.SetEmbedded();
+		auto result = settings.Create();
+		if (result.HasError())
+		{
+			std::cerr << "Error creating Jolt MeshShape for entity " << entity.ID << ": " << result.GetError().c_str() << std::endl;
+			return nullptr;
+		}
+		auto shape = result.Get();
+		compoundSettings.AddShape(
+			JPH::Vec3(0.0f, 0.0f, 0.0f),
+			JPH::Quat::sIdentity(),
+			shape
+		);
+	}
+    JPH::Shape::ShapeResult compoundShapeResult = compoundSettings.Create();
+    if (compoundShapeResult.HasError())
+	{
+         std::cout << "Error creating compound shape: " << compoundShapeResult.GetError().c_str() << std::endl;
         return nullptr;
     }
-    return result.Get();
+    return compoundShapeResult.Get();
 }
 
 JPH::ShapeRefC ConvexHullShapeData::createJoltShape(Entity& entity) const
 {
-	std::vector<glm::vec3> entityVertices = entity.vertices(entity);
-	if (entityVertices.empty())
+	JPH::StaticCompoundShapeSettings compoundSettings;
+	for (auto& meshID : entity.meshIDs)
 	{
-		std::cerr << "Error: Cannot create convex hull with zero vertices." << std::endl;
-		return nullptr;
+		auto& mesh = Registry::getMesh(meshID);
+		std::vector<glm::vec3> entityVertices = mesh.vertices(entity);
+		if (entityVertices.empty())
+		{
+			std::cerr << "Error: Cannot create convex hull with zero vertices." << std::endl;
+			return nullptr;
+		}
+		if (entityVertices.size() < 4)
+		{
+			std::cerr << "Warning: Trying to create a convex hull with fewer than 4 vertices (" << entityVertices.size() << ")." << std::endl;
+			return nullptr;
+		}
+		std::vector<uint32_t> entityIndices = mesh.indices(entity);
+		std::vector<double> vhacdVertices;
+		vhacdVertices.reserve(entityVertices.size() * 3);
+		for (auto& v : entityVertices)
+		{
+			vhacdVertices.push_back(v.x);
+			vhacdVertices.push_back(v.y);
+			vhacdVertices.push_back(v.z);
+		}
+		VHACD::IVHACD* vhacd = VHACD::CreateVHACD();
+		VHACD::IVHACD::Parameters params;
+		params.m_resolution = 250;
+		params.m_minimumVolumePercentErrorAllowed = 0.1;
+		params.m_maxRecursionDepth = 5;
+		params.m_maxConvexHulls = 10;
+		params.m_maxNumVerticesPerCH = 1024;
+		// params.m_minimumVolumePercentErrorAllowed = 0.1;       // Maximum concavity
+		// params.m_maxNumVerticesPerCH = 256; // Max vertices per convex hull
+		// params.m_resolution = 100000;    // Voxelization resolution
+		// params.m_pca = false;
+		// params.m_planeDownsampling = 4;
+		bool success = vhacd->Compute(
+			vhacdVertices.data(),
+			static_cast<unsigned int>(vhacdVertices.size() / 3),
+			entityIndices.data(),
+			static_cast<unsigned int>(entityIndices.size() / 3),
+			params
+		);
+		if (!success)
+		{
+			vhacd->Release();
+			throw std::runtime_error("Error: VHACD decomposition failed");
+		}
+		auto numConvexHulls = vhacd->GetNConvexHulls();
+		for (unsigned int i = 0; i < numConvexHulls; ++i)
+		{
+			VHACD::IVHACD::ConvexHull ch;
+			vhacd->GetConvexHull(i, ch);
+			JPH::Array<JPH::Vec3> joltVertices;
+			auto chPointsSize = ch.m_points.size();
+			auto chPointsData = ch.m_points.data();
+			joltVertices.reserve(chPointsSize);
+			for (size_t j = 0; j < chPointsSize; ++j)
+			{
+				auto& v = chPointsData[j];
+				joltVertices.push_back(JPH::Vec3(v.mX, v.mY, v.mZ));
+			}
+			JPH::ConvexHullShapeSettings settings(joltVertices);
+			auto result = settings.Create();
+			if (result.HasError())
+			{
+				std::cerr << "Error creating Jolt ConvexHullShape: " << result.GetError().c_str() << std::endl;
+				return nullptr;
+			}
+			auto shape = result.Get();
+			compoundSettings.AddShape(
+				JPH::Vec3(0.0f, 0.0f, 0.0f),
+				JPH::Quat::sIdentity(),
+				shape
+			);
+		}
+		vhacd->Release();
 	}
-    if (entityVertices.size() < 4)
+    JPH::Shape::ShapeResult compoundShapeResult = compoundSettings.Create();
+    if (compoundShapeResult.HasError())
 	{
-		std::cerr << "Warning: Trying to create a convex hull with fewer than 4 vertices (" << entityVertices.size() << ")." << std::endl;
-		return nullptr;
-	}
-	JPH::Array<JPH::Vec3> joltVertices;
-	joltVertices.reserve(entityVertices.size());
-	for (const auto& v : entityVertices)
-	{
-		joltVertices.push_back(JPH::Vec3(v.x, v.y, v.z));
-	}
-	JPH::ConvexHullShapeSettings settings(joltVertices);
-	auto result = settings.Create();
-	if (result.HasError())
-	{
-		std::cerr << "Error creating Jolt ConvexHullShape: " << result.GetError().c_str() << std::endl;
-		return nullptr;
-	}
-	return result.Get();
+         std::cout << "Error creating compound shape: " << compoundShapeResult.GetError().c_str() << std::endl;
+        return nullptr;
+    }
+    return compoundShapeResult.Get();
 }
 
 ColliderInfo::ColliderInfo(const std::shared_ptr<ShapeData>& shapeData, const PhysicsMaterial& material, bool isSensor) :

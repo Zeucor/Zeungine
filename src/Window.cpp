@@ -28,15 +28,17 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
 Window::Window(const WindowCreateInfo& info) :
+	ID(info.ID),
+	INDEX(info.INDEX),
 	INDEX_STACK(info.INDEX_STACK),
-		title(info.title), childWindows([](auto& childWindow) { return childWindow.title; }), windowWidth(info.windowWidth),
-		windowHeight(info.windowHeight), windowX(info.windowX), windowY(info.windowY),
-		scenes([](auto& scene) { return scene.name; }), deltaTime(1.0 / info.framerate), borderless(info.borderless),
-		framerate(info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
-		framebudget(frameduration), systemFonts(*this), postProcessingPipeline(INDEX_STACK)
+	title(info.title), childWindows([](auto& childWindow) { return childWindow.title; }), windowWidth(info.windowWidth),
+	windowHeight(info.windowHeight), windowX(info.windowX), windowY(info.windowY),
+	scenes([](auto& scene) { return scene.name; }), deltaTime(1.0 / info.framerate), borderless(info.borderless),
+	framerate(info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
+	framebudget(frameduration), systemFonts(*this), postProcessingPipeline(INDEX_STACK)
 {
-	memset(windowKeys, 0, 256 * sizeof(int));
-	memset(windowButtons, 0, 7 * sizeof(int));
+	memset(windowKeys, 0, 256 * sizeof(bool));
+	memset(windowButtons, 0, 7 * sizeof(bool));
 	// if (info.isChildWindow)
 	// {
 	// 	NDCFramebufferPlane = info.NDCFramebufferPlane;
@@ -54,6 +56,8 @@ Window::Window(const WindowCreateInfo& info) :
 	// }
 }
 Window::Window(const Window& other) :
+	ID(other.ID),
+	INDEX(other.INDEX),
 	INDEX_STACK(other.INDEX_STACK),
 		title(other.title), childWindows(other.childWindows), windowWidth(other.windowWidth),
 		windowHeight(other.windowHeight), windowX(other.windowX), windowY(other.windowY), scenes(other.scenes),
@@ -157,7 +161,6 @@ void Window::preRender()
 	updateKeyboard();
 	updateMouse();
 	auto& framebufferRef = *framebuffer;
-	// framebufferRef.scenePointer = (Scene*)scene.get();
 	framebufferRef.bind();
 }
 void Window::render()
@@ -189,8 +192,8 @@ void Window::startWindow()
 	iRendererRef.init();
 	iPlatformWindowRef.postInit();
 	fullscreenQuad = std::make_unique<FullscreenQuad>(INDEX_STACK, zg::shaders::RuntimeConstants({"ColorTexture"}));
-	mainColorTexture = std::make_shared<textures::Texture>(iRenderer, glm::ivec4(windowWidth, windowHeight, 0, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	// mainDepthTexture = std::make_shared<textures::Texture>(iRenderer, glm::ivec4(windowWidth, windowHeight, 0, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	mainColorTexture = std::make_shared<textures::Texture>(iRenderer, glm::ivec4(windowWidth, windowHeight, 1, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	// mainDepthTexture = std::make_shared<textures::Texture>(iRenderer, glm::ivec4(windowWidth, windowHeight, 1, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
 	mainFramebuffer = std::make_shared<textures::Framebuffer>(iRenderer, std::vector<textures::Framebuffer::TextureAttachmentPair>{
 		{mainColorTexture, textures::Framebuffer::AttachmentType::Color}//,
 		// {mainDepthTexture, textures::Framebuffer::AttachmentType::Depth}
@@ -309,7 +312,7 @@ void Window::updateKeyboard()
 }
 void Window::updateMouse()
 {
-	for (unsigned int i = MinMouseButton; i < MaxMouseButton; ++i)
+	for (unsigned int i = MinMouseButtonIndex; i < MaxMouseButtonIndex; ++i)
 	{
 	_checkPressed:
 		auto& pressed = windowButtons[i];
@@ -347,7 +350,7 @@ void Window::minimize()
 	}
 	iPlatformWindow->minimize();
 	buttons.clear();
-	for (unsigned i = 0; i <= MaxMouseButton; ++i)
+	for (unsigned i = 0; i <= MaxMouseButtonIndex; ++i)
 	{
 		windowButtons[i] = false;
 	}
@@ -592,7 +595,7 @@ void Window::removeMouseMoveHandler(UniqueIdentifier& id)
 	handlers.erase(handlerIter);
 	id = 0;
 };
-void Window::callMousePressHandler(Button button, int pressed)
+void Window::callMousePressHandler(Button button, bool pressed)
 {
 	buttons[button] = pressed;
 	{
@@ -769,10 +772,9 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCr
 	auto transaction = scenes.startTransaction();
 	usingInfo.INDEX_STACK = {INDEX_STACK.begin(), INDEX_STACK.end()};
 	usingInfo.INDEX_STACK.push_back(transaction.index);
+	usingInfo.ID = transaction.id;
+	usingInfo.INDEX = transaction.index;
 	auto& scene = scenes.commitTransaction(transaction, usingInfo);
-	scene.ID = transaction.id;
-	scene.INDEX = transaction.index;
-	scene.INDEX_STACK = {INDEX, scene.INDEX};
 	if (scene.onAttachedFunction)
 		scene.onAttachedFunction(scene);
 	(*Registry::idScenes)[scene.ID] = scene.INDEX_STACK;

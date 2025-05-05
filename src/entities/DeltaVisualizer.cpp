@@ -15,14 +15,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
     auto targetDeltaPointer = &targetDelta;
     auto currentDeltaPointer = &currentDelta;
 	auto color = glm::vec4(0.2f, 0.3f, 0.4f, 0.7f);
-    zg::EntityCreateInfo info{
-        .typeName = "DeltaVisualizer",
-        .position = position,
-        .rotation = rotation,
-        .scale = scale,
-        .constants = zg::mergeVectors<std::string>(
-			{{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
-        .name = name,
+    MeshCreateInfo meshInfo{
         .indiceCount = [](auto&) { return 6; },
         .indices = [frontFace](auto&) -> std::vector<uint32_t>
         {
@@ -44,6 +37,15 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
             auto& color = entity.template getData<glm::vec4>("Color");
             return {4, color};
         },
+        .constants = zg::mergeVectors<std::string>(
+			{{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
+    };
+    EntityCreateInfo info{
+        .typeName = "DeltaVisualizer",
+        .position = position,
+        .rotation = rotation,
+        .scale = scale,
+        .name = name,
         .preUpdateFunction = [constants, size](auto& entity)
         {
             auto& currentDelta = *entity.template getData<long double*>("currentDelta");
@@ -120,7 +122,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
                 auto& currentPointEntity = Registry::getEntity(currentPoint);
 				currentPointEntity.position = glm::vec3(point, 0.15);
 				curvePointsData[curvePointsIndex++] = point;
-				curve.refreshVertices();
+				curve.refreshMeshes();
 
 				// update lastDeltaText
 				std::string lastDeltaTextString = "Delta: " + std::to_string(currentDelta);
@@ -253,7 +255,8 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
         .dataMap = {
             {"Size", size},
             {"Color", color}
-        }
+        },
+        .meshInfos = {meshInfo}
     };
     return info;
 }

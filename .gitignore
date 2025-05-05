@@ -8,3 +8,4 @@ cmake-build*
 lib/*/*/Debug
 releases
 _CPack_Packages
+models

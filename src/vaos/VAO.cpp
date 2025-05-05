@@ -55,7 +55,7 @@ void VAO::drawVAO() const
 {
 	vaoIRenderer->drawVAO(*this);
 }
-void* VAO::getShaderData(IRenderer* iRenderer)
+void* VAO::getShaderUHash(IRenderer* iRenderer)
 {
 	void* data = 0;
 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(iRenderer);
@@ -69,19 +69,31 @@ void* VAO::getShaderData(IRenderer* iRenderer)
 	}
 	return data;
 }
+size_t VAO::getVAOuHash() const
+{
+	void* data = 0;
+	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(vaoIRenderer);
+	if (vulkanRenderer.currentFramebufferImpl)
+	{
+		data = vulkanRenderer.currentFramebufferImpl->renderPass;
+	}
+	else
+	{
+		data = vulkanRenderer.renderPass;
+	}
+	return (size_t)data ^ uid;
+}
 bool VAO::isEnsured()
 {
-	auto data = getShaderData(vaoIRenderer);
-	return ensuredBools[data];
+	return ensuredBools[getVAOuHash()];
 }
 void VAO::setEnsured()
 {
-	auto data = getShaderData(vaoIRenderer);
-	ensuredBools[data] = true;
+	ensuredBools[getVAOuHash()] = true;
 }
 zg::shaders::Shader* VAO::addShader(zg::shaders::Shader* setShader)
 {
-	auto data = getShaderData(vaoIRenderer);
+	auto data = getShaderUHash(vaoIRenderer);
 	auto& shader = shaders[data];
 	if (shader)
 		return shader;

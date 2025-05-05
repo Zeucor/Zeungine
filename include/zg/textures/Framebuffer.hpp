@@ -24,7 +24,7 @@ namespace zg::textures
 		IRenderer* iRenderer = 0;
 		std::vector<TextureAttachmentPair> textureAttachmentPairs;
 		glm::vec4 clearColor = glm::vec4(0);
-		Scene* scenePointer = 0;
+		size_t sceneID = 0;
 		void* rendererData = 0;
 		bool hasDepthAttachment() const
 		{

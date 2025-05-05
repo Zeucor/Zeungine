@@ -1,14 +1,15 @@
 #pragma once
 #include "ComponentHolder.hpp"
 #include "DataStorage.hpp"
+#include "KeyIDVector.hpp"
+#include "Serial.hpp"
 #include "components/entities/EntityComponent.hpp"
 #include "entities/TypeID.hpp"
 #include "renderers/GLRenderer.hpp"
 #include "vaos/VAO.hpp"
 #include "vp/Projection.hpp"
 #include "vp/View.hpp"
-#include "KeyIDVector.hpp"
-#include "Serial.hpp"
+#include "Mesh.hpp"
 namespace zg
 {
 	struct Scene;
@@ -16,10 +17,9 @@ namespace zg
 	inline static zg::UniqueIdentifier EntityType = 0;
 	struct EntityCreateInfo;
 	struct Window;
-	struct Entity
-			: vaos::VAO,
-				ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>,
-				DataStorage<Entity>
+	struct Entity :
+		ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>,
+		DataStorage<Entity>
 	{
 		friend Scene;
 		friend Window;
@@ -44,48 +44,47 @@ namespace zg
 		size_t VALUE = 0;
 		std::string typeName;
 		std::string name;
-		std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> keyedTextures;
+		// transform
 		glm::vec3 position;
 		glm::quat rotation;
 		glm::vec3 scale;
 		glm::mat4 model;
-		std::function<uint32_t(Entity&)> indiceCount;
-		std::function<std::vector<uint32_t>(Entity&)> indices;
-		std::function<uint32_t(Entity&)> vertexCount;
-		std::function<std::vector<glm::vec3>(Entity&)> vertices;
-		std::function<uint32_t(Entity&)> colorCount;
-		std::function<std::vector<glm::vec4>(Entity&)> colors;
-		std::function<uint32_t(Entity&)> uv2Count;
-		std::function<std::vector<glm::vec2>(Entity&)> uv2s;
-		std::function<uint32_t(Entity&)> uv3Count;
-		std::function<std::vector<glm::vec3>(Entity&)> uv3s;
+		// view/projection overrides
 		std::shared_ptr<vp::Projection> projectionPointer;
 		std::shared_ptr<vp::View> viewPointer;
+		// some flags
 		bool affectedByShadows = true;
-		KeyIDVector<std::string, Entity> children;
 		bool addToBVH = true;
-		std::unordered_map<Button, int> buttons;
-		std::unordered_map<Button, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MousePressHandler>>>
-			mousePressHandlers;
+		// event handlers
+		std::unordered_map<Button, bool> buttons;
+		std::unordered_map<
+			Button,
+			std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MousePressHandler>>
+		> mousePressHandlers;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseMoveHandler>> mouseMoveHandlers;
 		using MouseHoverHandler = std::function<void(bool)>;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		size_t updateNonce;
+		// settable functions
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
 		std::function<void(Entity&)> postRenderFunction;
 		std::function<void(Entity&)> onAddedFunction;
 		std::function<void(Entity&)> onRemovedFunction;
 		std::recursive_mutex handlersMutex;
-
+		// meshes and children
+		std::vector<size_t> meshIDs;
+		std::vector<MeshCreateInfo> meshInfos;
+		KeyIDVector<std::string, Entity> children;
 	public:
 		Entity(const EntityCreateInfo& info);
 		Entity(const Entity& other);
 		~Entity();
 		Entity& operator=(const Entity& other);
-		void refreshVertices();
+		void refreshMeshes();
 		void update();
 		void render();
+		void postRender();
 		glm::mat4& getModelMatrix();
 		KeyIDVector<std::string, Entity>::EmplaceBackTuple addChild(const EntityCreateInfo& childInfo);
 		void removeChild(size_t& ID);
@@ -95,17 +94,9 @@ namespace zg
 		void removeMouseMoveHandler(UniqueIdentifier& id);
 		UniqueIdentifier addMouseHoverHandler(const MouseHoverHandler& callback);
 		void removeMouseHoverHandler(UniqueIdentifier& id);
-		void callMousePressHandler(const Button& button, int pressed);
+		void callMousePressHandler(const Button& button, bool pressed);
 		void callMouseMoveHandler(glm::vec2 coords);
 		void callMouseHoverHandler(bool hovered);
-		template <typename T>
-		static void flipUVsY(std::vector<T>& uvs)
-		{
-			for (auto& uv : uvs)
-			{
-				uv.y = 1 - uv.y;
-			}
-		}
 		void setPosition(glm::vec3 newPosition);
 		void setOrientation(glm::quat newOrientation);
 	};
@@ -115,19 +106,7 @@ namespace zg
 		glm::vec3 position;
 		glm::quat rotation;
 		glm::vec3 scale;
-		shaders::RuntimeConstants constants;
 		std::string name;
-		std::function<uint32_t(Entity&)> indiceCount;
-		std::function<std::vector<uint32_t>(Entity&)> indices;
-		std::function<uint32_t(Entity&)> vertexCount;
-		std::function<std::vector<glm::vec3>(Entity&)> vertices;
-		std::function<uint32_t(Entity&)> colorCount;
-		std::function<std::vector<glm::vec4>(Entity&)> colors;
-		std::function<uint32_t(Entity&)> uv2Count;
-		std::function<std::vector<glm::vec2>(Entity&)> uv2s;
-		std::function<uint32_t(Entity&)> uv3Count;
-		std::function<std::vector<glm::vec3>(Entity&)> uv3s;
-		std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>> keyedTextures;
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
 		std::function<void(Entity&)> postRenderFunction;
@@ -136,6 +115,10 @@ namespace zg
 		DataStorage<Entity>::DataMap dataMap;
 		DataStorage<Entity>::GetDataFunctionMap getDataFunctionMap;
 		DataStorage<Entity>::SetDataFunctionMap setDataFunctionMap;
+		std::vector<MeshCreateInfo> meshInfos;
+		std::vector<EntityCreateInfo> childrenInfos;
+		size_t ID;
+		size_t* INDEX;
 		std::vector<size_t*> INDEX_STACK;
 	};
 } // namespace zg

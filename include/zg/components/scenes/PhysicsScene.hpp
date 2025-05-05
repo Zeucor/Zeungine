@@ -1,7 +1,7 @@
 #pragma once
 #include "SceneComponent.hpp"
 #include <zg/physics/CollisionManifold.hpp>
-#include <zg/physics/ToJolt.hpp>
+#include <zg/conversions/ToJolt.hpp>
 #include <zg/system/Budget.hpp>
 #include <thread>
 #include <mutex>

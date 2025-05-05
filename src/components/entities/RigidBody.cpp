@@ -367,10 +367,16 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
 				auto manifold = std::any_cast<physics::CollisionManifold>(val);
 				std::lock_guard lock(mutex);
-				auto rigidBodyComponentPointer = (&component == manifold.ecA) ? manifold.ecB : manifold.ecA;
-				activeRigidBodyManifolds[rigidBodyComponentPointer->ID] = manifold;
+				auto otherID = (component.ID == manifold.ecID_A) ? manifold.ecID_B : manifold.ecID_A;
+				auto iter = activeRigidBodyManifolds.find(otherID);
+				if (iter != activeRigidBodyManifolds.end())
+				{
+					return {};
+				}
+				activeRigidBodyManifolds[otherID] = manifold;
 				auto& collidingMaskCounts = component.template getData<std::map<size_t, size_t>>("CollidingMaskCounts");
-				auto& rbCollisionMask = rigidBodyComponentPointer->template getData<size_t>("CollisionMask");
+				auto& otherRb = Registry::getEntityComponent(otherID);
+				auto& rbCollisionMask = otherRb.template getData<size_t>("CollisionMask");
 				collidingMaskCounts[rbCollisionMask]++;
 				return {};
 			}},
@@ -379,14 +385,15 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				auto& mutex = *mutexPointer;
 				auto& activeRigidBodyManifolds = component.template getData<std::unordered_map<size_t, physics::CollisionManifold>>("activeRigidBodyManifolds");
 				std::lock_guard lock(mutex);
-				auto otherRb = std::any_cast<components::entities::EntityComponent*>(val);
-				auto iter = activeRigidBodyManifolds.find(otherRb->ID);
+				auto otherRbID = std::any_cast<size_t>(val);
+				auto iter = activeRigidBodyManifolds.find(otherRbID);
 				if (iter == activeRigidBodyManifolds.end())
 				{
 					return {};
 				}
+				auto& otherRb = Registry::getEntityComponent(otherRbID);
 				auto& collidingMaskCounts = component.template getData<std::map<size_t, size_t>>("CollidingMaskCounts");
-				auto& rbCollisionMask = otherRb->template getData<size_t>("CollisionMask");
+				auto& rbCollisionMask = otherRb.template getData<size_t>("CollisionMask");
 				collidingMaskCounts[rbCollisionMask]--;
 				activeRigidBodyManifolds.erase(iter);
 				return {};

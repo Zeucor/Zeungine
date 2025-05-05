@@ -14,6 +14,17 @@ endif()
 
 #New Dependency Declarations to the top!
 
+message(STATUS "FetchContent: V-HACD")
+FetchContent_Declare(
+    vhacd
+    GIT_REPOSITORY https://github.com/kmammou/v-hacd.git
+    GIT_TAG v4.1.0
+)
+FetchContent_GetProperties(vhacd)
+if(NOT vhacd_POPULATED)
+    FetchContent_Populate(vhacd)
+endif()
+
 message(STATUS "FetchContent: assimp")
 set(BUILD_SHARED_LIBS OFF)
 set(ASSIMP_INSTALL OFF)

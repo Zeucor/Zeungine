@@ -10,7 +10,7 @@ PointLightShadow::PointLightShadow(Window& window, PointLight& pointLight) :
 		// "PointLightSpaceMatrix"}, {shaders::ShaderType::Vertex, shaders::ShaderType::Geometry,
 		// shaders::ShaderType::Fragment}).second),
 		pointLight(pointLight),
-		texture(std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(2048, 2048, 1, 1), (const void*)0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Linear, true)),
+		texture(std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(2048, 2048, 1, 1), (const void*)0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1, textures::Texture::AddressMode::ClampToEdge)),
 		framebuffer(std::make_shared<textures::Framebuffer>(window.iRenderer, std::vector<textures::Framebuffer::TextureAttachmentPair>{{texture, textures::Framebuffer::AttachmentType::Depth}}))
 {
 	updateShadowTransforms();

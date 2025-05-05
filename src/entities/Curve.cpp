@@ -1,4 +1,5 @@
 #include <zg/entities/Curve.hpp>
+#include <zg/Mesh.hpp>
 using namespace zg;
 using namespace zg::entities;
 template <size_t N>
@@ -22,12 +23,12 @@ size_t zg::entities::NDCurve::getIndiceCount(size_t numPoints)
     size_t indiceCount = 0;
     if constexpr (N == 2)
     {
-        indiceCount = (numSegments + 1) * 6; // Segments + closing segment
+        indiceCount = numSegments * 6;
     }
     else if constexpr (N == 3)
     {
         const int circleSegments = 16;
-        indiceCount = (numSegments + 1) * circleSegments * 6; // Segments + closing segment
+        indiceCount = (numSegments + 1) * circleSegments * 6;
     }
     return indiceCount;
 }
@@ -328,29 +329,29 @@ std::vector<uint32_t> zg::entities::NDCurve::getIndices(const std::vector<glm::v
             }
         }
         // Closing for 2D
-        if (centralPoints.size() > 1)
-        {
-            int firstRowIdx = 0;
-            int lastRowIdx = (centralPoints.size() - 1) * 2;
-            if (frontFace == zg::COUNTERCLOCKWISE)
-            {
-                indices.push_back(lastRowIdx);
-                indices.push_back(lastRowIdx + 1);
-                indices.push_back(firstRowIdx);
-                indices.push_back(firstRowIdx);
-                indices.push_back(lastRowIdx + 1);
-                indices.push_back(firstRowIdx + 1);
-            }
-            else
-            {
-                indices.push_back(firstRowIdx);
-                indices.push_back(lastRowIdx + 1);
-                indices.push_back(lastRowIdx);
-                indices.push_back(firstRowIdx + 1);
-                indices.push_back(lastRowIdx + 1);
-                indices.push_back(firstRowIdx);
-            }
-        }
+        // if (centralPoints.size() > 1)
+        // {
+        //     int firstRowIdx = 0;
+        //     int lastRowIdx = (centralPoints.size() - 1) * 2;
+        //     if (frontFace == zg::COUNTERCLOCKWISE)
+        //     {
+        //         indices.push_back(lastRowIdx);
+        //         indices.push_back(lastRowIdx + 1);
+        //         indices.push_back(firstRowIdx);
+        //         indices.push_back(firstRowIdx);
+        //         indices.push_back(lastRowIdx + 1);
+        //         indices.push_back(firstRowIdx + 1);
+        //     }
+        //     else
+        //     {
+        //         indices.push_back(firstRowIdx);
+        //         indices.push_back(lastRowIdx + 1);
+        //         indices.push_back(lastRowIdx);
+        //         indices.push_back(firstRowIdx + 1);
+        //         indices.push_back(lastRowIdx + 1);
+        //         indices.push_back(firstRowIdx);
+        //     }
+        // }
     }
     // --- N == 3 Case (Tube Curve with RMF) ---
     else if constexpr (N == 3)
@@ -387,8 +388,6 @@ std::vector<uint32_t> zg::entities::NDCurve::getIndices(const std::vector<glm::v
                 }
             }
         }
-
-        // --- Add section to close the tube ---
         if (centralPoints.size() > 1)
         {
             int firstRow = 0;
@@ -429,14 +428,7 @@ EntityCreateInfo zg::entities::NDParametricCurveFactory(glm::vec3 position, glm:
     using namespace NDCurve;
     auto vertexCount = getVertexCount(points);
     auto indiceCount = getIndiceCount(points);
-    EntityCreateInfo info{
-        .typeName = "NDParametricCurve<" + std::to_string(N) + ">",
-        .position = position,
-        .rotation = rotation,
-        .scale = scale,
-        .constants = zg::mergeVectors<std::string>(
-            {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
-        .name = name,
+    MeshCreateInfo meshInfo{
         .indiceCount = [indiceCount](auto&){return indiceCount;},
         .indices = [frontFace](auto& entity)
         {
@@ -455,10 +447,20 @@ EntityCreateInfo zg::entities::NDParametricCurveFactory(glm::vec3 position, glm:
         {
             return std::vector<glm::vec4>(vertexCount, color);
         },
+        .constants = zg::mergeVectors<std::string>(
+            {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
+    };
+    EntityCreateInfo info{
+        .typeName = "NDParametricCurve<" + std::to_string(N) + ">",
+        .position = position,
+        .rotation = rotation,
+        .scale = scale,
+        .name = name,
         .dataMap = {
             {"Points", points},
             {"Radius", radius}
-        }
+        },
+        .meshInfos = {meshInfo}
     };
     return info;
 }

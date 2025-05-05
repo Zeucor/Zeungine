@@ -2,19 +2,13 @@
 #include <zg/Serial.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/utilities.hpp>
+#include <zg/Mesh.hpp>
 size_t cubesCount = 0;
 zg::EntityCreateInfo zg::entities::CubeFactory(std::string _name, glm::vec3 position, glm::quat rotation,
 																							 glm::vec3 scale, glm::vec3 size, glm::vec4 color,
 																							 const shaders::RuntimeConstants& constants, zg::FRONTFACE frontFace)
 {
-	zg::EntityCreateInfo info{
-		.typeName = "Cube",
-		.position = position,
-		.rotation = rotation,
-		.scale = scale,
-		.constants = zg::mergeVectors<std::string>(
-			{{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
-		.name = (_name.empty() ? "Cube " + std::to_string(++cubesCount) : _name),
+	zg::MeshCreateInfo meshInfo{
 		.indiceCount = [](auto&) { return 36; },
 		.indices = [frontFace](auto&) -> std::vector<uint32_t> {
 			if (frontFace == zg::CLOCKWISE)
@@ -61,10 +55,20 @@ zg::EntityCreateInfo zg::entities::CubeFactory(std::string _name, glm::vec3 posi
 			auto& color = entity.template getData<glm::vec4>("Color");
 			return {24, color};
 		},
+		.constants = zg::mergeVectors<std::string>(
+			{{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
+	};
+	zg::EntityCreateInfo info{
+		.typeName = "Cube",
+		.position = position,
+		.rotation = rotation,
+		.scale = scale,
+		.name = (_name.empty() ? "Cube " + std::to_string(++cubesCount) : _name),
 		.dataMap = {
 			{"Color", color},
 			{"Size", size}
-		}
+		},
+		.meshInfos = { meshInfo }
 	};
 	return info;
 }

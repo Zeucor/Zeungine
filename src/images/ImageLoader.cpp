@@ -1,5 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
+#define STB_IMAGE_STATIC
+#define STB_IMAGE_RESIZE_STATIC
 #include <stdexcept>
 #include <zg/images/ImageLoader.hpp>
 #include "stb_image.h"

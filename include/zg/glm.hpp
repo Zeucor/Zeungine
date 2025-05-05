@@ -13,3 +13,30 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+namespace std
+{
+	template <>
+	struct hash<glm::vec2>
+	{
+		size_t operator()(const glm::vec2 &vec) const
+		{
+			return std::hash<float>{}(vec.x) ^ std::hash<float>{}(vec.y);
+		}
+	};
+	template <>
+	struct hash<glm::vec3>
+	{
+		size_t operator()(const glm::vec3 &vec) const
+		{
+			return std::hash<float>{}(vec.x) ^ std::hash<float>{}(vec.y) ^ std::hash<float>{}(vec.z);
+		}
+	};
+	template <>
+	struct hash<glm::vec4>
+	{
+		size_t operator()(const glm::vec4 &vec) const
+		{
+			return std::hash<float>{}(vec.x) ^ std::hash<float>{}(vec.y) ^ std::hash<float>{}(vec.z) ^ std::hash<float>{}(vec.w);
+		}
+	};
+}

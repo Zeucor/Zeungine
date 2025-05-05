@@ -30,6 +30,12 @@ Uses CMake for it's build system and comes with some included tests
  - [harfbuzz](https://harfbuzz.github.io/)
  - [png](http://www.libpng.org/pub/png/libpng.html)
  - [JoltPhysics](https://github.com/jrouwe/JoltPhysics)
+ - [assimp](https://assimp.org/)
+ - [V-HACD](https://github.com/kmammou/v-hacd)
+ - [miniaudio](https://github.com/mackron/miniaudio.git)
+ - [ttf2mesh](https://github.com/fetisov/ttf2mesh.git)
+ - [lunasvg](https://github.com/ZeunO8/lunasvg.git)
+ - [plutovg](https://github.com/ZeunO8/plutovg.git)
 
 ### Features
 

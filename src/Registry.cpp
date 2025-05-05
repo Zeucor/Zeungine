@@ -1,8 +1,11 @@
 #include <zg/Registry.hpp>
 #include <zg/Window.hpp>
+#include <zg/crypto/vector.hpp>
 #include <string>
 using namespace zg;
 std::unique_ptr<Registry::WindowKeyIDVector> Registry::windows = std::make_unique<Registry::WindowKeyIDVector>([](auto& window) { return window.title; });
+std::unique_ptr<Registry::MeshKeyIDVector> Registry::meshes = std::make_unique<Registry::MeshKeyIDVector>([](auto& mesh) { return mesh.hash; });
+std::unordered_map<size_t, size_t> Registry::meshIDRefCounts;
 std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idWindows = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
 std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idScenes = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
 std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idEntities = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
@@ -43,9 +46,9 @@ Registry::WindowKeyIDVector::EmplaceBackTuple Registry::addWindow(const WindowCr
     auto& windowsRef = *windows;
     auto transaction = windowsRef.startTransaction();
     usingInfo.INDEX_STACK = {transaction.index};
+    usingInfo.ID = transaction.id;
+    usingInfo.INDEX = transaction.index;
     auto& window = windowsRef.commitTransaction(transaction, usingInfo);
-    window.ID = transaction.id;
-    window.INDEX = transaction.index;
     (*idWindows)[window.ID] = window.INDEX_STACK;
     return {transaction.key, transaction.id, transaction.index, &window};
 }
@@ -144,4 +147,77 @@ components::entities::EntityComponent& Registry::getEntityComponent(size_t ID)
         throw std::runtime_error("Entity Component not found with ID: "+ std::to_string(ID));
     auto& host = getEntity(indexStackIter->second);
     return host.getComponentByID(ID);
+}
+size_t Registry::hashMeshCreateInfo(const MeshCreateInfo& info, Entity& entity)
+{
+    size_t finalHash = 0;
+    if (!info.indiceCount || !info.indices || !info.vertexCount || !info.vertices)
+        return finalHash;
+    auto indiceHash = crypto::hashVector(info.indices(entity));
+    auto verticeHash = crypto::hashVector(info.vertices(entity));
+    finalHash = indiceHash;
+    finalHash ^= verticeHash;
+    if (info.colors)
+    {
+        auto colorsHash = crypto::hashVector(info.colors(entity));
+        finalHash ^= colorsHash;
+    }
+    if (info.uv2s)
+    {
+        auto uv2sHash = crypto::hashVector(info.uv2s(entity));
+        finalHash ^= uv2sHash;
+    }
+    if (info.uv3s)
+    {
+        auto uv3sHash = crypto::hashVector(info.uv3s(entity));
+        finalHash ^= uv3sHash;
+    }
+    for (auto& keyedPair : info.keyedTextures)
+    {
+        finalHash ^= (size_t)keyedPair.second->rendererData;
+    }
+    return finalHash;
+}
+size_t Registry::addMesh(const MeshCreateInfo& info, Entity& entity)
+{
+    auto usingInfo = info;
+    usingInfo.hash = hashMeshCreateInfo(info, entity);
+    auto& meshesRef = *meshes;
+    auto keyIter = meshesRef.find_key(usingInfo.hash);
+    if (keyIter != meshesRef.end())
+    {
+        auto meshID = keyIter.id();
+        meshIDRefCounts[meshID]++;
+        return meshID;
+    }
+    auto transaction = meshesRef.startTransaction();
+    usingInfo.INDEX_STACK = {transaction.index};
+    auto& mesh = meshesRef.commitTransaction(transaction, usingInfo, entity);
+    mesh.ID = transaction.id;
+    mesh.INDEX = transaction.index;
+    std::lock_guard lock(meshIDMutex);
+    meshIDRefCounts[mesh.ID]++;
+    return transaction.id;
+}
+Mesh& Registry::getMesh(size_t ID)
+{
+    std::lock_guard lock(meshIDMutex);
+    auto& meshesRef = *meshes;
+    auto idIter = meshesRef.find_id(ID);
+    if (idIter == meshesRef.end())
+        throw std::runtime_error("Mesh not found with ID: " + std::to_string(ID));
+    return *idIter;
+}
+bool Registry::deRefMesh(size_t ID)
+{
+    std::lock_guard lock(meshIDMutex);
+    auto& count = meshIDRefCounts[ID];
+    if (--count)
+        return false;
+    auto& meshesRef = *meshes;
+    auto idIter = meshesRef.find_id(ID);
+    if (idIter == meshesRef.end())
+        throw std::runtime_error("Mesh not found with ID: " + std::to_string(ID));
+    meshesRef.erase(idIter);
+    return true;
 }

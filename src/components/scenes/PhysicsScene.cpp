@@ -216,7 +216,7 @@ CollisionManifold ZGContactListener::constructManifold(components::entities::Ent
 																											 components::entities::EntityComponent* ec2,
 																											 const JPH::ContactManifold& inManifold)
 {
-	zg::physics::CollisionManifold manifold(ec1, ec2);
+	zg::physics::CollisionManifold manifold(ec1->ID, ec2->ID);
 	manifold.colliding = true;
 	manifold.normal = ToJolt<JPH::Vec3, glm::vec3>(inManifold.mWorldSpaceNormal);
 	manifold.penetrationDepth = inManifold.mPenetrationDepth;
@@ -260,8 +260,8 @@ void ZGContactListener::OnContactPersisted(const JPH::Body& inBody1, const JPH::
 		physicsScene.template getData<std::unordered_map<JPH::BodyID, size_t>>("joltIDRigidBodies");
 	auto& ec1 = Registry::getEntityComponent(joltIDRigidBodies[inBody1.GetID()]);
 	auto& ec2 = Registry::getEntityComponent(joltIDRigidBodies[inBody2.GetID()]);
-	ec1.template setData<components::entities::EntityComponent*>("removeActiveManifold", &ec2);
-	ec2.template setData<components::entities::EntityComponent*>("removeActiveManifold", &ec1);
+	ec1.template setData<size_t>("removeActiveManifold", ec2.ID);
+	ec2.template setData<size_t>("removeActiveManifold", ec1.ID);
 	auto manifold = constructManifold(&ec1, &ec2, inManifold);
 	ec1.template setData<CollisionManifold>("addActiveManifold", manifold);
 	ec2.template setData<CollisionManifold>("addActiveManifold", manifold);
@@ -276,6 +276,6 @@ void ZGContactListener::OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePa
 		physicsScene.template getData<std::unordered_map<JPH::BodyID, size_t>>("joltIDRigidBodies");
 	auto& ec1 = Registry::getEntityComponent(joltIDRigidBodies[inSubShapePair.GetBody1ID()]);
 	auto& ec2 = Registry::getEntityComponent(joltIDRigidBodies[inSubShapePair.GetBody2ID()]);
-	ec1.template setData<components::entities::EntityComponent*>("removeActiveManifold", &ec2);
-	ec2.template setData<components::entities::EntityComponent*>("removeActiveManifold", &ec1);
+	ec1.template setData<size_t>("removeActiveManifold", ec2.ID);
+	ec2.template setData<size_t>("removeActiveManifold", ec1.ID);
 }

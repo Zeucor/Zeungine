@@ -12,6 +12,8 @@
 using namespace zg;
 std::unordered_map<std::string, size_t> entityKeyCounts;
 Scene::Scene(const SceneCreateInfo& info) :
+	ID(info.ID),
+	INDEX(info.INDEX),
 	INDEX_STACK(info.INDEX_STACK),
 	iRenderer(Registry::getWindow(INDEX_STACK).iRenderer),
 	name(info.name),
@@ -60,8 +62,8 @@ Scene::Scene(const SceneCreateInfo& info) :
 	{
 	case 0:
 		keyedTextures = {
-			{"ColorTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true)},
-			{"DepthTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true)}
+			{"ColorTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 1, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true)},
+			{"DepthTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 1, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true)}
 		};
 		{
 			std::vector<textures::Framebuffer::TextureAttachmentPair> attachments{
@@ -102,6 +104,7 @@ Scene::Scene(const SceneCreateInfo& info) :
 			std::make_shared<textures::Framebuffer>(iRenderer, generateTexturesFromAttachments(info.frameBufferAttachments));
 		break;
 	}
+	framebuffer->sceneID = ID;
 	shaders::RuntimeConstants fsqconstants;
 	for (auto& pair : keyedTextures)
 	{
@@ -170,7 +173,7 @@ Scene& Scene::operator=(const Scene& other)
 	postProcessingPipeline = other.postProcessingPipeline;
 	mousePressIDs = other.mousePressIDs;
 	mouseMoveID = other.mouseMoveID;
-	currentHoveredEntity = other.currentHoveredEntity;
+	currentHoveredEntityID = other.currentHoveredEntityID;
 	viewPointer = other.viewPointer;
 	useBVH = other.useBVH;
 	updateNonce = other.updateNonce;
@@ -229,7 +232,7 @@ Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::
 			type = textures::Texture::Type::UnsignedByte;
 		}
 		keyedTextures.push_back({key,
-			std::make_shared<textures::Texture>(iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 0, 0),
+			std::make_shared<textures::Texture>(iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 1, 0),
 																					(const void*)0, format, type, textures::Texture::FilterType::Linear)});
 		textureAttachmentPairs.push_back({keyedTextures[keyedTextures.size() - 1].second, attachment});
 	}
@@ -241,9 +244,9 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 	auto transaction = entities.startTransaction();
 	usingInfo.INDEX_STACK = {INDEX_STACK.begin(), INDEX_STACK.end()};
 	usingInfo.INDEX_STACK.push_back(transaction.index);
+	usingInfo.ID = transaction.id;
+	usingInfo.INDEX = transaction.index;
 	auto& entity = entities.commitTransaction(transaction, usingInfo);
-	entity.ID = transaction.id;
-	entity.INDEX = transaction.index;
 	(*Registry::idEntities)[entity.ID] = entity.INDEX_STACK;
 	postAddEntity(entity, {entity.ID});
 	if (entity.onAddedFunction)
@@ -308,14 +311,18 @@ void Scene::preRender()
 			auto& entity = entitiesData[index];
 			if (!entity.affectedByShadows)
 				continue;
-			directionaLightShadow.shader->bind(entity);
-			directionaLightShadow.shader->setBlock("LightSpaceMatrix", entity, directionaLightShadow.lightSpaceMatrix,
-																						 sizeof(glm::mat4));
-			// const auto& model = entity.getModelMatrix();
-			directionaLightShadow.shader->setBlock("Model", entity, entity.getModelMatrix());
-			iRenderer->bindShader(*entity.addShader(directionaLightShadow.shader), entity);
-			entity.drawVAO();
-			directionaLightShadow.shader->unbind();
+			for (auto& meshID : entity.meshIDs)
+			{
+				auto& mesh = Registry::getMesh(meshID);
+				directionaLightShadow.shader->bind(mesh);
+				directionaLightShadow.shader->setBlock("LightSpaceMatrix", mesh, directionaLightShadow.lightSpaceMatrix,
+																							 sizeof(glm::mat4));
+				// const auto& model = mesh.getModelMatrix();
+				directionaLightShadow.shader->setBlock("Model", mesh, entity.getModelMatrix());
+				iRenderer->bindShader(*mesh.addShader(directionaLightShadow.shader), mesh);
+				mesh.drawVAO();
+				directionaLightShadow.shader->unbind();
+			}
 		}
 		directionaLightShadow.framebuffer->unbind();
 	}
@@ -328,13 +335,17 @@ void Scene::preRender()
 			auto& entity = entitiesData[index];
 			if (!entity.affectedByShadows)
 				continue;
-			spotLightShadow.shader->bind(entity);
-			spotLightShadow.shader->setBlock("LightSpaceMatrix", entity, spotLightShadow.lightSpaceMatrix,
-																			 sizeof(glm::mat4));
-			// const auto& model = entity.getModelMatrix();
-			spotLightShadow.shader->setBlock("Model", entity, entity.getModelMatrix());
-			entity.drawVAO();
-			spotLightShadow.shader->unbind();
+			for (auto& meshID : entity.meshIDs)
+			{
+				auto& mesh = Registry::getMesh(meshID);
+				spotLightShadow.shader->bind(mesh);
+				spotLightShadow.shader->setBlock("LightSpaceMatrix", mesh, spotLightShadow.lightSpaceMatrix,
+																				 sizeof(glm::mat4));
+				// const auto& model = mesh.getModelMatrix();
+				spotLightShadow.shader->setBlock("Model", mesh, entity.getModelMatrix());
+				mesh.drawVAO();
+				spotLightShadow.shader->unbind();
+			}
 		}
 		spotLightShadow.framebuffer->unbind();
 	}
@@ -347,16 +358,20 @@ void Scene::preRender()
 			auto& entity = entitiesData[index];
 			if (!entity.affectedByShadows)
 				continue;
-			pointLightShadow.shader->bind(entity);
-			pointLightShadow.shader->setBlock("PointLightSpaceMatrix", entity, pointLightShadow.shadowTransforms,
-																				sizeof(glm::mat4) * 6);
-			pointLightShadow.shader->setUniform("nearPlane", entity, pointLightShadow.pointLight.nearPlane);
-			pointLightShadow.shader->setUniform("farPlane", entity, pointLightShadow.pointLight.farPlane);
-			pointLightShadow.shader->setUniform("lightPos", entity, pointLightShadow.pointLight.position);
-			// const auto& model = entity.getModelMatrix();
-			pointLightShadow.shader->setBlock("Model", entity, entity.getModelMatrix());
-			entity.drawVAO();
-			pointLightShadow.shader->unbind();
+			for (auto& meshID : entity.meshIDs)
+			{
+				auto& mesh = Registry::getMesh(meshID);
+				pointLightShadow.shader->bind(mesh);
+				pointLightShadow.shader->setBlock("PointLightSpaceMatrix", mesh, pointLightShadow.shadowTransforms,
+																					sizeof(glm::mat4) * 6);
+				pointLightShadow.shader->setUniform("nearPlane", mesh, pointLightShadow.pointLight.nearPlane);
+				pointLightShadow.shader->setUniform("farPlane", mesh, pointLightShadow.pointLight.farPlane);
+				pointLightShadow.shader->setUniform("lightPos", mesh, pointLightShadow.pointLight.position);
+				// const auto& model = mesh.getModelMatrix();
+				pointLightShadow.shader->setBlock("Model", mesh, entity.getModelMatrix());
+				mesh.drawVAO();
+				pointLightShadow.shader->unbind();
+			}
 		}
 		pointLightShadow.framebuffer->unbind();
 	}
@@ -380,11 +395,24 @@ void Scene::renderEntities()
 {
 	auto& framebufferRef = *framebuffer;
 	framebufferRef.bind();
-	auto entitiesData = entities.data();
-	auto entitiesSize = entities.size();
-	for (size_t index = 0; index < entitiesSize; ++index)
+	auto transparentDrawList = getTransparentDrawList();
+	auto opaqueDrawList = getOpaqueDrawList();
+	auto cameraPosition = viewPointer->position;
+	std::sort(transparentDrawList.begin(), transparentDrawList.end(), [&](auto& a, auto& b)
 	{
-		entitiesData[index].render();
+		auto distA = glm::distance(a.first->position, cameraPosition);
+		auto distB = glm::distance(b.first->position, cameraPosition);
+		return distA > distB;
+	});
+	for (auto& ep : opaqueDrawList)
+	{
+		ep.second->uid = ep.first->ID;
+		ep.second->render(*ep.first);
+	}
+	for (auto& ep : transparentDrawList)
+	{
+		ep.second->uid = ep.first->ID;
+		ep.second->render(*ep.first);
 	}
 	framebufferRef.unbind();
 }
@@ -392,11 +420,14 @@ void Scene::postRender()
 {
 	if (postPostRenderFunction)
 		postPostRenderFunction(*this);
+	auto entitiesData = entities.data();
+	auto entitiesSize = entities.size();
+	for (size_t index = 0; index < entitiesSize; ++index)
+		entitiesData[index].postRender();
 }
-void Scene::entityPreRender(Entity& entity)
+void Scene::meshPreRender(Mesh& mesh)
 {
-	auto data = entity.getShaderData(iRenderer);
-	auto shader = entity.shaders[data];
+	auto shader = mesh.addShader();
 	uint32_t index = 0;
 	glm::mat4 directionalLightSpaceMatrices[4];
 	for (auto& directionalLightShadow : directionalLightShadows)
@@ -404,7 +435,7 @@ void Scene::entityPreRender(Entity& entity)
 		directionalLightSpaceMatrices[index] = directionalLightShadow.lightSpaceMatrix;
 		++index;
 	}
-	shader->setBlock("DirectionalLightSpaceMatrices", entity, directionalLightSpaceMatrices, sizeof(glm::mat4) * 4);
+	shader->setBlock("DirectionalLightSpaceMatrices", mesh, directionalLightSpaceMatrices, sizeof(glm::mat4) * 4);
 	glm::mat4 spotLightSpaceMatrices[4];
 	index = 0;
 	for (auto& spotLightShadow : spotLightShadows)
@@ -412,39 +443,39 @@ void Scene::entityPreRender(Entity& entity)
 		spotLightSpaceMatrices[index] = spotLightShadow.lightSpaceMatrix;
 		++index;
 	}
-	shader->setBlock("SpotLightSpaceMatrices", entity, spotLightSpaceMatrices, sizeof(glm::mat4) * 4);
+	shader->setBlock("SpotLightSpaceMatrices", mesh, spotLightSpaceMatrices, sizeof(glm::mat4) * 4);
 	int32_t unit = 0;
 	index = 0;
 	uint32_t unitRemaining = 4;
 	for (auto& directionalLightShadow : directionalLightShadows)
 	{
-		shader->setTexture("directionalLightSamplers[" + std::to_string(index) + "]", entity,
+		shader->setTexture("directionalLightSamplers[" + std::to_string(index) + "]", mesh,
 											 *directionalLightShadow.texture, unit);
 		++unit;
 		--unitRemaining;
 	}
-	shader->setSSBO("DirectionalLights", entity, directionalLights.data(),
+	shader->setSSBO("DirectionalLights", mesh, directionalLights.data(),
 									directionalLights.size() * sizeof(lights::DirectionalLight));
 	index = 0;
 	unit += unitRemaining;
 	unitRemaining = 4;
 	for (auto& spotLightShadow : spotLightShadows)
 	{
-		shader->setTexture("spotLightSamplers[" + std::to_string(index) + "]", entity, *spotLightShadow.texture, unit);
+		shader->setTexture("spotLightSamplers[" + std::to_string(index) + "]", mesh, *spotLightShadow.texture, unit);
 		++unit;
 		--unitRemaining;
 	}
-	shader->setSSBO("SpotLights", entity, spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
+	shader->setSSBO("SpotLights", mesh, spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
 	index = 0;
 	unit += unitRemaining;
 	unitRemaining = 4;
 	for (auto& pointLightShadow : pointLightShadows)
 	{
-		shader->setTexture("pointLightSamplers[" + std::to_string(index) + "]", entity, *pointLightShadow.texture, unit);
+		shader->setTexture("pointLightSamplers[" + std::to_string(index) + "]", mesh, *pointLightShadow.texture, unit);
 		++unit;
 		--unitRemaining;
 	}
-	shader->setSSBO("PointLights", entity, pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
+	shader->setSSBO("PointLights", mesh, pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
 }
 void Scene::resize(glm::vec2 newSize)
 {
@@ -492,24 +523,26 @@ void Scene::preRemoveEntity(Entity& entity, const std::vector<size_t>& entityIDs
 		bvh->removeEntity(*this, entity);
 	}
 }
-Entity* Scene::findEntityByPrimID(const size_t& primID)
+std::pair<Entity&, Mesh&> Scene::findEntityAndMeshByPrimID(const size_t& primID)
 {
 	if (!useBVH)
-		return 0;
+		throw std::runtime_error("Scene is not using a BVH");
 	auto& _bvh = *bvh;
 	auto& tri = _bvh.triangles[_bvh.bvh.prim_ids[primID]];
-	auto& entityID = tri.userData;
-	if (!entityID)
-		return 0;
-	auto iter = entities.find_id(entityID);
+	auto& entityMeshID = tri.userData;
+	if (!entityMeshID.first || !entityMeshID.second)
+	{
+		throw std::runtime_error("Ohmy now, we always set tri IDs, so this should logically never happen");
+	}
+	auto iter = entities.find_id(entityMeshID.first);
 	if (iter == entities.end())
-		return 0;
-	return &*iter;
+		throw std::runtime_error("We should always find an entity due to the add/update/remove structure");
+	return {*iter, Registry::getMesh(entityMeshID.second)};
 }
 void Scene::hookMouseEvents()
 {
 	auto& window = Registry::getWindow(INDEX_STACK);
-	for (unsigned int button = MinMouseButton; button <= MaxMouseButton; ++button)
+	for (unsigned int button = MinMouseButtonIndex; button < MaxMouseButton; ++button)
 	{
 		mousePressIDs[button] = window.addMousePressHandler(
 			button,
@@ -527,8 +560,8 @@ void Scene::hookMouseEvents()
 				{
 					return;
 				}
-				auto foundEntity = findEntityByPrimID(primID);
-				foundEntity->callMousePressHandler(button, pressed);
+				auto foundEntityMesh = findEntityAndMeshByPrimID(primID);
+				foundEntityMesh.first.callMousePressHandler(button, pressed);
 			});
 	}
 	mouseMoveID = window.addMouseMoveHandler(
@@ -543,28 +576,32 @@ void Scene::hookMouseEvents()
 			auto primID = _bvh.trace(ray);
 			if (primID == raytracing::invalidID)
 			{
-				if (currentHoveredEntity)
+				if (currentHoveredEntityID)
 				{
-					currentHoveredEntity->callMouseHoverHandler(false);
-					currentHoveredEntity = 0;
+					auto& currentHoveredEntity = Registry::getEntity(currentHoveredEntityID);
+					currentHoveredEntity.callMouseHoverHandler(false);
+					currentHoveredEntityID = 0;
 				}
 				return;
 			}
-			auto foundEntity = findEntityByPrimID(primID);
-			if (currentHoveredEntity != foundEntity)
+			auto foundEntityMesh = findEntityAndMeshByPrimID(primID);
+			if (currentHoveredEntityID != foundEntityMesh.first.ID)
 			{
-				if (currentHoveredEntity)
-					currentHoveredEntity->callMouseHoverHandler(false);
-				currentHoveredEntity = foundEntity;
-				foundEntity->callMouseHoverHandler(true);
+				if (currentHoveredEntityID)
+				{
+					auto& currentHoveredEntity = Registry::getEntity(currentHoveredEntityID);
+					currentHoveredEntity.callMouseHoverHandler(false);
+				}
+				currentHoveredEntityID = foundEntityMesh.first.ID;
+				foundEntityMesh.first.callMouseHoverHandler(true);
 			}
-			foundEntity->callMouseMoveHandler(coords);
+			foundEntityMesh.first.callMouseMoveHandler(coords);
 		});
 }
 void Scene::unhookMouseEvents()
 {
 	auto& window = Registry::getWindow(INDEX_STACK);
-	for (unsigned int button = MinMouseButton; button <= MaxMouseButton; ++button)
+	for (unsigned int button = MinMouseButtonIndex; button <= MaxMouseButtonIndex; ++button)
 	{
 		window.removeMousePressHandler(button, mousePressIDs[button]);
 	}
@@ -729,4 +766,142 @@ Serial& deserialize(Serial& serial, Scene& scene)
 	}
 	serial >> scene.fsq >> scene.viewPointer;
 	return serial;
+}
+size_t Scene::getTransparentDrawCount()
+{
+	size_t c = 0;
+	auto entitiesSize = entities.size();
+	auto entitiesData = entities.data();
+	std::function<void(Entity&)> countEntity;
+	countEntity = [&](auto& entity)
+	{
+		for (auto& meshID : entity.meshIDs)
+		{
+			bool addMesh = false;
+			auto& mesh = Registry::getMesh(meshID);
+			for (auto& keyedPair : mesh.keyedTextures)
+			{
+				if (keyedPair.second->isTransparent)
+				{
+					addMesh = true;
+					break;
+				}
+			}
+			if (addMesh)
+				c++;
+		}
+		for (auto& child : entity.children)
+			countEntity(child);
+	};
+	for (size_t i = 0; i < entitiesSize; ++i)
+	{
+		auto& entity = entitiesData[i];
+		countEntity(entity);
+	}
+	return c;
+}
+size_t Scene::getOpaqueDrawCount()
+{
+	size_t c = 0;
+	auto entitiesSize = entities.size();
+	auto entitiesData = entities.data();
+	std::function<void(Entity&)> countEntity;
+	countEntity = [&](auto& entity)
+	{
+		bool addMesh = true;
+		for (auto& meshID : entity.meshIDs)
+		{
+			auto& mesh = Registry::getMesh(meshID);
+			for (auto& keyedPair : mesh.keyedTextures)
+			{
+				if (keyedPair.second->isTransparent)
+				{
+					addMesh = false;
+					break;
+				}
+			}
+			if (addMesh)
+				c++;
+		}
+		for (auto& child : entity.children)
+			countEntity(child);
+	};
+	for (size_t i = 0; i < entitiesSize; ++i)
+	{
+		auto& entity = entitiesData[i];
+		countEntity(entity);
+	}
+	return c;
+}
+std::vector<std::pair<Entity*, Mesh*>> Scene::getTransparentDrawList()
+{
+	auto size = getTransparentDrawCount();
+	std::vector<std::pair<Entity*, Mesh*>> vec;
+	vec.reserve(size);
+	auto entitiesSize = entities.size();
+	auto entitiesData = entities.data();
+	std::function<void(Entity&)> addEntity;
+	addEntity = [&](auto& entity)
+	{
+		for (auto& meshID : entity.meshIDs)
+		{
+			bool addMesh = false;
+			auto& mesh = Registry::getMesh(meshID);
+			for (auto& keyedPair : mesh.keyedTextures)
+			{
+				if (keyedPair.second->isTransparent)
+				{
+					addMesh = true;
+					break;
+				}
+			}
+			if (addMesh)
+			{
+				vec.push_back({&entity, &mesh});
+			}
+		}
+		for (auto& child : entity.children)
+			addEntity(child);
+	};
+	for (size_t i = 0; i < entitiesSize; ++i)
+	{
+		auto& entity = entitiesData[i];
+		addEntity(entity);
+	}
+	return vec;
+}
+std::vector<std::pair<Entity*, Mesh*>> Scene::getOpaqueDrawList()
+{
+	auto size = getOpaqueDrawCount();
+	std::vector<std::pair<Entity*, Mesh*>> vec;
+	vec.reserve(size);
+	auto entitiesSize = entities.size();
+	auto entitiesData = entities.data();
+	std::function<void(Entity&)> addEntity;
+	addEntity = [&](auto& entity)
+	{
+		for (auto& meshID : entity.meshIDs)
+		{
+			bool addMesh = true;
+			auto& mesh = Registry::getMesh(meshID);
+			for (auto& keyedPair : mesh.keyedTextures)
+			{
+				if (keyedPair.second->isTransparent)
+				{
+					addMesh = false;
+					break;
+				}
+			}
+			if (addMesh)
+				vec.push_back({&entity, &mesh});
+		}
+		for (auto& child : entity.children)
+			addEntity(child);
+	};
+	for (size_t i = 0; i < entitiesSize; ++i)
+	{
+		auto& entity = entitiesData[i];
+		addEntity(entity);
+	}
+	return vec;
 }

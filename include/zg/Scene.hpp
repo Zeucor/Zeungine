@@ -6,6 +6,7 @@
 #include "ComponentHolder.hpp"
 #include "DataStorage.hpp"
 #include "Entity.hpp"
+#include "Mesh.hpp"
 #include "KeyIDVector.hpp"
 #include "components/scenes/SceneComponent.hpp"
 #include "lights/DirectionalLight.hpp"
@@ -44,9 +45,9 @@ namespace zg
 		std::shared_ptr<FullscreenQuad> fsq;
 		PostProcessingPipeline postProcessingPipeline;
 		std::unique_ptr<raytracing::BVH> bvh;
-		std::array<UniqueIdentifier, 7 - 0 + 1> mousePressIDs;
+		std::array<UniqueIdentifier, MaxMouseButton> mousePressIDs;
 		UniqueIdentifier mouseMoveID;
-		Entity* currentHoveredEntity = 0;
+		size_t currentHoveredEntityID = 0;
 		std::shared_ptr<vp::View> viewPointer;
 		bool useBVH = true;
 		size_t updateNonce = 0;
@@ -93,15 +94,19 @@ namespace zg
 		void render();
 		void renderEntities();
 		void postRender();
-		void entityPreRender(Entity& entity);
+		void meshPreRender(Mesh& entity);
 		void resize(glm::vec2 newSize);
 		void postAddEntity(Entity& entity, const std::vector<size_t>& entityIDs);
 		void preRemoveEntity(Entity& entity, const std::vector<size_t>& entityIDs);
-		Entity* findEntityByPrimID(const size_t& primID);
+		std::pair<Entity&, Mesh&> findEntityAndMeshByPrimID(const size_t& primID);
 		void hookMouseEvents();
 		void unhookMouseEvents();
 		zg::Entity& getEntityByName(const std::string& name);
 		zg::Entity& getEntityByID(const size_t& id);
+		size_t getTransparentDrawCount();
+		size_t getOpaqueDrawCount();
+		std::vector<std::pair<Entity*, Mesh*>> getTransparentDrawList();
+		std::vector<std::pair<Entity*, Mesh*>> getOpaqueDrawList();
 	};
 	struct SceneCreateInfo
 	{
@@ -123,6 +128,8 @@ namespace zg
 		std::function<void(Scene&)> postPostRenderFunction = {};
 		bool drawColorToWindowPlane = true;
 		bool useBVH = true;
+		size_t ID;
+		size_t* INDEX;
 		std::vector<size_t*> INDEX_STACK;
 	};
 } // namespace zg

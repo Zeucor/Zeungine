@@ -13,8 +13,8 @@ namespace zg::physics
 	// Simplified version without multiple contact points for now
 	struct CollisionManifold
 	{
-		components::entities::EntityComponent* ecA = nullptr;
-		components::entities::EntityComponent* ecB = nullptr;
+		size_t ecID_A = 0;
+		size_t ecID_B = 0;
 		glm::vec3 normal = glm::vec3(0.0f); // From B's perspective (points from B to A, i.e., push A along normal)
 		float penetrationDepth = 0.0f; // Minimum penetration depth along the normal
 		bool colliding = false;
@@ -23,6 +23,6 @@ namespace zg::physics
 		std::vector<glm::vec3> relativeContactPointsOnA;
 		std::vector<glm::vec3> relativeContactPointsOnB;
 		CollisionManifold() = default;
-		CollisionManifold(components::entities::EntityComponent* a, components::entities::EntityComponent* b) : ecA(a), ecB(b) {}
+		CollisionManifold(size_t a_ID, size_t b_ID) : ecID_A(a_ID), ecID_B(b_ID) {}
 	};
 } // namespace zg::physics

@@ -119,65 +119,77 @@ size_t BVH::addTriangle(const Tri& tri)
 }
 void BVH::addEntity(Entity& entity)
 {
-	auto indiceCount = entity.indiceCount(entity);
-	auto indices = entity.indices(entity);
-	auto vertices = entity.vertices(entity);
-	auto indicesData = indices.data();
-	auto verticesData = vertices.data();
-	auto& model = entity.getModelMatrix();
-	for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
+	for (auto& meshID : entity.meshIDs)
 	{
-		auto i0 = indicesData[i + 0];
-		auto i1 = indicesData[i + 1];
-		auto i2 = indicesData[i + 2];
-		auto v0 = verticesData[i0];
-		auto v1 = verticesData[i1];
-		auto v2 = verticesData[i2];
-		v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
-		v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
-		v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
-		addTriangle({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, entity.ID});
+		auto& mesh = Registry::getMesh(meshID);
+		auto indiceCount = mesh.indiceCount ? mesh.indiceCount(entity) : 0;
+		if (!indiceCount)
+			return;
+		auto indices = mesh.indices(entity);
+		auto vertices = mesh.vertices(entity);
+		auto indicesData = indices.data();
+		auto verticesData = vertices.data();
+		auto& model = entity.getModelMatrix();
+		for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
+		{
+			auto i0 = indicesData[i + 0];
+			auto i1 = indicesData[i + 1];
+			auto i2 = indicesData[i + 2];
+			auto v0 = verticesData[i0];
+			auto v1 = verticesData[i1];
+			auto v2 = verticesData[i2];
+			v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
+			v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
+			v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
+			addTriangle({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, {entity.ID, mesh.ID}});
+		}
 	}
 }
 void BVH::updateEntity(Entity& entity)
 {
-	std::vector<size_t> indices;
-	size_t indicesCount = 0;
-	auto trianglesSize = triangles.size();
-	for (size_t i = 0; i < trianglesSize; ++i)
+	for (auto& meshID : entity.meshIDs)
 	{
-		if (triangles[i].userData == entity.ID)
+		auto& mesh = Registry::getMesh(meshID);
+		std::vector<size_t> indices;
+		size_t indicesCount = 0;
+		auto trianglesSize = triangles.size();
+		for (size_t i = 0; i < trianglesSize; ++i)
 		{
-			++indicesCount;
+			if (triangles[i].userData.first == entity.ID && triangles[i].userData.second == mesh.ID)
+			{
+				++indicesCount;
+			}
 		}
-	}
-	indices.reserve(indicesCount);
-	for (size_t i = 0; i < trianglesSize; ++i)
-	{
-		if (triangles[i].userData == entity.ID)
+		indices.reserve(indicesCount);
+		for (size_t i = 0; i < trianglesSize; ++i)
 		{
-			indices.push_back(i);
+			if (triangles[i].userData.first == entity.ID && triangles[i].userData.second == mesh.ID)
+			{
+				indices.push_back(i);
+			}
 		}
-	}
-	auto indiceCount = entity.indiceCount(entity);
-	auto entityIndices = entity.indices(entity);
-	auto entityVertices = entity.vertices(entity);
-	auto indicesData = entityIndices.data();
-	auto verticesData = entityVertices.data();
-	auto& model = entity.getModelMatrix();
-	for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
-	{
-		auto& triangleID = indices[c];
-		auto i0 = indicesData[i + 0];
-		auto i1 = indicesData[i + 1];
-		auto i2 = indicesData[i + 2];
-		auto v0 = verticesData[i0];
-		auto v1 = verticesData[i1];
-		auto v2 = verticesData[i2];
-		v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
-		v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
-		v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
-		triangles[triangleID] = {{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, entity.ID};
+		auto indiceCount = mesh.indiceCount ? mesh.indiceCount(entity) : 0;
+		if (!indiceCount)
+			return;
+		auto meshIndices = mesh.indices(entity);
+		auto meshVertices = mesh.vertices(entity);
+		auto indicesData = meshIndices.data();
+		auto verticesData = meshVertices.data();
+		auto& model = entity.getModelMatrix();
+		for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
+		{
+			auto& triangleID = indices[c];
+			auto i0 = indicesData[i + 0];
+			auto i1 = indicesData[i + 1];
+			auto i2 = indicesData[i + 2];
+			auto v0 = verticesData[i0];
+			auto v1 = verticesData[i1];
+			auto v2 = verticesData[i2];
+			v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
+			v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
+			v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
+			triangles[triangleID] = {{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, {entity.ID, mesh.ID}};
+		}
 	}
 	built = false;
 	changed = true;
@@ -192,7 +204,7 @@ void BVH::removeEntity(Scene& scene, Entity& entity)
 		triangles.erase(std::remove_if(triangles.begin(), triangles.end(),
 																	 [&](const Tri& tri) -> bool
 																	 {
-																		 if (tri.userData == entityID)
+																		 if (tri.userData.first == entityID)
 																		 {
 																			 removalIndex++;
 																			 return true;
