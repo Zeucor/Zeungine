@@ -14,6 +14,21 @@ endif()
 
 #New Dependency Declarations to the top!
 
+message(STATUS "FetchContent: rtmidi")
+set(RTMIDI_BUILD_STATIC_LIBS ON)
+set(RTMIDI_BUILD_TESTING OFF)
+set(RTMIDI_INSTALL OFF)
+FetchContent_Declare(
+    rtmidi
+    GIT_REPOSITORY https://github.com/thestk/rtmidi.git
+    GIT_TAG 6.0.0
+)
+FetchContent_MakeAvailable(rtmidi)
+set_target_properties(rtmidi PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(rtmidi PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(rtmidi PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(rtmidi PROPERTIES MINSIZEREL_POSTFIX "")
+
 message(STATUS "FetchContent: V-HACD")
 FetchContent_Declare(
     vhacd
