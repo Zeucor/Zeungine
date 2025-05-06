@@ -12,6 +12,7 @@
 using namespace zg;
 std::unordered_map<std::string, size_t> entityKeyCounts;
 Scene::Scene(const SceneCreateInfo& info) :
+	DataStorage<Scene>(info.getDataFunctionMap, info.setDataFunctionMap, info.dataMap),
 	ID(info.ID),
 	INDEX(info.INDEX),
 	INDEX_STACK(info.INDEX_STACK),

@@ -128,6 +128,9 @@ namespace zg
 		std::function<void(Scene&)> postPostRenderFunction = {};
 		bool drawColorToWindowPlane = true;
 		bool useBVH = true;
+		DataStorage<Scene>::DataMap dataMap;
+		DataStorage<Scene>::GetDataFunctionMap getDataFunctionMap;
+		DataStorage<Scene>::SetDataFunctionMap setDataFunctionMap;
 		size_t ID;
 		size_t* INDEX;
 		std::vector<size_t*> INDEX_STACK;
