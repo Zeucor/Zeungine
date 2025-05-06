@@ -797,7 +797,7 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCr
 	(*Registry::idScenes)[scene.ID] = scene.INDEX_STACK;
 	return {transaction.key, transaction.id, transaction.index, &scene};
 }
-bool Window::removeScene(size_t& ID)
+bool Window::removeScene(size_t ID)
 {
 	auto iter = scenes.find_id(ID);
 	if (iter == scenes.end())

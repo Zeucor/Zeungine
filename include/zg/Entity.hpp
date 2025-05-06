@@ -87,7 +87,7 @@ namespace zg
 		void postRender();
 		glm::mat4& getModelMatrix();
 		KeyIDVector<std::string, Entity>::EmplaceBackTuple addChild(const EntityCreateInfo& childInfo);
-		void removeChild(size_t& ID);
+		void removeChild(size_t ID);
 		UniqueIdentifier addMousePressHandler(const Button& button, const MousePressHandler& callback);
 		void removeMousePressHandler(const Button& button, UniqueIdentifier& id);
 		UniqueIdentifier addMouseMoveHandler(const MouseMoveHandler& callback);

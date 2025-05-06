@@ -260,7 +260,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 		window.onEntityAdded(entity);
 	return {transaction.key, transaction.id, transaction.index, &entity};
 }
-bool Scene::removeEntity(size_t& ID)
+bool Scene::removeEntity(size_t ID)
 {
 	auto entityIter = entities.find_id(ID);
 	if (entityIter == entities.end())
@@ -269,13 +269,11 @@ bool Scene::removeEntity(size_t& ID)
 	if (entity.onRemovedFunction)
 		entity.onRemovedFunction(entity);
 	preRemoveEntity(entity, {ID});
-	entity.ID = 0;
 	entities.erase(entityIter);
 	auto& idEntitiesRef = *Registry::idEntities;
 	auto idIter = idEntitiesRef.find(ID);
 	if (idIter != idEntitiesRef.end())
 		idEntitiesRef.erase(idIter);
-	ID = 0;
 	return true;
 }
 void Scene::update()

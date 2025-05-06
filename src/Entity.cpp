@@ -207,7 +207,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const Entity
 		childEntity.onAddedFunction(childEntity);
 	return {transaction.key, transaction.id, transaction.index, &childEntity};
 }
-void Entity::removeChild(size_t& ID)
+void Entity::removeChild(size_t ID)
 {
 	auto childIter = children.find_id(ID);
 	if (childIter == children.end())
@@ -224,7 +224,6 @@ void Entity::removeChild(size_t& ID)
 	{
 		idEntitiesRef.erase(idIter);
 	}
-	ID = 0;
 }
 // Mouse
 UniqueIdentifier Entity::addMousePressHandler(const Button& button, const MousePressHandler& callback)

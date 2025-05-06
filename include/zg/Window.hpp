@@ -169,7 +169,7 @@ struct WindowCreateInfo;
 		bool removeShutdownHandler(size_t& ID);
 		// scene
 		KeyIDVector<std::string, Scene>::EmplaceBackTuple  addScene(const SceneCreateInfo& info);
-		bool removeScene(size_t& ID);
+		bool removeScene(size_t ID);
 		// runnables
 		void runOnThread(const Runnable& runnable);
 		void runRunnables();
