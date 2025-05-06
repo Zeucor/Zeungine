@@ -172,6 +172,7 @@ Scene& Scene::operator=(const Scene& other)
 	framebuffer = other.framebuffer;
 	fsq = other.fsq;
 	postProcessingPipeline = other.postProcessingPipeline;
+	unhookMouseEvents();
 	mousePressIDs = other.mousePressIDs;
 	mouseMoveID = other.mouseMoveID;
 	currentHoveredEntityID = other.currentHoveredEntityID;
