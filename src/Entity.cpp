@@ -60,6 +60,7 @@ Entity::Entity(const Entity& other) :
 	meshIDs(other.meshIDs),
 	meshInfos(other.meshInfos),
 	children(other.children),
+	isTransparent(other.isTransparent),
 	preUpdateFunction(other.preUpdateFunction),
 	preRenderFunction(other.preRenderFunction),
 	postRenderFunction(other.postRenderFunction),
@@ -113,6 +114,7 @@ Entity& Entity::operator=(const Entity& other)
 	postRenderFunction = other.postRenderFunction;
 	onAddedFunction = other.onAddedFunction;
 	onRemovedFunction = other.onRemovedFunction;
+	isTransparent = other.isTransparent;
 	return *this;
 }
 void Entity::refreshMeshes()

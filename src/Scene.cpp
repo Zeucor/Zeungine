@@ -783,12 +783,19 @@ size_t Scene::getTransparentDrawCount()
 		{
 			bool addMesh = false;
 			auto& mesh = Registry::getMesh(meshID);
-			for (auto& keyedPair : mesh.keyedTextures)
+			if (entity.isTransparent)
 			{
-				if (keyedPair.second->isTransparent)
+				addMesh = true;
+			}
+			else
+			{
+				for (auto& keyedPair : mesh.keyedTextures)
 				{
-					addMesh = true;
-					break;
+					if (keyedPair.second->isTransparent)
+					{
+						addMesh = true;
+						break;
+					}
 				}
 			}
 			if (addMesh)
@@ -851,12 +858,19 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getTransparentDrawList()
 		{
 			bool addMesh = false;
 			auto& mesh = Registry::getMesh(meshID);
-			for (auto& keyedPair : mesh.keyedTextures)
+			if (entity.isTransparent)
 			{
-				if (keyedPair.second->isTransparent)
+				addMesh = true;
+			}
+			else
+			{
+				for (auto& keyedPair : mesh.keyedTextures)
 				{
-					addMesh = true;
-					break;
+					if (keyedPair.second->isTransparent)
+					{
+						addMesh = true;
+						break;
+					}
 				}
 			}
 			if (addMesh)

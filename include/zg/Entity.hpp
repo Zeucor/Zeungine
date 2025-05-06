@@ -76,6 +76,7 @@ namespace zg
 		std::vector<size_t> meshIDs;
 		std::vector<MeshCreateInfo> meshInfos;
 		KeyIDVector<std::string, Entity> children;
+		bool isTransparent = false;
 	public:
 		Entity(const EntityCreateInfo& info);
 		Entity(const Entity& other);
