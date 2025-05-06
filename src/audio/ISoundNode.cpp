@@ -7,10 +7,18 @@ ISoundNode::ISoundNode(AudioEngine& _audioEngine, const bool& isOutput, const bo
 void ISoundNode::activate()
 {
 	activationTime = audioEngine.getEngineTime();
-	isActive = true;
+	isActive = activateVirtual();
+}
+bool ISoundNode::activateVirtual()
+{
+	return true;
 }
 void ISoundNode::deactivate()
 {
 	deactivationTime = audioEngine.getEngineTime();
-	isActive = false;
+	isActive = deactivateVirtual();
+}
+bool ISoundNode::deactivateVirtual()
+{
+	return false;
 }

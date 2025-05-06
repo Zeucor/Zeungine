@@ -17,6 +17,8 @@ namespace zg::audio
 		virtual std::vector<float> inputFrames(const float *frames, const int32_t &channelCount, const unsigned long &frameCount, const audio_time_t &time) = 0;
 		virtual void outputFrames(float *frames, const int32_t &channelCount, const unsigned long &frameCount, const audio_time_t &time) = 0;
 		void activate();
+		virtual bool activateVirtual();
 		void deactivate();
+		virtual bool deactivateVirtual();
 	};
 }
