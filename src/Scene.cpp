@@ -782,13 +782,13 @@ size_t Scene::getTransparentDrawCount()
 		for (auto& meshID : entity.meshIDs)
 		{
 			bool addMesh = false;
-			auto& mesh = Registry::getMesh(meshID);
 			if (entity.isTransparent)
 			{
 				addMesh = true;
 			}
 			else
 			{
+				auto& mesh = Registry::getMesh(meshID);
 				for (auto& keyedPair : mesh.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
@@ -822,13 +822,21 @@ size_t Scene::getOpaqueDrawCount()
 		bool addMesh = true;
 		for (auto& meshID : entity.meshIDs)
 		{
-			auto& mesh = Registry::getMesh(meshID);
-			for (auto& keyedPair : mesh.keyedTextures)
+			if (entity.isTransparent)
 			{
-				if (keyedPair.second->isTransparent)
+				addMesh = false;
+				break;
+			}
+			else
+			{
+				auto& mesh = Registry::getMesh(meshID);
+				for (auto& keyedPair : mesh.keyedTextures)
 				{
-					addMesh = false;
-					break;
+					if (keyedPair.second->isTransparent)
+					{
+						addMesh = false;
+						break;
+					}
 				}
 			}
 			if (addMesh)
@@ -857,13 +865,13 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getTransparentDrawList()
 		for (auto& meshID : entity.meshIDs)
 		{
 			bool addMesh = false;
-			auto& mesh = Registry::getMesh(meshID);
 			if (entity.isTransparent)
 			{
 				addMesh = true;
 			}
 			else
 			{
+				auto& mesh = Registry::getMesh(meshID);
 				for (auto& keyedPair : mesh.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
@@ -901,13 +909,21 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getOpaqueDrawList()
 		for (auto& meshID : entity.meshIDs)
 		{
 			bool addMesh = true;
-			auto& mesh = Registry::getMesh(meshID);
-			for (auto& keyedPair : mesh.keyedTextures)
+			if (entity.isTransparent)
 			{
-				if (keyedPair.second->isTransparent)
+				addMesh = false;
+				break;
+			}
+			else
+			{
+				auto& mesh = Registry::getMesh(meshID);
+				for (auto& keyedPair : mesh.keyedTextures)
 				{
-					addMesh = false;
-					break;
+					if (keyedPair.second->isTransparent)
+					{
+						addMesh = false;
+						break;
+					}
 				}
 			}
 			if (addMesh)
