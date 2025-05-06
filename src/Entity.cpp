@@ -128,9 +128,9 @@ void Entity::refreshMeshes()
 		auto meshID = index < meshIDsSize ? meshIDsData[index] : 0;
 		auto& meshInfo = meshInfosData[index];
 		auto newSubMeshID = Registry::addMesh(meshInfo, *this);
+		Registry::deRefMesh(meshID);
 		if (meshID != 0 && meshID != newSubMeshID)
 		{
-			Registry::deRefMesh(meshID);
 			meshIDsData[index] = newSubMeshID;
 		}
 		else if (meshID == 0)
