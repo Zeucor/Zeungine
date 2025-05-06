@@ -72,6 +72,7 @@ struct WindowCreateInfo;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseMoveHandler>> mouseMoveHandlers;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, ViewResizeHandler>> viewResizeHandlers;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, FocusHandler>> focusHandlers;
+		std::map<size_t, ShutdownHandler> shutdownHandlers;
 		zg::td::queue<PreSwapbuffersOnceoff> preSwapbuffersOnceoffs;
 		zg::KeyIDVector<std::string, Scene> scenes;
 		bool open = true;
@@ -163,6 +164,9 @@ struct WindowCreateInfo;
 		// preSwapbuffers
 		void addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff);
 		void callPreSwapbuffersOnceoff();
+		// shutdown
+		size_t addShutdownHandler(const ShutdownHandler& handler);
+		bool removeShutdownHandler(size_t& ID);
 		// scene
 		KeyIDVector<std::string, Scene>::EmplaceBackTuple  addScene(const SceneCreateInfo& info);
 		bool removeScene(size_t& ID);

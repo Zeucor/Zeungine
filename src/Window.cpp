@@ -260,6 +260,8 @@ void Window::startWindow()
 		framebudget.sleep();
 	}
 _exit:
+	for (auto& pair : shutdownHandlers)
+		pair.second(*this);
 	iPlatformWindowRef.enableKeyAutoRepeat();
 	audioEngine.stop();
 	audioEngine.clearPipeline();
@@ -765,6 +767,21 @@ void Window::callPreSwapbuffersOnceoff()
 	auto onceoff = preSwapbuffersOnceoffs.front();
 	preSwapbuffersOnceoffs.pop();
 	onceoff();
+}
+size_t Window::addShutdownHandler(const ShutdownHandler& handler)
+{
+	auto ID = GlobalUID::GetNew();
+	shutdownHandlers[ID] = handler;
+	return ID;
+}
+bool Window::removeShutdownHandler(size_t& ID)
+{
+	auto iter = shutdownHandlers.find(ID);
+	if (iter == shutdownHandlers.end())
+		return false;
+	shutdownHandlers.erase(iter);
+	ID = 0;
+	return true;
 }
 KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCreateInfo& info)
 {

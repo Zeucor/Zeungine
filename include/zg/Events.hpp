@@ -19,6 +19,7 @@ namespace zg
 	using FocusHandler = std::function<void(bool)>;
 	using OnEntityAddedFunction = std::function<void(const Entity&)>;
 	using PreSwapbuffersOnceoff = std::function<void()>;
+	using ShutdownHandler = std::function<void(Window&)>;
     static constexpr unsigned int MinMouseButtonIndex = 0;
     static constexpr unsigned int MaxMouseButtonIndex = 6;
     static constexpr unsigned int MinMouseButton = 1;
