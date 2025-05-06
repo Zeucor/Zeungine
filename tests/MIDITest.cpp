@@ -34,7 +34,6 @@ int main()
             waveLayers[midiNote] = oscillator->addWaveLayer(Oscillator::sineWave, {
                 .frequency = frequency
             });
-            oscillator->frequency = frequency;
             break;
         }
         case MIDIEventType::NoteOff:
