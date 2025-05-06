@@ -865,6 +865,7 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getTransparentDrawList()
 	{
 		for (auto& meshID : entity.meshIDs)
 		{
+			auto& mesh = Registry::getMesh(meshID);
 			bool addMesh = false;
 			if (entity.isTransparent)
 			{
@@ -872,7 +873,6 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getTransparentDrawList()
 			}
 			else
 			{
-				auto& mesh = Registry::getMesh(meshID);
 				for (auto& keyedPair : mesh.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
@@ -909,6 +909,7 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getOpaqueDrawList()
 	{
 		for (auto& meshID : entity.meshIDs)
 		{
+			auto& mesh = Registry::getMesh(meshID);
 			bool addMesh = true;
 			if (entity.isTransparent)
 			{
@@ -917,7 +918,6 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getOpaqueDrawList()
 			}
 			else
 			{
-				auto& mesh = Registry::getMesh(meshID);
 				for (auto& keyedPair : mesh.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
