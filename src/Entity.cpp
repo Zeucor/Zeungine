@@ -95,6 +95,11 @@ Entity& Entity::operator=(const Entity& other)
 	position = other.position;
 	rotation = other.rotation;
 	scale = other.scale;
+	{
+		std::lock_guard meshIDLock(Registry::meshIDMutex);
+		for (auto& meshID : meshIDs)
+			Registry::meshIDRefCounts[meshID]--;
+	}
 	meshIDs = other.meshIDs;
 	{
 		std::lock_guard meshIDLock(Registry::meshIDMutex);

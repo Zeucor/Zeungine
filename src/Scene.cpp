@@ -190,6 +190,9 @@ Scene::~Scene()
 	for (auto& entity : entities)
 		if (entity.onRemovedFunction)
 			entity.onRemovedFunction(entity);
+	dataMap.clear();
+	getDataFunctionMap.clear();
+	setDataFunctionMap.clear();
 	entities.clear();
 	postProcessingPipeline.cleanup();
 	unhookMouseEvents();

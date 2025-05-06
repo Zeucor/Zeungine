@@ -283,7 +283,7 @@ namespace zg
 					throw std::logic_error(
 						"KeyIDVector::erase: Inconsistent state - No ID found for last_index in m_IndexIDMap.");
 				size_t last_id = last_idx_id_it->second;
-				m_Values[erased_index] = std::move_if_noexcept(m_Values[last_index]);
+				std::swap(m_Values[erased_index], m_Values[last_index]);
 				auto moved_id_idx_it = m_IDIndexMap.find(last_id);
 				if (moved_id_idx_it == m_IDIndexMap.end())
 					throw std::logic_error("KeyIDVector::erase: Inconsistent state - No ID->Index map entry for moved element.");
