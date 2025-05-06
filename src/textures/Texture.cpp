@@ -111,7 +111,6 @@ bool Texture::testIsTransparent(const void* data)
 {
 	if (!data)
 		return false;
-	using uvec = glm::vec<4, unsigned char>;
 	auto colors = (uvec*)data;
 	size_t n = size.x * size.y;
 	for (size_t i = 0; i < n; ++i)

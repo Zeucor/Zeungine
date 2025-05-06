@@ -14,6 +14,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 inline static float ZG_PI = acos(-1);
+using uvec = glm::vec<4, uint8_t>;
 namespace std
 {
 	template <>
