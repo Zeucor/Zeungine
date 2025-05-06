@@ -17,10 +17,10 @@ int main()
     auto oscillatorStage = std::make_shared<zg::audio::AudioStage>(window.audioEngine);
     auto oscillator = std::make_shared<zg::audio::Oscillator>(
         window.audioEngine,
-        440,
         0.5
     );
-    oscillator->addWaveLayer(Oscillator::sineWave, {});
+    std::map<double, size_t> waveLayers;
+    oscillator->activate();
     oscillatorStage->addSoundNode(oscillator);
     window.audioEngine.pipeline.addStage(oscillatorStage);
     MIDIEngine midiEngine(true);
@@ -29,15 +29,23 @@ int main()
         {
         case MIDIEventType::NoteOn:
         {
-            oscillator->activate();
             double midiNote = static_cast<double>(event.data1);
             double frequency = 440.0 * std::pow(2.0, (midiNote - 69.0) / 12.0);
+            waveLayers[midiNote] = oscillator->addWaveLayer(Oscillator::sineWave, {
+                .frequency = frequency
+            });
             oscillator->frequency = frequency;
             break;
         }
         case MIDIEventType::NoteOff:
-            oscillator->deactivate();
+        {
+            double midiNote = static_cast<double>(event.data1);
+            auto iter = waveLayers.find(midiNote);
+            if (iter == waveLayers.end())
+                break;
+            oscillator->removeWaveLayer(iter->second);
             break;
+        }
         }
     });
     window.run();

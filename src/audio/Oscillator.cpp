@@ -1,4 +1,5 @@
 #include <zg/audio/Oscillator.hpp>
+#include <zg/GlobalUID.hpp>
 using namespace zg::audio;
 float Oscillator::sineWave(double currentPhase, double baseAmplitude, const WaveParameters& params)
 {
@@ -81,20 +82,24 @@ float Oscillator::triangleWave(double currentPhase, double baseAmplitude, const 
 
 	return static_cast<float>(currentAmplitude * value);
 }
-Oscillator::Oscillator(AudioEngine& _audioEngine, double freq, double amp) :
-		ISoundNode(_audioEngine, true, false), frequency(freq), amplitude(amp)
+Oscillator::Oscillator(AudioEngine& _audioEngine, double amp) :
+		ISoundNode(_audioEngine, true, false), amplitude(amp)
 {
 }
-void Oscillator::addWaveLayer(WaveGeneratorFunc func, const WaveParameters& params)
+size_t Oscillator::addWaveLayer(WaveGeneratorFunc func, const WaveParameters& params)
 {
-	layeredWaves.push_back({func, params});
+    auto ID = GlobalUID::GetNew();
+	layeredWaves[ID] = {func, params};
+    return ID;
 }
-void Oscillator::removeWaveLayer(size_t index)
+bool Oscillator::removeWaveLayer(size_t& ID)
 {
-	if (index < layeredWaves.size())
-	{
-		layeredWaves.erase(layeredWaves.begin() + index);
-	}
+    auto iter = layeredWaves.find(ID);
+    if (iter == layeredWaves.end())
+        return false;
+    layeredWaves.erase(iter);
+    ID = 0;
+    return true;
 }
 bool Oscillator::modifyWaveLayerParams(size_t index, const WaveParameters& newParams)
 {
@@ -131,10 +136,10 @@ void Oscillator::outputFrames(float* frames, const int32_t& channelCount, const 
 	{
 		float sampleValue = 0.0f;
 
-		for (auto& wave : layeredWaves)
-		{ // Use auto& to modify currentPhase
-			// Calculate the phase increment for this specific layer
-			double layerFrequency = frequency * wave.params.frequencyMultiplier;
+		for (auto& wavePair : layeredWaves)
+		{
+			auto& wave = wavePair.second;
+			double layerFrequency = wave.params.frequency * wave.params.frequencyMultiplier;
 			double layerPhaseIncrement = (layerFrequency / sampleRate) * 2.0 * ZG_PI;
 
 			// Generate sample using the layer's current phase
