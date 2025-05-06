@@ -26,7 +26,7 @@ void SpriteSheet::loadSheet(IRenderer* iRenderer, interfaces::IFile& file, uvec 
     for (size_t i = 0; i < n; ++i)
     {
         auto& color = colors[i];
-        if (color == bgColor)
+        if (color.r == bgColor.r && color.g == bgColor.g && color.b == bgColor.b && color.a == bgColor.a)
             color = uvec(0);
     }
     spriteTexture = std::make_shared<textures::Texture>(
