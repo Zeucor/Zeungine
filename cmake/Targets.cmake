@@ -16,6 +16,9 @@ zg_setup_target(assimp STATIC
 zg_setup_target(jolt STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" jolt jolt "${STATIC_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(rtmidi STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ZG_LIB_PREFIX}" rtmidi rtmidi "${STATIC_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(freetype ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)
@@ -89,7 +92,7 @@ endif()
 if(WIN32)
 	if(ZG_TYPE STREQUAL STATIC)
 	# ucrt
-		set(ZG_LIBRARIES ${ZG_LIBRARIES} ws2_32 secur32 crypt32 bcrypt mfplat mf mfuuid strmiids advapi32  iphlpapi legacy_stdio_definitions)
+		set(ZG_LIBRARIES ${ZG_LIBRARIES} ws2_32 secur32 crypt32 bcrypt mfplat mf mfuuid strmiids advapi32 iphlpapi legacy_stdio_definitions winmm)
 		# if (RELEASE_OR_DEBUG STREQUAL Release)
 		# 	set(ZG_LIBRARIES ${ZG_LIBRARIES} msvcrt)
 		# else()

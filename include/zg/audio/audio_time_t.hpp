@@ -2,5 +2,5 @@
 #include <stdint.h>
 namespace zg::audio
 {
-	typedef uint64_t audio_time_t;
+	typedef long double audio_time_t;
 }

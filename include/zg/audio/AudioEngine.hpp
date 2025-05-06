@@ -20,7 +20,7 @@ namespace zg::audio
 		ma_engine engine;
 		ma_engine_config engineConfig;
 		ma_context context;
-		uint64_t startTimeNs;
+		uint64_t startTimeSeconds;
 		bool running = false;
 		AudioEngine();
 		~AudioEngine();
@@ -31,6 +31,6 @@ namespace zg::audio
 		bool clearPipeline();
 		bool await();
 		audio_time_t getEngineTime();
-        audio_time_t getTimeNanoSeconds();
+        audio_time_t getTimeSeconds();
     };
 }

@@ -13,13 +13,21 @@ set(jolt_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/jol
 set(ttf2mesh_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/ttf2mesh-src")
 set(assimp_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/assimp-src")
 set(vhacd_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/vhacd-src")
+set(rtmidi_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/rtmidi-src")
 
-# assimp
+# rtmidi
+install(FILES ${rtmidi_SOURCE_DIR}/RtMidi.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    COMPONENT headers)
+
+# VHACD
 install(FILES ${vhacd_SOURCE_DIR}/include/VHACD.h
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     COMPONENT headers)
 
+# assimp
 install(DIRECTORY ${assimp_SOURCE_DIR}/include/assimp
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     COMPONENT headers

@@ -20,8 +20,8 @@ set(RTMIDI_BUILD_TESTING OFF)
 set(RTMIDI_INSTALL OFF)
 FetchContent_Declare(
     rtmidi
-    GIT_REPOSITORY https://github.com/thestk/rtmidi.git
-    GIT_TAG 6.0.0
+    GIT_REPOSITORY https://github.com/ZeunO8/rtmidi.git
+    GIT_TAG master
 )
 FetchContent_MakeAvailable(rtmidi)
 set_target_properties(rtmidi PROPERTIES DEBUG_POSTFIX "")

@@ -93,7 +93,7 @@ int32_t AudioEngine::start()
         return -6;
 	}
 
-	startTimeNs = getTimeNanoSeconds();
+	startTimeSeconds = getTimeSeconds();
 
 	running = true;
 
@@ -146,9 +146,11 @@ bool AudioEngine::clearPipeline()
 }
 audio_time_t AudioEngine::getEngineTime()
 {
-	return getTimeNanoSeconds() - startTimeNs;
+	return getTimeSeconds() - startTimeSeconds;
 }
-audio_time_t AudioEngine::getTimeNanoSeconds()
+audio_time_t AudioEngine::getTimeSeconds()
 {
-    return std::chrono::system_clock::now().time_since_epoch().count();
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    return std::chrono::duration<long double>(duration).count();
 }
