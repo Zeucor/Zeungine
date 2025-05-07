@@ -118,7 +118,7 @@ namespace zg
 		virtual void drawVAO(const vaos::VAO &vao, shaders::Shader* shader) = 0;
 		virtual void generateVAO(vaos::VAO &vao) = 0;
 		virtual void copyVAO(vaos::VAO &dest, const vaos::VAO &src) = 0;
-		virtual void destroyVAO(vaos::VAO &vao) = 0;
+		virtual void destroyVAO(vaos::VAO &vao, bool destroyNow) = 0;
 		virtual void ensureVAO(shaders::Shader &shader, vaos::VAO &vao) = 0;
 		virtual void swapBuffers() = 0;
 	};

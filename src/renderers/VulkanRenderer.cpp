@@ -2791,39 +2791,76 @@ void VulkanRenderer::copyVAO(vaos::VAO &dest, const vaos::VAO &src)
 	memcpy(destImpl.vertexData, srcImpl.vertexData, vertexBufferSize);
 	memcpy(destImpl.indiceData, srcImpl.indiceData, indiceBufferSize);
 }
-void VulkanRenderer::destroyVAO(vaos::VAO& vao)
+void VulkanRenderer::destroyVAO(vaos::VAO &vao, bool destroyNow)
 {
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	destroyAtRenderPassEndOrDestroy(
-		[&, ssboBuffers = vaoImpl.ssboBuffers, uniformBuffers = vaoImpl.uniformBuffers,
-		 uniformBuffersMemory = vaoImpl.uniformBuffersMemory, descriptorPools = vaoImpl.descriptorPools,
-		 indiceBuffer = vaoImpl.indiceBuffer, indiceBufferMemory = vaoImpl.indiceBufferMemory,
-		 vertexBuffer = vaoImpl.vertexBuffer, vertexBufferMemory = vaoImpl.vertexBufferMemory]
+	if (destroyNow)
+	{
+		for (auto& pair : vaoImpl.ssboBuffers)
 		{
-			for (auto& pair : ssboBuffers)
+			for (auto& pair2 : pair.second)
 			{
-				for (auto& pair2 : pair.second)
+				_vkDestroyBuffer(device, pair2.second.first, 0);
+				_vkFreeMemory(device, pair2.second.second, 0);
+			}
+		}
+		for (auto& pair : vaoImpl.uniformBuffers)
+			for (auto& uniformBuffer : pair.second)
+				_vkDestroyBuffer(device, uniformBuffer, 0);
+		for (auto& pair : vaoImpl.uniformBuffersMemory)
+			for (auto& uniformBufferMemory : pair.second)
+				_vkFreeMemory(device, uniformBufferMemory, 0);
+		for (auto& pair : vaoImpl.descriptorPools)
+		{
+			_vkDestroyDescriptorPool(device, pair.second, 0);
+		}
+		_vkDestroyBuffer(device, vaoImpl.indiceBuffer, 0);
+		_vkFreeMemory(device, vaoImpl.indiceBufferMemory, 0);
+		_vkDestroyBuffer(device, vaoImpl.vertexBuffer, 0);
+		_vkFreeMemory(device, vaoImpl.vertexBufferMemory, 0);
+		vaoImpl.vertexBuffer = 0;
+		vaoImpl.vertexBufferMemory = 0;
+		vaoImpl.vertexData = 0;
+		vaoImpl.vertexBufferSize = 0;
+		vaoImpl.indiceBuffer = 0;
+		vaoImpl.indiceBufferMemory = 0;
+		vaoImpl.indiceData = 0;
+		vaoImpl.indiceBufferSize = 0;
+	}
+	else
+	{
+		destroyAtRenderPassEndOrDestroy(
+			[&, ssboBuffers = vaoImpl.ssboBuffers, uniformBuffers = vaoImpl.uniformBuffers,
+			uniformBuffersMemory = vaoImpl.uniformBuffersMemory, descriptorPools = vaoImpl.descriptorPools,
+			indiceBuffer = vaoImpl.indiceBuffer, indiceBufferMemory = vaoImpl.indiceBufferMemory,
+			vertexBuffer = vaoImpl.vertexBuffer, vertexBufferMemory = vaoImpl.vertexBufferMemory]
+			{
+				for (auto& pair : ssboBuffers)
 				{
-					_vkDestroyBuffer(device, pair2.second.first, 0);
-					_vkFreeMemory(device, pair2.second.second, 0);
+					for (auto& pair2 : pair.second)
+					{
+						_vkDestroyBuffer(device, pair2.second.first, 0);
+						_vkFreeMemory(device, pair2.second.second, 0);
+					}
 				}
-			}
-			for (auto& pair : uniformBuffers)
-				for (auto& uniformBuffer : pair.second)
-					_vkDestroyBuffer(device, uniformBuffer, 0);
-			for (auto& pair : uniformBuffersMemory)
-				for (auto& uniformBufferMemory : pair.second)
-					_vkFreeMemory(device, uniformBufferMemory, 0);
-			for (auto& pair : descriptorPools)
-			{
-				_vkDestroyDescriptorPool(device, pair.second, 0);
-			}
-			_vkDestroyBuffer(device, indiceBuffer, 0);
-			_vkFreeMemory(device, indiceBufferMemory, 0);
-			_vkDestroyBuffer(device, vertexBuffer, 0);
-			_vkFreeMemory(device, vertexBufferMemory, 0);
-		});
+				for (auto& pair : uniformBuffers)
+					for (auto& uniformBuffer : pair.second)
+						_vkDestroyBuffer(device, uniformBuffer, 0);
+				for (auto& pair : uniformBuffersMemory)
+					for (auto& uniformBufferMemory : pair.second)
+						_vkFreeMemory(device, uniformBufferMemory, 0);
+				for (auto& pair : descriptorPools)
+				{
+					_vkDestroyDescriptorPool(device, pair.second, 0);
+				}
+				_vkDestroyBuffer(device, indiceBuffer, 0);
+				_vkFreeMemory(device, indiceBufferMemory, 0);
+				_vkDestroyBuffer(device, vertexBuffer, 0);
+				_vkFreeMemory(device, vertexBufferMemory, 0);
+			});
+	}
 	delete &vaoImpl;
+	vao.rendererData = 0;
 }
 void VulkanRenderer::ensureVAO(shaders::Shader& shader, vaos::VAO& vao)
 {

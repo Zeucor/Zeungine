@@ -742,7 +742,7 @@ void GLRenderer::generateVAO(vaos::VAO &vao)
 		attribIndex++;
 	}
 }
-void GLRenderer::destroyVAO(vaos::VAO &vao)
+void GLRenderer::destroyVAO(vaos::VAO &vao, bool destroyNow)
 {
 	auto &vaoImpl = *(vaos::GLVAOImpl *)vao.rendererData;
 	glContext->DeleteVertexArrays(1, &vaoImpl.vao);

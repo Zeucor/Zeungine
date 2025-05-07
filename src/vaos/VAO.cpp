@@ -28,12 +28,15 @@ VAO::VAO(const VAO& other):
 VAO::VAO() {};
 VAO& VAO::operator=(const VAO& other)
 {
+	VAOFactory::destroy(*this, true);
 	constants = other.constants;
 	indiceCount = other.indiceCount;
 	vertexCount = other.vertexCount;
 	stride = other.stride;
 	VAO_INDEX_STACK = other.VAO_INDEX_STACK;
 	vaoIRenderer = Registry::getWindow(VAO_INDEX_STACK).iRenderer;
+	shaders.clear();
+	ensuredBools.clear();
 	VAOFactory::copy(*this, other);
 	return *this;
 }

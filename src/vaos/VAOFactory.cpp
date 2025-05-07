@@ -52,4 +52,4 @@ bool VAOFactory::isVAOConstant(const std::string_view constant)
 	auto iter = VAOConstants.find(constant);
 	return (iter != VAOConstants.end());
 }
-void VAOFactory::destroy(VAO &vao) { vao.vaoIRenderer->destroyVAO(vao); };
+void VAOFactory::destroy(VAO &vao, bool destroyNow) { vao.vaoIRenderer->destroyVAO(vao, destroyNow); };

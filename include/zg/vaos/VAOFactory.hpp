@@ -14,6 +14,6 @@ namespace zg::vaos
     static size_t getStride(const RuntimeConstants &constants);
     static size_t getOffset(const RuntimeConstants &constants, const std::string_view offsetConstant);
     static bool isVAOConstant(const std::string_view constant);
-    static void destroy(VAO &vao);
+    static void destroy(VAO &vao, bool destroyNow = false);
   };
 }

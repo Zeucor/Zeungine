@@ -74,7 +74,7 @@ void MetalRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_vi
 }
 void MetalRenderer::drawVAO(const vaos::VAO &vao, shaders::Shader* shader) {}
 void MetalRenderer::generateVAO(vaos::VAO& vao) {}
-void MetalRenderer::destroyVAO(vaos::VAO& vao) {}
+void MetalRenderer::destroyVAO(vaos::VAO &vao, bool destroyNow) {}
 // change void* result to the result type of a Metal call?
 bool zg::MTLcheck(const char* fn, void* result)
 {

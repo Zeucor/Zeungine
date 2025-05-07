@@ -667,7 +667,7 @@ void EGLRenderer::generateVAO(vaos::VAO &vao)
 		attribIndex++;
 	}
 }
-void EGLRenderer::destroyVAO(vaos::VAO &vao)
+void EGLRenderer::destroyVAO(vaos::VAO &vao, bool destroyNow)
 {
 	auto &vaoImpl = *(vaos::GLVAOImpl *)vao.rendererData;
 	glDeleteVertexArrays(1, &vaoImpl.vao);

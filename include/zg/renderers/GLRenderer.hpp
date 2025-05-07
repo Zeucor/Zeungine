@@ -57,7 +57,7 @@ namespace zg
 		void drawVAO(const vaos::VAO &vao, shaders::Shader* shader) override;
 		void generateVAO(vaos::VAO &vao) override;
 		void copyVAO(vaos::VAO &dest, const vaos::VAO &src) override;
-		void destroyVAO(vaos::VAO &vao) override;
+		void destroyVAO(vaos::VAO &vao, bool destroyNow) override;
 		void ensureVAO(shaders::Shader &shader, vaos::VAO &vao) override;
 		void swapBuffers() override;
 	};
