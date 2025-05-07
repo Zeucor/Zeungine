@@ -14,11 +14,18 @@ set(ttf2mesh_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps
 set(assimp_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/assimp-src")
 set(vhacd_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/vhacd-src")
 set(rtmidi_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/rtmidi-src")
+set(tinyfiledialogs_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/tinyfiledialogs-src")
 
 # zg first
 install(DIRECTORY ${ZG_SRC_ABS}/include/zg DESTINATION ${ZG_INC_INSTALL_PREFIX}
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
+    COMPONENT headers)
+
+# tinyfiledialogs
+install(FILES ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     COMPONENT headers)
 
 # rtmidi

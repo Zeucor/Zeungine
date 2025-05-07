@@ -14,6 +14,20 @@ endif()
 
 #New Dependency Declarations to the top!
 
+message(STATUS "FetchContent: tinyfiledialogs")
+FetchContent_Declare(
+    tinyfiledialogs
+    GIT_REPOSITORY https://github.com/native-toolkit/libtinyfiledialogs.git
+    GIT_TAG master
+)
+FetchContent_GetProperties(tinyfiledialogs)
+if(NOT tinyfiledialogs_POPULATED)
+    FetchContent_Populate(tinyfiledialogs)
+endif()
+
+add_library(tinyfiledialogs STATIC ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.c)
+target_include_directories(tinyfiledialogs PRIVATE ${tinyfiledialogs_SOURCE_DIR})
+
 message(STATUS "FetchContent: rtmidi")
 set(RTMIDI_BUILD_STATIC_LIBS ON)
 set(RTMIDI_BUILD_TESTING OFF)

@@ -42,6 +42,7 @@ set(ZG_TARGETS_TO_INSTALL
     miniaudio glsl svg
     ttf2mesh assimp
     rtmidi
+    tinyfiledialogs
 )
 set(TARGET_ARTIFACT_FILES_TO_INSTALL "")
 foreach(TGT ${ZG_TARGETS_TO_INSTALL})

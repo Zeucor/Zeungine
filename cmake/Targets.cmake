@@ -19,6 +19,9 @@ zg_setup_target(jolt STATIC
 zg_setup_target(rtmidi STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" rtmidi rtmidi "${STATIC_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(tinyfiledialogs STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ZG_LIB_PREFIX}" tinyfiledialogs tinyfiledialogs "${STATIC_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(freetype ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)
