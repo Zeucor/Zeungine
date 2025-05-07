@@ -31,7 +31,7 @@ using namespace zg::entities;
 // 	auto panelItem = std::make_shared<Tab>(window, scene, glm::vec3(sizeXTotal, 0, 0.1), glm::vec3(0), glm::vec3(1),
 // 																				 color, name, font, height, handler, active, *this, iconFile);
 // 	addChild(panelItem);
-// 	scene.postAddEntity(panelItem, {ID, panelItem->ID});
+// 	scene.postAddEntity(panelItem);
 // 	setSize();
 // 	return panelItem->ID;
 // };

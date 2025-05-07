@@ -74,7 +74,7 @@ using namespace zg::entities;
 // void PanelMenu::addPanelEntity(const std::shared_ptr<Entity> &entity, bool alignSizeX)
 // {
 // 	addChild(entity);
-// 	scene.postAddEntity(entity, {ID, entity->ID});
+// 	scene.postAddEntity(entity);
 // 	if (alignSizeX)
 // 	{
 // 		float sizeXMax = 0;
@@ -101,7 +101,7 @@ using namespace zg::entities;
 // }
 // void PanelMenu::removePanelEntity(const std::shared_ptr<Entity> &entity)
 // {
-// 	scene.preRemoveEntity(entity, {ID, entity->ID});
+// 	scene.preRemoveEntity(entity);
 // 	removeChild(entity->ID);
 // }
 // float PanelMenu::getSizeYTotal()

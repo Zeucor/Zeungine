@@ -253,7 +253,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 	usingInfo.INDEX = transaction.index;
 	auto& entity = entities.commitTransaction(transaction, usingInfo);
 	(*Registry::idEntities)[entity.ID] = entity.INDEX_STACK;
-	postAddEntity(entity, {entity.ID});
+	postAddEntity(entity);
 	if (entity.onAddedFunction)
 		entity.onAddedFunction(entity);
 	auto& window = Registry::getWindow(INDEX_STACK);
@@ -269,7 +269,7 @@ bool Scene::removeEntity(size_t ID)
 	auto& entity = *entityIter;
 	if (entity.onRemovedFunction)
 		entity.onRemovedFunction(entity);
-	preRemoveEntity(entity, {ID});
+	preRemoveEntity(entity);
 	entities.erase(entityIter);
 	auto& idEntitiesRef = *Registry::idEntities;
 	auto idIter = idEntitiesRef.find(ID);
@@ -500,33 +500,15 @@ void Scene::resize(glm::vec2 newSize)
 		}
 	}
 }
-void Scene::postAddEntity(Entity& entity, const std::vector<size_t>& entityIDs)
+void Scene::postAddEntity(Entity& entity)
 {
-	if (useBVH && entity.addToBVH)
-	{
+	if (useBVH)
 		bvh->addEntity(entity);
-		// for (auto &triangleID : triangleIDs)
-		// {
-		// 	triangleIDsToEntityIDsMap[triangleID] = entityIDs;
-		// }
-	}
-	auto entityChildrenData = entity.children.data();
-	auto entityChildrenSize = entity.children.size();
-	for (size_t index = 0; index < entityChildrenSize; ++index)
-	{
-		auto& childEntity = entityChildrenData[index];
-		auto& childEntityID = childEntity.ID;
-		auto entityIDsWithSubID = entityIDs;
-		entityIDsWithSubID.push_back(childEntityID);
-		postAddEntity(childEntity, entityIDsWithSubID);
-	}
 }
-void Scene::preRemoveEntity(Entity& entity, const std::vector<size_t>& entityIDs)
+void Scene::preRemoveEntity(Entity& entity)
 {
-	if (useBVH && entity.addToBVH)
-	{
+	if (useBVH)
 		bvh->removeEntity(*this, entity);
-	}
 }
 std::pair<Entity&, Mesh&> Scene::findEntityAndMeshByPrimID(const size_t& primID)
 {
@@ -709,7 +691,7 @@ Serial& deserialize(Serial& serial, Scene& scene)
 		entityCreateInfo.INDEX_STACK.push_back(transaction.index);
 		auto& entity = scene.entities.commitTransaction(transaction, entityCreateInfo);
 		entity.ID = ID;
-		scene.postAddEntity(entity, {ID});
+		scene.postAddEntity(entity);
 		if (window.onEntityAdded)
 			window.onEntityAdded(entity);
 	}

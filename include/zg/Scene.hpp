@@ -96,8 +96,8 @@ namespace zg
 		void postRender();
 		void meshPreRender(Mesh& entity);
 		void resize(glm::vec2 newSize);
-		void postAddEntity(Entity& entity, const std::vector<size_t>& entityIDs);
-		void preRemoveEntity(Entity& entity, const std::vector<size_t>& entityIDs);
+		void postAddEntity(Entity& entity);
+		void preRemoveEntity(Entity& entity);
 		std::pair<Entity&, Mesh&> findEntityAndMeshByPrimID(const size_t& primID);
 		void hookMouseEvents();
 		void unhookMouseEvents();
