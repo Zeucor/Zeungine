@@ -44,7 +44,7 @@ namespace zg
 		std::shared_ptr<textures::Framebuffer> framebuffer;
 		std::shared_ptr<FullscreenQuad> fsq;
 		PostProcessingPipeline postProcessingPipeline;
-		std::unique_ptr<raytracing::BVH> bvh;
+		std::shared_ptr<raytracing::BVH> bvh;
 		std::array<UniqueIdentifier, MaxMouseButton> mousePressIDs;
 		UniqueIdentifier mouseMoveID;
 		size_t currentHoveredEntityID = 0;

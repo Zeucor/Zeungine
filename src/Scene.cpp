@@ -57,7 +57,7 @@ Scene::Scene(const SceneCreateInfo& info) :
 	}
 	if (useBVH)
 	{
-		bvh = std::make_unique<raytracing::BVH>();
+		bvh = std::make_shared<raytracing::BVH>();
 	}
 	switch (info.framebufferCreateInt)
 	{
@@ -146,7 +146,7 @@ Scene::Scene(const Scene& other) :
 {
 	if (useBVH)
 	{
-		bvh = std::make_unique<raytracing::BVH>();
+		bvh = std::make_shared<raytracing::BVH>();
 	}
 	hookMouseEvents();
 }
@@ -173,11 +173,11 @@ Scene& Scene::operator=(const Scene& other)
 	fsq = other.fsq;
 	postProcessingPipeline = other.postProcessingPipeline;
 	unhookMouseEvents();
-	mousePressIDs = other.mousePressIDs;
-	mouseMoveID = other.mouseMoveID;
+	hookMouseEvents();
 	currentHoveredEntityID = other.currentHoveredEntityID;
 	viewPointer = other.viewPointer;
 	useBVH = other.useBVH;
+	bvh = other.bvh;
 	updateNonce = other.updateNonce;
 	onAttachedFunction = other.onAttachedFunction;
 	onDetachedFunction = other.onDetachedFunction;
