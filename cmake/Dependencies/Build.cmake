@@ -27,6 +27,10 @@ endif()
 
 add_library(tinyfiledialogs STATIC ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.c)
 target_include_directories(tinyfiledialogs PRIVATE ${tinyfiledialogs_SOURCE_DIR})
+set_target_properties(tinyfiledialogs PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(tinyfiledialogs PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(tinyfiledialogs PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(tinyfiledialogs PROPERTIES MINSIZEREL_POSTFIX "")
 
 message(STATUS "FetchContent: rtmidi")
 set(RTMIDI_BUILD_STATIC_LIBS ON)

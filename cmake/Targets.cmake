@@ -95,7 +95,9 @@ endif()
 if(WIN32)
 	if(ZG_TYPE STREQUAL STATIC)
 	# ucrt
-		set(ZG_LIBRARIES ${ZG_LIBRARIES} ws2_32 secur32 crypt32 bcrypt mfplat mf mfuuid strmiids advapi32 iphlpapi legacy_stdio_definitions winmm)
+		set(ZG_LIBRARIES ${ZG_LIBRARIES}
+			ws2_32 secur32 crypt32 bcrypt mfplat mf mfuuid strmiids
+			advapi32 iphlpapi legacy_stdio_definitions winmm Comdlg32 Ole32)
 		# if (RELEASE_OR_DEBUG STREQUAL Release)
 		# 	set(ZG_LIBRARIES ${ZG_LIBRARIES} msvcrt)
 		# else()
