@@ -11,32 +11,15 @@ Uses CMake for it's build system and comes with some included tests
 ![Build Status](https://github.com/Zeucor/Zeungine/actions/workflows/every-tag.yml/badge.svg)
 
 ***zg*** uses many libraries to help piece together the engine
-
- - [OpenGL](https://www.opengl.org/)
- - [Vulkan](https://www.vulkan.org/)
- - [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools)
- - [glslang](https://github.com/KhronosGroup/glslang)
- - [Boost Libraries](https://www.boost.org/)
- - [OpenSSL](https://www.openssl.org/)
- - [FFmpeg](https://www.ffmpeg.org/)
- - [zlib](https://github.com/madler/zlib)
- - [bzip2](https://github.com/libarchive/bzip2)
- - [lzma](https://tukaani.org/xz/)
- - [zstd](https://github.com/facebook/zstd)
- - [exprtk](https://github.com/ArashPartow/exprtk)
- - [brotli](https://github.com/google/brotli)
- - [freetype](https://freetype.org/)
- - [glm](https://github.com/icaven/glm)
- - [harfbuzz](https://harfbuzz.github.io/)
- - [png](http://www.libpng.org/pub/png/libpng.html)
- - [JoltPhysics](https://github.com/jrouwe/JoltPhysics)
- - [assimp](https://assimp.org/)
- - [V-HACD](https://github.com/kmammou/v-hacd)
- - [miniaudio](https://github.com/mackron/miniaudio.git)
- - [ttf2mesh](https://github.com/fetisov/ttf2mesh.git)
- - [lunasvg](https://github.com/ZeunO8/lunasvg.git)
- - [plutovg](https://github.com/ZeunO8/plutovg.git)
- - [rtmidi](https://github.com/thestk/rtmidi.git)
+|  |  |  |  |
+|---|---|---|---|
+| [OpenGL](https://www.opengl.org/) | [Vulkan](https://www.vulkan.org/) | [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) | [glslang](https://github.com/KhronosGroup/glslang) |
+| [Boost Libraries](https://www.boost.org/) | [OpenSSL](https://www.openssl.org/) | [FFmpeg](https://www.ffmpeg.org/) | [zlib](https://github.com/madler/zlib) |
+| [bzip2](https://github.com/libarchive/bzip2) | [lzma](https://tukaani.org/xz/) | [zstd](https://github.com/facebook/zstd) | [exprtk](https://github.com/ArashPartow/exprtk) |
+| [brotli](https://github.com/google/brotli) | [freetype](https://freetype.org/) | [glm](https://github.com/icaven/glm) | [harfbuzz](https://harfbuzz.github.io/) |
+| [png](http://www.libpng.org/pub/png/libpng.html) | [JoltPhysics](https://github.com/jrouwe/JoltPhysics) | [assimp](https://assimp.org/) | [V-HACD](https://github.com/kmammou/v-hacd) |
+| [miniaudio](https://github.com/mackron/miniaudio.git) | [ttf2mesh](https://github.com/fetisov/ttf2mesh.git) | [lunasvg](https://github.com/ZeunO8/lunasvg.git) | [plutovg](https://github.com/ZeunO8/plutovg.git) |
+| [rtmidi](https://github.com/thestk/rtmidi.git) | [tinyfiledialogs](https://github.com/native-toolkit/libtinyfiledialogs.git) |  |  |
 
 ### Features
 
