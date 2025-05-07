@@ -521,10 +521,8 @@ std::pair<Entity&, Mesh&> Scene::findEntityAndMeshByPrimID(const size_t& primID)
 	{
 		throw std::runtime_error("Ohmy now, we always set tri IDs, so this should logically never happen");
 	}
-	auto iter = entities.find_id(entityMeshID.first);
-	if (iter == entities.end())
-		throw std::runtime_error("We should always find an entity due to the add/update/remove structure");
-	return {*iter, Registry::getMesh(entityMeshID.second)};
+	auto& entity = Registry::getEntity(entityMeshID.first);
+	return {entity, Registry::getMesh(entityMeshID.second)};
 }
 void Scene::hookMouseEvents()
 {
