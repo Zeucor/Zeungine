@@ -250,12 +250,19 @@ void TTF2MeshFont::stringToScene(const std::string_view string, glm::vec3 positi
 					else 
 					{
 						auto& glyph = Registry::getEntity(glyphID);
-						if (glyph.VALUE != codepoint)
+						if (glyph.VALUE.has_value())
 						{
-							glyph.position = characterPosition;
-							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
-							// glyph.keyedTextures[0].second = characterPointer->texturePointer;
-							glyph.VALUE = codepoint;
+							try
+							{
+								auto glyphValue = glyph.template getValue<uint64_t>();
+								if (glyphValue != codepoint)
+								{
+									glyph.position = characterPosition;
+									glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
+									glyph.VALUE = codepoint;
+								}
+							}
+							catch (...) {}
 						}
 						if (glyph.position != characterPosition)
 						{
@@ -400,12 +407,19 @@ void TTF2MeshFont::stringToEntity(const std::string_view string, glm::vec3 posit
 					else 
 					{
 						auto& glyph = Registry::getEntity(glyphID);
-						if (glyph.VALUE != codepoint)
+						if (glyph.VALUE.has_value())
 						{
-							glyph.position = characterPosition;
-							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
-							// glyph.keyedTextures[0].second = characterPointer->texturePointer;
-							glyph.VALUE = codepoint;
+							try
+							{
+								auto glyphValue = glyph.template getValue<uint64_t>();
+								if (glyphValue != codepoint)
+								{
+									glyph.position = characterPosition;
+									glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
+									glyph.VALUE = codepoint;
+								}
+							}
+							catch (...) {}
 						}
 						if (glyph.position != characterPosition)
 						{

@@ -41,7 +41,17 @@ namespace zg
 		size_t ID = 0;
 		size_t* INDEX = 0;
 		std::vector<size_t*> INDEX_STACK;
-		size_t VALUE = 0;
+		std::any VALUE;
+		template<typename T>
+		T& getValue()
+		{
+			return std::any_cast<T&>(VALUE);
+		}
+		template <typename T>
+		const T& getValue() const
+		{
+			return std::any_cast<const T&>(VALUE);
+		}
 		std::string typeName;
 		std::string name;
 		// transform

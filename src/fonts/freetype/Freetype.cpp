@@ -347,14 +347,22 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 					else 
 					{
 						auto& glyph = Registry::getEntity(glyphID);
-						if (glyph.VALUE != codepoint)
+						if (glyph.VALUE.has_value())
 						{
-							glyph.position = characterPosition;
-							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
-							assert(glyph.meshInfos.size());
-							glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
-							glyph.VALUE = codepoint;
-							glyph.refreshMeshes();
+							try
+							{
+								auto glyphValue = glyph.template getValue<uint64_t>();
+								if (glyphValue != codepoint)
+								{
+									glyph.position = characterPosition;
+									glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
+									assert(glyph.meshInfos.size());
+									glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
+									glyph.VALUE = codepoint;
+									glyph.refreshMeshes();
+								}
+							}
+							catch (...) {}
 						}
 						if (glyph.position != characterPosition)
 						{
@@ -490,14 +498,22 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 					else 
 					{
 						auto& glyph = Registry::getEntity(glyphID);
-						if (glyph.VALUE != codepoint)
+						if (glyph.VALUE.has_value())
 						{
-							glyph.position = characterPosition;
-							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
-							assert(glyph.meshInfos.size());
-							glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
-							glyph.VALUE = codepoint;
-							glyph.refreshMeshes();
+							try
+							{
+								auto glyphValue = glyph.template getValue<uint64_t>();
+								if (glyphValue != codepoint)
+								{
+									glyph.position = characterPosition;
+									glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
+									assert(glyph.meshInfos.size());
+									glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
+									glyph.VALUE = codepoint;
+									glyph.refreshMeshes();
+								}
+							}
+							catch (...) {}
 						}
 						if (glyph.position != characterPosition)
 						{
