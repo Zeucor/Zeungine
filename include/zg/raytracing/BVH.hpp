@@ -52,6 +52,7 @@ namespace zg::raytracing
 		void buildBVH();
 		void precomputeTriangles();
 		glm::vec3 unProject(glm::vec3 win, const glm::mat4 &inverseProjectionView, glm::vec4 viewport);
+		glm::vec3 unProjectToView(glm::vec3 win, const glm::mat4& inverseProjection, glm::vec4 viewport);
 		Ray mouseCoordToRay(uint32_t windowHeight,
 							glm::vec2 screenCoord,
 							glm::vec4 viewport,
