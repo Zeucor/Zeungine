@@ -38,7 +38,8 @@ Entity::Entity(const EntityCreateInfo& info) :
 	preUpdateFunction(info.preUpdateFunction), preRenderFunction(info.preRenderFunction),
 	postRenderFunction(info.postRenderFunction),
 	onAddedFunction(info.onAddedFunction),
-	onRemovedFunction(info.onRemovedFunction)
+	onRemovedFunction(info.onRemovedFunction),
+	addToBVH(info.addToBVH)
 {
 	for (auto& meshInfo : info.meshInfos)
 		meshIDs.push_back(Registry::addMesh(meshInfo, *this));
@@ -57,6 +58,15 @@ Entity::Entity(const Entity& other) :
 	position(other.position),
 	rotation(other.rotation),
 	scale(other.scale),
+	model(other.model),
+	projectionPointer(other.projectionPointer),
+	viewPointer(other.viewPointer),
+	affectedByShadows(other.affectedByShadows),
+	addToBVH(other.addToBVH),
+	buttons(other.buttons),
+	mousePressHandlers(other.mousePressHandlers),
+	mouseMoveHandlers(other.mouseMoveHandlers),
+	mouseHoverHandlers(other.mouseHoverHandlers),
 	meshIDs(other.meshIDs),
 	meshInfos(other.meshInfos),
 	children(other.children),
@@ -96,6 +106,15 @@ Entity& Entity::operator=(const Entity& other)
 	position = other.position;
 	rotation = other.rotation;
 	scale = other.scale;
+	model = other.model;
+	projectionPointer = other.projectionPointer;
+	viewPointer = other.viewPointer;
+	affectedByShadows = other.affectedByShadows;
+	addToBVH = other.addToBVH;
+	buttons = other.buttons;
+	mousePressHandlers = other.mousePressHandlers;
+	mouseMoveHandlers = other.mouseMoveHandlers;
+	mouseHoverHandlers = other.mouseHoverHandlers;
 	{
 		std::lock_guard meshIDLock(Registry::meshIDMutex);
 		for (auto& meshID : meshIDs)

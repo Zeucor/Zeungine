@@ -118,6 +118,7 @@ namespace zg
 		DataStorage<Entity>::SetDataFunctionMap setDataFunctionMap;
 		std::vector<MeshCreateInfo> meshInfos;
 		std::vector<EntityCreateInfo> childrenInfos;
+		bool addToBVH = true;
 		size_t ID;
 		size_t* INDEX;
 		std::vector<size_t*> INDEX_STACK;
