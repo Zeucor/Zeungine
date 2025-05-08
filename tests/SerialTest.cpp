@@ -15,6 +15,7 @@
 #define TCP_BITSTREAM true
 void tcp_server();
 std::vector<bool> serverBits(TCP_BITSLENGTH, false);
+std::any _float1(1.0f);
 std::mutex tcpServerStartMutex;
 bool tcpServerStarted = false;
 std::condition_variable tcpServerStartCV;
@@ -54,6 +55,9 @@ void tcp_server()
 	auto& clientSerial = *std::get<1>(clientTuple);
 	// write a random hash to the client
 	clientSerial.writeBits(serverBits, 0, serverBits.size());
+
+	clientSerial << _float1;
+
 	clientSerial.synchronize();
 
 	zg::Logger::print(zg::Logger::Blank, "TCP_SERVER: synchronized bits");
@@ -69,7 +73,11 @@ void tcp_client()
 	Serial serial(tcp_client, TCP_BITSTREAM);
 	std::vector<bool> clientBits(TCP_BITSLENGTH, false);
 	serial.readBits(clientBits, 0, clientBits.size());
+
+	std::any clientFloat1;
+	serial >> clientFloat1;
 	assert(clientBits == serverBits);
+	assert(std::any_cast<float>(clientFloat1) == std::any_cast<float>(_float1));
 	zg::Logger::print(zg::Logger::Blank, "TCP_CLIENT: Received Bits");
 }
 void udp_server()
@@ -90,6 +98,7 @@ void udp_server()
 	serial >> x >> y >> z >> t >> u >> v >> _7;
 	zg::Logger::print(zg::Logger::Blank, "UDP_SERVER: RECEIVED BITS: ", x ? "1" : "0", y ? "1" : "0", z ? "1" : "0",
 										t ? "1" : "0", u ? "1" : "0", v ? "1" : "0", _7 ? "1" : "0");
+	
 }
 void udp_client()
 {
@@ -99,7 +108,7 @@ void udp_client()
 	}
 	zg::net::udp_client udpClient("127.0.0.1", UDP_PORT);
 	Serial serial(udpClient, UDP_BITSTREAM);
-	serial << true << true << true << true << true << true << true;
+	serial << true << true << true << true << true << false << true;
 	serial.synchronize();
 	zg::Logger::print(zg::Logger::Blank, "UDP_CLIENT: SYNCHRONIZED BITS");
 }

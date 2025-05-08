@@ -4,7 +4,11 @@
 #include <istream>
 #include <ostream>
 #include <unordered_map>
-
+#include <typeindex>
+#include <string>
+#include <any>
+#include <map>
+#include <functional>
 struct Serial;
 
 template <typename T>
@@ -12,6 +16,21 @@ Serial& serialize(Serial& serial, const T& value);
 
 template <typename T>
 Serial& deserialize(Serial& serial, T& value);
+
+struct any_registry
+{
+	using any_serialize = std::function<Serial&(Serial&, const std::any&)>;
+	using any_deserialize = std::function<Serial&(Serial&, std::any&)>;
+	static void register_type(
+		std::type_index type,
+		const std::string& stable_name,
+		const any_serialize& ser_func,
+		const any_deserialize& deser_func);
+	static std::map<std::type_index, any_serialize> serializers;
+	static std::map<std::type_index, any_deserialize> deserializers;
+	static std::map<std::type_index, std::string> type_to_stable_name;
+	static std::map<std::string, std::type_index> stable_name_to_type;
+};
 
 /**
  * @brief Provides custom << or >> operators wrapping std::i/o/streams        .             
