@@ -17,28 +17,17 @@ inline static float ZG_PI = acos(-1);
 using uvec = glm::vec<4, uint8_t>;
 namespace std
 {
-	template <>
-	struct hash<glm::vec2>
+	template <size_t N, typename T>
+	struct hash<glm::vec<N, T>>
 	{
-		size_t operator()(const glm::vec2 &vec) const
+		size_t operator()(const glm::vec<N, T> &vec) const
 		{
-			return std::hash<float>{}(vec.x) ^ std::hash<float>{}(vec.y);
-		}
-	};
-	template <>
-	struct hash<glm::vec3>
-	{
-		size_t operator()(const glm::vec3 &vec) const
-		{
-			return std::hash<float>{}(vec.x) ^ std::hash<float>{}(vec.y) ^ std::hash<float>{}(vec.z);
-		}
-	};
-	template <>
-	struct hash<glm::vec4>
-	{
-		size_t operator()(const glm::vec4 &vec) const
-		{
-			return std::hash<float>{}(vec.x) ^ std::hash<float>{}(vec.y) ^ std::hash<float>{}(vec.z) ^ std::hash<float>{}(vec.w);
+			auto hash = std::hash<T>{}(vec[0]) << 1;
+			for (auto i = 1; i < N; ++i)
+			{
+				hash ^= std::hash<T>{}(vec[i]) << 3;
+			}
+			return hash;
 		}
 	};
 }
