@@ -49,10 +49,10 @@ udp_server::IOStreamPointer udp_server::receiveOne(bool nonBlock, unsigned int n
 	}
 	//
 	//
-	size_t recv_len = recvfrom(server_fd, buffer, sizeof(buffer), 0, (struct sockaddr*)&client_addr, &client_len);
+	long long recv_len = recvfrom(server_fd, buffer, sizeof(buffer), 0, (struct sockaddr*)&client_addr, &client_len);
 	if (recv_len == -1)
 	{
-		throw std::runtime_error("recvfrom failed");
+		perror("recvfrom failed");
 	}
 	auto key = std::make_pair(client_addr.sin_addr.s_addr, client_addr.sin_port);
 	auto& clientStream = clientStreams[key];
@@ -60,6 +60,7 @@ udp_server::IOStreamPointer udp_server::receiveOne(bool nonBlock, unsigned int n
 	{
 		clientStream = std::make_shared<zg::net::streams::udp_iostream>(zg::net::streams::udp_streambuf::SocketPair(server_fd, client_addr));
 	}
-	clientStream->write(buffer, recv_len);
+	auto& clientStreamRef = *clientStream;
+	clientStreamRef.buf.add_received_data(buffer, recv_len);
 	return clientStream;
 }

@@ -26,7 +26,10 @@ namespace zg::net::streams
 
 		~udp_streambuf();
 
+		void add_received_data(const char* data, size_t size);
+
 	protected:
+	
 		int underflow() override;
 
 		int overflow(int c = traits_type::eof()) override;
