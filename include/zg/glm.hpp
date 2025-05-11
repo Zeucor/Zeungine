@@ -30,4 +30,42 @@ namespace std
 			return hash;
 		}
 	};
+	template <size_t R, size_t C, typename T>
+	struct hash<glm::mat<R, C, T>>
+	{
+		size_t operator()(const glm::mat<R, C, T>& mat) const
+		{
+			unsigned char shift = 0;
+			long long x = 0;
+			long long y = 0;
+			auto hash = std::hash<T>{}(mat[x][y]) << ++shift;
+			for (;x<C;++x)
+			{
+				for (y=0;y<R;++y)
+				{
+					hash = std::hash<T>{}(mat[x][y]) << ++shift;
+					if (shift > 47)
+					{
+						shift = 3;
+					}
+				}
+			}
+			return hash;
+		}
+	};
+	template <typename T>
+	struct hash<glm::qua<T>>
+	{
+		size_t operator()(const glm::qua<T>& qua)
+		{
+			unsigned char i = 0;
+			unsigned char shift = 0;
+			auto hash = std::hash<T>{}(qua[i]) << ++shift;
+			for (;i<4;++i)
+			{
+				hash ^= std::hash<T>{}(qua[i]) << ++shift;
+			}
+			return hash;
+		}
+	};
 }

@@ -3,6 +3,7 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
+#include "pureconstcharstreamcode.hpp"
 #include "ComponentHolder.hpp"
 #include "DataStorage.hpp"
 #include "Entity.hpp"
@@ -19,6 +20,7 @@
 #include "vp/View.hpp"
 #include "FullscreenQuad.hpp"
 #include "PostProcessingPipeline.hpp"
+#include "InstancedDraw.hpp"
 namespace zg
 {
 	struct SceneCreateInfo;
@@ -26,6 +28,8 @@ namespace zg
 			: DataStorage<Scene>,
 				ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>
 	{
+		SYS_CLOCK::time_point sceneFirstEncountered;
+		SYS_CLOCK::time_point sceneIsAt;
 		size_t ID = 0;
 		size_t* INDEX = 0;
 		std::vector<size_t*> INDEX_STACK;
@@ -50,12 +54,15 @@ namespace zg
 		size_t currentHoveredEntityID = 0;
 		std::shared_ptr<vp::View> viewPointer;
 		bool useBVH = true;
-		size_t updateNonce = 0;
+		long double updateNonce = 0;
 		std::function<void(Scene&)> onAttachedFunction;
 		std::function<void(Scene&)> onDetachedFunction;
 		std::function<void(Scene&)> preUpdateFunction;
 		std::function<void(Scene&)> prePreRenderFunction;
 		std::function<void(Scene&)> postPostRenderFunction;
+		InstancedDraw instancedDraw;
+		size_t oldOpaqueHash = 0;
+		size_t oldTransparentHash = 0;
 		// when adding new members remember to add to operator=
 
 	public:
@@ -105,8 +112,8 @@ namespace zg
 		zg::Entity& getEntityByID(const size_t& id);
 		size_t getTransparentDrawCount();
 		size_t getOpaqueDrawCount();
-		std::vector<std::pair<Entity*, Mesh*>> getTransparentDrawList();
-		std::vector<std::pair<Entity*, Mesh*>> getOpaqueDrawList();
+		TransparentDrawList getTransparentDrawList();
+		OpaqueDrawList getOpaqueDrawList();
 	};
 	struct SceneCreateInfo
 	{

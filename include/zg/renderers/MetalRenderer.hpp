@@ -27,6 +27,7 @@ namespace zg
 		void setBlock(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name, const void *pointer, size_t size) override;
 		void deleteBuffer(uint32_t id) override;
 		void bindShader(shaders::Shader& shader, vaos::VAO& vao) override;
+		void bindShader(shaders::Shader& shader) override;
 		void unbindShader(shaders::Shader &shader) override;
 		void addSSBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) override;
 		void addUBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) override;
@@ -54,6 +55,8 @@ namespace zg
 		void updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t> &indices) override;
 		void updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) override;
 		void drawVAO(const vaos::VAO &vao, shaders::Shader* shader) override;
+		void drawVAOInstanced(const vaos::VAO &vao, shaders::Shader* shader, size_t instanceCount = 1) override;
+		void drawMultiInstanced(shaders::Shader* shader, const vaos::VAO& vao, const std::vector<DrawIndirectCommand>& commands) override;
 		void copyVAO(vaos::VAO &dest, const vaos::VAO &src) override;
 		void generateVAO(vaos::VAO &vao) override;
 		void destroyVAO(vaos::VAO &vao, bool destroyNow) override;

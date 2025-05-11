@@ -4,9 +4,10 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <cstdint>
 namespace zg::audio
 {
-	enum class MIDIEventType : uint8_t
+	enum class MIDIEventType
 	{
 		NoteOff = 0x80, // 128
 		NoteOn = 0x90, // 144

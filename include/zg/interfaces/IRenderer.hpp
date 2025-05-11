@@ -61,6 +61,13 @@ namespace zg
 		std::unordered_map<std::size_t, std::pair<uint32_t, std::shared_ptr<shaders::Shader>>> shadersByHash;
 		uint32_t shaderCount = 0;
 	};
+	struct DrawIndirectCommand
+	{
+		uint32_t vertexCount = 0;
+		uint32_t instanceCount = 0;
+		uint32_t firstVertex = 0;
+		uint32_t firstInstance = 0;
+	};
 	struct Entity;
 	struct IRenderer
 	{
@@ -90,6 +97,7 @@ namespace zg
 		virtual void setBlock(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name, const void *pointer, size_t size) = 0;
 		virtual void deleteBuffer(uint32_t id) = 0;
 		virtual void bindShader(shaders::Shader& shader, vaos::VAO& vao) = 0;
+		virtual void bindShader(shaders::Shader& shader) = 0;
 		virtual void unbindShader(shaders::Shader &shader) = 0;
 		virtual void addSSBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) = 0;
 		virtual void addUBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount = 1, bool isArray = false) = 0;
@@ -116,6 +124,12 @@ namespace zg
 		virtual void updateIndicesVAO(const vaos::VAO &vao, const std::vector<uint32_t> &indices) = 0;
 		virtual void updateElementsVAO(const vaos::VAO &vao, const std::string_view constant, uint8_t *elementsAsChar) = 0;
 		virtual void drawVAO(const vaos::VAO &vao, shaders::Shader* shader) = 0;
+		virtual void drawVAOInstanced(const vaos::VAO &vao, shaders::Shader* shader, size_t instanceCount = 1) = 0;
+		/**
+		 * @brief draws a list of commands using one call. in zg,
+		 * 	VAOs aren't used here, we generate vertex data using SSBOs and vertex shaders
+		 */
+		virtual void drawMultiInstanced(shaders::Shader* shader, const vaos::VAO& vao, const std::vector<DrawIndirectCommand>& commands) = 0;
 		virtual void generateVAO(vaos::VAO &vao) = 0;
 		virtual void copyVAO(vaos::VAO &dest, const vaos::VAO &src) = 0;
 		virtual void destroyVAO(vaos::VAO &vao, bool destroyNow) = 0;

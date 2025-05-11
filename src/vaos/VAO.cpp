@@ -56,7 +56,11 @@ template void VAO::updateElements<glm::vec3>(const std::string_view, const std::
 template void VAO::updateElements<glm::vec4>(const std::string_view, const std::vector<glm::vec4>&) const;
 void VAO::drawVAO(shaders::Shader* shader) const
 {
-	vaoIRenderer->drawVAO(*this, shader);
+	vaoIRenderer->drawVAOInstanced(*this, shader);
+}
+void VAO::drawVAOInstanced(size_t instanceCount, shaders::Shader* shader)
+{
+	vaoIRenderer->drawVAOInstanced(*this, shader, instanceCount);
 }
 void* VAO::getShaderUHash(IRenderer* iRenderer)
 {

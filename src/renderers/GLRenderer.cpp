@@ -721,7 +721,7 @@ void GLRenderer::generateVAO(vaos::VAO &vao)
 	size_t offset = 0;
 	for (auto &constant : vao.constants)
 	{
-		if (!vaos::VAOFactory::isVAOConstant(constant))
+		if (!vaos::VAOFactory::isVAOConstant(vao.constants, constant))
 			continue;
 		glContext->EnableVertexAttribArray(attribIndex);
 		GLcheck(*this, "glEnableVertexAttribArray");

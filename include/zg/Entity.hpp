@@ -54,6 +54,7 @@ namespace zg
 		}
 		std::string typeName;
 		std::string name;
+		size_t mesh_hash = 0;
 		// transform
 		glm::vec3 position;
 		glm::quat rotation;
@@ -74,7 +75,7 @@ namespace zg
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseMoveHandler>> mouseMoveHandlers;
 		using MouseHoverHandler = std::function<void(bool)>;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseHoverHandler>> mouseHoverHandlers;
-		size_t updateNonce;
+		long double updateNonce;
 		// settable functions
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
@@ -93,6 +94,11 @@ namespace zg
 		~Entity();
 		Entity& operator=(const Entity& other);
 		void refreshMeshes();
+		
+	private:
+		void reMeshhash();
+
+	public:
 		void update();
 		void render();
 		void postRender();

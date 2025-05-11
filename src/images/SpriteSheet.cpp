@@ -5,7 +5,7 @@
 using namespace zg;
 using namespace zg::images;
 SpriteSheet::SpriteSheet(IRenderer* iRenderer, const interfaces::IFile& file, uvec bgColor,
-                        const std::vector<std::pair<std::string, glm::vec4>>& spriteKeyCoords)
+                        const std::vector<std::pair<std::string, uv_data_t>>& spriteKeyCoords)
 {
     loadSheet(iRenderer, (interfaces::IFile&)file, bgColor);
     parseSheet(spriteKeyCoords);
@@ -41,7 +41,7 @@ void SpriteSheet::loadSheet(IRenderer* iRenderer, interfaces::IFile& file, uvec 
         textures::Texture::AddressMode::ClampToEdge
     );
 }
-void SpriteSheet::parseSheet(const std::vector<std::pair<std::string, glm::vec4>>& spriteKeyCoords)
+void SpriteSheet::parseSheet(const std::vector<std::pair<std::string, uv_data_t>>& spriteKeyCoords)
 {
     auto& spriteTextureRef = *spriteTexture;
     auto& sheetWidth = spriteTextureRef.size.x;
@@ -49,26 +49,28 @@ void SpriteSheet::parseSheet(const std::vector<std::pair<std::string, glm::vec4>
     for (auto& pair : spriteKeyCoords)
     {
         auto& key = pair.first;
-        auto& pixelCoords = pair.second;
+        auto& tuple = pair.second;
+        auto& pixelCoords = std::get<KUV_UV_INDEX>(tuple);
+        auto& sprite_data = std::get<KUV_DATA_INDEX>(tuple);
         auto tl = glm::vec2(pixelCoords.x, pixelCoords.y);
         auto wh = glm::vec2(pixelCoords.z, pixelCoords.w);
-        keyedUVs[key] = glm::vec4(
+        keyedUVDatas[key] = {glm::vec4(
             // bottom left
             tl.x / sheetWidth,
             (sheetHeight - (tl.y + wh.y)) / sheetHeight,
             // top right
             (tl.x + wh.x) / sheetWidth,
             (sheetHeight - tl.y) / sheetHeight
-        );
+        ), sprite_data};
     }
 }
 // Given a key, extract the UV and return 4 uvs in order BL-BR-TR-TL
 std::array<glm::vec2, 4> SpriteSheet::getUVForKey(const std::string& key)
 {
-    auto iter = keyedUVs.find(key);
-    if (iter == keyedUVs.end())
+    auto iter = keyedUVDatas.find(key);
+    if (iter == keyedUVDatas.end())
         return std::array<glm::vec2, 4>();
-    auto& vec = iter->second;
+    auto& vec = std::get<KUV_UV_INDEX>(iter->second);
     auto bl = glm::vec2(vec.x, vec.y);
     auto tr = glm::vec2(vec.z, vec.w);
     return {
@@ -77,6 +79,13 @@ std::array<glm::vec2, 4> SpriteSheet::getUVForKey(const std::string& key)
         tr,
         glm::vec2(bl.x, tr.y)
     };
+}
+std::any SpriteSheet::getDataForKey(const std::string& key)
+{
+    auto iter = keyedUVDatas.find(key);
+    if (iter == keyedUVDatas.end())
+        return std::array<glm::vec2, 4>();
+    return std::get<KUV_DATA_INDEX>(iter->second);
 }
 std::shared_ptr<textures::Texture> SpriteSheet::getTexture() const
 {

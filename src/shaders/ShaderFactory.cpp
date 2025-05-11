@@ -16,8 +16,15 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
-                    ") in vec4 inColor;";
+                  auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                    return constant == "Shape";
+                  });
+                  if (found == constants.end())
+                  {
+                    return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
+                      ") in vec4 inColor;";
+                  }
+                  return "";
                 }
               },
               {
@@ -42,8 +49,15 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
-                    ") in vec3 inPosition;";
+                  auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                    return constant == "Shape";
+                  });
+                  if (found == constants.end())
+                  {
+                    return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
+                      ") in vec3 inPosition;";
+                  }
+                  return "";
                 }
               },
               {
@@ -64,13 +78,20 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           },
           {
             "UV2", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                  auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                    return constant == "Shape";
+                  });
+                  if (found == constants.end())
                   {
                     return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
                       ") in vec2 inUV;";
                   }
-                },
+                  return "";
+                }
+              },
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
@@ -82,13 +103,20 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
           },
           {
             "UV3", {
+                {
+                  ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
-                    ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                    auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                      return constant == "Shape";
+                    });
+                    if (found == constants.end())
                     {
                       return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
                         ") in vec3 inUV;";
                     }
-                  },
+                    return "";
+                  }
+                },
                 {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
@@ -99,16 +127,99 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
             }
           },
           {
+            "Shape", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants) -> std::string
+                {
+                  std::string string;
+                  string += R"(struct Entity {
+  uint shape_id;
+  uint material_index;
+  uint vertex_offset;
+};
+const int SHAPE_TYPE_BOX = 1;
+const int SHAPE_TYPE_PLANE = 2;
+const int SHAPE_TYPE_MESH = 3;
+struct Material {
+  vec4 albedo;
+  int type; // 0 = albedo, 1 = uv2, 2 = uv3
+};
+Material get_material(in Entity entity);
+Entity get_entity(uint entity_id);
+vec2 get_uv2(uint vertex_id, in Entity entity, in Material material);
+vec3 get_uv3(uint vertex_id, in Entity entity, in Material material);
+vec3 get_box_vertex(uint vertex_id);
+vec3 get_box_normal(uint vertex_id);
+vec4 get_box_color(uint vertex_id, in Entity entity, in Material material);
+vec3 get_box_uv3(uint vertex_id, in Entity entity, in Material material);
+vec3 get_plane_vertex(uint vertex_id);
+vec3 get_plane_normal(uint vertex_id);
+vec4 get_plane_color(uint vertex_id, in Entity entity, in Material material);
+vec2 get_plane_uv2(uint vertex_id, in Entity entity, in Material material);
+vec3 get_mesh_vertex(uint vertex_id, in Entity entity, in Material material);
+vec3 get_mesh_normal(uint vertex_id, in Entity entity, in Material material);
+vec4 get_mesh_color(uint vertex_id, in Entity entity, in Material material);
+vec2 get_mesh_uv2(uint vertex_id, in Entity entity, in Material material);
+uint get_entity_id();
+vec3 get_entity_vertex(uint vertex_id, in Entity entity, in Material material);
+vec3 get_entity_normal(uint vertex_id, in Entity entity, in Material material);
+vec4 get_entity_color(uint vertex_id, in Entity entity, in Material material);
+vec2 get_entity_uv2(uint vertex_id, in Entity entity, in Material material);
+vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material);
+)";
+                  auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Vertex, "Entities", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer EntitiesBuffer {\n" +
+                      "    Entity data[];\n" +
+                      "} Entities;\n";
+                  bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Vertex, "Materials", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer MaterialsBuffer {\n" +
+                      "    Material data[];\n" +
+                      "} Materials;\n";
+                  bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Vertex, "MeshPositions", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer MeshPositionsBuffer {\n" +
+                      "    vec3 data[];\n" +
+                      "} MeshPositions;\n";
+                  bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Vertex, "MeshNormals", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer MeshNormalsBuffer {\n" +
+                      "    vec3 data[];\n" +
+                      "} MeshNormals;\n";
+                  bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Vertex, "EntityUV2s", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer EntityUV2sBuffer {\n" +
+                      "    vec2 data[];\n" +
+                      "} EntityUV2s;\n";
+                  bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Vertex, "EntityUV3s", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer EntityUV3sBuffer {\n" +
+                      "    vec3 data[];\n" +
+                      "} EntityUV3s;\n";
+                    return string;
+                }
+              }
+            }
+          },
+          {
             "View",
             {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO(ShaderType::Vertex, "View", bindingIndex, sizeof(glm::mat4));
-                  return "layout(binding = " + std::to_string(bindingIndex) + ") uniform View {\n" +
-                    "  mat4 matrix;\n" +
-                    "} view;";
+                  shader.addSSBO(ShaderType::Vertex, "InstanceViews", bindingIndex);
+                  return "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer InstanceViewsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InstanceViews;\n";
                 }
               }
             }
@@ -120,10 +231,11 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO(ShaderType::Vertex, "Projection", bindingIndex, sizeof(glm::mat4));
-                  return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Projection {\n" +
-                    "  mat4 matrix;\n" +
-                    "} projection;";
+                  shader.addSSBO(ShaderType::Vertex, "InstanceProjections", bindingIndex);
+                  return "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer InstanceProjectionsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InstanceProjections;\n";
                 }
               }
             }
@@ -135,10 +247,10 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
-                  shader.addUBO(ShaderType::Vertex, "Model", bindingIndex, sizeof(glm::mat4));
-                  return "layout(binding = " + std::to_string(bindingIndex) + ") uniform Model {\n" +
-                    "  mat4 matrix;\n" +
-                    "} model;";
+                  shader.addSSBO(ShaderType::Vertex, "InstanceModels", bindingIndex);
+                  return "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer InstanceModelsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InstanceModels;\n";
                 }
               }
             }
@@ -148,8 +260,15 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
-                    ") in vec3 inNormal;";
+                  auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                    return constant == "Shape";
+                  });
+                  if (found == constants.end())
+                  {
+                    return "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
+                      ") in vec3 inNormal;";
+                  }
+                  return "";
                 }
               },
               {
@@ -218,6 +337,18 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
       {
         "preInMain", {
           {
+            "Shape", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants) -> std::string
+                {
+                  return R"(uint entity_id = get_entity_id();
+  Entity entity = get_entity(entity_id);
+  Material material = get_material(entity);)";
+                }
+              }
+            }
+          },
+          {
             "Color", {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
@@ -229,7 +360,14 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   }
                   else
                   {
-                    return "  outColor = inColor;";
+                    auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                      return constant == "Shape";
+                    });
+                    if (found == constants.end())
+                    {
+                      return "  outColor = inColor;";
+                    }
+                    return "  outColor = get_entity_color(gl_VertexIndex, entity, material);";
                   }
                 }
               }
@@ -242,6 +380,13 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   bool hasSkyBox = std::find(constants.begin(), constants.end(), "SkyBox") != constants.end();
                   std::string string;
+                  auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                    return constant == "Shape";
+                  });
+                  if (found != constants.end())
+                  {
+                    string += "  vec3 inPosition = get_entity_vertex(gl_VertexIndex, entity, material);\n";
+                  }
                   if (hasSkyBox)
                   {
                     string += "  vec4 pos = ";
@@ -256,15 +401,15 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   }
                   if (std::find(constants.begin(), constants.end(), "Projection") != constants.end())
                   {
-                    string += "projection.matrix * ";
+                    string += "InstanceProjections.data[gl_InstanceIndex] * ";
                   }
                   if (std::find(constants.begin(), constants.end(), "View") != constants.end())
                   {
-                    string += "view.matrix * ";
+                    string += "InstanceViews.data[gl_InstanceIndex] * ";
                   }
                   if (std::find(constants.begin(), constants.end(), "Model") != constants.end())
                   {
-                    string += "model.matrix * ";
+                    string += "InstanceModels.data[gl_InstanceIndex] * ";
                   }
                   string += "vec4(inPosition, 1);\n";
                   if (hasSkyBox)
@@ -290,14 +435,14 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   string += "directionalLightSpaceMatrices.matrix[i] * ";
                   if (std::find(constants.begin(), constants.end(), "Model") != constants.end())
                   {
-                    string += "model.matrix * ";
+                    string += "InstanceModels.data[gl_InstanceIndex] * ";
                   }
                   string += "vec4(inPosition, 1);\n";
                   string += "    outSpotLightSpaceVertices[i] = ";
                   string += "spotLightSpaceMatrices.matrix[i] * ";
                   if (std::find(constants.begin(), constants.end(), "Model") != constants.end())
                   {
-                    string += "model.matrix * ";
+                    string += "InstanceModels.data[gl_InstanceIndex] * ";
                   }
                   string += "vec4(inPosition, 1);\n";
                   string += "  }";
@@ -312,12 +457,19 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   std::string string;
+                  auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                    return constant == "Shape";
+                  });
+                  if (found != constants.end())
+                  {
+                    string += "  vec3 inNormal = get_entity_normal(gl_VertexIndex, entity, material);\n";
+                  }
                   if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end())
                   {
                     return string;
                   }
-                  string += "  outFragPosition = model.matrix * vec4(inPosition, 1.0);\n";
-                  string += "  outNormal = mat3(transpose(inverse(model.matrix))) * inNormal;";
+                  string += "  outFragPosition = InstanceModels.data[gl_InstanceIndex] * vec4(inPosition, 1.0);\n";
+                  string += "  outNormal = mat3(transpose(inverse(InstanceModels.data[gl_InstanceIndex]))) * inNormal;";
                   return string;
                 }
               }
@@ -328,6 +480,13 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 {
                   ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                   {
+                    auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                      return constant == "Shape";
+                    });
+                    if (found != constants.end())
+                    {
+                      return "  outUV = get_entity_uv2(gl_VertexIndex, entity, material);";
+                    }
                     return "  outUV = inUV;";
                   }
                 }
@@ -338,9 +497,262 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                   {
                     ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                     {
-                      return "  outUV = normalize(inUV);";
+                      auto found = std::find_if(constants.begin(), constants.end(), [](auto& constant) {
+                        return constant == "Shape";
+                      });
+                      if (found != constants.end())
+                      {
+                        return "  outUV = normalize(get_entity_uv3(gl_VertexIndex, entity, material));";
+                      }
+                      return "  outUV = inUV;";
                     }
                   }
+            }
+          }
+        }
+      },
+      {
+        "postMain",
+        {
+          {
+            "Shape", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants) -> std::string
+                {
+                  return R"(
+Material get_material(in Entity entity)
+{
+  uint material_index = entity.material_index;
+  if (material_index >= 0) {
+    return Materials.data[material_index];
+  }
+  Material defaultMaterial;
+  defaultMaterial.type = 0;
+  defaultMaterial.albedo = vec4(1.0);
+  return defaultMaterial;
+}
+Entity get_entity(uint entity_id)
+{
+  if (entity_id >= 0) {
+    return Entities.data[entity_id];
+  }
+  Entity defaultEntity;
+  defaultEntity.shape_id = -1;
+  defaultEntity.material_index = -1;
+  defaultEntity.vertex_offset = -1;
+  return defaultEntity;
+}
+vec4 get_color(uint vertex_id, in Entity entity, in Material material)
+{
+  // if (material.type != 0)
+  //   return vec4(1, 1, 1, 1);
+  return material.albedo;
+  // return vec4(material.type, material.type, material.type, 1);
+}
+vec2 get_uv2(uint vertex_id, in Entity entity, in Material material)
+{
+  if (material.type != 1)
+    return vec2(0, 0);
+  return EntityUV2s.data[entity.vertex_offset + vertex_id];
+}
+vec3 get_uv3(uint vertex_id, in Entity entity, in Material material)
+{
+  if (material.type != 2)
+    return vec3(0, 0, 0);
+  return EntityUV3s.data[entity.vertex_offset + vertex_id];
+}
+vec3 get_box_vertex(uint vertex_id)
+{
+  // Define the 8 unique corners of the cube
+  vec3 v0 = vec3(-1.0, -1.0, -1.0); // NLL
+  vec3 v1 = vec3( 1.0, -1.0, -1.0); // NLR
+  vec3 v2 = vec3(-1.0,  1.0, -1.0); // NUL
+  vec3 v3 = vec3( 1.0,  1.0, -1.0); // NUR
+  vec3 v4 = vec3(-1.0, -1.0,  1.0); // FLL
+  vec3 v5 = vec3( 1.0, -1.0,  1.0); // FLR
+  vec3 v6 = vec3(-1.0,  1.0,  1.0); // FUL
+  vec3 v7 = vec3( 1.0,  1.0,  1.0); // FUR
+
+  switch (vertex_id)
+  {
+    // Front face (-Z) - Triangles: (v0,v1,v2), (v1,v3,v2)
+    case 0:  return v0; // NLL
+    case 1:  return v1; // NLR
+    case 2:  return v2; // NUL
+    case 3:  return v1; // NLR
+    case 4:  return v3; // NUR
+    case 5:  return v2; // NUL
+
+    // Back face (+Z) - Triangles: (v5,v4,v7), (v4,v6,v7)
+    case 6:  return v5; // FLR
+    case 7:  return v4; // FLL
+    case 8:  return v7; // FUR
+    case 9:  return v4; // FLL
+    case 10: return v6; // FUL
+    case 11: return v7; // FUR
+
+    // Left face (-X) - Triangles: (v4,v0,v6), (v0,v2,v6)
+    case 12: return v4; // FLL
+    case 13: return v0; // NLL
+    case 14: return v6; // FUL
+    case 15: return v0; // NLL
+    case 16: return v2; // NUL
+    case 17: return v6; // FUL
+
+    // Right face (+X) - Triangles: (v1,v5,v3), (v5,v7,v3)
+    case 18: return v1; // NLR
+    case 19: return v5; // FLR
+    case 20: return v3; // NUR
+    case 21: return v5; // FLR
+    case 22: return v7; // FUR
+    case 23: return v3; // NUR
+
+    // Top face (+Y) - Triangles: (v2,v3,v6), (v3,v7,v6)
+    case 24: return v2; // NUL
+    case 25: return v3; // NUR
+    case 26: return v6; // FUL
+    case 27: return v3; // NUR
+    case 28: return v7; // FUR
+    case 29: return v6; // FUL
+
+    // Bottom face (-Y) - Triangles: (v4,v5,v0), (v5,v1,v0)
+    case 30: return v4; // FLL
+    case 31: return v5; // FLR
+    case 32: return v0; // NLL
+    case 33: return v5; // FLR
+    case 34: return v1; // NLR
+    case 35: return v0; // NLL
+
+    default: return vec3(0.0, 0.0, 0.0); // Should not happen if vertexCount is 36
+  }
+}
+vec3 get_box_normal(uint vertex_id)
+{
+  // Normals for each face of the cube
+  // Each face has 6 vertices (2 triangles), and all 6 share the same normal.
+
+  // Front face (-Z normal)
+  if (vertex_id >= 0 && vertex_id <= 5) {
+    return vec3(0.0, 0.0, -1.0);
+  }
+  // Back face (+Z normal)
+  else if (vertex_id >= 6 && vertex_id <= 11) {
+    return vec3(0.0, 0.0, 1.0);
+  }
+  // Left face (-X normal)
+  else if (vertex_id >= 12 && vertex_id <= 17) {
+    return vec3(-1.0, 0.0, 0.0);
+  }
+  // Right face (+X normal)
+  else if (vertex_id >= 18 && vertex_id <= 23) {
+    return vec3(1.0, 0.0, 0.0);
+  }
+  // Top face (+Y normal)
+  else if (vertex_id >= 24 && vertex_id <= 29) {
+    return vec3(0.0, 1.0, 0.0);
+  }
+  // Bottom face (-Y normal)
+  else if (vertex_id >= 30 && vertex_id <= 35) {
+    return vec3(0.0, -1.0, 0.0);
+  }
+  
+  // Default fallback, though with correct vertex_id (0-35) this shouldn't be reached.
+  return vec3(0.0, 0.0, 0.0); 
+}
+vec3 get_box_uv3(uint vertex_id, in Entity entity, in Material material)
+{
+  if (material.type == 2)
+  {
+    return get_uv3(vertex_id, entity, material);
+  }
+  return vec3(0, 0, 0);
+}
+vec3 get_plane_vertex(uint vertex_id)
+{
+  switch (vertex_id)
+  {
+    case 0: return vec3(-1.0, 0.0, -1.0);
+    case 1: return vec3( 1.0, 0.0, -1.0);
+    case 2: return vec3(-1.0, 0.0,  1.0);
+    case 3: return vec3(-1.0, 0.0,  1.0);
+    case 4: return vec3( 1.0, 0.0, -1.0);
+    case 5: return vec3( 1.0, 0.0,  1.0);
+    default: return vec3(0.0, 0.0, 0.0);
+  }
+}
+vec3 get_plane_normal(uint vertex_id)
+{
+    return vec3(0, 1, 0);
+}
+vec2 get_plane_uv2(uint vertex_id, in Entity entity, in Material material)
+{
+  if (material.type == 2)
+  {
+    return get_uv2(vertex_id, entity, material);
+  }
+  return vec2(0, 0);
+}
+vec3 get_mesh_vertex(uint vertex_id, in Entity entity, in Material material)
+{
+  return MeshPositions.data[entity.vertex_offset + vertex_id];
+}
+vec3 get_mesh_normal(uint vertex_id, in Entity entity, in Material material)
+{
+  return MeshNormals.data[entity.vertex_offset + vertex_id];
+}
+vec2 get_mesh_uv2(uint vertex_id, in Entity entity, in Material material)
+{
+  if (material.type == 2)
+  {
+    return get_uv2(vertex_id, entity, material);
+  }
+  return vec2(0, 0);
+}
+uint get_entity_id()
+{
+  return gl_InstanceIndex;
+};
+vec3 get_entity_vertex(uint vertex_id, in Entity entity, in Material material)
+{
+  switch (entity.shape_id)
+  {
+  case SHAPE_TYPE_BOX:
+    return get_box_vertex(vertex_id);
+  case SHAPE_TYPE_PLANE:
+    return get_plane_vertex(vertex_id);
+  case SHAPE_TYPE_MESH:
+    return get_mesh_vertex(vertex_id, entity, material);
+  }
+  return vec3(0.0);
+}
+vec3 get_entity_normal(uint vertex_id, in Entity entity, in Material material)
+{
+  switch (entity.shape_id)
+  {
+  case SHAPE_TYPE_BOX:
+    return get_box_normal(vertex_id);
+  case SHAPE_TYPE_PLANE:
+    return get_plane_normal(vertex_id);
+  case SHAPE_TYPE_MESH:
+    return get_mesh_normal(vertex_id, entity, material);
+  }
+  return vec3(0.0);
+}
+vec4 get_entity_color(uint vertex_id, in Entity entity, in Material material)
+{
+  return get_color(vertex_id, entity, material);
+}
+vec2 get_entity_uv2(uint vertex_id, in Entity entity, in Material material)
+{
+  return get_uv2(vertex_id, entity, material);
+}
+vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material)
+{
+  return get_uv3(vertex_id, entity, material);
+}
+)";
+                }
+              }
             }
           }
         }
@@ -1176,6 +1588,7 @@ ShaderMap ShaderFactory::generateShaderMap(const RuntimeConstants& constants, Sh
 																					 const std::vector<ShaderType>& shaderTypes)
 {
 	ShaderMap shaderMap;
+  currentBindingIndex = 0;
 	for (auto& shaderType : shaderTypes)
 	{
 		shaderMap[shaderType] = generateShader(shaderType, constants, shader);
@@ -1189,9 +1602,10 @@ ShaderPair ShaderFactory::generateShader(const ShaderType& shaderType, const Run
 	auto& shaderString = shaderPair.first;
 	auto& shaderHooks = hooks[shaderType];
 	// #if defined(USE_GL) || defined(USE_VULKAN)
-	shaderString += "#version 460 core\n";
-	shaderString += "precision highp float;\n";
-	shaderString += "precision highp samplerCube;\n";
+	shaderString += "#version 460 core\n"
+                  "#extension GL_ARB_shader_draw_parameters : require\n"
+	                "precision highp float;\n"
+	                "precision highp samplerCube;\n";
 	// #elif defined(USE_EGL)
 	//   shaderString += "#version 310 es\n";
 	//   if (shaderType == ShaderType::Geometry)

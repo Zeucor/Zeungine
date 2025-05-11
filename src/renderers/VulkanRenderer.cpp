@@ -408,6 +408,7 @@ void VulkanRenderer::setupPFNs()
 	VK_INSTANCE(_vkDestroyRenderPass, PFN_vkDestroyRenderPass, "vkDestroyRenderPass");
 	VK_INSTANCE(_vkDeviceWaitIdle, PFN_vkDeviceWaitIdle, "vkDeviceWaitIdle");
 	VK_INSTANCE(_vkDestroyShaderModule, PFN_vkDestroyShaderModule, "vkDestroyShaderModule");
+	VK_INSTANCE(_vkCmdDrawIndirectCount, PFN_vkCmdDrawIndirectCount, "vkCmdDrawIndirectCount");
 }
 #ifndef NDEBUG
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -739,15 +740,6 @@ void VulkanRenderer::createLogicalDevice()
 	VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
 	descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
 	descriptorIndexingFeatures.pNext = 0;
-	VkPhysicalDeviceFeatures2 deviceFeatures{};
-	deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-	deviceFeatures.pNext = &descriptorIndexingFeatures;
-	_vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures);
-	deviceFeatures.features.sampleRateShading = VK_TRUE;
-	deviceFeatures.features.depthClamp = VK_TRUE;
-	deviceFeatures.features.depthBiasClamp = VK_TRUE;
-	deviceFeatures.features.samplerAnisotropy = VK_TRUE;
-	deviceFeatures.features.robustBufferAccess = VK_TRUE;
 	// descriptorIndexingFeatures.robustBufferAccessUpdateAfterBind = VK_FALSE;
 	descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_FALSE;
 	descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_FALSE;
@@ -761,6 +753,25 @@ void VulkanRenderer::createLogicalDevice()
 	// #endif
 	// 	assert(descriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing);
 	// 	assert(descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind);
+	VkPhysicalDeviceShaderDrawParametersFeatures shaderDrawParamsFeatures_query = {};
+	shaderDrawParamsFeatures_query.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
+	shaderDrawParamsFeatures_query.shaderDrawParameters = VK_TRUE;
+    VkPhysicalDeviceVulkan12Features vulkan12Features{};
+    vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+	vulkan12Features.pNext = &shaderDrawParamsFeatures_query;
+	// vulkan12Features.pNext = &descriptorIndexingFeatures;
+    vulkan12Features.drawIndirectCount = VK_TRUE;
+	VkPhysicalDeviceFeatures2 deviceFeatures{};
+	deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	deviceFeatures.pNext = &vulkan12Features;
+	_vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures);
+	deviceFeatures.features.sampleRateShading = VK_TRUE;
+	deviceFeatures.features.depthClamp = VK_TRUE;
+	deviceFeatures.features.depthBiasClamp = VK_TRUE;
+	deviceFeatures.features.samplerAnisotropy = VK_TRUE;
+	deviceFeatures.features.robustBufferAccess = VK_TRUE;
+	deviceFeatures.features.multiDrawIndirect = VK_TRUE;
+	deviceFeatures.features.drawIndirectFirstInstance = VK_TRUE;
 	createInfo.pNext = &deviceFeatures;
 	auto createdDevice = VKcheck("vkCreateDevice", _vkCreateDevice(physicalDevice, &createInfo, 0, &device));
 	if (!createdDevice)
@@ -1187,6 +1198,13 @@ void VulkanRenderer::callDestroyAtRenderPassEndOrDestroy()
 void VulkanRenderer::destroy()
 {
 	_vkDeviceWaitIdle(device);
+	for (auto& drawPair : drawBuffers)
+	{
+		_vkDestroyBuffer(device, drawPair.second.first, 0);
+		_vkFreeMemory(device, drawPair.second.second, 0);
+	}
+	_vkDestroyBuffer(device, countBuffer, 0);
+	_vkFreeMemory(device, countBufferMemory, 0);
 	if (fallbackToSwiftshader)
 	{
 		_vkUnmapMemory(device, stagingBufferMemory);
@@ -1442,6 +1460,47 @@ void VulkanRenderer::bindShader(shaders::Shader& shader, vaos::VAO& vao)
 		_vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
 	}
 }
+void VulkanRenderer::bindShader(shaders::Shader& shader)
+{
+	if (!shader.compiled)
+	{
+		compileProgram(shader);
+	}
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	_vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.graphicsPipeline);
+	if (currentFramebufferImpl)
+	{
+		auto& framebufferImpl = *currentFramebufferImpl;
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = (float)framebufferImpl.width;
+		viewport.height = (float)framebufferImpl.height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		_vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent.width = framebufferImpl.width;
+		scissor.extent.height = framebufferImpl.height;
+		_vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+	}
+	else
+	{
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = (float)swapChainExtent.width;
+		viewport.height = (float)swapChainExtent.height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		_vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
+		VkRect2D scissor{};
+		scissor.offset = {0, 0};
+		scissor.extent = swapChainExtent;
+		_vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+	}
+}
 void VulkanRenderer::unbindShader(shaders::Shader& shader) {}
 void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
 														 uint32_t bindingIndex)
@@ -1525,17 +1584,28 @@ void VulkanRenderer::setSSBO(shaders::Shader& shader, vaos::VAO& vao, const std:
 	auto ssboBufferIter = ssboBuffers.find(stringName);
 	if (ssboBufferIter == ssboBuffers.end())
 	{
-		ssboBuffers[stringName] = {0, 0};
+		ssboBuffers[stringName] = {0, 0, 0};
 		ssboBufferIter = ssboBuffers.find(stringName);
 	}
 	auto& buffer = std::get<0>(ssboBufferIter->second);
 	auto& deviceMemory = std::get<1>(ssboBufferIter->second);
+	auto& bufferSize = std::get<2>(ssboBufferIter->second);
 	auto& bindingIndex = std::get<1>(ssboIter->second);
 	if (buffer == VK_NULL_HANDLE)
 	{
+_createBuffer:
 		createBuffer(
 			size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, buffer, deviceMemory);
+		bufferSize = size;
+	}
+	if (bufferSize != size && buffer)
+	{
+		_vkDestroyBuffer(device, buffer, 0);
+		_vkFreeMemory(device, deviceMemory, 0);
+		buffer = 0;
+		deviceMemory = 0;
+		goto _createBuffer;
 	}
 	void* bufferData;
 	if (!VKcheck("vkMapMemory", _vkMapMemory(device, deviceMemory, 0, size, 0, &bufferData)))
@@ -1651,7 +1721,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	uint32_t offset = 0;
 	for (auto& constant : shader.constants)
 	{
-		if (!vaos::VAOFactory::isVAOConstant(constant))
+		if (!vaos::VAOFactory::isVAOConstant(shader.constants, constant))
 			continue;
 		auto constantIter = vaos::VAOFactory::constantSizes.find(constant);
 		if (constantIter == vaos::VAOFactory::constantSizes.end())
@@ -1661,7 +1731,7 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 		vertexInputAttributeDescription.location = attribIndex;
 		vertexInputAttributeDescription.binding = 0;
 		vertexInputAttributeDescription.format = (VkFormat)std::get<2>(constantSize);
-		vertexInputAttributeDescription.offset = offset;
+ 		vertexInputAttributeDescription.offset = offset;
 		attributeDescriptions.push_back(vertexInputAttributeDescription);
 		offset += std::get<0>(constantSize) * std::get<1>(constantSize);
 		attribIndex++;
@@ -2742,6 +2812,98 @@ void VulkanRenderer::drawVAO(const vaos::VAO &vao, shaders::Shader* shaderPointe
 	}
 	_vkCmdDrawIndexed(*commandBuffer, indices, 1, 0, 0, 0);
 }
+void VulkanRenderer::drawVAOInstanced(const vaos::VAO &vao, shaders::Shader* shaderPointer, size_t instanceCount)
+{
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto vaoHash = vao.getVAOuHash();
+	auto& shader = *((vaos::VAO&)vao).addShader(shaderPointer);
+	auto& shaderImpl = *(VulkanShaderImpl*)(shader.rendererData);
+	if (vaoImpl.vertexBuffer == VK_NULL_HANDLE)
+	{
+		return;
+	}
+	VkBuffer vertexBuffers[] = {vaoImpl.vertexBuffer};
+	VkDeviceSize offsets[] = {0};
+	_vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
+	_vkCmdBindIndexBuffer(*commandBuffer, vaoImpl.indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
+	_vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
+													 &vaoImpl.getDescriptorSet(vaoHash), 0, 0);
+	auto& indices = vao.indiceCount;
+	if (!indices)
+	{
+		return;
+	}
+	_vkCmdDrawIndexed(*commandBuffer, indices, instanceCount, 0, 0, 0);
+}
+void VulkanRenderer::drawMultiInstanced(shaders::Shader* shader, const vaos::VAO& vao, const std::vector<DrawIndirectCommand>& commands)
+{
+	VkBuffer drawBuffer;
+	VkDeviceMemory drawBufferMemory;
+	auto drawsSize = commands.size();
+	auto drawBufferSize = sizeof(VkDrawIndirectCommand) * drawsSize;
+	auto drawBufferIter = drawBuffers.find(drawBufferSize);
+	if (drawBufferIter == drawBuffers.end())
+	{
+		createBuffer(
+			drawBufferSize,
+			VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			drawBuffer,
+			drawBufferMemory
+		);
+		drawBuffers[drawBufferSize] = {drawBuffer, drawBufferMemory};
+	}
+	else
+	{
+		drawBuffer = drawBufferIter->second.first;
+		drawBufferMemory = drawBufferIter->second.second;
+	}
+	if (!countBuffer)
+		createBuffer(
+			sizeof(uint32_t),
+			VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			countBuffer,
+			countBufferMemory
+		);
+	std::vector<VkDrawIndirectCommand> i_commands(drawsSize, {});
+	auto i_commands_data = i_commands.data();
+	auto v_commands_data = commands.data();
+	for (auto i = 0; i < drawsSize; ++i)
+	{
+		auto& i_command = i_commands_data[i];
+		auto& v_command = v_commands_data[i];
+		i_command.vertexCount = v_command.vertexCount;
+		i_command.instanceCount = v_command.instanceCount;
+		i_command.firstVertex = v_command.firstVertex;
+		i_command.firstInstance = v_command.firstInstance;
+	}
+	void* drawBufferData;
+	_vkMapMemory(device, drawBufferMemory, 0, VK_WHOLE_SIZE, 0, &drawBufferData);
+	memcpy(drawBufferData, i_commands_data, drawsSize * sizeof(VkDrawIndirectCommand));
+	_vkUnmapMemory(device, drawBufferMemory);
+
+	uint32_t drawCount = static_cast<uint32_t>(drawsSize);
+	void* countBufferData;
+	_vkMapMemory(device, countBufferMemory, 0, VK_WHOLE_SIZE, 0, &countBufferData);
+	memcpy(countBufferData, &drawCount, sizeof(uint32_t));
+	_vkUnmapMemory(device, countBufferMemory);
+
+	auto& shaderImpl = *(VulkanShaderImpl*)(shader->rendererData);
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto vaoHash = vao.getVAOuHash();
+	_vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
+													 &vaoImpl.getDescriptorSet(vaoHash), 0, 0);
+	_vkCmdDrawIndirectCount(
+		*commandBuffer,
+		drawBuffer,
+		0,
+		countBuffer,
+		0,
+		drawCount,
+		sizeof(VkDrawIndirectCommand)
+	);
+};
 void VulkanRenderer::generateVAO(vaos::VAO& vao)
 {
 	vao.rendererData = new VulkanVAOImpl();
@@ -2800,8 +2962,8 @@ void VulkanRenderer::destroyVAO(vaos::VAO &vao, bool destroyNow)
 		{
 			for (auto& pair2 : pair.second)
 			{
-				_vkDestroyBuffer(device, pair2.second.first, 0);
-				_vkFreeMemory(device, pair2.second.second, 0);
+				_vkDestroyBuffer(device, std::get<0>(pair2.second), 0);
+				_vkFreeMemory(device, std::get<1>(pair2.second), 0);
 			}
 		}
 		for (auto& pair : vaoImpl.uniformBuffers)
@@ -2839,8 +3001,8 @@ void VulkanRenderer::destroyVAO(vaos::VAO &vao, bool destroyNow)
 				{
 					for (auto& pair2 : pair.second)
 					{
-						_vkDestroyBuffer(device, pair2.second.first, 0);
-						_vkFreeMemory(device, pair2.second.second, 0);
+						_vkDestroyBuffer(device, std::get<0>(pair2.second), 0);
+						_vkFreeMemory(device, std::get<1>(pair2.second), 0);
 					}
 				}
 				for (auto& pair : uniformBuffers)

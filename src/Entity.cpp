@@ -4,6 +4,7 @@
 #include <zg/renderers/VulkanRenderer.hpp>
 #include <zg/shaders/ShaderManager.hpp>
 #include <zg/Registry.hpp>
+#include <zg/crypto/vector.hpp>
 using namespace zg;
 std::unordered_map<std::string, size_t> childKeyCounts;
 Entity::Entity(const EntityCreateInfo& info) :
@@ -147,7 +148,11 @@ void Entity::refreshMeshes()
 		auto meshID = index < meshIDsSize ? meshIDsData[index] : 0;
 		auto& meshInfo = meshInfosData[index];
 		auto newSubMeshID = Registry::addMesh(meshInfo, *this);
-		Registry::deRefMesh(meshID);
+		if (Registry::deRefMesh(meshID))
+		{
+			auto& scene = Registry::getScene(INDEX_STACK);
+			scene.instancedDraw.removeMesh(meshID);
+		}
 		if (meshID != 0 && meshID != newSubMeshID)
 		{
 			meshIDsData[index] = newSubMeshID;
@@ -160,6 +165,10 @@ void Entity::refreshMeshes()
 		}
 	}
 }
+void Entity::reMeshhash()
+{
+	mesh_hash = zg::crypto::hashVector(meshIDs);
+};
 void Entity::update()
 {
 	if (preUpdateFunction)

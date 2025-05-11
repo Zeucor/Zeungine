@@ -13,6 +13,7 @@ using namespace zg;
 std::unordered_map<std::string, size_t> entityKeyCounts;
 Scene::Scene(const SceneCreateInfo& info) :
 	DataStorage<Scene>(info.getDataFunctionMap, info.setDataFunctionMap, info.dataMap),
+	sceneFirstEncountered(SYS_CLOCK::now()),
 	ID(info.ID),
 	INDEX(info.INDEX),
 	INDEX_STACK(info.INDEX_STACK),
@@ -267,6 +268,7 @@ bool Scene::removeEntity(size_t ID)
 	if (entityIter == entities.end())
 		return false;
 	auto& entity = *entityIter;
+	instancedDraw.removeEntity(entity);
 	if (entity.onRemovedFunction)
 		entity.onRemovedFunction(entity);
 	preRemoveEntity(entity);
@@ -279,7 +281,8 @@ bool Scene::removeEntity(size_t ID)
 }
 void Scene::update()
 {
-	++updateNonce;
+	sceneIsAt = SYS_CLOCK::now();
+	updateNonce = (sceneIsAt - sceneFirstEncountered).count() / 10'000'000.0;
 	if (preUpdateFunction)
 		preUpdateFunction(*this);
 	auto componentsData = m_components.data();
@@ -315,7 +318,7 @@ void Scene::preRender()
 			mesh.uid = entity.ID;
 			shader.bind(mesh);
 			setShader(mesh, shader);
-			shader.setBlock("Model", mesh, entity.getModelMatrix());
+			shader.setSSBO("InstanceModels", mesh, &entity.getModelMatrix(), sizeof(glm::mat4));
 			mesh.drawVAO(&shader);
 			shader.unbind();
 		}
@@ -409,16 +412,17 @@ void Scene::renderEntities()
 		auto distB = glm::distance(b.first->position, cameraPosition);
 		return distA > distB;
 	});
-	for (auto& ep : opaqueDrawList)
-	{
-		ep.second->uid = ep.first->ID;
-		ep.second->render(*ep.first);
-	}
-	for (auto& ep : transparentDrawList)
-	{
-		ep.second->uid = ep.first->ID;
-		ep.second->render(*ep.first);
-	}
+	instancedDraw.drawMulti(*this, opaqueDrawList, transparentDrawList, oldOpaqueHash, oldTransparentHash);
+	// for (auto& ep : opaqueDrawList)
+	// {
+	// 	ep.second->uid = ep.first->ID;
+	// 	ep.second->render(*ep.first);
+	// }
+	// for (auto& ep : transparentDrawList)
+	// {
+	// 	ep.second->uid = ep.first->ID;
+	// 	ep.second->render(*ep.first);
+	// }
 	framebufferRef.unbind();
 }
 void Scene::postRender()

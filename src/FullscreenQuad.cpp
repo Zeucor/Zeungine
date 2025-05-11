@@ -53,7 +53,7 @@ void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared
 	auto shader = addShader();
     if (!shaderAlreadyBound)
     	shader->bind(*this);
-	shader->setBlock("Model", *this, model);
+	shader->setSSBO("InstanceModels", *this, &model, sizeof(glm::mat4));
     uint32_t unit = 0;
     auto constantsBegin = constants.begin();
     auto constantsEnd = constants.end();

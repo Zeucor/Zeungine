@@ -20,6 +20,10 @@ void Shader::bind(vaos::VAO &vao)
 {
   iRenderer->bindShader(*this, vao);
 }
+void Shader::bind()
+{
+  iRenderer->bindShader(*this);
+}
 void Shader::unbind()
 {
   iRenderer->unbindShader(*this);

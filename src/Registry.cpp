@@ -151,30 +151,34 @@ components::entities::EntityComponent& Registry::getEntityComponent(size_t ID)
 size_t Registry::hashMeshCreateInfo(const MeshCreateInfo& info, Entity& entity)
 {
     size_t finalHash = 0;
+    uint64_t shift = 0;
+    finalHash = std::hash<uint32_t>{}(uint32_t(info.shapeType)) << ++shift;
+    finalHash ^= std::hash<uint32_t>{}(info.material.type) << ++shift;
+    finalHash ^= std::hash<glm::vec4>{}(info.material.albedo) << ++shift;
     if (!info.indiceCount || !info.indices || !info.vertexCount || !info.vertices)
         return finalHash;
     auto indiceHash = crypto::hashVector(info.indices(entity));
     auto verticeHash = crypto::hashVector(info.vertices(entity));
-    finalHash = indiceHash;
-    finalHash ^= verticeHash;
+    finalHash ^= indiceHash << ++shift;
+    finalHash ^= verticeHash << ++shift;
     if (info.colors)
     {
         auto colorsHash = crypto::hashVector(info.colors(entity));
-        finalHash ^= colorsHash;
+        finalHash ^= colorsHash << ++shift;
     }
     if (info.uv2s)
     {
         auto uv2sHash = crypto::hashVector(info.uv2s(entity));
-        finalHash ^= uv2sHash;
+        finalHash ^= uv2sHash << ++shift;
     }
     if (info.uv3s)
     {
         auto uv3sHash = crypto::hashVector(info.uv3s(entity));
-        finalHash ^= uv3sHash;
+        finalHash ^= uv3sHash << ++shift;
     }
     for (auto& keyedPair : info.keyedTextures)
     {
-        finalHash ^= (size_t)keyedPair.second->rendererData;
+        finalHash ^= (size_t)keyedPair.second->rendererData << ++shift;
     }
     return finalHash;
 }

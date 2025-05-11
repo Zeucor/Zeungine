@@ -249,8 +249,7 @@ void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 colo
 					"Glyph " + std::string(1, codepoint),
 					characterPosition,
 					glm::quat(1, 0, 0, 0),
-					glm::vec3(1),
-					glm::vec2(characterPointer->size)
+					glm::vec3(characterPointer->size, 1.f)
 				);
 				scene.addEntity(planeInfo);
 			}
@@ -373,7 +372,7 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 				else
 				{
 _addGlyph:
-					auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale, glm::vec2(1));
+					auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale);
 					auto glyph_tuple = scene.addEntity(glyphCreateInfo);
 					existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + iterator.getCurrentCodepointIndex(), std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
 					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
@@ -524,7 +523,7 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 				else
 				{
 _addGlyph:
-					auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale, glm::vec2(1));
+					auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale);
 					auto glyph_tuple = entity.addChild(glyphCreateInfo);
 					existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + codepointIndex, std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
 					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);

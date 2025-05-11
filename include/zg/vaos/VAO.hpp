@@ -28,6 +28,7 @@ namespace zg::vaos
 		template <typename T>
 		void updateElements(const std::string_view constant, const std::vector<T>& elements) const;
 		void drawVAO(shaders::Shader* shader = 0) const;
+		void drawVAOInstanced(size_t instanceCount = 1, shaders::Shader* shader = 0);
 		static void* getShaderUHash(IRenderer* iRenderer);
 		size_t getVAOuHash() const;
 		bool isEnsured();

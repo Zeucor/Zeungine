@@ -9,6 +9,9 @@ Mesh::Mesh(const MeshCreateInfo& info, Entity& entity):
         (info.vertexCount ? info.vertexCount(entity) : 0)
     ),
     hash(info.hash),
+    name(info.name),
+	shapeType(info.shapeType),
+	material(info.material),
     keyedTextures(info.keyedTextures),
     indiceCount(info.indiceCount),
     indices(info.indices),
@@ -19,8 +22,15 @@ Mesh::Mesh(const MeshCreateInfo& info, Entity& entity):
     uv2Count(info.uv2Count),
     uv2s(info.uv2s),
     uv3Count(info.uv3Count),
+	m_indiceCount(indiceCount ? indiceCount(entity) : 0),
+	m_vertexCount(vertexCount ? vertexCount(entity) : 0),
+	m_colorCount(colorCount ? colorCount(entity) : 0),
+	m_uv2Count(uv2Count ? uv2Count(entity) : 0),
+	m_uv3Count(uv3Count ? uv3Count(entity) : 0),
     uv3s(info.uv3s)
 {
+	if (std::find(constants.begin(), constants.end(), "Shape") != constants.end())
+		return;
 	auto& window = Registry::getWindow(entity.INDEX_STACK);
 	if (!indices || !vertices)
         return;
@@ -53,6 +63,9 @@ Mesh::Mesh(const Mesh& other):
 	INDEX(other.INDEX),
 	INDEX_STACK(other.INDEX_STACK),
     hash(other.hash),
+    name(other.name),
+	shapeType(other.shapeType),
+	material(other.material),
 	keyedTextures(other.keyedTextures),
 	indiceCount(other.indiceCount),
 	indices(other.indices),
@@ -63,6 +76,11 @@ Mesh::Mesh(const Mesh& other):
 	uv2Count(other.uv2Count),
 	uv2s(other.uv2s),
 	uv3Count(other.uv3Count),
+	m_indiceCount(other.m_indiceCount),
+	m_vertexCount(other.m_vertexCount),
+	m_colorCount(other.m_colorCount),
+	m_uv2Count(other.m_uv2Count),
+	m_uv3Count(other.m_uv3Count),
 	uv3s(other.uv3s)
 {}
 Mesh& Mesh::operator=(const Mesh& other)
@@ -72,6 +90,9 @@ Mesh& Mesh::operator=(const Mesh& other)
 	INDEX = other.INDEX;
 	INDEX_STACK = other.INDEX_STACK;
     hash = other.hash;
+    name = other.name;
+	shapeType = other.shapeType;
+	material = other.material;
 	keyedTextures = other.keyedTextures;
 	indiceCount = other.indiceCount;
 	indices = other.indices;
@@ -82,6 +103,11 @@ Mesh& Mesh::operator=(const Mesh& other)
 	uv2Count = other.uv2Count;
 	uv2s = other.uv2s;
 	uv3Count = other.uv3Count;
+	m_indiceCount = other.m_indiceCount;
+	m_vertexCount = other.m_vertexCount;
+	m_colorCount = other.m_colorCount;
+	m_uv2Count = other.m_uv2Count;
+	m_uv3Count = other.m_uv3Count;
 	uv3s = other.uv3s;
 	return *this;
 }
@@ -96,15 +122,15 @@ void Mesh::render(Entity& entity)
 		else
 			scene.viewPointer->updateMutex.lock();
 		scene.meshPreRender(*this);
-		shader->setBlock("Model", *this, entity.getModelMatrix());
-		shader->setBlock("View", *this, entity.viewPointer ? entity.viewPointer->matrix : scene.viewPointer->matrix);
+		shader->setSSBO("InstanceModels", *this, &entity.getModelMatrix(), sizeof(glm::mat4));
+		shader->setSSBO("InstanceViews", *this, &(entity.viewPointer ? entity.viewPointer->matrix : scene.viewPointer->matrix), sizeof(glm::mat4));
 		shader->setBlock("CameraPosition", *this, entity.viewPointer ? entity.viewPointer->position : scene.viewPointer->position, 16);
 		if (entity.viewPointer)
 			entity.viewPointer->updateMutex.unlock();
 		else
 			scene.viewPointer->updateMutex.unlock();
 	}
-	shader->setBlock("Projection", *this, entity.projectionPointer ? entity.projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setSSBO("InstanceProjections", *this, &(entity.projectionPointer ? entity.projectionPointer->matrix : scene.projectionPointer->matrix), sizeof(glm::mat4));
 	auto keyedTexturesSize = keyedTextures.size();
 	auto keyedTexturesData = keyedTextures.data();
 	for (size_t unit = 0; unit < keyedTexturesSize; ++unit)

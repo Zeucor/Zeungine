@@ -65,7 +65,7 @@ namespace zg
 	};
 	struct VulkanVAOImpl
 	{
-		using SSBOBuffers = std::unordered_map<std::string, std::pair<VkBuffer, VkDeviceMemory>>;
+		using SSBOBuffers = std::unordered_map<std::string, std::tuple<VkBuffer, VkDeviceMemory, size_t>>;
 		using UniformBuffers = std::vector<VkBuffer>;
 		using UniformBuffersMemory = std::vector<VkDeviceMemory>;
 		using UniformBuffersMapped = std::vector<void*>;
@@ -235,6 +235,7 @@ namespace zg
 		PFN_vkDestroyRenderPass _vkDestroyRenderPass;
 		PFN_vkDeviceWaitIdle _vkDeviceWaitIdle;
 		PFN_vkDestroyShaderModule _vkDestroyShaderModule;
+		PFN_vkCmdDrawIndirectCount _vkCmdDrawIndirectCount;
 		size_t allocatedMemoryBytes = 0;
 		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 		VkInstance instance;
@@ -260,6 +261,9 @@ namespace zg
 		VkCommandPool commandPool;
 		std::vector<VkCommandBuffer> commandBuffers;
 		VkCommandBuffer* commandBuffer;
+		std::map<size_t, std::pair<VkBuffer, VkDeviceMemory>> drawBuffers;
+		VkBuffer countBuffer = 0;
+		VkDeviceMemory countBufferMemory = 0;
 		std::shared_ptr<textures::Framebuffer> currentFramebuffer;
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -334,6 +338,7 @@ namespace zg
 		int32_t getUniformLocation(shaders::Shader& shader, vaos::VAO& vao, const std::string_view& name);
 		void deleteBuffer(uint32_t id) override;
 		void bindShader(shaders::Shader& shader, vaos::VAO& vao) override;
+		void bindShader(shaders::Shader& shader) override;
 		void unbindShader(shaders::Shader& shader) override;
 		void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
 								 uint32_t bindingIndex) override;
@@ -380,6 +385,8 @@ namespace zg
 		void updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices) override;
 		void updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar) override;
 		void drawVAO(const vaos::VAO &vao, shaders::Shader* shader) override;
+		void drawVAOInstanced(const vaos::VAO &vao, shaders::Shader* shader, size_t instanceCount = 1) override;
+		void drawMultiInstanced(shaders::Shader* shader, const vaos::VAO& vao, const std::vector<DrawIndirectCommand>& commands) override;
 		void generateVAO(vaos::VAO& vao) override;
 		void copyVAO(vaos::VAO &dest, const vaos::VAO &src) override;
 		void destroyVAO(vaos::VAO &vao, bool destroyNow) override;

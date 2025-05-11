@@ -30,6 +30,7 @@ namespace zg::shaders
 			   const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
 		~Shader();
 		void bind(vaos::VAO &vao);
+		void bind();
 		void unbind();
 		void addSSBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex);
 		void addUBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount = 1, bool isArray = false);

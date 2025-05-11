@@ -3,13 +3,18 @@
 #include <unordered_map>
 #include <zg/interfaces/IFile.hpp>
 #include <zg/textures/Texture.hpp>
+#include <any>
+#include <tuple>
 namespace zg::images
 {
 	struct SpriteSheet
 	{
+#define KUV_UV_INDEX 0
+#define KUV_DATA_INDEX 1
+	using uv_data_t = std::tuple<glm::vec4, std::any>;
 	private:
 		// keyedUVs stores a vec4. x/y is bottomLeft, z/w is topRight
-		std::unordered_map<std::string, glm::vec4> keyedUVs;
+		std::unordered_map<std::string, uv_data_t> keyedUVDatas;
 		std::shared_ptr<textures::Texture> spriteTexture;
 
 	public:
@@ -21,11 +26,12 @@ namespace zg::images
 		 * sprite topleft
 		 */
 		SpriteSheet(IRenderer* iRenderer, const interfaces::IFile& file, uvec bgColor,
-								const std::vector<std::pair<std::string, glm::vec4>>& spriteKeyCoords);
+								const std::vector<std::pair<std::string, uv_data_t>>& spriteKeyCoords);
 		void loadSheet(IRenderer* iRenderer, interfaces::IFile& file, uvec bgColor);
-		void parseSheet(const std::vector<std::pair<std::string, glm::vec4>>& spriteKeyCoords);
+		void parseSheet(const std::vector<std::pair<std::string, uv_data_t>>& spriteKeyCoords);
 		// Given a key, extract the UV and return 4 uvs in order BL-BR-TR-TL
 		std::array<glm::vec2, 4> getUVForKey(const std::string& key);
+		std::any getDataForKey(const std::string& key);
 		std::shared_ptr<textures::Texture> getTexture() const;
 	};
 } // namespace zg::images

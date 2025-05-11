@@ -211,18 +211,18 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
             //                                             constants);
             // entity.addChild(frameCreateInfo);
             auto medianCreateInfo = entities::PlaneFactory(glm::vec4(0.208, 0.990, 0.586, 1.f), "Window Curve Median",
-                                                        glm::vec3(0, 0, 0.05), angle, glm::vec3(1),
-                                                        glm::vec2(size.x, size.y / 32.f),
+                                                        glm::vec3(0, 0, 0.05), angle,
+                                                        glm::vec3(size.x, size.y / 32.f, 1.f),
                                                         constants);
             entity.addChild(medianCreateInfo);
             auto overworkCreateInfo = entities::PlaneFactory(glm::vec4(0.868, 0.960, 0.0384, 1.f), "Window Curve Overwork",
-                                                            glm::vec3(0, (size.y / 3.f) - (size.y / 64.f), 0.05), angle, glm::vec3(1),
-                                                            glm::vec2(size.x, size.y / 32.f),
+                                                            glm::vec3(0, (size.y / 3.f) - (size.y / 64.f), 0.05), angle,
+                                                            glm::vec3(size.x, size.y / 32.f, 1.f),
                                                             constants);
             entity.addChild(overworkCreateInfo);
             auto underworkCreateInfo = entities::PlaneFactory(glm::vec4(0.700, 0.715, 1.00, 1.f), "Window Curve Underwork",
-                                                            glm::vec3(0, (-size.y / 3.f) + (size.y / 64.f), 0.05), angle, glm::vec3(1),
-                                                            glm::vec2(size.x, size.y / 32.f),
+                                                            glm::vec3(0, (-size.y / 3.f) + (size.y / 64.f), 0.05), angle,
+                                                            glm::vec3(size.x, size.y / 32.f, 1.f),
                                                             constants);
             entity.addChild(underworkCreateInfo);
             //
@@ -241,7 +241,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
                 glm::vec4(0.869, 0.860, 0.864, 1), angle, frametimeScale, frametimeFontsize, frametimeLineheight,
                 frametimeSize * (glm::vec2(frametimeScale) + glm::vec2(1e-3f)), frametimeBreakstyle, scene, entity,
                 frametimeEntities, frametimeCursorIndex, frametimeCursor);
-            auto currentPointInfo = entities::PlaneFactory(glm::vec4(0.9, 0.2, 0.4, 1), "Delta Visualizer Current Point", glm::vec3(0), glm::quat(1, 0, 0, 0), glm::vec3(1), glm::vec2(size.x / 25.f, size.x / 25.f), constants, frontFace);
+            auto currentPointInfo = entities::PlaneFactory(glm::vec4(0.9, 0.2, 0.4, 1), "Delta Visualizer Current Point", glm::vec3(0), glm::quat(1, 0, 0, 0), glm::vec3(size.x / 25.f, size.x / 25.f, 1.f), constants, frontFace);
             auto currentPoint_tuple = entity.addChild(currentPointInfo);
             currentPoint = std::get<KEY_ID_VECTOR_ID_INDEX>(currentPoint_tuple);
         },

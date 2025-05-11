@@ -12,7 +12,7 @@ VAOFactory::ConstantSizeMap VAOFactory::constantSizes = {{"Indice", {3, sizeof(u
 														 {"UV2", {2, sizeof(float), ZG_FLOAT2}},
 														 {"UV3", {3, sizeof(float), ZG_FLOAT3}}};
 VAOFactory::VAOConstantMap VAOFactory::VAOConstants = {
-	{"Color", true}, {"Position", true}, {"Normal", true}, {"UV2", true}, {"UV3", true}};
+	{"Color", "Shape"}, {"Position", "Shape"}, {"Normal", "Shape"}, {"UV2", "Shape"}, {"UV3", "Shape"}};
 void VAOFactory::generate(VAO &vao) { vao.vaoIRenderer->generateVAO(vao); };
 void VAOFactory::copy(VAO &dest, const VAO& src) { src.vaoIRenderer->copyVAO(dest, src); };
 size_t VAOFactory::getStride(const RuntimeConstants &constants)
@@ -20,7 +20,7 @@ size_t VAOFactory::getStride(const RuntimeConstants &constants)
 	size_t stride = 0;
 	for (auto &constant : constants)
 	{
-		if (!isVAOConstant(constant))
+		if (!isVAOConstant(constants, constant))
 			continue;
 		auto constantIter = constantSizes.find(constant);
 		if (constantIter == constantSizes.end())
@@ -35,7 +35,7 @@ size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::strin
 	size_t stride = 0;
 	for (auto &constant : constants)
 	{
-		if (!isVAOConstant(constant))
+		if (!isVAOConstant(constants, constant))
 			continue;
 		if (constant == offsetConstant)
 			return stride;
@@ -47,9 +47,13 @@ size_t VAOFactory::getOffset(const RuntimeConstants &constants, const std::strin
 	};
 	throw std::runtime_error("No such constant");
 };
-bool VAOFactory::isVAOConstant(const std::string_view constant)
+bool VAOFactory::isVAOConstant(const RuntimeConstants &constants, const std::string_view constant)
 {
 	auto iter = VAOConstants.find(constant);
-	return (iter != VAOConstants.end());
+	if (iter == VAOConstants.end())
+	{
+		return false;
+	}
+	return std::find(constants.begin(), constants.end(), iter->second) == constants.end();
 }
 void VAOFactory::destroy(VAO &vao, bool destroyNow) { vao.vaoIRenderer->destroyVAO(vao, destroyNow); };

@@ -38,7 +38,7 @@ auto cubeRigidBodyInfo = components::entities::RigidBodyFactory(
 auto glyphRigidBodyInfo = components::entities::RigidBodyFactory(
 	components::entities::RigidBodyInfo{components::entities::BodyType::Dynamic, 1.0f, 0.85f, 0.7f, true, false,
 																			glm::vec<3, bool>(1, 0, 1), glm::vec<3, bool>(0), 2});
-auto floorCreateInfo = entities::CubeFactory("Floor", {50, 40, 50}, {1, 0, 0, 0}, {1, 1, 1}, {20000, 0.5, 20000},
+auto floorCreateInfo = entities::CubeFactory("Floor", {50, 40, 50}, {1, 0, 0, 0}, {20000, 0.5, 20000},
 																						 {0.35, 0.45, 0.25, 1}, commonShaderConstants);
 auto floorColliderInfo = components::entities::ColliderFactory(
 	components::entities::ColliderInfo(
@@ -47,7 +47,7 @@ auto floorColliderInfo = components::entities::ColliderFactory(
 		false
 	)
 );
-auto toxyCreateInfo = entities::CubeFactory("Toxy", {50, 47, 62}, {1, 0, 0, 0}, glm::vec3(0.5), glm::vec3(1), {0, 0, 1, 1}, commonShaderConstants);
+auto toxyCreateInfo = entities::CubeFactory("Toxy", {50, 47, 62}, {1, 0, 0, 0}, glm::vec3(0.5), {0, 0, 1, 1}, commonShaderConstants);
 auto toxyColliderInfo = components::entities::ColliderFactory(
 	components::entities::ColliderInfo(
 		std::make_shared<components::entities::ConvexHullShapeData>(),
@@ -55,7 +55,7 @@ auto toxyColliderInfo = components::entities::ColliderFactory(
 		false
 	)
 );
-auto cubeCreateInfo = entities::CubeFactory("Cube", {53, 47, 58}, {1, 0, 0, 0}, glm::vec3(1), glm::vec3(1), {0.01, 1, 0.2, 1}, commonShaderConstants);
+auto cubeCreateInfo = entities::CubeFactory("Cube", {53, 47, 58}, {1, 0, 0, 0}, glm::vec3(1), {0.01, 1, 0.2, 1}, commonShaderConstants);
 auto cubeColliderInfo = components::entities::ColliderFactory(
 	components::entities::ColliderInfo(
 		std::make_shared<components::entities::BoxShapeData>(glm::vec3(1, 1, 1) / 2.f),
