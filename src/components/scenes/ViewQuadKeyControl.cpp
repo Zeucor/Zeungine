@@ -76,6 +76,18 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 						scene.viewPointer->position.z += right.z * force * window.deltaTime;
 						scene.viewPointer->setDirty();
 					}));
-		}};
+		},
+		.onDetachedFunction = [](auto& component) {
+			auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+			auto& f = component.template getData<char>("f");
+			auto& b = component.template getData<char>("b");
+			auto& l = component.template getData<char>("l");
+			auto& r = component.template getData<char>("r");
+			window.removeKeyUpdateHandler(f, component.template getData<UniqueIdentifier>("fID"));
+			window.removeKeyUpdateHandler(b, component.template getData<UniqueIdentifier>("bID"));
+			window.removeKeyUpdateHandler(l, component.template getData<UniqueIdentifier>("lID"));
+			window.removeKeyUpdateHandler(r, component.template getData<UniqueIdentifier>("rID"));
+		}
+	};
 	return info;
 }
