@@ -14,6 +14,29 @@ endif()
 
 #New Dependency Declarations to the top!
 
+message(STATUS "FetchContent: tracy")
+include(FetchContent)
+FetchContent_Declare(
+    tracy
+    GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(tracy)
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -B build -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    WORKING_DIRECTORY ${tracy_SOURCE_DIR}/profiler
+    RESULT_VARIABLE tracyserver_ConfigureResult)
+if(tracyserver_ConfigureResult)
+    message(FATAL_ERROR "tracyserver-configure: ${tracyserver_ConfigureResult}")
+else()
+    message(STATUS "tracyserver-configure: success")
+endif()
+add_custom_target(tracyserver ALL
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}/tracyserver
+    WORKING_DIRECTORY ${tracy_SOURCE_DIR}profiler
+    COMMENT "Building Tracy Profiler Server"
+)
+
 message(STATUS "FetchContent: tinyfiledialogs")
 FetchContent_Declare(
     tinyfiledialogs

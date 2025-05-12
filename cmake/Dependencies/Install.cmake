@@ -33,7 +33,10 @@ if(NOT MACOS)
         "${openssl_LIB_DIR}"
         "${ffmpeg_ZG_LIB_PREFIX}" crypto crypto "${STATIC_ZG_LIB_SUFFIX}" ON)
 endif()
-
+install(FILES ${CMAKE_BINARY_DIR}/tracyserver/tracy-profiler.exe
+    DESTINATION ${ZG_BIN_INSTALL_PREFIX}
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    COMPONENT dependencies)
 set(ZG_TARGETS_TO_INSTALL
     boost
     freetype png harfbuzz brotlidec brotlicommon
@@ -42,7 +45,7 @@ set(ZG_TARGETS_TO_INSTALL
     miniaudio glsl svg
     ttf2mesh assimp
     rtmidi
-    tinyfiledialogs
+    tinyfiledialogs TracyClient
 )
 set(TARGET_ARTIFACT_FILES_TO_INSTALL "")
 foreach(TGT ${ZG_TARGETS_TO_INSTALL})

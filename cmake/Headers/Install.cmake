@@ -15,12 +15,30 @@ set(assimp_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/a
 set(vhacd_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/vhacd-src")
 set(rtmidi_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/rtmidi-src")
 set(tinyfiledialogs_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/tinyfiledialogs-src")
+set(tracy_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/tracy-src")
+
+set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")
+set(CPACK_COMPONENT_HEADERS_GROUP "Zeungine")
 
 # zg first
 install(DIRECTORY ${ZG_SRC_ABS}/include/zg DESTINATION ${ZG_INC_INSTALL_PREFIX}
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
     COMPONENT headers)
+
+set(CPACK_COMPONENT_CMAKECONFIG_DESCRIPTION "Zeungine CMake Configuration")
+set(CPACK_COMPONENT_CMAKECONFIG_GROUP "Zeungine")
+install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ../Targets.cmake DESTINATION ${ZG_SHR_INSTALL_PREFIX}
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
+    COMPONENT cmakeconfig)
+
+# tracy
+install(DIRECTORY ${tracy_SOURCE_DIR}/public/common ${tracy_SOURCE_DIR}/public/libbacktrace ${tracy_SOURCE_DIR}/public/tracy ${tracy_SOURCE_DIR}/public/client
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy
+    COMPONENT headers
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp")
 
 # tinyfiledialogs
 install(FILES ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.h
@@ -182,13 +200,3 @@ install(FILES ${miniaudio_SOURCE_DIR}/miniaudio.h
 install(FILES ${exprtk_SOURCE_DIR}/exprtk.hpp DESTINATION ${ZG_INC_INSTALL_PREFIX}
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     COMPONENT headers)
-
-set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")
-set(CPACK_COMPONENT_HEADERS_GROUP "Zeungine")
-
-install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ../Targets.cmake DESTINATION ${ZG_SHR_INSTALL_PREFIX}
-    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
-    COMPONENT cmakeconfig)
-
-set(CPACK_COMPONENT_CMAKECONFIG_DESCRIPTION "Zeungine CMake Configuration")
-set(CPACK_COMPONENT_CMAKECONFIG_GROUP "Zeungine")
