@@ -32,6 +32,10 @@ void Shader::addSSBO(ShaderType shaderType, const std::string_view name, uint32_
 {
   iRenderer->addSSBO(*this, shaderType, name, bindingIndex);
 }
+int32_t Shader::getSSBO_BindingIndex(const std::string_view name)
+{
+  return iRenderer->getSSBO_BindingIndex(*this, name);
+}
 void Shader::addUBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
 {
   iRenderer->addUBO(*this, shaderType, name, bindingIndex, bufferSize, descriptorCount, isArray);

@@ -1554,6 +1554,19 @@ void VulkanRenderer::addSSBO(shaders::Shader& shader, shaders::ShaderType shader
 	}
 	std::get<0>(*ssboBindingPointer) |= (uint32_t)shaderType;
 }
+int32_t VulkanRenderer::getSSBO_BindingIndex(shaders::Shader &shader, const std::string_view name)
+{
+	auto& shaderImpl = *(VulkanShaderImpl*)shader.rendererData;
+	std::string stringName(name);
+	auto data = vaos::VAO::getShaderUHash(shader.iRenderer);
+	auto& ssboBindings = shaderImpl.getSsboBindings(data);
+	auto ssboIter = ssboBindings.find(stringName);
+	if (ssboIter == ssboBindings.end())
+	{
+		return -1;
+	}
+	return std::get<1>(ssboIter->second);
+}
 void VulkanRenderer::addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
 														uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
 {

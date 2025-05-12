@@ -282,9 +282,10 @@ void Window::startWindow()
 				}
 				index = 0;
 				mainFramebuffer->bind();
-				for (auto& scene : scenes)
+				for (auto& sceneID : sortedScenes)
 				{
 					ZoneScopedN("p3/scene:render");
+					auto& scene = Registry::getScene(sceneID);
 					scene.fsq->render(ppOutputs[index++]);
 				}
 				mainFramebuffer->unbind();
@@ -1002,11 +1003,14 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCr
 	usingInfo.ID = transaction.id;
 	usingInfo.INDEX = transaction.index;
 	auto& scene = scenes.commitTransaction(transaction, usingInfo);
+	sceneZ = (scene.z = (sceneZ + 0.1f));
 	if (scene.onAttachedFunction)
 	{
 		ZoneScoped;
 		scene.onAttachedFunction(scene);
 	}
+	sortedScenes.push_back(scene.ID);
+	sortScenes();
 	(*Registry::idScenes)[scene.ID] = scene.INDEX_STACK;
 	return {transaction.key, transaction.id, transaction.index, &scene};
 }
@@ -1025,7 +1029,11 @@ bool Window::removeScene(size_t ID)
 		ZoneScoped;
 		scene.onDetachedFunction(scene);
 	}
+	sceneZ -= 0.1f;
+	auto sortedSceneIter = std::find(sortedScenes.begin(), sortedScenes.end(), scene.ID);
+	sortedScenes.erase(sortedSceneIter);
 	scenes.erase(iter);
+	sortScenes();
 	auto& idScenesRef = *Registry::idScenes;
 	auto idIter = idScenesRef.find(ID);
 	if (idIter != idScenesRef.end())
@@ -1034,6 +1042,14 @@ bool Window::removeScene(size_t ID)
 		idScenesRef.erase(idIter);
 	}
 	return true;
+}
+void Window::sortScenes()
+{
+	std::sort(sortedScenes.begin(), sortedScenes.end(), [](auto& a_ID, auto& b_ID){
+		auto& a_s = Registry::getScene(a_ID);
+		auto& b_s = Registry::getScene(b_ID);
+		return a_s.z > b_s.z;
+	});
 }
 void Window::runOnThread(const Runnable& runnable)
 {

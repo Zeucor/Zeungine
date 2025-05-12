@@ -342,6 +342,7 @@ namespace zg
 		void unbindShader(shaders::Shader& shader) override;
 		void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
 								 uint32_t bindingIndex) override;
+		int32_t getSSBO_BindingIndex(shaders::Shader &shader, const std::string_view name) override;
 		void addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
 								uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) override;
 		void addTexture(shaders::Shader& shader, uint32_t bindingIndex, shaders::ShaderType shaderType,

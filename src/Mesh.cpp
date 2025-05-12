@@ -122,15 +122,25 @@ void Mesh::render(Entity& entity)
 		else
 			scene.viewPointer->updateMutex.lock();
 		scene.meshPreRender(*this);
-		shader->setSSBO("InstanceModels", *this, &entity.getModelMatrix(), sizeof(glm::mat4));
-		shader->setSSBO("InstanceViews", *this, &(entity.viewPointer ? entity.viewPointer->matrix : scene.viewPointer->matrix), sizeof(glm::mat4));
-		shader->setBlock("CameraPosition", *this, entity.viewPointer ? entity.viewPointer->position : scene.viewPointer->position, 16);
+		auto& model_matrix = entity.getModelMatrix();
+		auto& view_matrix = (entity.viewPointer ? entity.viewPointer->matrix : scene.viewPointer->matrix);
+		auto& camera_position = entity.viewPointer ? entity.viewPointer->position : scene.viewPointer->position;
+		shader->setSSBO("InstanceModels", *this, &model_matrix, sizeof(glm::mat4));
+		auto inverse_model_matrix = glm::inverse(model_matrix);
+		shader->setSSBO("InverseInstanceModels", *this, &inverse_model_matrix, sizeof(glm::mat4));
+		shader->setSSBO("InstanceViews", *this, &view_matrix, sizeof(glm::mat4));
+		auto inverse_view_matrix = glm::inverse(view_matrix);
+		shader->setSSBO("InverseInstanceViews", *this, &inverse_view_matrix, sizeof(glm::mat4));
+		shader->setBlock("CameraPosition", *this, camera_position, 16);
 		if (entity.viewPointer)
 			entity.viewPointer->updateMutex.unlock();
 		else
 			scene.viewPointer->updateMutex.unlock();
 	}
-	shader->setSSBO("InstanceProjections", *this, &(entity.projectionPointer ? entity.projectionPointer->matrix : scene.projectionPointer->matrix), sizeof(glm::mat4));
+	auto& projection_matrix = (entity.projectionPointer ? entity.projectionPointer->matrix : scene.projectionPointer->matrix);
+	shader->setSSBO("InstanceProjections", *this, &projection_matrix, sizeof(glm::mat4));
+	auto inverse_projection_matrix = glm::inverse(projection_matrix);
+	shader->setSSBO("InverseInstanceProjections", *this, &inverse_projection_matrix, sizeof(glm::mat4));
 	auto keyedTexturesSize = keyedTextures.size();
 	auto keyedTexturesData = keyedTextures.data();
 	for (size_t unit = 0; unit < keyedTexturesSize; ++unit)

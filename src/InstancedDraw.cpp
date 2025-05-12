@@ -1,5 +1,6 @@
 #include <zg/InstancedDraw.hpp>
 #include <zg/Window.hpp>
+#include <zg/crypto/vector.hpp>
 using namespace zg;
 bool entity_mat4_transform_registry::initialized = ([](){
     if (!entity_mat4_transform_registry::set_getter_function("Model", [](Entity& entity) { return entity.getModelMatrix(); })) return false;
@@ -160,13 +161,14 @@ void InstancedDraw::drawMulti(
         }
         uint32_t firstInstance = 0;
         uint32_t i = 0;
-        int32_t vertex_offset = 0;
-        int32_t uv2_offset = 0;
-        int32_t uv3_offset = 0;
         std::vector<glm::vec3> positions;
         std::vector<glm::vec3> normals;
         std::vector<glm::vec2> uv2s;
         std::vector<glm::vec3> uv3s;
+        std::unordered_map<size_t, size_t> position_index_map;
+        std::unordered_map<size_t, size_t> normals_index_map;
+        std::unordered_map<size_t, size_t> uv2_index_map;
+        std::unordered_map<size_t, size_t> uv3_index_map;
         for (auto& meshID : shaderPair.second)
         {
             auto& mesh = Registry::getMesh(meshID);
@@ -179,6 +181,10 @@ void InstancedDraw::drawMulti(
             }
             for (auto& entityID : batch.entities)
             {
+                int32_t vertex_offset = -1;
+                int32_t normal_offset = -1;
+                int32_t uv2_offset = -1;
+                int32_t uv3_offset = -1;
                 auto& entity = Registry::getEntity(entityID);
                 auto material = entity.meshMaterial(meshID);
                 auto material_index = find_material_index(material);
@@ -190,46 +196,88 @@ void InstancedDraw::drawMulti(
                 auto vertexCount = mesh.vertexCount ? mesh.vertexCount(entity) : 0;
                 auto uv2Count = mesh.uv2Count ? mesh.uv2Count(entity) : 0;
                 auto uv3Count = mesh.uv3Count ? mesh.uv3Count(entity) : 0;
+                if (vertexCount)
+                {
+                    auto vertices = mesh.vertices(entity);
+                    auto vertices_hash = zg::crypto::hashVector(vertices);
+                    auto pim_iter = position_index_map.find(vertices_hash);
+                    if (pim_iter == position_index_map.end())
+                    {
+                        vertex_offset = positions.size();
+                        positions.insert(positions.end(), vertices.begin(), vertices.end());
+                        position_index_map.emplace(vertices_hash, vertex_offset); 
+                    }
+                    else
+                    {
+                        vertex_offset = pim_iter->second;
+                    }
+                    auto _indices_ = mesh.indices(entity);
+                    std::vector<glm::vec3> mnormals;
+                    computeNormals(window.iRenderer->frontFace, _indices_, vertices, mnormals);
+                    auto mnormals_hash = zg::crypto::hashVector(mnormals);
+                    auto nim_iter = normals_index_map.find(mnormals_hash);
+                    if (pim_iter == position_index_map.end())
+                    {
+                        normal_offset = normals.size();
+                        normals.insert(normals.end(), mnormals.begin(), mnormals.end());
+                        position_index_map.emplace(mnormals_hash, normal_offset); 
+                    }
+                    else
+                    {
+                        normal_offset = pim_iter->second;
+                    }
+                }
+                if (uv2Count)
+                {
+                    auto muv2s = mesh.uv2s(entity);
+                    auto muv2s_hash = zg::crypto::hashVector(muv2s);
+                    auto u2m_iter = uv2_index_map.find(muv2s_hash);
+                    if (u2m_iter == position_index_map.end())
+                    {
+                        uv2_offset = uv2s.size();
+                        uv2s.insert(uv2s.end(), muv2s.begin(), muv2s.end());
+                        position_index_map.emplace(muv2s_hash, uv2_offset); 
+                    }
+                    else
+                    {
+                        uv2_offset = u2m_iter->second;
+                    }
+                }
+                if (uv3Count)
+                {
+                    auto muv3s = mesh.uv3s(entity);
+                    auto muv3s_hash = zg::crypto::hashVector(muv3s);
+                    auto u3m_iter = uv3_index_map.find(muv3s_hash);
+                    if (u3m_iter == position_index_map.end())
+                    {
+                        uv3_offset = uv3s   .size();
+                        uv3s    .insert(uv3s    .end(), muv3s.begin(), muv3s.end());
+                        position_index_map.emplace(muv3s_hash, uv3_offset); 
+                    }
+                    else
+                    {
+                        uv3_offset = u3m_iter->second;
+                    }
+                }
                 entities[i++] = {
                     int32_t(mesh.shapeType),
-                    int32_t(material_index),
+                    material_index,
                     vertex_offset,
+                    normal_offset,
                     uv2_offset,
                     uv3_offset
                 };
                 vertex_offset += vertexCount;
-                if (vertexCount)
-                {
-                    auto vertices = mesh.vertices(entity);
-                    positions.insert(positions.end(), vertices.begin(), vertices.end());
-                    auto _indices_ = mesh.indices(entity);
-                    std::vector<glm::vec3> mnormals;
-                    computeNormals(window.iRenderer->frontFace, _indices_, vertices, mnormals);
-                    normals.insert(normals.end(), mnormals.begin(), mnormals.end());
-                }
-                if (uv2Count)
-                {
-                    auto uv2s = mesh.uv2s(entity);
-                    uv2s.insert(uv2s.end(), uv2s.begin(), uv2s.end());
-                }
-                if (uv3Count)
-                {
-                    auto uv3s = mesh.uv3s(entity);
-                    uv3s.insert(uv3s.end(), uv3s.begin(), uv3s.end());
-                }
             }
             uint32_t vertexCount;
-            switch (mesh.shapeType)
+            auto shape_count_iter = shapeVerticeCounts.find(mesh.shapeType);
+            if (shape_count_iter != shapeVerticeCounts.end())
             {
-            case ShapeType::Box:
-                vertexCount = 36;
-                break;
-            case ShapeType::Plane:
-                vertexCount = 6;
-                break;
-            case ShapeType::Mesh:
+                vertexCount = shape_count_iter->second;
+            }
+            else
+            {
                 vertexCount = mesh.m_vertexCount;
-                break;
             }
             uint32_t batchEntitiesSize = batch.entities.size();
             indirect_commands.push_back({
@@ -277,8 +325,18 @@ void InstancedDraw::drawMulti(
         shader.setSSBO("EntityUV3s", firstMesh, uv3s.data(), sizeof(glm::vec3) * uv3sSize);
         for (auto& transform_pair : transforms)
         {
-            auto transform_array_data = transform_pair.second.data();
-            shader.setSSBO("Instance" + transform_pair.first + "s", firstMesh, transform_array_data, transform_pair.second.size() * sizeof(glm::mat4));
+            auto& vector = transform_pair.second;
+            auto& tkey = transform_pair.first;
+            auto tsize = transform_pair.second.size();
+            auto vector_data = vector.data();
+            shader.setSSBO("Instance" + tkey + "s", firstMesh, vector_data, tsize * sizeof(glm::mat4));
+            auto inverse_vector = vector;
+            auto inverse_vector_data = inverse_vector.data();
+            for (auto& t : inverse_vector)
+            {
+                t = glm::inverse(t);
+            }
+            shader.setSSBO("InverseInstance" + tkey + "s", firstMesh, inverse_vector_data, tsize * sizeof(glm::mat4));
         }
         window.iRenderer->drawMultiInstanced(&shader, firstMesh, indirect_commands);
         shader.unbind();

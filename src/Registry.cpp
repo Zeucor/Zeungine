@@ -152,7 +152,7 @@ size_t Registry::hashMeshCreateInfo(const MeshCreateInfo& info, Entity& entity)
 {
     size_t finalHash = 0;
     uint64_t shift = 0;
-    finalHash = std::hash<uint32_t>{}(uint32_t(info.shapeType)) << ++shift;
+    finalHash = (std::hash<uint32_t>{}(uint32_t(info.shapeType)) + 1) << ++shift;
     if (!info.indiceCount || !info.indices || !info.vertexCount || !info.vertices)
         return finalHash;
     auto indiceHash = crypto::hashVector(info.indices(entity));

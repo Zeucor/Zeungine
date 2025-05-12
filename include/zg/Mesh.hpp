@@ -49,7 +49,7 @@ namespace zg
     {
         size_t hash;
 		std::string name;
-		ShapeType shapeType;
+		ShapeType shapeType = ShapeType::NoShape;
 		std::function<Material(Entity&)> material;
 		std::function<uint32_t(Entity&)> indiceCount;
 		std::function<std::vector<uint32_t>(Entity&)> indices;

@@ -28,11 +28,12 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
 	auto& stage = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(emplace_tuple);
     stage.floatingIndex = floatingIndex;
 	std::vector<textures::Framebuffer::TextureAttachmentPair> attachments;
-	for (auto& outputPair : stage.outputs)
+	for (auto& outputTuple : stage.outputs)
 	{
-		auto& key = outputPair.first;
+		auto& key = std::get<0>(outputTuple);
         stage.constants.push_back(key);
-		auto& type = outputPair.second;
+		auto& type = std::get<1>(outputTuple);
+        auto& addressMode = std::get<2>(outputTuple);
 		textures::Texture::Format textureFormat;
 		textures::Texture::Type textureType;
 		textures::Framebuffer::AttachmentType attachmentType;
@@ -56,7 +57,7 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
 		auto textureFilterType = textures::Texture::FilterType::Linear;
 		auto texture =
 			std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 1, 0),
-																					(const void*)0, textureFormat, textureType, textureFilterType, true);
+																					(const void*)0, textureFormat, textureType, textureFilterType, true, textures::Texture::Multisampling::x1, addressMode);
         textureRegistry.registerOutput(floatingIndex, key, texture);
 		attachments.push_back({texture, attachmentType});
 	}

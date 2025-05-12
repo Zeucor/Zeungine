@@ -24,7 +24,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::FXAAFac
             zg::PostProcessingStageCreateInfo fxaaStageCreateInfo{
                 .name = "FXAA",
                 .inputs = {"ColorTexture"},
-                .outputs = {{"ColorTexture", zg::textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"ColorTexture", zg::textures::Framebuffer::AttachmentType::Color, textures::Texture::AddressMode::ClampToEdge}},
                 .constants = {"FXAA"},
                 .setShaderConstants = [
                     edgeThresholdMin,

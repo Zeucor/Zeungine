@@ -28,11 +28,12 @@ namespace zg
         void registerOutput(float floatingIndex, const std::string& key, const std::shared_ptr<textures::Texture>& texture);
         void deregisterOutput(float floatingIndex, const std::string& key);
     };
+    using P3OutputsVector = std::vector<std::tuple<std::string, textures::Framebuffer::AttachmentType, textures::Texture::AddressMode>>;
     struct PostProcessingStageCreateInfo
     {
         std::string name;
         std::vector<std::string> inputs;
-        std::vector<std::pair<std::string, textures::Framebuffer::AttachmentType>> outputs;
+        P3OutputsVector outputs;
         shaders::RuntimeConstants constants;
         std::function<void(zg::shaders::Shader&, zg::vaos::VAO&)> setShaderConstants;
         std::function<void()> staticOnAttached;
@@ -43,7 +44,7 @@ namespace zg
         std::string name;
         float floatingIndex;
         std::vector<std::string> inputs;
-        std::vector<std::pair<std::string, textures::Framebuffer::AttachmentType>> outputs;
+        P3OutputsVector outputs;
         shaders::RuntimeConstants constants;
         std::function<void(zg::shaders::Shader&, zg::vaos::VAO&)> setShaderConstants;
         std::function<void()> staticOnAttached;

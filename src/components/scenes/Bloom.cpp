@@ -25,7 +25,7 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
             PostProcessingStageCreateInfo bloomBrightExtractStageCreateInfo{
                 .name = "BloomBrightExtract",
                 .inputs = {"ColorTexture"},
-                .outputs = {{"BrightTexture", textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"BrightTexture", textures::Framebuffer::AttachmentType::Color, textures::Texture::AddressMode::ClampToEdge}},
                 .constants = {"BloomBrightExtract"},
                 .setShaderConstants = [
                     HOST_INDEX_STACK = component.HOST_INDEX_STACK,
@@ -84,7 +84,7 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
             PostProcessingStageCreateInfo bloomBlurStageCreateInfo{
                 .name = "BloomBlur",
                 .inputs = {"BrightTexture"},
-                .outputs = {{"BlurTexture", textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"BlurTexture", textures::Framebuffer::AttachmentType::Color, textures::Texture::AddressMode::ClampToEdge}},
                 .constants = {"BloomBlur"},
                 .setShaderConstants = [
                     HOST_INDEX_STACK = component.HOST_INDEX_STACK,
@@ -169,7 +169,7 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
             PostProcessingStageCreateInfo bloomCombineStageCreateInfo{
                 .name = "BloomCombine",
                 .inputs = {"ColorTexture", "BlurTexture"},
-                .outputs = {{"ColorTexture", textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"ColorTexture", textures::Framebuffer::AttachmentType::Color, textures::Texture::AddressMode::ClampToEdge}},
                 .constants = {"BloomCombine"},
                 .setShaderConstants = [
                     HOST_INDEX_STACK = component.HOST_INDEX_STACK,

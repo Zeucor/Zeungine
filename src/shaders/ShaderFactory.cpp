@@ -5,6 +5,8 @@
 #include <zg/lights/Lights.hpp>
 #include <zg/renderers/GLRenderer.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
+#include <zg/zgfilesystem/File.hpp>
+#include <zg/zgfilesystem/Directory.hpp>
 using namespace zg::shaders;
 ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
   {
@@ -132,42 +134,48 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants) -> std::string
                 {
                   std::string string;
+                  string += "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
+                    ") out int outID;";
                   string += R"(struct Entity {
-  uint shape_id;
-  uint material_index;
-  uint vertex_offset;
-  uint uv2_offset;
-  uint uv3_offset;
+  int shape_type;
+  int material_index;
+  int vertex_offset;
+  int normal_offset;
+  int uv2_offset;
+  int uv3_offset;
 };
 const int SHAPE_TYPE_BOX = 1;
 const int SHAPE_TYPE_PLANE = 2;
-const int SHAPE_TYPE_MESH = 3;
+const int SHAPE_TYPE_SPHERE = 3;
+const int SHAPE_TYPE_MESH = 4;
 struct Material {
   vec4 albedo;
   int type; // 0 = albedo, 1 = uv2, 2 = uv3
 };
 Material get_material(in Entity entity);
-Entity get_entity(uint entity_id);
-vec2 get_uv2(uint vertex_id, in Entity entity, in Material material);
-vec3 get_uv3(uint vertex_id, in Entity entity, in Material material);
-vec3 get_box_vertex(uint vertex_id);
-vec3 get_box_normal(uint vertex_id);
-vec4 get_box_color(uint vertex_id, in Entity entity, in Material material);
-vec3 get_box_uv3(uint vertex_id, in Entity entity, in Material material);
-vec3 get_plane_vertex(uint vertex_id);
-vec3 get_plane_normal(uint vertex_id);
-vec4 get_plane_color(uint vertex_id, in Entity entity, in Material material);
-vec2 get_plane_uv2(uint vertex_id, in Entity entity, in Material material);
-vec3 get_mesh_vertex(uint vertex_id, in Entity entity, in Material material);
-vec3 get_mesh_normal(uint vertex_id, in Entity entity, in Material material);
-vec4 get_mesh_color(uint vertex_id, in Entity entity, in Material material);
-vec2 get_mesh_uv2(uint vertex_id, in Entity entity, in Material material);
-uint get_entity_id();
-vec3 get_entity_vertex(uint vertex_id, in Entity entity, in Material material);
-vec3 get_entity_normal(uint vertex_id, in Entity entity, in Material material);
-vec4 get_entity_color(uint vertex_id, in Entity entity, in Material material);
-vec2 get_entity_uv2(uint vertex_id, in Entity entity, in Material material);
-vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material);
+Entity get_entity(int entity_id);
+vec2 get_uv2(int vertex_id, in Entity entity, in Material material);
+vec3 get_uv3(int vertex_id, in Entity entity, in Material material);
+vec3 get_box_vertex(int vertex_id);
+vec3 get_box_normal(int vertex_id);
+vec4 get_box_color(int vertex_id, in Entity entity, in Material material);
+vec3 get_box_uv3(int vertex_id, in Entity entity, in Material material);
+vec3 get_plane_vertex_xz(int vertex_id);
+vec3 get_plane_normal_xz(int vertex_id);
+vec3 get_plane_vertex_xy(int vertex_id);
+vec3 get_plane_normal_xy(int vertex_id);
+vec4 get_plane_color(int vertex_id, in Entity entity, in Material material);
+vec2 get_plane_uv2(int vertex_id, in Entity entity, in Material material);
+vec3 get_mesh_vertex(int vertex_id, in Entity entity, in Material material);
+vec3 get_mesh_normal(int vertex_id, in Entity entity, in Material material);
+vec4 get_mesh_color(int vertex_id, in Entity entity, in Material material);
+vec2 get_mesh_uv2(int vertex_id, in Entity entity, in Material material);
+int get_entity_id();
+vec3 get_entity_vertex(int vertex_id, in Entity entity, in Material material);
+vec3 get_entity_normal(int vertex_id, in Entity entity, in Material material);
+vec4 get_entity_color(int vertex_id, in Entity entity, in Material material);
+vec2 get_entity_uv2(int vertex_id, in Entity entity, in Material material);
+vec3 get_entity_uv3(int vertex_id, in Entity entity, in Material material);
 )";
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addSSBO(ShaderType::Vertex, "Entities", bindingIndex);
@@ -217,11 +225,17 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material);
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Vertex, "InverseInstanceViews", bindingIndex);
+                  std::string string;
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer InverseInstanceViewsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InverseInstanceViews;\n";
+                  bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addSSBO(ShaderType::Vertex, "InstanceViews", bindingIndex);
-                  return "layout(std430, binding = " + std::to_string(bindingIndex) +
-                      ") buffer InstanceViewsBuffer {\n" +
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer InstanceViewsBuffer {\n" +
                       "    mat4 data[];\n" +
                       "} InstanceViews;\n";
+                  return string;
                 }
               }
             }
@@ -233,11 +247,17 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material);
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Vertex, "InverseInstanceProjections", bindingIndex);
+                  std::string string;
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer InverseInstanceProjectionsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InverseInstanceProjections;\n";
+                  bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addSSBO(ShaderType::Vertex, "InstanceProjections", bindingIndex);
-                  return "layout(std430, binding = " + std::to_string(bindingIndex) +
-                      ") buffer InstanceProjectionsBuffer {\n" +
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer InstanceProjectionsBuffer {\n" +
                       "    mat4 data[];\n" +
                       "} InstanceProjections;\n";
+                  return string;
                 }
               }
             }
@@ -249,10 +269,17 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material);
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                  shader.addSSBO(ShaderType::Vertex, "InverseInstanceModels", bindingIndex);
+                  std::string string;
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer InverseInstanceModelsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InverseInstanceModels;\n";
+                  bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addSSBO(ShaderType::Vertex, "InstanceModels", bindingIndex);
-                  return "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer InstanceModelsBuffer {\n" +
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) + ") buffer InstanceModelsBuffer {\n" +
                       "    mat4 data[];\n" +
                       "} InstanceModels;\n";
+                  return string;
                 }
               }
             }
@@ -343,7 +370,8 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material);
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants) -> std::string
                 {
-                  return R"(uint entity_id = get_entity_id();
+                  return R"(int entity_id = get_entity_id();
+  outID = entity_id;
   Entity entity = get_entity(entity_id);
   Material material = get_material(entity);)";
                 }
@@ -524,7 +552,7 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material);
                   return R"(
 Material get_material(in Entity entity)
 {
-  uint material_index = entity.material_index;
+  int material_index = entity.material_index;
   if (material_index >= 0) {
     return Materials.data[material_index];
   }
@@ -533,39 +561,39 @@ Material get_material(in Entity entity)
   defaultMaterial.albedo = vec4(1.0);
   return defaultMaterial;
 }
-Entity get_entity(uint entity_id)
+Entity get_entity(int entity_id)
 {
   if (entity_id >= 0) {
     return Entities.data[entity_id];
   }
   Entity defaultEntity;
-  defaultEntity.shape_id = -1;
+  defaultEntity.shape_type = -1;
   defaultEntity.material_index = -1;
   defaultEntity.vertex_offset = -1;
   defaultEntity.uv2_offset = -1;
   defaultEntity.uv3_offset = -1;
   return defaultEntity;
 }
-vec4 get_color(uint vertex_id, in Entity entity, in Material material)
+vec4 get_color(int vertex_id, in Entity entity, in Material material)
 {
   // if (material.type != 0)
   //   return vec4(1, 1, 1, 1);
   return material.albedo;
   // return vec4(material.type, material.type, material.type, 1);
 }
-vec2 get_uv2(uint vertex_id, in Entity entity, in Material material)
+vec2 get_uv2(int vertex_id, in Entity entity, in Material material)
 {
   if (material.type != 1)
     return vec2(0, 0);
   return EntityUV2s.data[entity.uv2_offset + vertex_id];
 }
-vec3 get_uv3(uint vertex_id, in Entity entity, in Material material)
+vec3 get_uv3(int vertex_id, in Entity entity, in Material material)
 {
   if (material.type != 2)
     return vec3(0, 0, 0);
   return EntityUV3s.data[entity.uv3_offset + vertex_id];
 }
-vec3 get_box_vertex(uint vertex_id)
+vec3 get_box_vertex(int vertex_id)
 {
   // Define the 8 unique corners of the cube
   vec3 v0 = vec3(-1.0, -1.0, -1.0); // NLL
@@ -630,7 +658,7 @@ vec3 get_box_vertex(uint vertex_id)
     default: return vec3(0.0, 0.0, 0.0); // Should not happen if vertexCount is 36
   }
 }
-vec3 get_box_normal(uint vertex_id)
+vec3 get_box_normal(int vertex_id)
 {
   // Normals for each face of the cube
   // Each face has 6 vertices (2 triangles), and all 6 share the same normal.
@@ -663,7 +691,7 @@ vec3 get_box_normal(uint vertex_id)
   // Default fallback, though with correct vertex_id (0-35) this shouldn't be reached.
   return vec3(0.0, 0.0, 0.0); 
 }
-vec3 get_box_uv3(uint vertex_id, in Entity entity, in Material material)
+vec3 get_box_uv3(int vertex_id, in Entity entity, in Material material)
 {
   if (material.type == 2)
   {
@@ -671,7 +699,7 @@ vec3 get_box_uv3(uint vertex_id, in Entity entity, in Material material)
   }
   return vec3(0, 0, 0);
 }
-vec3 get_plane_vertex(uint vertex_id)
+vec3 get_plane_vertex_xz(int vertex_id)
 {
   switch (vertex_id)
   {
@@ -684,11 +712,28 @@ vec3 get_plane_vertex(uint vertex_id)
     default: return vec3(0.0, 0.0, 0.0);
   }
 }
-vec3 get_plane_normal(uint vertex_id)
+vec3 get_plane_vertex_xy(int vertex_id)
+{
+  switch (vertex_id)
+  {
+    case 0: return vec3(-0.5, -0.5, 0.0);
+    case 1: return vec3( 0.5, -0.5, 0.0);
+    case 2: return vec3(-0.5,  0.5, 0.0);
+    case 3: return vec3(-0.5,  0.5, 0.0);
+    case 4: return vec3( 0.5, -0.5, 0.0);
+    case 5: return vec3( 0.5,  0.5, 0.0);
+    default: return vec3(0.0, 0.0, 0.0);
+  }
+}
+vec3 get_plane_normal_xy(int vertex_id)
+{
+  return vec3(0.0, 0.0, 1.0);
+}
+vec3 get_plane_normal_xz(int vertex_id)
 {
     return vec3(0, 1, 0);
 }
-vec2 get_plane_uv2(uint vertex_id, in Entity entity, in Material material)
+vec2 get_plane_uv2(int vertex_id, in Entity entity, in Material material)
 {
   if (material.type == 2)
   {
@@ -696,15 +741,15 @@ vec2 get_plane_uv2(uint vertex_id, in Entity entity, in Material material)
   }
   return vec2(0, 0);
 }
-vec3 get_mesh_vertex(uint vertex_id, in Entity entity, in Material material)
+vec3 get_mesh_vertex(int vertex_id, in Entity entity, in Material material)
 {
   return MeshPositions.data[entity.vertex_offset + vertex_id];
 }
-vec3 get_mesh_normal(uint vertex_id, in Entity entity, in Material material)
+vec3 get_mesh_normal(int vertex_id, in Entity entity, in Material material)
 {
   return MeshNormals.data[entity.vertex_offset + vertex_id];
 }
-vec2 get_mesh_uv2(uint vertex_id, in Entity entity, in Material material)
+vec2 get_mesh_uv2(int vertex_id, in Entity entity, in Material material)
 {
   if (material.type == 2)
   {
@@ -712,45 +757,54 @@ vec2 get_mesh_uv2(uint vertex_id, in Entity entity, in Material material)
   }
   return vec2(0, 0);
 }
-uint get_entity_id()
+int get_entity_id()
 {
   return gl_InstanceIndex;
 };
-vec3 get_entity_vertex(uint vertex_id, in Entity entity, in Material material)
+vec3 get_entity_vertex(int vertex_id, in Entity entity, in Material material)
 {
-  switch (entity.shape_id)
+  switch (entity.shape_type)
   {
   case SHAPE_TYPE_BOX:
     return get_box_vertex(vertex_id);
   case SHAPE_TYPE_PLANE:
-    return get_plane_vertex(vertex_id);
+    return get_plane_vertex_xz(vertex_id);
+  case SHAPE_TYPE_SPHERE:
+  {
+    vec3 vertex_local = get_plane_vertex_xy(vertex_id) * 2.0;
+    mat4 viewMatrix = InstanceViews.data[gl_InstanceIndex];
+    mat3 viewRotationInverse = transpose(mat3(viewMatrix));
+    return viewRotationInverse * vertex_local;
+  }
   case SHAPE_TYPE_MESH:
     return get_mesh_vertex(vertex_id, entity, material);
   }
   return vec3(0.0);
 }
-vec3 get_entity_normal(uint vertex_id, in Entity entity, in Material material)
+vec3 get_entity_normal(int vertex_id, in Entity entity, in Material material)
 {
-  switch (entity.shape_id)
+  switch (entity.shape_type)
   {
   case SHAPE_TYPE_BOX:
     return get_box_normal(vertex_id);
   case SHAPE_TYPE_PLANE:
-    return get_plane_normal(vertex_id);
+    return get_plane_normal_xz(vertex_id);
+  case SHAPE_TYPE_SPHERE:
+    return get_plane_normal_xy(vertex_id);
   case SHAPE_TYPE_MESH:
     return get_mesh_normal(vertex_id, entity, material);
   }
   return vec3(0.0);
 }
-vec4 get_entity_color(uint vertex_id, in Entity entity, in Material material)
+vec4 get_entity_color(int vertex_id, in Entity entity, in Material material)
 {
   return get_color(vertex_id, entity, material);
 }
-vec2 get_entity_uv2(uint vertex_id, in Entity entity, in Material material)
+vec2 get_entity_uv2(int vertex_id, in Entity entity, in Material material)
 {
   return get_uv2(vertex_id, entity, material);
 }
-vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material)
+vec3 get_entity_uv3(int vertex_id, in Entity entity, in Material material)
 {
   return get_uv3(vertex_id, entity, material);
 }
@@ -842,6 +896,79 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material)
         "layout",
         {
           {
+            "Shape", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants) -> std::string
+                {
+                  std::string string;
+                  string += "layout(location = " + std::to_string(ShaderFactory::currentInLayoutIndex++) +
+                    ") flat in int inID;\n";
+                  string += R"(struct Entity {
+  int shape_type;
+  int material_index;
+  int vertex_offset;
+  int normal_offset;
+  int uv2_offset;
+  int uv3_offset;
+};
+const int SHAPE_TYPE_BOX = 1;
+const int SHAPE_TYPE_PLANE = 2;
+const int SHAPE_TYPE_SPHERE = 3;
+const int SHAPE_TYPE_MESH = 4;
+struct Material {
+  vec4 albedo;
+  int type; // 0 = albedo, 1 = uv2, 2 = uv3
+};
+Material get_material(in Entity entity);
+Entity get_entity(int entity_id);
+vec4 get_box_color(int vertex_id, in Entity entity, in Material material);
+vec4 get_plane_color(int vertex_id, in Entity entity, in Material material);
+vec4 get_mesh_color(int vertex_id, in Entity entity, in Material material);
+int get_entity_id();
+vec4 get_entity_color(in Entity entity, in Material material);
+)";
+                  auto bindingIndex = shader.getSSBO_BindingIndex("Entities");
+                  shader.addSSBO(ShaderType::Fragment, "Entities", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer EntitiesBuffer {\n" +
+                      "    Entity data[];\n" +
+                      "} Entities;\n";
+                  bindingIndex = shader.getSSBO_BindingIndex("Materials");
+                  shader.addSSBO(ShaderType::Fragment, "Materials", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer MaterialsBuffer {\n" +
+                      "    Material data[];\n" +
+                      "} Materials;\n";
+                  bindingIndex = shader.getSSBO_BindingIndex("MeshPositions");
+                  shader.addSSBO(ShaderType::Fragment, "MeshPositions", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer MeshPositionsBuffer {\n" +
+                      "    vec3 data[];\n" +
+                      "} MeshPositions;\n";
+                  bindingIndex = shader.getSSBO_BindingIndex("MeshNormals");
+                  shader.addSSBO(ShaderType::Fragment, "MeshNormals", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer MeshNormalsBuffer {\n" +
+                      "    vec3 data[];\n" +
+                      "} MeshNormals;\n";
+                  bindingIndex = shader.getSSBO_BindingIndex("EntityUV2s");
+                  shader.addSSBO(ShaderType::Fragment, "EntityUV2s", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer EntityUV2sBuffer {\n" +
+                      "    vec2 data[];\n" +
+                      "} EntityUV2s;\n";
+                  bindingIndex = shader.getSSBO_BindingIndex("EntityUV3s");
+                  shader.addSSBO(ShaderType::Fragment, "EntityUV3s", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer EntityUV3sBuffer {\n" +
+                      "    vec3 data[];\n" +
+                      "} EntityUV3s;\n";
+                    return string;
+                }
+              }
+            }
+          },
+          {
             "Color", {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
@@ -923,9 +1050,81 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material)
                 {
                   auto bindingIndex = ShaderFactory::currentBindingIndex++;
                   shader.addUBO(ShaderType::Fragment, "CameraPosition", bindingIndex, sizeof(glm::vec3));
-                  return "layout(binding = " + std::to_string(bindingIndex) + ") uniform CameraPosition {\n" +
+                  return "layout(binding = " + std::to_string(bindingIndex) + ") uniform CameraPositionBuffer {\n" +
                     " vec3 value;\n" +
-                    "} cameraPosition;";
+                    "} CameraPosition;";
+                }
+              }
+            }
+          },
+          {
+            "View",
+            {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                {
+                  auto bindingIndex = shader.getSSBO_BindingIndex("InverseInstanceViews");
+                  shader.addSSBO(ShaderType::Fragment, "InverseInstanceViews", bindingIndex);
+                  std::string string;
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer InverseInstanceViewsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InverseInstanceViews;\n";
+                  bindingIndex = shader.getSSBO_BindingIndex("InstanceViews");
+                  shader.addSSBO(ShaderType::Fragment, "InstanceViews", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer InstanceViewsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InstanceViews;\n";
+                  return string;
+                }
+              }
+            }
+          },
+          {
+            "Projection",
+            {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                {
+                  auto bindingIndex = shader.getSSBO_BindingIndex("InverseInstanceProjections");
+                  shader.addSSBO(ShaderType::Fragment, "InverseInstanceProjections", bindingIndex);
+                  std::string string;
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer InverseInstanceProjectionsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InverseInstanceProjections;\n";
+                  bindingIndex = shader.getSSBO_BindingIndex("InstanceProjections");
+                  shader.addSSBO(ShaderType::Fragment, "InstanceProjections", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer InstanceProjectionsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InstanceProjections;\n";
+                  return string;
+                }
+              }
+            }
+          },
+          {
+            "Model",
+            {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                {
+                  auto bindingIndex = shader.getSSBO_BindingIndex("InverseInstanceModels");
+                  shader.addSSBO(ShaderType::Fragment, "InverseInstanceModels", bindingIndex);
+                  std::string string;
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer InverseInstanceModelsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InverseInstanceModels;\n";
+                  bindingIndex = shader.getSSBO_BindingIndex("InstanceModels");
+                  shader.addSSBO(ShaderType::Fragment, "InstanceModels", bindingIndex);
+                  string += "layout(std430, binding = " + std::to_string(bindingIndex) +
+                      ") buffer InstanceModelsBuffer {\n" +
+                      "    mat4 data[];\n" +
+                      "} InstanceModels;\n";
+                  return string;
                 }
               }
             }
@@ -1234,6 +1433,36 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material)
         "preInMain",
         {
           {
+            "Shape", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants) -> std::string
+                {
+                  return R"(int entity_id = get_entity_id();
+  Entity entity = get_entity(entity_id);
+  Material material = get_material(entity);)";
+                }
+              }
+            }
+          },
+          {
+            "SDFColor", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
+                {
+                  if (std::find(constants.begin(), constants.end(), "PointLightSpaceMatrix") != constants.end() ||
+                      std::find(constants.begin(), constants.end(), "DepthMap") != constants.end())
+                  {
+                    return "";
+                  }
+                  else
+                  {
+                    return "  FragColor = get_entity_color(entity, material);";
+                  }
+                }
+              }
+            }
+          },
+          {
             "Color", {
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
@@ -1316,7 +1545,7 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material)
               {
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
-                  return std::string("  float distance = length(inPosition.xyz - cameraPosition.value);\n") +
+                  return std::string("  float distance = length(inPosition.xyz - CameraPosition.value);\n") +
                     "  float fogFactor = calculateFogFactor(distance, fogDensity.value);\n"
                     "  FragColor = mix(fogColor.value, FragColor, fogFactor);";
                 }
@@ -1329,7 +1558,7 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material)
                 ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants)-> std::string
                 {
                   return std::string("  vec3 normal = normalize(inNormal);\n") +
-                    "  vec3 viewDir = normalize(cameraPosition.value - inFragPosition.xyz);\n"
+                    "  vec3 viewDir = normalize(CameraPosition.value - inFragPosition.xyz);\n"
                     "  vec3 lightingColor = vec3(0.0);\n";
                 }
               }
@@ -1416,6 +1645,123 @@ vec3 get_entity_uv3(uint vertex_id, in Entity entity, in Material material)
       },
       {
         "postMain", {
+          {
+            "Shape", {
+              {
+                ++ShaderFactory::hooksCount, [](auto& shader, const auto& constants) -> std::string
+                {
+                  return R"(
+Material get_material(in Entity entity)
+{
+  int material_index = entity.material_index;
+  if (material_index >= 0) {
+    return Materials.data[material_index];
+  }
+  Material defaultMaterial;
+  defaultMaterial.type = 0;
+  defaultMaterial.albedo = vec4(1.0);
+  return defaultMaterial;
+}
+Entity get_entity(int entity_id)
+{
+  if (entity_id >= 0) {
+    return Entities.data[entity_id];
+  }
+  Entity defaultEntity;
+  defaultEntity.shape_type = -1;
+  defaultEntity.material_index = -1;
+  defaultEntity.vertex_offset = -1;
+  defaultEntity.uv2_offset = -1;
+  defaultEntity.uv3_offset = -1;
+  return defaultEntity;
+}
+float sphereSDF(vec3 p, float r) {
+    return length(p) - r;
+}
+float objectSDF(vec3 p_world) {
+    vec3 p_local = vec3(InverseInstanceModels.data[inID] * vec4(p_world, 1.0));
+    return sphereSDF(p_local, 0.49);
+}
+const int MAX_STEPS = 100;
+const float MIN_DIST = 0.01;
+const float MAX_DIST = 10.0;
+vec4 sdf_get_color_sphere(vec4 baseColor)
+{
+  vec3 rayOrigin = inFragPosition.xyz;
+  vec3 rayDirection = normalize(rayOrigin - CameraPosition.value);
+  float totalDistance = 0.0;
+  vec3 currentPos = rayOrigin;
+  float distanceToSurface = 0.0;
+  bool hit = false; 
+  for (int i = 0; i < MAX_STEPS; ++i) {
+      currentPos = rayOrigin + rayDirection * totalDistance;
+      distanceToSurface = objectSDF(currentPos);
+      if (distanceToSurface < MIN_DIST) {
+          hit = true;
+          break;
+      }
+      totalDistance += distanceToSurface;
+      if (totalDistance > MAX_DIST) {
+          break;
+      }
+  }
+  if (hit) {
+    return baseColor;
+      // // Calculate surface normal (using finite difference)
+      // // Evaluate the SDF in world space for normal calculation
+      // vec3 normal;
+      // vec2 eps = vec2(0.001, 0.0);
+      // normal.x = objectSDF(currentPos + eps.xyy) - objectSDF(currentPos - eps.xyy);
+      // normal.y = objectSDF(currentPos + eps.yxy) - objectSDF(currentPos - eps.yxy);
+      // normal.z = objectSDF(currentPos + eps.yyx) - objectSDF(currentPos - eps.yyx);
+      // normal = normalize(normal);
+
+      // // Simple diffuse lighting
+      // vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0)); // Example light direction
+      // float diff = max(dot(normal, lightDir), 0.0);
+
+      // // Output color (e.g., based on diffuse light)
+      // vec3 objectColor = vec3(0.2, 0.7, 0.3); // Example object color
+
+      // // Example of using the instance ID to change color per instance
+      // // if (v_InstanceID % 2 == 0) {
+      // //     objectColor = vec3(0.8, 0.1, 0.1); // Red for even instances
+      // // } else {
+      // //     objectColor = vec3(0.1, 0.1, 0.8); // Blue for odd instances
+      // // }
+
+
+      // FragColor = vec4(objectColor * diff, 1.0);
+
+      // // You could also encode depth or other information here
+      // // FragColor = vec4(vec3(totalDistance / MAX_DIST), 1.0); // Visualize depth
+  }
+  return vec4(0.0, 0.0, 0.0, 0.0);
+}
+vec4 get_color(in Entity entity, in Material material)
+{
+  vec4 baseColor = FragColor;
+  switch (entity.shape_type) {
+    case 3:
+      return sdf_get_color_sphere(baseColor);
+    default:
+      return baseColor;
+  }
+  return baseColor;
+}
+int get_entity_id()
+{
+  return inID;
+};
+vec4 get_entity_color(in Entity entity, in Material material)
+{
+  return get_color(entity, material);
+}
+)";
+                }
+              }
+            }
+          },
           {
             "Fog", {
               {
@@ -1671,6 +2017,12 @@ void ShaderFactory::appendHooks(std::string& shaderString, RuntimeHooksMap& runt
 }
 bool ShaderFactory::compileShader(Shader& shader, ShaderType shaderType, ShaderPair& shaderPair)
 {
+  {
+    static auto shadersPath = zgfilesystem::File::getProgramDirectoryPath() / "shaders";
+    zgfilesystem::Directory::ensureExists(shadersPath);
+    zgfilesystem::File shaderFile(shadersPath / ("shader-" + std::to_string(shader.hash) + "-" + shaderTypeStringMap[shaderType] + ".glsl"), enums::EFileLocation::Absolute, "w");
+    shaderFile.writeBytes(0, shaderPair.first.size(), shaderPair.first.c_str());
+  }
 	return shader.iRenderer->compileShader(shader, shaderType, shaderPair);
 }
 bool ShaderFactory::compileProgram(Shader& shader) { return shader.iRenderer->compileProgram(shader); }

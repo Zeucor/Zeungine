@@ -54,6 +54,8 @@ struct WindowCreateInfo;
 		float windowX;
 		float windowY;
 		uint32_t framerate = 60;
+		float sceneZ = 0.0f;
+		std::vector<size_t> sortedScenes;
 #if defined(_WIN32) || defined(__linux__)
 		std::shared_ptr<std::thread> windowThread;
 #endif
@@ -170,6 +172,7 @@ struct WindowCreateInfo;
 		// scene
 		KeyIDVector<std::string, Scene>::EmplaceBackTuple  addScene(const SceneCreateInfo& info);
 		bool removeScene(size_t ID);
+		void sortScenes();
 		// runnables
 		void runOnThread(const Runnable& runnable);
 		void runRunnables();

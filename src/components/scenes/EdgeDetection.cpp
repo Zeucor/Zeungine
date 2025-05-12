@@ -29,7 +29,7 @@ SceneComponentCreateInfo components::scenes::EdgeDetectionFactory() {
             PostProcessingStageCreateInfo edgeDetectionStageCreateInfo{
                 .name = "EdgeDetection",
                 .inputs = {"ColorTexture", "DepthTexture"},
-                .outputs = {{"ColorTexture", textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"ColorTexture", textures::Framebuffer::AttachmentType::Color, textures::Texture::AddressMode::ClampToEdge}},
                 .constants = {"EdgeDetection"},
                 .setShaderConstants = [
                     HOST_INDEX_STACK = component.HOST_INDEX_STACK,

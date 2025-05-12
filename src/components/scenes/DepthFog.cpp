@@ -23,7 +23,7 @@ SceneComponentCreateInfo zg::components::scenes::DepthFogFactory() {
             PostProcessingStageCreateInfo depthFogStageCreateInfo{
                 .name = "DepthFog",
                 .inputs = {"ColorTexture", "DepthTexture"},
-                .outputs = {{"ColorTexture", zg::textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"ColorTexture", zg::textures::Framebuffer::AttachmentType::Color, textures::Texture::AddressMode::ClampToEdge}},
                 .constants = {"DepthFog", "LinearizeDepthUtil"},
                 .setShaderConstants = [
                     HOST_INDEX_STACK = component.HOST_INDEX_STACK,

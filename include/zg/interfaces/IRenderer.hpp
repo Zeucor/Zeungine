@@ -100,6 +100,7 @@ namespace zg
 		virtual void bindShader(shaders::Shader& shader) = 0;
 		virtual void unbindShader(shaders::Shader &shader) = 0;
 		virtual void addSSBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex) = 0;
+		virtual int32_t getSSBO_BindingIndex(shaders::Shader &shader, const std::string_view name) = 0;
 		virtual void addUBO(shaders::Shader &shader, shaders::ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount = 1, bool isArray = false) = 0;
 		virtual void addTexture(shaders::Shader &shader, uint32_t bindingIndex, shaders::ShaderType shaderType, std::string_view textureName, uint32_t descriptorCount) = 0;
 		virtual void setSSBO(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name, const void *pointer, size_t size) = 0;

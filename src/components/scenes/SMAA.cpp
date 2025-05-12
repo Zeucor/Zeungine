@@ -24,7 +24,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::SMAAFac
             PostProcessingStageCreateInfo smaaStageCreateInfo{
                 .name = "SMAA",
                 .inputs = {"ColorTexture"},
-                .outputs = {{"ColorTexture", textures::Framebuffer::AttachmentType::Color}},
+                .outputs = {{"ColorTexture", textures::Framebuffer::AttachmentType::Color, textures::Texture::AddressMode::ClampToEdge}},
                 .constants = {"SMAA"},
                 .setShaderConstants = [
                     threshold,
