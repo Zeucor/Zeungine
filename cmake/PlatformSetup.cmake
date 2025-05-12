@@ -75,16 +75,19 @@ if(LINUX OR MACOS)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
     endif()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wno-deprecated-declarations")
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrivial-auto-var-init=pattern")
+    endif()
 	set(LD_CONF_FILE "/etc/ld.so.conf.d/zg${CMAKE_BUILD_TYPE}.conf")
 elseif(WINDOWS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /RTC1")
+    endif()
 endif()
 if(MACOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
-#when using C++26
-#-ftrivial-auto-var-init=pattern
-#/RTC1
 
 # setup target helper
 function(zg_setup_target
