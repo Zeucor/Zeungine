@@ -82,6 +82,9 @@ endif()
 if(MACOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
+#when using C++26
+#-ftrivial-auto-var-init=pattern
+#/RTC1
 
 # setup target helper
 function(zg_setup_target
