@@ -670,7 +670,7 @@ endif()
 # FetchContent_MakeAvailable(swiftshader)
 
 # FFmpeg
-message(STATUS "|FetchContent&Build&buildInstall|OneTime: ffmpeg")
+message(STATUS "FetchContent: ffmpeg")
 FetchContent_Declare(ffmpeg
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
     GIT_TAG n7.1)
