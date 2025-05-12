@@ -33,12 +33,22 @@ install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ..
     COMPONENT cmakeconfig)
 
 # tracy
-install(DIRECTORY ${tracy_SOURCE_DIR}/public/common ${tracy_SOURCE_DIR}/public/libbacktrace ${tracy_SOURCE_DIR}/public/tracy ${tracy_SOURCE_DIR}/public/client
-    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy
-    COMPONENT headers
-    FILES_MATCHING
-    PATTERN "*.h"
-    PATTERN "*.hpp")
+install(DIRECTORY ${tracy_SOURCE_DIR}/public/client
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy COMPONENT headers
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+install(DIRECTORY ${tracy_SOURCE_DIR}/public/common
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy COMPONENT headers
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+install(FILES
+        ${tracy_SOURCE_DIR}/public/libbacktrace/backtrace.hpp
+        ${tracy_SOURCE_DIR}/public/libbacktrace/config.h
+        ${tracy_SOURCE_DIR}/public/libbacktrace/filenames.hpp
+        ${tracy_SOURCE_DIR}/public/libbacktrace/internal.hpp
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy/libbacktrace COMPONENT headers
+    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+install(DIRECTORY ${tracy_SOURCE_DIR}/public/tracy
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy COMPONENT headers
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 
 # tinyfiledialogs
 install(FILES ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.h
@@ -91,17 +101,20 @@ install(DIRECTORY ${jolt_SOURCE_DIR}/Jolt
     PATTERN "*.inc")
 
 # boost includes
-file(GLOB BOOST_INCLUDES "${boost_SOURCE_DIR}/libs/*/include/boost")
-list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/python/include/boost$")
-list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/graph_parallel/include/boost$")
-list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/stacktrace/include/boost$")
-list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/mpi/include/boost$")
+option(INSTALL_BOOST "Whether to install boost headers" ON)
+if(INSTALL_BOOST)
+    file(GLOB BOOST_INCLUDES "${boost_SOURCE_DIR}/libs/*/include/boost")
+    list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/python/include/boost$")
+    list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/graph_parallel/include/boost$")
+    list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/stacktrace/include/boost$")
+    list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/mpi/include/boost$")
 
-foreach(dir ${BOOST_INCLUDES})
-    install(DIRECTORY "${dir}" DESTINATION ${ZG_INC_INSTALL_PREFIX}
-        FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-        DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
-endforeach()
+    foreach(dir ${BOOST_INCLUDES})
+        install(DIRECTORY "${dir}" DESTINATION ${ZG_INC_INSTALL_PREFIX}
+            FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+            DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)
+    endforeach()
+endif()
 
 # openssl includes
 if(NOT MACOS)

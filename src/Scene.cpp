@@ -46,6 +46,7 @@ Scene::Scene(const SceneCreateInfo& info) :
 	prePreRenderFunction(info.prePreRenderFunction),
 	postPostRenderFunction(info.postPostRenderFunction)
 {
+	ZoneScopedN("Scene::constructor");
 	auto& window = Registry::getWindow(INDEX_STACK);
 	switch (info.projectionType)
 	{
@@ -145,6 +146,7 @@ Scene::Scene(const Scene& other) :
 	prePreRenderFunction(other.prePreRenderFunction),
 	postPostRenderFunction(other.postPostRenderFunction)
 {
+	ZoneScopedN("Scene::constructor");
 	if (useBVH)
 	{
 		bvh = std::make_shared<raytracing::BVH>();
@@ -153,6 +155,7 @@ Scene::Scene(const Scene& other) :
 }
 Scene& Scene::operator=(const Scene& other)
 {
+	ZoneScopedN("Scene::operator=");
 	((DataStorage<Scene>&)*this) = other;
 	((ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>&)*this) = other;
 	ID = other.ID;
@@ -189,6 +192,7 @@ Scene& Scene::operator=(const Scene& other)
 };
 Scene::~Scene()
 {
+	ZoneScopedN("Scene::destructor");
 	for (auto& entity : entities)
 		if (entity.onRemovedFunction)
 			entity.onRemovedFunction(entity);
@@ -202,10 +206,12 @@ Scene::~Scene()
 std::vector<textures::Framebuffer::TextureAttachmentPair>
 Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::AttachmentType>& attachments)
 {
+	ZoneScoped;
 	auto& window = Registry::getWindow(INDEX_STACK);
 	std::vector<textures::Framebuffer::TextureAttachmentPair> textureAttachmentPairs;
 	for (auto& attachment : attachments)
 	{
+		ZoneScoped;
 		auto isDepthStencil = attachment == textures::Framebuffer::AttachmentType::DepthStencil;
 		auto isDepth = attachment == textures::Framebuffer::AttachmentType::Depth;
 		auto isColor = attachment == textures::Framebuffer::AttachmentType::Color;
@@ -246,6 +252,7 @@ Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::
 }
 KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const EntityCreateInfo& info, bool callOnEntityAdded)
 {
+	ZoneScoped;
 	auto usingInfo{info};
 	auto transaction = entities.startTransaction();
 	usingInfo.INDEX_STACK = {INDEX_STACK.begin(), INDEX_STACK.end()};
@@ -264,6 +271,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 }
 bool Scene::removeEntity(size_t ID)
 {
+	ZoneScoped;
 	auto entityIter = entities.find_id(ID);
 	if (entityIter == entities.end())
 		return false;
@@ -281,6 +289,7 @@ bool Scene::removeEntity(size_t ID)
 }
 void Scene::update()
 {
+	ZoneScoped;
 	sceneIsAt = SYS_CLOCK::now();
 	updateNonce = (sceneIsAt - sceneFirstEncountered).count() / 10'000'000.0;
 	if (preUpdateFunction)
@@ -297,12 +306,14 @@ void Scene::update()
 	{
 		if (bvh->changed)
 		{
+			ZoneScoped;
 			bvh->buildBVH();
 		}
 	}
 }
 void Scene::preRender()
 {
+	ZoneScoped;
 	if (prePreRenderFunction)
 		prePreRenderFunction(*this);
 	auto entitiesData = entities.data();
@@ -310,10 +321,12 @@ void Scene::preRender()
 	std::function<void(Entity&, shaders::Shader&, const std::function<void(Mesh&, shaders::Shader&)>)> drawEntity;
 	drawEntity = [&](auto& entity, auto& shader, auto setShader)
 	{
+		ZoneScoped;
 		if (!entity.affectedByShadows)
 			return;
 		for (auto& meshID : entity.meshIDs)
 		{
+			ZoneScoped;
 			auto& mesh = Registry::getMesh(meshID);
 			mesh.uid = entity.ID;
 			shader.bind(mesh);
@@ -327,11 +340,13 @@ void Scene::preRender()
 	};
 	for (auto& directionalLightShadow : directionalLightShadows)
 	{
+		ZoneScoped;
 		directionalLightShadow.framebuffer->bind();
 		directionalLightShadow.addShader();
 		iRenderer->clear();
 		for (size_t index = 0; index < entitiesSize; ++index)
 		{
+			ZoneScoped;
 			auto& entity = entitiesData[index];
 			drawEntity(entity, *directionalLightShadow.shader, [&](auto& mesh, auto& shader) {
 				shader.setBlock(
@@ -346,10 +361,12 @@ void Scene::preRender()
 	}
 	for (auto& spotLightShadow : spotLightShadows)
 	{
+		ZoneScoped;
 		spotLightShadow.framebuffer->bind();
 		iRenderer->clear();
 		for (size_t index = 0; index < entitiesSize; ++index)
 		{
+			ZoneScoped;
 			auto& entity = entitiesData[index];
 			drawEntity(entity, *spotLightShadow.shader, [&](auto& mesh, auto& shader) {
 				shader.setBlock(
@@ -364,10 +381,12 @@ void Scene::preRender()
 	}
 	for (auto& pointLightShadow : pointLightShadows)
 	{
+		ZoneScoped;
 		pointLightShadow.framebuffer->bind();
 		iRenderer->clear();
 		for (size_t index = 0; index < entitiesSize; ++index)
 		{
+			ZoneScoped;
 			auto& entity = entitiesData[index];
 			drawEntity(entity, *pointLightShadow.shader, [&](auto& mesh, auto& shader) {
 				shader.setBlock(
@@ -401,17 +420,21 @@ void Scene::render()
 }
 void Scene::renderEntities()
 {
+	ZoneScoped;
 	auto& framebufferRef = *framebuffer;
 	framebufferRef.bind();
 	auto transparentDrawList = getTransparentDrawList();
 	auto opaqueDrawList = getOpaqueDrawList();
 	auto cameraPosition = viewPointer->position;
-	std::sort(transparentDrawList.begin(), transparentDrawList.end(), [&](auto& a, auto& b)
 	{
-		auto distA = glm::distance(a.first->position, cameraPosition);
-		auto distB = glm::distance(b.first->position, cameraPosition);
-		return distA > distB;
-	});
+		ZoneScoped;
+		std::sort(transparentDrawList.begin(), transparentDrawList.end(), [&](auto& a, auto& b)
+		{
+			auto distA = glm::distance(a.first->position, cameraPosition);
+			auto distB = glm::distance(b.first->position, cameraPosition);
+			return distA > distB;
+		});
+	}
 	instancedDraw.drawMulti(*this, opaqueDrawList, transparentDrawList, oldOpaqueHash, oldTransparentHash);
 	// for (auto& ep : opaqueDrawList)
 	// {
@@ -427,6 +450,7 @@ void Scene::renderEntities()
 }
 void Scene::postRender()
 {
+	ZoneScoped;
 	if (postPostRenderFunction)
 		postPostRenderFunction(*this);
 	auto entitiesData = entities.data();
@@ -436,6 +460,7 @@ void Scene::postRender()
 }
 void Scene::meshPreRender(Mesh& mesh)
 {
+	ZoneScoped;
 	auto shader = mesh.addShader();
 	uint32_t index = 0;
 	glm::mat4 directionalLightSpaceMatrices[4];
@@ -488,6 +513,7 @@ void Scene::meshPreRender(Mesh& mesh)
 }
 void Scene::resize(glm::vec2 newSize)
 {
+	ZoneScoped;
 	viewPointer->callResizeHandler(newSize);
 	// projectionPointer->orthoSize = newSize;
 	// projectionPointer->update();
@@ -506,16 +532,19 @@ void Scene::resize(glm::vec2 newSize)
 }
 void Scene::postAddEntity(Entity& entity)
 {
+	ZoneScoped;
 	if (useBVH)
 		bvh->addEntity(entity);
 }
 void Scene::preRemoveEntity(Entity& entity)
 {
+	ZoneScoped;
 	if (useBVH)
 		bvh->removeEntity(*this, entity);
 }
 std::pair<Entity&, Mesh&> Scene::findEntityAndMeshByPrimID(const size_t& primID)
 {
+	ZoneScoped;
 	if (!useBVH)
 		throw std::runtime_error("Scene is not using a BVH");
 	auto& _bvh = *bvh;
@@ -530,6 +559,7 @@ std::pair<Entity&, Mesh&> Scene::findEntityAndMeshByPrimID(const size_t& primID)
 }
 void Scene::hookMouseEvents()
 {
+	ZoneScoped;
 	auto& window = Registry::getWindow(INDEX_STACK);
 	for (unsigned int button = MinMouseButtonIndex; button < MaxMouseButton; ++button)
 	{
@@ -537,6 +567,7 @@ void Scene::hookMouseEvents()
 			button,
 			[&, button](auto pressed)
 			{
+				ZoneScoped;
 				if (!useBVH)
 					return;
 				auto& _bvh = *bvh;
@@ -556,6 +587,7 @@ void Scene::hookMouseEvents()
 	mouseMoveID = window.addMouseMoveHandler(
 		[&](auto coords)
 		{
+			ZoneScoped;
 			if (!useBVH)
 				return;
 			auto& _bvh = *bvh;
@@ -589,6 +621,7 @@ void Scene::hookMouseEvents()
 }
 void Scene::unhookMouseEvents()
 {
+	ZoneScoped;
 	auto& window = Registry::getWindow(INDEX_STACK);
 	for (unsigned int button = MinMouseButtonIndex; button <= MaxMouseButtonIndex; ++button)
 	{
@@ -598,6 +631,7 @@ void Scene::unhookMouseEvents()
 }
 zg::Entity& Scene::getEntityByName(const std::string& name)
 {
+	ZoneScoped;
 	auto iter = entities.find_key(name);
 	if (iter == entities.end())
 		throw std::runtime_error("Entity not found with name");
@@ -605,6 +639,7 @@ zg::Entity& Scene::getEntityByName(const std::string& name)
 }
 zg::Entity& Scene::getEntityByID(const size_t& id)
 {
+	ZoneScoped;
 	auto iter = entities.find_id(id);
 	if (iter == entities.end())
 		throw std::runtime_error("Entity not found with name");
@@ -613,6 +648,7 @@ zg::Entity& Scene::getEntityByID(const size_t& id)
 template <>
 Serial& serialize(Serial& serial, const Scene& scene)
 {
+	ZoneScoped;
 	serial << true << scene.clearColor << scene.projectionPointer;
 	auto entitiesSize = scene.entities.size();
 	serial << entitiesSize;
@@ -668,6 +704,7 @@ Serial& serialize(Serial& serial, const Scene& scene)
 template <>
 Serial& deserialize(Serial& serial, Scene& scene)
 {
+	ZoneScoped;
 	auto& window = Registry::getWindow(scene.INDEX_STACK);
 	bool wroteBit = false;
 	serial >> wroteBit;

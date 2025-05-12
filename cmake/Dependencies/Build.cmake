@@ -14,16 +14,22 @@ endif()
 
 #New Dependency Declarations to the top!
 
+# tracy
 message(STATUS "FetchContent: tracy")
+set(TRACY_INSTALL Off)
 include(FetchContent)
 FetchContent_Declare(
     tracy
-    GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+    GIT_REPOSITORY https://github.com/ZeunO8/tracy.git
     GIT_TAG master
 )
 FetchContent_MakeAvailable(tracy)
+set_target_properties(TracyClient PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(TracyClient PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(TracyClient PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(TracyClient PROPERTIES MINSIZEREL_POSTFIX "")
 execute_process(
-    COMMAND ${CMAKE_COMMAND} -B build -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    COMMAND ${CMAKE_COMMAND} -B ${CMAKE_BINARY_DIR}/tracyserver -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     WORKING_DIRECTORY ${tracy_SOURCE_DIR}/profiler
     RESULT_VARIABLE tracyserver_ConfigureResult)
 if(tracyserver_ConfigureResult)
@@ -32,8 +38,8 @@ else()
     message(STATUS "tracyserver-configure: success")
 endif()
 add_custom_target(tracyserver ALL
-    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}/tracyserver
-    WORKING_DIRECTORY ${tracy_SOURCE_DIR}profiler
+    COMMAND ${CMAKE_COMMAND} --build .
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tracyserver
     COMMENT "Building Tracy Profiler Server"
 )
 
@@ -80,6 +86,8 @@ FetchContent_GetProperties(vhacd)
 if(NOT vhacd_POPULATED)
     FetchContent_Populate(vhacd)
 endif()
+
+# assimp
 
 message(STATUS "FetchContent: assimp")
 set(BUILD_SHARED_LIBS OFF)
@@ -591,15 +599,16 @@ target_include_directories(png PRIVATE ${zlib_SOURCE_DIR})
 configure_file(${png_SOURCE_DIR}/scripts/pnglibconf.h.prebuilt ${png_SOURCE_DIR}/pnglibconf.h)
 
 # OpenSSL
-if(NOT MACOS)
-    message(STATUS "FetchContent: openssl")
-    FetchContent_Declare(openssl
-        GIT_REPOSITORY https://github.com/openssl/openssl.git
-        GIT_TAG openssl-3.4.1)
-    FetchContent_GetProperties(openssl)
-    if(NOT openssl_POPULATED)
-        FetchContent_Populate(openssl)
-    endif()
+option(BUILD_OPENSSL "Whether to build OpenSSL" On)
+message(STATUS "FetchContent: openssl")
+FetchContent_Declare(openssl
+    GIT_REPOSITORY https://github.com/openssl/openssl.git
+    GIT_TAG openssl-3.4.1)
+FetchContent_GetProperties(openssl)
+if(NOT openssl_POPULATED)
+    FetchContent_Populate(openssl)
+endif()
+if(BUILD_OPENSSL AND NOT MACOS)
 
     function(add_openssl_config VARI)
         # if(WIN32)
@@ -693,89 +702,95 @@ endif()
 # FetchContent_MakeAvailable(swiftshader)
 
 # FFmpeg
+option(BUILD_FFMPEG "Whether to build FFmpeg" On)
 message(STATUS "FetchContent: ffmpeg")
 FetchContent_Declare(ffmpeg
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
     GIT_TAG n7.1)
-FetchContent_MakeAvailable(ffmpeg)
-function(add_ffmpeg_config VARI)
-    if(WIN32)
-        set(ffmpeg_CONFIGURE "${ffmpeg_CONFIGURE} ${VARI}" PARENT_SCOPE)
-    else()
-        set(ffmpeg_CONFIGURE ${ffmpeg_CONFIGURE} ${VARI} PARENT_SCOPE)
+FetchContent_GetProperties(ffmpeg)
+if(NOT ffmpeg_POPULATED)
+    FetchContent_Populate(ffmpeg)
+endif()
+if(BUILD_FFMPEG)
+    function(add_ffmpeg_config VARI)
+        if(WIN32)
+            set(ffmpeg_CONFIGURE "${ffmpeg_CONFIGURE} ${VARI}" PARENT_SCOPE)
+        else()
+            set(ffmpeg_CONFIGURE ${ffmpeg_CONFIGURE} ${VARI} PARENT_SCOPE)
+        endif()
+    endfunction()
+    add_ffmpeg_config(--disable-programs)
+    add_ffmpeg_config(--disable-doc)
+    add_ffmpeg_config(--prefix=${ffmpeg_BINARY_DIR})
+    if(ZG_TYPE STREQUAL STATIC)
+        add_ffmpeg_config(--enable-static)
+        add_ffmpeg_config(--disable-shared)
+        add_ffmpeg_config(--enable-decoder=aac)
+        add_ffmpeg_config(--enable-parser=aac)
+    elseif(ZG_TYPE STREQUAL SHARED)
+        add_ffmpeg_config(--enable-shared)
+        add_ffmpeg_config(--disable-static)
     endif()
-endfunction()
-add_ffmpeg_config(--disable-programs)
-add_ffmpeg_config(--disable-doc)
-add_ffmpeg_config(--prefix=${ffmpeg_BINARY_DIR})
-if(ZG_TYPE STREQUAL STATIC)
-    add_ffmpeg_config(--enable-static)
-    add_ffmpeg_config(--disable-shared)
-    add_ffmpeg_config(--enable-decoder=aac)
-    add_ffmpeg_config(--enable-parser=aac)
-elseif(ZG_TYPE STREQUAL SHARED)
-    add_ffmpeg_config(--enable-shared)
-    add_ffmpeg_config(--disable-static)
+    if(RELEASE_OR_DEBUG STREQUAL Release)
+        add_ffmpeg_config(--enable-optimizations)
+        add_ffmpeg_config(--disable-debug)
+    else()
+        add_ffmpeg_config(--disable-optimizations)
+    endif()
+    if(ANDROID)
+        set(FFMPEG_AR ${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar)
+        set(FFMPEG_RANLIB ${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib)
+        set(FFMPEG_STRIP ${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip)
+        add_ffmpeg_config(--target-os=android)
+        add_ffmpeg_config(--arch=${CMAKE_ANDROID_ARCH})
+        add_ffmpeg_config(--cross-prefix=${CROSS_PREFIX})
+        add_ffmpeg_config(--sysroot=${CMAKE_SYSROOT})
+        add_ffmpeg_config(--cpu=${CPU})
+        add_ffmpeg_config(--ar=${FFMPEG_AR})
+        add_ffmpeg_config(--strip=${FFMPEG_STRIP})
+        add_ffmpeg_config(--ranlib=${FFMPEG_RANLIB})
+        add_ffmpeg_config(--enable-cross-compile)
+    elseif(WIN32)
+        add_ffmpeg_config(--disable-asm)
+        add_ffmpeg_config(--disable-mmx)
+        add_ffmpeg_config(--disable-mmxext)
+        add_ffmpeg_config(--disable-sse2)
+        add_ffmpeg_config(--disable-x86asm)
+        add_ffmpeg_config(--disable-d3d12va)
+        add_ffmpeg_config(--toolchain=msvc)
+    endif()
+    if(WIN32)
+        set(ffmpeg_BUILD_COMMAND "make")
+        set(ffmpeg_INSTALL_COMMAND "make install")
+        set(ffmpeg_CONFIGURE "./configure ${ffmpeg_CONFIGURE}")
+        set(ffmpeg_BUILD_COMMAND ${SHELL} ${ffmpeg_BUILD_COMMAND})
+        set(ffmpeg_INSTALL_COMMAND ${SHELL} ${ffmpeg_INSTALL_COMMAND})
+    else()
+        set(ffmpeg_BUILD_COMMAND make)
+        set(ffmpeg_INSTALL_COMMAND make install)
+        set(ffmpeg_CONFIGURE "./configure" ${ffmpeg_CONFIGURE})
+        set(ffmpeg_BUILD_COMMAND ${ffmpeg_BUILD_COMMAND})
+        set(ffmpeg_INSTALL_COMMAND ${ffmpeg_INSTALL_COMMAND})
+    endif()
+    message(STATUS "ffmpeg-dos2unix")
+    execute_process(COMMAND dos2unix configure WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR})
+    message(STATUS "ffmpeg-configure: ${SHELL} \"${ffmpeg_CONFIGURE}\"")
+    execute_process(
+        COMMAND ${SHELL} ${ffmpeg_CONFIGURE}
+        WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR}
+        RESULT_VARIABLE ffmpeg_ConfigureResult)
+    if(ffmpeg_ConfigureResult)
+        message(FATAL_ERROR "ffmpeg-configure: ${ffmpeg_ConfigureResult}")
+    else()
+        message(STATUS "ffmpeg-configure: success")
+    endif()
+    add_custom_target(ffmpeg ALL
+        COMMAND ${ffmpeg_BUILD_COMMAND}
+        COMMAND ${ffmpeg_INSTALL_COMMAND}
+        WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR}
+        COMMENT "Building ffmpeg"
+    )
 endif()
-if(RELEASE_OR_DEBUG STREQUAL Release)
-    add_ffmpeg_config(--enable-optimizations)
-    add_ffmpeg_config(--disable-debug)
-else()
-    add_ffmpeg_config(--disable-optimizations)
-endif()
-if(ANDROID)
-    set(FFMPEG_AR ${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar)
-    set(FFMPEG_RANLIB ${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib)
-    set(FFMPEG_STRIP ${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip)
-    add_ffmpeg_config(--target-os=android)
-    add_ffmpeg_config(--arch=${CMAKE_ANDROID_ARCH})
-    add_ffmpeg_config(--cross-prefix=${CROSS_PREFIX})
-    add_ffmpeg_config(--sysroot=${CMAKE_SYSROOT})
-    add_ffmpeg_config(--cpu=${CPU})
-    add_ffmpeg_config(--ar=${FFMPEG_AR})
-    add_ffmpeg_config(--strip=${FFMPEG_STRIP})
-    add_ffmpeg_config(--ranlib=${FFMPEG_RANLIB})
-    add_ffmpeg_config(--enable-cross-compile)
-elseif(WIN32)
-    add_ffmpeg_config(--disable-asm)
-    add_ffmpeg_config(--disable-mmx)
-    add_ffmpeg_config(--disable-mmxext)
-    add_ffmpeg_config(--disable-sse2)
-    add_ffmpeg_config(--disable-x86asm)
-    add_ffmpeg_config(--disable-d3d12va)
-    add_ffmpeg_config(--toolchain=msvc)
-endif()
-if(WIN32)
-    set(ffmpeg_BUILD_COMMAND "make")
-    set(ffmpeg_INSTALL_COMMAND "make install")
-    set(ffmpeg_CONFIGURE "./configure ${ffmpeg_CONFIGURE}")
-    set(ffmpeg_BUILD_COMMAND ${SHELL} ${ffmpeg_BUILD_COMMAND})
-    set(ffmpeg_INSTALL_COMMAND ${SHELL} ${ffmpeg_INSTALL_COMMAND})
-else()
-    set(ffmpeg_BUILD_COMMAND make)
-    set(ffmpeg_INSTALL_COMMAND make install)
-    set(ffmpeg_CONFIGURE "./configure" ${ffmpeg_CONFIGURE})
-    set(ffmpeg_BUILD_COMMAND ${ffmpeg_BUILD_COMMAND})
-    set(ffmpeg_INSTALL_COMMAND ${ffmpeg_INSTALL_COMMAND})
-endif()
-message(STATUS "ffmpeg-dos2unix")
-execute_process(COMMAND dos2unix configure WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR})
-message(STATUS "ffmpeg-configure: ${SHELL} \"${ffmpeg_CONFIGURE}\"")
-execute_process(
-    COMMAND ${SHELL} ${ffmpeg_CONFIGURE}
-    WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR}
-    RESULT_VARIABLE ffmpeg_ConfigureResult)
-if(ffmpeg_ConfigureResult)
-    message(FATAL_ERROR "ffmpeg-configure: ${ffmpeg_ConfigureResult}")
-else()
-    message(STATUS "ffmpeg-configure: success")
-endif()
-add_custom_target(ffmpeg ALL
-    COMMAND ${ffmpeg_BUILD_COMMAND}
-    COMMAND ${ffmpeg_INSTALL_COMMAND}
-    WORKING_DIRECTORY ${ffmpeg_SOURCE_DIR}
-    COMMENT "Building ffmpeg"
-)
 
 # Freetype
 message(STATUS "FetchContent: freetype")

@@ -2,6 +2,7 @@
 #include <zg/vaos/VAO.hpp>
 #include <zg/Shape.hpp>
 #include <zg/Material.hpp>
+#include <zg/tracy.hpp>
 namespace zg
 {
     struct MeshCreateInfo;

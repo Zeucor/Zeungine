@@ -37,6 +37,7 @@ Window::Window(const WindowCreateInfo& info) :
 	framerate(info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
 	framebudget(frameduration), systemFonts(*this), postProcessingPipeline(INDEX_STACK)
 {
+	ZoneScoped;
 	memset(windowKeys, 0, 256 * sizeof(bool));
 	memset(windowButtons, 0, 7 * sizeof(bool));
 	// if (info.isChildWindow)
@@ -67,11 +68,13 @@ Window::Window(const Window& other) :
 		mainColorTexture(other.mainColorTexture),// mainDepthTexture(other.mainDepthTexture),
 		mainFramebuffer(other.mainFramebuffer)
 {
+	ZoneScoped;
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
 }
 Window& Window::operator=(const Window& other)
 {
+	ZoneScoped;
 	ID = other.ID;
 	INDEX = other.INDEX;
 	INDEX_STACK = other.INDEX_STACK;
@@ -131,30 +134,42 @@ Window& Window::operator=(const Window& other)
 }
 void Window::run()
 {
-#if defined(_WIN32) || defined(__linux__)
-	windowThread = std::make_shared<std::thread>(&Window::startWindow, this);
-	windowThread->join();
-#elif defined(MACOS)
+	ZoneScoped;
+// #if defined(_WIN32) || defined(__linux__)
+// 	windowThread = std::make_shared<std::thread>(&Window::startWindow, this);
+// 	windowThread->join();
+// #elif defined(MACOS)
 	startWindow();
-#endif
+// #endif
 }
 void Window::update()
 {
+	ZoneScopedN("Window::update");
 	auto componentsData = m_components.data();
 	auto componentsSize = m_components.size();
 	for (size_t index = 0; index < componentsSize; ++index)
+	{
+		ZoneScopedN("component:onUpdate");
 		componentsData[index].onUpdate();
+	}
 	auto scenesData = scenes.data();
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
+	{
+		ZoneScopedN("scene:update");
 		scenesData[index].update();
+	}
 }
 void Window::preRender()
 {
+	ZoneScopedN("Window::preRender");
 	auto scenesData = scenes.data();
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
+	{
+		ZoneScopedN("scene:preRender");
 		scenesData[index].preRender();
+	}
 	if (!isChildWindow)
 		return;
 	runRunnables();
@@ -165,24 +180,33 @@ void Window::preRender()
 }
 void Window::render()
 {
+	ZoneScopedN("Window::render");
 	std::lock_guard lock(renderMutex);
 	auto scenesData = scenes.data();
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
+	{
+		ZoneScopedN("scene:render");
 		scenesData[index].render();
+	}
 };
 void Window::postRender()
 {
+	ZoneScopedN("Window::postRender");
 	auto scenesData = scenes.data();
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
+	{
+		ZoneScopedN("scene:postRender");
 		scenesData[index].postRender();
+	}
 	if (!isChildWindow)
 		return;
 	framebuffer->unbind();
 }
 void Window::startWindow()
 {
+	ZoneScopedN("Window::startWindow");
 	iPlatformWindow = createPlatformWindow();
 	auto& iPlatformWindowRef = *iPlatformWindow;
 	iRenderer = createRenderer();
@@ -205,63 +229,100 @@ void Window::startWindow()
 	std::vector<std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>>> ppOutputs;
 	while (true)
 	{
-		auto _now = framebudget.begin();
-		updateDeltaTime(_now, false);
-		if (!iPlatformWindowRef.pollMessages())
+		ZoneScopedN("window:mainLoop");
 		{
-			framebudget.sleep();
-			break;
+			ZoneScopedN("mainLoop:budgetBegin");
+			auto _now = framebudget.begin();
+			updateDeltaTime(_now, false);
 		}
-		iRendererRef.preBeginRenderPass();
-		runRunnables();
-		updateKeyboard();
-		updateMouse();
-		update();
-		// auto childWindowsSize = childWindows.size();
-		// auto childWindowsData = childWindows.data();
-		// for (size_t index = 0; index < childWindowsSize; ++index)
-		// {
-		// 	auto& childWindow = childWindowsData[index];
-		// 	if (childWindow.minimized)
-		// 		continue;
-		// 	childWindow.render();
-		// 	framebudget.tick();
-		// }
-		preRender();
-		// iRendererRef.beginMainFramebuffer();
-		render();
-		// for (size_t index = 0; index < childWindowsSize; ++index)
-		// {
-		// 	auto& childWindow = childWindowsData[index];
-		// 	if (childWindow.minimized)
-		// 		continue;
-		// 	framebudget.tick();
-		// 	childWindow.framebufferPlane->render();
-		// }
-		// iRendererRef.postMainFramebuffer();
-		ppOutputs.resize(scenes.size());
-		auto index = 0;
-		for (auto& scene : scenes)
-			ppOutputs[index++] = scene.postProcessingPipeline.postProcess();
-		index = 0;
-		mainFramebuffer->bind();
-		for (auto& scene : scenes)
-			scene.fsq->render(ppOutputs[index++]);
-		mainFramebuffer->unbind();
-		auto finalInputs = postProcessingPipeline.postProcess();
-		iRendererRef.beginRenderPass();
-		fullscreenQuad->render(finalInputs);
-		iRendererRef.postRenderPass();
-		postRender();
-		callPreSwapbuffersOnceoff();
-		_now = framebudget.end();
-		updateDeltaTime(_now, true);
-		iRendererRef.swapBuffers();
-		framebudget.sleep();
+		{
+			{
+				ZoneScopedN("mainLoop:update");
+				if (!iPlatformWindowRef.pollMessages())
+				{
+					framebudget.sleep();
+					break;
+				}
+				iRendererRef.preBeginRenderPass();
+				runRunnables();
+				updateKeyboard();
+				updateMouse();
+				update();
+			}
+			// auto childWindowsSize = childWindows.size();
+			// auto childWindowsData = childWindows.data();
+			// for (size_t index = 0; index < childWindowsSize; ++index)
+			// {
+			// 	auto& childWindow = childWindowsData[index];
+			// 	if (childWindow.minimized)
+			// 		continue;
+			// 	childWindow.render();
+			// 	framebudget.tick();
+			// }
+			// iRendererRef.beginMainFramebuffer();
+			// for (size_t index = 0; index < childWindowsSize; ++index)
+			// {
+			// 	auto& childWindow = childWindowsData[index];
+			// 	if (childWindow.minimized)
+			// 		continue;
+			// 	framebudget.tick();
+			// 	childWindow.framebufferPlane->render();
+			// }
+			// iRendererRef.postMainFramebuffer();
+			{
+				ZoneScopedN("mainLoop:renderPass");
+				preRender();
+				render();
+				ppOutputs.resize(scenes.size());
+				auto index = 0;
+				for (auto& scene : scenes)
+				{
+					ZoneScopedN("p3:pp");
+					ppOutputs[index++] = scene.postProcessingPipeline.postProcess();
+				}
+				index = 0;
+				mainFramebuffer->bind();
+				for (auto& scene : scenes)
+				{
+					ZoneScopedN("p3/scene:render");
+					scene.fsq->render(ppOutputs[index++]);
+				}
+				mainFramebuffer->unbind();
+				{
+					ZoneScopedN("mainLoop: p3:final");
+					auto finalInputs = postProcessingPipeline.postProcess();
+					{
+						ZoneScopedN("mainLoop: final fsq render");
+						iRendererRef.beginRenderPass();
+						fullscreenQuad->render(finalInputs);
+					}
+					{
+						ZoneScopedN("mainLoop:postRender");
+						iRendererRef.postRenderPass();
+						postRender();
+					}
+				}
+			}
+			{
+				ZoneScopedN("mainLoop:budgetEnd");
+				auto _now = framebudget.end();
+				updateDeltaTime(_now, true);
+			}
+		}
+		FrameMark;
+		{
+			ZoneScopedN("mainLoop:swapBuffers");
+			callPreSwapbuffersOnceoff();
+			iRendererRef.swapBuffers();
+			framebudget.sleep();
+		}
 	}
 _exit:
 	for (auto& pair : shutdownHandlers)
+	{
+		ZoneScopedN("shutdownHandler");
 		pair.second(*this);
+	}
 	iPlatformWindowRef.enableKeyAutoRepeat();
 	audioEngine.stop();
 	audioEngine.clearPipeline();
@@ -269,7 +330,10 @@ _exit:
 	auto scenesSize = scenes.size();
 	auto scenesData = scenes.data();
 	for (size_t i = 0; i < scenesSize; ++i)
+	{
+		ZoneScoped;
 		scenesData[i].detachAllComponents();
+	}
 	scenes.clear();
 	mainColorTexture.reset();
 	// mainDepthTexture.reset();
@@ -298,31 +362,39 @@ _exit:
 }
 void Window::updateKeyboard()
 {
+	ZoneScoped;
 	for (unsigned int i = 0; i < 256; ++i)
 	{
+		ZoneScoped;
 		auto& pressed = windowKeys[i];
 		if (keys[i] != pressed)
 		{
+			ZoneScoped;
 			callKeyPressHandler(i, pressed);
 			callAnyKeyPressHandler(i, pressed);
 		}
 		if (pressed)
 		{
+			ZoneScoped;
 			callKeyUpdateHandler(i);
 		}
 	}
 }
 void Window::updateMouse()
 {
+	ZoneScoped;
 	for (unsigned int i = MinMouseButtonIndex; i < MaxMouseButtonIndex; ++i)
 	{
+		ZoneScoped;
 	_checkPressed:
 		auto& pressed = windowButtons[i];
 		if (buttons[i] != pressed)
 		{
+			ZoneScoped;
 			callMousePressHandler(i, pressed);
 			if ((i == 3 || i == 4) && pressed)
 			{
+				ZoneScoped;
 				windowButtons[i] = false;
 				goto _checkPressed;
 			}
@@ -330,24 +402,29 @@ void Window::updateMouse()
 	}
 	if (mouseMoved)
 	{
+		ZoneScoped;
 		callMouseMoveHandler(newMouseCoords);
 		mouseMoved = false;
 	}
 }
 void Window::close()
 {
+	ZoneScoped;
 	if (isChildWindow)
 	{
+		ZoneScoped;
 		return;
 	}
 	iPlatformWindow->close();
 }
 void Window::minimize()
 {
+	ZoneScoped;
 	minimized = true;
 	maximized = false;
 	if (isChildWindow)
 	{
+		ZoneScoped;
 		return;
 	}
 	iPlatformWindow->minimize();
@@ -359,15 +436,18 @@ void Window::minimize()
 }
 void Window::maximize()
 {
+	ZoneScoped;
 	minimized = false;
 	if (maximized)
 	{
+		ZoneScoped;
 		maximized = false;
 		iPlatformWindow->restore();
 		setXY(oldXY.x, oldXY.y);
 	}
 	else
 	{
+		ZoneScoped;
 		maximized = true;
 		iPlatformWindow->maximize();
 		oldXY.x = windowX;
@@ -377,10 +457,12 @@ void Window::maximize()
 }
 void Window::restore()
 {
+	ZoneScoped;
 	minimized = false;
 	maximized = false;
 	if (isChildWindow)
 	{
+		ZoneScoped;
 		return;
 	}
 	iPlatformWindow->restore();
@@ -388,32 +470,42 @@ void Window::restore()
 }
 void Window::warpPointer(glm::vec2 coords)
 {
+	ZoneScoped;
 	iPlatformWindow->warpPointer(coords);
 	justWarpedPointer = true;
 }
 void Window::setXY(float x, float y)
 {
+	ZoneScoped;
 	windowX = x;
 	windowY = y;
 	if (isChildWindow)
 	{
+		ZoneScoped;
 		return;
 	}
 	iPlatformWindow->setXY();
 }
 void Window::setWidthHeight(float width, float height)
 {
+	ZoneScoped;
 	windowWidth = width;
 	windowHeight = height;
 	if (isChildWindow)
 	{
+		ZoneScoped;
 		return;
 	}
 	iPlatformWindow->setWidthHeight();
 }
-void Window::mouseCapture(bool capture) { iPlatformWindow->mouseCapture(capture); }
+void Window::mouseCapture(bool capture)
+{
+	ZoneScoped;
+	iPlatformWindow->mouseCapture(capture);
+}
 zg::Window& Window::createChildWindow(const WindowCreateInfo& info)
 {
+	ZoneScoped;
 	auto usingInfo{info};
 	usingInfo.isChildWindow = true;
 	return *std::get<KEY_ID_VECTOR_VALUE_INDEX>(childWindows.emplace_back(usingInfo));
@@ -422,6 +514,7 @@ zg::Window& Window::createChildWindow(const WindowCreateInfo& info)
 // Keyboard
 UniqueIdentifier Window::addKeyPressHandler(Key key, const KeyPressHandler& callback)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto& handlersPair = keyPressHandlers[key];
 	auto id = ++handlersPair.first;
@@ -430,11 +523,13 @@ UniqueIdentifier Window::addKeyPressHandler(Key key, const KeyPressHandler& call
 };
 void Window::removeKeyPressHandler(Key key, UniqueIdentifier& id)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto& handlersPair = keyPressHandlers[key];
 	auto handlerIter = handlersPair.second.find(id);
 	if (handlerIter == handlersPair.second.end())
 	{
+		ZoneScoped;
 		return;
 	}
 	handlersPair.second.erase(handlerIter);
@@ -442,6 +537,7 @@ void Window::removeKeyPressHandler(Key key, UniqueIdentifier& id)
 };
 UniqueIdentifier Window::addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto& handlersPair = keyUpdateHandlers[key];
 	auto id = ++handlersPair.first;
@@ -450,14 +546,19 @@ UniqueIdentifier Window::addKeyUpdateHandler(Key key, const KeyUpdateHandler& ca
 };
 void Window::removeKeyUpdateHandler(Key key, UniqueIdentifier& id)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto handlersIter = keyUpdateHandlers.find(key);
 	if (handlersIter == keyUpdateHandlers.end())
+	{
+		ZoneScoped;
 		return;
+	}
 	auto& handlers = handlersIter->second.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
 	{
+		ZoneScoped;
 		return;
 	}
 	handlers.erase(handlerIter);
@@ -465,6 +566,7 @@ void Window::removeKeyUpdateHandler(Key key, UniqueIdentifier& id)
 };
 void Window::callKeyPressHandler(Key key, int pressed)
 {
+	ZoneScoped;
 	keys[key] = pressed;
 	{
 		std::vector<KeyPressHandler> handlersCopy;
@@ -472,36 +574,52 @@ void Window::callKeyPressHandler(Key key, int pressed)
 			// std::lock_guard lock(handlersMutex);
 			auto handlersIter = keyPressHandlers.find(key);
 			if (handlersIter == keyPressHandlers.end())
+			{
+				ZoneScoped;
 				return;
+			}
 			auto& handlersMap = handlersIter->second.second;
 			for (const auto& pair : handlersMap)
+			{
+				ZoneScoped;
 				handlersCopy.push_back(pair.second);
+			}
 		}
 		for (auto& handler : handlersCopy)
 		{
+			ZoneScoped;
 			handler(!!pressed);
 		}
 	}
 };
 void Window::callKeyUpdateHandler(Key key)
 {
+	ZoneScoped;
 	std::vector<KeyUpdateHandler> handlersCopy;
 	{
 		// std::lock_guard lock(handlersMutex);
 		auto handlersIter = keyUpdateHandlers.find(key);
 		if (handlersIter == keyUpdateHandlers.end())
+		{
+			ZoneScoped;
 			return;
+		}
 		auto& handlersMap = handlersIter->second.second;
 		for (const auto& pair : handlersMap)
+		{
+			ZoneScoped;
 			handlersCopy.push_back(pair.second);
+		}
 	}
 	for (auto& handler : handlersCopy)
 	{
+		ZoneScoped;
 		handler();
 	}
 };
 UniqueIdentifier Window::addAnyKeyPressHandler(const AnyKeyPressHandler& callback)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto id = ++anyKeyPressHandlers.first;
 	anyKeyPressHandlers.second[id] = callback;
@@ -509,11 +627,13 @@ UniqueIdentifier Window::addAnyKeyPressHandler(const AnyKeyPressHandler& callbac
 };
 void Window::removeAnyKeyPressHandler(UniqueIdentifier& id)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto& handlers = anyKeyPressHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
 	{
+		ZoneScoped;
 		return;
 	}
 	handlers.erase(handlerIter);
@@ -521,31 +641,45 @@ void Window::removeAnyKeyPressHandler(UniqueIdentifier& id)
 };
 void Window::callAnyKeyPressHandler(Key key, bool pressed)
 {
+	ZoneScoped;
 	std::vector<AnyKeyPressHandler> handlersCopy;
 	{
+		ZoneScoped;
 		// std::lock_guard lock(handlersMutex);
 		auto& handlersMap = anyKeyPressHandlers.second;
 		for (const auto& pair : handlersMap)
+		{
+			ZoneScoped;
 			handlersCopy.push_back(pair.second);
+		}
 	}
 	for (auto& handler : handlersCopy)
 	{
+		ZoneScoped;
 		handler(key, pressed);
 	}
 }
 void Window::handleKey(Key key, int32_t mod, bool pressed)
 {
+	ZoneScoped;
 	auto& window = *dynamic_cast<Window*>(this);
 	bool hadChildFocus = false;
 	auto childWindowsSize = childWindows.size();
 	auto childWindowsData = childWindows.data();
 	for (size_t index = 0; index < childWindowsSize; ++index)
 	{
+		ZoneScoped;
 		auto& childWindow = childWindowsData[index];
 		if (childWindow.minimized)
+		{
+			ZoneScoped;
 			continue;
+		}
 		if (!childWindow.focused)
+		{
+			ZoneScoped;
 			continue;
+		}
 		childWindow.mod = mod;
 		childWindow.windowKeys[key] = pressed;
 		hadChildFocus = true;
@@ -553,6 +687,7 @@ void Window::handleKey(Key key, int32_t mod, bool pressed)
 	}
 	if (!hadChildFocus)
 	{
+		ZoneScoped;
 		window.mod = mod;
 		window.windowKeys[key] = pressed;
 	}
@@ -560,6 +695,7 @@ void Window::handleKey(Key key, int32_t mod, bool pressed)
 // Mouse
 UniqueIdentifier Window::addMousePressHandler(Button button, const MousePressHandler& callback)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto& handlersPair = mousePressHandlers[button];
 	auto id = ++handlersPair.first;
@@ -568,11 +704,13 @@ UniqueIdentifier Window::addMousePressHandler(Button button, const MousePressHan
 };
 void Window::removeMousePressHandler(Button button, UniqueIdentifier& id)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto& handlersPair = mousePressHandlers[button];
 	auto handlerIter = handlersPair.second.find(id);
 	if (handlerIter == handlersPair.second.end())
 	{
+		ZoneScoped;
 		return;
 	}
 	handlersPair.second.erase(handlerIter);
@@ -580,6 +718,7 @@ void Window::removeMousePressHandler(Button button, UniqueIdentifier& id)
 };
 UniqueIdentifier Window::addMouseMoveHandler(const MouseMoveHandler& callback)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto id = ++mouseMoveHandlers.first;
 	mouseMoveHandlers.second[id] = callback;
@@ -587,11 +726,13 @@ UniqueIdentifier Window::addMouseMoveHandler(const MouseMoveHandler& callback)
 };
 void Window::removeMouseMoveHandler(UniqueIdentifier& id)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto& handlers = mouseMoveHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
 	{
+		ZoneScoped;
 		return;
 	}
 	handlers.erase(handlerIter);
@@ -599,54 +740,81 @@ void Window::removeMouseMoveHandler(UniqueIdentifier& id)
 };
 void Window::callMousePressHandler(Button button, bool pressed)
 {
+	ZoneScoped;
 	buttons[button] = pressed;
 	{
+		ZoneScoped;
 		std::vector<MousePressHandler> handlersCopy;
 		{
+			ZoneScoped;
 			// std::lock_guard lock(handlersMutex);
 			auto handlersIter = mousePressHandlers.find(button);
 			if (handlersIter == mousePressHandlers.end())
+			{
+				ZoneScoped;
 				return;
+			}
 			auto& handlersMap = handlersIter->second.second;
 			for (const auto& pair : handlersMap)
+			{
+				ZoneScoped;
 				handlersCopy.push_back(pair.second);
+			}
 		}
 		for (auto& handler : handlersCopy)
 		{
+			ZoneScoped;
 			handler(!!pressed);
 		}
 	}
 }
 void Window::callMouseMoveHandler(glm::vec2 coords)
 {
+	ZoneScoped;
 	if (coords == mouseCoords)
+	{
+		ZoneScoped;
 		return;
+	}
 	mouseCoords = coords;
 	std::vector<MouseMoveHandler> handlersCopy;
 	{
+		ZoneScoped;
 		// std::lock_guard lock(handlersMutex);
 		auto& handlersMap = mouseMoveHandlers.second;
 		for (const auto& pair : handlersMap)
+		{
+			ZoneScoped;
 			handlersCopy.push_back(pair.second);
+		}
 	}
 	for (auto& handler : handlersCopy)
 	{
+		ZoneScoped;
 		handler(coords);
 	}
 }
 void Window::handleMouseMove(uint32_t x, uint32_t y)
 {
+	ZoneScoped;
 	auto& window = *dynamic_cast<Window*>(this);
 	bool hadChildFocus = false;
 	auto childWindowsSize = childWindows.size();
 	auto childWindowsData = childWindows.data();
 	for (size_t index = 0; index < childWindowsSize; ++index)
 	{
+		ZoneScoped;
 		auto& childWindow = childWindowsData[index];
 		if (childWindow.minimized)
+		{
+			ZoneScoped;
 			continue;
+		}
 		if (!childWindow.focused)
+		{
+			ZoneScoped;
 			continue;
+		}
 		auto childX = x - childWindow.windowX;
 		auto childY = childWindow.windowHeight - (window.windowHeight - y - childWindow.windowY);
 		childWindow.newMouseCoords.x = childX, childWindow.newMouseCoords.y = childY;
@@ -656,33 +824,46 @@ void Window::handleMouseMove(uint32_t x, uint32_t y)
 	}
 	if (!hadChildFocus)
 	{
+		ZoneScoped;
 		window.newMouseCoords.y = y, window.newMouseCoords.x = x;
 		window.mouseMoved = true;
 	}
 }
 void Window::handleMousePress(Button button, bool pressed)
 {
+	ZoneScoped;
 	auto& window = *dynamic_cast<Window*>(this);
 	bool hadChildFocus = false;
 	auto childWindowsSize = childWindows.size();
 	auto childWindowsData = childWindows.data();
 	for (size_t index = 0; index < childWindowsSize; ++index)
 	{
+		ZoneScoped;
 		auto& childWindow = childWindowsData[index];
 		if (childWindow.minimized)
+		{
+			ZoneScoped;
 			continue;
+		}
 		if (!childWindow.focused)
+		{
+			ZoneScoped;
 			continue;
+		}
 		childWindow.windowButtons[button] = pressed;
 		hadChildFocus = true;
 		break;
 	}
 	if (!hadChildFocus)
+	{
+		ZoneScoped;
 		window.windowButtons[button] = pressed;
+	}
 }
 // resize
 UniqueIdentifier Window::addResizeHandler(const ViewResizeHandler& callback)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto id = ++viewResizeHandlers.first;
 	viewResizeHandlers.second[id] = callback;
@@ -690,11 +871,13 @@ UniqueIdentifier Window::addResizeHandler(const ViewResizeHandler& callback)
 };
 void Window::removeResizeHandler(UniqueIdentifier& id)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto& handlers = viewResizeHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
 	{
+		ZoneScoped;
 		return;
 	}
 	handlers.erase(handlerIter);
@@ -702,21 +885,28 @@ void Window::removeResizeHandler(UniqueIdentifier& id)
 };
 void Window::callResizeHandler(glm::vec2 newSize)
 {
+	ZoneScoped;
 	std::vector<ViewResizeHandler> handlersCopy;
 	{
+		ZoneScoped;
 		// std::lock_guard lock(handlersMutex);
 		auto& handlersMap = viewResizeHandlers.second;
 		for (const auto& pair : handlersMap)
+		{
+			ZoneScoped;
 			handlersCopy.push_back(pair.second);
+		}
 	}
 	for (auto& handler : handlersCopy)
 	{
+		ZoneScoped;
 		handler(newSize);
 	}
 };
 // focus
 UniqueIdentifier Window::addFocusHandler(const FocusHandler& callback)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto id = ++focusHandlers.first;
 	focusHandlers.second[id] = callback;
@@ -724,11 +914,13 @@ UniqueIdentifier Window::addFocusHandler(const FocusHandler& callback)
 }
 void Window::removeFocusHandler(UniqueIdentifier& id)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	auto& handlers = focusHandlers.second;
 	auto handlerIter = handlers.find(id);
 	if (handlerIter == handlers.end())
 	{
+		ZoneScoped;
 		return;
 	}
 	handlers.erase(handlerIter);
@@ -736,32 +928,44 @@ void Window::removeFocusHandler(UniqueIdentifier& id)
 }
 void Window::callFocusHandler(bool focused)
 {
+	ZoneScoped;
 	if (this->focused == focused)
+	{
+		ZoneScoped;
 		return;
+	}
 	std::vector<FocusHandler> handlersCopy;
 	{
+		ZoneScoped;
 		// std::lock_guard lock(handlersMutex);
 		auto& handlersMap = focusHandlers.second;
 		for (const auto& pair : handlersMap)
+		{
+			ZoneScoped;
 			handlersCopy.push_back(pair.second);
+		}
 	}
 	this->focused = focused;
 	for (auto& handler : handlersCopy)
 	{
+		ZoneScoped;
 		handler(focused);
 	}
 }
 // onceoffs
 void Window::addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff)
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	preSwapbuffersOnceoffs.push(onceoff);
 }
 void Window::callPreSwapbuffersOnceoff()
 {
+	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	if (preSwapbuffersOnceoffs.empty())
 	{
+		ZoneScoped;
 		return;
 	}
 	auto onceoff = preSwapbuffersOnceoffs.front();
@@ -770,21 +974,27 @@ void Window::callPreSwapbuffersOnceoff()
 }
 size_t Window::addShutdownHandler(const ShutdownHandler& handler)
 {
+	ZoneScoped;
 	auto ID = GlobalUID::GetNew();
 	shutdownHandlers[ID] = handler;
 	return ID;
 }
 bool Window::removeShutdownHandler(size_t& ID)
 {
+	ZoneScoped;
 	auto iter = shutdownHandlers.find(ID);
 	if (iter == shutdownHandlers.end())
+	{
+		ZoneScoped;
 		return false;
+	}
 	shutdownHandlers.erase(iter);
 	ID = 0;
 	return true;
 }
 KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCreateInfo& info)
 {
+	ZoneScoped;
 	auto usingInfo{info};
 	auto transaction = scenes.startTransaction();
 	usingInfo.INDEX_STACK = {INDEX_STACK.begin(), INDEX_STACK.end()};
@@ -793,45 +1003,61 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCr
 	usingInfo.INDEX = transaction.index;
 	auto& scene = scenes.commitTransaction(transaction, usingInfo);
 	if (scene.onAttachedFunction)
+	{
+		ZoneScoped;
 		scene.onAttachedFunction(scene);
+	}
 	(*Registry::idScenes)[scene.ID] = scene.INDEX_STACK;
 	return {transaction.key, transaction.id, transaction.index, &scene};
 }
 bool Window::removeScene(size_t ID)
 {
+	ZoneScoped;
 	auto iter = scenes.find_id(ID);
 	if (iter == scenes.end())
 	{
+		ZoneScoped;
 		return false;
 	}
 	auto& scene = *iter;
 	if (scene.onDetachedFunction)
+	{
+		ZoneScoped;
 		scene.onDetachedFunction(scene);
+	}
 	scenes.erase(iter);
 	auto& idScenesRef = *Registry::idScenes;
 	auto idIter = idScenesRef.find(ID);
 	if (idIter != idScenesRef.end())
 	{
+		ZoneScoped;
 		idScenesRef.erase(idIter);
 	}
 	return true;
 }
 void Window::runOnThread(const Runnable& runnable)
 {
+	ZoneScoped;
 	// std::lock_guard lock(runnablesMutex);
 	runnables.push(runnable);
 };
 void Window::runRunnables()
 {
+	ZoneScoped;
 	std::queue<Runnable> runnablesCopy;
 	{
+		ZoneScoped;
 		// std::lock_guard lock(runnablesMutex);
 		runnablesCopy = runnables;
 		while (!runnables.empty())
+		{
+			ZoneScoped;
 			runnables.pop();
+		}
 	}
 	while (!runnablesCopy.empty())
 	{
+		ZoneScoped;
 		auto runnable = runnablesCopy.front();
 		runnablesCopy.pop();
 		runnable(dynamic_cast<Window&>(*this));
@@ -839,8 +1065,10 @@ void Window::runRunnables()
 };
 void Window::updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTime)
 {
+	ZoneScoped;
 	if (updateLastFrameDeltaTime)
 	{
+		ZoneScoped;
 		auto duration = now - lastFrameTime;
 		lastFrameDeltaTime = duration.count() / 1'000'000'000.0L;
 	}
@@ -848,6 +1076,7 @@ void Window::updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTime)
 };
 void Window::resize(glm::vec2 newSize)
 {
+	ZoneScoped;
 	if (windowWidth != newSize.x)
 		windowWidth = newSize.x;
 	if (windowHeight != newSize.y)
@@ -855,16 +1084,21 @@ void Window::resize(glm::vec2 newSize)
 	auto scenesSize = scenes.size();
 	auto scenesData = scenes.data();
 	for (size_t index = 0; index < scenesSize; ++index)
+	{
+		ZoneScoped;
 		scenesData[index].resize(newSize);
+	}
 	callResizeHandler(newSize);
 };
 void Window::registerOnEntityAddedFunction(const OnEntityAddedFunction& function)
 {
+	ZoneScoped;
 	onEntityAdded = function;
 	return;
 }
 uint32_t Window::getScreenRefreshRate(uint32_t screenNum)
 {
+	ZoneScoped;
 	auto modes =
 #if defined(_WIN32)
 	WIN32Window::getCurrentScreenModes();
@@ -879,6 +1113,7 @@ uint32_t Window::getScreenRefreshRate(uint32_t screenNum)
 void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& indices,
 												const std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& normals)
 {
+	ZoneScoped;
 	const float FACE_NORMAL_EPSILON_SQ = 1e-12f * 1e-12f;
 	const float EDGE_LEN_EPSILON_SQ = 1e-10f * 1e-10f;
 	const float VEC_EPSILON_SQ = 1e-10f * 1e-10f;
@@ -891,17 +1126,20 @@ void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& in
 
 	if (nbVertices == 0 || nbIndices == 0)
 	{
+		ZoneScoped;
 		normals.clear();
 		return;
 	}
 	if (nbIndices % 3 != 0)
 	{
+		ZoneScoped;
 		normals.clear();
 		return;
 	}
 
 	if (normals.size() != nbVertices)
 	{
+		ZoneScoped;
 		normals.resize(nbVertices);
 	}
 	std::fill(normals.begin(), normals.end(), glm::vec3(0.0f));
@@ -909,12 +1147,14 @@ void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& in
 
 	for (size_t i = 0; i < nbIndices; i += 3)
 	{
+		ZoneScoped;
 		uint32_t i1 = indices[i + 0];
 		uint32_t i2 = indices[i + 1];
 		uint32_t i3 = indices[i + 2];
 
 		if (i1 >= nbVertices || i2 >= nbVertices || i3 >= nbVertices)
 		{
+			ZoneScoped;
 			continue;
 		}
 
@@ -981,6 +1221,7 @@ void zg::computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& in
 	// Normalize final normals
 	for (size_t i = 0; i < nbVertices; ++i)
 	{
+		ZoneScoped;
 		float normal_len_sq = glm::dot(normals[i], normals[i]);
 
 		if (normal_len_sq > VEC_EPSILON_SQ)
