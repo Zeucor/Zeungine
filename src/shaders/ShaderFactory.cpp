@@ -136,6 +136,8 @@ ShaderFactory::ShaderHooksMap ShaderFactory::hooks = {
   uint shape_id;
   uint material_index;
   uint vertex_offset;
+  uint uv2_offset;
+  uint uv3_offset;
 };
 const int SHAPE_TYPE_BOX = 1;
 const int SHAPE_TYPE_PLANE = 2;
@@ -540,6 +542,8 @@ Entity get_entity(uint entity_id)
   defaultEntity.shape_id = -1;
   defaultEntity.material_index = -1;
   defaultEntity.vertex_offset = -1;
+  defaultEntity.uv2_offset = -1;
+  defaultEntity.uv3_offset = -1;
   return defaultEntity;
 }
 vec4 get_color(uint vertex_id, in Entity entity, in Material material)
@@ -553,13 +557,13 @@ vec2 get_uv2(uint vertex_id, in Entity entity, in Material material)
 {
   if (material.type != 1)
     return vec2(0, 0);
-  return EntityUV2s.data[entity.vertex_offset + vertex_id];
+  return EntityUV2s.data[entity.uv2_offset + vertex_id];
 }
 vec3 get_uv3(uint vertex_id, in Entity entity, in Material material)
 {
   if (material.type != 2)
     return vec3(0, 0, 0);
-  return EntityUV3s.data[entity.vertex_offset + vertex_id];
+  return EntityUV3s.data[entity.uv3_offset + vertex_id];
 }
 vec3 get_box_vertex(uint vertex_id)
 {

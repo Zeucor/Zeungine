@@ -138,10 +138,10 @@ void InstancedDraw::drawMulti(
         std::vector<GLEntity> entities;
         std::unordered_map<std::string, std::vector<glm::mat4>> transforms;
         std::vector<Material> materials;
-        auto find_material_index = [&](auto& mesh) -> int32_t {
-            auto iter = std::find_if(materials.begin(), materials.end(), [&](auto& material){
-                return material.type == mesh.material.type &&
-                    material.albedo == mesh.material.albedo;
+        auto find_material_index = [&](auto& material) -> int32_t {
+            auto iter = std::find_if(materials.begin(), materials.end(), [&](auto& amaterial){
+                return amaterial.type == material.type &&
+                    amaterial.albedo == material.albedo;
             });
             if (iter != materials.end())
             {
@@ -160,7 +160,9 @@ void InstancedDraw::drawMulti(
         }
         uint32_t firstInstance = 0;
         uint32_t i = 0;
-        uint32_t vertex_offset = 0;
+        int32_t vertex_offset = 0;
+        int32_t uv2_offset = 0;
+        int32_t uv3_offset = 0;
         std::vector<glm::vec3> positions;
         std::vector<glm::vec3> normals;
         std::vector<glm::vec2> uv2s;
@@ -168,12 +170,6 @@ void InstancedDraw::drawMulti(
         for (auto& meshID : shaderPair.second)
         {
             auto& mesh = Registry::getMesh(meshID);
-            auto material_index = find_material_index(mesh);
-            if (material_index == -1)
-            {
-                materials.push_back(mesh.material);
-                material_index = materials.size() -1;
-            }
             auto& batch = opaqueBatches.try_emplace(meshID, meshID).first->second;
             batch.update_transforms();
             for (auto& t : batch.mvp_transforms)
@@ -184,11 +180,22 @@ void InstancedDraw::drawMulti(
             for (auto& entityID : batch.entities)
             {
                 auto& entity = Registry::getEntity(entityID);
+                auto material = entity.meshMaterial(meshID);
+                auto material_index = find_material_index(material);
+                if (material_index == -1)
+                {
+                    materials.push_back(material);
+                    material_index = materials.size() -1;
+                }
                 auto vertexCount = mesh.vertexCount ? mesh.vertexCount(entity) : 0;
+                auto uv2Count = mesh.uv2Count ? mesh.uv2Count(entity) : 0;
+                auto uv3Count = mesh.uv3Count ? mesh.uv3Count(entity) : 0;
                 entities[i++] = {
-                    uint32_t(mesh.shapeType),
-                    uint32_t(material_index),
-                    vertex_offset
+                    int32_t(mesh.shapeType),
+                    int32_t(material_index),
+                    vertex_offset,
+                    uv2_offset,
+                    uv3_offset
                 };
                 vertex_offset += vertexCount;
                 if (vertexCount)
@@ -200,13 +207,11 @@ void InstancedDraw::drawMulti(
                     computeNormals(window.iRenderer->frontFace, _indices_, vertices, mnormals);
                     normals.insert(normals.end(), mnormals.begin(), mnormals.end());
                 }
-                auto uv2Count = mesh.uv2Count ? mesh.uv2Count(entity) : 0;
                 if (uv2Count)
                 {
                     auto uv2s = mesh.uv2s(entity);
                     uv2s.insert(uv2s.end(), uv2s.begin(), uv2s.end());
                 }
-                auto uv3Count = mesh.uv3Count ? mesh.uv3Count(entity) : 0;
                 if (uv3Count)
                 {
                     auto uv3s = mesh.uv3s(entity);

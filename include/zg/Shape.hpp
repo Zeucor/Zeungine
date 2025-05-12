@@ -10,8 +10,10 @@ namespace zg
     };
     struct GLEntity
     {
-        uint32_t shape_type;
-        uint32_t material_index;
-        uint32_t vertex_offset;
+        int32_t shape_type;
+        int32_t material_index;
+        int32_t vertex_offset;
+        int32_t uv2_offset;
+        int32_t uv3_offset;
     };
 }

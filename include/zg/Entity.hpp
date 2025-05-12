@@ -94,6 +94,7 @@ namespace zg
 		~Entity();
 		Entity& operator=(const Entity& other);
 		void refreshMeshes();
+		Material meshMaterial(size_t meshID);
 		
 	private:
 		void reMeshhash();

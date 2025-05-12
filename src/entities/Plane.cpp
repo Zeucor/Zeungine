@@ -7,9 +7,11 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string nam
 {
     zg::MeshCreateInfo meshInfo{
         .shapeType = ShapeType::Plane,
-        .material = {
-            color,
-            0
+        .material = [color](auto&) -> Material {
+            return {
+                color,
+                0
+            };
         },
         .constants = zg::mergeVectors<std::string>(
             {{"Shape", "Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
@@ -31,9 +33,11 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(const std::shared_ptr<textures::
 {
     zg::MeshCreateInfo meshInfo{
         .shapeType = ShapeType::Plane,
-        .material = {
-            glm::vec4(1),
-            1
+        .material = [](auto&) -> Material {
+            return {
+                glm::vec4(1),
+                1
+            };
         },
         .uv2Count = [](auto&) { return 4; },
         .uv2s = [](auto&) -> std::vector<glm::vec2>

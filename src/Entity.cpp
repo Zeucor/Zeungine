@@ -170,6 +170,15 @@ void Entity::refreshMeshes()
 		}
 	}
 }
+Material Entity::meshMaterial(size_t meshID)
+{
+	ZoneScoped;
+	auto meshIDsBegin = meshIDs.begin();
+	auto found = std::find(meshIDsBegin, meshIDs.end(), meshID);
+	auto index = found - meshIDsBegin;
+	auto& meshInfo = meshInfos[index];
+	return meshInfo.material(*this);
+}
 void Entity::reMeshhash()
 {
 	ZoneScoped;

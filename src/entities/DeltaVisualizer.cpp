@@ -16,29 +16,15 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
     auto currentDeltaPointer = &currentDelta;
 	auto color = glm::vec4(0.2f, 0.3f, 0.4f, 0.7f);
     MeshCreateInfo meshInfo{
-        .indiceCount = [](auto&) { return 6; },
-        .indices = [frontFace](auto&) -> std::vector<uint32_t>
-        {
-            if (frontFace == zg::CLOCKWISE)
-                return {0, 1, 2, 2, 3, 0};
-            else
-                return {2, 1, 0, 0, 3, 2};
-        },
-        .vertexCount = [](auto&) { return 4; },
-        .vertices = [](auto& entity) -> std::vector<glm::vec3>
-        {
-            auto& size = entity.template getData<glm::vec2>("Size");
-            return {{glm::vec3(size.x / 2.f, size.y / 2.f, 0), glm::vec3(size.x / 2.f, -(size.y / 2.f), 0),
-                glm::vec3(-(size.x / 2.f), -(size.y / 2.f), 0), glm::vec3(-(size.x / 2.f), size.y / 2.f, 0)}};
-        },
-        .colorCount = [](auto&) { return 4; },
-        .colors = [](auto& entity) -> std::vector<glm::vec4>
-        {
-            auto& color = entity.template getData<glm::vec4>("Color");
-            return {4, color};
+        .shapeType = ShapeType::Plane,
+        .material = [](auto& entity) -> Material {
+            return {
+                entity.template getData<glm::vec4>("Color"),
+                0
+            };
         },
         .constants = zg::mergeVectors<std::string>(
-			{{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
+			{{"Shape", "Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
     };
     EntityCreateInfo info{
         .typeName = "DeltaVisualizer",
@@ -253,7 +239,6 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
             delete robotoRegularPointer;
         },
         .dataMap = {
-            {"Size", size},
             {"Color", color}
         },
         .meshInfos = {meshInfo}

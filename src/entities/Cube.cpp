@@ -10,9 +10,11 @@ zg::EntityCreateInfo zg::entities::CubeFactory(std::string _name, glm::vec3 posi
 {
 	zg::MeshCreateInfo meshInfo{
 		.shapeType = ShapeType::Box,
-		.material = {
-			color,
-			0
+        .material = [color](auto&) -> Material {
+            return {
+				color,
+				0
+			};
 		},
 		.constants = zg::mergeVectors<std::string>(
 			{{"Shape", "Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)

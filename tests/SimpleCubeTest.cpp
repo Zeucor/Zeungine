@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <cmath> // For spherical calculations
+#include <cmath> // For spherical calculations and std::fmod, std::abs
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Cube.hpp>

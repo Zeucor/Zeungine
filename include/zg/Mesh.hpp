@@ -14,7 +14,7 @@ namespace zg
         size_t hash;
 		std::string name;
 		ShapeType shapeType;
-		Material material;
+		std::function<Material(Entity&)> material;
 		std::function<uint32_t(Entity&)> indiceCount;
 		std::function<std::vector<uint32_t>(Entity&)> indices;
 		std::function<uint32_t(Entity&)> vertexCount;
@@ -50,7 +50,7 @@ namespace zg
         size_t hash;
 		std::string name;
 		ShapeType shapeType;
-		Material material;
+		std::function<Material(Entity&)> material;
 		std::function<uint32_t(Entity&)> indiceCount;
 		std::function<std::vector<uint32_t>(Entity&)> indices;
 		std::function<uint32_t(Entity&)> vertexCount;

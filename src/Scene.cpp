@@ -193,6 +193,7 @@ Scene& Scene::operator=(const Scene& other)
 Scene::~Scene()
 {
 	ZoneScopedN("Scene::destructor");
+	detachAllComponents();
 	for (auto& entity : entities)
 		if (entity.onRemovedFunction)
 			entity.onRemovedFunction(entity);
