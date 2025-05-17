@@ -113,7 +113,6 @@ install(DIRECTORY ${jolt_SOURCE_DIR}/Jolt
     PATTERN "*.inc")
 
 # boost includes
-option(INSTALL_BOOST "Whether to install boost headers" ON)
 if(INSTALL_BOOST)
     file(GLOB BOOST_INCLUDES "${boost_SOURCE_DIR}/libs/*/include/boost")
     list(FILTER BOOST_INCLUDES EXCLUDE REGEX "^${boost_SOURCE_DIR}/libs/python/include/boost$")
@@ -129,7 +128,7 @@ if(INSTALL_BOOST)
 endif()
 
 # openssl includes
-if(NOT MACOS)
+if(NOT MACOS OR LINK_SYS_OPENSSL)
     install(DIRECTORY "${openssl_INC_DIR}/openssl" DESTINATION ${ZG_INC_INSTALL_PREFIX}
         FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
         DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ)

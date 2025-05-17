@@ -76,17 +76,21 @@ zg_setup_target(lzma STATIC
 zg_setup_target(zstd STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" zstd zstd "${STATIC_ZG_LIB_SUFFIX}" ON)
-if(MACOS)
+if(MACOS OR LINK_SYS_OPENSSL)
 	find_package(OpenSSL REQUIRED)
 	set(ZG_LIBRARIES
 		${ZG_LIBRARIES}
 		OpenSSL::SSL
-		OpenSSL::Crypto
-		"-framework AudioToolbox"
-		"-framework CoreMedia"
-		"-framework VideoToolbox"
-		"-framework Security"
-		iconv)
+		OpenSSL::Crypto)
+	if(MACOS)
+		set(ZG_LIBRARIES
+			${ZG_LIBRARIES}
+			"-framework AudioToolbox"
+			"-framework CoreMedia"
+			"-framework VideoToolbox"
+			"-framework Security"
+			iconv)
+	endif()
 else()
 	zg_setup_target(ssl STATIC
 		"${ZG_LIB_INSTALL_PREFIX_ABS}"
