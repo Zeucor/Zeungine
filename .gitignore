@@ -1,6 +1,7 @@
 .idea
 build
-build-*
+build-debug
+build-release
 cmake-build*
 .vscode
 .DS_Store
