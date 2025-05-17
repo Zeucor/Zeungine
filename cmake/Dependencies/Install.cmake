@@ -25,7 +25,7 @@ if(WIN32)
 elseif(UNIX)
     set(openssl_LIB_DIR "${openssl_BINARY_DIR}/lib64")
 endif()
-if(NOT MACOS)
+if(NOT MACOS AND NOT LINK_SYS_OPENSSL)
     zg_setup_target(ssl STATIC
         "${openssl_LIB_DIR}"
         "${ffmpeg_ZG_LIB_PREFIX}" ssl ssl "${STATIC_ZG_LIB_SUFFIX}" ON)
