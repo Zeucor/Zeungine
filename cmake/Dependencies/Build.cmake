@@ -629,7 +629,7 @@ target_include_directories(png PRIVATE ${zlib_SOURCE_DIR})
 configure_file(${png_SOURCE_DIR}/scripts/pnglibconf.h.prebuilt ${png_SOURCE_DIR}/pnglibconf.h)
 
 # OpenSSL
-if(NOT LINK_SYS_OPENSSL)
+if("${LINK_SYS_OPENSSL}" STREQUAL "OFF")
     message(STATUS "FetchContent: openssl")
     FetchContent_Declare(openssl
         GIT_REPOSITORY https://github.com/openssl/openssl.git

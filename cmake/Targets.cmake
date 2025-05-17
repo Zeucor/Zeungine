@@ -76,7 +76,7 @@ zg_setup_target(lzma STATIC
 zg_setup_target(zstd STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" zstd zstd "${STATIC_ZG_LIB_SUFFIX}" ON)
-if(MACOS OR LINK_SYS_OPENSSL)
+if(MACOS OR "${LINK_SYS_OPENSSL}" STREQUAL "ON")
 	find_package(OpenSSL REQUIRED)
 	set(ZG_LIBRARIES
 		${ZG_LIBRARIES}
