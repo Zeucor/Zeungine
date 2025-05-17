@@ -9,7 +9,7 @@ namespace zg::shaders
     static Shader &getShaderByID(IRenderer* iRenderer, uint32_t id);
     static std::pair<uint32_t, std::shared_ptr<Shader>> getShaderByConstants(IRenderer* iRenderer,
                                                                              const RuntimeConstants &constants,
-                                                                             void *data,
                                                                              const std::vector<ShaderType> &shaderTypes = {ShaderType::Vertex, ShaderType::Fragment});
+    static size_t hashConstants(const RuntimeConstants& constants, IRenderer* iRenderer);
   };
 }

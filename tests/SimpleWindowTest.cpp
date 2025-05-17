@@ -1,10 +1,14 @@
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/Registry.hpp>
+#include <zg/shaders/ShaderFactory.hpp>
 #include <iostream>
 using namespace zg;
+using namespace zg::shaders;
 int main()
 {
+	ShaderFactory shader_factory;
+	register_zg_shader_hooks();
 	auto sizeofWindow = sizeof(Window);
 	auto sizeofScene = sizeof(Scene);
 	auto sizeofEntity = sizeof(Entity);

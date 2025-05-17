@@ -4,22 +4,29 @@
 #include <zg/utilities.hpp>
 #include <zg/Mesh.hpp>
 size_t cubesCount = 0;
-zg::EntityCreateInfo zg::entities::CubeFactory(std::string _name, glm::vec3 position, glm::quat rotation,
+using namespace zg;
+EntityCreateInfo entities::CubeFactory(std::string _name, glm::vec3 position, glm::quat rotation,
 							glm::vec3 scale, glm::vec4 color,
-							const shaders::RuntimeConstants& constants, zg::FRONTFACE frontFace)
+							const shaders::RuntimeConstants constants, FRONTFACE frontFace)
 {
-	zg::MeshCreateInfo meshInfo{
+    auto mergedConstants = shaders::mergeConstants({
+        shaders::RuntimeConstants({"Shape", "Color"}),
+        shaders::common_zg_constants,
+        constants
+	});
+	MeshCreateInfo meshInfo{
+		.name = "Cube",
 		.shapeType = ShapeType::Box,
-        .material = [color](auto&) -> Material {
-            return {
-				color,
-				0
-			};
+		.material = {
+			color,
+			0
 		},
-		.constants = zg::mergeVectors<std::string>(
-			{{"Shape", "Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
+		.info = [](auto&) -> MeshInfo {
+			return { };
+		},
+		.constants = mergedConstants
 	};
-	zg::EntityCreateInfo info{
+	EntityCreateInfo info{
 		.typeName = "Cube",
 		.position = position,
 		.rotation = rotation,

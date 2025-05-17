@@ -152,28 +152,24 @@ size_t Registry::hashMeshCreateInfo(const MeshCreateInfo& info, Entity& entity)
 {
     size_t finalHash = 0;
     uint64_t shift = 0;
+    auto mesh_info_iter = info.entity_id_mesh_infos.find(entity.ID);
+    if (mesh_info_iter == info.entity_id_mesh_infos.end())
+    {
+        auto meshInfo = info.info(entity);
+        ((MeshCreateInfo&)info).entity_id_mesh_infos[entity.ID] = meshInfo;
+        mesh_info_iter = info.entity_id_mesh_infos.find(entity.ID);
+    }
+    auto& meshInfo = mesh_info_iter->second;
     finalHash = (std::hash<uint32_t>{}(uint32_t(info.shapeType)) + 1) << ++shift;
-    if (!info.indiceCount || !info.indices || !info.vertexCount || !info.vertices)
-        return finalHash;
-    auto indiceHash = crypto::hashVector(info.indices(entity));
-    auto verticeHash = crypto::hashVector(info.vertices(entity));
-    finalHash ^= indiceHash << ++shift;
-    finalHash ^= verticeHash << ++shift;
-    if (info.colors)
+    if (meshInfo.indices.empty() || meshInfo.vertices.empty())
+        goto _textureHash;
     {
-        auto colorsHash = crypto::hashVector(info.colors(entity));
-        finalHash ^= colorsHash << ++shift;
+        auto indiceHash = crypto::hashVector(meshInfo.indices);
+        auto verticeHash = crypto::hashVector(meshInfo.vertices);
+        finalHash ^= indiceHash << ++shift;
+        finalHash ^= verticeHash << ++shift;
     }
-    if (info.uv2s)
-    {
-        auto uv2sHash = crypto::hashVector(info.uv2s(entity));
-        finalHash ^= uv2sHash << ++shift;
-    }
-    if (info.uv3s)
-    {
-        auto uv3sHash = crypto::hashVector(info.uv3s(entity));
-        finalHash ^= uv3sHash << ++shift;
-    }
+_textureHash:
     for (auto& keyedPair : info.keyedTextures)
     {
         finalHash ^= (size_t)keyedPair.second->rendererData << ++shift;
@@ -183,7 +179,7 @@ size_t Registry::hashMeshCreateInfo(const MeshCreateInfo& info, Entity& entity)
 size_t Registry::addMesh(const MeshCreateInfo& info, Entity& entity)
 {
     auto usingInfo = info;
-    usingInfo.hash = hashMeshCreateInfo(info, entity);
+    usingInfo.hash = hashMeshCreateInfo(usingInfo, entity);
     auto& meshesRef = *meshes;
     auto keyIter = meshesRef.find_key(usingInfo.hash);
     if (keyIter != meshesRef.end())
@@ -193,10 +189,10 @@ size_t Registry::addMesh(const MeshCreateInfo& info, Entity& entity)
         return meshID;
     }
     auto transaction = meshesRef.startTransaction();
-    usingInfo.INDEX_STACK = {transaction.index};
     auto& mesh = meshesRef.commitTransaction(transaction, usingInfo, entity);
     mesh.ID = transaction.id;
     mesh.INDEX = transaction.index;
+    mesh.INDEX_STACK = {transaction.index};
     std::lock_guard lock(meshIDMutex);
     meshIDRefCounts[mesh.ID]++;
     return transaction.id;

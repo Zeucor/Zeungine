@@ -51,13 +51,15 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
                 },
                 .staticOnAttached = []()
                 {
-                    ShaderFactory::addHook(
+                    auto& sf = ShaderFactory::GetSingleton();
+                    sf.addHook(
                         ShaderType::Fragment,
                         "layout",
                         "BloomBrightExtract",
                         [](Shader& shader, const auto& constants) -> std::string {
                             
-                            uint32_t bindingIndex = shaders::ShaderFactory::currentBindingIndex++;
+                            auto& sf = ShaderFactory::GetSingleton();
+                            uint32_t bindingIndex = sf.currentBindingIndex++;
                             shader.addUBO(shaders::ShaderType::Fragment, "BrightExtract", bindingIndex, sizeof(float)*8);
                             std::string string;
                             string += "layout(binding = " + std::to_string(bindingIndex) + ") uniform BrightExtract {\n" +
@@ -68,7 +70,7 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
                             return string;
                         }
                     );
-                    ShaderFactory::addHook(
+                    sf.addHook(
                         ShaderType::Fragment,
                         "postPostInMain",
                         "BloomBrightExtract",
@@ -109,12 +111,14 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
                 },
                 .staticOnAttached = []()
                 {
-                    ShaderFactory::addHook(
+                    auto& sf = ShaderFactory::GetSingleton();
+                    sf.addHook(
                         ShaderType::Fragment,
                         "layout",
                         "BloomBlur",
                         [](Shader& shader, const auto& constants) -> std::string {
-                            uint32_t bindingIndex = shaders::ShaderFactory::currentBindingIndex++;
+                            auto& sf = ShaderFactory::GetSingleton();
+                            uint32_t bindingIndex = sf.currentBindingIndex++;
                             shader.addUBO(shaders::ShaderType::Fragment, "Blur", bindingIndex, sizeof(float) * 6);
                             std::string string;
                             string +=
@@ -130,26 +134,28 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
                             return string;
                         }
                     );
-                    ShaderFactory::addHook(
+                    sf.addHook(
                         ShaderType::Fragment,
                         "layout",
                         "BrightTexture",
                         [](Shader& shader, const auto& constants) -> std::string {
-                            auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                            auto& sf = ShaderFactory::GetSingleton();
+                            auto bindingIndex = sf.currentBindingIndex++;
                             shader.addTexture(bindingIndex, ShaderType::Fragment, "BrightTexture");
                             return "layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D BrightTexture;";
                         }
                     );
-                    ShaderFactory::addHook(
+                    sf.addHook(
                         ShaderType::Fragment,
                         "layout",
                         "BloomBlur",
                         [](Shader& shader, const auto& constants) -> std::string {
-                            return "layout(location = " + std::to_string(ShaderFactory::currentOutLayoutIndex++) +
+                            auto& sf = ShaderFactory::GetSingleton();
+                            return "layout(location = " + std::to_string(sf.currentOutLayoutIndex++) +
                             ") out vec4 BlurColor;\n";
                         }
                     );
-                    ShaderFactory::addHook(
+                    sf.addHook(
                         ShaderType::Fragment,
                         "postPostInMain",
                         "BloomBlur",
@@ -186,30 +192,33 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
                 },
                 .staticOnAttached = []()
                 {
-                    ShaderFactory::addHook(
+                    auto& sf = ShaderFactory::GetSingleton();
+                    sf.addHook(
                         ShaderType::Fragment,
                         "layout",
                         "BlurTexture",
                         [](Shader& shader, const auto& constants) -> std::string {
-                            auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                            auto& sf = ShaderFactory::GetSingleton();
+                            auto bindingIndex = sf.currentBindingIndex++;
                             shader.addTexture(bindingIndex, ShaderType::Fragment, "BlurTexture");
                             return "layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D BlurTexture;";
                         }
                     );
                     
-                    ShaderFactory::addHook(
+                    sf.addHook(
                         ShaderType::Fragment,
                         "layout",
                         "BloomCombine",
                         [](Shader& shader, const auto& constants) -> std::string {
-                            uint32_t bindingIndex = shaders::ShaderFactory::currentBindingIndex++;
+                            auto& sf = ShaderFactory::GetSingleton();
+                            uint32_t bindingIndex = sf.currentBindingIndex++;
                             shader.addUBO(shaders::ShaderType::Fragment, "BloomCombine", bindingIndex, sizeof(float)*1);
                             return "layout(binding = " + std::to_string(bindingIndex) + ") uniform BloomCombine {\n" +
                                 "  float intensity;\n"
                                 "} bloomCombine;\n";
                         }
                     );
-                    ShaderFactory::addHook(
+                    sf.addHook(
                         ShaderType::Fragment,
                         "postPostInMain",
                         "BloomCombine",

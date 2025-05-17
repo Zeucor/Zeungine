@@ -4,7 +4,7 @@ namespace zg::entities
 {
 	EntityCreateInfo DeltaVisualizerFactory(glm::vec2 size, long double& targetDelta, long double& currentDelta,
 											glm::vec3 position = {0, 0, 0}, glm::quat rotation = {1, 0, 0, 0}, glm::vec3 _scale = {1, 1, 1},
-											const shaders::RuntimeConstants& constants = {}, std::string name = "", zg::FRONTFACE frontFace = IRenderer::DEFAULTFRONTFACE);
+											const shaders::RuntimeConstants constants = {}, std::string name = "", zg::FRONTFACE frontFace = IRenderer::DEFAULTFRONTFACE);
 	// struct DeltaVisualizer : Entity
 	// {
 	// 	std::vector<glm::vec4> colors;

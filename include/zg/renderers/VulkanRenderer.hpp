@@ -111,19 +111,19 @@ namespace zg
 		 *        3: bindingIndex
 		 *        4: isArray
 		 */
-		std::unordered_map<void*, UBOLayoutBindings> uboLayoutBindings;
-		std::unordered_map<void*, VkDescriptorSetLayout> descriptorSetLayouts;
+		std::unordered_map<size_t, UBOLayoutBindings> uboLayoutBindings;
+		std::unordered_map<size_t, VkDescriptorSetLayout> descriptorSetLayouts;
 		VkPipelineLayout pipelineLayout;
 		VkPipeline graphicsPipeline;
 		shaders::ShaderMap shaders;
-		std::unordered_map<void*, SSBOBindings> ssboBindings;
-		std::unordered_map<void*, TextureBindings> textureBindings;
-		std::unordered_map<void*, UBOStringBindings> uboStringBindings;
-		UBOLayoutBindings& getUboLayoutBindings(void* data) { return uboLayoutBindings[data]; }
-		SSBOBindings& getSsboBindings(void* data) { return ssboBindings[data]; }
-		VkDescriptorSetLayout& getDescriptorSetLayout(void* data) { return descriptorSetLayouts[data]; }
-		UBOStringBindings& getUboStringBindings(void* data) { return uboStringBindings[data]; }
-		TextureBindings& getTextureBindings(void* data) { return textureBindings[data]; }
+		std::unordered_map<size_t, SSBOBindings> ssboBindings;
+		std::unordered_map<size_t, TextureBindings> textureBindings;
+		std::unordered_map<size_t, UBOStringBindings> uboStringBindings;
+		UBOLayoutBindings& getUboLayoutBindings(size_t data) { return uboLayoutBindings[data]; }
+		SSBOBindings& getSsboBindings(size_t data) { return ssboBindings[data]; }
+		VkDescriptorSetLayout& getDescriptorSetLayout(size_t data) { return descriptorSetLayouts[data]; }
+		UBOStringBindings& getUboStringBindings(size_t data) { return uboStringBindings[data]; }
+		TextureBindings& getTextureBindings(size_t data) { return textureBindings[data]; }
 	};
 	static inline std::unordered_map<size_t, VkRenderPass> renderPassMap = {};
 	constexpr int MAX_FRAMES_IN_FLIGHT = 3;
@@ -343,6 +343,7 @@ namespace zg
 		void addSSBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
 								 uint32_t bindingIndex) override;
 		int32_t getSSBO_BindingIndex(shaders::Shader &shader, const std::string_view name) override;
+		int32_t getUBO_BindingIndex(shaders::Shader &shader, const std::string_view name) override;
 		void addUBO(shaders::Shader& shader, shaders::ShaderType shaderType, const std::string_view name,
 								uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray) override;
 		void addTexture(shaders::Shader& shader, uint32_t bindingIndex, shaders::ShaderType shaderType,

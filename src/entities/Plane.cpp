@@ -3,18 +3,24 @@
 #include <zg/utilities.hpp>
 using namespace zg;
 zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string name, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-    const shaders::RuntimeConstants& constants, zg::FRONTFACE frontFace)
+    const shaders::RuntimeConstants constants, zg::FRONTFACE frontFace)
 {
+    auto mergedConstants = shaders::mergeConstants({
+        shaders::RuntimeConstants({"Shape", "Color"}),
+        shaders::common_zg_constants,
+        constants
+    });
     zg::MeshCreateInfo meshInfo{
+        .name = "Plane",
         .shapeType = ShapeType::Plane,
-        .material = [color](auto&) -> Material {
-            return {
-                color,
-                0
-            };
+        .material = {
+            color,
+            0
         },
-        .constants = zg::mergeVectors<std::string>(
-            {{"Shape", "Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
+        .info = [](auto&) -> MeshInfo {
+            return  {};
+        },
+        .constants = mergedConstants
     };
     zg::EntityCreateInfo info{
         .typeName = "Plane",
@@ -29,31 +35,34 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string nam
     return info;
 }
 zg::EntityCreateInfo zg::entities::PlaneFactory(const std::shared_ptr<textures::Texture>& texture, std::string name, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-    const shaders::RuntimeConstants& constants, zg::FRONTFACE frontFace)
+    const shaders::RuntimeConstants constants, zg::FRONTFACE frontFace)
 {
+    auto mergedConstants = shaders::mergeConstants({
+        shaders::RuntimeConstants({"Shape", "UV2"}),
+        shaders::common_zg_constants,
+        constants
+    });
     zg::MeshCreateInfo meshInfo{
+        .name = "Plane",
         .shapeType = ShapeType::Plane,
-        .material = [](auto&) -> Material {
-            return {
-                glm::vec4(1),
-                1
-            };
+        .material = {
+            glm::vec4(1),
+            1
         },
-        .uv2Count = [](auto&) { return 4; },
-        .uv2s = [](auto&) -> std::vector<glm::vec2>
-        {
+        .info = [](auto&) -> MeshInfo {
             return {
-                {0, 0},
-                {1, 0},
-                {1, 1},
-                {0, 1}
+                .uv2s = {
+                    {0, 0},
+                    {1, 0},
+                    {1, 1},
+                    {0, 1}
+                },
             };
         },
         .keyedTextures = {
             {"ColorTexture", texture}
         },
-        .constants = zg::mergeVectors<std::string>(
-			{{"Shape", "UV2", "Position", "Normal", "ColorTexture", "View", "Projection", "Model", "CameraPosition"}}, constants)
+        .constants = mergedConstants
     };
     zg::EntityCreateInfo info{
         .typeName = "Plane",

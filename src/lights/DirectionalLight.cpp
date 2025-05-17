@@ -41,10 +41,10 @@ DirectionalLightShadow& DirectionalLightShadow::operator=(const DirectionalLight
 	update();
 	return *this;
 }
-void DirectionalLightShadow::addShader()
+zg::shaders::Shader* DirectionalLightShadow::addShader()
 {
 	if (shader)
-		return;
+		return shader;
 	void* data = 0;
 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(iRenderer);
 	if (vulkanRenderer.currentFramebufferImpl)
@@ -56,8 +56,9 @@ void DirectionalLightShadow::addShader()
 		data = vulkanRenderer.renderPass;
 	}
 	shader = shaders::ShaderManager::getShaderByConstants(
-						 iRenderer, {"DepthMap", "Color", "Position", "Normal", "Model", "LightSpaceMatrix"}, data)
+						 iRenderer, {"Viewport", "Time", "DepthMap", "Shape", "Color", "Position", "Normal", "View", "Projection", "Model"})
 						 .second.get();
+	return shader;
 }
 void DirectionalLightShadow::update()
 {
@@ -65,14 +66,18 @@ void DirectionalLightShadow::update()
 	auto& scene = Registry::getScene(INDEX_STACK);
 	auto& directionalLight = scene.directionalLights[directionalLightIndex];
 	static glm::vec2 projectionDimensions = {64, 64};
-	vp::Projection projection(window, projectionDimensions, directionalLight.nearPlane, directionalLight.farPlane);
-	vp::View view(directionalLight.position, directionalLight.direction, directionalLight.up, lookAtSet, lookAt);
+	vp::Projection _projection(window, projectionDimensions, directionalLight.nearPlane, directionalLight.farPlane);
+	vp::View _view(directionalLight.position, directionalLight.direction, directionalLight.up, lookAtSet, lookAt);
 	{
-		std::unique_lock lock(view.updateMutex);
-		view.updateCV.wait(lock, [&]
+		std::unique_lock lock(_view.updateMutex);
+		_view.updateCV.wait(lock, [&]
 		{
-			return !view.dirty;
+			return !_view.dirty;
 		});
 	}
-	lightSpaceMatrix = projection.matrix * view.matrix;
+	projection = _projection.matrix;
+	inverseProjection = glm::inverse(projection);
+	view = _view.matrix;
+	inverseView = glm::inverse(view);
+	lightSpaceMatrix = projection * view;
 }

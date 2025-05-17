@@ -9,7 +9,7 @@ namespace zg::vaos
 	using namespace shaders;
 	struct VAO
 	{
-		shaders::RuntimeConstants constants;
+		shaders::RuntimeConstants vaoConstants;
 		uint32_t indiceCount;
 		uint32_t vertexCount;
 		uint32_t stride;
@@ -17,7 +17,7 @@ namespace zg::vaos
 		IRenderer* vaoIRenderer = 0;
 		void* rendererData = 0;
 		size_t uid = GlobalUID::GetNew();
-		std::unordered_map<void*, shaders::Shader*> shaders;
+		std::unordered_map<size_t, shaders::Shader*> shaders;
 		std::unordered_map<size_t, bool> ensuredBools;
 		VAO();
 		VAO(const VAO& other);
@@ -29,7 +29,6 @@ namespace zg::vaos
 		void updateElements(const std::string_view constant, const std::vector<T>& elements) const;
 		void drawVAO(shaders::Shader* shader = 0) const;
 		void drawVAOInstanced(size_t instanceCount = 1, shaders::Shader* shader = 0);
-		static void* getShaderUHash(IRenderer* iRenderer);
 		size_t getVAOuHash() const;
 		bool isEnsured();
 		void setEnsured();

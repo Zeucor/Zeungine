@@ -4,7 +4,7 @@
 #include <zg/Mesh.hpp>
 using namespace zg;
 FullscreenQuad::FullscreenQuad(const FullscreenQuad& other):
-    vaos::VAO(other.VAO_INDEX_STACK, other.constants, other.indiceCount, other.vertexCount),
+    vaos::VAO(other),
     model(other.model)
 {
     generateQuad();
@@ -57,8 +57,8 @@ void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared
     auto inversemodel = glm::inverse(model);
 	shader->setSSBO("InverseInstanceModels", *this, &inversemodel, sizeof(glm::mat4));
     uint32_t unit = 0;
-    auto constantsBegin = constants.begin();
-    auto constantsEnd = constants.end();
+    auto constantsBegin = vaoConstants.begin();
+    auto constantsEnd = vaoConstants.end();
     for (auto& pair : inputTextures)
     {
         auto found_iter = std::find_if(constantsBegin, constantsEnd, [&](auto& val)
@@ -74,7 +74,7 @@ void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared
 template <>
 Serial& serialize(Serial& serial, const std::shared_ptr<FullscreenQuad>& fsq)
 {
-    return serial << fsq->constants;
+    return serial << fsq->vaoConstants;
 }
 template <>
 Serial& deserialize(Serial& serial, std::shared_ptr<FullscreenQuad>& fsq)

@@ -49,6 +49,10 @@ namespace zg
         static bool initialized;
     };
     using entity_mat4_transform_registry = transform_registry<std::string, glm::mat4, Entity>;
+#define SHADER_BATCH_MAIN 0
+#define SHADER_BATCH_DIRECTIONAL_LIGHT 1
+#define SHADER_BATCH_POINT_LIGHT 2
+#define SHADER_BATCH_SPOT_LIGHT 3
     struct InstancedDraw
     {
     private:
@@ -77,7 +81,7 @@ namespace zg
         /**
          * @brief shaderBatches Key = shaderPointer, value = unordered_set<MeshID>
          */
-        std::unordered_map<shaders::Shader*, std::unordered_set<size_t>> shaderBatches;
+        std::unordered_map<size_t, std::unordered_map<shaders::Shader*, std::unordered_set<size_t>>> bID_shaderBatches;
     public:
         void draw(
             Scene& scene,
@@ -88,12 +92,15 @@ namespace zg
             shaders::Shader* shaderPointer = 0
         );
         void drawMulti(
+            size_t batchID,
             Scene& scene,
             const OpaqueDrawList& opaqueDrawList,
             const TransparentDrawList& transparentDrawList,
             size_t& oldOpaqueHash,
             size_t& oldTransparentHash,
-            shaders::Shader* shaderPointer = 0
+            shaders::Shader* shaderPointer = 0,
+            const std::unordered_map<std::string, glm::mat4>& transformOverrides = {},
+            const std::unordered_map<std::string, std::function<void(Scene&, shaders::Shader&, Mesh&)>>& shaderSets = {}
         );
         void addEntity(const Entity& entity);
         void removeEntity(const Entity& entity);

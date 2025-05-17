@@ -12,10 +12,12 @@ set(boost_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/bo
 set(jolt_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/jolt-src")
 set(ttf2mesh_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/ttf2mesh-src")
 set(assimp_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/assimp-src")
+set(assimp_BUILD_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/assimp-build")
 set(vhacd_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/vhacd-src")
 set(rtmidi_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/rtmidi-src")
 set(tinyfiledialogs_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/tinyfiledialogs-src")
 set(tracy_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/tracy-src")
+set(cgal_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/cgal-install")
 
 set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")
 set(CPACK_COMPONENT_HEADERS_GROUP "Zeungine")
@@ -31,6 +33,11 @@ set(CPACK_COMPONENT_CMAKECONFIG_GROUP "Zeungine")
 install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ../Targets.cmake DESTINATION ${ZG_SHR_INSTALL_PREFIX}
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT cmakeconfig)
+
+# cgal
+install(DIRECTORY ${cgal_SOURCE_DIR}/include/CGAL
+    DESTINATION ${ZG_INC_INSTALL_PREFIX} COMPONENT headers
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.tcc")
 
 # tracy
 install(DIRECTORY ${tracy_SOURCE_DIR}/public/client
@@ -77,6 +84,11 @@ install(DIRECTORY ${assimp_SOURCE_DIR}/include/assimp
     PATTERN "*.hpp"
     PATTERN "*.inl"
     PATTERN "*.inc")
+install(DIRECTORY ${assimp_BUILD_DIR}/include/assimp
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    COMPONENT headers
+    FILES_MATCHING
+    PATTERN "*.h")
 
 # ttf2mesh
 install(FILES ${ttf2mesh_SOURCE_DIR}/ttf2mesh.h

@@ -2,6 +2,7 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/textures/Texture.hpp>
 #include <zg/crypto/vector.hpp>
+#include <zg/renderers/VulkanRenderer.hpp>
 using namespace zg::shaders;
 Shader::Shader(size_t hash,
                IRenderer *iRenderer,
@@ -36,6 +37,10 @@ int32_t Shader::getSSBO_BindingIndex(const std::string_view name)
 {
   return iRenderer->getSSBO_BindingIndex(*this, name);
 }
+int32_t Shader::getUBO_BindingIndex(const std::string_view name)
+{
+  return iRenderer->getUBO_BindingIndex(*this, name);
+}
 void Shader::addUBO(ShaderType shaderType, const std::string_view name, uint32_t bindingIndex, uint32_t bufferSize, uint32_t descriptorCount, bool isArray)
 {
   iRenderer->addUBO(*this, shaderType, name, bindingIndex, bufferSize, descriptorCount, isArray);
@@ -51,4 +56,11 @@ void Shader::setSSBO(const std::string_view name, vaos::VAO &vao, const void *po
 void Shader::setTexture(const std::string_view name, vaos::VAO &vao, const textures::Texture &texture, const int32_t unit)
 {
   iRenderer->setTexture(*this, vao, name, texture, unit);
+}
+RuntimeConstants zg::shaders::mergeConstants(const std::vector<RuntimeConstants>& constants)
+{
+  RuntimeConstants merged;
+  for (auto& constants : constants)
+    merged.insert(merged.end(), constants.begin(), constants.end());
+  return merged;
 }

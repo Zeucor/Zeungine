@@ -41,16 +41,16 @@ namespace zg::entities
 
 	template <size_t N = 3>
 	EntityCreateInfo NDParametricCurveFactory(glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec4 color,
-													 const shaders::RuntimeConstants& constants, const std::string& name, float radius,
+													 const shaders::RuntimeConstants constants, const std::string& name, float radius,
 													 const std::vector<glm::vec<N, float>>& points, zg::FRONTFACE frontFace = IRenderer::DEFAULTFRONTFACE);
 	template <size_t N = 3, typename... Args>
 	EntityCreateInfo NDParametricCurveFactory(glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec4 color,
-													 const shaders::RuntimeConstants& constants, const std::string& name, float radius,
+													 const shaders::RuntimeConstants constants, const std::string& name, float radius,
 													 const std::map<std::string, double>& vars, double tStart, double tEnd, double tStep,
 													 const std::string& t_equation, const Args&... args);
 	template <size_t N = 3>
 	EntityCreateInfo NDParametricCurveFactory(glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec4 color,
-													 const shaders::RuntimeConstants& constants, const std::string& name, float radius,
+													 const shaders::RuntimeConstants constants, const std::string& name, float radius,
 													 const std::map<std::string, double>& vars, double tStart, double tEnd, double tStep,
 													 const std::array<std::string, N>& equations);
 	// struct NDParametricCurve : Entity
@@ -71,7 +71,7 @@ namespace zg::entities
 	// 	std::vector<glm::vec4> colors;
 	// 	std::vector<glm::vec3> normals = {};
 	// 	NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-	// 										glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float
+	// 										glm::vec4 color, const shaders::RuntimeConstants constants, std::string_view name, float
 	// radius, 										const std::map<std::string, double>& vars, const std::vector<glm::vec<N, float>>& points) : 			Entity(window,
 	// scene, 						 zg::mergeVectors<std::string>(
 	// 							 {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
@@ -84,7 +84,7 @@ namespace zg::entities
 	// 	}
 	// 	template <typename... Args>
 	// 	NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-	// 										glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float
+	// 										glm::vec4 color, const shaders::RuntimeConstants constants, std::string_view name, float
 	// radius, 										const std::map<std::string, double>& vars, double tStart, double tEnd, double tStep, 										const std::string&
 	// t_equation, const Args&... args) : 			Entity(window, scene, 						 zg::mergeVectors<std::string>(
 	// 							 {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),
@@ -98,7 +98,7 @@ namespace zg::entities
 	// 		generateAndUpdateCurve(tStart, tEnd, tStep);
 	// 	}
 	// 	NDParametricCurve(zg::Window& window, zg::Scene& scene, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-	// 										glm::vec4 color, const shaders::RuntimeConstants& constants, std::string_view name, float
+	// 										glm::vec4 color, const shaders::RuntimeConstants constants, std::string_view name, float
 	// radius, 										const std::map<std::string, double>& vars, double tStart, double tEnd, double tStep, 										const
 	// std::array<std::string, N>& equations) : 			Entity(window, scene, 						 zg::mergeVectors<std::string>(
 	// 							 {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants),

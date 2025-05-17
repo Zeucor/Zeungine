@@ -41,8 +41,8 @@ JPH::ShapeRefC MeshShapeData::createJoltShape(Entity& entity) const
 	for (auto& meshID : entity.meshIDs)
 	{
 		auto& mesh = Registry::getMesh(meshID);
-		std::vector<glm::vec3> entityVertices = mesh.vertices(entity);
-		std::vector<uint32_t> entityIndices = mesh.indices(entity);
+		auto& entityVertices = mesh.vertices;
+		auto& entityIndices = mesh.indices;
 		if (entityIndices.size() % 3 != 0)
 		{
 			std::cerr << "Error: Index count (" << entityIndices.size() << ") is not a multiple of 3 for entity " << entity.ID << std::endl;
@@ -99,7 +99,7 @@ JPH::ShapeRefC ConvexHullShapeData::createJoltShape(Entity& entity) const
 	for (auto& meshID : entity.meshIDs)
 	{
 		auto& mesh = Registry::getMesh(meshID);
-		std::vector<glm::vec3> entityVertices = mesh.vertices(entity);
+		std::vector<glm::vec3> entityVertices = mesh.vertices;
 		if (entityVertices.empty())
 		{
 			std::cerr << "Error: Cannot create convex hull with zero vertices." << std::endl;
@@ -110,7 +110,7 @@ JPH::ShapeRefC ConvexHullShapeData::createJoltShape(Entity& entity) const
 			std::cerr << "Warning: Trying to create a convex hull with fewer than 4 vertices (" << entityVertices.size() << ")." << std::endl;
 			return nullptr;
 		}
-		std::vector<uint32_t> entityIndices = mesh.indices(entity);
+		std::vector<uint32_t> entityIndices = mesh.indices;
 		std::vector<double> vhacdVertices;
 		vhacdVertices.reserve(entityVertices.size() * 3);
 		for (auto& v : entityVertices)

@@ -150,11 +150,11 @@ void BVH::addEntity(Entity& entity)
 		for (auto& meshID : entity.meshIDs)
 		{
 			auto& mesh = Registry::getMesh(meshID);
-			auto indiceCount = mesh.indiceCount ? mesh.indiceCount(entity) : 0;
+			auto indiceCount = mesh.indices.size();
 			if (!indiceCount)
 				return;
-			auto indices = mesh.indices(entity);
-			auto vertices = mesh.vertices(entity);
+			auto& indices = mesh.indices;
+			auto& vertices = mesh.vertices;
 			auto indicesData = indices.data();
 			auto verticesData = vertices.data();
 			auto& model = entity.getModelMatrix();
@@ -203,11 +203,11 @@ void BVH::updateEntity(Entity& entity)
 					indices.push_back(i);
 				}
 			}
-			auto indiceCount = mesh.indiceCount ? mesh.indiceCount(entity) : 0;
+			auto indiceCount = mesh.indices.size();
 			if (!indiceCount)
 				return;
-			auto meshIndices = mesh.indices(entity);
-			auto meshVertices = mesh.vertices(entity);
+			auto& meshIndices = mesh.indices;
+			auto& meshVertices = mesh.vertices;
 			auto indicesData = meshIndices.data();
 			auto verticesData = meshVertices.data();
 			auto& model = entity.getModelMatrix();

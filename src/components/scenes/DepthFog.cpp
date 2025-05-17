@@ -55,12 +55,14 @@ SceneComponentCreateInfo zg::components::scenes::DepthFogFactory() {
                     shader.setBlock("DepthFogParams", vao, fogData);
                 },
                 .staticOnAttached = []() {
-                    ShaderFactory::addHook(
+                    auto& sf = ShaderFactory::GetSingleton();
+                    sf.addHook(
                         ShaderType::Fragment,
                         "layout",
                         "DepthFog",
                         [](Shader& shader, const auto& constants) -> std::string {
-                            uint32_t bindingIndex = ShaderFactory::currentBindingIndex++;
+                            auto& sf = ShaderFactory::GetSingleton();
+                            uint32_t bindingIndex = sf.currentBindingIndex++;
                             size_t uboSize = sizeof(float) * 11;
                             shader.addUBO(ShaderType::Fragment, "DepthFogParams", bindingIndex, uboSize);
                             std::string uboString =
@@ -74,14 +76,14 @@ SceneComponentCreateInfo zg::components::scenes::DepthFogFactory() {
                                 "    float farPlane;\n"
                                 "    float ignoreMaxDepth;\n"
                                 "} depthFogParams;\n";
-                            uint32_t depthTexBinding = ShaderFactory::currentBindingIndex++;
+                            uint32_t depthTexBinding = sf.currentBindingIndex++;
                             shader.addTexture(depthTexBinding, ShaderType::Fragment, "DepthTexture");
                             uboString += "layout(binding = " + std::to_string(depthTexBinding) + ") uniform sampler2D DepthTexture;\n";
                             return uboString;
                         }
                     );
 
-                    ShaderFactory::addHook(
+                    sf.addHook(
                         ShaderType::Fragment,
                         "preMain",
                         "LinearizeDepthUtil",
@@ -109,7 +111,7 @@ float linearizeDepth(float depthSample, float near, float far) {)";
                         }
                     );
 
-                    ShaderFactory::addHook(
+                    sf.addHook(
                         ShaderType::Fragment,
                         "postPostInMain",
                         "DepthFog",

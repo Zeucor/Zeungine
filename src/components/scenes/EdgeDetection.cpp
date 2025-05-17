@@ -64,12 +64,14 @@ SceneComponentCreateInfo components::scenes::EdgeDetectionFactory() {
                     shader.setBlock("EdgeDetectionParams", vao, edgeDetectionData);
                 },
                 .staticOnAttached = []() {
-                    ShaderFactory::addHook(
+                    auto& sf = ShaderFactory::GetSingleton();
+                    sf.addHook(
                         ShaderType::Fragment,
                         "layout",
                         "EdgeDetection",
                         [](Shader& shader, const auto& constants) -> std::string {
-                            auto bindingIndex = ShaderFactory::currentBindingIndex++;
+                            auto& sf = ShaderFactory::GetSingleton();
+                            auto bindingIndex = sf.currentBindingIndex++;
                             auto uboSize = sizeof(float) * (4 + 4 + 2 + 1 + 1 + 1 + 1);
                             shader.addUBO(ShaderType::Fragment, "EdgeDetectionParams", bindingIndex, uboSize);
 
@@ -85,7 +87,7 @@ SceneComponentCreateInfo components::scenes::EdgeDetectionFactory() {
                                 "} edgeDetectionParams;\n";
 
                             // Add sampler declaration ONLY for DepthTexture as requested
-                            bindingIndex = ShaderFactory::currentBindingIndex++;
+                            bindingIndex = sf.currentBindingIndex++;
                             shader.addTexture(bindingIndex, ShaderType::Fragment, "DepthTexture");
                             uboString += "layout(binding = " + std::to_string(bindingIndex) + ") uniform sampler2D DepthTexture;\n";
 
@@ -97,7 +99,7 @@ SceneComponentCreateInfo components::scenes::EdgeDetectionFactory() {
                         }
                     );
 
-                    ShaderFactory::addHook(
+                    sf.addHook(
                         ShaderType::Fragment,
                         "postPostInMain",
                         "EdgeDetection",

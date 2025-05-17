@@ -6,17 +6,18 @@
 #include <zg/vaos/VAO.hpp>
 #include <zg/vaos/VAOFactory.hpp>
 #include <zg/Registry.hpp>
+#include <zg/crypto/vector.hpp>
 using namespace zg;
 using namespace zg::vaos;
 VAO::VAO(const std::vector<size_t*>& VAO_INDEX_STACK, const RuntimeConstants& constants, uint32_t indiceCount, uint32_t vertexCount) :
-		constants(constants), indiceCount(indiceCount), vertexCount(vertexCount), stride(VAOFactory::getStride(constants)),
+		vaoConstants(constants), indiceCount(indiceCount), vertexCount(vertexCount), stride(VAOFactory::getStride(constants)),
 		VAO_INDEX_STACK(VAO_INDEX_STACK),
 		vaoIRenderer(Registry::getWindow(VAO_INDEX_STACK).iRenderer)
 {
 	VAOFactory::generate(*this);
 }
 VAO::VAO(const VAO& other):
-	constants(other.constants),
+	vaoConstants(other.vaoConstants),
 	indiceCount(other.indiceCount),
 	vertexCount(other.vertexCount),
 	stride(other.stride),
@@ -29,7 +30,7 @@ VAO::VAO() {};
 VAO& VAO::operator=(const VAO& other)
 {
 	VAOFactory::destroy(*this, true);
-	constants = other.constants;
+	vaoConstants = other.vaoConstants;
 	indiceCount = other.indiceCount;
 	vertexCount = other.vertexCount;
 	stride = other.stride;
@@ -62,33 +63,19 @@ void VAO::drawVAOInstanced(size_t instanceCount, shaders::Shader* shader)
 {
 	vaoIRenderer->drawVAOInstanced(*this, shader, instanceCount);
 }
-void* VAO::getShaderUHash(IRenderer* iRenderer)
-{
-	void* data = 0;
-	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(iRenderer);
-	if (vulkanRenderer.currentFramebufferImpl)
-	{
-		data = vulkanRenderer.currentFramebufferImpl->renderPass;
-	}
-	else
-	{
-		data = vulkanRenderer.renderPass;
-	}
-	return data;
-}
 size_t VAO::getVAOuHash() const
 {
-	void* data = 0;
+	size_t render_pass = 0;
 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(vaoIRenderer);
 	if (vulkanRenderer.currentFramebufferImpl)
 	{
-		data = vulkanRenderer.currentFramebufferImpl->renderPass;
+		render_pass = size_t(vulkanRenderer.currentFramebufferImpl->renderPass);
 	}
 	else
 	{
-		data = vulkanRenderer.renderPass;
+		render_pass = size_t(vulkanRenderer.renderPass);
 	}
-	return (size_t)data ^ uid;
+	return (render_pass << 1) ^ (uid << 2);
 }
 bool VAO::isEnsured()
 {
@@ -104,13 +91,10 @@ zg::shaders::Shader* VAO::addShader(zg::shaders::Shader* useShader)
 	{
 		return useShader;
 	}
-	auto data = getShaderUHash(vaoIRenderer);
-	auto& shader = shaders[data];
+  	auto hash = zg::shaders::ShaderManager::hashConstants(vaoConstants, vaoIRenderer);
+	auto& shader = shaders[hash];
 	if (shader)
 		return shader;
-	else
-	{
-		shader = zg::shaders::ShaderManager::getShaderByConstants(vaoIRenderer, constants, data).second.get();
-	}
+	shader = zg::shaders::ShaderManager::getShaderByConstants(vaoIRenderer, vaoConstants).second.get();
 	return shader;
 }

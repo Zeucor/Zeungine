@@ -17,13 +17,17 @@ namespace zg::lights
     size_t directionalLightIndex = 0;
     std::shared_ptr<textures::Texture> texture;
     std::shared_ptr<textures::Framebuffer> framebuffer;
+    glm::mat4 projection;
+    glm::mat4 inverseProjection;
+    glm::mat4 view;
+    glm::mat4 inverseView;
     glm::mat4 lightSpaceMatrix;
     bool lookAtSet = false;
     glm::vec3 lookAt = glm::vec3(0);
     DirectionalLightShadow(const std::vector<size_t*>& INDEX_STACK, size_t directionalLightIndex);
     DirectionalLightShadow(const DirectionalLightShadow& other);
     DirectionalLightShadow& operator=(const DirectionalLightShadow& other);
-    void addShader();
+    zg::shaders::Shader* addShader();
     void update();
   };
 }

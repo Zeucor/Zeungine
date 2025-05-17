@@ -3,7 +3,9 @@
 #include <zg/Window.hpp>
 #include <zg/media/entities/Video.hpp>
 #include <zg/zgfilesystem/File.hpp>
+#include <zg/shaders/ShaderFactory.hpp>
 using namespace zg;
+using namespace zg::shaders;
 // struct VideoScene : Scene
 // {
 // 	long double deltaTimeCounter = 0;
@@ -44,6 +46,8 @@ using namespace zg;
 // };
 int main()
 {
+	ShaderFactory shader_factory;
+	register_zg_shader_hooks();
 	// Window window("Video Test", 1024, 768, -1, -1, true, false);
 	// window.runOnThread([](auto& window) { window.setScene(std::make_shared<VideoScene>(window)); });
 	// window.run();

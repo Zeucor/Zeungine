@@ -51,6 +51,7 @@ struct WindowCreateInfo;
 		IRenderer* iRenderer;
 		float windowWidth;
 		float windowHeight;
+		glm::vec4 viewport = glm::vec4(0);
 		float windowX;
 		float windowY;
 		uint32_t framerate = 60;
@@ -133,6 +134,7 @@ struct WindowCreateInfo;
 		void warpPointer(glm::vec2 coords);
 		void setXY(float x, float y);
 		void setWidthHeight(float width, float height);
+		void setViewport();
 		void mouseCapture(bool capture);
 		Window& createChildWindow(const WindowCreateInfo& info);
 		// Keyboard

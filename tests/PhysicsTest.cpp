@@ -25,8 +25,10 @@
 #include <zg/physics/CollisionManifold.hpp>
 #include <zg/fonts/ttf2mesh/TTF2Mesh.hpp>
 #include <zg/entities/Model.hpp>
+#include <zg/shaders/ShaderFactory.hpp>
 using namespace zg;
-shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
+using namespace zg::shaders;
+RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition"});
 glm::vec3 windowVisualizerPosition(56.8, 42, 57);
 SceneCreateInfo PhysicsSceneFactory();
 SceneCreateInfo HUDSceneFactory();
@@ -65,6 +67,8 @@ auto cubeColliderInfo = components::entities::ColliderFactory(
 );
 int main()
 {
+	ShaderFactory shader_factory;
+	register_zg_shader_hooks();
 	WindowCreateInfo windowCreateInfo{
 		.title = "Physics Test",
 		.windowWidth = 1920,

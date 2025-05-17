@@ -3,6 +3,7 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/Window.hpp>
 using namespace zg;
+using namespace zg::shaders;
 using namespace zg::components::scenes;
 zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::FXAAFactory(
     float edgeThresholdMin,
@@ -45,14 +46,16 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::FXAAFac
                 },
                 .staticOnAttached = []()
                 {
-                    shaders::ShaderFactory::addHook(
-                        shaders::ShaderType::Fragment,
+                    auto& sf = ShaderFactory::GetSingleton();
+                    sf.addHook(
+                        ShaderType::Fragment,
                         "layout",
                         "FXAA",
-                        [](shaders::Shader& shader, const auto& constants) -> std::string {
+                        [](auto& shader, const auto& constants) -> std::string {
+                            auto& sf = ShaderFactory::GetSingleton();
                             uint32_t bindingIndex = 0;
-                            bindingIndex = shaders::ShaderFactory::currentBindingIndex++;
-                            shader.addUBO(shaders::ShaderType::Fragment, "FXAAValues", bindingIndex, sizeof(float) * 4);
+                            bindingIndex = sf.currentBindingIndex++;
+                            shader.addUBO(ShaderType::Fragment, "FXAAValues", bindingIndex, sizeof(float) * 4);
                             std::string string =
                                 "layout(binding = " + std::to_string(bindingIndex) + ") uniform FXAAValues {\n" +
                                 "  float edgeThresholdMin;\n" +
@@ -60,8 +63,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::FXAAFac
                                 "  float edgeSearchSteps;\n" +
                                 "  float subpixQuality;\n" +
                                 "} fxaaValues;\n";
-                            bindingIndex = shaders::ShaderFactory::currentBindingIndex++;
-                            shader.addUBO(shaders::ShaderType::Fragment, "InverseScreenSize", bindingIndex, sizeof(glm::vec2));
+                            bindingIndex = sf.currentBindingIndex++;
+                            shader.addUBO(ShaderType::Fragment, "InverseScreenSize", bindingIndex, sizeof(glm::vec2));
                             string +=
                                 "layout(binding = " + std::to_string(bindingIndex) + ") uniform InverseScreenSize {\n" +
                                 "  vec2 size;\n" +
@@ -70,8 +73,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::FXAAFac
                             return string;
                         }
                     );
-                    shaders::ShaderFactory::addHook(
-                        shaders::ShaderType::Fragment,
+                    sf.addHook(
+                        ShaderType::Fragment,
                         "postPostInMain",
                         "FXAA",
                         [](auto& shader, const auto& constants) -> std::string {
@@ -128,8 +131,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::FXAAFac
                                     "FragColor = texture(ColorTexture, finalTexCoord);";
                         }
                     );
-                    shaders::ShaderFactory::addHook(
-                        shaders::ShaderType::Fragment,
+                    sf.addHook(
+                        ShaderType::Fragment,
                         "postMain",
                         "FXAA",
                         [](auto& shader, const auto& constants) -> std::string {

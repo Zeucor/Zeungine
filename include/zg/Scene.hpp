@@ -55,15 +55,21 @@ namespace zg
 		size_t currentHoveredEntityID = 0;
 		std::shared_ptr<vp::View> viewPointer;
 		bool useBVH = true;
-		long double updateNonce = 0;
+		long double updateTime = 0;
+		long double transparentDrawListTime = 0;
+		long double opaqueDrawListTime = 0;
 		std::function<void(Scene&)> onAttachedFunction;
 		std::function<void(Scene&)> onDetachedFunction;
 		std::function<void(Scene&)> preUpdateFunction;
 		std::function<void(Scene&)> prePreRenderFunction;
 		std::function<void(Scene&)> postPostRenderFunction;
 		InstancedDraw instancedDraw;
+		std::vector<std::pair<Entity*, Mesh*>> transparentDrawList;
+		std::vector<std::pair<Entity*, Mesh*>> opaqueDrawList;
 		size_t oldOpaqueHash = 0;
 		size_t oldTransparentHash = 0;
+		int32_t unit = 0;
+		int32_t unitRemaining = 0;
 		// when adding new members remember to add to operator=
 
 	public:
@@ -113,8 +119,67 @@ namespace zg
 		zg::Entity& getEntityByID(const size_t& id);
 		size_t getTransparentDrawCount();
 		size_t getOpaqueDrawCount();
-		TransparentDrawList getTransparentDrawList();
-		OpaqueDrawList getOpaqueDrawList();
+		TransparentDrawList& getTransparentDrawList();
+		OpaqueDrawList& getOpaqueDrawList();
+	private:
+		std::unordered_map<std::string, std::function<void(Scene&, shaders::Shader&, Mesh&)>> shaderSets = {
+			{"Lighting", [](auto& scene, auto& shader, auto& mesh) {
+				uint32_t index = 0;
+				glm::mat4 directionalLightSpaceMatrices[4];
+				for (auto& directionalLightShadow : scene.directionalLightShadows)
+				{
+					directionalLightSpaceMatrices[index] = directionalLightShadow.lightSpaceMatrix;
+					++index;
+				}
+				shader.setBlock("DirectionalLightSpaceMatrices", mesh, directionalLightSpaceMatrices, sizeof(glm::mat4) * 4);
+				glm::mat4 spotLightSpaceMatrices[4];
+				index = 0;
+				for (auto& spotLightShadow : scene.spotLightShadows)
+				{
+					spotLightSpaceMatrices[index] = spotLightShadow.lightSpaceMatrix;
+					++index;
+				}
+				shader.setBlock("SpotLightSpaceMatrices", mesh, spotLightSpaceMatrices, sizeof(glm::mat4) * 4);
+				shader.setSSBO("DirectionalLights", mesh, scene.directionalLights.data(), scene.directionalLights.size() * sizeof(lights::DirectionalLight));
+				shader.setSSBO("SpotLights", mesh, scene.spotLights.data(), scene.spotLights.size() * sizeof(lights::SpotLight));
+				shader.setSSBO("PointLights", mesh, scene.pointLights.data(), scene.pointLights.size() * sizeof(lights::PointLight));
+			}},
+			{"DirectionalLightShadowMaps", [](auto& scene, auto& shader, auto& mesh) {
+				scene.unit = 0;
+				int32_t index = 0;
+				scene.unitRemaining = 4;
+				for (auto& directionalLightShadow : scene.directionalLightShadows)
+				{
+					shader.setTexture("directionalLightSamplers[" + std::to_string(index) + "]", mesh,
+														*directionalLightShadow.texture, scene.unit);
+					++scene.unit;
+					--scene.unitRemaining;
+				}
+			}},
+			{"SpotLightShadowMaps", [](auto& scene, auto& shader, auto& mesh) {
+				int32_t index = 0;
+				scene.unit += scene.unitRemaining;
+				scene.unitRemaining = 4;
+				for (auto& spotLightShadow : scene.spotLightShadows)
+				{
+					shader.setTexture("spotLightSamplers[" + std::to_string(index) + "]", mesh, *spotLightShadow.texture, scene.unit);
+					++scene.unit;
+					--scene.unitRemaining;
+				}
+
+			}},
+			{"PointLightShadowMaps", [](auto& scene, auto& shader, auto& mesh) {
+				int32_t index = 0;
+				scene.unit += scene.unitRemaining;
+				scene.unitRemaining = 4;
+				for (auto& pointLightShadow : scene.pointLightShadows)
+				{
+					shader.setTexture("pointLightSamplers[" + std::to_string(index) + "]", mesh, *pointLightShadow.texture, scene.unit);
+					++scene.unit;
+					--scene.unitRemaining;
+				}
+			}}
+		};
 	};
 	struct SceneCreateInfo
 	{

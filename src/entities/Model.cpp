@@ -98,7 +98,8 @@ void processMesh(
     aiMesh *mesh,
     zg::FRONTFACE frontFace,
     zg::MeshCreateInfo& info,
-    IRenderer* iRenderer
+    IRenderer* iRenderer,
+	const shaders::RuntimeConstants& constants
 )
 {
 	glm::vec4 color;
@@ -202,39 +203,17 @@ void processMesh(
     auto vertexCount = uint32_t(vertices.size());
     auto colorCount = uint32_t(colors.size());
     auto uv2Count = uint32_t(uv2s.size());
-    info.indiceCount = [indiceCount](auto&)
-    {
-        return indiceCount;
-    };
-    info.indices = [indices](auto&)
-    {
-        return indices;
-    };
-    info.vertexCount = [vertexCount](auto&)
-    {
-        return vertexCount;
-    };
-    info.vertices = [vertices](auto&)
-    {
-        return vertices;
-    };
-    info.colorCount = [colorCount](auto&)
-    {
-        return colorCount;
-    };
-    info.colors = [colors](auto&)
-    {
-        return colors;
-    };
-    info.uv2Count = [uv2Count](auto&)
-    {
-        return uv2Count;
-    };
-    info.uv2s = [uv2s](auto&)
-    {
-        return uv2s;
-    };
-    info.keyedTextures = keyedTextures;
+	info.shapeType = ShapeType::Mesh;
+	info.info = [indices, vertices, colors, uv2s](auto&) -> MeshInfo {
+		return {
+			.indices = indices,
+			.vertices = vertices,
+			.colors = colors,
+			.uv2s = uv2s,
+		};
+	};
+	info.keyedTextures = keyedTextures;
+	info.constants = constants;
 	//
 	// if (mesh->mNumBones)
 	// {
@@ -312,10 +291,7 @@ std::optional<zg::EntityCreateInfo> processNode(
         .scale = _scale,
         .name = aiscene->mName.C_Str()
     };
-	zg::MeshCreateInfo meshInfo{
-        .constants = zg::mergeVectors<std::string>(
-			{{"UV2", "Position", "Normal", "View", "Projection", "Model", "CameraPosition", "ColorTexture"}}, constants)
-	};
+	zg::MeshCreateInfo meshInfo;
 	auto infoCopy = info;
     bool valid = false;
 	for (size_t i = 0; i < node->mNumMeshes; ++i)
@@ -323,7 +299,7 @@ std::optional<zg::EntityCreateInfo> processNode(
 		auto thisMeshInfo = meshInfo;
         valid = true;
 		aiMesh *aimesh = aiscene->mMeshes[node->mMeshes[i]];
-		processMesh(aiscene, aimesh, frontFace, thisMeshInfo, iRenderer);
+		processMesh(aiscene, aimesh, frontFace, thisMeshInfo, iRenderer, constants);
 		info.meshInfos.push_back(thisMeshInfo);
 	}
 	for (uint32_t i = 0; i < node->mNumChildren; i++)

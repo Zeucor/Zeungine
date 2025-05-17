@@ -43,6 +43,21 @@ namespace zg
 			setDataFunctionMap[name] = function;
 		}
 		template <typename T>
+		const T& getData(const std::string& name) const
+		{
+			auto iter = getDataFunctionMap.find(name);
+			if (iter != getDataFunctionMap.end())
+			{
+				return std::any_cast<T&>(iter->second(dynamic_cast<HostT&>((DataStorage<HostT>&)*this)));
+			}
+			auto iter2 = dataMap.find(name);
+			if (iter2 != dataMap.end())
+			{
+				return std::any_cast<const T&>(iter2->second);
+			}
+			throw std::runtime_error("Could not find data with name");
+		}
+		template <typename T>
 		T& getData(const std::string& name)
 		{
 			auto iter = getDataFunctionMap.find(name);
@@ -54,6 +69,20 @@ namespace zg
 			if (iter2 != dataMap.end())
 			{
 				return std::any_cast<T&>(iter2->second);
+			}
+			throw std::runtime_error("Could not find data with name");
+		}
+		const std::any& getDataReturnAny(const std::string& name) const
+		{
+			auto iter = getDataFunctionMap.find(name);
+			if (iter != getDataFunctionMap.end())
+			{
+				return iter->second(dynamic_cast<HostT&>((DataStorage<HostT>&)*this));
+			}
+			auto iter2 = dataMap.find(name);
+			if (iter2 != dataMap.end())
+			{
+				return iter2->second;
 			}
 			throw std::runtime_error("Could not find data with name");
 		}

@@ -3,6 +3,7 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/Window.hpp>
 using namespace zg;
+using namespace zg::shaders;
 using namespace zg::components::scenes;
 zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::SMAAFactory(
     float threshold,
@@ -31,7 +32,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::SMAAFac
                     maxSearchSteps,
                     maxSearchStepsDiag,
                     cornerRounding
-                ](shaders::Shader& shader, auto& vao)
+                ](auto& shader, auto& vao)
                 {
                     float values[4] = {
                         threshold,
@@ -45,14 +46,16 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::SMAAFac
                 },
                 .staticOnAttached = []()
                 {
-                    shaders::ShaderFactory::addHook(
-                        shaders::ShaderType::Fragment,
+                    auto& sf = ShaderFactory::GetSingleton();
+                    sf.addHook(
+                        ShaderType::Fragment,
                         "layout",
                         "SMAA",
-                        [](shaders::Shader& shader, const auto& constants) -> std::string {
+                        [](auto& shader, const auto& constants) -> std::string {
                             uint32_t bindingIndex = 0;
-                            bindingIndex = shaders::ShaderFactory::currentBindingIndex++;
-                            shader.addUBO(shaders::ShaderType::Fragment, "SMAAValues", bindingIndex, sizeof(float) * 4);
+                            auto& sf = ShaderFactory::GetSingleton();
+                            bindingIndex = sf.currentBindingIndex++;
+                            shader.addUBO(ShaderType::Fragment, "SMAAValues", bindingIndex, sizeof(float) * 4);
                             std::string string =
                                 "layout(binding = " + std::to_string(bindingIndex) + ") uniform SMAAValues {\n" +
                                 "  float threshold;\n" +
@@ -60,8 +63,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::SMAAFac
                                 "  float maxSearchStepsDiag;\n" +
                                 "  float cornerRounding;\n" +
                                 "} smaaValues;\n";
-                            bindingIndex = shaders::ShaderFactory::currentBindingIndex++;
-                            shader.addUBO(shaders::ShaderType::Fragment, "InverseScreenSize", bindingIndex, sizeof(glm::vec2));
+                            bindingIndex = sf.currentBindingIndex++;
+                            shader.addUBO(ShaderType::Fragment, "InverseScreenSize", bindingIndex, sizeof(glm::vec2));
                             string +=
                                 "layout(binding = " + std::to_string(bindingIndex) + ") uniform InverseScreenSize {\n" +
                                 "  vec2 size;\n" +
@@ -78,8 +81,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::SMAAFac
                             return string;
                         }
                     );
-                    shaders::ShaderFactory::addHook(
-                        shaders::ShaderType::Fragment,
+                    sf.addHook(
+                        ShaderType::Fragment,
                         "postPostInMain",
                         "SMAA",
                         [](auto& shader, const auto& constants) -> std::string {
@@ -92,8 +95,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::SMAAFac
                                     "FragColor = SMAANeighborhoodBlendingPS(inUV, weights);";
                         }
                     );
-                    shaders::ShaderFactory::addHook(
-                        shaders::ShaderType::Fragment,
+                    sf.addHook(
+                        ShaderType::Fragment,
                         "postMain",
                         "SMAA",
                         [](auto& shader, const auto& constants) -> std::string {

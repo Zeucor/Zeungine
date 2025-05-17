@@ -15,8 +15,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <functional> // Required for std::function
 #include <numeric> // Required for std::iota
+#include <zg/shaders/ShaderFactory.hpp>
 
 using namespace zg;
+using namespace zg::shaders;
 
 // Constants for SphereFactory
 const int NUM_SPHERE_CUBES = 1600; // Total number of cubes for the sphere
@@ -129,6 +131,8 @@ glm::vec3 hslToRgb(float h, float s, float l) {
 
 int main()
 {
+	ShaderFactory shader_factory;
+	register_zg_shader_hooks();
     // Window creation info
     WindowCreateInfo windowCreateInfo{.title = "Beautiful 3D Scene Factories Test", .borderless = true, .vsync = false, .framerate = 144};
     auto window_tuple = zg::Registry::addWindow(windowCreateInfo);
@@ -246,9 +250,9 @@ SceneCreateInfo SphereFactory()
 
                 glm::vec3 color = hslToRgb(hue, saturation, lightness);
 
-                usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
-                    return { glm::vec4(color, 1.0f), 0 };
-                };
+                // usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
+                //     return { glm::vec4(color, 1.0f), 0 };
+                // };
 
                 // Add the cube and store its ID
                 cubes.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo)));
@@ -361,9 +365,9 @@ SceneCreateInfo CubeGridFactory()
                             (float)z / (GRID_SIZE - 1)
                         );
 
-                         usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
-                            return { glm::vec4(color, 1.0f), 0 };
-                        };
+                        //  usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
+                        //     return { glm::vec4(color, 1.0f), 0 };
+                        // };
 
                         // Add the cube and store its ID
                         cubes.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo)));
@@ -462,9 +466,9 @@ SceneCreateInfo RandomCubesFactory()
                     zg::crypto::Random::value<float>(0.2f, 1.0f)
                 );
 
-                 usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
-                    return { glm::vec4(color, 1.0f), 0 };
-                };
+                //  usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
+                //     return { glm::vec4(color, 1.0f), 0 };
+                // };
 
                 // Add the cube and store its ID
                 cubes.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo)));
@@ -555,9 +559,9 @@ SceneCreateInfo SpiralFactory()
                 float lightness = 0.5f;
                  glm::vec3 color = hslToRgb(hue, saturation, lightness);
 
-                 usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
-                    return { glm::vec4(color, 1.0f), 0 };
-                };
+                //  usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
+                //     return { glm::vec4(color, 1.0f), 0 };
+                // };
 
                 // Add the cube and store its ID
                 cubes.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo)));
@@ -639,9 +643,9 @@ SceneCreateInfo WaveformGridFactory()
                     initialPositions.push_back(initialPosXZ);
 
                     // Initial color (will be animated)
-                     usingCubeCreateInfo.meshInfos[0].material = [](auto&) -> Material {
-                        return { glm::vec4(1.0f), 0 }; // Start with white
-                    };
+                    //  usingCubeCreateInfo.meshInfos[0].material = [](auto&) -> Material {
+                    //     return { glm::vec4(1.0f), 0 }; // Start with white
+                    // };
 
                     // Add the cube and store its ID
                     cubes.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo)));
@@ -691,9 +695,9 @@ SceneCreateInfo WaveformGridFactory()
                 glm::vec3 color = hslToRgb(color_hue, 1.0f, 0.5f);
 
                 // Update material color
-                cube.meshInfos[0].material = [color](auto&) -> Material {
-                    return { glm::vec4(color, 1.0f), 0 };
-                };
+                // cube.meshInfos[0].material = [color](auto&) -> Material {
+                //     return { glm::vec4(color, 1.0f), 0 };
+                // };
             }
         }
     };
@@ -754,9 +758,9 @@ SceneCreateInfo RingFactory()
                 float hue = glm::mod(angle / glm::two_pi<float>(), 1.0f);
                 glm::vec3 color = hslToRgb(hue, 1.0f, 0.6f);
 
-                 usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
-                    return { glm::vec4(color, 1.0f), 0 };
-                };
+                //  usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
+                //     return { glm::vec4(color, 1.0f), 0 };
+                // };
 
                 // Add the cube and store its ID
                 cubes.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo)));
@@ -877,9 +881,9 @@ SceneCreateInfo FountainFactory()
                     zg::crypto::Random::value<float>(0.5f, 1.0f),
                     zg::crypto::Random::value<float>(0.5f, 1.0f)
                 );
-                 usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
-                    return { glm::vec4(color, 1.0f), 0 };
-                };
+                //  usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
+                //     return { glm::vec4(color, 1.0f), 0 };
+                // };
 
                 // Add the cube and store particle data
                 size_t entityID = std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo));
@@ -907,12 +911,12 @@ SceneCreateInfo FountainFactory()
                 } else {
                     // Update color based on lifetime (fade out)
                     float alpha = 1.0f - (particle.lifetime / FOUNTAIN_PARTICLE_LIFETIME);
-                     glm::vec4 color = cube.meshInfos[0].material(cube).albedo; // Get current color
-                     color.a = alpha; // Update alpha
+                    //  glm::vec4 color = cube.meshInfos[0].material(cube).albedo; // Get current color
+                    //  color.a = alpha; // Update alpha
 
-                     cube.meshInfos[0].material = [color](auto&) -> Material {
-                        return { color, 0 };
-                    };
+                    //  cube.meshInfos[0].material = [color](auto&) -> Material {
+                    //     return { color, 0 };
+                    // };
                     ++it;
                 }
             }
@@ -968,9 +972,9 @@ SceneCreateInfo DNAHelixFactory()
                 // Set color for the first strand (e.g., based on height)
                 float color_hue1 = glm::mod(t, 1.0f);
                 glm::vec3 color1 = hslToRgb(color_hue1, 1.0f, 0.6f);
-                 usingCubeCreateInfo1.meshInfos[0].material = [color1](auto&) -> Material {
-                    return { glm::vec4(color1, 1.0f), 0 };
-                };
+                //  usingCubeCreateInfo1.meshInfos[0].material = [color1](auto&) -> Material {
+                //     return { glm::vec4(color1, 1.0f), 0 };
+                // };
                 cubes.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo1)));
 
                 // Create cube for the second strand
@@ -987,9 +991,9 @@ SceneCreateInfo DNAHelixFactory()
                 // Set color for the second strand (e.g., complementary color or different scheme)
                  float color_hue2 = glm::mod(t + 0.5f, 1.0f); // Offset hue
                  glm::vec3 color2 = hslToRgb(color_hue2, 1.0f, 0.6f);
-                 usingCubeCreateInfo2.meshInfos[0].material = [color2](auto&) -> Material {
-                    return { glm::vec4(color2, 1.0f), 0 };
-                };
+                //  usingCubeCreateInfo2.meshInfos[0].material = [color2](auto&) -> Material {
+                //     return { glm::vec4(color2, 1.0f), 0 };
+                // };
                 cubes.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo2)));
             }
 
@@ -1098,9 +1102,9 @@ SceneCreateInfo SwarmFactory()
                     zg::crypto::Random::value<float>(0.6f, 1.0f),
                     zg::crypto::Random::value<float>(0.6f, 1.0f)
                 );
-                 usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
-                    return { glm::vec4(color, 1.0f), 0 };
-                };
+                //  usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
+                //     return { glm::vec4(color, 1.0f), 0 };
+                // };
 
 
                 // Add the cube and store swarm data
@@ -1160,12 +1164,12 @@ SceneCreateInfo SwarmFactory()
 
                  // Subtle color change based on time or position
                  float color_factor = glm::sin(deltaTimeCounter * 0.5f + glm::length(cube.position) * 0.05f) * 0.1f + 0.9f;
-                 glm::vec4 currentColor = cube.meshInfos[0].material(cube).albedo;
-                 glm::vec3 baseColor = glm::vec3(currentColor);
-                 glm::vec3 newColor = baseColor * color_factor;
-                 cube.meshInfos[0].material = [newColor](auto&) -> Material {
-                    return { glm::vec4(newColor, 1.0f), 0 };
-                };
+                //  glm::vec4 currentColor = cube.meshInfos[0].material(cube).albedo;
+                //  glm::vec3 baseColor = glm::vec3(currentColor);
+                //  glm::vec3 newColor = baseColor * color_factor;
+                //  cube.meshInfos[0].material = [newColor](auto&) -> Material {
+                //     return { glm::vec4(newColor, 1.0f), 0 };
+                // };
             }
         }
     };
@@ -1215,9 +1219,9 @@ SceneCreateInfo TorusFactory()
                     // Calculate color based on position on the torus
                     float hue = glm::mod(phi / glm::two_pi<float>() + theta / glm::two_pi<float>(), 1.0f);
                     glm::vec3 color = hslToRgb(hue, 1.0f, 0.7f);
-                     usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
-                        return { glm::vec4(color, 1.0f), 0 };
-                    };
+                    //  usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
+                    //     return { glm::vec4(color, 1.0f), 0 };
+                    // };
 
                     // Add the cube and store its ID
                     cubes.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo)));
@@ -1347,9 +1351,9 @@ SceneCreateInfo FallingCubesFactory()
                     zg::crypto::Random::value<float>(0.7f, 1.0f),
                     zg::crypto::Random::value<float>(0.7f, 1.0f)
                 );
-                 usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
-                    return { glm::vec4(color, 1.0f), 0 };
-                };
+                //  usingCubeCreateInfo.meshInfos[0].material = [color](auto&) -> Material {
+                //     return { glm::vec4(color, 1.0f), 0 };
+                // };
 
                 // Add the cube and store falling cube data
                 size_t entityID = std::get<KEY_ID_VECTOR_ID_INDEX>(scene.addEntity(usingCubeCreateInfo));

@@ -147,8 +147,9 @@ void EGLRenderer::initShader(shaders::Shader &shader, const shaders::RuntimeCons
 {
 	shader.rendererData = new shaders::GLShaderImpl();
 	auto &shaderImpl = *(shaders::GLShaderImpl *)shader.rendererData;
-	shaderImpl.shaders = shaders::ShaderFactory::generateShaderMap(constants, shader, shaderTypes);
-	shaders::ShaderFactory::compileProgram(shader);
+	auto& sf = ShaderFactory::GetSingleton();
+	shaderImpl.shaders = sf.generateShaderMap(constants, shader, shaderTypes);
+	sf.compileProgram(shader);
 }
 void EGLRenderer::setUniform(shaders::Shader &shader, vaos::VAO &vao, const std::string_view name, const void *pointer, uint32_t size,
 							 enums::EUniformType uniformType)

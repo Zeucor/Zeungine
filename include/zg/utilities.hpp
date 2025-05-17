@@ -3,7 +3,7 @@
 namespace zg
 {
 	template <typename T>
-	std::vector<T> mergeVectors(const std::vector<T> &vec1, const std::vector<T> &vec2)
+	std::vector<T> mergeVectors(const std::vector<T>& vec1, const std::vector<T>& vec2)
 	{
 		std::vector<T> result;
 		result.reserve(vec1.size() + vec2.size());

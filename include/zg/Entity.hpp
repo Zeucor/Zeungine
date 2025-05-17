@@ -10,11 +10,10 @@
 #include "vp/Projection.hpp"
 #include "vp/View.hpp"
 #include "Mesh.hpp"
+#include "CGAL.hpp"
 namespace zg
 {
 	struct Scene;
-	inline static std::mutex EntityTypeMutex = std::mutex();
-	inline static zg::UniqueIdentifier EntityType = 0;
 	struct EntityCreateInfo;
 	struct Window;
 	struct Entity :
@@ -42,6 +41,9 @@ namespace zg
 		size_t* INDEX = 0;
 		std::vector<size_t*> INDEX_STACK;
 		std::any VALUE;
+		int32_t meta_int;
+		float meta_float;
+		glm::vec4 meta_vec4;
 		template<typename T>
 		T& getValue()
 		{
@@ -75,7 +77,7 @@ namespace zg
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseMoveHandler>> mouseMoveHandlers;
 		using MouseHoverHandler = std::function<void(bool)>;
 		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseHoverHandler>> mouseHoverHandlers;
-		long double updateNonce;
+		long double updateTime;
 		// settable functions
 		std::function<void(Entity&)> preUpdateFunction;
 		std::function<bool(Entity&)> preRenderFunction;
@@ -94,7 +96,9 @@ namespace zg
 		~Entity();
 		Entity& operator=(const Entity& other);
 		void refreshMeshes();
-		Material meshMaterial(size_t meshID);
+		Material& meshMaterial(size_t meshID);
+		K::FT operator()(K::Point_3 p_cgal) const;
+		K::Sphere_3 get_suggested_bounding_sphere(float multiplier = 1.5f) const;
 		
 	private:
 		void reMeshhash();
@@ -139,5 +143,8 @@ namespace zg
 		size_t ID;
 		size_t* INDEX;
 		std::vector<size_t*> INDEX_STACK;
+		int32_t meta_int = -1;
+		float meta_float = 0.f;
+		glm::vec4 meta_vec4 = glm::vec4(0);
 	};
 } // namespace zg

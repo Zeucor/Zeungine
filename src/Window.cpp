@@ -37,6 +37,7 @@ Window::Window(const WindowCreateInfo& info) :
 	framerate(info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
 	framebudget(frameduration), systemFonts(*this), postProcessingPipeline(INDEX_STACK)
 {
+	setViewport();
 	ZoneScoped;
 	memset(windowKeys, 0, 256 * sizeof(bool));
 	memset(windowButtons, 0, 7 * sizeof(bool));
@@ -68,6 +69,7 @@ Window::Window(const Window& other) :
 		mainColorTexture(other.mainColorTexture),// mainDepthTexture(other.mainDepthTexture),
 		mainFramebuffer(other.mainFramebuffer)
 {
+	setViewport();
 	ZoneScoped;
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
@@ -82,6 +84,7 @@ Window& Window::operator=(const Window& other)
 	iRenderer = other.iRenderer;
 	windowWidth = other.windowWidth;
 	windowHeight = other.windowHeight;
+	setViewport();
 	windowX = other.windowX;
 	windowY = other.windowY;
 	framerate = other.framerate;
@@ -275,9 +278,12 @@ void Window::startWindow()
 				render();
 				ppOutputs.resize(scenes.size());
 				auto index = 0;
-				for (auto& scene : scenes)
+				auto scenesData = scenes.data();
+				auto scenesSize = scenes.size();
+				for (size_t index = 0; index < scenesSize; ++index)
 				{
 					ZoneScopedN("p3:pp");
+					auto& scene = scenesData[index];
 					ppOutputs[index++] = scene.postProcessingPipeline.postProcess();
 				}
 				index = 0;
@@ -328,12 +334,14 @@ _exit:
 	audioEngine.stop();
 	audioEngine.clearPipeline();
 	childWindows.clear();
-	auto scenesSize = scenes.size();
-	auto scenesData = scenes.data();
-	for (size_t i = 0; i < scenesSize; ++i)
 	{
-		ZoneScoped;
-		scenesData[i].detachAllComponents();
+		auto scenesSize = scenes.size();
+		auto scenesData = scenes.data();
+		for (size_t i = 0; i < scenesSize; ++i)
+		{
+			ZoneScoped;
+			scenesData[i].detachAllComponents();
+		}
 	}
 	scenes.clear();
 	mainColorTexture.reset();
@@ -492,12 +500,17 @@ void Window::setWidthHeight(float width, float height)
 	ZoneScoped;
 	windowWidth = width;
 	windowHeight = height;
+	setViewport();
 	if (isChildWindow)
 	{
 		ZoneScoped;
 		return;
 	}
 	iPlatformWindow->setWidthHeight();
+}
+void Window::setViewport()
+{
+	viewport = {0, 0, windowWidth, windowHeight};
 }
 void Window::mouseCapture(bool capture)
 {

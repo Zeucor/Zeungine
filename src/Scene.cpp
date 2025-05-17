@@ -139,7 +139,7 @@ Scene::Scene(const Scene& other) :
 	mouseMoveID(other.mouseMoveID),
 	viewPointer(other.viewPointer),
 	useBVH(other.useBVH),
-	updateNonce(other.updateNonce),
+	updateTime(other.updateTime),
 	onAttachedFunction(other.onAttachedFunction),
 	onDetachedFunction(other.onDetachedFunction),
 	preUpdateFunction(other.preUpdateFunction),
@@ -182,7 +182,7 @@ Scene& Scene::operator=(const Scene& other)
 	viewPointer = other.viewPointer;
 	useBVH = other.useBVH;
 	bvh = other.bvh;
-	updateNonce = other.updateNonce;
+	updateTime = other.updateTime;
 	onAttachedFunction = other.onAttachedFunction;
 	onDetachedFunction = other.onDetachedFunction;
 	preUpdateFunction = other.preUpdateFunction;
@@ -292,7 +292,7 @@ void Scene::update()
 {
 	ZoneScoped;
 	sceneIsAt = SYS_CLOCK::now();
-	updateNonce = (sceneIsAt - sceneFirstEncountered).count() / 10'000'000.0;
+	updateTime = (sceneIsAt - sceneFirstEncountered).count() / 10'000'000.0;
 	if (preUpdateFunction)
 		preUpdateFunction(*this);
 	auto componentsData = m_components.data();
@@ -343,66 +343,62 @@ void Scene::preRender()
 	{
 		ZoneScoped;
 		directionalLightShadow.framebuffer->bind();
-		directionalLightShadow.addShader();
+		auto shaderPointer = directionalLightShadow.addShader();
 		iRenderer->clear();
-		for (size_t index = 0; index < entitiesSize; ++index)
-		{
-			ZoneScoped;
-			auto& entity = entitiesData[index];
-			drawEntity(entity, *directionalLightShadow.shader, [&](auto& mesh, auto& shader) {
-				shader.setBlock(
-					"LightSpaceMatrix",
-					mesh,
-					directionalLightShadow.lightSpaceMatrix,
-					sizeof(glm::mat4)
-				);
-			});
-		}
+		auto transparentDrawList = getTransparentDrawList();
+		auto opaqueDrawList = getOpaqueDrawList();
+		instancedDraw.drawMulti(SHADER_BATCH_DIRECTIONAL_LIGHT, *this, opaqueDrawList, transparentDrawList, oldOpaqueHash, oldTransparentHash, shaderPointer, {
+			{"InverseInstanceProjections", directionalLightShadow.inverseProjection},
+			{"Projection", directionalLightShadow.projection},
+			{"InverseInstanceViews", directionalLightShadow.inverseView},
+			{"View", directionalLightShadow.view}
+		});
 		directionalLightShadow.framebuffer->unbind();
 	}
-	for (auto& spotLightShadow : spotLightShadows)
-	{
-		ZoneScoped;
-		spotLightShadow.framebuffer->bind();
-		iRenderer->clear();
-		for (size_t index = 0; index < entitiesSize; ++index)
-		{
-			ZoneScoped;
-			auto& entity = entitiesData[index];
-			drawEntity(entity, *spotLightShadow.shader, [&](auto& mesh, auto& shader) {
-				shader.setBlock(
-					"LightSpaceMatrix",
-					mesh,
-					spotLightShadow.lightSpaceMatrix,
-					sizeof(glm::mat4)
-				);
-			});
-		}
-		spotLightShadow.framebuffer->unbind();
-	}
-	for (auto& pointLightShadow : pointLightShadows)
-	{
-		ZoneScoped;
-		pointLightShadow.framebuffer->bind();
-		iRenderer->clear();
-		for (size_t index = 0; index < entitiesSize; ++index)
-		{
-			ZoneScoped;
-			auto& entity = entitiesData[index];
-			drawEntity(entity, *pointLightShadow.shader, [&](auto& mesh, auto& shader) {
-				shader.setBlock(
-					"PointLightSpaceMatrix",
-					mesh,
-					pointLightShadow.shadowTransforms,
-					sizeof(glm::mat4) * 6
-				);
-				shader.setUniform("nearPlane", mesh, pointLightShadow.pointLight.nearPlane);
-				shader.setUniform("farPlane", mesh, pointLightShadow.pointLight.farPlane);
-				shader.setUniform("lightPos", mesh, pointLightShadow.pointLight.position);
-			});
-		}
-		pointLightShadow.framebuffer->unbind();
-	}
+	// for (auto& spotLightShadow : spotLightShadows)
+	// {
+	// 	ZoneScoped;
+	// 	spotLightShadow.framebuffer->bind();
+	// 	auto shaderPointer = spotLightShadow.addShader();
+	// 	iRenderer->clear();
+	// 	for (size_t index = 0; index < entitiesSize; ++index)
+	// 	{
+	// 		ZoneScoped;
+	// 		auto& entity = entitiesData[index];
+	// 		drawEntity(entity, *spotLightShadow.shader, [&](auto& mesh, auto& shader) {
+	// 			shader.setBlock(
+	// 				"LightSpaceMatrix",
+	// 				mesh,
+	// 				spotLightShadow.lightSpaceMatrix,
+	// 				sizeof(glm::mat4)
+	// 			);
+	// 		});
+	// 	}
+	// 	spotLightShadow.framebuffer->unbind();
+	// }
+	// for (auto& pointLightShadow : pointLightShadows)
+	// {
+	// 	ZoneScoped;
+	// 	pointLightShadow.framebuffer->bind();
+	// 	iRenderer->clear();
+	// 	for (size_t index = 0; index < entitiesSize; ++index)
+	// 	{
+	// 		ZoneScoped;
+	// 		auto& entity = entitiesData[index];
+	// 		drawEntity(entity, *pointLightShadow.shader, [&](auto& mesh, auto& shader) {
+	// 			shader.setBlock(
+	// 				"PointLightSpaceMatrix",
+	// 				mesh,
+	// 				pointLightShadow.shadowTransforms,
+	// 				sizeof(glm::mat4) * 6
+	// 			);
+	// 			shader.setUniform("nearPlane", mesh, pointLightShadow.pointLight.nearPlane);
+	// 			shader.setUniform("farPlane", mesh, pointLightShadow.pointLight.farPlane);
+	// 			shader.setUniform("lightPos", mesh, pointLightShadow.pointLight.position);
+	// 		});
+	// 	}
+	// 	pointLightShadow.framebuffer->unbind();
+	// }
 #if defined(USE_GL) || defined(USE_EGL)
 	// if (framebuffer != 0)
 	// {
@@ -426,22 +422,17 @@ void Scene::renderEntities()
 	framebufferRef.bind();
 	auto transparentDrawList = getTransparentDrawList();
 	auto opaqueDrawList = getOpaqueDrawList();
-	auto cameraPosition = viewPointer->position;
-	{
-		ZoneScoped;
-		std::sort(transparentDrawList.begin(), transparentDrawList.end(), [&](auto& a, auto& b)
-		{
-			auto distA = glm::distance(a.first->position, cameraPosition);
-			auto distB = glm::distance(b.first->position, cameraPosition);
-			return distA > distB;
-		});
-	}
-	instancedDraw.drawMulti(*this, opaqueDrawList, transparentDrawList, oldOpaqueHash, oldTransparentHash);
-	// for (auto& ep : opaqueDrawList)
-	// {
-	// 	ep.second->uid = ep.first->ID;
-	// 	ep.second->render(*ep.first);
-	// }
+	instancedDraw.drawMulti(
+		SHADER_BATCH_MAIN,
+		*this,
+		opaqueDrawList,
+		transparentDrawList,
+		oldOpaqueHash,
+		oldTransparentHash,
+		0,
+		{},
+		shaderSets
+	);
 	// for (auto& ep : transparentDrawList)
 	// {
 	// 	ep.second->uid = ep.first->ID;
@@ -462,55 +453,6 @@ void Scene::postRender()
 void Scene::meshPreRender(Mesh& mesh)
 {
 	ZoneScoped;
-	auto shader = mesh.addShader();
-	uint32_t index = 0;
-	glm::mat4 directionalLightSpaceMatrices[4];
-	for (auto& directionalLightShadow : directionalLightShadows)
-	{
-		directionalLightSpaceMatrices[index] = directionalLightShadow.lightSpaceMatrix;
-		++index;
-	}
-	shader->setBlock("DirectionalLightSpaceMatrices", mesh, directionalLightSpaceMatrices, sizeof(glm::mat4) * 4);
-	glm::mat4 spotLightSpaceMatrices[4];
-	index = 0;
-	for (auto& spotLightShadow : spotLightShadows)
-	{
-		spotLightSpaceMatrices[index] = spotLightShadow.lightSpaceMatrix;
-		++index;
-	}
-	shader->setBlock("SpotLightSpaceMatrices", mesh, spotLightSpaceMatrices, sizeof(glm::mat4) * 4);
-	int32_t unit = 0;
-	index = 0;
-	uint32_t unitRemaining = 4;
-	for (auto& directionalLightShadow : directionalLightShadows)
-	{
-		shader->setTexture("directionalLightSamplers[" + std::to_string(index) + "]", mesh,
-											 *directionalLightShadow.texture, unit);
-		++unit;
-		--unitRemaining;
-	}
-	shader->setSSBO("DirectionalLights", mesh, directionalLights.data(),
-									directionalLights.size() * sizeof(lights::DirectionalLight));
-	index = 0;
-	unit += unitRemaining;
-	unitRemaining = 4;
-	for (auto& spotLightShadow : spotLightShadows)
-	{
-		shader->setTexture("spotLightSamplers[" + std::to_string(index) + "]", mesh, *spotLightShadow.texture, unit);
-		++unit;
-		--unitRemaining;
-	}
-	shader->setSSBO("SpotLights", mesh, spotLights.data(), spotLights.size() * sizeof(lights::SpotLight));
-	index = 0;
-	unit += unitRemaining;
-	unitRemaining = 4;
-	for (auto& pointLightShadow : pointLightShadows)
-	{
-		shader->setTexture("pointLightSamplers[" + std::to_string(index) + "]", mesh, *pointLightShadow.texture, unit);
-		++unit;
-		--unitRemaining;
-	}
-	shader->setSSBO("PointLights", mesh, pointLights.data(), pointLights.size() * sizeof(lights::PointLight));
 }
 void Scene::resize(glm::vec2 newSize)
 {
@@ -812,7 +754,7 @@ size_t Scene::getTransparentDrawCount()
 			else
 			{
 				auto& mesh = Registry::getMesh(meshID);
-				for (auto& keyedPair : mesh.keyedTextures)
+				for (auto& keyedPair : mesh.info.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
 					{
@@ -853,7 +795,7 @@ size_t Scene::getOpaqueDrawCount()
 			else
 			{
 				auto& mesh = Registry::getMesh(meshID);
-				for (auto& keyedPair : mesh.keyedTextures)
+				for (auto& keyedPair : mesh.info.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
 					{
@@ -875,14 +817,18 @@ size_t Scene::getOpaqueDrawCount()
 	}
 	return c;
 }
-std::vector<std::pair<Entity*, Mesh*>> Scene::getTransparentDrawList()
+std::vector<std::pair<Entity*, Mesh*>>& Scene::getTransparentDrawList()
 {
+	if (updateTime == transparentDrawListTime)
+		return transparentDrawList;
+	transparentDrawListTime = updateTime;
 	auto size = getTransparentDrawCount();
-	std::vector<std::pair<Entity*, Mesh*>> vec;
-	vec.reserve(size);
+	transparentDrawList.resize(size);
+	auto transparentDrawListData = transparentDrawList.data();
 	auto entitiesSize = entities.size();
 	auto entitiesData = entities.data();
 	std::function<void(Entity&)> addEntity;
+	size_t index = 0;
 	addEntity = [&](auto& entity)
 	{
 		for (auto& meshID : entity.meshIDs)
@@ -895,7 +841,7 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getTransparentDrawList()
 			}
 			else
 			{
-				for (auto& keyedPair : mesh.keyedTextures)
+				for (auto& keyedPair : mesh.info.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
 					{
@@ -906,7 +852,7 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getTransparentDrawList()
 			}
 			if (addMesh)
 			{
-				vec.push_back({&entity, &mesh});
+				transparentDrawListData[index++] = {&entity, &mesh};
 			}
 		}
 		for (auto& child : entity.children)
@@ -917,16 +863,30 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getTransparentDrawList()
 		auto& entity = entitiesData[i];
 		addEntity(entity);
 	}
-	return vec;
+	auto cameraPosition = viewPointer->position;
+	{
+		ZoneScoped;
+		std::sort(transparentDrawList.begin(), transparentDrawList.end(), [&](auto& a, auto& b)
+		{
+			auto distA = glm::distance(a.first->position, cameraPosition);
+			auto distB = glm::distance(b.first->position, cameraPosition);
+			return distA > distB;
+		});
+	}
+	return transparentDrawList;
 }
-std::vector<std::pair<Entity*, Mesh*>> Scene::getOpaqueDrawList()
+std::vector<std::pair<Entity*, Mesh*>>& Scene::getOpaqueDrawList()
 {
+	if (updateTime == opaqueDrawListTime)
+		return opaqueDrawList;
+	opaqueDrawListTime = updateTime;
 	auto size = getOpaqueDrawCount();
-	std::vector<std::pair<Entity*, Mesh*>> vec;
-	vec.reserve(size);
+	opaqueDrawList.resize(size);
+	auto opaqueDrawListData = opaqueDrawList.data();
 	auto entitiesSize = entities.size();
 	auto entitiesData = entities.data();
 	std::function<void(Entity&)> addEntity;
+	size_t index = 0;
 	addEntity = [&](auto& entity)
 	{
 		for (auto& meshID : entity.meshIDs)
@@ -940,7 +900,7 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getOpaqueDrawList()
 			}
 			else
 			{
-				for (auto& keyedPair : mesh.keyedTextures)
+				for (auto& keyedPair : mesh.info.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
 					{
@@ -950,7 +910,7 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getOpaqueDrawList()
 				}
 			}
 			if (addMesh)
-				vec.push_back({&entity, &mesh});
+				opaqueDrawListData[index++] = {&entity, &mesh};
 		}
 		for (auto& child : entity.children)
 			addEntity(child);
@@ -960,5 +920,5 @@ std::vector<std::pair<Entity*, Mesh*>> Scene::getOpaqueDrawList()
 		auto& entity = entitiesData[i];
 		addEntity(entity);
 	}
-	return vec;
+	return opaqueDrawList;
 }

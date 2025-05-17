@@ -14,7 +14,7 @@ bool entity_mat4_transform_registry::initialized = ([](){
 })();
 InstancedDraw::InstanceBatch::InstanceBatch(size_t meshID):
     m_meshID(meshID),
-    m_transform_keys(entity_mat4_transform_registry::extract_transform_keys(Registry::getMesh(meshID).constants))
+    m_transform_keys(entity_mat4_transform_registry::extract_transform_keys(Registry::getMesh(meshID).info.constants))
 {
     if (!entity_mat4_transform_registry::initialized)
         throw std::runtime_error("entity_mat4_tfm_rgt is false");
@@ -40,7 +40,7 @@ void InstancedDraw::InstanceBatch::draw(Scene& scene, shaders::Shader* shaderPoi
         shaderRef.setSSBO("Instance" + transform_pair.first + "s", mesh, transform_array_data, transform_pair.second.size() * sizeof(glm::mat4));
     }
     uint32_t unit = 0;
-    for (auto& keyedTexture : mesh.keyedTextures)
+    for (auto& keyedTexture : mesh.info.keyedTextures)
         shaderRef.setTexture(keyedTexture.first, mesh, *keyedTexture.second, unit++);
     mesh.drawVAOInstanced(entities.size());
     shaderRef.unbind();
@@ -112,14 +112,18 @@ void InstancedDraw::draw(
            transparentBatches.try_emplace(meshID, meshID).first->second.draw(scene, shaderPointer);
 }
 void InstancedDraw::drawMulti(
+    size_t batchID,
     Scene& scene,
     const OpaqueDrawList& opaqueDrawList,
     const TransparentDrawList& transparentDrawList,
     size_t& oldOpaqueHash,
     size_t& oldTransparentHash,
-    shaders::Shader* shaderPointer
+    shaders::Shader* shaderPointer,
+    const std::unordered_map<std::string, glm::mat4>& transformOverrides,
+    const std::unordered_map<std::string, std::function<void(Scene&, shaders::Shader&, Mesh&)>>& shaderSets
 )
 {
+    auto& shaderBatches = bID_shaderBatches[batchID];
     auto& window = Registry::getWindow(scene.INDEX_STACK);
     for (auto& pair : opaqueDrawList)
         opaqueBatches.try_emplace(pair.second->ID, pair.second->ID).first->second.addEntity(pair.first->ID);
@@ -161,14 +165,14 @@ void InstancedDraw::drawMulti(
         }
         uint32_t firstInstance = 0;
         uint32_t i = 0;
-        std::vector<glm::vec3> positions;
-        std::vector<glm::vec3> normals;
+        std::vector<glm::vec4> positions;
+        // std::vector<glm::vec4> normals;
         std::vector<glm::vec2> uv2s;
         std::vector<glm::vec3> uv3s;
-        std::unordered_map<size_t, size_t> position_index_map;
-        std::unordered_map<size_t, size_t> normals_index_map;
-        std::unordered_map<size_t, size_t> uv2_index_map;
-        std::unordered_map<size_t, size_t> uv3_index_map;
+        std::map<size_t, std::pair<size_t, size_t>> position_index_size_map;
+        // std::map<size_t, std::pair<size_t, size_t>> normals_index_size_map;
+        std::map<size_t, std::pair<size_t, size_t>> uv2s_index_size_map;
+        std::map<size_t, std::pair<size_t, size_t>> uv3s_index_size_map;
         for (auto& meshID : shaderPair.second)
         {
             auto& mesh = Registry::getMesh(meshID);
@@ -176,125 +180,181 @@ void InstancedDraw::drawMulti(
             batch.update_transforms();
             for (auto& t : batch.mvp_transforms)
             {
-                auto& tvec = transforms[t.first];
-                tvec.insert(tvec.end(), t.second.begin(), t.second.end());
+                auto& tkey = t.first;
+                auto& tvec = transforms[tkey];
+                auto oIter = transformOverrides.find(tkey);
+                if (oIter != transformOverrides.end())
+                {
+                    auto tsize = t.second.size();
+                    tvec.insert(tvec.end(), tsize, oIter->second);
+                }
+                else
+                {
+                    tvec.insert(tvec.end(), t.second.begin(), t.second.end());
+                }
+            }
+            int32_t vertex_offset = -1;
+            // int32_t normal_offset = -1;
+            uint32_t triangle_count = 0;
+            auto indiceCount = mesh.indices.size();
+            auto vertexCount = mesh.vertices.size();
+            auto uv2Count = mesh.uv2s.size();
+            auto uv3Count = mesh.uv3s.size();
+            if (indiceCount)
+            {
+                auto& vertices = mesh.vertices;
+                auto vertices_hash = zg::crypto::hashVector(vertices);
+                auto pim_iter = position_index_size_map.find(vertices_hash);
+                if (pim_iter == position_index_size_map.end())
+                {
+                    auto vertices_data = vertices.data();
+                    auto& indices = mesh.indices;
+                    auto indices_data = (glm::ivec3*)indices.data();
+                    std::vector<glm::vec4> triangle_vertices;
+                    triangle_vertices.reserve(indiceCount / 3);
+                    for (size_t ii = 0; ii < indiceCount / 3; ++ii)
+                    {
+                        triangle_vertices.push_back(glm::vec4(vertices_data[indices_data[ii].x], 0));
+                        triangle_vertices.push_back(glm::vec4(vertices_data[indices_data[ii].y], 0));
+                        triangle_vertices.push_back(glm::vec4(vertices_data[indices_data[ii].z], 0));
+                    }
+                    vertex_offset = positions.size();
+                    positions.insert(positions.end(), triangle_vertices.begin(), triangle_vertices.end());
+                    triangle_count = triangle_vertices.size();
+                    position_index_size_map[vertices_hash] = {vertex_offset, triangle_count};
+                }
+                else
+                {
+                    vertex_offset = pim_iter->second.first;
+                    triangle_count = pim_iter->second.second;
+                }
+                // auto& mindices = mesh.indices;
+                // std::vector<glm::vec3> mnormals;
+                // mnormals.resize(triangle_count);
+                // computeNormals(window.iRenderer->frontFace, mindices, vertices, mnormals);
+                // auto mnormals_hash = zg::crypto::hashVector(mnormals);
+                // auto nim_iter = normals_index_size_map.find(mnormals_hash);
+                // if (nim_iter == normals_index_size_map.end())
+                // {
+                //     auto& indices = mesh.indices;
+                //     auto normals_data = mnormals.data();
+                //     auto indices_data = (glm::ivec3*)indices.data();
+                //     std::vector<glm::vec4> triangle_normals;
+                //     triangle_normals.reserve(indiceCount / 3);
+                //     for (size_t ii = 0; ii < indiceCount / 3; ++ii)
+                //     {
+                //         triangle_normals.push_back(glm::vec4(normals_data[indices_data[ii].x], 0));
+                //         triangle_normals.push_back(glm::vec4(normals_data[indices_data[ii].y], 0));
+                //         triangle_normals.push_back(glm::vec4(normals_data[indices_data[ii].z], 0));
+                //     }
+                //     normal_offset = normals.size();
+                //     normals.insert(normals.end(), triangle_normals.begin(), triangle_normals.end());
+                //     normals_index_size_map[mnormals_hash] = {normal_offset, triangle_normals.size()};
+                // }
+                // else
+                // {
+                //     normal_offset = nim_iter->second.first;
+                // }
             }
             for (auto& entityID : batch.entities)
             {
-                int32_t vertex_offset = -1;
-                int32_t normal_offset = -1;
                 int32_t uv2_offset = -1;
                 int32_t uv3_offset = -1;
                 auto& entity = Registry::getEntity(entityID);
-                auto material = entity.meshMaterial(meshID);
+                auto& material = entity.meshMaterial(meshID);
                 auto material_index = find_material_index(material);
                 if (material_index == -1)
                 {
                     materials.push_back(material);
                     material_index = materials.size() -1;
                 }
-                auto vertexCount = mesh.vertexCount ? mesh.vertexCount(entity) : 0;
-                auto uv2Count = mesh.uv2Count ? mesh.uv2Count(entity) : 0;
-                auto uv3Count = mesh.uv3Count ? mesh.uv3Count(entity) : 0;
-                if (vertexCount)
-                {
-                    auto vertices = mesh.vertices(entity);
-                    auto vertices_hash = zg::crypto::hashVector(vertices);
-                    auto pim_iter = position_index_map.find(vertices_hash);
-                    if (pim_iter == position_index_map.end())
-                    {
-                        vertex_offset = positions.size();
-                        positions.insert(positions.end(), vertices.begin(), vertices.end());
-                        position_index_map.emplace(vertices_hash, vertex_offset); 
-                    }
-                    else
-                    {
-                        vertex_offset = pim_iter->second;
-                    }
-                    auto _indices_ = mesh.indices(entity);
-                    std::vector<glm::vec3> mnormals;
-                    computeNormals(window.iRenderer->frontFace, _indices_, vertices, mnormals);
-                    auto mnormals_hash = zg::crypto::hashVector(mnormals);
-                    auto nim_iter = normals_index_map.find(mnormals_hash);
-                    if (pim_iter == position_index_map.end())
-                    {
-                        normal_offset = normals.size();
-                        normals.insert(normals.end(), mnormals.begin(), mnormals.end());
-                        position_index_map.emplace(mnormals_hash, normal_offset); 
-                    }
-                    else
-                    {
-                        normal_offset = pim_iter->second;
-                    }
-                }
                 if (uv2Count)
                 {
-                    auto muv2s = mesh.uv2s(entity);
+                    auto& muv2s = mesh.uv2s;
                     auto muv2s_hash = zg::crypto::hashVector(muv2s);
-                    auto u2m_iter = uv2_index_map.find(muv2s_hash);
-                    if (u2m_iter == position_index_map.end())
+                    auto u2m_iter = uv2s_index_size_map.find(muv2s_hash);
+                    if (u2m_iter == uv2s_index_size_map.end())
                     {
                         uv2_offset = uv2s.size();
                         uv2s.insert(uv2s.end(), muv2s.begin(), muv2s.end());
-                        position_index_map.emplace(muv2s_hash, uv2_offset); 
+                        uv2s_index_size_map[muv2s_hash] = {uv2_offset, muv2s.size()};
                     }
                     else
                     {
-                        uv2_offset = u2m_iter->second;
+                        uv2_offset = u2m_iter->second.first;
                     }
                 }
                 if (uv3Count)
                 {
-                    auto muv3s = mesh.uv3s(entity);
+                    auto& muv3s = mesh.uv3s;
                     auto muv3s_hash = zg::crypto::hashVector(muv3s);
-                    auto u3m_iter = uv3_index_map.find(muv3s_hash);
-                    if (u3m_iter == position_index_map.end())
+                    auto u3m_iter = uv3s_index_size_map.find(muv3s_hash);
+                    if (u3m_iter == uv3s_index_size_map.end())
                     {
                         uv3_offset = uv3s   .size();
-                        uv3s    .insert(uv3s    .end(), muv3s.begin(), muv3s.end());
-                        position_index_map.emplace(muv3s_hash, uv3_offset); 
+                        uv3s.insert(uv3s    .end(), muv3s.begin(), muv3s.end());
+                        uv3s_index_size_map[muv3s_hash] = {uv3_offset, muv3s.size()};
                     }
                     else
                     {
-                        uv3_offset = u3m_iter->second;
+                        uv3_offset = u3m_iter->second.first;
                     }
                 }
                 entities[i++] = {
-                    int32_t(mesh.shapeType),
+                    int32_t(mesh.info.shapeType),
                     material_index,
                     vertex_offset,
-                    normal_offset,
+                    0,
                     uv2_offset,
-                    uv3_offset
+                    uv3_offset,
+                    mesh.info.meta_int,
+                    entity.meta_float,
+                    entity.meta_vec4
                 };
-                vertex_offset += vertexCount;
+                vertex_offset += triangle_count;
             }
-            uint32_t vertexCount;
-            auto shape_count_iter = shapeVerticeCounts.find(mesh.shapeType);
-            if (shape_count_iter != shapeVerticeCounts.end())
+            if (!triangle_count && mesh.info.shapeType != ShapeType::Mesh)
             {
-                vertexCount = shape_count_iter->second;
-            }
-            else
-            {
-                vertexCount = mesh.m_vertexCount;
+                auto shape_count_iter = shapeVerticeCounts.find(mesh.info.shapeType);
+                if (shape_count_iter != shapeVerticeCounts.end())
+                {
+                    triangle_count = shape_count_iter->second;
+                }
             }
             uint32_t batchEntitiesSize = batch.entities.size();
             indirect_commands.push_back({
-                vertexCount,
+                triangle_count,
                 batchEntitiesSize,
-                0,
+                0,  
                 firstInstance
             });
             firstInstance += batchEntitiesSize;
             //
             // set uv/color/normal data
         }
+        auto& projection = *scene.projectionPointer;
         shader.setBlock("CameraPosition", firstMesh, scene.viewPointer->position, 16);
+        shader.setBlock("Viewport", firstMesh, glm::vec4(0, 0, window.windowWidth, window.windowHeight), 16);
+        shader.setBlock("Time", firstMesh, scene.updateTime, 4);
+		float nearFar[2] = {
+			projection.nearPlane,
+			projection.farPlane,
+		};
+		shader.setBlock("NearFarPlanes", firstMesh, nearFar, 8);
+        for (auto& shaderSet : shaderSets)
+        {
+            auto& constant = shaderSet.first;
+            auto shader_constants_end = shader.constants.end();
+            auto c_iter = std::find(shader.constants.begin(), shader_constants_end, constant);
+            if (c_iter != shader_constants_end)
+            {
+                shaderSet.second(scene, shader, firstMesh);
+            }
+        }
         auto entitiesSize = entities.size();
         auto materialsSize = materials.size();
         auto positionsSize = positions.size();
-        auto normalsSize = normals.size();
+        // auto normalsSize = normals.size();
         auto uv2sSize = uv2s.size();
         auto uv3sSize = uv3s.size();
         if (!positionsSize)
@@ -302,11 +362,11 @@ void InstancedDraw::drawMulti(
             positions.resize(1);
             positionsSize = positions.size();
         }
-        if (!normalsSize)
-        {
-            normals.resize(1);
-            normalsSize = normals.size();
-        }
+        // if (!normalsSize)
+        // {
+        //     normals.resize(1);
+        //     normalsSize = normals.size();
+        // }
         if (!uv2sSize)
         {
             uv2s.resize(1);
@@ -319,8 +379,8 @@ void InstancedDraw::drawMulti(
         }
         shader.setSSBO("Entities", firstMesh, entities.data(), sizeof(GLEntity) * entitiesSize);
         shader.setSSBO("Materials", firstMesh, materials.data(), sizeof(Material) * materialsSize);
-        shader.setSSBO("MeshPositions", firstMesh, positions.data(), sizeof(glm::vec3) * positionsSize);
-        shader.setSSBO("MeshNormals", firstMesh, normals.data(), sizeof(glm::vec3) * normalsSize);
+        shader.setSSBO("MeshPositions", firstMesh, positions.data(), sizeof(glm::vec4) * positionsSize);
+        // shader.setSSBO("MeshNormals", firstMesh, normals.data(), sizeof(glm::vec4) * normalsSize);
         shader.setSSBO("EntityUV2s", firstMesh, uv2s.data(), sizeof(glm::vec2) * uv2sSize);
         shader.setSSBO("EntityUV3s", firstMesh, uv3s.data(), sizeof(glm::vec3) * uv3sSize);
         for (auto& transform_pair : transforms)
@@ -329,14 +389,24 @@ void InstancedDraw::drawMulti(
             auto& tkey = transform_pair.first;
             auto tsize = transform_pair.second.size();
             auto vector_data = vector.data();
-            shader.setSSBO("Instance" + tkey + "s", firstMesh, vector_data, tsize * sizeof(glm::mat4));
+            auto ikey = "Instance" + tkey + "s";
+            shader.setSSBO(ikey, firstMesh, vector_data, tsize * sizeof(glm::mat4));
             auto inverse_vector = vector;
             auto inverse_vector_data = inverse_vector.data();
+            auto iikey = "InverseInstance" + tkey + "s";
+            auto oIter = transformOverrides.find(iikey);
+            glm::mat4 io;
+            bool o = false;
+            if (oIter != transformOverrides.end())
+            {
+                io = oIter->second;
+                o = true;
+            }
             for (auto& t : inverse_vector)
             {
-                t = glm::inverse(t);
+                t = o ? io : glm::inverse(t);
             }
-            shader.setSSBO("InverseInstance" + tkey + "s", firstMesh, inverse_vector_data, tsize * sizeof(glm::mat4));
+            shader.setSSBO(iikey, firstMesh, inverse_vector_data, tsize * sizeof(glm::mat4));
         }
         window.iRenderer->drawMultiInstanced(&shader, firstMesh, indirect_commands);
         shader.unbind();
@@ -350,7 +420,7 @@ void InstancedDraw::addEntity(const Entity& entity)
     for (auto& meshID : entity.meshIDs)
     {
         auto& mesh = Registry::getMesh(meshID);
-        for (auto& keyedTexture : mesh.keyedTextures)
+        for (auto& keyedTexture : mesh.info.keyedTextures)
         {
             if (keyedTexture.second->isTransparent)
             {
@@ -377,7 +447,7 @@ void InstancedDraw::removeEntity(const Entity& entity)
     for (auto& meshID : entity.meshIDs)
     {
         auto& mesh = Registry::getMesh(meshID);
-        for (auto& keyedTexture : mesh.keyedTextures)
+        for (auto& keyedTexture : mesh.info.keyedTextures)
         {
             if (keyedTexture.second->isTransparent)
             {

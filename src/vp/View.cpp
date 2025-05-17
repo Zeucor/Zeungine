@@ -129,6 +129,8 @@ Serial& deserialize(Serial& serial, std::shared_ptr<zg::vp::View>& viewPointer)
 }
 void View::setDirty()
 {
+	phi = atan2(direction.z, direction.x);
+	theta = acos(glm::clamp(direction.y, -1.0f, 1.0f));
 	{
 		std::unique_lock lock(updateMutex);
 		dirty = true;

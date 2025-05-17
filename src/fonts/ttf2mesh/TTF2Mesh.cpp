@@ -54,13 +54,20 @@ TTF2MeshGlyph::TTF2MeshGlyph(IRenderer* iRenderer, const TTF2MeshFont& ttf2MeshF
 			indices[index * 3 + 2] = face.v3;
 		}
 	}
-    meshInfo.indiceCount = [indiceCount](auto&) { return indiceCount; };
-    meshInfo.indices = [indices](auto&) { return indices; };
-    meshInfo.vertexCount = [_vertexCount](auto&) { return _vertexCount; };
-    meshInfo.vertices = [vertices](auto&) { return vertices; };
-    meshInfo.colorCount = [_vertexCount](auto&) { return _vertexCount; };
-    meshInfo.colors = [colors](auto&) { return colors; };
-    meshInfo.constants = {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}};
+	meshInfo.name = "Glyph " + std::to_string(codepoint);
+	meshInfo.shapeType = ShapeType::Mesh;
+	meshInfo.info = [indices, vertices, colors](auto&) -> MeshInfo {
+		return {
+			.indices = indices,
+			.vertices = vertices,
+			.colors = colors,
+		};
+	};
+	meshInfo.constants = shaders::mergeConstants({
+        shaders::RuntimeConstants({"Shape", "Color"}),
+        shaders::common_zg_constants,
+        shaders::RuntimeConstants({"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"})
+    });
     entityCreateInfo.position = {0, 0, 0};
     entityCreateInfo.rotation = {1, 0, 0, 0};
     entityCreateInfo.scale = {fontSize, fontSize, 1};
@@ -277,12 +284,12 @@ _addGlyph:
                     info.position = characterPosition;
                     info.scale *= _scale;
 					auto& meshInfo = info.meshInfos[0];
-					meshInfo.constants = zg::mergeVectors<std::string>(meshInfo.constants, constants);
-					std::vector<glm::vec4> colors(characterPointer->vertexCount, color);
-					meshInfo.colors = [colors](auto&)
-					{
-						return colors;
-					};
+					// meshInfo.constants = zg::mergeVectors<std::string>(meshInfo.constants, constants);
+					// std::vector<glm::vec4> colors(characterPointer->vertexCount, color);
+					// meshInfo.colors = [colors](auto&)
+					// {
+					// 	return colors;
+					// };
                     auto glyph_tuple = scene.addEntity(info);
 					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
 					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
@@ -434,12 +441,12 @@ _addGlyph:
 					info.position = characterPosition;
 					info.scale *= _scale;
 					auto& meshInfo = info.meshInfos[0];
-					meshInfo.constants = zg::mergeVectors<std::string>(meshInfo.constants, constants);
-					std::vector<glm::vec4> colors(characterPointer->vertexCount, color);
-					meshInfo.colors = [colors](auto&)
-					{
-						return colors;
-					};
+					// meshInfo.constants = zg::mergeVectors<std::string>(meshInfo.constants, constants);
+					// std::vector<glm::vec4> colors(characterPointer->vertexCount, color);
+					// meshInfo.colors = [colors](auto&)
+					// {
+					// 	return colors;
+					// };
                     auto glyph_tuple = entity.addChild(info);
 					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
 					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);

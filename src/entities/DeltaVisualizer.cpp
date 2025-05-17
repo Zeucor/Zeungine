@@ -10,21 +10,27 @@
 using namespace zg;
 zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long double& targetDelta, long double& currentDelta,
     glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-    const shaders::RuntimeConstants& constants, std::string name, zg::FRONTFACE frontFace)
+    const shaders::RuntimeConstants constants, std::string name, zg::FRONTFACE frontFace)
 {
+    auto mergedConstants = shaders::mergeConstants({
+        shaders::RuntimeConstants({"Shape", "Color"}),
+        shaders::common_zg_constants,
+        constants
+    });
     auto targetDeltaPointer = &targetDelta;
     auto currentDeltaPointer = &currentDelta;
 	auto color = glm::vec4(0.2f, 0.3f, 0.4f, 0.7f);
     MeshCreateInfo meshInfo{
+        .name = "DeltaVisualizer",
         .shapeType = ShapeType::Plane,
-        .material = [](auto& entity) -> Material {
-            return {
-                entity.template getData<glm::vec4>("Color"),
-                0
-            };
+        .material = {
+            color,
+            0
         },
-        .constants = zg::mergeVectors<std::string>(
-			{{"Shape", "Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
+        .info = [](auto& entity) -> MeshInfo {
+            return { };
+        },
+        .constants = mergedConstants
     };
     EntityCreateInfo info{
         .typeName = "DeltaVisualizer",
@@ -237,9 +243,6 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
             auto& robotoRegularPointer = entity.template getData<zg::fonts::freetype::FreetypeFont*>("RobotoRegularFont");
             delete robotoFilePointer;
             delete robotoRegularPointer;
-        },
-        .dataMap = {
-            {"Color", color}
         },
         .meshInfos = {meshInfo}
     };

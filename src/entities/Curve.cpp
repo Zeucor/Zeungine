@@ -422,33 +422,30 @@ template std::vector<uint32_t> zg::entities::NDCurve::getIndices<2>(const std::v
 template std::vector<uint32_t> zg::entities::NDCurve::getIndices<3>(const std::vector<glm::vec<3, float>>& centralPoints, zg::FRONTFACE frontFace);
 template <size_t N>
 EntityCreateInfo zg::entities::NDParametricCurveFactory(glm::vec3 position, glm::quat rotation, glm::vec3 scale, glm::vec4 color,
-                                                 const shaders::RuntimeConstants& constants, const std::string& name, float radius,
+                                                 const shaders::RuntimeConstants constants, const std::string& name, float radius,
                                                  const std::vector<glm::vec<N, float>>& points, zg::FRONTFACE frontFace)
 {
     using namespace NDCurve;
-    auto vertexCount = getVertexCount(points);
-    auto indiceCount = getIndiceCount(points);
+    auto mergedConstants = shaders::mergeConstants({
+        shaders::RuntimeConstants({"Color"}),
+        shaders::common_zg_constants,
+        constants
+    });
     MeshCreateInfo meshInfo{
-        .indiceCount = [indiceCount](auto&){return indiceCount;},
-        .indices = [frontFace](auto& entity)
-        {
-            auto& points = entity.template getData<std::vector<glm::vec<N, float>>&>("Points");
-            return getIndices(points, frontFace);
-        },
-        .vertexCount = [vertexCount](auto&){return vertexCount;},
-        .vertices = [frontFace](auto& entity)
-        {
+        .name = "Curve",
+        .shapeType = ShapeType::Mesh,
+        .info = [mergedConstants, frontFace, color](auto& entity) -> MeshInfo {
             auto& points = entity.template getData<std::vector<glm::vec<N, float>>>("Points");
             auto& radius = entity.template getData<float>("Radius");
-            return getVertices(points, radius, frontFace);
+            auto vertexCount = getVertexCount(points);
+            auto indiceCount = getIndiceCount(points);
+            return {
+                .indices =  getIndices(points, frontFace),
+                .vertices = getVertices(points, radius, frontFace),
+                .colors = std::vector<glm::vec4>(vertexCount, color),
+            };
         },
-        .colorCount = [vertexCount](auto&){return vertexCount;},
-        .colors = [vertexCount, color](auto&)
-        {
-            return std::vector<glm::vec4>(vertexCount, color);
-        },
-        .constants = zg::mergeVectors<std::string>(
-            {{"Color", "Position", "Normal", "View", "Projection", "Model", "CameraPosition"}}, constants)
+        .constants = mergedConstants
     };
     EntityCreateInfo info{
         .typeName = "NDParametricCurve<" + std::to_string(N) + ">",
@@ -466,11 +463,11 @@ EntityCreateInfo zg::entities::NDParametricCurveFactory(glm::vec3 position, glm:
 }
 template EntityCreateInfo zg::entities::NDParametricCurveFactory<2>(
     glm::vec3, glm::quat, glm::vec3, glm::vec4,
-    const shaders::RuntimeConstants&, const std::string&, float,
+    const shaders::RuntimeConstants, const std::string&, float,
     const std::vector<glm::vec<2, float>>& points, zg::FRONTFACE frontFace
 );
 template EntityCreateInfo zg::entities::NDParametricCurveFactory<3>(
     glm::vec3, glm::quat, glm::vec3, glm::vec4,
-    const shaders::RuntimeConstants&, const std::string&, float,
+    const shaders::RuntimeConstants, const std::string&, float,
     const std::vector<glm::vec<3, float>>&, zg::FRONTFACE
 );

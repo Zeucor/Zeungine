@@ -1,5 +1,6 @@
 #include <zg/shaders/ShaderManager.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
+#include <zg/renderers/VulkanRenderer.hpp>
 #include <zg/crypto/vector.hpp>
 #include <iostream>
 using namespace zg::shaders;
@@ -12,11 +13,9 @@ Shader &ShaderManager::getShaderByID(IRenderer* iRenderer, uint32_t id)
 }
 std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants(IRenderer* iRenderer,
                                                                                  const RuntimeConstants &constants,
-                                                                                 void *data,
                                                                                  const std::vector<ShaderType> &shaderTypes)
 {
-  auto hash = crypto::hashVector(constants);
-  hash = crypto::combineHashes(hash, (size_t)data);
+  auto hash = ShaderManager::hashConstants(constants, iRenderer);
   auto hashIter = iRenderer->shaderContext->shadersByHash.find(hash);
   if (hashIter != iRenderer->shaderContext->shadersByHash.end())
     return hashIter->second;
@@ -27,4 +26,19 @@ std::pair<uint32_t, std::shared_ptr<Shader>> ShaderManager::getShaderByConstants
   std::pair<uint32_t, std::shared_ptr<Shader>> pair(id, shaderPointer);
   iRenderer->shaderContext->shadersByHash[hash] = pair;
   return pair;
+}
+size_t ShaderManager::hashConstants(const RuntimeConstants& constants, IRenderer* iRenderer)
+{
+  auto hash = crypto::hashVector(constants);
+	size_t render_pass = 0;
+	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(iRenderer);
+	if (vulkanRenderer.currentFramebufferImpl)
+	{
+		render_pass = size_t(vulkanRenderer.currentFramebufferImpl->renderPass);
+	}
+	else
+	{
+		render_pass = size_t(vulkanRenderer.renderPass);
+	}
+  return (hash << 3) ^ (render_pass << 1);
 }

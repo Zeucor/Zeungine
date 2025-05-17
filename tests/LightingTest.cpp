@@ -12,7 +12,9 @@
 #include <zg/lights/Lights.hpp>
 #include <zg/math/Rotations.hpp>
 #include <zg/zgfilesystem/File.hpp>
+#include <zg/shaders/ShaderFactory.hpp>
 using namespace zg;
+using namespace zg::shaders;
 // #define PI acos(-1)
 // glm::vec3 centerPos = glm::vec3(1024.f) * 8.0f;
 // float angleStep = PI * 2.0f / 8.0f; // Place 8 curves per rotation
@@ -20,7 +22,7 @@ using namespace zg;
 // float currentAngle = 0.0f;
 // float currentRadius = 0.0f; // Start at the center for the very first one slightly offset
 // float zOffsetStep = 2.0f; // Slightly change Z for each curve
-// shaders::RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition",
+// RuntimeConstants commonShaderConstants({"Lighting", "DirectionalLightShadowMaps", "LightSpacePosition",
 // 																								 "Fog"});
 // float commonLineThickness = 0.5f;
 // float commonDt = PI / 64.f; // Default step size (can be overridden)
@@ -96,7 +98,7 @@ using namespace zg;
 // 	// 	directionalLightShadows.emplace_back(window, directionalLights[0]);
 // 	// 	sun = std::make_shared<zg::entities::NDParametricCurve<3>>(
 // 	// 		window, *this, dl.position, glm::quat(1, 0, 0, 0), glm::vec3(4.3), glm::vec4(0.944, 1.00, 0.760, 1),
-// 	// 		shaders::RuntimeConstants(), "Sun", commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt,
+// 	// 		RuntimeConstants(), "Sun", commonLineThickness, std::map<std::string, double>(), 0.0f, 2.0f * PI, commonDt,
 // 	// 		"cos(8*t) * cos(t)", // Combination of angular frequencies
 // 	// 		"sin(8*t) * cos(t)",
 // 	// 		"sin(t)" // Controls latitude based on main angle t
@@ -473,7 +475,7 @@ using namespace zg;
 // 	// 																					glm::vec3(0, 0, 0), // rotation
 // 	// 																					glm::vec3(1, 1, 1), // scale
 // 	// 																					glm::vec3(6.7, .9, 11.8), // size
-// 	// 																					shaders::RuntimeConstants({"Lighting", "DirectionalLightShadowMaps",
+// 	// 																					RuntimeConstants({"Lighting", "DirectionalLightShadowMaps",
 // 	// 																																		 //  "SpotLightShadowMaps",
 // 	// 																																		 //  "PointLightShadowMaps",
 // 	// 																																		 "LightSpacePosition", "Fog"}));
@@ -481,7 +483,7 @@ using namespace zg;
 
 // 	// 	addEntity(std::make_shared<entities::Cube>((Window&)window, *this, centerPos, glm::vec3(0, 0, 0),
 // 	// 																						 glm::vec3(1, 1, 1), glm::vec3(16 * 8, 1.3, 32 * 8),
-// 	// 																						 shaders::RuntimeConstants({"Lighting", "DirectionalLightShadowMaps",
+// 	// 																						 RuntimeConstants({"Lighting", "DirectionalLightShadowMaps",
 // 	// 																																				// "SpotLightShadowMaps",
 // 	// 																																				// "PointLightShadowMaps",
 // 	// 																																				"LightSpacePosition", "Fog"})));
@@ -561,6 +563,8 @@ using namespace zg;
 // }
 int main()
 {
+	ShaderFactory shader_factory;
+	register_zg_shader_hooks();
 	// Window window("Window", 1280, 720, -1, -1);
 	// window.runOnThread([](auto& window) { window.setScene(std::make_shared<TestScene>(window)); });
 	// window.run();
