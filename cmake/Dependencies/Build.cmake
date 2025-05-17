@@ -60,7 +60,7 @@ set_target_properties(TracyClient PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(TracyClient PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(TracyClient PROPERTIES MINSIZEREL_POSTFIX "")
 execute_process(
-    COMMAND ${CMAKE_COMMAND} -B ${CMAKE_BINARY_DIR}/tracyserver -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    COMMAND ${CMAKE_COMMAND} -B ${CMAKE_BINARY_DIR}/tracyserver -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D USE_WAYLAND=OFF
     WORKING_DIRECTORY ${tracy_SOURCE_DIR}/profiler
     RESULT_VARIABLE tracyserver_ConfigureResult)
 if(tracyserver_ConfigureResult)
