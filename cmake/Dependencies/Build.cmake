@@ -52,7 +52,7 @@ include(FetchContent)
 FetchContent_Declare(
     tracy
     GIT_REPOSITORY https://github.com/ZeunO8/tracy.git
-    GIT_TAG master
+    GIT_TAG wayland-option
 )
 FetchContent_MakeAvailable(tracy)
 set_target_properties(TracyClient PROPERTIES DEBUG_POSTFIX "")
