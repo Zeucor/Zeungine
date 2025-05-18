@@ -10,6 +10,8 @@
 #include <vector>
 #include <zg/GlobalUID.hpp>
 #include <cassert>
+#include <memory>
+#include <map>
 namespace zg
 {
 #define KEY_ID_VECTOR_KEY_INDEX 0
