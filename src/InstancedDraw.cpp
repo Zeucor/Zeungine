@@ -2,6 +2,7 @@
 #include <zg/Window.hpp>
 #include <zg/crypto/vector.hpp>
 using namespace zg;
+template<>
 bool entity_mat4_transform_registry::initialized = ([](){
     if (!entity_mat4_transform_registry::set_getter_function("Model", [](Entity& entity) { return entity.getModelMatrix(); })) return false;
     if (!entity_mat4_transform_registry::set_getter_function("InverseModel", [](Entity& entity) { return glm::inverse(entity.getModelMatrix()); })) return false;
