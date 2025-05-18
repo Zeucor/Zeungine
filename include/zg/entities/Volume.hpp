@@ -255,10 +255,6 @@ namespace zg::entities
 	//                 ++vertex_index;
 	//             }
 	//         }
-	//         if (!useAnalyticalNormals)
-	//         {
-	//             computeNormals(frontFace, calculated_indices, calculated_vertices, calculated_normals);
-	//         }
 
 	// 		size_t actualVertexCount = calculated_vertices.size();
 	// 		std::vector<glm::vec4> calculated_colors(actualVertexCount, this->color);

@@ -11,11 +11,9 @@ using namespace zg::entities;
 // 							 rotation, scale, name.empty() ? "Frame " + std::to_string(++framesCount) : name),
 // 		uvs({{}, {}, {}, {}}), size(size)
 // {
-// 	computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
 // 	updateIndices(indices);
 // 	setColor(color);
 // 	updateElements("Position", vertices);
-// 	updateElements("Normal", normals);
 // };
 // std::vector<uint32_t> Frame::getIndices(zg::Window& window)
 // {

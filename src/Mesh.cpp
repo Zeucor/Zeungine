@@ -18,8 +18,6 @@ Mesh::Mesh(const MeshCreateInfo& info, Entity& entity):
 	auto& window = Registry::getWindow(entity.INDEX_STACK);
 	if (!indices.size() || !vertices.size())
         return;
-    std::vector<glm::vec3> normals;
-    computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
     updateIndices(indices);
     if (!colors.empty())
         updateElements("Color", colors);
@@ -35,7 +33,6 @@ Mesh::Mesh(const MeshCreateInfo& info, Entity& entity):
         updateElements("UV3", uv3s);
     }
     updateElements("Position", vertices);
-    updateElements("Normal", normals);
 }
 Mesh::Mesh(const Mesh& other):
 	MeshInfo(other),

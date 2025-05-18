@@ -49,8 +49,6 @@ using namespace zg::media::entities;
 // 	updateIndices(indices);
 // 	updateElements("UV2", uvs);
 // 	setSize(glm::vec3(_size, 0));
-// 	computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
-// 	updateElements("Normal", normals);
 // 	NANOSECONDS_DURATION videoFrameDuration = getVideoFrameDuration();
 // 	budget = std::make_shared<ZBudget<>>(videoFrameDuration, (size_t)1, true, false, uri + "+budget");
 // }

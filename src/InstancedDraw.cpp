@@ -229,33 +229,6 @@ void InstancedDraw::drawMulti(
                     vertex_offset = pim_iter->second.first;
                     triangle_count = pim_iter->second.second;
                 }
-                // auto& mindices = mesh.indices;
-                // std::vector<glm::vec3> mnormals;
-                // mnormals.resize(triangle_count);
-                // computeNormals(window.iRenderer->frontFace, mindices, vertices, mnormals);
-                // auto mnormals_hash = zg::crypto::hashVector(mnormals);
-                // auto nim_iter = normals_index_size_map.find(mnormals_hash);
-                // if (nim_iter == normals_index_size_map.end())
-                // {
-                //     auto& indices = mesh.indices;
-                //     auto normals_data = mnormals.data();
-                //     auto indices_data = (glm::ivec3*)indices.data();
-                //     std::vector<glm::vec4> triangle_normals;
-                //     triangle_normals.reserve(indiceCount / 3);
-                //     for (size_t ii = 0; ii < indiceCount / 3; ++ii)
-                //     {
-                //         triangle_normals.push_back(glm::vec4(normals_data[indices_data[ii].x], 0));
-                //         triangle_normals.push_back(glm::vec4(normals_data[indices_data[ii].y], 0));
-                //         triangle_normals.push_back(glm::vec4(normals_data[indices_data[ii].z], 0));
-                //     }
-                //     normal_offset = normals.size();
-                //     normals.insert(normals.end(), triangle_normals.begin(), triangle_normals.end());
-                //     normals_index_size_map[mnormals_hash] = {normal_offset, triangle_normals.size()};
-                // }
-                // else
-                // {
-                //     normal_offset = nim_iter->second.first;
-                // }
             }
             for (auto& entityID : batch.entities)
             {

@@ -24,11 +24,9 @@ using namespace zg::entities;
 // 		breakStyle(breakStyle), repositionHandler(repositionHandler), resizeHandler(resizeHandler),
 // 		reFontSizeHandler(reFontSizeHandler)
 // {
-// 	computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
 // 	updateIndices(indices);
 // 	// updateElements("UV2", uvs);
 // 	updateElements("Position", vertices);
-// 	updateElements("Normal", normals);
 // 	resizeID = window.addResizeHandler([&](auto newSize) { forceUpdate(); });
 // 	setTextColor(textColor);
 // }

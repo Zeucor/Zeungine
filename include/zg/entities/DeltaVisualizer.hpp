@@ -52,11 +52,9 @@ namespace zg::entities
 	// 		// frame
 	// 		{
 	// 		}
-	// 		computeNormals(window.iRenderer->frontFace, indices, vertices, normals);
 	// 		updateIndices(indices);
 	// 		setColor();
 	// 		updateElements("Position", vertices);
-	// 		updateElements("Normal", normals);
 	// 	}
 	// 	void setColor(glm::vec4 newColor)
 	// 	{

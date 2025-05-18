@@ -183,8 +183,6 @@ struct WindowCreateInfo;
 		void registerOnEntityAddedFunction(const OnEntityAddedFunction& function);
 		static uint32_t getScreenRefreshRate(uint32_t screenNum);
 	};
-	void computeNormals(zg::FRONTFACE frontFace, const std::vector<uint32_t>& indices,
-											const std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& normals);
 	struct WindowCreateInfo
 	{
 		std::string title = "Default Window Name";
