@@ -64,6 +64,12 @@ namespace zg
             std::unordered_set<size_t> entities;
             std::unordered_map<std::string, std::vector<glm::mat4>> mvp_transforms;
             glm::vec3 cameraPosition;
+            std::vector<glm::vec4> positions;
+            std::vector<glm::vec2> uv2s;
+            std::vector<glm::vec3> uv3s;
+            std::map<size_t, std::pair<size_t, size_t>> position_index_size_map;
+            std::map<size_t, std::pair<size_t, size_t>> uv2s_index_size_map;
+            std::map<size_t, std::pair<size_t, size_t>> uv3s_index_size_map;
             InstanceBatch(size_t meshID);
             void addEntity(const size_t entity_ID);
             void removeEntity(const size_t entity_ID);

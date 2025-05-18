@@ -160,20 +160,46 @@ void InstancedDraw::drawMulti(
         auto& firstMesh = Registry::getMesh(firstMeshID);
         shader.bind(firstMesh);
         auto& firstBatch = opaqueBatches.try_emplace(firstMeshID, firstMeshID).first->second;
+        auto& positions = firstBatch.positions;
+        auto& uv2s = firstBatch.uv2s;
+        auto& uv3s = firstBatch.uv3s;
+        auto& position_index_size_map = firstBatch.position_index_size_map;
+        auto& uv2s_index_size_map = firstBatch.uv2s_index_size_map;
+        auto& uv3s_index_size_map = firstBatch.uv3s_index_size_map;
+        auto removeUnusedMeshes = [&](std::map<size_t, std::pair<size_t, size_t>>& map, auto& vec)
+        {
+            auto end = map.end();
+            for (auto iter = map.begin(); iter != end; ++iter)
+            {
+                auto& meshID = iter->first;
+                auto setIter = shaderPair.second.find(meshID);
+                if (setIter == shaderPair.second.end())
+                {
+                    auto& index_size = iter->second;
+                    iter = map.erase(iter);
+                    end = map.end();
+                    auto index = index_size.first;
+                    auto size = index_size.second;
+                    size_t eraseCount = std::min(index_size.second, vec.size() - index);
+                    vec.erase(vec.begin() + index, vec.begin() + index + eraseCount);
+                    auto iter2 = map.begin();
+                    while (iter2 != end)
+                    {
+                        auto& index_size_2 = iter->second;
+                        if (index_size_2.first > index)
+                        {
+                            index_size_2.second -= size;
+                        }
+                    }
+                }
+            }
+        };
         for (auto& tk : firstBatch.m_transform_keys)
         {
             transforms[tk].reserve(totalShapes);
         }
         uint32_t firstInstance = 0;
         uint32_t i = 0;
-        std::vector<glm::vec4> positions;
-        // std::vector<glm::vec4> normals;
-        std::vector<glm::vec2> uv2s;
-        std::vector<glm::vec3> uv3s;
-        std::map<size_t, std::pair<size_t, size_t>> position_index_size_map;
-        // std::map<size_t, std::pair<size_t, size_t>> normals_index_size_map;
-        std::map<size_t, std::pair<size_t, size_t>> uv2s_index_size_map;
-        std::map<size_t, std::pair<size_t, size_t>> uv3s_index_size_map;
         for (auto& meshID : shaderPair.second)
         {
             auto& mesh = Registry::getMesh(meshID);
@@ -195,8 +221,9 @@ void InstancedDraw::drawMulti(
                 }
             }
             int32_t vertex_offset = -1;
-            // int32_t normal_offset = -1;
             uint32_t triangle_count = 0;
+            int32_t uv2_offset = -1;
+            int32_t uv3_offset = -1;
             auto indiceCount = mesh.indices.size();
             auto vertexCount = mesh.vertices.size();
             auto uv2Count = mesh.uv2s.size();
@@ -204,8 +231,8 @@ void InstancedDraw::drawMulti(
             if (indiceCount)
             {
                 auto& vertices = mesh.vertices;
-                auto vertices_hash = zg::crypto::hashVector(vertices);
-                auto pim_iter = position_index_size_map.find(vertices_hash);
+                // auto vertices_hash = zg::crypto::hashVector(vertices);
+                auto pim_iter = position_index_size_map.find(mesh.ID);
                 if (pim_iter == position_index_size_map.end())
                 {
                     auto vertices_data = vertices.data();
@@ -222,7 +249,7 @@ void InstancedDraw::drawMulti(
                     vertex_offset = positions.size();
                     positions.insert(positions.end(), triangle_vertices.begin(), triangle_vertices.end());
                     triangle_count = triangle_vertices.size();
-                    position_index_size_map[vertices_hash] = {vertex_offset, triangle_count};
+                    position_index_size_map[mesh.ID] = {vertex_offset, triangle_count};
                 }
                 else
                 {
@@ -230,10 +257,38 @@ void InstancedDraw::drawMulti(
                     triangle_count = pim_iter->second.second;
                 }
             }
+            if (uv2Count)
+            {
+                auto& muv2s = mesh.uv2s;
+                auto u2m_iter = uv2s_index_size_map.find(mesh.ID);
+                if (u2m_iter == uv2s_index_size_map.end())
+                {
+                    uv2_offset = uv2s.size();
+                    uv2s.insert(uv2s.end(), muv2s.begin(), muv2s.end());
+                    uv2s_index_size_map[mesh.ID] = {uv2_offset, muv2s.size()};
+                }
+                else
+                {
+                    uv2_offset = u2m_iter->second.first;
+                }
+            }
+            if (uv3Count)
+            {
+                auto& muv3s = mesh.uv3s;
+                auto u3m_iter = uv3s_index_size_map.find(mesh.ID);
+                if (u3m_iter == uv3s_index_size_map.end())
+                {
+                    uv3_offset = uv3s   .size();
+                    uv3s.insert(uv3s    .end(), muv3s.begin(), muv3s.end());
+                    uv3s_index_size_map[mesh.ID] = {uv3_offset, muv3s.size()};
+                }
+                else
+                {
+                    uv3_offset = u3m_iter->second.first;
+                }
+            }
             for (auto& entityID : batch.entities)
             {
-                int32_t uv2_offset = -1;
-                int32_t uv3_offset = -1;
                 auto& entity = Registry::getEntity(entityID);
                 auto& material = entity.meshMaterial(meshID);
                 auto material_index = find_material_index(material);
@@ -241,38 +296,6 @@ void InstancedDraw::drawMulti(
                 {
                     materials.push_back(material);
                     material_index = materials.size() -1;
-                }
-                if (uv2Count)
-                {
-                    auto& muv2s = mesh.uv2s;
-                    auto muv2s_hash = zg::crypto::hashVector(muv2s);
-                    auto u2m_iter = uv2s_index_size_map.find(muv2s_hash);
-                    if (u2m_iter == uv2s_index_size_map.end())
-                    {
-                        uv2_offset = uv2s.size();
-                        uv2s.insert(uv2s.end(), muv2s.begin(), muv2s.end());
-                        uv2s_index_size_map[muv2s_hash] = {uv2_offset, muv2s.size()};
-                    }
-                    else
-                    {
-                        uv2_offset = u2m_iter->second.first;
-                    }
-                }
-                if (uv3Count)
-                {
-                    auto& muv3s = mesh.uv3s;
-                    auto muv3s_hash = zg::crypto::hashVector(muv3s);
-                    auto u3m_iter = uv3s_index_size_map.find(muv3s_hash);
-                    if (u3m_iter == uv3s_index_size_map.end())
-                    {
-                        uv3_offset = uv3s   .size();
-                        uv3s.insert(uv3s    .end(), muv3s.begin(), muv3s.end());
-                        uv3s_index_size_map[muv3s_hash] = {uv3_offset, muv3s.size()};
-                    }
-                    else
-                    {
-                        uv3_offset = u3m_iter->second.first;
-                    }
                 }
                 entities[i++] = {
                     int32_t(mesh.info.shapeType),
@@ -303,9 +326,10 @@ void InstancedDraw::drawMulti(
                 firstInstance
             });
             firstInstance += batchEntitiesSize;
-            //
-            // set uv/color/normal data
         }
+        removeUnusedMeshes(position_index_size_map, positions);
+        removeUnusedMeshes(uv2s_index_size_map, uv2s);
+        removeUnusedMeshes(uv3s_index_size_map, uv3s);
         auto& projection = *scene.projectionPointer;
         shader.setBlock("CameraPosition", firstMesh, scene.viewPointer->position, 16);
         shader.setBlock("Viewport", firstMesh, glm::vec4(0, 0, window.windowWidth, window.windowHeight), 16);
@@ -328,7 +352,6 @@ void InstancedDraw::drawMulti(
         auto entitiesSize = entities.size();
         auto materialsSize = materials.size();
         auto positionsSize = positions.size();
-        // auto normalsSize = normals.size();
         auto uv2sSize = uv2s.size();
         auto uv3sSize = uv3s.size();
         if (!positionsSize)
@@ -336,11 +359,6 @@ void InstancedDraw::drawMulti(
             positions.resize(1);
             positionsSize = positions.size();
         }
-        // if (!normalsSize)
-        // {
-        //     normals.resize(1);
-        //     normalsSize = normals.size();
-        // }
         if (!uv2sSize)
         {
             uv2s.resize(1);
@@ -354,7 +372,6 @@ void InstancedDraw::drawMulti(
         shader.setSSBO("Entities", firstMesh, entities.data(), sizeof(GLEntity) * entitiesSize);
         shader.setSSBO("Materials", firstMesh, materials.data(), sizeof(Material) * materialsSize);
         shader.setSSBO("MeshPositions", firstMesh, positions.data(), sizeof(glm::vec4) * positionsSize);
-        // shader.setSSBO("MeshNormals", firstMesh, normals.data(), sizeof(glm::vec4) * normalsSize);
         shader.setSSBO("EntityUV2s", firstMesh, uv2s.data(), sizeof(glm::vec2) * uv2sSize);
         shader.setSSBO("EntityUV3s", firstMesh, uv3s.data(), sizeof(glm::vec3) * uv3sSize);
         for (auto& transform_pair : transforms)
