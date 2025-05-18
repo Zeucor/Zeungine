@@ -1132,9 +1132,9 @@ uint32_t zg::Window::getScreenRefreshRate(uint32_t screenNum)
 #if defined(_WIN32)
 	WIN32Window::getCurrentScreenModes();
 #elif defined(__linux__)
-	XCBzg::Window::getCurrentScreenModes();
+	XCBWindow::getCurrentScreenModes();
 #elif defined(MACOS)
-	MacOSzg::Window::getCurrentScreenModes();
+	MacOSWindow::getCurrentScreenModes();
 #endif
 	return modes.size() >= screenNum ? modes[screenNum - 1].refreshRate : 60;
 }
