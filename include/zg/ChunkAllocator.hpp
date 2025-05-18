@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <string.h>
 namespace zg
 {
 	// Default size for chunks allocated by the global manager
