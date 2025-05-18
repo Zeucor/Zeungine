@@ -27,7 +27,7 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 1;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
-Window::Window(const WindowCreateInfo& info) :
+zg::Window::Window(const WindowCreateInfo& info) :
 	ID(info.ID),
 	INDEX(info.INDEX),
 	INDEX_STACK(info.INDEX_STACK),
@@ -57,7 +57,7 @@ Window::Window(const WindowCreateInfo& info) :
 	// 	framebufferPlane->addToBVH = false;
 	// }
 }
-Window::Window(const Window& other) :
+zg::Window::Window(const zg::Window& other) :
 	ID(other.ID),
 	INDEX(other.INDEX),
 	INDEX_STACK(other.INDEX_STACK),
@@ -74,7 +74,7 @@ Window::Window(const Window& other) :
 	memset(windowKeys, 0, 256 * sizeof(int));
 	memset(windowButtons, 0, 7 * sizeof(int));
 }
-Window& Window::operator=(const Window& other)
+zg::Window& zg::Window::operator=(const zg::Window& other)
 {
 	ZoneScoped;
 	ID = other.ID;
@@ -135,19 +135,19 @@ Window& Window::operator=(const Window& other)
 	mainFramebuffer = other.mainFramebuffer;
 	return *this;
 }
-void Window::run()
+void zg::Window::run()
 {
 	ZoneScoped;
 // #if defined(_WIN32) || defined(__linux__)
-// 	windowThread = std::make_shared<std::thread>(&Window::startWindow, this);
+// 	windowThread = std::make_shared<std::thread>(&zg::Window::startWindow, this);
 // 	windowThread->join();
 // #elif defined(MACOS)
 	startWindow();
 // #endif
 }
-void Window::update()
+void zg::Window::update()
 {
-	ZoneScopedN("Window::update");
+	ZoneScopedN("zg::Window::update");
 	auto componentsData = m_components.data();
 	auto componentsSize = m_components.size();
 	for (size_t index = 0; index < componentsSize; ++index)
@@ -163,9 +163,9 @@ void Window::update()
 		scenesData[index].update();
 	}
 }
-void Window::preRender()
+void zg::Window::preRender()
 {
-	ZoneScopedN("Window::preRender");
+	ZoneScopedN("zg::Window::preRender");
 	auto scenesData = scenes.data();
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
@@ -181,9 +181,9 @@ void Window::preRender()
 	auto& framebufferRef = *framebuffer;
 	framebufferRef.bind();
 }
-void Window::render()
+void zg::Window::render()
 {
-	ZoneScopedN("Window::render");
+	ZoneScopedN("zg::Window::render");
 	std::lock_guard lock(renderMutex);
 	auto scenesData = scenes.data();
 	auto scenesSize = scenes.size();
@@ -193,9 +193,9 @@ void Window::render()
 		scenesData[index].render();
 	}
 };
-void Window::postRender()
+void zg::Window::postRender()
 {
-	ZoneScopedN("Window::postRender");
+	ZoneScopedN("zg::Window::postRender");
 	auto scenesData = scenes.data();
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
@@ -207,9 +207,9 @@ void Window::postRender()
 		return;
 	framebuffer->unbind();
 }
-void Window::startWindow()
+void zg::Window::startWindow()
 {
-	ZoneScopedN("Window::startWindow");
+	ZoneScopedN("zg::Window::startWindow");
 	iPlatformWindow = createPlatformWindow();
 	auto& iPlatformWindowRef = *iPlatformWindow;
 	iRenderer = createRenderer();
@@ -369,7 +369,7 @@ _exit:
 		}
 	}
 }
-void Window::updateKeyboard()
+void zg::Window::updateKeyboard()
 {
 	ZoneScoped;
 	for (unsigned int i = 0; i < 256; ++i)
@@ -389,7 +389,7 @@ void Window::updateKeyboard()
 		}
 	}
 }
-void Window::updateMouse()
+void zg::Window::updateMouse()
 {
 	ZoneScoped;
 	for (unsigned int i = MinMouseButtonIndex; i < MaxMouseButtonIndex; ++i)
@@ -416,7 +416,7 @@ void Window::updateMouse()
 		mouseMoved = false;
 	}
 }
-void Window::close()
+void zg::Window::close()
 {
 	ZoneScoped;
 	if (isChildWindow)
@@ -426,7 +426,7 @@ void Window::close()
 	}
 	iPlatformWindow->close();
 }
-void Window::minimize()
+void zg::Window::minimize()
 {
 	ZoneScoped;
 	minimized = true;
@@ -443,7 +443,7 @@ void Window::minimize()
 		windowButtons[i] = false;
 	}
 }
-void Window::maximize()
+void zg::Window::maximize()
 {
 	ZoneScoped;
 	minimized = false;
@@ -464,7 +464,7 @@ void Window::maximize()
 		setXY(0, 0);
 	}
 }
-void Window::restore()
+void zg::Window::restore()
 {
 	ZoneScoped;
 	minimized = false;
@@ -477,13 +477,13 @@ void Window::restore()
 	iPlatformWindow->restore();
 	setXY(oldXY.x, oldXY.y);
 }
-void Window::warpPointer(glm::vec2 coords)
+void zg::Window::warpPointer(glm::vec2 coords)
 {
 	ZoneScoped;
 	iPlatformWindow->warpPointer(coords);
 	justWarpedPointer = true;
 }
-void Window::setXY(float x, float y)
+void zg::Window::setXY(float x, float y)
 {
 	ZoneScoped;
 	windowX = x;
@@ -495,7 +495,7 @@ void Window::setXY(float x, float y)
 	}
 	iPlatformWindow->setXY();
 }
-void Window::setWidthHeight(float width, float height)
+void zg::Window::setWidthHeight(float width, float height)
 {
 	ZoneScoped;
 	windowWidth = width;
@@ -508,16 +508,16 @@ void Window::setWidthHeight(float width, float height)
 	}
 	iPlatformWindow->setWidthHeight();
 }
-void Window::setViewport()
+void zg::Window::setViewport()
 {
 	viewport = {0, 0, windowWidth, windowHeight};
 }
-void Window::mouseCapture(bool capture)
+void zg::Window::mouseCapture(bool capture)
 {
 	ZoneScoped;
 	iPlatformWindow->mouseCapture(capture);
 }
-zg::Window& Window::createChildWindow(const WindowCreateInfo& info)
+zg::Window& zg::Window::createChildWindow(const WindowCreateInfo& info)
 {
 	ZoneScoped;
 	auto usingInfo{info};
@@ -526,7 +526,7 @@ zg::Window& Window::createChildWindow(const WindowCreateInfo& info)
 }
 
 // Keyboard
-UniqueIdentifier Window::addKeyPressHandler(Key key, const KeyPressHandler& callback)
+UniqueIdentifier zg::Window::addKeyPressHandler(Key key, const KeyPressHandler& callback)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -535,7 +535,7 @@ UniqueIdentifier Window::addKeyPressHandler(Key key, const KeyPressHandler& call
 	handlersPair.second[id] = callback;
 	return id;
 };
-void Window::removeKeyPressHandler(Key key, UniqueIdentifier& id)
+void zg::Window::removeKeyPressHandler(Key key, UniqueIdentifier& id)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -549,7 +549,7 @@ void Window::removeKeyPressHandler(Key key, UniqueIdentifier& id)
 	handlersPair.second.erase(handlerIter);
 	id = 0;
 };
-UniqueIdentifier Window::addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback)
+UniqueIdentifier zg::Window::addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -558,7 +558,7 @@ UniqueIdentifier Window::addKeyUpdateHandler(Key key, const KeyUpdateHandler& ca
 	handlersPair.second[id] = callback;
 	return id;
 };
-void Window::removeKeyUpdateHandler(Key key, UniqueIdentifier& id)
+void zg::Window::removeKeyUpdateHandler(Key key, UniqueIdentifier& id)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -578,7 +578,7 @@ void Window::removeKeyUpdateHandler(Key key, UniqueIdentifier& id)
 	handlers.erase(handlerIter);
 	id = 0;
 };
-void Window::callKeyPressHandler(Key key, int pressed)
+void zg::Window::callKeyPressHandler(Key key, int pressed)
 {
 	ZoneScoped;
 	keys[key] = pressed;
@@ -606,7 +606,7 @@ void Window::callKeyPressHandler(Key key, int pressed)
 		}
 	}
 };
-void Window::callKeyUpdateHandler(Key key)
+void zg::Window::callKeyUpdateHandler(Key key)
 {
 	ZoneScoped;
 	std::vector<KeyUpdateHandler> handlersCopy;
@@ -631,7 +631,7 @@ void Window::callKeyUpdateHandler(Key key)
 		handler();
 	}
 };
-UniqueIdentifier Window::addAnyKeyPressHandler(const AnyKeyPressHandler& callback)
+UniqueIdentifier zg::Window::addAnyKeyPressHandler(const AnyKeyPressHandler& callback)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -639,7 +639,7 @@ UniqueIdentifier Window::addAnyKeyPressHandler(const AnyKeyPressHandler& callbac
 	anyKeyPressHandlers.second[id] = callback;
 	return id;
 };
-void Window::removeAnyKeyPressHandler(UniqueIdentifier& id)
+void zg::Window::removeAnyKeyPressHandler(UniqueIdentifier& id)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -653,7 +653,7 @@ void Window::removeAnyKeyPressHandler(UniqueIdentifier& id)
 	handlers.erase(handlerIter);
 	id = 0;
 };
-void Window::callAnyKeyPressHandler(Key key, bool pressed)
+void zg::Window::callAnyKeyPressHandler(Key key, bool pressed)
 {
 	ZoneScoped;
 	std::vector<AnyKeyPressHandler> handlersCopy;
@@ -673,7 +673,7 @@ void Window::callAnyKeyPressHandler(Key key, bool pressed)
 		handler(key, pressed);
 	}
 }
-void Window::handleKey(Key key, int32_t mod, bool pressed)
+void zg::Window::handleKey(Key key, int32_t mod, bool pressed)
 {
 	ZoneScoped;
 	auto& window = *dynamic_cast<Window*>(this);
@@ -707,7 +707,7 @@ void Window::handleKey(Key key, int32_t mod, bool pressed)
 	}
 }
 // Mouse
-UniqueIdentifier Window::addMousePressHandler(Button button, const MousePressHandler& callback)
+UniqueIdentifier zg::Window::addMousePressHandler(Button button, const MousePressHandler& callback)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -716,7 +716,7 @@ UniqueIdentifier Window::addMousePressHandler(Button button, const MousePressHan
 	handlersPair.second[id] = callback;
 	return id;
 };
-void Window::removeMousePressHandler(Button button, UniqueIdentifier& id)
+void zg::Window::removeMousePressHandler(Button button, UniqueIdentifier& id)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -730,7 +730,7 @@ void Window::removeMousePressHandler(Button button, UniqueIdentifier& id)
 	handlersPair.second.erase(handlerIter);
 	id = 0;
 };
-UniqueIdentifier Window::addMouseMoveHandler(const MouseMoveHandler& callback)
+UniqueIdentifier zg::Window::addMouseMoveHandler(const MouseMoveHandler& callback)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -738,7 +738,7 @@ UniqueIdentifier Window::addMouseMoveHandler(const MouseMoveHandler& callback)
 	mouseMoveHandlers.second[id] = callback;
 	return id;
 };
-void Window::removeMouseMoveHandler(UniqueIdentifier& id)
+void zg::Window::removeMouseMoveHandler(UniqueIdentifier& id)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -752,7 +752,7 @@ void Window::removeMouseMoveHandler(UniqueIdentifier& id)
 	handlers.erase(handlerIter);
 	id = 0;
 };
-void Window::callMousePressHandler(Button button, bool pressed)
+void zg::Window::callMousePressHandler(Button button, bool pressed)
 {
 	ZoneScoped;
 	buttons[button] = pressed;
@@ -782,7 +782,7 @@ void Window::callMousePressHandler(Button button, bool pressed)
 		}
 	}
 }
-void Window::callMouseMoveHandler(glm::vec2 coords)
+void zg::Window::callMouseMoveHandler(glm::vec2 coords)
 {
 	ZoneScoped;
 	if (coords == mouseCoords)
@@ -808,7 +808,7 @@ void Window::callMouseMoveHandler(glm::vec2 coords)
 		handler(coords);
 	}
 }
-void Window::handleMouseMove(uint32_t x, uint32_t y)
+void zg::Window::handleMouseMove(uint32_t x, uint32_t y)
 {
 	ZoneScoped;
 	auto& window = *dynamic_cast<Window*>(this);
@@ -843,7 +843,7 @@ void Window::handleMouseMove(uint32_t x, uint32_t y)
 		window.mouseMoved = true;
 	}
 }
-void Window::handleMousePress(Button button, bool pressed)
+void zg::Window::handleMousePress(Button button, bool pressed)
 {
 	ZoneScoped;
 	auto& window = *dynamic_cast<Window*>(this);
@@ -875,7 +875,7 @@ void Window::handleMousePress(Button button, bool pressed)
 	}
 }
 // resize
-UniqueIdentifier Window::addResizeHandler(const ViewResizeHandler& callback)
+UniqueIdentifier zg::Window::addResizeHandler(const ViewResizeHandler& callback)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -883,7 +883,7 @@ UniqueIdentifier Window::addResizeHandler(const ViewResizeHandler& callback)
 	viewResizeHandlers.second[id] = callback;
 	return id;
 };
-void Window::removeResizeHandler(UniqueIdentifier& id)
+void zg::Window::removeResizeHandler(UniqueIdentifier& id)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -897,7 +897,7 @@ void Window::removeResizeHandler(UniqueIdentifier& id)
 	handlers.erase(handlerIter);
 	id = 0;
 };
-void Window::callResizeHandler(glm::vec2 newSize)
+void zg::Window::callResizeHandler(glm::vec2 newSize)
 {
 	ZoneScoped;
 	std::vector<ViewResizeHandler> handlersCopy;
@@ -918,7 +918,7 @@ void Window::callResizeHandler(glm::vec2 newSize)
 	}
 };
 // focus
-UniqueIdentifier Window::addFocusHandler(const FocusHandler& callback)
+UniqueIdentifier zg::Window::addFocusHandler(const FocusHandler& callback)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -926,7 +926,7 @@ UniqueIdentifier Window::addFocusHandler(const FocusHandler& callback)
 	focusHandlers.second[id] = callback;
 	return id;
 }
-void Window::removeFocusHandler(UniqueIdentifier& id)
+void zg::Window::removeFocusHandler(UniqueIdentifier& id)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -940,7 +940,7 @@ void Window::removeFocusHandler(UniqueIdentifier& id)
 	handlers.erase(handlerIter);
 	id = 0;
 }
-void Window::callFocusHandler(bool focused)
+void zg::Window::callFocusHandler(bool focused)
 {
 	ZoneScoped;
 	if (this->focused == focused)
@@ -967,13 +967,13 @@ void Window::callFocusHandler(bool focused)
 	}
 }
 // onceoffs
-void Window::addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff)
+void zg::Window::addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff)
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
 	preSwapbuffersOnceoffs.push(onceoff);
 }
-void Window::callPreSwapbuffersOnceoff()
+void zg::Window::callPreSwapbuffersOnceoff()
 {
 	ZoneScoped;
 	// std::lock_guard lock(handlersMutex);
@@ -986,14 +986,14 @@ void Window::callPreSwapbuffersOnceoff()
 	preSwapbuffersOnceoffs.pop();
 	onceoff();
 }
-size_t Window::addShutdownHandler(const ShutdownHandler& handler)
+size_t zg::Window::addShutdownHandler(const ShutdownHandler& handler)
 {
 	ZoneScoped;
 	auto ID = GlobalUID::GetNew();
 	shutdownHandlers[ID] = handler;
 	return ID;
 }
-bool Window::removeShutdownHandler(size_t& ID)
+bool zg::Window::removeShutdownHandler(size_t& ID)
 {
 	ZoneScoped;
 	auto iter = shutdownHandlers.find(ID);
@@ -1006,7 +1006,7 @@ bool Window::removeShutdownHandler(size_t& ID)
 	ID = 0;
 	return true;
 }
-KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCreateInfo& info)
+KeyIDVector<std::string, Scene>::EmplaceBackTuple zg::Window::addScene(const SceneCreateInfo& info)
 {
 	ZoneScoped;
 	auto usingInfo{info};
@@ -1027,7 +1027,7 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple Window::addScene(const SceneCr
 	(*Registry::idScenes)[scene.ID] = scene.INDEX_STACK;
 	return {transaction.key, transaction.id, transaction.index, &scene};
 }
-bool Window::removeScene(size_t ID)
+bool zg::Window::removeScene(size_t ID)
 {
 	ZoneScoped;
 	auto iter = scenes.find_id(ID);
@@ -1056,7 +1056,7 @@ bool Window::removeScene(size_t ID)
 	}
 	return true;
 }
-void Window::sortScenes()
+void zg::Window::sortScenes()
 {
 	std::sort(sortedScenes.begin(), sortedScenes.end(), [](auto& a_ID, auto& b_ID){
 		auto& a_s = Registry::getScene(a_ID);
@@ -1064,13 +1064,13 @@ void Window::sortScenes()
 		return a_s.z > b_s.z;
 	});
 }
-void Window::runOnThread(const Runnable& runnable)
+void zg::Window::runOnThread(const Runnable& runnable)
 {
 	ZoneScoped;
 	// std::lock_guard lock(runnablesMutex);
 	runnables.push(runnable);
 };
-void Window::runRunnables()
+void zg::Window::runRunnables()
 {
 	ZoneScoped;
 	std::queue<Runnable> runnablesCopy;
@@ -1089,10 +1089,10 @@ void Window::runRunnables()
 		ZoneScoped;
 		auto runnable = runnablesCopy.front();
 		runnablesCopy.pop();
-		runnable(dynamic_cast<Window&>(*this));
+		runnable(*this);
 	}
 };
-void Window::updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTime)
+void zg::Window::updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTime)
 {
 	ZoneScoped;
 	if (updateLastFrameDeltaTime)
@@ -1103,7 +1103,7 @@ void Window::updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTime)
 	}
 	lastFrameTime = now;
 };
-void Window::resize(glm::vec2 newSize)
+void zg::Window::resize(glm::vec2 newSize)
 {
 	ZoneScoped;
 	if (windowWidth != newSize.x)
@@ -1119,22 +1119,22 @@ void Window::resize(glm::vec2 newSize)
 	}
 	callResizeHandler(newSize);
 };
-void Window::registerOnEntityAddedFunction(const OnEntityAddedFunction& function)
+void zg::Window::registerOnEntityAddedFunction(const OnEntityAddedFunction& function)
 {
 	ZoneScoped;
 	onEntityAdded = function;
 	return;
 }
-uint32_t Window::getScreenRefreshRate(uint32_t screenNum)
+uint32_t zg::Window::getScreenRefreshRate(uint32_t screenNum)
 {
 	ZoneScoped;
 	auto modes =
 #if defined(_WIN32)
 	WIN32Window::getCurrentScreenModes();
 #elif defined(__linux__)
-	XCBWindow::getCurrentScreenModes();
+	XCBzg::Window::getCurrentScreenModes();
 #elif defined(MACOS)
-	MacOSWindow::getCurrentScreenModes();
+	MacOSzg::Window::getCurrentScreenModes();
 #endif
 	return modes.size() >= screenNum ? modes[screenNum - 1].refreshRate : 60;
 }
