@@ -215,5 +215,21 @@ void WaylandWindow::setWidthHeight() {}
 void WaylandWindow::mouseCapture(bool capture) {}
 void WaylandWindow::enableKeyAutoRepeat() {}
 void WaylandWindow::disableKeyAutoRepeat() {}
+std::vector<ScreenMode> WaylandWindow::getCurrentScreenModes()
+{
+	return {};
+}
+std::vector<ScreenMode> WaylandWindow::getAvailableScreenModes()
+{
+	return {};
+}
+void WaylandWindow::setScreenMode(const ScreenMode& screenMode)
+{
+	return;
+}
+void WaylandWindow::restoreScreenMode()
+{
+	return;
+}
 #endif
 #endif

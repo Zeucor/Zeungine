@@ -481,5 +481,21 @@ void X11Window::disableKeyAutoRepeat()
 {
 	XAutoRepeatOff(display);
 }
+std::vector<ScreenMode> X11Window::getCurrentScreenModes()
+{
+	return {};
+}
+std::vector<ScreenMode> X11Window::getAvailableScreenModes()
+{
+	return {};
+}
+void X11Window::setScreenMode(const ScreenMode& screenMode)
+{
+	return;
+}
+void X11Window::restoreScreenMode()
+{
+	return;
+}
 #endif
 #endif
