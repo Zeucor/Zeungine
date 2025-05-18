@@ -13,8 +13,10 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/hash.hpp>
 inline static float ZG_PI = acos(-1);
 using uvec = glm::vec<4, uint8_t>;
+/*
 namespace std
 {
 	template <size_t N, typename T>
@@ -69,3 +71,4 @@ namespace std
 		}
 	};
 }
+*/
