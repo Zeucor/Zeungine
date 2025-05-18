@@ -76,7 +76,5 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat" x64
-          .\win-package.bat 1
-          .\win-package.bat 2
-          .\win-package.bat 3
+          .\win-package.bat 10
         shell: cmd

@@ -45,34 +45,36 @@ add_custom_target(cgal_install ALL
 )
 
 # tracy
-message(STATUS "FetchContent: tracy")
-set(USE_WAYLAND OFF)
-set(TRACY_INSTALL OFF)
-include(FetchContent)
-FetchContent_Declare(
-    tracy
-    GIT_REPOSITORY https://github.com/ZeunO8/tracy.git
-    GIT_TAG wayland-option
-)
-FetchContent_MakeAvailable(tracy)
-set_target_properties(TracyClient PROPERTIES DEBUG_POSTFIX "")
-set_target_properties(TracyClient PROPERTIES RELEASE_POSTFIX "")
-set_target_properties(TracyClient PROPERTIES RELWITHDEBINFO_POSTFIX "")
-set_target_properties(TracyClient PROPERTIES MINSIZEREL_POSTFIX "")
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -B ${CMAKE_BINARY_DIR}/tracyserver -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D USE_WAYLAND=OFF
-    WORKING_DIRECTORY ${tracy_SOURCE_DIR}/profiler
-    RESULT_VARIABLE tracyserver_ConfigureResult)
-if(tracyserver_ConfigureResult)
-    message(FATAL_ERROR "tracyserver-configure: ${tracyserver_ConfigureResult}")
-else()
-    message(STATUS "tracyserver-configure: success")
+if(ENABLE_TRACY)
+    message(STATUS "FetchContent: tracy")
+    set(USE_WAYLAND OFF)
+    set(TRACY_INSTALL OFF)
+    include(FetchContent)
+    FetchContent_Declare(
+        tracy
+        GIT_REPOSITORY https://github.com/ZeunO8/tracy.git
+        GIT_TAG wayland-option
+    )
+    FetchContent_MakeAvailable(tracy)
+    set_target_properties(TracyClient PROPERTIES DEBUG_POSTFIX "")
+    set_target_properties(TracyClient PROPERTIES RELEASE_POSTFIX "")
+    set_target_properties(TracyClient PROPERTIES RELWITHDEBINFO_POSTFIX "")
+    set_target_properties(TracyClient PROPERTIES MINSIZEREL_POSTFIX "")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -B ${CMAKE_BINARY_DIR}/tracyserver -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D USE_WAYLAND=OFF
+        WORKING_DIRECTORY ${tracy_SOURCE_DIR}/profiler
+        RESULT_VARIABLE tracyserver_ConfigureResult)
+    if(tracyserver_ConfigureResult)
+        message(FATAL_ERROR "tracyserver-configure: ${tracyserver_ConfigureResult}")
+    else()
+        message(STATUS "tracyserver-configure: success")
+    endif()
+    add_custom_target(tracyserver ALL
+        COMMAND ${CMAKE_COMMAND} --build .
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tracyserver
+        COMMENT "Building Tracy Profiler Server"
+    )
 endif()
-add_custom_target(tracyserver ALL
-    COMMAND ${CMAKE_COMMAND} --build .
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tracyserver
-    COMMENT "Building Tracy Profiler Server"
-)
 
 message(STATUS "FetchContent: tinyfiledialogs")
 FetchContent_Declare(

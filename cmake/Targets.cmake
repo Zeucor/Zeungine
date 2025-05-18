@@ -22,9 +22,11 @@ zg_setup_target(rtmidi STATIC
 zg_setup_target(tinyfiledialogs STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" tinyfiledialogs tinyfiledialogs "${STATIC_ZG_LIB_SUFFIX}" ON)
-zg_setup_target(TracyClient STATIC
-	"${ZG_LIB_INSTALL_PREFIX_ABS}"
-	"${ZG_LIB_PREFIX}" TracyClient TracyClient "${STATIC_ZG_LIB_SUFFIX}" ON)
+if(ENABLE_TRACY)
+	zg_setup_target(TracyClient STATIC
+		"${ZG_LIB_INSTALL_PREFIX_ABS}"
+		"${ZG_LIB_PREFIX}" TracyClient TracyClient "${STATIC_ZG_LIB_SUFFIX}" ON)
+endif()
 zg_setup_target(freetype ${ZG_TYPE}
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" freetype freetype "${TYPE_ZG_LIB_SUFFIX}" ON)

@@ -48,8 +48,13 @@ set(ZG_TARGETS_TO_INSTALL
     miniaudio glsl svg
     ttf2mesh assimp
     rtmidi
-    tinyfiledialogs TracyClient
+    tinyfiledialogs
 )
+if(ENABLE_TRACY)
+    set(ZG_TARGET_TO_INSTALL
+        ${ZG_TARGET_TO_INSTALL}
+        TracyClient)
+endif()
 set(TARGET_ARTIFACT_FILES_TO_INSTALL "")
 foreach(TGT ${ZG_TARGETS_TO_INSTALL})
     if(NOT TARGET ${TGT})

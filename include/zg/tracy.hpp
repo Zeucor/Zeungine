@@ -1,6 +1,6 @@
 #pragma once
-#include <tracy/tracy/Tracy.hpp>
 #ifdef ENABLE_TRACY
+#include <tracy/tracy/Tracy.hpp>
 #define ZGZoneScoped ZoneScoped
 #define ZGZoneScopedN(STR) ZoneScopedN(STR)
 #define ZGFrameMark FrameMark

@@ -40,22 +40,24 @@ install(DIRECTORY ${cgal_SOURCE_DIR}/include/CGAL
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.tcc")
 
 # tracy
-install(DIRECTORY ${tracy_SOURCE_DIR}/public/client
-    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy COMPONENT headers
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
-install(DIRECTORY ${tracy_SOURCE_DIR}/public/common
-    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy COMPONENT headers
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
-install(FILES
-        ${tracy_SOURCE_DIR}/public/libbacktrace/backtrace.hpp
-        ${tracy_SOURCE_DIR}/public/libbacktrace/config.h
-        ${tracy_SOURCE_DIR}/public/libbacktrace/filenames.hpp
-        ${tracy_SOURCE_DIR}/public/libbacktrace/internal.hpp
-    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy/libbacktrace COMPONENT headers
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-install(DIRECTORY ${tracy_SOURCE_DIR}/public/tracy
-    DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy COMPONENT headers
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+if(ENABLE_TRACY)
+    install(DIRECTORY ${tracy_SOURCE_DIR}/public/client
+        DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy COMPONENT headers
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+    install(DIRECTORY ${tracy_SOURCE_DIR}/public/common
+        DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy COMPONENT headers
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+    install(FILES
+            ${tracy_SOURCE_DIR}/public/libbacktrace/backtrace.hpp
+            ${tracy_SOURCE_DIR}/public/libbacktrace/config.h
+            ${tracy_SOURCE_DIR}/public/libbacktrace/filenames.hpp
+            ${tracy_SOURCE_DIR}/public/libbacktrace/internal.hpp
+        DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy/libbacktrace COMPONENT headers
+        PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+    install(DIRECTORY ${tracy_SOURCE_DIR}/public/tracy
+        DESTINATION ${ZG_INC_INSTALL_PREFIX}/tracy COMPONENT headers
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+endif()
 
 # tinyfiledialogs
 install(FILES ${tinyfiledialogs_SOURCE_DIR}/tinyfiledialogs.h

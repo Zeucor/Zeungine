@@ -41,6 +41,16 @@ if "%MODE%"=="0" (
     call :bundle
 ) else if "%MODE%"=="9" (
     call :bundle  
+) else if "%MODE%"=="10" (
+    call "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat" x64
+    call :build_dependencies_static
+    call :build_headers
+    call :build_zeungine_static
+) else if "%MODE%"=="11" (
+    call "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat" x64
+    call :build_dependencies_static
+    call :build_headers
+    call :build_zeungine_static
 ) else (
     echo Invalid mode: %MODE%
     call :usage
