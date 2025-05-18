@@ -95,7 +95,7 @@ std::vector<glm::vec3> zg::entities::NDCurve::getVertices(const std::vector<glm:
     const float VEC_EPSILON_SQ = VEC_EPSILON * VEC_EPSILON;
 
     std::vector<glm::vec3> vertices;
-    vertices.reserve(getVertexCount(centralPoints));
+    vertices.reserve(getVertexCount<N>(centralPoints));
 
     if (centralPoints.size() < 2)
     {
@@ -291,7 +291,7 @@ std::vector<uint32_t> zg::entities::NDCurve::getIndices(const std::vector<glm::v
     const float VEC_EPSILON_SQ = VEC_EPSILON * VEC_EPSILON;
 
     std::vector<uint32_t> indices;
-    indices.reserve(getIndiceCount(centralPoints));
+    indices.reserve(getIndiceCount<N>(centralPoints));
 
     if (centralPoints.size() < 2)
     {
@@ -437,11 +437,11 @@ EntityCreateInfo zg::entities::NDParametricCurveFactory(glm::vec3 position, glm:
         .info = [mergedConstants, frontFace, color](auto& entity) -> MeshInfo {
             auto& points = entity.template getData<std::vector<glm::vec<N, float>>>("Points");
             auto& radius = entity.template getData<float>("Radius");
-            auto vertexCount = getVertexCount(points);
-            auto indiceCount = getIndiceCount(points);
+            auto vertexCount = getVertexCount<N>(points);
+            auto indiceCount = getIndiceCount<N>(points);
             return {
-                .indices =  getIndices(points, frontFace),
-                .vertices = getVertices(points, radius, frontFace),
+                .indices =  getIndices<N>(points, frontFace),
+                .vertices = getVertices<N>(points, radius, frontFace),
                 .colors = std::vector<glm::vec4>(vertexCount, color),
             };
         },
