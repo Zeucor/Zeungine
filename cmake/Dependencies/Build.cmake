@@ -47,7 +47,7 @@ add_custom_target(cgal_install ALL
 # tracy
 message(STATUS "FetchContent: tracy")
 set(USE_WAYLAND OFF)
-set(TRACY_INSTALL Off)
+set(TRACY_INSTALL OFF)
 include(FetchContent)
 FetchContent_Declare(
     tracy
