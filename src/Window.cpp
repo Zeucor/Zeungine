@@ -12,7 +12,7 @@
 #include <zg/Registry.hpp>
 #if defined(MACOS)
 #include <zg/windows/MacOSWindow.hpp>
-#elif defined(_linux__)
+#elif defined(__linux__)
 #include <zg/windows/WaylandWindow.hpp>
 #include <zg/windows/X11Window.hpp>
 #include <zg/windows/XCBWindow.hpp>
