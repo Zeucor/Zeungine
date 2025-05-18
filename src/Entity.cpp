@@ -211,7 +211,7 @@ K::FT Entity::operator()(K::Point_3 p_cgal) const
 			case ShapeType::SDF:
 			{
 			_sdf_from_type:
-				auto& sdf_rgy = sdf_registry::GetSingleton();
+				auto& sdf_rgy = SDFRegistry::GetSingleton();
 				if (!meshInfo.sdf_c_function)
 				{
 					((MeshCreateInfo&)meshInfo).sdf_c_function = sdf_rgy.get_sdf_function(meshInfo.meta_int);

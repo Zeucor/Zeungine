@@ -1281,7 +1281,7 @@ vec3 extractScale(in mat4 modelMatrix) {
   return vec3(modelMatrix[0][0], modelMatrix[1][1], modelMatrix[2][2]);
 }
 )";
-  auto& sdf_rgy = sdf_registry::GetSingleton();
+  auto& sdf_rgy = SDFRegistry::GetSingleton();
   auto sdf_end = sdf_rgy.end();
   for (auto sdf_iter = sdf_rgy.begin(); sdf_iter != sdf_end; ++sdf_iter)
   {

@@ -18,7 +18,7 @@ int main()
     // we are using SDFs so we need to declare a Registry
 	ShaderFactory shader_factory;
     register_zg_shader_hooks();
-    sdf_registry sdf_rgy;
+    SDFRegistry sdf_rgy;
     register_zg_sdfs();
     WindowCreateInfo windowInfo{
         .title = "SDF Test",

@@ -2,7 +2,7 @@
 #include <zg/Mesh.hpp>
 #include <zg/utilities.hpp>
 using namespace zg;
-int32_t sdf_registry::register_sdf(const std::string& key, const shaders::Shader::ShaderHook& functionHook, const std::string& param_append_string)
+int32_t SDFRegistry::register_sdf(const std::string& key, const shaders::Shader::ShaderHook& functionHook, const std::string& param_append_string)
 {
     auto iter = functionHooks.find(key);
     if (iter != functionHooks.end())
@@ -13,7 +13,7 @@ int32_t sdf_registry::register_sdf(const std::string& key, const shaders::Shader
     functionHooks[key] = {id, functionHook, param_append_string};
     return id;
 }
-int32_t sdf_registry::get_sdf_type(const std::string& key)
+int32_t SDFRegistry::get_sdf_type(const std::string& key)
 {
     auto iter = functionHooks.find(key);
     if (iter == functionHooks.end())
@@ -23,18 +23,18 @@ int32_t sdf_registry::get_sdf_type(const std::string& key)
     auto& pair = iter->second;
     return std::get<0>(pair);
 }
-void sdf_registry::register_c_sdf(int32_t id, const sdf_function& sdf)
+void SDFRegistry::register_c_sdf(int32_t id, const sdf_function& sdf)
 {
     cFunctions.emplace(id, sdf);
 }
-sdf_function& sdf_registry::get_sdf_function(int32_t id)
+sdf_function& SDFRegistry::get_sdf_function(int32_t id)
 {
     auto iter = cFunctions.find(id);
     if (iter == cFunctions.end())
         throw std::runtime_error("c SDF is not registered");
     return iter->second;
 }
-size_t sdf_registry::size()
+size_t SDFRegistry::size()
 {
     return functionHooks.size();
 }
@@ -44,7 +44,7 @@ zg::EntityCreateInfo zg::entities::SDFFactory(const std::string& sdf_key, glm::v
 {
     if (!registered_zg_sdfs)
         throw std::runtime_error("registered_zg_sdfs is false");
-    auto sdf_type = sdf_registry::GetSingleton().get_sdf_type(sdf_key);
+    auto sdf_type = SDFRegistry::GetSingleton().get_sdf_type(sdf_key);
     auto mergedConstants = shaders::mergeConstants({
         shaders::RuntimeConstants({"Shape", "Color"}),
         shaders::common_zg_constants,
@@ -77,7 +77,7 @@ zg::EntityCreateInfo zg::entities::SDFFactory(const std::string& sdf_key, glm::v
 }
 void zg::register_zg_sdfs()
 {
-    auto& sdf_rgy = sdf_registry::GetSingleton();
+    auto& sdf_rgy = SDFRegistry::GetSingleton();
     auto sphere_id = sdf_rgy.register_sdf("Sphere", [](auto& shader, auto& constants) {
         return R"(float SphereSDF(vec3 p_local) {
     return length(p_local) - (0.5);

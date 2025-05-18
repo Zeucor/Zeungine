@@ -4,7 +4,7 @@ namespace zg
 {
     void register_zg_sdfs();
     using sdf_function = std::function<float(const Entity&, glm::vec3)>;
-    struct sdf_registry : Singleton<sdf_registry>
+    struct SDFRegistry : Singleton<SDFRegistry>
     {
     private:
         size_t total_sdf_count = 0;

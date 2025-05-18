@@ -107,7 +107,7 @@ EntityCreateInfo zg::entities::sdf_mesh_factory(const std::string& sdf_key, cons
 																								glm::quat rotation, glm::vec3 scale, glm::vec4 color,
 																								const shaders::RuntimeConstants& constants)
 {
-	auto sdf_type = sdf_registry::GetSingleton().get_sdf_type(sdf_key);
+	auto sdf_type = SDFRegistry::GetSingleton().get_sdf_type(sdf_key);
 	MeshCreateInfo meshInfo{
         .name = sdf_key,
         .shapeType = ShapeType::Mesh,
