@@ -555,7 +555,7 @@ void VulkanRenderer::createSurface()
 VkSampleCountFlagBits VulkanRenderer::getMaxUsableSampleCount()
 {
 	VkPhysicalDeviceProperties physicalDeviceProperties;
-	vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+	_vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
 
 	VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts &
 		physicalDeviceProperties.limits.framebufferDepthSampleCounts;
@@ -2688,8 +2688,8 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 	textureImpl.textureImageView = createImageView(textureImpl.textureImage, format, aspectMask);
 	if (textureImpl.textureImageView == VK_NULL_HANDLE)
 	{
-		vkDestroyImage(device, textureImpl.textureImage, nullptr);
-		vkFreeMemory(device, textureImpl.textureImageMemory, nullptr);
+		_vkDestroyImage(device, textureImpl.textureImage, nullptr);
+		_vkFreeMemory(device, textureImpl.textureImageMemory, nullptr);
 		delete static_cast<VulkanTextureImpl*>(texture.rendererData);
 		texture.rendererData = nullptr;
 		throw std::runtime_error("Failed to create texture image view!");
@@ -2757,9 +2757,9 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 
 		if (!VKcheck("vkCreateSampler", _vkCreateSampler(device, &samplerInfo, nullptr, &textureImpl.textureSampler)))
 		{
-			vkDestroyImageView(device, textureImpl.textureImageView, nullptr);
-			vkDestroyImage(device, textureImpl.textureImage, nullptr);
-			vkFreeMemory(device, textureImpl.textureImageMemory, nullptr);
+			_vkDestroyImageView(device, textureImpl.textureImageView, nullptr);
+			_vkDestroyImage(device, textureImpl.textureImage, nullptr);
+			_vkFreeMemory(device, textureImpl.textureImageMemory, nullptr);
 			delete static_cast<VulkanTextureImpl*>(texture.rendererData);
 			texture.rendererData = nullptr;
 			throw std::runtime_error("failed to create texture sampler!");
@@ -2933,7 +2933,7 @@ void VulkanRenderer::drawMultiInstanced(shaders::Shader* shader, const vaos::VAO
 			countBuffer,
 			countBufferMemory
 		);
-	std::vector<VkDrawIndirectCommand> i_commands(drawsSize, {});
+	std::vector<VkDrawIndirectCommand> i_commands(drawsSize, VkDrawIndirectCommand{});
 	auto i_commands_data = i_commands.data();
 	auto v_commands_data = commands.data();
 	for (auto i = 0; i < drawsSize; ++i)
@@ -3581,7 +3581,7 @@ void VulkanRenderer::transitionDepthLayoutForWriting(const textures::Framebuffer
 													VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, // Old layout
 													VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, // New layout for attachment use
 													VK_IMAGE_ASPECT_DEPTH_BIT, sourceStage, destinationStage, barrier);
-			vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+			_vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 			textureImpl.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // Update tracked layout
 		}
 		else if (textureImpl.layout != VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
@@ -3629,7 +3629,7 @@ void VulkanRenderer::transitionDepthLayoutForReading(const textures::Framebuffer
 												sourceStage, destinationStage, barrier);
 
 		// Record the barrier in the current command buffer
-		vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+		_vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
 		// Update tracked layout
 		textureImpl.layout = newLayout;
@@ -3650,7 +3650,7 @@ void VulkanRenderer::transitionColorLayoutForWriting(const textures::Framebuffer
 			prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
 													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 													VK_IMAGE_ASPECT_COLOR_BIT, sourceStage, destinationStage, colorBarrier);
-			vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &colorBarrier);
+			_vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &colorBarrier);
 			textureImpl.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		}
 		else if (textureImpl.layout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL &&
@@ -3686,7 +3686,7 @@ void VulkanRenderer::transitionColorResolveLayoutForWriting(const textures::Fram
 			prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
 													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 													VK_IMAGE_ASPECT_COLOR_BIT, sourceStage, destinationStage, colorBarrier);
-			vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &colorBarrier);
+			_vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &colorBarrier);
 			textureImpl.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		}
 		else if (textureImpl.layout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL &&
@@ -3722,7 +3722,7 @@ void VulkanRenderer::transitionDepthResolveLayoutForWriting(const textures::Fram
 			prepareImageBarrier(*commandBuffer, textureImpl.textureImage, textureImpl.format,
 													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 													VK_IMAGE_ASPECT_DEPTH_BIT, sourceStage, destinationStage, depthBarrier);
-			vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &depthBarrier);
+			_vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &depthBarrier);
 			textureImpl.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		}
 		else if (textureImpl.layout != VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL &&
@@ -3767,7 +3767,7 @@ void VulkanRenderer::transitionDepthResolveLayoutForReading(const textures::Fram
 												sourceStage, destinationStage, barrier);
 
 		// Record the barrier in the current command buffer
-		vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+		_vkCmdPipelineBarrier(*commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
 		// Update tracked layout
 		textureImpl.layout = newLayout;
