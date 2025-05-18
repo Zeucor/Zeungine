@@ -1,6 +1,12 @@
 #include <regex>
 #include <zg/strings/InFileProcessor.hpp>
 using namespace zg::strings;
+std::string zg::strings::StripQuotes(const char* str)
+{
+    return (str[0] == '"' && str[std::char_traits<char>::length(str) - 1] == '"')
+        ? std::string(str + 1, std::char_traits<char>::length(str) - 2)
+        : std::string(str);
+}
 void InFileProcessor::addVariableMapping(const std::string& variableName, const std::string& variableValue)
 {
 	variableMappings.emplace(variableName, variableValue);

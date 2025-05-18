@@ -7,12 +7,7 @@ namespace zg::strings
 #define STRINGIFY(x) #x
 #define TO_STRING_RAW(x) STRINGIFY(x)
 #define TO_STRING(x) StripQuotes(TO_STRING_RAW(x))
-	std::string StripQuotes(const char* str)
-	{
-		return (str[0] == '"' && str[std::char_traits<char>::length(str) - 1] == '"')
-			? std::string(str + 1, std::char_traits<char>::length(str) - 2)
-			: std::string(str);
-	}
+	std::string StripQuotes(const char* str);
 	struct InFileProcessor
 	{
 		std::unordered_map<std::string, std::string> variableMappings;
