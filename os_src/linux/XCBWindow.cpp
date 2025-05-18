@@ -338,4 +338,20 @@ void XCBWindow::disableKeyAutoRepeat()
 {
 	XAutoRepeatOff(display);
 }
+std::vector<ScreenMode> XCBWindow::getCurrentScreenModes()
+{
+	return {};
+}
+std::vector<ScreenMode> XCBWindow::getAvailableScreenModes()
+{
+	return {};
+}
+void XCBWindow::setScreenMode(const ScreenMode& screenMode)
+{
+	return;
+}
+void XCBWindow::restoreScreenMode()
+{
+	return;
+}
 #endif
