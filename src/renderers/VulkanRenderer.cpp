@@ -1310,9 +1310,9 @@ void VulkanRenderer::beginRenderPass()
 }
 void VulkanRenderer::postRenderPass()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	{
-		ZoneScopedN("EndRenderPass");
+		ZGZoneScopedN("EndRenderPass");
 		_vkCmdEndRenderPass(*commandBuffer);
 		if (!VKcheck("vkEndCommandBuffer", _vkEndCommandBuffer(*commandBuffer)))
 		{
@@ -1321,7 +1321,7 @@ void VulkanRenderer::postRenderPass()
 	}
 	VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
 	{
-		ZoneScopedN("QueueSubmit");
+		ZGZoneScopedN("QueueSubmit");
 		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.pCommandBuffers = commandBuffer;
@@ -1334,21 +1334,21 @@ void VulkanRenderer::postRenderPass()
 		}
 	}
     {
-        ZoneScopedN("WaitForFences");
+        ZGZoneScopedN("WaitForFences");
         if (!VKcheck("vkWaitForFences", _vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX)))
         {
              throw std::runtime_error("VulkanRenderer-vkWaitForFences failed");
         }
     }
 	// {
-	// 	ZoneScopedN("graphicsQueueWaitIdle");
+	// 	ZGZoneScopedN("graphicsQueueWaitIdle");
 	// 	if (!VKcheck("vkQueueWaitIdle", _vkQueueWaitIdle(graphicsQueue)))
 	// 	{
 	// 		throw std::runtime_error("VulkanRenderer-vkQueueWaitIdle failed");
 	// 	}
 	// }
 	{
-		ZoneScopedN("presentQueueWaitIdle");
+		ZGZoneScopedN("presentQueueWaitIdle");
 		presentInfo.pWaitSemaphores = signalSemaphores;
 		swapChains[0] = {swapChain};
 		presentInfo.pSwapchains = swapChains;
@@ -1360,7 +1360,7 @@ void VulkanRenderer::postRenderPass()
 	// 	}
 	// }
 	{
-		ZoneScopedN("callDestroyAtRenderPassEndOrDestroy");
+		ZGZoneScopedN("callDestroyAtRenderPassEndOrDestroy");
 		callDestroyAtRenderPassEndOrDestroy();
 	}
 	return;
@@ -2365,7 +2365,7 @@ VkImageView VulkanRenderer::createImageView(VkImage image, VkFormat format, VkIm
 }
 VkFormat VulkanRenderer::findDepthFormat(uint32_t _format)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	std::vector<VkFormat> candidates;
 	textures::Texture::Format format = (textures::Texture::Format)_format;
 	switch (format)
@@ -2396,7 +2396,7 @@ VkFormat VulkanRenderer::findDepthFormat(uint32_t _format)
 VkFormat VulkanRenderer::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
 																						 VkFormatFeatureFlags features)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	for (VkFormat format : candidates)
 	{
 		VkFormatProperties props;
@@ -2414,7 +2414,7 @@ VkFormat VulkanRenderer::findSupportedFormat(const std::vector<VkFormat>& candid
 }
 void VulkanRenderer::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 	VkBufferImageCopy region{};
 	region.bufferOffset = 0;
@@ -2439,7 +2439,7 @@ void VulkanRenderer::prepareImageBarrier(VkCommandBuffer commandBuffer, VkImage 
 																				 VkImageAspectFlags aspectMask, VkPipelineStageFlags& sourceStage,
 																				 VkPipelineStageFlags& destinationStage, VkImageMemoryBarrier& barrier)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	barrier.oldLayout = oldLayout;
 	barrier.newLayout = newLayout;
@@ -2548,7 +2548,7 @@ void VulkanRenderer::transitionImageLayout(VulkanTextureImpl& textureImpl, VkIma
 																					 VkImageLayout oldLayout, VkImageLayout newLayout,
 																					 VkImageAspectFlags aspectMask)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	if (newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 	{
 		newLayout = newLayout;
@@ -2582,7 +2582,7 @@ void VulkanRenderer::transitionImageLayout(VulkanTextureImpl& textureImpl, VkIma
 }
 void VulkanRenderer::preInitTexture(textures::Texture& texture)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	if (texture.rendererData)
 	{
 		throw std::runtime_error("Texture already initialized!");
@@ -2773,7 +2773,7 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 void VulkanRenderer::midInitTexture(const textures::Texture& texture,
 																		const std::vector<images::ImageLoader::ImagePair>& images)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	void* bytes = images.size() ? std::get<1>(images[0]).get() : 0;
 	if (!bytes)
 	{
@@ -2813,12 +2813,12 @@ void VulkanRenderer::midInitTexture(const textures::Texture& texture,
 }
 void VulkanRenderer::postInitTexture(const textures::Texture& texture)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	texture.bind();
 }
 void VulkanRenderer::destroyTexture(textures::Texture& texture)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
 	destroyAtRenderPassEndOrDestroy(
 		[&, textureSampler = textureImpl.textureSampler, textureImageView = textureImpl.textureImageView,
@@ -2833,13 +2833,13 @@ void VulkanRenderer::destroyTexture(textures::Texture& texture)
 }
 void VulkanRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	memcpy(vaoImpl.indiceData, indices.data(), vaoImpl.indiceBufferSize);
 }
 void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_view constant, uint8_t* elementsAsChar)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	auto constantIter = vaos::VAOFactory::constantSizes.find(constant);
 	if (constantIter == vaos::VAOFactory::constantSizes.end())
@@ -2855,7 +2855,7 @@ void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_v
 }
 void VulkanRenderer::drawVAO(const vaos::VAO &vao, shaders::Shader* shaderPointer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	auto vaoHash = vao.getVAOuHash();
 	auto& shader = *((vaos::VAO&)vao).addShader(shaderPointer);
@@ -2879,7 +2879,7 @@ void VulkanRenderer::drawVAO(const vaos::VAO &vao, shaders::Shader* shaderPointe
 }
 void VulkanRenderer::drawVAOInstanced(const vaos::VAO &vao, shaders::Shader* shaderPointer, size_t instanceCount)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	auto vaoHash = vao.getVAOuHash();
 	auto& shader = *((vaos::VAO&)vao).addShader(shaderPointer);
@@ -2903,7 +2903,7 @@ void VulkanRenderer::drawVAOInstanced(const vaos::VAO &vao, shaders::Shader* sha
 }
 void VulkanRenderer::drawMultiInstanced(shaders::Shader* shader, const vaos::VAO& vao, const std::vector<DrawIndirectCommand>& commands)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	VkBuffer drawBuffer;
 	VkDeviceMemory drawBufferMemory;
 	auto drawsSize = commands.size();
@@ -2973,7 +2973,7 @@ void VulkanRenderer::drawMultiInstanced(shaders::Shader* shader, const vaos::VAO
 };
 void VulkanRenderer::generateVAO(vaos::VAO& vao)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	vao.rendererData = new VulkanVAOImpl();
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	auto stride = vaos::VAOFactory::getStride(vao.vaoConstants);
@@ -2996,7 +2996,7 @@ void VulkanRenderer::generateVAO(vaos::VAO& vao)
 }
 void VulkanRenderer::copyVAO(vaos::VAO &dest, const vaos::VAO &src)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& srcImpl = *(VulkanVAOImpl*)src.rendererData;
 	if (!dest.rendererData)
 		dest.rendererData = new VulkanVAOImpl();
@@ -3024,7 +3024,7 @@ void VulkanRenderer::copyVAO(vaos::VAO &dest, const vaos::VAO &src)
 }
 void VulkanRenderer::destroyVAO(vaos::VAO &vao, bool destroyNow)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
 	if (destroyNow)
 	{
@@ -3096,7 +3096,7 @@ void VulkanRenderer::destroyVAO(vaos::VAO &vao, bool destroyNow)
 }
 void VulkanRenderer::ensureVAO(shaders::Shader& shader, vaos::VAO& vao)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	if (!shader.compiled)
 		return;
 	if (vao.isEnsured())
@@ -3231,7 +3231,7 @@ void VulkanRenderer::ensureVAO(shaders::Shader& shader, vaos::VAO& vao)
 };
 VkCommandBuffer VulkanRenderer::beginSingleTimeCommands()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	VkCommandBuffer commandBuffer;
 	VkCommandBufferAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -3254,7 +3254,7 @@ VkCommandBuffer VulkanRenderer::beginSingleTimeCommands()
 }
 void VulkanRenderer::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	if (_vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to end command buffer!");
@@ -3272,7 +3272,7 @@ void VulkanRenderer::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 }
 uint32_t VulkanRenderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	VkPhysicalDeviceMemoryProperties memProperties;
 	_vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
@@ -3287,7 +3287,7 @@ uint32_t VulkanRenderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFla
 void VulkanRenderer::ensureBuffer(VkBuffer& buffer, VkDeviceMemory& bufferMemory, void*& bufferData,
 																	uint32_t& bufferSize, uint32_t newBufferSize, VkBufferUsageFlagBits extraUsageFlags)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	if (buffer == VK_NULL_HANDLE || newBufferSize != bufferSize)
 	{
 		if (buffer)
@@ -3319,7 +3319,7 @@ void VulkanRenderer::ensureBuffer(VkBuffer& buffer, VkDeviceMemory& bufferMemory
 void VulkanRenderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
 																	VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.size = size;
@@ -3350,7 +3350,7 @@ void VulkanRenderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, V
 }
 void VulkanRenderer::getCurrentImageToBitmap()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 	VkImage image = swapChainImages[currentFrame];
@@ -3566,7 +3566,7 @@ bool zg::VKcheck(const char* fn, VkResult result)
 // #endif
 void VulkanRenderer::transitionDepthLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto shadowMapTexture = framebuffer.getDepthTexture();
 	if (shadowMapTexture && shadowMapTexture->rendererData)
 	{
@@ -3594,7 +3594,7 @@ void VulkanRenderer::transitionDepthLayoutForWriting(const textures::Framebuffer
 }
 void VulkanRenderer::transitionDepthLayoutForReading(const textures::Framebuffer& framebuffer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto shadowMapTexture = framebuffer.getDepthTexture();
 	if (shadowMapTexture && shadowMapTexture->rendererData)
 	{
@@ -3637,7 +3637,7 @@ void VulkanRenderer::transitionDepthLayoutForReading(const textures::Framebuffer
 }
 void VulkanRenderer::transitionColorLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto colorTexture = framebuffer.getColorTexture();
 	if (colorTexture && colorTexture->rendererData)
 	{
@@ -3663,7 +3663,7 @@ void VulkanRenderer::transitionColorLayoutForWriting(const textures::Framebuffer
 }
 void VulkanRenderer::transitionColorLayoutForReading(const textures::Framebuffer& framebuffer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto colorTexture = framebuffer.getColorTexture();
 	if (colorTexture && colorTexture->rendererData && !framebuffer.hasColorResolveAttachment())
 	{
@@ -3673,7 +3673,7 @@ void VulkanRenderer::transitionColorLayoutForReading(const textures::Framebuffer
 }
 void VulkanRenderer::transitionColorResolveLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto colorResolveTexture = framebuffer.getColorResolveTexture();
 	if (colorResolveTexture && colorResolveTexture->rendererData)
 	{
@@ -3699,7 +3699,7 @@ void VulkanRenderer::transitionColorResolveLayoutForWriting(const textures::Fram
 }
 void VulkanRenderer::transitionColorResolveLayoutForReading(const textures::Framebuffer& framebuffer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto colorResolveTexture = framebuffer.getColorResolveTexture();
 	if (colorResolveTexture && colorResolveTexture->rendererData)
 	{
@@ -3709,7 +3709,7 @@ void VulkanRenderer::transitionColorResolveLayoutForReading(const textures::Fram
 }
 void VulkanRenderer::transitionDepthResolveLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto depthResolveTexture = framebuffer.getDepthResolveTexture();
 	if (depthResolveTexture && depthResolveTexture->rendererData)
 	{
@@ -3735,7 +3735,7 @@ void VulkanRenderer::transitionDepthResolveLayoutForWriting(const textures::Fram
 }
 void VulkanRenderer::transitionDepthResolveLayoutForReading(const textures::Framebuffer& framebuffer)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto depthResolveTexture = framebuffer.getDepthResolveTexture();
 	if (depthResolveTexture && depthResolveTexture->rendererData)
 	{

@@ -46,7 +46,7 @@ Entity::Entity(const EntityCreateInfo& info) :
 	onRemovedFunction(info.onRemovedFunction),
 	addToBVH(info.addToBVH)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	for (auto& meshInfo : info.meshInfos)
 		meshIDs.push_back(Registry::addMesh(meshInfo, *this));
 	for (auto& childInfo : info.childrenInfos)
@@ -86,7 +86,7 @@ Entity::Entity(const Entity& other) :
 	onAddedFunction(other.onAddedFunction),
 	onRemovedFunction(other.onRemovedFunction)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	{
 		std::lock_guard meshIDLock(Registry::meshIDMutex);
 		for (auto& meshID : meshIDs)
@@ -95,7 +95,7 @@ Entity::Entity(const Entity& other) :
 }
 Entity::~Entity()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	for (auto& child : children)
 		if (child.onRemovedFunction)
 			child.onRemovedFunction(child);
@@ -106,7 +106,7 @@ Entity::~Entity()
 }
 Entity& Entity::operator=(const Entity& other)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	((ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>&)*this) = other;
 	((DataStorage<Entity>&)*this) = other;
 	ID = other.ID;
@@ -153,7 +153,7 @@ Entity& Entity::operator=(const Entity& other)
 }
 void Entity::refreshMeshes()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto meshInfosSize = meshInfos.size();
 	auto meshInfosData = meshInfos.data();
 	auto meshIDsSize = meshIDs.size();
@@ -182,7 +182,7 @@ void Entity::refreshMeshes()
 }
 Material& Entity::meshMaterial(size_t meshID)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& mesh = Registry::getMesh(meshID);
 	return mesh.info.material;
 }
@@ -292,12 +292,12 @@ K::Sphere_3 Entity::get_suggested_bounding_sphere(float multiplier) const
 }
 void Entity::reMeshhash()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	mesh_hash = zg::crypto::hashVector(meshIDs);
 };
 void Entity::update()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	if (preUpdateFunction)
 		preUpdateFunction(*this);
 	auto componentsData = m_components.data();
@@ -311,7 +311,7 @@ void Entity::update()
 }
 void Entity::render()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	if (preRenderFunction && !preRenderFunction(*this))
 		return;
 	for (auto& meshID : meshIDs)
@@ -327,13 +327,13 @@ void Entity::render()
 }
 void Entity::postRender()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	// for (auto& meshID : meshIDs)
 	// 	Registry::getMesh(meshID).setTexturesThisPass = false;
 }
 glm::mat4& Entity::getModelMatrix()
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto& scene = Registry::getScene(INDEX_STACK);
 	if (updateTime == scene.updateTime && updateTime != 0)
 	{
@@ -355,7 +355,7 @@ glm::mat4& Entity::getModelMatrix()
 }
 KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const EntityCreateInfo& childCreateInfo)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto usingInfo = childCreateInfo;
 	auto transaction = children.startTransaction();
 	usingInfo.INDEX_STACK = {INDEX_STACK.begin(), INDEX_STACK.end()};
@@ -370,7 +370,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const Entity
 }
 void Entity::removeChild(size_t ID)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	auto childIter = children.find_id(ID);
 	if (childIter == children.end())
 	{
@@ -390,7 +390,7 @@ void Entity::removeChild(size_t ID)
 // Mouse
 UniqueIdentifier Entity::addMousePressHandler(const Button& button, const MousePressHandler& callback)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	std::lock_guard lock(handlersMutex);
 	auto& handlersPair = mousePressHandlers[button];
 	auto id = ++handlersPair.first;
@@ -399,7 +399,7 @@ UniqueIdentifier Entity::addMousePressHandler(const Button& button, const MouseP
 }
 void Entity::removeMousePressHandler(const Button& button, UniqueIdentifier& id)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	std::lock_guard lock(handlersMutex);
 	auto& handlersPair = mousePressHandlers[button];
 	auto handlerIter = handlersPair.second.find(id);
@@ -412,7 +412,7 @@ void Entity::removeMousePressHandler(const Button& button, UniqueIdentifier& id)
 }
 UniqueIdentifier Entity::addMouseMoveHandler(const MouseMoveHandler& callback)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	std::lock_guard lock(handlersMutex);
 	auto id = ++mouseMoveHandlers.first;
 	mouseMoveHandlers.second[id] = callback;
@@ -420,7 +420,7 @@ UniqueIdentifier Entity::addMouseMoveHandler(const MouseMoveHandler& callback)
 }
 void Entity::removeMouseMoveHandler(UniqueIdentifier& id)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	std::lock_guard lock(handlersMutex);
 	auto& handlers = mouseMoveHandlers.second;
 	auto handlerIter = handlers.find(id);
@@ -433,7 +433,7 @@ void Entity::removeMouseMoveHandler(UniqueIdentifier& id)
 }
 UniqueIdentifier Entity::addMouseHoverHandler(const MouseHoverHandler& callback)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	std::lock_guard lock(handlersMutex);
 	auto id = ++mouseHoverHandlers.first;
 	mouseHoverHandlers.second[id] = callback;
@@ -441,7 +441,7 @@ UniqueIdentifier Entity::addMouseHoverHandler(const MouseHoverHandler& callback)
 }
 void Entity::removeMouseHoverHandler(UniqueIdentifier& id)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	std::lock_guard lock(handlersMutex);
 	auto& handlers = mouseHoverHandlers.second;
 	auto handlerIter = handlers.find(id);
@@ -454,7 +454,7 @@ void Entity::removeMouseHoverHandler(UniqueIdentifier& id)
 }
 void Entity::callMousePressHandler(const Button& button, bool pressed)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	buttons[button] = pressed;
 	{
 		auto handlersIter = mousePressHandlers.find(button);
@@ -475,7 +475,7 @@ void Entity::callMousePressHandler(const Button& button, bool pressed)
 }
 void Entity::callMouseMoveHandler(glm::vec2 coords)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	std::vector<MouseMoveHandler> handlersCopy;
 	{
 		auto& handlersMap = mouseMoveHandlers.second;
@@ -490,7 +490,7 @@ void Entity::callMouseMoveHandler(glm::vec2 coords)
 }
 void Entity::callMouseHoverHandler(bool hovered)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	std::vector<MouseHoverHandler> handlersCopy;
 	{
 		auto& handlersMap = mouseHoverHandlers.second;
@@ -505,7 +505,7 @@ void Entity::callMouseHoverHandler(bool hovered)
 }
 void Entity::setPosition(glm::vec3 newPosition)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	position = newPosition;
 	try
 	{
@@ -518,7 +518,7 @@ void Entity::setPosition(glm::vec3 newPosition)
 }
 void Entity::setOrientation(glm::quat newOrientation)
 {
-	ZoneScoped;
+	ZGZoneScoped;
 	try
 	{
 		auto& rb = getComponentByName("RigidBody");
