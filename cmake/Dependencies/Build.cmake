@@ -18,7 +18,7 @@ endif()
 message(STATUS "FetchContent: CGAL")
 FetchContent_Declare(cgal
     GIT_REPOSITORY https://github.com/ZeunO8/cgal.git
-    GIT_TAG NT_BACKEND)
+    GIT_TAG 5.6.x-branch)
 FetchContent_GetProperties(cgal)
 if(NOT cgal_POPULATED)
     FetchContent_Populate(cgal)
