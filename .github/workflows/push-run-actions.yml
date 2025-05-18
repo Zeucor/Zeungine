@@ -1,9 +1,8 @@
-name: Build Test and Package
+name: Build
 on:
   push:
-    tags:
-      - '**'
-      - '!v*.*.*.*'
+    branches:
+      - run-actions
 permissions:
   contents: write
 jobs:
@@ -59,15 +58,25 @@ jobs:
 
       - name: Build Package on Linux
         if: runner.os == 'Linux'
-        run: ./unx-package.sh 0
+        run: |
+          ./unx-package.sh 1
+          ./unx-package.sh 2
+          ./unx-package.sh 3
         shell: bash
 
       - name: Build Package on macOS
         if: runner.os == 'macOS'
-        run: ./unx-package.sh 0
+        run: |
+          ./unx-package.sh 1
+          ./unx-package.sh 2
+          ./unx-package.sh 3
         shell: bash
 
       - name: Build Package on Windows
         if: runner.os == 'Windows'
-        run: .\win-package.bat 8
+        run: |
+          "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat" x64
+          .\win-package.bat 1
+          .\win-package.bat 2
+          .\win-package.bat 3
         shell: cmd
