@@ -118,7 +118,7 @@ void zg::register_zg_sdfs()
         glm::vec2 d = glm::abs(glm::vec2(glm::length(glm::vec2(p.x, p.z)), p.y)) - glm::vec2(0.5f, 0.5f);
         return (glm::min)((glm::max)(d.x, d.y), 0.0f) + glm::length((glm::max)(d, 0.0f));
     });
-    sdf_rgy.register_sdf("Cone", [](auto& shader, auto& constants) {
+    auto cone_id = sdf_rgy.register_sdf("Cone", [](auto& shader, auto& constants) {
         return R"(float ConeSDF(vec3 p_local) {
     float r = 0.5; // Base radius
     float h = 1.0; // Height
@@ -145,7 +145,32 @@ void zg::register_zg_sdfs()
     return signed_dist_surface;
 })";
     });
-    sdf_rgy.register_sdf("HexagonalPrism", [](auto& shader, auto& constants) {
+    sdf_rgy.register_c_sdf(cone_id, [](auto& entity, auto p_local) {
+        float r = 0.5; // Base radius
+        float h = 1.0; // Height
+
+        // Translate the local space down by 0.5
+        glm::vec3 p_adjusted = p_local + glm::vec3(0.0, 0.5, 0.0);
+
+        // Project the point onto the XZ plane and get the squared distance from the center
+        float d_sq = p_adjusted.x * p_adjusted.x + p_adjusted.z * p_adjusted.z;
+
+        // Squared radius at height y (linearly interpolating from r^2 at y=0 to 0 at y=h)
+        float r_at_y_sq = r * r * (h - p_adjusted.y) * (h - p_adjusted.y) / (h * h);
+
+        float signed_dist_surface = (r * p_adjusted.y + h * glm::sqrt(d_sq) - r * h) / glm::sqrt(r * r + h * h);
+
+        if (p_adjusted.y > h) {
+            return glm::length(glm::vec2(glm::sqrt(d_sq), p_adjusted.y - h));
+        }
+
+        if (p_adjusted.y < 0.0) {
+            return glm::length(glm::vec2(glm::sqrt(d_sq), p_adjusted.y));
+        }
+
+        return signed_dist_surface;
+    });
+    auto hexagonal_prism_id = sdf_rgy.register_sdf("HexagonalPrism", [](auto& shader, auto& constants) {
         return R"(float Hexagon2DSDF(vec2 p, float inradius_hex) {
     p = abs(p);
     // K_HEX_PRISM = vec3(-0.866025404, 0.5, 0.577350269)
@@ -158,6 +183,19 @@ float HexagonalPrismSDF(vec3 p_local) {
     float d_y = abs(p_local.y) - 0.5; // HalfHeight
     return length(max(vec2(d_hex, d_y), 0.0)) + min(max(d_hex, d_y), 0.0);
 })";
+    });
+    sdf_rgy.register_c_sdf(hexagonal_prism_id, [](auto& entity, auto p) -> float {
+        constexpr glm::vec3 K_HEX_PRISM = glm::vec3(-0.866025404, 0.5, 0.577350269);
+        float Hexagon2DSDF(glm::vec2 p, float inradius_hex) {
+            p = glm::abs(p);
+            // K_HEX_PRISM = vec3(-0.866025404, 0.5, 0.577350269)
+            p -= 2.0 * glm::min(glm::dot(K_HEX_PRISM.xy, p), 0.0) * glm(K_HEX_PRISM.x, K_HEX_PRISM.y);
+            p -= glm::vec2(glm::clamp(p.x, -K_HEX_PRISM.z * inradius_hex, K_HEX_PRISM.z * inradius_hex), inradius_hex);
+            return glm::length(p) * glm::sign(p.y);
+        }
+        float d_hex = Hexagon2DSDF(p.xz, SQRT3_DIV_4);
+        float d_y = glm::abs(p.y) - 0.5f; // HalfHeight
+        return glm::length((glm::max)(glm::vec2(d_hex, d_y), 0.0f)) + (glm::min)((glm::max)(d_hex, d_y), 0.0f);
     });
     auto rounded_cube_id = sdf_rgy.register_sdf("RoundedCube", [](auto& shader, auto& constants) {
         return R"(float RoundedCubeSDF(vec3 p_local) {

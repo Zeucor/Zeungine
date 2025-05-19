@@ -82,11 +82,15 @@ SceneCreateInfo SDFSceneFactory()
             Spot spot({1, 1, 1});
             auto sphere_sdf_mesh = entities::sdf_mesh_factory("Sphere", "Sphere", spot(1), rotate_identity, {1, 1, 1}, glm::vec4(0.944, 1.00, 0.440, 1.0), commonShaderConstants);
             scene.addEntity(sphere_sdf_mesh);
-            auto torus_sdf_mesh  = entities::sdf_mesh_factory("Torus", "Torus", spot(3), rotate_identity, {3, 3, 3}, glm::vec4(1, 0, 0, 1), commonShaderConstants);
+            auto torus_sdf_mesh  = entities::sdf_mesh_factory("Torus", "Torus", spot(3), rotate_identity, {3, 3, 3}, glm::vec4(.87, .13, .2, 1), commonShaderConstants);
             scene.addEntity(torus_sdf_mesh);
-            auto cylinder_sdf_mesh  = entities::sdf_mesh_factory("Cylinder", "Cylinder", spot(3), rotate_identity, {3, 3, 3}, glm::vec4(1, 1, 0, 1), commonShaderConstants);
+            auto cylinder_sdf_mesh  = entities::sdf_mesh_factory("Cylinder", "Cylinder", spot(3), rotate_identity, {3, 3, 3}, glm::vec4(.97, .9, .4, 1), commonShaderConstants);
             scene.addEntity(cylinder_sdf_mesh);
-            auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("RoundedCube", "RoundedCube", spot(1), rotate_identity, {1, 1, 1}, glm::vec4(0, 0, 1, 1), commonShaderConstants);
+            auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("RoundedCube", "RoundedCube", spot(1), rotate_identity, {1, 1, 1}, glm::vec4(.74, .64, .92, 1), commonShaderConstants);
+            scene.addEntity(rounded_cube_sdf_mesh);
+            auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("Cone", "Cone", spot(4), rotate_identity, {4, 4, 4}, glm::vec4(.82, .9, .77, 1), commonShaderConstants);
+            scene.addEntity(rounded_cube_sdf_mesh);
+            auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("HexagonalPrism", "HexagonalPrism", spot(8), rotate_identity, {8, 4, 4}, glm::vec4(.9, .8, .7, 1), commonShaderConstants);
             scene.addEntity(rounded_cube_sdf_mesh);
             // auto cube2Info = entities::CubeFactory("Cube", {14, 0, 0}, rotate_identity, {1, 1, 1}, {1, 1, 0, 1}, commonShaderConstants);
             // scene.addEntity(cube2Info);
