@@ -109,7 +109,7 @@ namespace zg
 				return iter->second(std::any(value), dynamic_cast<HostT&>(*this));
 			}
 			auto& any = dataMap[name];
-			any.emplace<T>(value);
+			any.template emplace<T>(value);
 			return any;
 		}
 		template <typename T, typename... Args>
