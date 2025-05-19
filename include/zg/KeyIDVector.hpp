@@ -518,8 +518,7 @@ namespace zg
 
 			const KeyT& key() const
 			{
-				auto id = id();
-				auto keyIter = kiv_ptr->m_IDKeyMap.find(id);
+				auto keyIter = kiv_ptr->m_IDKeyMap.find(id());
 				if (keyIter == kiv_ptr->m_IDKeyMap.end())
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
@@ -601,8 +600,7 @@ namespace zg
 
 			const KeyT& key() const
 			{
-				auto id = id();
-				auto keyIter = kiv_ptr->m_IDKeyMap.find(id);
+				auto keyIter = kiv_ptr->m_IDKeyMap.find(id());
 				if (keyIter == kiv_ptr->m_IDKeyMap.end())
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
@@ -683,8 +681,7 @@ namespace zg
 
 			const KeyT& key() const
 			{
-				auto id = id();
-				auto keyIter = kiv_ptr->m_IDKeyVector.find(id);
+				auto keyIter = kiv_ptr->m_IDKeyVector.find(id());
 				if (keyIter == kiv_ptr->m_IDKeyVector.end())
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
@@ -766,8 +763,7 @@ namespace zg
 
 			const KeyT& key() const
 			{
-				auto id = id();
-				auto keyIter = kiv_ptr->m_IDKeyVector.find(id);
+				auto keyIter = kiv_ptr->m_IDKeyVector.find(id());
 				if (keyIter == kiv_ptr->m_IDKeyVector.end())
 					throw std::logic_error("ID has no Key!");
 				return keyIter->second;
