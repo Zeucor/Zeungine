@@ -81,7 +81,7 @@ int32_t AudioEngine::start()
 	result = ma_engine_init(&engineConfig, &engine);
 	if (result != MA_SUCCESS)
 	{
-		std::cerr << "Failed to initialize engine for %s.\n", playbackDeviceInfos[selectedDeviceIndex].name;
+		std::cerr << "Failed to initialize engine for " << playbackDeviceInfos[selectedDeviceIndex].name << std::endl;
 		ma_device_uninit(&device);
 		return -5;
 	}
