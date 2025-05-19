@@ -22,10 +22,10 @@
 #include <CGAL/Min_sphere_annulus_d_traits_3.h>
 #include <CGAL/Polyhedron_3.h>
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef K::FT FT;
-typedef K::Point_3 Point;
-typedef FT (Function)(const Point&);
 typedef CGAL::Labeled_mesh_domain_3<K> Mesh_domain;
+// #ifdef ENABLE_TBB
+// #define CGAL_LINKED_WITH_TBB
+// #define CGAL_CONCURRENT_MESH_3
 #ifdef CGAL_CONCURRENT_MESH_3
 typedef CGAL::Parallel_tag Concurrency_tag;
 #else
