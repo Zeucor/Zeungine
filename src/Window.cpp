@@ -316,7 +316,7 @@ void zg::Window::startWindow()
 				updateDeltaTime(_now, true);
 			}
 		}
-		FrameMark;
+		ZGFrameMark;
 		{
 			ZGZoneScopedN("mainLoop:swapBuffers");
 			callPreSwapbuffersOnceoff();
