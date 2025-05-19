@@ -42,14 +42,14 @@ namespace zg::components::entities
 		glm::vec3 halfExtents; // Half-width, half-height, half-depth
 		BoxShapeData(glm::vec3 halfExtents);
 		ShapeType getType() const override { return ShapeType::Box; }
-		glm::vec3 getHalfExtents() const { return halfExtents; }
+		glm::vec3 getHalfExtents() const override { return halfExtents; }
 		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct SphereShapeData : ShapeData
 	{
 		float radius;
 		ShapeType getType() const override { return ShapeType::Sphere; }
-		glm::vec3 getHalfExtents() const { return glm::vec3(radius); }
+		glm::vec3 getHalfExtents() const override { return glm::vec3(radius); }
 		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct CapsuleShapeData : ShapeData
@@ -57,21 +57,21 @@ namespace zg::components::entities
 		float radius;
 		float height; // Height of the cylindrical part
 		ShapeType getType() const override { return ShapeType::Capsule; }
-		glm::vec3 getHalfExtents() const { return glm::vec3(radius, (height / 2.f) + radius, radius); }
+		glm::vec3 getHalfExtents() const override { return glm::vec3(radius, (height / 2.f) + radius, radius); }
 		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct MeshShapeData : ShapeData
 	{
 		MeshShapeData() = default;
 		ShapeType getType() const override { return ShapeType::Mesh; }
-		glm::vec3 getHalfExtents() const { /* TODO: Find half extents */ return glm::vec3(1); }
+		glm::vec3 getHalfExtents() const override { /* TODO: Find half extents */ return glm::vec3(1); }
 		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct ConvexHullShapeData : ShapeData
 	{
 		ConvexHullShapeData() = default;
 		ShapeType getType() const override { return ShapeType::ConvexHull; }
-		glm::vec3 getHalfExtents() const { /* TODO: Find half extents */ return glm::vec3(1); }
+		glm::vec3 getHalfExtents() const override { /* TODO: Find half extents */ return glm::vec3(1); }
 		JPH::ShapeRefC createJoltShape(Entity& entity) const override;
 	};
 	struct PhysicsMaterial
