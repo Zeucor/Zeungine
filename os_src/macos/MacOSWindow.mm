@@ -345,4 +345,20 @@ void MacOSWindow::mouseCapture(bool capture)
 }
 void MacOSWindow::enableKeyAutoRepeat() {}
 void MacOSWindow::disableKeyAutoRepeat() {}
+std::vector<ScreenMode> MacOSWindow::getCurrentScreenModes()
+{
+	return {};
+}
+std::vector<ScreenMode> MacOSWindow::getAvailableScreenModes()
+{
+	return {};
+}
+void MacOSWindow::setScreenMode(const ScreenMode& screenMode)
+{
+	return;
+}
+void MacOSWindow::restoreScreenMode()
+{
+	return;
+}
 #endif
