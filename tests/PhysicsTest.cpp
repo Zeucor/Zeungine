@@ -67,6 +67,7 @@ auto cubeColliderInfo = components::entities::ColliderFactory(
 );
 int main()
 {
+	Registry registry;
 	ShaderFactory shader_factory;
 	register_zg_shader_hooks();
 	WindowCreateInfo windowCreateInfo{
@@ -79,7 +80,7 @@ int main()
 		.vsync = false,
 		.framerate = 60, //Window::getScreenRefreshRate(1),
 	};
-	auto window_tuple = Registry::addWindow(windowCreateInfo);
+	auto window_tuple = Registry::GetSingleton().addWindow(windowCreateInfo);
 	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
 	window.runOnThread([](auto& window){
 		// window.attachComponent(zg::components::windows::FXAAFactory(0.0f, 0.00f, 32, 1.0f));
@@ -109,7 +110,7 @@ SceneCreateInfo PhysicsSceneFactory()
 		.fov = 81.f,
 		.onAttachedFunction = [](auto& scene)
 		{
-			auto& window = Registry::getWindow(scene.INDEX_STACK);
+			auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 			scene.clearColor = {1, 0, 0, 1};
 			glm::vec3 dldirection{1, -1, 1};
 			dldirection = glm::normalize(dldirection);
@@ -145,7 +146,7 @@ SceneCreateInfo PhysicsSceneFactory()
 			scene.attachComponent(components::scenes::EntityThirdPersonCameraFactory(*std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_tuple)));
 
 			scene.attachComponent(components::scenes::PhysicsSceneFactory());
-			auto& floor = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(floor_tuple));
+			auto& floor = Registry::GetSingleton().getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(floor_tuple));
 			auto floor_index_stack = floor.INDEX_STACK;
 			auto floor_rb_tuple = floor.attachComponent(staticRigidBodyInfo);
 			auto& floor_rb = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(floor_rb_tuple);
@@ -153,19 +154,19 @@ SceneCreateInfo PhysicsSceneFactory()
 			floor_rb.template setData<float>("Mass", 1000000.0f);
 			floor.attachComponent(floorColliderInfo);
 			auto floorPosition = floor.position;
-			auto& toxy = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(toxy_tuple));
+			auto& toxy = Registry::GetSingleton().getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(toxy_tuple));
 			auto toxy_index_stack = toxy.INDEX_STACK;
 			auto toxy_rb_tuple = toxy.attachComponent(cubeRigidBodyInfo);
 			auto toxy_rb_ID = std::get<KEY_ID_VECTOR_VALUE_INDEX>(toxy_rb_tuple)->ID;
 			toxy.attachComponent(toxyColliderInfo);
 			auto toxyPosition = toxy.position;
-			// auto& cube1 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube1_tuple));
+			// auto& cube1 = Registry::GetSingleton().getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube1_tuple));
 			// cube1.attachComponent(cubeRigidBodyInfo);
 			// cube1.attachComponent(cubeColliderInfo);
-			// auto& cube2 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube2_tuple));
+			// auto& cube2 = Registry::GetSingleton().getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube2_tuple));
 			// cube2.attachComponent(cubeRigidBodyInfo);
 			// cube2.attachComponent(cubeColliderInfo);
-			// auto& cube3 = Registry::getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube3_tuple));
+			// auto& cube3 = Registry::GetSingleton().getEntity(std::get<KEY_ID_VECTOR_ID_INDEX>(cube3_tuple));
 			// cube3.attachComponent(cubeRigidBodyInfo);
 			// cube3.attachComponent(cubeColliderInfo);
 			// scene.attachComponent(components::scenes::DepthFogFactory());
@@ -173,33 +174,33 @@ SceneCreateInfo PhysicsSceneFactory()
 			{
 				std::function<void()> onFrontTickFunction = [toxy_index_stack, toxy_rb_ID]()
 				{
-					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
 					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
 					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, 20));
 				};
 				std::function<void()> onBackTickFunction = [toxy_index_stack, toxy_rb_ID]()
 				{
-					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
 					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
 					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, -20));
 				};
 				std::function<void()> onLeftTickFunction = [toxy_index_stack, toxy_rb_ID]()
 				{
-					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
 					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
 					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(20, 0, 0));
 				};
 				std::function<void()> onRightTickFunction = [toxy_index_stack, toxy_rb_ID]()
 				{
-					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
 					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
 					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(-20, 0, 0));
 				};
 				std::function<void()> onSpaceTickFunction = [toxy_index_stack, floor_index_stack, floor_rb_ID, toxy_rb_ID]()
 				{
-					auto& toxy = Registry::getEntity(toxy_index_stack);
+					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
 					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID);
-					auto& floor = Registry::getEntity(floor_index_stack);
+					auto& floor = Registry::GetSingleton().getEntity(floor_index_stack);
 					auto& floor_rb = floor.getComponentByID(floor_rb_ID);
 					physics::CollisionManifold* ManifoldPointer = 0;
 					auto collidingMask = toxy_rb.template getData<size_t>("CollidingMask");
@@ -232,7 +233,7 @@ SceneCreateInfo PhysicsSceneFactory()
 			meshFont.stringToScene(zgString, toxy.position, zgColor, {1, 0, 0, 0}, zgScale, zgFontSize, zgLineHeight, zgSize, enums::EBreakStyle::None, scene, zgEntities, zgCursorIndex, zgCursor, commonShaderConstants);
 			for (auto& ID : zgEntities)
 			{
-				auto& entity = Registry::getEntity(ID);
+				auto& entity = Registry::GetSingleton().getEntity(ID);
 				entity.attachComponent(glyphRigidBodyInfo);
 				entity.attachComponent(toxyColliderInfo);
 			}
@@ -519,7 +520,7 @@ SceneCreateInfo HUDSceneFactory()
 		.orthoSize = {2, 2},
 		.onAttachedFunction = [](auto& scene)
 		{
-			auto& window = Registry::getWindow(scene.INDEX_STACK);
+			auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto angle = glm::angleAxis(glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
 			scene.addEntity(entities::DeltaVisualizerFactory(glm::vec2(0.5, 0.5), window.deltaTime, window.lastFrameDeltaTime, glm::vec3(-0.75, 0.75, 0), angle));
 		},

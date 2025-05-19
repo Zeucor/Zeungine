@@ -291,7 +291,7 @@ void zg::Window::startWindow()
 				for (auto& sceneID : sortedScenes)
 				{
 					ZGZoneScopedN("p3/scene:render");
-					auto& scene = Registry::getScene(sceneID);
+					auto& scene = Registry::GetSingleton().getScene(sceneID);
 					scene.fsq->render(ppOutputs[index++]);
 				}
 				mainFramebuffer->unbind();
@@ -357,17 +357,6 @@ _exit:
 	iPlatformWindowRef.destroy();
 	delete iPlatformWindow;
 	zg::Entity::cleanupSerialize();
-	if (Registry::idWindows)
-	{
-		auto& idWindowsRef = *Registry::idWindows;
-		if (!idWindowsRef.size())
-			return;
-		auto idIter = idWindowsRef.find(ID);
-		if (idIter != idWindowsRef.end())
-		{
-			idWindowsRef.erase(idIter);
-		}
-	}
 }
 void zg::Window::updateKeyboard()
 {
@@ -1024,7 +1013,7 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple zg::Window::addScene(const Sce
 	}
 	sortedScenes.push_back(scene.ID);
 	sortScenes();
-	(*Registry::idScenes)[scene.ID] = scene.INDEX_STACK;
+	Registry::GetSingleton().idScenes[scene.ID] = scene.INDEX_STACK;
 	return {transaction.key, transaction.id, transaction.index, &scene};
 }
 bool zg::Window::removeScene(size_t ID)
@@ -1047,20 +1036,20 @@ bool zg::Window::removeScene(size_t ID)
 	sortedScenes.erase(sortedSceneIter);
 	scenes.erase(iter);
 	sortScenes();
-	auto& idScenesRef = *Registry::idScenes;
-	auto idIter = idScenesRef.find(ID);
-	if (idIter != idScenesRef.end())
+	auto& idScenes = Registry::GetSingleton().idScenes;
+	auto idIter = idScenes.find(ID);
+	if (idIter != idScenes.end())
 	{
 		ZGZoneScoped;
-		idScenesRef.erase(idIter);
+		idScenes.erase(idIter);
 	}
 	return true;
 }
 void zg::Window::sortScenes()
 {
 	std::sort(sortedScenes.begin(), sortedScenes.end(), [](auto& a_ID, auto& b_ID){
-		auto& a_s = Registry::getScene(a_ID);
-		auto& b_s = Registry::getScene(b_ID);
+		auto& a_s = Registry::GetSingleton().getScene(a_ID);
+		auto& b_s = Registry::GetSingleton().getScene(b_ID);
 		return a_s.z > b_s.z;
 	});
 }

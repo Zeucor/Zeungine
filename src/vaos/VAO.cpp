@@ -12,7 +12,7 @@ using namespace zg::vaos;
 VAO::VAO(const std::vector<size_t*>& VAO_INDEX_STACK, const RuntimeConstants& constants, uint32_t indiceCount, uint32_t vertexCount) :
 		vaoConstants(constants), indiceCount(indiceCount), vertexCount(vertexCount), stride(VAOFactory::getStride(constants)),
 		VAO_INDEX_STACK(VAO_INDEX_STACK),
-		vaoIRenderer(Registry::getWindow(VAO_INDEX_STACK).iRenderer)
+		vaoIRenderer(Registry::GetSingleton().getWindow(VAO_INDEX_STACK).iRenderer)
 {
 	VAOFactory::generate(*this);
 }
@@ -22,7 +22,7 @@ VAO::VAO(const VAO& other):
 	vertexCount(other.vertexCount),
 	stride(other.stride),
 	VAO_INDEX_STACK(other.VAO_INDEX_STACK),
-	vaoIRenderer(Registry::getWindow(VAO_INDEX_STACK).iRenderer)
+	vaoIRenderer(Registry::GetSingleton().getWindow(VAO_INDEX_STACK).iRenderer)
 {
 	VAOFactory::copy(*this, other);
 }
@@ -35,7 +35,7 @@ VAO& VAO::operator=(const VAO& other)
 	vertexCount = other.vertexCount;
 	stride = other.stride;
 	VAO_INDEX_STACK = other.VAO_INDEX_STACK;
-	vaoIRenderer = Registry::getWindow(VAO_INDEX_STACK).iRenderer;
+	vaoIRenderer = Registry::GetSingleton().getWindow(VAO_INDEX_STACK).iRenderer;
 	shaders.clear();
 	ensuredBools.clear();
 	VAOFactory::copy(*this, other);

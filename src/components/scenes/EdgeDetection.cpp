@@ -16,7 +16,7 @@ SceneComponentCreateInfo components::scenes::EdgeDetectionFactory() {
     SceneComponentCreateInfo info{
         .name = "EdgeDetection",
         .onAttachedFunction = [](auto& component) {
-            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+            auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
             component.template make<glm::vec4>("edgeColor", 0.0f, 0.0f, 0.0f, 1.0f);
             component.template make<glm::vec4>("backgroundColor", 1.0f, 1.0f, 1.0f, 0.0f);
             component.template make<float>("combinedThreshold", 0.3f);
@@ -35,7 +35,7 @@ SceneComponentCreateInfo components::scenes::EdgeDetectionFactory() {
                     HOST_INDEX_STACK = component.HOST_INDEX_STACK,
                     componentID = component.ID
                 ](auto& shader, auto& vao) {
-                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                    auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
                     auto& component = scene.getComponentByID(componentID);
 
                     auto& edgeColor = component.template getData<glm::vec4>("edgeColor");

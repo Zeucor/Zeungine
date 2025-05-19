@@ -149,7 +149,7 @@ void BVH::addEntity(Entity& entity)
 	{
 		for (auto& meshID : entity.meshIDs)
 		{
-			auto& mesh = Registry::getMesh(meshID);
+			auto& mesh = Registry::GetSingleton().getMesh(meshID);
 			auto indiceCount = mesh.indices.size();
 			if (!indiceCount)
 				return;
@@ -184,7 +184,7 @@ void BVH::updateEntity(Entity& entity)
 	{
 		for (auto& meshID : entity.meshIDs)
 		{
-			auto& mesh = Registry::getMesh(meshID);
+			auto& mesh = Registry::GetSingleton().getMesh(meshID);
 			std::vector<size_t> indices;
 			size_t indicesCount = 0;
 			auto trianglesSize = triangles.size();

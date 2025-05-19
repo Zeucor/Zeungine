@@ -15,7 +15,7 @@ RuntimeConstants commonShaderConstants({
 });
 int main()
 {
-    // Registry rgy
+    Registry registry;
     // we are using SDFs so we need to declare a Registry
 	ShaderFactory shader_factory;
     register_zg_shader_hooks();
@@ -31,7 +31,7 @@ int main()
         .vsync = false,
         .framerate = 144 / 2
     };
-    auto window_tuple = Registry::addWindow(windowInfo);
+    auto window_tuple = Registry::GetSingleton().addWindow(windowInfo);
     auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
     window.runOnThread([](auto& window){
         window.addScene(SDFSceneFactory());
@@ -112,17 +112,17 @@ SceneCreateInfo SDFSceneFactory()
             // scene.addEntity(cube2Info);
             scene.attachComponent(components::scenes::ViewMouseControlFactory());
             scene.attachComponent(components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 8));
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             scene.template make<size_t>("rID", window.addKeyPressHandler('r', [&, SCENE_INDEX_STACK = scene.INDEX_STACK](auto pressed){
                 if (!pressed)
                     return;
-                auto& scene = Registry::getScene(SCENE_INDEX_STACK);
+                auto& scene = Registry::GetSingleton().getScene(SCENE_INDEX_STACK);
                 scene.viewPointer->direction = glm::normalize(glm::vec3(-1, -1, -1));
                 scene.viewPointer->setDirty();
             }));
         },
         .onDetachedFunction = [](auto& scene){
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             window.removeKeyPressHandler('r', scene.template getData<size_t>("rID"));
         },
         .preUpdateFunction = [](auto& scene){

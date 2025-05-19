@@ -947,7 +947,7 @@ void VulkanRenderer::createImageViews()
 	// 							platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
 	// 	(const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
 	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	// TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorResolveTexture);
+	// TextureOutputRegistry::GetSingleton().registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorResolveTexture);
 	auto swapChainImagesSize = swapChainImages.size();
 	swapChainImageViews.resize(swapChainImagesSize);
 	for (uint32_t index = 0; index < swapChainImagesSize; index++)
@@ -1114,7 +1114,7 @@ void VulkanRenderer::createDepthResources()
 	// 							platformWindowPointer->renderWindowPointer->windowHeight, 0, 0),
 	// 	(const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float,
 	// 	textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
-	// TextureOutputRegistry::registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthResolveTexture);
+	// TextureOutputRegistry::GetSingleton().registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthResolveTexture);
 }
 void VulkanRenderer::createSyncObjects()
 {
@@ -1998,7 +1998,7 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 				glm::vec4 clearColor = framebuffer.clearColor;
 				if (framebuffer.sceneID)
 				{
-					auto& scene = Registry::getScene(framebuffer.sceneID);
+					auto& scene = Registry::GetSingleton().getScene(framebuffer.sceneID);
 					clearColor = scene.clearColor;
 				}
 				clearValue.color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};

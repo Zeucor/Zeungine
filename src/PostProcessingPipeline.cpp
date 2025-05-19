@@ -23,7 +23,7 @@ PostProcessingPipeline::PostProcessingPipeline(const std::vector<size_t*>& INDEX
 KeyIDVector<float, PostProcessingStage>::EmplaceBackTuple
 PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageCreateInfo& info)
 {
-    auto& window = Registry::getWindow(INDEX_STACK);
+    auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	auto emplace_tuple = stages.emplace_back_key(floatingIndex, info);
 	auto& stage = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(emplace_tuple);
     stage.floatingIndex = floatingIndex;

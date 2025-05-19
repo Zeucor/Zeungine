@@ -304,7 +304,7 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 		// cursor = std::make_shared<entities::Plane>(window, scene, glm::vec3(0), glm::vec3(0), glm::vec3(1),
 		// 																					 glm::vec2(3, lineHeight), color);
 	}
-	// auto& cursorRef = Registry::getEntity(cursor);
+	// auto& cursorRef = Registry::GetSingleton().getEntity(cursor);
 	// if (cursorIndex == 0)
 	// {
 	// 	cursorRef.position = currentPosition;
@@ -345,7 +345,7 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 					}
 					else 
 					{
-						auto& glyph = Registry::getEntity(glyphID);
+						auto& glyph = Registry::GetSingleton().getEntity(glyphID);
 						if (glyph.VALUE.has_value())
 						{
 							try
@@ -412,7 +412,7 @@ _addGlyph:
 	for (auto i = existingAndUpdatedGlyphIDs.size() - 1; i >= codepointIndex; i--)
 	{
 		auto& entityID = existingAndUpdatedGlyphIDs.back();
-		auto& entity = Registry::getEntity(entityID);
+		auto& entity = Registry::GetSingleton().getEntity(entityID);
 		scene.bvh->removeEntity(scene, entity);
 		scene.removeEntity(entityID);
 		existingAndUpdatedGlyphIDs.erase(existingAndUpdatedGlyphIDs.end() - 1);
@@ -454,7 +454,7 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 		// cursor = std::make_shared<entities::Plane>(window, scene, glm::vec3(0), glm::vec3(0), glm::vec3(1),
 		// 																					 glm::vec2(3, lineHeight), color);
 	}
-	// auto& cursorRef = Registry::getEntity(cursor);
+	// auto& cursorRef = Registry::GetSingleton().getEntity(cursor);
 	// if (cursorIndex == 0)
 	// {
 	// 	cursorRef.position = currentPosition;
@@ -496,7 +496,7 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 					}
 					else 
 					{
-						auto& glyph = Registry::getEntity(glyphID);
+						auto& glyph = Registry::GetSingleton().getEntity(glyphID);
 						if (glyph.VALUE.has_value())
 						{
 							try

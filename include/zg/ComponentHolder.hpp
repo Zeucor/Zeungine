@@ -52,15 +52,15 @@ namespace zg
 			component.ID = std::get<KEY_ID_VECTOR_ID_INDEX>(component_tuple);
 			if constexpr (std::is_same_v<HostT, Entity>)
 			{
-				Registry::idEntityComponents[component.ID] = component.HOST_INDEX_STACK;
+				Registry::GetSingleton().idEntityComponents[component.ID] = component.HOST_INDEX_STACK;
 			}
 			else if constexpr (std::is_same_v<HostT, Scene>)
 			{
-				Registry::idSceneComponents[component.ID] = component.HOST_INDEX_STACK;
+				Registry::GetSingleton().idSceneComponents[component.ID] = component.HOST_INDEX_STACK;
 			}
 			else if constexpr (std::is_same_v<HostT, Window>)
 			{
-				Registry::idWindowComponents[component.ID] = component.HOST_INDEX_STACK;
+				Registry::GetSingleton().idWindowComponents[component.ID] = component.HOST_INDEX_STACK;
 			}
 			component.onAttached();
 			return component_tuple;
@@ -77,15 +77,15 @@ namespace zg
 			iter->onDetached();
 			if constexpr (std::is_same_v<HostT, Entity>)
 			{
-				Registry::idEntityComponents.erase(iter->ID);
+				Registry::GetSingleton().idEntityComponents.erase(iter->ID);
 			}
 			else if constexpr (std::is_same_v<HostT, Scene>)
 			{
-				Registry::idSceneComponents.erase(iter->ID);
+				Registry::GetSingleton().idSceneComponents.erase(iter->ID);
 			}
 			else if constexpr (std::is_same_v<HostT, Window>)
 			{
-				Registry::idWindowComponents.erase(iter->ID);
+				Registry::GetSingleton().idWindowComponents.erase(iter->ID);
 			}
 			m_components.erase(iter);
 			id = 0;

@@ -13,6 +13,7 @@
 #include <zg/math/Rotations.hpp>
 #include <zg/zgfilesystem/File.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
+#include <zg/Registry.hpp>
 using namespace zg;
 using namespace zg::shaders;
 // #define PI acos(-1)
@@ -563,6 +564,7 @@ using namespace zg::shaders;
 // }
 int main()
 {
+	Registry registry;
 	ShaderFactory shader_factory;
 	register_zg_shader_hooks();
 	// Window window("Window", 1280, 720, -1, -1);

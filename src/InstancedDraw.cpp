@@ -6,16 +6,16 @@ template<>
 bool entity_mat4_transform_registry::initialized = ([](){
     if (!entity_mat4_transform_registry::set_getter_function("Model", [](Entity& entity) { return entity.getModelMatrix(); })) return false;
     if (!entity_mat4_transform_registry::set_getter_function("InverseModel", [](Entity& entity) { return glm::inverse(entity.getModelMatrix()); })) return false;
-    if (!entity_mat4_transform_registry::set_getter_function("Projection", [](Entity& entity) { return entity.projectionPointer ? entity.projectionPointer->matrix : Registry::getScene(entity.INDEX_STACK).projectionPointer->matrix; })) return false;
-    if (!entity_mat4_transform_registry::set_getter_function("InverseProjection", [](Entity& entity) { return glm::inverse(entity.projectionPointer ? entity.projectionPointer->matrix : Registry::getScene(entity.INDEX_STACK).projectionPointer->matrix); })) return false;
-    if (!entity_mat4_transform_registry::set_getter_function("View", [](Entity& entity) { return entity.viewPointer ? entity.viewPointer->matrix : Registry::getScene(entity.INDEX_STACK).viewPointer->matrix; })) return false;
-    if (!entity_mat4_transform_registry::set_getter_function("InverseView", [](Entity& entity) { return glm::inverse(entity.viewPointer ? entity.viewPointer->matrix : Registry::getScene(entity.INDEX_STACK).viewPointer->matrix); })) return false;
-    if (!entity_mat4_transform_registry::set_getter_function("InverseView", [](Entity& entity) { return glm::inverse(entity.viewPointer ? entity.viewPointer->matrix : Registry::getScene(entity.INDEX_STACK).viewPointer->matrix); })) return false;
+    if (!entity_mat4_transform_registry::set_getter_function("Projection", [](Entity& entity) { return entity.projectionPointer ? entity.projectionPointer->matrix : Registry::GetSingleton().getScene(entity.INDEX_STACK).projectionPointer->matrix; })) return false;
+    if (!entity_mat4_transform_registry::set_getter_function("InverseProjection", [](Entity& entity) { return glm::inverse(entity.projectionPointer ? entity.projectionPointer->matrix : Registry::GetSingleton().getScene(entity.INDEX_STACK).projectionPointer->matrix); })) return false;
+    if (!entity_mat4_transform_registry::set_getter_function("View", [](Entity& entity) { return entity.viewPointer ? entity.viewPointer->matrix : Registry::GetSingleton().getScene(entity.INDEX_STACK).viewPointer->matrix; })) return false;
+    if (!entity_mat4_transform_registry::set_getter_function("InverseView", [](Entity& entity) { return glm::inverse(entity.viewPointer ? entity.viewPointer->matrix : Registry::GetSingleton().getScene(entity.INDEX_STACK).viewPointer->matrix); })) return false;
+    if (!entity_mat4_transform_registry::set_getter_function("InverseView", [](Entity& entity) { return glm::inverse(entity.viewPointer ? entity.viewPointer->matrix : Registry::GetSingleton().getScene(entity.INDEX_STACK).viewPointer->matrix); })) return false;
     return true;
 })();
 InstancedDraw::InstanceBatch::InstanceBatch(size_t meshID):
     m_meshID(meshID),
-    m_transform_keys(entity_mat4_transform_registry::extract_transform_keys(Registry::getMesh(meshID).info.constants))
+    m_transform_keys(entity_mat4_transform_registry::extract_transform_keys(Registry::GetSingleton().getMesh(meshID).info.constants))
 {
     if (!entity_mat4_transform_registry::initialized)
         throw std::runtime_error("entity_mat4_tfm_rgt is false");
@@ -30,7 +30,7 @@ void InstancedDraw::InstanceBatch::removeEntity(const size_t entity_ID)
 }
 void InstancedDraw::InstanceBatch::draw(Scene& scene, shaders::Shader* shaderPointer)
 {
-    auto& mesh = Registry::getMesh(m_meshID);
+    auto& mesh = Registry::GetSingleton().getMesh(m_meshID);
     auto shader = mesh.addShader(shaderPointer);
     auto& shaderRef = *shader;
     shaderRef.bind(mesh);
@@ -58,7 +58,7 @@ void InstancedDraw::InstanceBatch::update_transforms()
         for (size_t index = 0; index < entitiesSize; ++index)
         {
             auto& entityID = *entitiesIter;
-            mvp_transforms_t_k_data[index] = entity_mat4_transform_registry::get_value(transform_key, Registry::getEntity(entityID));
+            mvp_transforms_t_k_data[index] = entity_mat4_transform_registry::get_value(transform_key, Registry::GetSingleton().getEntity(entityID));
             ++entitiesIter;
         }
     }
@@ -125,11 +125,11 @@ void InstancedDraw::drawMulti(
 )
 {
     auto& shaderBatches = bID_shaderBatches[batchID];
-    auto& window = Registry::getWindow(scene.INDEX_STACK);
+    auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
     for (auto& pair : opaqueDrawList)
         opaqueBatches.try_emplace(pair.second->ID, pair.second->ID).first->second.addEntity(pair.first->ID);
     for (auto& batch : opaqueBatches)
-        shaderBatches[Registry::getMesh(batch.second.m_meshID).addShader(shaderPointer)].insert(batch.second.m_meshID);
+        shaderBatches[Registry::GetSingleton().getMesh(batch.second.m_meshID).addShader(shaderPointer)].insert(batch.second.m_meshID);
     for (auto& shaderPair : shaderBatches)
     {
         auto& shader = *shaderPair.first;
@@ -157,7 +157,7 @@ void InstancedDraw::drawMulti(
         };
         entities.resize(totalShapes);
         auto& firstMeshID = *shaderPair.second.begin();
-        auto& firstMesh = Registry::getMesh(firstMeshID);
+        auto& firstMesh = Registry::GetSingleton().getMesh(firstMeshID);
         shader.bind(firstMesh);
         auto& firstBatch = opaqueBatches.try_emplace(firstMeshID, firstMeshID).first->second;
         auto& positions = firstBatch.positions;
@@ -202,7 +202,7 @@ void InstancedDraw::drawMulti(
         uint32_t i = 0;
         for (auto& meshID : shaderPair.second)
         {
-            auto& mesh = Registry::getMesh(meshID);
+            auto& mesh = Registry::GetSingleton().getMesh(meshID);
             auto& batch = opaqueBatches.try_emplace(meshID, meshID).first->second;
             batch.update_transforms();
             for (auto& t : batch.mvp_transforms)
@@ -289,7 +289,7 @@ void InstancedDraw::drawMulti(
             }
             for (auto& entityID : batch.entities)
             {
-                auto& entity = Registry::getEntity(entityID);
+                auto& entity = Registry::GetSingleton().getEntity(entityID);
                 auto& material = entity.meshMaterial(meshID);
                 auto material_index = find_material_index(material);
                 if (material_index == -1)
@@ -410,7 +410,7 @@ void InstancedDraw::addEntity(const Entity& entity)
         goto _add;
     for (auto& meshID : entity.meshIDs)
     {
-        auto& mesh = Registry::getMesh(meshID);
+        auto& mesh = Registry::GetSingleton().getMesh(meshID);
         for (auto& keyedTexture : mesh.info.keyedTextures)
         {
             if (keyedTexture.second->isTransparent)
@@ -437,7 +437,7 @@ void InstancedDraw::removeEntity(const Entity& entity)
         goto _add;
     for (auto& meshID : entity.meshIDs)
     {
-        auto& mesh = Registry::getMesh(meshID);
+        auto& mesh = Registry::GetSingleton().getMesh(meshID);
         for (auto& keyedTexture : mesh.info.keyedTextures)
         {
             if (keyedTexture.second->isTransparent)

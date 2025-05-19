@@ -2,17 +2,19 @@
 #include <zg/Registry.hpp>
 #include <zg/audio/MIDIEngine.hpp>
 #include <zg/audio/Oscillator.hpp>
+#include <zg/Window.hpp>
 using namespace zg;
 using namespace zg::audio;
 int main()
 {
+    Registry registry;
     WindowCreateInfo windowInfo{
         .title = "MIDI Test",
         .windowWidth = 1024,
         .windowHeight = 768,
         .framerate = 60
     };
-    auto window_tuple = Registry::addWindow(windowInfo);
+    auto window_tuple = registry.addWindow(windowInfo);
     auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
     auto oscillatorStage = std::make_shared<zg::audio::AudioStage>(window.audioEngine);
     auto oscillator = std::make_shared<zg::audio::Oscillator>(

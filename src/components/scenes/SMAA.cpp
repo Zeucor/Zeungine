@@ -21,7 +21,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::SMAAFac
             cornerRounding
         ](auto& component)
         {
-            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+            auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
             PostProcessingStageCreateInfo smaaStageCreateInfo{
                 .name = "SMAA",
                 .inputs = {"ColorTexture"},

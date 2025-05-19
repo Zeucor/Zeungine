@@ -21,7 +21,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::FXAAFac
             subpixQuality
         ](auto& component)
         {
-            auto& scene = zg::Registry::getScene(component.HOST_INDEX_STACK);
+            auto& scene = zg::Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
             zg::PostProcessingStageCreateInfo fxaaStageCreateInfo{
                 .name = "FXAA",
                 .inputs = {"ColorTexture"},

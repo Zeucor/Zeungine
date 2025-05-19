@@ -131,11 +131,12 @@ glm::vec3 hslToRgb(float h, float s, float l) {
 
 int main()
 {
+    Registry registry;
 	ShaderFactory shader_factory;
 	register_zg_shader_hooks();
     // Window creation info
     WindowCreateInfo windowCreateInfo{.title = "Beautiful 3D Scene Factories Test", .borderless = true, .vsync = false, .framerate = 144};
-    auto window_tuple = zg::Registry::addWindow(windowCreateInfo);
+    auto window_tuple = zg::Registry::GetSingleton().addWindow(windowCreateInfo);
     auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
 
     size_t current_scene_id = 0; // Initialize with 0
@@ -211,7 +212,7 @@ SceneCreateInfo SphereFactory()
         .cameraDirection = glm::normalize(glm::vec3(0, 0, -1)), // Look towards the center
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a dark clear color for contrast
             scene.clearColor = {0.05f, 0.05f, 0.1f, 1.0f};
@@ -269,7 +270,7 @@ SceneCreateInfo SphereFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -294,7 +295,7 @@ SceneCreateInfo SphereFactory()
             for (size_t i = 0; i < cubesSize; ++i)
             {
                 auto& cubeID = cubes[i];
-                auto& cube = Registry::getEntity(cubeID);
+                auto& cube = Registry::GetSingleton().getEntity(cubeID);
                 const auto& initialCoords = initialSphericalCoords[i]; // Initial (phi, theta)
 
                 float phi = initialCoords.x;
@@ -330,7 +331,7 @@ SceneCreateInfo CubeGridFactory()
         .cameraDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -1.0f)), // Look towards the center of the grid
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.1f, 0.1f, 0.15f, 1.0f};
@@ -386,7 +387,7 @@ SceneCreateInfo CubeGridFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -403,7 +404,7 @@ SceneCreateInfo CubeGridFactory()
             for (size_t i = 0; i < cubesSize; ++i)
             {
                 auto& cubeID = cubes[i];
-                auto& cube = Registry::getEntity(cubeID);
+                auto& cube = Registry::GetSingleton().getEntity(cubeID);
                 const auto& initialPos = initialPositions[i];
 
                 // Calculate wave offset based on initial position and time
@@ -426,7 +427,7 @@ SceneCreateInfo RandomCubesFactory()
         .cameraDirection = glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f)), // Look towards the center
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.15f, 0.1f, 0.1f, 1.0f};
@@ -485,7 +486,7 @@ SceneCreateInfo RandomCubesFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -500,7 +501,7 @@ SceneCreateInfo RandomCubesFactory()
             for (size_t i = 0; i < cubesSize; ++i)
             {
                 auto& cubeID = cubes[i];
-                auto& cube = Registry::getEntity(cubeID);
+                auto& cube = Registry::GetSingleton().getEntity(cubeID);
                 const auto& initialRot = initialRotations[i];
 
                 // Apply a continuous rotation based on initial random rotation and time
@@ -524,7 +525,7 @@ SceneCreateInfo SpiralFactory()
         .cameraDirection = glm::normalize(glm::vec3(-1.0f, -0.2f, -1.0f)), // Look towards the center of the spiral
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.1f, 0.15f, 0.1f, 1.0f};
@@ -578,7 +579,7 @@ SceneCreateInfo SpiralFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -594,7 +595,7 @@ SceneCreateInfo SpiralFactory()
             for (size_t i = 0; i < cubesSize; ++i)
             {
                 auto& cubeID = cubes[i];
-                auto& cube = Registry::getEntity(cubeID);
+                auto& cube = Registry::GetSingleton().getEntity(cubeID);
 
                 // Calculate scale factor based on index and time
                 float t = (float)i / (NUM_SPIRAL_CUBES - 1);
@@ -616,7 +617,7 @@ SceneCreateInfo WaveformGridFactory()
         .cameraDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -1.0f)), // Look towards the center
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.1f, 0.1f, 0.2f, 1.0f};
@@ -663,7 +664,7 @@ SceneCreateInfo WaveformGridFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -681,7 +682,7 @@ SceneCreateInfo WaveformGridFactory()
             for (size_t i = 0; i < cubesSize; ++i)
             {
                 auto& cubeID = cubes[i];
-                auto& cube = Registry::getEntity(cubeID);
+                auto& cube = Registry::GetSingleton().getEntity(cubeID);
                 const auto& initialPosXZ = initialPositions[i];
 
                 // Calculate wave offset based on initial position and time
@@ -713,7 +714,7 @@ SceneCreateInfo RingFactory()
         .cameraDirection = glm::normalize(glm::vec3(0, -0.5f, -1.0f)), // Look towards the center
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.2f, 0.1f, 0.1f, 1.0f};
@@ -777,7 +778,7 @@ SceneCreateInfo RingFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -793,7 +794,7 @@ SceneCreateInfo RingFactory()
             for (size_t i = 0; i < cubesSize; ++i)
             {
                 auto& cubeID = cubes[i];
-                auto& cube = Registry::getEntity(cubeID);
+                auto& cube = Registry::GetSingleton().getEntity(cubeID);
                 const auto& initialAngle = initialAngles[i];
                  const auto& initialRot = initialRotations[i];
 
@@ -828,7 +829,7 @@ SceneCreateInfo FountainFactory()
         .cameraDirection = glm::normalize(glm::vec3(0, -0.5f, -1.0f)), // Look towards the fountain source
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.08f, 0.1f, 0.08f, 1.0f};
@@ -848,7 +849,7 @@ SceneCreateInfo FountainFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -893,7 +894,7 @@ SceneCreateInfo FountainFactory()
             // Update particle positions and lifetimes
             for (auto it = particles.begin(); it != particles.end(); ) {
                 auto& particle = *it;
-                auto& cube = Registry::getEntity(particle.entityID);
+                auto& cube = Registry::GetSingleton().getEntity(particle.entityID);
 
                 // Apply gravity to velocity
                 particle.velocity.y += FOUNTAIN_GRAVITY * window.deltaTime;
@@ -934,7 +935,7 @@ SceneCreateInfo DNAHelixFactory()
         .cameraDirection = glm::normalize(glm::vec3(-1.0f, -0.2f, -1.0f)), // Look towards the center of the helix
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.12f, 0.08f, 0.12f, 1.0f};
@@ -1008,7 +1009,7 @@ SceneCreateInfo DNAHelixFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -1026,7 +1027,7 @@ SceneCreateInfo DNAHelixFactory()
             for (size_t i = 0; i < cubesSize; ++i)
             {
                 auto& cubeID = cubes[i];
-                auto& cube = Registry::getEntity(cubeID);
+                auto& cube = Registry::GetSingleton().getEntity(cubeID);
                 const auto& initialParams = initialHelixParams[i]; // x: initial angle, y: initial height
 
                 float current_angle = initialParams.x + deltaTimeCounter * rotation_speed;
@@ -1066,7 +1067,7 @@ SceneCreateInfo SwarmFactory()
         .cameraDirection = glm::normalize(glm::vec3(-1.0f, -0.5f, -1.0f)), // Look towards the center of the swarm
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.05f, 0.08f, 0.08f, 1.0f};
@@ -1123,7 +1124,7 @@ SceneCreateInfo SwarmFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -1133,7 +1134,7 @@ SceneCreateInfo SwarmFactory()
             // Update swarm cube positions and velocities
             for (auto& swarmCube : swarmCubes)
             {
-                auto& cube = Registry::getEntity(swarmCube.entityID);
+                auto& cube = Registry::GetSingleton().getEntity(swarmCube.entityID);
 
                 // Add random influence to velocity
                 swarmCube.velocity += glm::vec3(
@@ -1185,7 +1186,7 @@ SceneCreateInfo TorusFactory()
         .cameraDirection = glm::normalize(glm::vec3(-1.0f, -0.5f, -1.0f)), // Look towards the center of the torus
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.08f, 0.08f, 0.12f, 1.0f};
@@ -1239,7 +1240,7 @@ SceneCreateInfo TorusFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -1258,7 +1259,7 @@ SceneCreateInfo TorusFactory()
             for (size_t i = 0; i < cubesSize; ++i)
             {
                 auto& cubeID = cubes[i];
-                auto& cube = Registry::getEntity(cubeID);
+                auto& cube = Registry::GetSingleton().getEntity(cubeID);
                 const auto& initialParams = initialTorusParams[i]; // x: initial phi, y: initial theta
 
                 // Calculate the initial position in the torus's local space
@@ -1295,7 +1296,7 @@ SceneCreateInfo FallingCubesFactory()
         .cameraDirection = glm::normalize(glm::vec3(-0.5f, -0.8f, -0.5f)), // Look downwards
         .onAttachedFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
             // Set a clear color
             scene.clearColor = {0.05f, 0.05f, 0.05f, 1.0f}; // Dark background
@@ -1315,7 +1316,7 @@ SceneCreateInfo FallingCubesFactory()
         },
         .preUpdateFunction = [](auto& scene)
         {
-            auto& window = Registry::getWindow(scene.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
             deltaTimeCounter += window.deltaTime;
 
@@ -1363,7 +1364,7 @@ SceneCreateInfo FallingCubesFactory()
             // Update falling cube positions and remove those below the despawn height
             for (auto it = fallingCubes.begin(); it != fallingCubes.end(); ) {
                 auto& fallingCube = *it;
-                auto& cube = Registry::getEntity(fallingCube.entityID);
+                auto& cube = Registry::GetSingleton().getEntity(fallingCube.entityID);
 
                 // Apply gravity to velocity
                 fallingCube.velocity.y += FALLING_GRAVITY * window.deltaTime;

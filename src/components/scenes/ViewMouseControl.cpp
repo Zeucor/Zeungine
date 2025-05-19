@@ -10,8 +10,8 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseContro
 		.name = "View Mouse Control",
 		.onAttachedFunction = [](auto& component)
 		{
-			auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
-			auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+			auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
+			auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
 			auto iRenderer = window.iRenderer;
             auto& deadZonePercent = component.template make<float>("DeadZonePercent", 0.1f);
             auto& lastPosition = component.template make<glm::vec2>("LastPosition", 0.0f, 0.0f);
@@ -45,7 +45,7 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseContro
 				window.addFocusHandler(
 					[HOST_INDEX_STACK = component.HOST_INDEX_STACK](bool focused)
 					{
-						auto& window = Registry::getWindow(HOST_INDEX_STACK);
+						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
 						if (focused)
 							window.iPlatformWindow->hidePointer();
 						else
@@ -56,7 +56,7 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseContro
 		},
 		.onDetachedFunction = [](auto& component)
 		{
-			auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+			auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
 			window.removeMouseMoveHandler(component.template getData<UniqueIdentifier>("mouseMoveID"));
 			window.removeFocusHandler(component.template getData<UniqueIdentifier>("focusID"));
 		}

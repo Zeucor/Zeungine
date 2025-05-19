@@ -8,7 +8,7 @@
 using namespace zg::lights;
 DirectionalLightShadow::DirectionalLightShadow(const std::vector<size_t*>& INDEX_STACK, size_t directionalLightIndex) :
 		INDEX_STACK(INDEX_STACK), directionalLightIndex(directionalLightIndex),
-		iRenderer(Registry::getWindow(INDEX_STACK).iRenderer),
+		iRenderer(Registry::GetSingleton().getWindow(INDEX_STACK).iRenderer),
 		texture(std::make_shared<textures::Texture>(iRenderer, glm::ivec4(8192, 8192, 1, 0), (const void*)0, textures::Texture::Depth, textures::Texture::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1, textures::Texture::AddressMode::ClampToEdge)),
 		framebuffer(std::make_shared<textures::Framebuffer>(iRenderer, std::vector<textures::Framebuffer::TextureAttachmentPair>{{texture, textures::Framebuffer::AttachmentType::Depth}}))
 {
@@ -62,8 +62,8 @@ zg::shaders::Shader* DirectionalLightShadow::addShader()
 }
 void DirectionalLightShadow::update()
 {
-	auto& window = Registry::getWindow(INDEX_STACK);
-	auto& scene = Registry::getScene(INDEX_STACK);
+	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
+	auto& scene = Registry::GetSingleton().getScene(INDEX_STACK);
 	auto& directionalLight = scene.directionalLights[directionalLightIndex];
 	static glm::vec2 projectionDimensions = {64, 64};
 	vp::Projection _projection(window, projectionDimensions, directionalLight.nearPlane, directionalLight.farPlane);

@@ -13,7 +13,7 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
         .name = "Bloom",
         .onAttachedFunction = [](auto& component)
         {
-            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+            auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
             auto& bloomColorMultiplier = component.template make<float>("bloomColorMultiplier", 1.00f);
             auto& bloomCoefficients = component.template make<glm::vec3>("bloomCoefficients", glm::vec3(0.2126, 0.7152, 0.0722));
             auto& bloomThreshold = component.template make<float>("bloomThreshold", 0.7f);
@@ -32,7 +32,7 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
                     componentID = component.ID
                 ](Shader& shader, auto& vao)
                 {
-                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                    auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
                     auto& component = scene.getComponentByID(componentID);
                     auto& bloomColorMultiplier = component.template getData<float>("bloomColorMultiplier");
                     auto& bloomCoefficients = component.template getData<glm::vec3>("bloomCoefficients");
@@ -93,7 +93,7 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
                     componentID = component.ID
                 ](Shader& shader, auto& vao)
                 {
-                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                    auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
                     auto& component = scene.getComponentByID(componentID);
                     auto& Pi2 = component.template getData<float>("Pi2");
                     auto& Directions = component.template getData<float>("Directions");
@@ -182,7 +182,7 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
                     componentID = component.ID
                 ](Shader& shader, auto& vao)
                 {
-                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
+                    auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
                     auto& component = scene.getComponentByID(componentID);
                     auto& intensity = component.template getData<float>("intensity");
                     float bloomCombine[1] = {

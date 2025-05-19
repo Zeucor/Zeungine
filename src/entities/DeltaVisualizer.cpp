@@ -78,7 +78,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
                     curveID = std::get<KEY_ID_VECTOR_ID_INDEX>(curve_tuple);
                     return;
 				}
-                auto& curve = Registry::getEntity(curveID);
+                auto& curve = Registry::GetSingleton().getEntity(curveID);
                 auto& curvePoints = curve.template getData<std::vector<glm::vec2>>("Points");
 				if (curveFrameOffset > 0)
 				{
@@ -111,7 +111,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
 				// << thisY
 				// 					<< std::endl;
 				auto point = glm::vec2(lastX + step, thisY);
-                auto& currentPointEntity = Registry::getEntity(currentPoint);
+                auto& currentPointEntity = Registry::GetSingleton().getEntity(currentPoint);
 				currentPointEntity.position = glm::vec3(point, 0.15);
 				curvePointsData[curvePointsIndex++] = point;
 				curve.refreshMeshes();
@@ -126,7 +126,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
 				auto lastDeltaTextSize =
 					robotoRegular.stringSize(lastDeltaTextString, lastDeltaTextFontsize, lastDeltaTextLineheight,
 																	 lastDeltaTextBounds, lastDeltaTextBreakstyle);
-                auto& scene = Registry::getScene(entity.INDEX_STACK);
+                auto& scene = Registry::GetSingleton().getScene(entity.INDEX_STACK);
                 auto deltaTextPosition = glm::vec3((size.x / 2.f) - (lastDeltaTextSize.x * lastDeltaTextScale.x),
                 (-size.y / 3.f) - (lastDeltaTextSize.y * lastDeltaTextScale.y), 0.15);
 				robotoRegular.stringToEntity(
@@ -168,7 +168,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
                     "r"
                 )
             );
-            auto& window = Registry::getWindow(entity.INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
             auto& robotoRegularPointer = entity.template make<zg::fonts::freetype::FreetypeFont*>(
                 "RobotoRegularFont",
                 new zg::fonts::freetype::FreetypeFont(
@@ -225,7 +225,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
             auto frametimeScale = glm::vec3(1.f / (frametimeFontsize * 32.f), 1.f / (frametimeFontsize * 32.f), 1.f);
             auto frametimeSize = robotoRegular.stringSize(frametimeString, frametimeFontsize, frametimeLineheight,
                                                                                                         frametimeBounds, frametimeBreakstyle);
-            auto& scene = Registry::getScene(entity.INDEX_STACK);
+            auto& scene = Registry::GetSingleton().getScene(entity.INDEX_STACK);
             robotoRegular.stringToEntity(
                 frametimeString,
                 glm::vec3((size.x / 2.f) - (frametimeSize.x * frametimeScale.x),

@@ -3,15 +3,10 @@
 #include <zg/crypto/vector.hpp>
 #include <string>
 using namespace zg;
-std::unique_ptr<Registry::WindowKeyIDVector> Registry::windows = std::make_unique<Registry::WindowKeyIDVector>([](auto& window) { return window.title; });
-std::unique_ptr<Registry::MeshKeyIDVector> Registry::meshes = std::make_unique<Registry::MeshKeyIDVector>([](auto& mesh) { return mesh.hash; });
-std::unordered_map<size_t, size_t> Registry::meshIDRefCounts;
-std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idWindows = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
-std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idScenes = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
-std::unique_ptr<std::map<size_t, std::vector<size_t*>>> Registry::idEntities = std::make_unique<std::map<size_t, std::vector<size_t*>>>();
-std::map<size_t, std::vector<size_t*>> Registry::idEntityComponents;
-std::map<size_t, std::vector<size_t*>> Registry::idSceneComponents;
-std::map<size_t, std::vector<size_t*>> Registry::idWindowComponents;
+Registry::Registry():
+    windows([](auto& window) { return window.title; }),
+    meshes([](auto& mesh) { return mesh.hash; })
+{}
 /**
  * Gets a Window from the registry by the Window ID
  */
@@ -20,17 +15,15 @@ Window& Registry::getWindow(const std::vector<size_t*>& indexStack)
     auto indexStackData = indexStack.data();
     if (indexStack.size() < 1)
         throw std::runtime_error("Cannot find a Window with a stack size of less than 1");
-    auto& windowsRef = *windows;
-    auto iter = (windowsRef.begin() + *indexStackData[0]);
-    if (iter == windowsRef.end())
+    auto iter = (windows.begin() + *indexStackData[0]);
+    if (iter == windows.end())
         throw std::runtime_error("Window not found with indexStack[0] = " + std::to_string(*indexStackData[0]));
     return *iter;
 }
 Window& Registry::getWindow(size_t ID)
 {
-    auto& idWindowsRef = *idWindows;
-    auto idIter = idWindowsRef.find(ID);
-    if (idIter == idWindowsRef.end())
+    auto idIter = idWindows.find(ID);
+    if (idIter == idWindows.end())
         throw std::runtime_error("Window not found with ID: " + std::to_string(ID));
     auto& stack = idIter->second;
     return getWindow(stack);
@@ -43,13 +36,12 @@ Window& Registry::getWindow(size_t ID)
 Registry::WindowKeyIDVector::EmplaceBackTuple Registry::addWindow(const WindowCreateInfo& createInfo)
 {
     auto usingInfo = createInfo;
-    auto& windowsRef = *windows;
-    auto transaction = windowsRef.startTransaction();
+    auto transaction = windows.startTransaction();
     usingInfo.INDEX_STACK = {transaction.index};
     usingInfo.ID = transaction.id;
     usingInfo.INDEX = transaction.index;
-    auto& window = windowsRef.commitTransaction(transaction, usingInfo);
-    (*idWindows)[window.ID] = window.INDEX_STACK;
+    auto& window = windows.commitTransaction(transaction, usingInfo);
+    idWindows[window.ID] = window.INDEX_STACK;
     return {transaction.key, transaction.id, transaction.index, &window};
 }
 components::windows::WindowComponent& Registry::getWindowComponent(size_t ID)
@@ -78,9 +70,8 @@ Scene& Registry::getScene(const std::vector<size_t*>& indexStack)
 }
 Scene& Registry::getScene(size_t ID)
 {
-    auto& idScenesRef = *idScenes;
-    auto idIter = idScenesRef.find(ID);
-    if (idIter == idScenesRef.end())
+    auto idIter = idScenes.find(ID);
+    if (idIter == idScenes.end())
         throw std::runtime_error("Scene not found with ID: " + std::to_string(ID));
     auto& stack = idIter->second;
     return getScene(stack);
@@ -124,9 +115,8 @@ Entity& Registry::getEntity(const std::vector<size_t*>& indexStack)
 }
 Entity& Registry::getEntity(size_t ID)
 {
-    auto& idEntitiesRef = *idEntities;
-    auto idIter = idEntitiesRef.find(ID);
-    if (idIter == idEntitiesRef.end())
+    auto idIter = idEntities.find(ID);
+    if (idIter == idEntities.end())
         throw std::runtime_error("Entity not found with ID: " + std::to_string(ID));
     auto& stack = idIter->second;
     return getEntity(stack);
@@ -180,16 +170,15 @@ size_t Registry::addMesh(const MeshCreateInfo& info, Entity& entity)
 {
     auto usingInfo = info;
     usingInfo.hash = hashMeshCreateInfo(usingInfo, entity);
-    auto& meshesRef = *meshes;
-    auto keyIter = meshesRef.find_key(usingInfo.hash);
-    if (keyIter != meshesRef.end())
+    auto keyIter = meshes.find_key(usingInfo.hash);
+    if (keyIter != meshes.end())
     {
         auto meshID = keyIter.id();
         meshIDRefCounts[meshID]++;
         return meshID;
     }
-    auto transaction = meshesRef.startTransaction();
-    auto& mesh = meshesRef.commitTransaction(transaction, usingInfo, entity);
+    auto transaction = meshes.startTransaction();
+    auto& mesh = meshes.commitTransaction(transaction, usingInfo, entity);
     mesh.ID = transaction.id;
     mesh.INDEX = transaction.index;
     mesh.INDEX_STACK = {transaction.index};
@@ -200,9 +189,8 @@ size_t Registry::addMesh(const MeshCreateInfo& info, Entity& entity)
 Mesh& Registry::getMesh(size_t ID)
 {
     std::lock_guard lock(meshIDMutex);
-    auto& meshesRef = *meshes;
-    auto idIter = meshesRef.find_id(ID);
-    if (idIter == meshesRef.end())
+    auto idIter = meshes.find_id(ID);
+    if (idIter == meshes.end())
         throw std::runtime_error("Mesh not found with ID: " + std::to_string(ID));
     return *idIter;
 }
@@ -212,10 +200,9 @@ bool Registry::deRefMesh(size_t ID)
     auto& count = meshIDRefCounts[ID];
     if (--count)
         return false;
-    auto& meshesRef = *meshes;
-    auto idIter = meshesRef.find_id(ID);
-    if (idIter == meshesRef.end())
+    auto idIter = meshes.find_id(ID);
+    if (idIter == meshes.end())
         throw std::runtime_error("Mesh not found with ID: " + std::to_string(ID));
-    meshesRef.erase(idIter);
+    meshes.erase(idIter);
     return true;
 }

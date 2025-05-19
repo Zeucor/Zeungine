@@ -40,7 +40,7 @@ JPH::ShapeRefC MeshShapeData::createJoltShape(Entity& entity) const
 	JPH::StaticCompoundShapeSettings compoundSettings;
 	for (auto& meshID : entity.meshIDs)
 	{
-		auto& mesh = Registry::getMesh(meshID);
+		auto& mesh = Registry::GetSingleton().getMesh(meshID);
 		auto& entityVertices = mesh.vertices;
 		auto& entityIndices = mesh.indices;
 		if (entityIndices.size() % 3 != 0)
@@ -98,7 +98,7 @@ JPH::ShapeRefC ConvexHullShapeData::createJoltShape(Entity& entity) const
 	JPH::StaticCompoundShapeSettings compoundSettings;
 	for (auto& meshID : entity.meshIDs)
 	{
-		auto& mesh = Registry::getMesh(meshID);
+		auto& mesh = Registry::GetSingleton().getMesh(meshID);
 		std::vector<glm::vec3> entityVertices = mesh.vertices;
 		if (entityVertices.empty())
 		{
@@ -202,7 +202,7 @@ zg::components::entities::ColliderFactory(const ColliderInfo& colliderInfo)
 		.name = "Collider",
 		.onAttachedFunction = [colliderInfo](auto& component)
 		{
-			auto& entity = Registry::getEntity(component.HOST_INDEX_STACK);
+			auto& entity = Registry::GetSingleton().getEntity(component.HOST_INDEX_STACK);
 			EntityComponent* rigidBodyComponentPointer = 0;
 			try
 			{
@@ -218,7 +218,7 @@ zg::components::entities::ColliderFactory(const ColliderInfo& colliderInfo)
 		},
 		.onDetachedFunction = [](auto& component)
 		{
-			auto& entity = Registry::getEntity(component.HOST_INDEX_STACK);
+			auto& entity = Registry::GetSingleton().getEntity(component.HOST_INDEX_STACK);
 			EntityComponent* rigidBodyComponentPointer = 0;
 			try
 			{

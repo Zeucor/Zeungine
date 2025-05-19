@@ -14,16 +14,16 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 			auto& b = (component.template make<char>("b", keyScheme == KeyScheme::UDLRSH ? KEYCODE_DOWN : 's'));
 			auto& l = (component.template make<char>("l", keyScheme == KeyScheme::UDLRSH ? KEYCODE_LEFT : 'a'));
 			auto& r = (component.template make<char>("r", keyScheme == KeyScheme::UDLRSH ? KEYCODE_RIGHT : 'd'));
-			auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
-			auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+			auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
+			auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
 			component.template make<UniqueIdentifier>(
 				"fID",
 				window.addKeyUpdateHandler(
 					f,
 					[HOST_INDEX_STACK = component.HOST_INDEX_STACK, force]()
 					{
-						auto& scene = Registry::getScene(HOST_INDEX_STACK);
-						auto& window = Registry::getWindow(HOST_INDEX_STACK);
+						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
+						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
 						scene.viewPointer->position.x += scene.viewPointer->direction.x * force * window.deltaTime;
 						scene.viewPointer->position.y += scene.viewPointer->direction.y * force * window.deltaTime;
 						scene.viewPointer->position.z += scene.viewPointer->direction.z * force * window.deltaTime;
@@ -35,8 +35,8 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 					b,
 					[HOST_INDEX_STACK = component.HOST_INDEX_STACK, force]()
 					{
-						auto& scene = Registry::getScene(HOST_INDEX_STACK);
-						auto& window = Registry::getWindow(HOST_INDEX_STACK);
+						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
+						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
 						scene.viewPointer->position.x -= scene.viewPointer->direction.x * force * window.deltaTime;
 						scene.viewPointer->position.y -= scene.viewPointer->direction.y * force * window.deltaTime;
 						scene.viewPointer->position.z -= scene.viewPointer->direction.z * force * window.deltaTime;
@@ -47,8 +47,8 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 				window.addKeyUpdateHandler(l,
 					[HOST_INDEX_STACK = component.HOST_INDEX_STACK, force]()
 					{
-						auto& scene = Registry::getScene(HOST_INDEX_STACK);
-						auto& window = Registry::getWindow(HOST_INDEX_STACK);
+						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
+						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
 						glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 						glm::vec3 right =
 							glm::normalize(glm::cross(scene.viewPointer->direction, worldUp));
@@ -64,8 +64,8 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 				window.addKeyUpdateHandler(r,
 					[HOST_INDEX_STACK = component.HOST_INDEX_STACK, force]()
 					{
-						auto& scene = Registry::getScene(HOST_INDEX_STACK);
-						auto& window = Registry::getWindow(HOST_INDEX_STACK);
+						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
+						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
 						glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 						glm::vec3 right =
 							glm::normalize(glm::cross(scene.viewPointer->direction, worldUp));
@@ -78,7 +78,7 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 					}));
 		},
 		.onDetachedFunction = [](auto& component) {
-			auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+			auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
 			auto& f = component.template getData<char>("f");
 			auto& b = component.template getData<char>("b");
 			auto& l = component.template getData<char>("l");

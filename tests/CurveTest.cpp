@@ -1,7 +1,9 @@
 #include <zg/Scene.hpp>
 #include <zg/Window.hpp>
 #include <zg/entities/Curve.hpp>
+#include <zg/Registry.hpp>
 #define PI acos(-1)
+using namespace zg;
 // struct CurveScene : zg::Scene
 // {
 // 	// std::shared_ptr<zg::entities::NDParametricCurve<2>> circle;
@@ -46,6 +48,7 @@
 // };
 int main()
 {
+	Registry registry;
 	// zg::Window window("Curve Test", 640, 480, -1, -1);
 	// window.runOnThread([](auto& window) { window.setScene(std::make_shared<CurveScene>(window)); });
 	// window.run();

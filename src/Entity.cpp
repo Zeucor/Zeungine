@@ -48,7 +48,7 @@ Entity::Entity(const EntityCreateInfo& info) :
 {
 	ZGZoneScoped;
 	for (auto& meshInfo : info.meshInfos)
-		meshIDs.push_back(Registry::addMesh(meshInfo, *this));
+		meshIDs.push_back(Registry::GetSingleton().addMesh(meshInfo, *this));
 	for (auto& childInfo : info.childrenInfos)
 		addChild(childInfo);
 }
@@ -88,9 +88,9 @@ Entity::Entity(const Entity& other) :
 {
 	ZGZoneScoped;
 	{
-		std::lock_guard meshIDLock(Registry::meshIDMutex);
+		std::lock_guard meshIDLock(Registry::GetSingleton().meshIDMutex);
 		for (auto& meshID : meshIDs)
-			Registry::meshIDRefCounts[meshID]++;
+			Registry::GetSingleton().meshIDRefCounts[meshID]++;
 	}
 }
 Entity::~Entity()
@@ -101,7 +101,7 @@ Entity::~Entity()
 			child.onRemovedFunction(child);
 	children.clear();
 	for (auto& meshID : meshIDs)
-		Registry::deRefMesh(meshID);
+		Registry::GetSingleton().deRefMesh(meshID);
 	detachAllComponents();
 }
 Entity& Entity::operator=(const Entity& other)
@@ -131,15 +131,15 @@ Entity& Entity::operator=(const Entity& other)
 	mouseMoveHandlers = other.mouseMoveHandlers;
 	mouseHoverHandlers = other.mouseHoverHandlers;
 	{
-		std::lock_guard meshIDLock(Registry::meshIDMutex);
+		std::lock_guard meshIDLock(Registry::GetSingleton().meshIDMutex);
 		for (auto& meshID : meshIDs)
-			Registry::meshIDRefCounts[meshID]--;
+			Registry::GetSingleton().meshIDRefCounts[meshID]--;
 	}
 	meshIDs = other.meshIDs;
 	{
-		std::lock_guard meshIDLock(Registry::meshIDMutex);
+		std::lock_guard meshIDLock(Registry::GetSingleton().meshIDMutex);
 		for (auto& meshID : meshIDs)
-			Registry::meshIDRefCounts[meshID]++;
+			Registry::GetSingleton().meshIDRefCounts[meshID]++;
 	}
 	meshInfos = other.meshInfos;
 	children = other.children;
@@ -162,10 +162,10 @@ void Entity::refreshMeshes()
 	{
 		auto meshID = index < meshIDsSize ? meshIDsData[index] : 0;
 		auto& meshInfo = meshInfosData[index];
-		auto newSubMeshID = Registry::addMesh(meshInfo, *this);
-		if (Registry::deRefMesh(meshID))
+		auto newSubMeshID = Registry::GetSingleton().addMesh(meshInfo, *this);
+		if (Registry::GetSingleton().deRefMesh(meshID))
 		{
-			auto& scene = Registry::getScene(INDEX_STACK);
+			auto& scene = Registry::GetSingleton().getScene(INDEX_STACK);
 			scene.instancedDraw.removeMesh(meshID);
 		}
 		if (meshID != 0 && meshID != newSubMeshID)
@@ -183,7 +183,7 @@ void Entity::refreshMeshes()
 Material& Entity::meshMaterial(size_t meshID)
 {
 	ZGZoneScoped;
-	auto& mesh = Registry::getMesh(meshID);
+	auto& mesh = Registry::GetSingleton().getMesh(meshID);
 	return mesh.info.material;
 }
 float BoxSDF(const glm::vec3& p) {
@@ -316,7 +316,7 @@ void Entity::render()
 		return;
 	for (auto& meshID : meshIDs)
 	{
-		auto& mesh = Registry::getMesh(meshID);
+		auto& mesh = Registry::GetSingleton().getMesh(meshID);
 		mesh.uid = ID;
 		mesh.render(*this);
 	}
@@ -329,12 +329,12 @@ void Entity::postRender()
 {
 	ZGZoneScoped;
 	// for (auto& meshID : meshIDs)
-	// 	Registry::getMesh(meshID).setTexturesThisPass = false;
+	// 	Registry::GetSingleton().getMesh(meshID).setTexturesThisPass = false;
 }
 glm::mat4& Entity::getModelMatrix()
 {
 	ZGZoneScoped;
-	auto& scene = Registry::getScene(INDEX_STACK);
+	auto& scene = Registry::GetSingleton().getScene(INDEX_STACK);
 	if (updateTime == scene.updateTime && updateTime != 0)
 	{
 		return model;
@@ -347,7 +347,7 @@ glm::mat4& Entity::getModelMatrix()
 	glm::mat4 localModel = transMat * rotMat * scaleMat;
 	model = localModel;
 	Entity* parentEntity = 0;
-	if (Registry::getNthParentEntity(INDEX_STACK, parentEntity))
+	if (Registry::GetSingleton().getNthParentEntity(INDEX_STACK, parentEntity))
 	{
 		model = parentEntity->getModelMatrix() * model;
 	}
@@ -363,7 +363,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const Entity
 	usingInfo.ID = transaction.id;
 	usingInfo.INDEX = transaction.index;
 	auto& childEntity = children.commitTransaction(transaction, usingInfo);
-	(*Registry::idEntities)[childEntity.ID] = childEntity.INDEX_STACK;
+	Registry::GetSingleton().idEntities[childEntity.ID] = childEntity.INDEX_STACK;
 	if (childEntity.onAddedFunction)
 		childEntity.onAddedFunction(childEntity);
 	return {transaction.key, transaction.id, transaction.index, &childEntity};
@@ -380,11 +380,11 @@ void Entity::removeChild(size_t ID)
 	if (child.onRemovedFunction)
 		child.onRemovedFunction(child);
 	children.erase(childIter);
-	auto& idEntitiesRef = *Registry::idEntities;
-	auto idIter = idEntitiesRef.find(ID);
-	if (idIter != idEntitiesRef.end())
+	auto& idEntities = Registry::GetSingleton().idEntities;
+	auto idIter = idEntities.find(ID);
+	if (idIter != idEntities.end())
 	{
-		idEntitiesRef.erase(idIter);
+		idEntities.erase(idIter);
 	}
 }
 // Mouse

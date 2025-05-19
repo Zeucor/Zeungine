@@ -72,7 +72,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 			auto& mTempAllocator = component.template getData<JPH::TempAllocatorImpl*>("mTempAllocator");
 			auto& mJobSystem = component.template getData<JPH::JobSystemThreadPool*>("mJobSystem");
 			auto& mPhysicsSystem = component.template getData<JPH::PhysicsSystem*>("mPhysicsSystem");
-			auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+			auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
 			auto entitiesSize = scene.entities.size();
 			auto entitiesData = scene.entities.data();
 			for (size_t index = 0; index < entitiesSize; ++index)
@@ -96,8 +96,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 		{
 			// auto& runningMutex = *component.template getData<std::mutex*>("runningMutex");
 			// std::lock_guard lock(runningMutex);
-			auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
-			auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+			auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
+			auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
 			auto& mPhysicsSystem = component.template getData<JPH::PhysicsSystem*>("mPhysicsSystem");
 			auto& mTempAllocator = component.template getData<JPH::TempAllocatorImpl*>("mTempAllocator");
 			auto& mJobSystem = component.template getData<JPH::JobSystemThreadPool*>("mJobSystem");
@@ -139,10 +139,10 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 						const auto& body = lock.GetBody();
 						if (!body.IsStatic())
 						{
-							auto& rb = Registry::getEntityComponent(rbID);
+							auto& rb = Registry::GetSingleton().getEntityComponent(rbID);
 							auto position = body.GetPosition();
 							auto rotation = body.GetRotation();
-							auto& entity = Registry::getEntity(rb.HOST_INDEX_STACK);
+							auto& entity = Registry::GetSingleton().getEntity(rb.HOST_INDEX_STACK);
 							entity.position = ToJolt<JPH::Vec3, glm::vec3>(position);
 							entity.rotation = ToJolt<JPH::Quat, glm::quat>(rotation);
 							entity.getModelMatrix();
@@ -240,12 +240,12 @@ CollisionManifold ZGContactListener::constructManifold(components::entities::Ent
 void ZGContactListener::OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2,
 																			 const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
-	auto& scene = Registry::getScene(sceneIndexStack);
+	auto& scene = Registry::GetSingleton().getScene(sceneIndexStack);
 	auto& physicsScene = scene.getComponentByID(physicsSceneID);
 	auto& joltIDRigidBodies =
 		physicsScene.template getData<std::unordered_map<JPH::BodyID, size_t>>("joltIDRigidBodies");
-	auto& ec1 = Registry::getEntityComponent(joltIDRigidBodies[inBody1.GetID()]);
-	auto& ec2 = Registry::getEntityComponent(joltIDRigidBodies[inBody2.GetID()]);
+	auto& ec1 = Registry::GetSingleton().getEntityComponent(joltIDRigidBodies[inBody1.GetID()]);
+	auto& ec2 = Registry::GetSingleton().getEntityComponent(joltIDRigidBodies[inBody2.GetID()]);
 	auto manifold = constructManifold(&ec1, &ec2, inManifold);
 	ec1.template setData<CollisionManifold>("addActiveManifold", manifold);
 	ec2.template setData<CollisionManifold>("addActiveManifold", manifold);
@@ -254,12 +254,12 @@ void ZGContactListener::OnContactAdded(const JPH::Body& inBody1, const JPH::Body
 void ZGContactListener::OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2,
 																					 const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings)
 {
-	auto& scene = Registry::getScene(sceneIndexStack);
+	auto& scene = Registry::GetSingleton().getScene(sceneIndexStack);
 	auto& physicsScene = scene.getComponentByID(physicsSceneID);
 	auto& joltIDRigidBodies =
 		physicsScene.template getData<std::unordered_map<JPH::BodyID, size_t>>("joltIDRigidBodies");
-	auto& ec1 = Registry::getEntityComponent(joltIDRigidBodies[inBody1.GetID()]);
-	auto& ec2 = Registry::getEntityComponent(joltIDRigidBodies[inBody2.GetID()]);
+	auto& ec1 = Registry::GetSingleton().getEntityComponent(joltIDRigidBodies[inBody1.GetID()]);
+	auto& ec2 = Registry::GetSingleton().getEntityComponent(joltIDRigidBodies[inBody2.GetID()]);
 	ec1.template setData<size_t>("removeActiveManifold", ec2.ID);
 	ec2.template setData<size_t>("removeActiveManifold", ec1.ID);
 	auto manifold = constructManifold(&ec1, &ec2, inManifold);
@@ -270,12 +270,12 @@ void ZGContactListener::OnContactPersisted(const JPH::Body& inBody1, const JPH::
 // Called when two bodies stop touching.
 void ZGContactListener::OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair)
 {
-	auto& scene = Registry::getScene(sceneIndexStack);
+	auto& scene = Registry::GetSingleton().getScene(sceneIndexStack);
 	auto& physicsScene = scene.getComponentByID(physicsSceneID);
 	auto& joltIDRigidBodies =
 		physicsScene.template getData<std::unordered_map<JPH::BodyID, size_t>>("joltIDRigidBodies");
-	auto& ec1 = Registry::getEntityComponent(joltIDRigidBodies[inSubShapePair.GetBody1ID()]);
-	auto& ec2 = Registry::getEntityComponent(joltIDRigidBodies[inSubShapePair.GetBody2ID()]);
+	auto& ec1 = Registry::GetSingleton().getEntityComponent(joltIDRigidBodies[inSubShapePair.GetBody1ID()]);
+	auto& ec2 = Registry::GetSingleton().getEntityComponent(joltIDRigidBodies[inSubShapePair.GetBody2ID()]);
 	ec1.template setData<size_t>("removeActiveManifold", ec2.ID);
 	ec2.template setData<size_t>("removeActiveManifold", ec1.ID);
 }

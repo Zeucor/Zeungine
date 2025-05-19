@@ -10,7 +10,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
         .name = "EntityThirdPersonCamera",
         .onAttachedFunction = [entityIndexStack = entity.INDEX_STACK](auto& component)
         {
-            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+            auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
             auto& focused = component.template make<bool>("Focused", false);
             auto& mouseMoveID = component.template make<UniqueIdentifier>("MouseMoveID", 0);
             auto& focusID = component.template make<UniqueIdentifier>("FocusID", 0);
@@ -23,11 +23,11 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             auto& maxPitch = component.template make<float>("MaxPitch", -5.0f);
             auto& lastPosition = component.template make<glm::vec2>("LastPosition", 0.0f, 0.0f);
             auto& deadZonePercent = component.template make<float>("DeadZonePercent", 0.1f);
-            auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
             mouseMoveID = window.addMouseMoveHandler([HOST_INDEX_STACK = component.HOST_INDEX_STACK, componentID = component.ID](glm::vec2 coords)
             	{
-                    auto& scene = Registry::getScene(HOST_INDEX_STACK);
-                    auto& window = Registry::getWindow(HOST_INDEX_STACK);
+                    auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
+                    auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
                     auto& component = scene.getComponentByID(componentID);
             		if (!window.focused)
             		{
@@ -75,10 +75,10 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             focusID =
                 window.addFocusHandler([entityIndexStack, HOST_INDEX_STACK = component.HOST_INDEX_STACK, componentID = component.ID](bool focused)
                 	{
-                        auto& scene = Registry::getScene(HOST_INDEX_STACK);
-                        auto& window = Registry::getWindow(HOST_INDEX_STACK);
+                        auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
+                        auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
                         auto& component = scene.getComponentByID(componentID);
-                        auto& entity = Registry::getEntity(entityIndexStack);
+                        auto& entity = Registry::GetSingleton().getEntity(entityIndexStack);
                 		if (focused)
                 		{
                             auto& currentYaw = component.template getData<float>("CurrentYaw");
@@ -126,8 +126,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
         {
             auto& mouseMoveID = component.template getData<UniqueIdentifier>("MouseMoveID");
             auto& focusID = component.template getData<UniqueIdentifier>("FocusID");
-            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
-            auto& window = Registry::getWindow(component.HOST_INDEX_STACK);
+            auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
+            auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
             window.removeMouseMoveHandler(mouseMoveID);
             window.removeFocusHandler(focusID);
         },
@@ -137,8 +137,8 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             auto& verticalOffset = component.template getData<float>("VerticalOffset");
             auto& currentYaw = component.template getData<float>("CurrentYaw");
             auto& currentPitch = component.template getData<float>("CurrentPitch");
-            auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
-            auto& entity = Registry::getEntity(entityIndexStack);
+            auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
+            auto& entity = Registry::GetSingleton().getEntity(entityIndexStack);
             if (!scene.viewPointer)
                 return;
 

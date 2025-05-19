@@ -17,7 +17,7 @@ Scene::Scene(const SceneCreateInfo& info) :
 	ID(info.ID),
 	INDEX(info.INDEX),
 	INDEX_STACK(info.INDEX_STACK),
-	iRenderer(Registry::getWindow(INDEX_STACK).iRenderer),
+	iRenderer(Registry::GetSingleton().getWindow(INDEX_STACK).iRenderer),
 	name(info.name),
 	viewPointer(std::make_shared<vp::View>(info.cameraPosition, info.cameraDirection, info.cameraUp)),
 	useBVH(info.useBVH),
@@ -47,7 +47,7 @@ Scene::Scene(const SceneCreateInfo& info) :
 	postPostRenderFunction(info.postPostRenderFunction)
 {
 	ZGZoneScopedN("Scene::constructor");
-	auto& window = Registry::getWindow(INDEX_STACK);
+	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	switch (info.projectionType)
 	{
 	case vp::Projection::TYPE::Perspective:
@@ -208,7 +208,7 @@ std::vector<textures::Framebuffer::TextureAttachmentPair>
 Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::AttachmentType>& attachments)
 {
 	ZGZoneScoped;
-	auto& window = Registry::getWindow(INDEX_STACK);
+	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	std::vector<textures::Framebuffer::TextureAttachmentPair> textureAttachmentPairs;
 	for (auto& attachment : attachments)
 	{
@@ -261,11 +261,11 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 	usingInfo.ID = transaction.id;
 	usingInfo.INDEX = transaction.index;
 	auto& entity = entities.commitTransaction(transaction, usingInfo);
-	(*Registry::idEntities)[entity.ID] = entity.INDEX_STACK;
+	Registry::GetSingleton().idEntities[entity.ID] = entity.INDEX_STACK;
 	postAddEntity(entity);
 	if (entity.onAddedFunction)
 		entity.onAddedFunction(entity);
-	auto& window = Registry::getWindow(INDEX_STACK);
+	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	if (callOnEntityAdded && window.onEntityAdded)
 		window.onEntityAdded(entity);
 	return {transaction.key, transaction.id, transaction.index, &entity};
@@ -282,10 +282,10 @@ bool Scene::removeEntity(size_t ID)
 		entity.onRemovedFunction(entity);
 	preRemoveEntity(entity);
 	entities.erase(entityIter);
-	auto& idEntitiesRef = *Registry::idEntities;
-	auto idIter = idEntitiesRef.find(ID);
-	if (idIter != idEntitiesRef.end())
-		idEntitiesRef.erase(idIter);
+	auto& idEntities = Registry::GetSingleton().idEntities;
+	auto idIter = idEntities.find(ID);
+	if (idIter != idEntities.end())
+		idEntities.erase(idIter);
 	return true;
 }
 void Scene::update()
@@ -328,7 +328,7 @@ void Scene::preRender()
 		for (auto& meshID : entity.meshIDs)
 		{
 			ZGZoneScoped;
-			auto& mesh = Registry::getMesh(meshID);
+			auto& mesh = Registry::GetSingleton().getMesh(meshID);
 			mesh.uid = entity.ID;
 			shader.bind(mesh);
 			setShader(mesh, shader);
@@ -497,13 +497,13 @@ std::pair<Entity&, Mesh&> Scene::findEntityAndMeshByPrimID(const size_t& primID)
 	{
 		throw std::runtime_error("Ohmy now, we always set tri IDs, so this should logically never happen");
 	}
-	auto& entity = Registry::getEntity(entityMeshID.first);
-	return {entity, Registry::getMesh(entityMeshID.second)};
+	auto& entity = Registry::GetSingleton().getEntity(entityMeshID.first);
+	return {entity, Registry::GetSingleton().getMesh(entityMeshID.second)};
 }
 void Scene::hookMouseEvents()
 {
 	ZGZoneScoped;
-	auto& window = Registry::getWindow(INDEX_STACK);
+	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	for (unsigned int button = MinMouseButtonIndex; button < MaxMouseButton; ++button)
 	{
 		mousePressIDs[button] = window.addMousePressHandler(
@@ -542,7 +542,7 @@ void Scene::hookMouseEvents()
 			{
 				if (currentHoveredEntityID)
 				{
-					auto& currentHoveredEntity = Registry::getEntity(currentHoveredEntityID);
+					auto& currentHoveredEntity = Registry::GetSingleton().getEntity(currentHoveredEntityID);
 					currentHoveredEntity.callMouseHoverHandler(false);
 					currentHoveredEntityID = 0;
 				}
@@ -553,7 +553,7 @@ void Scene::hookMouseEvents()
 			{
 				if (currentHoveredEntityID)
 				{
-					auto& currentHoveredEntity = Registry::getEntity(currentHoveredEntityID);
+					auto& currentHoveredEntity = Registry::GetSingleton().getEntity(currentHoveredEntityID);
 					currentHoveredEntity.callMouseHoverHandler(false);
 				}
 				currentHoveredEntityID = foundEntityMesh.first.ID;
@@ -565,7 +565,7 @@ void Scene::hookMouseEvents()
 void Scene::unhookMouseEvents()
 {
 	ZGZoneScoped;
-	auto& window = Registry::getWindow(INDEX_STACK);
+	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	for (unsigned int button = MinMouseButtonIndex; button <= MaxMouseButtonIndex; ++button)
 	{
 		window.removeMousePressHandler(button, mousePressIDs[button]);
@@ -648,7 +648,7 @@ template <>
 Serial& deserialize(Serial& serial, Scene& scene)
 {
 	ZGZoneScoped;
-	auto& window = Registry::getWindow(scene.INDEX_STACK);
+	auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 	bool wroteBit = false;
 	serial >> wroteBit;
 	if (!wroteBit)
@@ -753,7 +753,7 @@ size_t Scene::getTransparentDrawCount()
 			}
 			else
 			{
-				auto& mesh = Registry::getMesh(meshID);
+				auto& mesh = Registry::GetSingleton().getMesh(meshID);
 				for (auto& keyedPair : mesh.info.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
@@ -794,7 +794,7 @@ size_t Scene::getOpaqueDrawCount()
 			}
 			else
 			{
-				auto& mesh = Registry::getMesh(meshID);
+				auto& mesh = Registry::GetSingleton().getMesh(meshID);
 				for (auto& keyedPair : mesh.info.keyedTextures)
 				{
 					if (keyedPair.second->isTransparent)
@@ -833,7 +833,7 @@ std::vector<std::pair<Entity*, Mesh*>>& Scene::getTransparentDrawList()
 	{
 		for (auto& meshID : entity.meshIDs)
 		{
-			auto& mesh = Registry::getMesh(meshID);
+			auto& mesh = Registry::GetSingleton().getMesh(meshID);
 			bool addMesh = false;
 			if (entity.isTransparent)
 			{
@@ -891,7 +891,7 @@ std::vector<std::pair<Entity*, Mesh*>>& Scene::getOpaqueDrawList()
 	{
 		for (auto& meshID : entity.meshIDs)
 		{
-			auto& mesh = Registry::getMesh(meshID);
+			auto& mesh = Registry::GetSingleton().getMesh(meshID);
 			bool addMesh = true;
 			if (entity.isTransparent)
 			{

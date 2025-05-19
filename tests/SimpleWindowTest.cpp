@@ -7,6 +7,7 @@ using namespace zg;
 using namespace zg::shaders;
 int main()
 {
+	Registry registry;
 	ShaderFactory shader_factory;
 	register_zg_shader_hooks();
 	auto sizeofWindow = sizeof(Window);
@@ -18,7 +19,7 @@ int main()
 				"sizeof(Entity)\t= " << sizeofEntity << "bytes" << std::endl <<
 				"sizeof(25E1W2S)\t= " << _25Entities1Window2Scene << "bytes" << std::endl;
 	WindowCreateInfo windowCreateInfo{.title = "Simple Window", .windowWidth = 640, .windowHeight = 480};
-	auto window_tuple = zg::Registry::addWindow(windowCreateInfo);
+	auto window_tuple = zg::Registry::GetSingleton().addWindow(windowCreateInfo);
 	auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
 	window.runOnThread(
 		[](auto& window)

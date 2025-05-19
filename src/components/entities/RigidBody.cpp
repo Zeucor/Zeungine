@@ -48,8 +48,8 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 		.name = "RigidBody",
 		.onAttachedFunction = [&, info](auto& component)
 		{
-			auto& entity = Registry::getEntity(component.HOST_INDEX_STACK);
-			auto& scene = Registry::getScene(component.HOST_INDEX_STACK);
+			auto& entity = Registry::GetSingleton().getEntity(component.HOST_INDEX_STACK);
+			auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
 			auto& physicsScene = component.template make<zg::components::scenes::SceneComponent*>("PhysicsScene", nullptr);
 			try
 			{
@@ -74,7 +74,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 		.getDataFunctions = {
 			{"recreateJoltBody", [](auto& component)->std::any&
 			{
-				auto& entity = Registry::getEntity(component.HOST_INDEX_STACK);
+				auto& entity = Registry::GetSingleton().getEntity(component.HOST_INDEX_STACK);
 				auto& physicsScene = *component.template getData<zg::components::scenes::SceneComponent*>("PhysicsScene");
 				auto& info = component.template getData<RigidBodyInfo>("Info");
 				auto& position = *component.template getData<glm::vec3*>("Position");
@@ -375,7 +375,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				}
 				activeRigidBodyManifolds[otherID] = manifold;
 				auto& collidingMaskCounts = component.template getData<std::map<size_t, size_t>>("CollidingMaskCounts");
-				auto& otherRb = Registry::getEntityComponent(otherID);
+				auto& otherRb = Registry::GetSingleton().getEntityComponent(otherID);
 				auto& rbCollisionMask = otherRb.template getData<size_t>("CollisionMask");
 				collidingMaskCounts[rbCollisionMask]++;
 				return {};
@@ -391,7 +391,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 				{
 					return {};
 				}
-				auto& otherRb = Registry::getEntityComponent(otherRbID);
+				auto& otherRb = Registry::GetSingleton().getEntityComponent(otherRbID);
 				auto& collidingMaskCounts = component.template getData<std::map<size_t, size_t>>("CollidingMaskCounts");
 				auto& rbCollisionMask = otherRb.template getData<size_t>("CollisionMask");
 				collidingMaskCounts[rbCollisionMask]--;

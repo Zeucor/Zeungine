@@ -15,7 +15,7 @@ Mesh::Mesh(const MeshCreateInfo& info, Entity& entity):
 	auto meshInfoConstantsEnd = info.constants.end();
 	if (std::find(info.constants.begin(), meshInfoConstantsEnd, "Shape") != meshInfoConstantsEnd)
 		return;
-	auto& window = Registry::getWindow(entity.INDEX_STACK);
+	auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
 	if (!indices.size() || !vertices.size())
         return;
     updateIndices(indices);
@@ -54,10 +54,10 @@ Mesh& Mesh::operator=(const Mesh& other)
 }
 void Mesh::render(Entity& entity)
 {
-	auto& window = Registry::getWindow(entity.INDEX_STACK);
+	auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
 	auto shader = addShader();
 	shader->bind(*this);
-	auto& scene = Registry::getScene(entity.INDEX_STACK);
+	auto& scene = Registry::GetSingleton().getScene(entity.INDEX_STACK);
 	{
 		if (entity.viewPointer)
 			entity.viewPointer->updateMutex.lock();
