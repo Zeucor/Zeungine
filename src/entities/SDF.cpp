@@ -189,7 +189,7 @@ float HexagonalPrismSDF(vec3 p_local) {
         float Hexagon2DSDF(glm::vec2 p, float inradius_hex) {
             p = glm::abs(p);
             // K_HEX_PRISM = vec3(-0.866025404, 0.5, 0.577350269)
-            p -= 2.0 * glm::min(glm::dot(K_HEX_PRISM.xy, p), 0.0) * glm(K_HEX_PRISM.x, K_HEX_PRISM.y);
+            p -= 2.0 * (glm::min)(glm::dot(K_HEX_PRISM.xy, p), 0.0) * glm(K_HEX_PRISM.x, K_HEX_PRISM.y);
             p -= glm::vec2(glm::clamp(p.x, -K_HEX_PRISM.z * inradius_hex, K_HEX_PRISM.z * inradius_hex), inradius_hex);
             return glm::length(p) * glm::sign(p.y);
         }
