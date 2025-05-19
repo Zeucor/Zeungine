@@ -50,7 +50,7 @@ namespace zg
          */
         static Window& getWindow(size_t ID);
         /**
-         * Emplaces a Window at the back of the Windows' key/id vector, returning the tuple containing key/id/*index/*value
+         * Emplaces a Window at the back of the Windows' key/id vector, returning the tuple containing key/id/(*index)/(*value)
          * 
          * *value can become degenerate if adding multiple windows/scenes/entities, so use ID (stacks) instead
          */
