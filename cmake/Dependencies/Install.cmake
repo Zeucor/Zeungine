@@ -33,13 +33,15 @@ if(NOT MACOS AND NOT LINK_SYS_OPENSSL)
         "${openssl_LIB_DIR}"
         "${ffmpeg_ZG_LIB_PREFIX}" crypto crypto "${STATIC_ZG_LIB_SUFFIX}" ON)
 endif()
-if(WINDOWS)
-    set(TRACY_EXT .exe)
+if(ENABLE_TRACY)
+    if(WINDOWS)
+        set(TRACY_EXT .exe)
+    endif()
+    install(FILES ${CMAKE_BINARY_DIR}/tracyserver/tracy-profiler${TRACY_EXT}
+        DESTINATION ${ZG_BIN_INSTALL_PREFIX}
+        PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        COMPONENT dependencies)
 endif()
-install(FILES ${CMAKE_BINARY_DIR}/tracyserver/tracy-profiler${TRACY_EXT}
-    DESTINATION ${ZG_BIN_INSTALL_PREFIX}
-    PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    COMPONENT dependencies)
 set(ZG_TARGETS_TO_INSTALL
     boost
     freetype png harfbuzz brotlidec brotlicommon
