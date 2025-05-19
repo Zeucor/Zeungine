@@ -74,75 +74,6 @@ zg::EntityCreateInfo zg::entities::SDFFactory(const std::string& sdf_key, glm::v
         }
     };
     return info;
-}// Helper function for WobblySphereSDF (C++ side)
-float wobbly_sphere_sdf_impl(glm::vec3 p_local) {
-    float base_radius = 0.4f;
-    float amplitude1 = 0.05f;
-    glm::vec3 freq1 = glm::vec3(5.0f, 6.0f, 7.0f);
-    float amplitude2 = 0.03f;
-    glm::vec3 freq2 = glm::vec3(11.0f, 9.0f, 13.0f);
-
-    float displacement = 0.0f;
-    // First layer of sinusoidal displacement
-    displacement += amplitude1 * glm::sin(p_local.x * freq1.x) * glm::sin(p_local.y * freq1.y) * glm::sin(p_local.z * freq1.z);
-    // Second layer of cosinusoidal displacement with different frequencies and phase offsets
-    displacement += amplitude2 * glm::cos(p_local.x * freq2.x + 0.5f) * glm::cos(p_local.y * freq2.y + 1.0f) * glm::cos(p_local.z * freq2.z + 1.5f);
-    
-    return glm::length(p_local) - (base_radius + displacement);
-}
-
-// Helper function for HelixoidDonutSDF (C++ side)
-float helixoid_donut_sdf_impl(glm::vec3 p_local) {
-    float R = 0.55f; // Major radius of the torus
-    float r = 0.18f;  // Minor radius of the torus tube
-    float num_twists = 8.0f; // Number of full twists of the tube around the major ring
-
-    // Calculate distance from Y-axis for the main ring (cylindrical coordinate rho)
-    float main_ring_dist_from_y_axis = glm::length(glm::vec2(p_local.x, p_local.z));
-    
-    // q is the point in the 2D cross-section plane of the torus
-    glm::vec2 q = glm::vec2(main_ring_dist_from_y_axis - R, p_local.y);
-
-    // Angle around the Y-axis (azimuthal angle for the main ring)
-    // This angle determines the rotation for the twist
-    float angle_around_y = glm::atan(p_local.z, p_local.x); // atan2(z,x)
-
-    // Calculate the twist rotation
-    float twist_angle = num_twists * angle_around_y;
-    float c = glm::acos(twist_angle);
-    float s = glm::asin(twist_angle);
-    
-    // Apply the twist rotation to the 2D cross-section point q
-    glm::vec2 twisted_q = glm::vec2(c * q.y + s * q.x, s * q.y - c * q.x);
-
-    return glm::length(twisted_q) - r;
-}
-
-// Helper function for SphericalHarmonicsInspiredBlobSDF (C++ side)
-float spherical_harmonics_inspired_blob_sdf_impl(glm::vec3 p_local) {
-    float base_radius = 0.25f; // Adjusted base radius
-    float r_len = glm::length(p_local);
-
-    // Handle singularity at the origin: consider it inside
-    if (r_len < 0.00001f) return -base_radius;
-
-    // Convert to spherical coordinates
-    // phi: polar angle (from +Z axis), 0 to PI
-    // theta: azimuthal angle (in XY plane from +X axis), -PI to PI
-    float phi = glm::acos(glm::clamp(p_local.z / r_len, -1.0f, 1.0f));
-    float theta = glm::atan(p_local.y, p_local.x); // atan2(y,x)
-
-    // Terms inspired by spherical harmonics to modulate the radius
-    // These create various lobes and indentations
-    float term1 = 0.08f * glm::cos(phi);                                      // Elongates/compresses along Z (Y_1,0 like)
-    float term2 = 0.06f * glm::sin(phi) * glm::sin(phi) * glm::cos(2.0f * theta); // 2 lobes in XY plane (Y_2,2 like)
-    float term3 = 0.04f * (3.0f * glm::cos(phi) * glm::cos(phi) - 1.0f);     // Pinches/expands poles vs equator (Y_2,0 like)
-    float term4 = 0.03f * glm::pow(glm::sin(phi), 3.0f) * glm::cos(3.0f * theta); // 3 lobes in XY, stronger at equator (Y_3,3 like)
-    float term5 = 0.02f * glm::cos(2.0f * phi) * glm::sin(theta) * glm::sin(phi); // More complex polar/azimuthal interaction
-
-    float dynamic_radius = base_radius + term1 + term2 + term3 + term4 + term5;
-    
-    return r_len - dynamic_radius;
 }
 void zg::register_zg_sdfs()
 {
@@ -447,103 +378,215 @@ float HexagonalPrismSDF(vec3 p_local) {
     // WobblySphere SDF
     auto wobbly_sphere_id = sdf_rgy.register_sdf("WobblySphere", [](auto& shader, auto& constants) {
         return R"(
-    // WobblySphereSDF: A sphere with multi-frequency sinusoidal displacements.
-    // Creates a complex, round, and somewhat organic surface.
-    float WobblySphereSDF(vec3 p_local) {
-        float base_radius = 0.4;
-        float amplitude1 = 0.05;
-        vec3 freq1 = vec3(5.0, 6.0, 7.0);
-        float amplitude2 = 0.03;
-        vec3 freq2 = vec3(11.0, 9.0, 13.0);
+// WobblySphereSDF: A sphere with multi-frequency sinusoidal displacements.
+// Creates a complex, round, and somewhat organic surface.
+float WobblySphereSDF(vec3 p_local) {
+    float base_radius = 0.4;
+    float amplitude1 = 0.05;
+    vec3 freq1 = vec3(5.0, 6.0, 7.0);
+    float amplitude2 = 0.03;
+    vec3 freq2 = vec3(11.0, 9.0, 13.0);
 
-        float displacement = 0.0;
-        // First layer of sinusoidal displacement
-        displacement += amplitude1 * sin(p_local.x * freq1.x) * sin(p_local.y * freq1.y) * sin(p_local.z * freq1.z);
-        // Second layer of cosinusoidal displacement with different frequencies and phase offsets
-        displacement += amplitude2 * cos(p_local.x * freq2.x + 0.5) * cos(p_local.y * freq2.y + 1.0) * cos(p_local.z * freq2.z + 1.5);
-        
-        return length(p_local) - (base_radius + displacement);
-    }
-    )";
+    float displacement = 0.0;
+    // First layer of sinusoidal displacement
+    displacement += amplitude1 * sin(p_local.x * freq1.x) * sin(p_local.y * freq1.y) * sin(p_local.z * freq1.z);
+    // Second layer of cosinusoidal displacement with different frequencies and phase offsets
+    displacement += amplitude2 * cos(p_local.x * freq2.x + 0.5) * cos(p_local.y * freq2.y + 1.0) * cos(p_local.z * freq2.z + 1.5);
+    
+    return length(p_local) - (base_radius + displacement);
+}
+)";
     });
-    sdf_rgy.register_c_sdf(wobbly_sphere_id, [](auto& entity, auto p) {
-        return wobbly_sphere_sdf_impl(p);
+    sdf_rgy.register_c_sdf(wobbly_sphere_id, [](auto& entity, auto p_local) {
+        float base_radius = 0.4f;
+        float amplitude1 = 0.05f;
+        glm::vec3 freq1 = glm::vec3(5.0f, 6.0f, 7.0f);
+        float amplitude2 = 0.03f;
+        glm::vec3 freq2 = glm::vec3(11.0f, 9.0f, 13.0f);
+
+        float displacement = 0.0f;
+        // First layer of sinusoidal displacement
+        displacement += amplitude1 * glm::sin(p_local.x * freq1.x) * glm::sin(p_local.y * freq1.y) * glm::sin(p_local.z * freq1.z);
+        // Second layer of cosinusoidal displacement with different frequencies and phase offsets
+        displacement += amplitude2 * glm::cos(p_local.x * freq2.x + 0.5f) * glm::cos(p_local.y * freq2.y + 1.0f) * glm::cos(p_local.z * freq2.z + 1.5f);
+        
+        return glm::length(p_local) - (base_radius + displacement);
     });
 
     // HelixoidDonut SDF
     auto helixoid_donut_id = sdf_rgy.register_sdf("HelixoidDonut", [](auto& shader, auto& constants) {
         return R"(
-    // HelixoidDonutSDF: A torus-like shape where the tube has a helical twist.
-    // R: Major radius of the torus
-    // r: Minor radius of the torus tube
-    // num_twists: Number of full twists of the tube around the major ring
-    float HelixoidDonutSDF(vec3 p_local) {
-        float R = 0.35; 
-        float r_minor = 0.1;  
-        float num_twists = 4.0; 
+// HelixoidDonutSDF: A torus-like shape where the tube has a helical twist.
+// R: Major radius of the torus
+// r: Minor radius of the torus tube
+// num_twists: Number of full twists of the tube around the major ring
+float HelixoidDonutSDF(vec3 p_local) {
+    float R = 0.35; 
+    float r_minor = 0.1;  
+    float num_twists = 4.0; 
+
+    // Calculate distance from Y-axis for the main ring (cylindrical coordinate rho)
+    float main_ring_dist_from_y_axis = length(p_local.xz);
+    
+    // q is the point in the 2D cross-section plane of the torus
+    vec2 q = vec2(main_ring_dist_from_y_axis - R, p_local.y);
+
+    // Angle around the Y-axis (azimuthal angle for the main ring)
+    // GLSL's atan(y,x) is equivalent to C++ atan2(y,x)
+    float angle_around_y = atan(p_local.z, p_local.x); 
+
+    // Calculate the twist rotation
+    float twist_angle = num_twists * angle_around_y;
+    float c = cos(twist_angle);
+    float s = sin(twist_angle);
+    
+    // Apply the twist rotation to the 2D cross-section point q
+    // mat2 rot = mat2(c, -s, s, c);
+    // vec2 twisted_q = rot * q;
+    vec2 twisted_q = vec2(c * q.x - s * q.y, s * q.x + c * q.y);
+
+    return length(twisted_q) - r_minor;
+}
+)";
+    });
+    sdf_rgy.register_c_sdf(helixoid_donut_id, [](auto& entity, auto p_local) {
+        float R = 0.55f; // Major radius of the torus
+        float r = 0.18f;  // Minor radius of the torus tube
+        float num_twists = 8.0f; // Number of full twists of the tube around the major ring
 
         // Calculate distance from Y-axis for the main ring (cylindrical coordinate rho)
-        float main_ring_dist_from_y_axis = length(p_local.xz);
+        float main_ring_dist_from_y_axis = glm::length(glm::vec2(p_local.x, p_local.z));
         
         // q is the point in the 2D cross-section plane of the torus
-        vec2 q = vec2(main_ring_dist_from_y_axis - R, p_local.y);
+        glm::vec2 q = glm::vec2(main_ring_dist_from_y_axis - R, p_local.y);
 
         // Angle around the Y-axis (azimuthal angle for the main ring)
-        // GLSL's atan(y,x) is equivalent to C++ atan2(y,x)
-        float angle_around_y = atan(p_local.z, p_local.x); 
+        // This angle determines the rotation for the twist
+        float angle_around_y = glm::atan(p_local.z, p_local.x); // atan2(z,x)
 
         // Calculate the twist rotation
         float twist_angle = num_twists * angle_around_y;
-        float c = cos(twist_angle);
-        float s = sin(twist_angle);
+        float c = glm::acos(twist_angle);
+        float s = glm::asin(twist_angle);
         
         // Apply the twist rotation to the 2D cross-section point q
-        // mat2 rot = mat2(c, -s, s, c);
-        // vec2 twisted_q = rot * q;
-        vec2 twisted_q = vec2(c * q.x - s * q.y, s * q.x + c * q.y);
+        glm::vec2 twisted_q = glm::vec2(c * q.y + s * q.x, s * q.y - c * q.x);
 
-        return length(twisted_q) - r_minor;
-    }
-    )";
-    });
-    sdf_rgy.register_c_sdf(helixoid_donut_id, [](auto& entity, auto p) {
-        return helixoid_donut_sdf_impl(p);
+        return glm::length(twisted_q) - r;
     });
 
     // SphericalHarmonicsInspiredBlob SDF
     auto sh_blob_id = sdf_rgy.register_sdf("SphericalHarmonicsInspiredBlob", [](auto& shader, auto& constants) {
         return R"(
-    // SphericalHarmonicsInspiredBlobSDF: A blob-like shape whose radius is modulated
-    // by functions inspired by spherical harmonics. Creates organic, lobed forms.
-    float SphericalHarmonicsInspiredBlobSDF(vec3 p_local) {
-        float base_radius = 0.25; // Adjusted base radius
-        float r_len = length(p_local);
+// SphericalHarmonicsInspiredBlobSDF: A blob-like shape whose radius is modulated
+// by functions inspired by spherical harmonics. Creates organic, lobed forms.
+float SphericalHarmonicsInspiredBlobSDF(vec3 p_local) {
+    float base_radius = 0.25; // Adjusted base radius
+    float r_len = length(p_local);
+
+    // Handle singularity at the origin: consider it inside
+    if (r_len < 0.00001) return -base_radius;
+
+    // Convert to spherical coordinates
+    // phi: polar angle (from +Z axis, 0 to PI)
+    // theta: azimuthal angle (in XY plane from +X axis, -PI to PI)
+    float phi = acos(clamp(p_local.z / r_len, -1.0, 1.0)); 
+    float theta = atan(p_local.y, p_local.x); // GLSL atan(y,x)
+
+    // Terms inspired by spherical harmonics to modulate the radius
+    float term1 = 0.08 * cos(phi);                                  
+    float term2 = 0.06 * sin(phi) * sin(phi) * cos(2.0 * theta);    
+    float term3 = 0.04 * (3.0 * cos(phi) * cos(phi) - 1.0);         
+    float term4 = 0.03 * pow(sin(phi), 3.0) * cos(3.0 * theta); 
+    float term5 = 0.02 * cos(2.0 * phi) * sin(theta) * sin(phi);    
+
+    float dynamic_radius = base_radius + term1 + term2 + term3 + term4 + term5;
+    
+    return r_len - dynamic_radius;
+}
+)";
+    });
+    sdf_rgy.register_c_sdf(sh_blob_id, [](auto& entity, auto p_local) {
+        float base_radius = 0.25f; // Adjusted base radius
+        float r_len = glm::length(p_local);
 
         // Handle singularity at the origin: consider it inside
-        if (r_len < 0.00001) return -base_radius;
+        if (r_len < 0.00001f) return -base_radius;
 
         // Convert to spherical coordinates
-        // phi: polar angle (from +Z axis, 0 to PI)
-        // theta: azimuthal angle (in XY plane from +X axis, -PI to PI)
-        float phi = acos(clamp(p_local.z / r_len, -1.0, 1.0)); 
-        float theta = atan(p_local.y, p_local.x); // GLSL atan(y,x)
+        // phi: polar angle (from +Z axis), 0 to PI
+        // theta: azimuthal angle (in XY plane from +X axis), -PI to PI
+        float phi = glm::acos(glm::clamp(p_local.z / r_len, -1.0f, 1.0f));
+        float theta = glm::atan(p_local.y, p_local.x); // atan2(y,x)
 
         // Terms inspired by spherical harmonics to modulate the radius
-        float term1 = 0.08 * cos(phi);                                  
-        float term2 = 0.06 * sin(phi) * sin(phi) * cos(2.0 * theta);    
-        float term3 = 0.04 * (3.0 * cos(phi) * cos(phi) - 1.0);         
-        float term4 = 0.03 * pow(sin(phi), 3.0) * cos(3.0 * theta); 
-        float term5 = 0.02 * cos(2.0 * phi) * sin(theta) * sin(phi);    
+        // These create various lobes and indentations
+        float term1 = 0.08f * glm::cos(phi);                                      // Elongates/compresses along Z (Y_1,0 like)
+        float term2 = 0.06f * glm::sin(phi) * glm::sin(phi) * glm::cos(2.0f * theta); // 2 lobes in XY plane (Y_2,2 like)
+        float term3 = 0.04f * (3.0f * glm::cos(phi) * glm::cos(phi) - 1.0f);     // Pinches/expands poles vs equator (Y_2,0 like)
+        float term4 = 0.03f * glm::pow(glm::sin(phi), 3.0f) * glm::cos(3.0f * theta); // 3 lobes in XY, stronger at equator (Y_3,3 like)
+        float term5 = 0.02f * glm::cos(2.0f * phi) * glm::sin(theta) * glm::sin(phi); // More complex polar/azimuthal interaction
 
         float dynamic_radius = base_radius + term1 + term2 + term3 + term4 + term5;
         
         return r_len - dynamic_radius;
-    }
-    )";
     });
-    sdf_rgy.register_c_sdf(sh_blob_id, [](auto& entity, auto p) {
-        return spherical_harmonics_inspired_blob_sdf_impl(p);
-    });
+    auto box_frame_id = sdf_rgy.register_sdf("BoxFrame", [](auto& shader, auto& constants) -> std::string {
+        return R"(float BoxFrameSDF(vec3 p) {
+       p = abs(p  )-vec3(0.5, 0.5, 0.5);
+  vec3 q = abs(p+0.1)-0.1;
 
+  return min(min(
+      length(max(vec3(p.x,q.y,q.z),0.0))+min(max(p.x,max(q.y,q.z)),0.0),
+      length(max(vec3(q.x,p.y,q.z),0.0))+min(max(q.x,max(p.y,q.z)),0.0)),
+      length(max(vec3(q.x,q.y,p.z),0.0))+min(max(q.x,max(q.y,p.z)),0.0));
+})";
+    });
+    sdf_rgy.register_c_sdf(box_frame_id, [](auto& entity, auto p) {
+       p = glm::abs(p  )-glm::vec3(0.5f, 0.5f, 0.5f);
+  glm::vec3 q = abs(p+0.1f)-0.1f;
+
+  return (glm::min)((glm::min)(
+      glm::length((glm::max)(glm::vec3(p.x,q.y,q.z),0.0f))+(glm::min)((glm::max)(p.x,(glm::max)(q.y,q.z)),0.0f),
+      glm::length((glm::max)(glm::vec3(q.x,p.y,q.z),0.0f))+(glm::min)((glm::max)(q.x,(glm::max)(p.y,q.z)),0.0f)),
+      glm::length((glm::max)(glm::vec3(q.x,q.y,p.z),0.0f))+(glm::min)((glm::max)(q.x,(glm::max)(q.y,p.z)),0.0f));
+    });
+    auto Horseshoe_id = sdf_rgy.register_sdf("Horseshoe", [](auto& shader, auto& constants) {
+        return R"(float HorseshoeSDF(in vec3 p)
+{
+    vec2 c =  vec2(cos(1.3),sin(1.3));
+    float r = 0.2;
+    float le = 0.3;
+    vec2 w = vec2(0.03,0.08);
+    p.x = abs(p.x);
+    float l = length(p.xy);
+    p.xy = mat2(-c.x, c.y, 
+              c.y, c.x)*p.xy;
+    p.xy = vec2((p.y>0.0 || p.x>0.0)?p.x:l*sign(-c.x),
+                (p.x>0.0)?p.y:l );
+    p.xy = vec2(p.x,abs(p.y-r))-vec2(le,0.0);
+    
+    vec2 q = vec2(length(max(p.xy,0.0)) + min(0.0,max(p.x,p.y)),p.z);
+    vec2 d = abs(q) - w;
+    return min(max(d.x,d.y),0.0) + length(max(d,0.0));
+})";
+    });
+    sdf_rgy.register_c_sdf(Horseshoe_id, [](auto& entity, auto p) {
+        glm::vec2 c =  glm::vec2(cos(1.3f),sin(1.3f));
+        float r = 0.2f;
+        float le = 0.3f;
+        glm::vec2 w = glm::vec2(0.03f,0.08f);
+        p.x = abs(p.x);
+        auto pxy = glm::vec2(p.x, p.y);
+        float l = length(pxy);
+        pxy = glm::mat2(-c.x, c.y, 
+                c.y, c.x)*pxy;
+        pxy = glm::vec2((pxy.y>0.0 || pxy.x>0.0)?pxy.x:l*glm::sign(-c.x),
+                    (pxy.x>0.0)?pxy.y:l );
+        pxy = glm::vec2(pxy.x,glm::abs(pxy.y-r))-glm::vec2(le,0.0);
+        glm::vec2 q = glm::vec2(glm::length((glm::max)(pxy,0.0f)) + (glm::min)(0.0f,(glm::max)(pxy.x,pxy.y)),p.z);
+        glm::vec2 d = (glm::abs)(q) - w;
+        return (glm::min)((glm::max)(d.x,d.y),0.0f) + glm::length((glm::max)(d,0.0f));
+    });
     registered_zg_sdfs =  true;
 }

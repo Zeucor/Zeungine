@@ -102,6 +102,10 @@ SceneCreateInfo SDFSceneFactory()
             // scene.addEntity(WobblySphere_sdf_mesh);
             auto HelixoidDonut_sdf_mesh = entities::sdf_mesh_factory("HelixoidDonut", "HelixoidDonut", spot(4), rotate_identity, {3, 3, 3}, {0.34, 0.88, 0.99, 1}, commonShaderConstants);
             scene.addEntity(HelixoidDonut_sdf_mesh);
+            auto BoxFrame_sdf_mesh = entities::sdf_mesh_factory("BoxFrame", "BoxFrame", spot(11), rotate_identity, {8, 8, 8}, {0.84 / 2.f, 0.45 / 2.f, 0.95 / 2.f, 1}, commonShaderConstants);
+            scene.addEntity(BoxFrame_sdf_mesh);
+            // auto Horseshoe_sdf_mesh = entities::sdf_mesh_factory("Horseshoe", "Horseshoe", spot(12), rotate_identity, {8, 8, 8}, {tanh(1.00), tanh(0.989), tanh(0.770), 1}, commonShaderConstants);
+            // scene.addEntity(Horseshoe_sdf_mesh);
             // auto SphericalHarmonicsInspiredBlob_sdf_mesh = entities::sdf_mesh_factory("SphericalHarmonicsInspiredBlob", "SphericalHarmonicsInspiredBlob", spot(6), rotate_identity, {4, 4, 4}, {0.34, 0.88, 0.99, 1}, commonShaderConstants);
             // scene.addEntity(SphericalHarmonicsInspiredBlob_sdf_mesh);
             // auto cube2Info = entities::CubeFactory("Cube", {14, 0, 0}, rotate_identity, {1, 1, 1}, {1, 1, 0, 1}, commonShaderConstants);
