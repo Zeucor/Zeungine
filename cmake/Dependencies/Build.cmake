@@ -142,7 +142,7 @@ set_target_properties(assimp PROPERTIES RELEASE_POSTFIX "")
 message(STATUS "FetchContent: ttf2mesh")
 FetchContent_Declare(
     ttf2mesh
-    GIT_REPOSITORY https://github.com/fetisov/ttf2mesh.git
+    GIT_REPOSITORY https://github.com/ZeunO8/ttf2mesh.git
     GIT_TAG master
 )
 FetchContent_GetProperties(ttf2mesh)
