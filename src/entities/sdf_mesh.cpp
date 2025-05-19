@@ -17,8 +17,21 @@ void generate_mesh_from_sdf(const SDF_Functor_Type& sdf_functor, const K::Sphere
 														std::vector<glm::vec3>& out_vertices, std::vector<uint32_t>& out_indices)
 {
 	Mesh_domain domain = Mesh_domain::create_implicit_mesh_domain(sdf_functor, cgal_bounding_sphere);
+	#if defined(NDEBUG)
+	#define FACET_ANGLE 30
+	#define FACET_SIZE 0.025
+	#define FACET_DISTANCE 0.25
+	#define CELL_RADIUS_EDGE_RATIO 2.0
+	#define CELL_SIZE 0.1
+	#else
+	#define FACET_ANGLE 30
+	#define FACET_SIZE 0.025
+	#define FACET_DISTANCE 0.50
+	#define CELL_RADIUS_EDGE_RATIO 2.5
+	#define CELL_SIZE 0.2
+	#endif
 	Mesh_criteria criteria(
-		params::facet_angle(30).facet_size(0.025).facet_distance(0.50).cell_radius_edge_ratio(2.5).cell_size(0.2));
+		params::facet_angle(FACET_ANGLE).facet_size(FACET_SIZE).facet_distance(FACET_DISTANCE).cell_radius_edge_ratio(CELL_RADIUS_EDGE_RATIO).cell_size(CELL_SIZE));
 
 	C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria);
 
