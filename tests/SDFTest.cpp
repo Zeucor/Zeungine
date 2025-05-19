@@ -6,6 +6,7 @@
 #include <zg/components/scenes/ViewQuadKeyControl.hpp>
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/entities/sdf_mesh.hpp>
+#include <zg/Spot.hpp>
 using namespace zg;
 using namespace zg::shaders;
 SceneCreateInfo SDFSceneFactory();
@@ -28,7 +29,7 @@ int main()
         .windowY = 0,
         .borderless = true,
         .vsync = false,
-        .framerate = 500
+        .framerate = 144 / 2
     };
     auto window_tuple = Registry::addWindow(windowInfo);
     auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
@@ -66,27 +67,28 @@ SceneCreateInfo SDFSceneFactory()
 			});
 			// auto& dl = scene.directionalLights[0];
 			scene.directionalLightShadows.emplace_back(scene.INDEX_STACK, 0);
-            // auto sphereInfo = entities::SDFFactory("Sphere", glm::vec4(0.944, 1.00, 0.440, 1.0), "Sphere", {7, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, commonShaderConstants);
-            // scene.addEntity(sphereInfo);
-            // auto cubeInfo = entities::SDFFactory("Cube", glm::vec4(0.2, 0.1, 0.95, 1.0), "Cube", {14, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, commonShaderConstants);
+            // auto cubeInfo = entities::SDFFactory("Cube", glm::vec4(0.2, 0.1, 0.95, 1.0), "Cube", {14, 0, 0}, rotate_identity, {1, 1, 1}, commonShaderConstants);
             // scene.addEntity(cubeInfo);
-            // auto torusInfo = entities::SDFFactory("Torus", glm::vec4(0.2, 0.1, 0.95, 1.0), "Torus", {18, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, commonShaderConstants);
+            // auto torusInfo = entities::SDFFactory("Torus", glm::vec4(0.2, 0.1, 0.95, 1.0), "Torus", {18, 0, 0}, rotate_identity, {1, 1, 1}, commonShaderConstants);
             // scene.addEntity(torusInfo);
-            // auto cylinderInfo = entities::SDFFactory("Cylinder", glm::vec4(0.2, 0.1, 0.95, 1.0), "Cylinder", {7, 0, 7}, {1, 0, 0, 0}, {1, 1, 1}, commonShaderConstants);
+            // auto cylinderInfo = entities::SDFFactory("Cylinder", glm::vec4(0.2, 0.1, 0.95, 1.0), "Cylinder", {7, 0, 7}, rotate_identity, {1, 1, 1}, commonShaderConstants);
             // scene.addEntity(cylinderInfo);
-            // // auto coneInfo = entities::SDFFactory("Cone", glm::vec4(0.2, 0.1, 0.95, 1.0), "Cone", {14, 0, 7}, {1, 0, 0, 0}, {1, 1, 1}, commonShaderConstants);
+            // // auto coneInfo = entities::SDFFactory("Cone", glm::vec4(0.2, 0.1, 0.95, 1.0), "Cone", {14, 0, 7}, rotate_identity, {1, 1, 1}, commonShaderConstants);
             // // scene.addEntity(coneInfo);
-            // auto hexprisInfo = entities::SDFFactory("HexagonalPrism", glm::vec4(0.2, 0.1, 0.95, 1.0), "HexagonalPrism", {18, 0, 7}, {1, 0, 0, 0}, {1, 1, 1}, commonShaderConstants);
+            // auto hexprisInfo = entities::SDFFactory("HexagonalPrism", glm::vec4(0.2, 0.1, 0.95, 1.0), "HexagonalPrism", {18, 0, 7}, rotate_identity, {1, 1, 1}, commonShaderConstants);
             // scene.addEntity(hexprisInfo);
-            // auto sphere_sdf_mesh  = entities::sdf_mesh_factory("Sphere", "Sphere", {7, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, glm::vec4(0, 0, 1, 1), commonShaderConstants);
+            // auto sphere_sdf_mesh  = entities::sdf_mesh_factory("Sphere", "Sphere", {7, 0, 0}, rotate_identity, {1, 1, 1}, glm::vec4(0, 0, 1, 1), commonShaderConstants);
             // scene.addEntity(sphere_sdf_mesh);
-            auto torus_sdf_mesh  = entities::sdf_mesh_factory("Torus", "Torus", {0, 0, 0}, {1, 0, 0, 0}, {3, 3, 3}, glm::vec4(1, 0, 0, 1), commonShaderConstants);
+            Spot spot({1, 1, 1});
+            auto sphere_sdf_mesh = entities::sdf_mesh_factory("Sphere", "Sphere", spot(1), rotate_identity, {1, 1, 1}, glm::vec4(0.944, 1.00, 0.440, 1.0), commonShaderConstants);
+            scene.addEntity(sphere_sdf_mesh);
+            auto torus_sdf_mesh  = entities::sdf_mesh_factory("Torus", "Torus", spot(3), rotate_identity, {3, 3, 3}, glm::vec4(1, 0, 0, 1), commonShaderConstants);
             scene.addEntity(torus_sdf_mesh);
-            auto cylinder_sdf_mesh  = entities::sdf_mesh_factory("Cylinder", "Cylinder", {7, 0, 0}, {1, 0, 0, 0}, {3, 3, 3}, glm::vec4(1, 1, 0, 1), commonShaderConstants);
+            auto cylinder_sdf_mesh  = entities::sdf_mesh_factory("Cylinder", "Cylinder", spot(3), rotate_identity, {3, 3, 3}, glm::vec4(1, 1, 0, 1), commonShaderConstants);
             scene.addEntity(cylinder_sdf_mesh);
-            auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("RoundedCube", "RoundedCube",{14, 0, 7}, {1, 0, 0, 0}, {1, 1, 1}, glm::vec4(0, 0, 1, 1), commonShaderConstants);
+            auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("RoundedCube", "RoundedCube", spot(1), rotate_identity, {1, 1, 1}, glm::vec4(0, 0, 1, 1), commonShaderConstants);
             scene.addEntity(rounded_cube_sdf_mesh);
-            // auto cube2Info = entities::CubeFactory("Cube", {14, 0, 0}, {1, 0, 0, 0}, {1, 1, 1}, {1, 1, 0, 1}, commonShaderConstants);
+            // auto cube2Info = entities::CubeFactory("Cube", {14, 0, 0}, rotate_identity, {1, 1, 1}, {1, 1, 0, 1}, commonShaderConstants);
             // scene.addEntity(cube2Info);
             scene.attachComponent(components::scenes::ViewMouseControlFactory());
             scene.attachComponent(components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 8));
