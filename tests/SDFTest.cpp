@@ -88,10 +88,10 @@ SceneCreateInfo SDFSceneFactory()
             scene.addEntity(cylinder_sdf_mesh);
             auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("RoundedCube", "RoundedCube", spot(1), rotate_identity, {1, 1, 1}, glm::vec4(.74, .64, .92, 1), commonShaderConstants);
             scene.addEntity(rounded_cube_sdf_mesh);
-            auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("Cone", "Cone", spot(4), rotate_identity, {4, 4, 4}, glm::vec4(.82, .9, .77, 1), commonShaderConstants);
-            scene.addEntity(rounded_cube_sdf_mesh);
-            auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("HexagonalPrism", "HexagonalPrism", spot(8), rotate_identity, {8, 4, 4}, glm::vec4(.9, .8, .7, 1), commonShaderConstants);
-            scene.addEntity(rounded_cube_sdf_mesh);
+            auto cone_sdf_mesh = entities::sdf_mesh_factory("Cone", "Cone", spot(4), rotate_identity, {4, 4, 4}, glm::vec4(.82, .9, .77, 1), commonShaderConstants);
+            scene.addEntity(cone_sdf_mesh);
+            auto hexagonal_prism_sdf_mesh = entities::sdf_mesh_factory("HexagonalPrism", "HexagonalPrism", spot(8), rotate_identity, {8, 4, 4}, glm::vec4(.9, .8, .7, 1), commonShaderConstants);
+            scene.addEntity(hexagonal_prism_sdf_mesh);
             // auto cube2Info = entities::CubeFactory("Cube", {14, 0, 0}, rotate_identity, {1, 1, 1}, {1, 1, 0, 1}, commonShaderConstants);
             // scene.addEntity(cube2Info);
             scene.attachComponent(components::scenes::ViewMouseControlFactory());

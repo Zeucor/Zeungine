@@ -146,11 +146,11 @@ void zg::register_zg_sdfs()
 })";
     });
     sdf_rgy.register_c_sdf(cone_id, [](auto& entity, auto p_local) {
-        float r = 0.5; // Base radius
-        float h = 1.0; // Height
+        float r = 0.5f; // Base radius
+        float h = 1.0f; // Height
 
         // Translate the local space down by 0.5
-        glm::vec3 p_adjusted = p_local + glm::vec3(0.0, 0.5, 0.0);
+        glm::vec3 p_adjusted = p_local + glm::vec3(0.0f, 0.5f, 0.0f);
 
         // Project the point onto the XZ plane and get the squared distance from the center
         float d_sq = p_adjusted.x * p_adjusted.x + p_adjusted.z * p_adjusted.z;
@@ -185,15 +185,15 @@ float HexagonalPrismSDF(vec3 p_local) {
 })";
     });
     sdf_rgy.register_c_sdf(hexagonal_prism_id, [](auto& entity, auto p) -> float {
-        constexpr glm::vec3 K_HEX_PRISM = glm::vec3(-0.866025404, 0.5, 0.577350269);
-        float Hexagon2DSDF(glm::vec2 p, float inradius_hex) {
+        static constexpr glm::vec3 K_HEX_PRISM = glm::vec3(-0.866025404, 0.5, 0.577350269);
+        static constexpr float SQRT3_DIV_4 = 0.43301270189; // sqrt(3)/4, inradius for unit hexagon with circumradius 0.5
+        static auto Hexagon2DSDF = [](glm::vec2 p, float inradius_hex) -> float {
             p = glm::abs(p);
-            // K_HEX_PRISM = vec3(-0.866025404, 0.5, 0.577350269)
-            p -= 2.0 * (glm::min)(glm::dot(K_HEX_PRISM.xy, p), 0.0) * glm(K_HEX_PRISM.x, K_HEX_PRISM.y);
+            p -= 2.0f * (glm::min)(glm::dot(glm::vec2(K_HEX_PRISM.x, K_HEX_PRISM.y), p), 0.0f) * glm::vec2(K_HEX_PRISM.x, K_HEX_PRISM.y);
             p -= glm::vec2(glm::clamp(p.x, -K_HEX_PRISM.z * inradius_hex, K_HEX_PRISM.z * inradius_hex), inradius_hex);
             return glm::length(p) * glm::sign(p.y);
-        }
-        float d_hex = Hexagon2DSDF(p.xz, SQRT3_DIV_4);
+        };
+        float d_hex = Hexagon2DSDF(glm::vec2(p.x, p.z), SQRT3_DIV_4);
         float d_y = glm::abs(p.y) - 0.5f; // HalfHeight
         return glm::length((glm::max)(glm::vec2(d_hex, d_y), 0.0f)) + (glm::min)((glm::max)(d_hex, d_y), 0.0f);
     });
