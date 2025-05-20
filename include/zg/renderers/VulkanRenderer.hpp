@@ -136,7 +136,7 @@ namespace zg
 		static bool fallbackToSwiftshader;
 		static bool attempedCoreVulkan;
 		static std::shared_ptr<SharedLibrary> vulkanLibrarySS;
-#if defined(__linux__) || defined(MACOS)
+#if defined(__linux__)
 		static SharedLibrary vulkanLibraryCore;
 #endif
 		GET_PROC_ADDR_MEMBER(getProcAddr);

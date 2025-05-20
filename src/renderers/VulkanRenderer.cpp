@@ -44,9 +44,9 @@ std::shared_ptr<SharedLibrary> zg::VulkanRenderer::vulkanLibrarySS = ([]()->std:
 		return {};
 	}
 })();
-#ifdef MACOS
-SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan.1" + libSuffix);
-#elif defined(__linux__)
+// #ifdef MACOS
+// SharedLibrary zg::VulkanRenderer::vulkanLibraryCore(libPrefix + "vulkan.1" + libSuffix);
+#if defined(__linux__)
 static std::string vulkanCorePath(libPrefix + "vulkan" + libSuffix + ".1");
 SharedLibrary zg::VulkanRenderer::vulkanLibraryCore("/usr/lib/x86_64-linux-gnu/" + vulkanCorePath, vulkanCorePath);
 #endif
@@ -156,9 +156,9 @@ GetProcAddrFunc VulkanRenderer::doGetProcAddr()
 		attempedCoreVulkan = true;
 		try
 		{
-#if defined(__linux__) || defined(MACOS)
+#if defined(__linux__)
 			return vulkanLibraryCore.getProc<GetProcAddrFunc>("vkGetInstanceProcAddr");
-#elif defined(_WIN32)
+#elif defined(_WIN32) || defined(MACOS)
 			return vkGetInstanceProcAddr;
 #endif
 		}
