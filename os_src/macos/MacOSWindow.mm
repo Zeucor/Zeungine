@@ -302,7 +302,7 @@ void MacOSWindow::minimize()
 void MacOSWindow::maximize()
 {
 	auto window = (NSWindow *)nsWindow;
-	[window setStyleMask:([nsWindow styleMask] | NSWindowStyleMaskResizable)];
+	[window setStyleMask:([window styleMask] | NSWindowStyleMaskResizable)];
 	[window zoom:nil];
 }
 void MacOSWindow::restore()
