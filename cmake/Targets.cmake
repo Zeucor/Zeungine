@@ -91,6 +91,8 @@ if(MACOS OR LINK_SYS_OPENSSL)
 			"-framework CoreMedia"
 			"-framework VideoToolbox"
 			"-framework Security"
+			"-framework CoreMIDI"
+			"-framework CoreAudio"
 			iconv)
 	endif()
 else()
