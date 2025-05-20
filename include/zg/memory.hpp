@@ -1,6 +1,7 @@
 #pragma once
 #include <stdexcept>
 #include <cstdint>
+#include <map>
 namespace zg
 {
     size_t& ensure_allocated_size(size_t*& size_pointer);
