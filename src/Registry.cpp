@@ -29,7 +29,7 @@ Window& Registry::getWindow(size_t ID)
     return getWindow(stack);
 }
 /**
- * Emplaces a Window at the back of the Windows' key/id vector, returning the tuple containing key/id/*index/*value
+ * Emplaces a Window at the back of the Windows' key/id vector, returning the tuple containing key/id/(*index)/(*value)
  * 
  * *value can become degenerate if adding multiple windows/scenes/entities, so use ID (stacks) instead
  */
