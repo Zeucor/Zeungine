@@ -133,6 +133,7 @@ textures::Texture::Multisampling SampleCountBitToTextureMultisampling(VkSampleCo
 		return textures::Texture::x32;
 	case VK_SAMPLE_COUNT_64_BIT:
 		return textures::Texture::x64;
+	default: break;
 	}
 	return textures::Texture::x1;
 }
@@ -2004,6 +2005,7 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 				clearValue.color = {{clearColor.r, clearColor.g, clearColor.b, clearColor.a}};
 				break;
 			}
+		default: break;
 		}
 		clearValues.push_back(clearValue);
 	}

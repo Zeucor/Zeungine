@@ -53,6 +53,7 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
 				attachmentType = textures::Framebuffer::AttachmentType::Depth;
 				break;
 			};
+        default: break;
 		}
 		auto textureFilterType = textures::Texture::FilterType::Linear;
 		auto texture =

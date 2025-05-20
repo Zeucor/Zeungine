@@ -47,6 +47,7 @@ int main()
             oscillator->removeWaveLayer(iter->second);
             break;
         }
+        default: break;
         }
     });
     window.run();

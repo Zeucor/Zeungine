@@ -229,6 +229,7 @@ K::FT Entity::operator()(K::Point_3 p_cgal) const
 				// Run through TriangleMeshSDF
 				continue;
 			}
+			default: break;
 		}
         res = glm::min(res, current_sdf);
 	}
