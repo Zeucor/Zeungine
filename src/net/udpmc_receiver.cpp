@@ -1,6 +1,8 @@
+#if defined(_WIN32)
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
+#endif
 #include <zg/Logger.hpp>
 #include <zg/net/udpmc_receiver.hpp>
 #include <zg/net/resolve_host_or_ip_to_ip.hpp>
