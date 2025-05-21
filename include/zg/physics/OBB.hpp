@@ -73,7 +73,7 @@ namespace zg::physics
 		// Finds the face most aligned with a given direction
 		void findSupportFace(const glm::vec3& direction, int& bestAxisIndex, bool& positiveFace) const
 		{
-			float maxDot = -std::numeric_limits<float>::max();
+			float maxDot = -(std::numeric_limits<float>::max)();
 			bestAxisIndex = -1;
 
 			for (int i = 0; i < 3; ++i)

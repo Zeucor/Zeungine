@@ -189,7 +189,7 @@ Material& Entity::meshMaterial(size_t meshID)
 float BoxSDF(const glm::vec3& p) {
     glm::vec3 halfExtents(0.5f, 0.5f, 0.5f);
     glm::vec3 q = glm::abs(p) - halfExtents;
-    return glm::length(glm::max(q, 0.0f)) + glm::min(glm::max(q.x, q.y, q.z), 0.0f);
+    return glm::length((glm::max)(q, 0.0f)) + (glm::min)((glm::max)(q.x, q.y, q.z), 0.0f);
 }
 float PlaneXYSDF(const glm::vec3& p) {
     return p.z;
@@ -200,7 +200,7 @@ K::FT Entity::operator()(K::Point_3 p_cgal) const
 	float res = 0.0;
 	for (auto& meshInfo : meshInfos)
 	{
-        float current_sdf = std::numeric_limits<float>::max();
+        float current_sdf = (std::numeric_limits<float>::max)();
 		switch (meshInfo.shapeType) {
 			case ShapeType::Box:
 				current_sdf = BoxSDF(p);
@@ -231,7 +231,7 @@ K::FT Entity::operator()(K::Point_3 p_cgal) const
 			}
 			default: break;
 		}
-        res = glm::min(res, current_sdf);
+        res = (glm::min)(res, current_sdf);
 	}
 	return res;
 }

@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
 #include <stdexcept>
+#include <zg/Standard.hpp>
 #ifdef _WIN32
-#include <windows.h>
 void SET_WORKING_DIR(LPCSTR path)
 {
 	if (!SetCurrentDirectoryA(path))

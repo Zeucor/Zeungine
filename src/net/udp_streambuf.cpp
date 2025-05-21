@@ -1,3 +1,6 @@
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
 #include <zg/net/udp_streambuf.hpp>
 #include <zg/Logger.hpp>
 #include <cerrno>

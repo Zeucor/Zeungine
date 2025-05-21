@@ -1,8 +1,8 @@
 #include <zg/Window.hpp>
 #include <zg/system/ErrorPopup.hpp>
 #include <iostream>
+#include <zg/Standard.hpp>
 #if defined(_WIN32)
-#include <windows.h>
 // #elif defined(__linux__)
 // #include <gtk/gtk.h>
 // #elif defined(MACOS)

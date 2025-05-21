@@ -1,8 +1,8 @@
 #pragma once
+#include <zg/Standard.hpp>
 #include <memory>
 #include <zg/glm.hpp>
 #include "./IRenderer.hpp"
-#include <zg/Standard.hpp>
 namespace zg
 {
 	struct Window;

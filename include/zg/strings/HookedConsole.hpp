@@ -1,6 +1,6 @@
 #pragma once
+#include <zg/Standard.hpp>
 #ifdef _WIN32
-#include <windows.h>
 #include <io.h>
 #endif
 #include <functional>

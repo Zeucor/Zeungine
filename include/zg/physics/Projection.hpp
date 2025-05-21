@@ -5,8 +5,8 @@ namespace zg::physics
 {
 	struct Projection
 	{
-		float min = std::numeric_limits<float>::max();
-		float max = -std::numeric_limits<float>::max();
+		float min = (std::numeric_limits<float>::max)();
+		float max = -(std::numeric_limits<float>::max)();
 
 		/**
 		 * @brief Checks if this projection overlaps with another projection.
