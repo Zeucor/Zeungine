@@ -38,7 +38,7 @@ streams::udp_streambuf::SocketPair udpmc_sender::setup(const std::string& host, 
 
 	in_addr localIface = {};
 	localIface.s_addr = htonl(INADDR_ANY);
-	setsockopt(server_fd, IPPROTO_IP, IP_MULTICAST_IF, (char*)&localIface, sizeof(localIface));
+	sender_diagnose(setsockopt(server_fd, IPPROTO_IP, IP_MULTICAST_IF, (char*)&localIface, sizeof(localIface)) >= 0, "Setting IP_MULTICAST_IF");
 	return {server_fd, group_addr};
 }
 void udpmc_sender::close()

@@ -32,13 +32,13 @@ streams::udp_streambuf::SocketPair udpmc_receiver::bind(const std::string& host,
     ::bind(sock, (sockaddr*)&server_addr, sizeof(server_addr));
 
     BOOL loopback = TRUE;
-    receiver_diagnose(setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&loopback, sizeof(loopback)) >= 0, "Setting multicast Loop");
+    receiver_diagnose(setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&loopback, sizeof(loopback)) >= 0, "Setting IP_MULTICAST_LOOP");
 
     ip_mreq mreq = {};
 	auto ip = resolve_host_or_ip_to_ip(host);
     mreq.imr_multiaddr.s_addr = inet_addr(ip.c_str());
     mreq.imr_interface.s_addr = htonl(INADDR_ANY);
-    receiver_diagnose(setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (const char *)&mreq, sizeof(mreq)) >= 0, "Adding multicast group");
+    receiver_diagnose(setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (const char *)&mreq, sizeof(mreq)) >= 0, "Setting IP_ADD_MEMBERSHIP");
 
 	return {sock, server_addr};
 }
