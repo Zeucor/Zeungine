@@ -1,4 +1,4 @@
-#include <zg/editor/EditorScene.hpp>
+// #include <zg/editor/EditorScene.hpp>
 #include <zg/Window.hpp>
 #include <zg/system/TerminalIO.hpp>
 using namespace zg::system;
@@ -19,7 +19,7 @@ int32_t main()
 		.vsync = false
 	};
 	Window window(windowCreateInfo);
-	window.addScene(EditorSceneFactory());
+	// window.addScene(EditorSceneFactory());
 	window.run();
 	return 0;
 };

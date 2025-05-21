@@ -1,6 +1,6 @@
 #pragma once
 #include <zg/Scene.hpp>
-zg::SceneCreateInfo EditorSceneFactory();
+// zg::SceneCreateInfo EditorSceneFactory();
 // struct EditorScene : Scene
 // {
 // 	glm::vec4 editorClearColor = {0.2, 0.2, 0.2, 1};

@@ -3,17 +3,17 @@
 #include <zg/zgfilesystem/Directory.hpp>
 #include <zg/strings/InFileProcessor.hpp>
 using namespace zg::strings;
-zg::SceneCreateInfo EditorSceneFactory()
-{
-	zg::SceneCreateInfo info{
-		.name = "Editor Scene",
-		.onAttachedFunction = [](auto& scene)
-		{
+// zg::SceneCreateInfo EditorSceneFactory()
+// {
+// 	zg::SceneCreateInfo info{
+// 		.name = "Editor Scene",
+// 		.onAttachedFunction = [](auto& scene)
+// 		{
 
-		}
-	};
-	return info;
-};
+// 		}
+// 	};
+// 	return info;
+// };
 // EditorScene::EditorScene(Window& window) :
 // 		Scene(window, {0, 0, 50}, {0, 0, -1}, {2, 2}), toolbarHeight(window.windowHeight / 14),
 // 		bottomTabsHeight(window.windowHeight / 18),
