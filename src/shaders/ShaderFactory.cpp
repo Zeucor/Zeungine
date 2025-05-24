@@ -541,12 +541,12 @@ vec2 get_plane_uv2_xy(int vertex_id)
 {
     switch (vertex_id)
     {
-        case 2: return vec2(0.0, 0.0); // Corresponds to (-0.5, -0.5) in XY
-        case 1: return vec2(1.0, 0.0); // Corresponds to ( 0.5, -0.5) in XY
-        case 0: return vec2(0.0, 1.0); // Corresponds to (-0.5,  0.5) in XY
-        case 5: return vec2(0.0, 1.0); // Corresponds to (-0.5,  0.5) in XY
-        case 4: return vec2(1.0, 0.0); // Corresponds to ( 0.5, -0.5) in XY
-        case 3: return vec2(1.0, 1.0); // Corresponds to ( 0.5,  0.5) in XY
+        case 2: return vec2(0.0, 1.0); // Corresponds to (-0.5, -0.5) in XY
+        case 1: return vec2(1.0, 1.0); // Corresponds to ( 0.5, -0.5) in XY
+        case 0: return vec2(0.0, 0.0); // Corresponds to (-0.5,  0.5) in XY
+        case 5: return vec2(0.0, 0.0); // Corresponds to (-0.5,  0.5) in XY
+        case 4: return vec2(1.0, 1.0); // Corresponds to ( 0.5, -0.5) in XY
+        case 3: return vec2(1.0, 0.0); // Corresponds to ( 0.5,  0.5) in XY
         default: return vec2(0.0, 0.0);
     }
 }
