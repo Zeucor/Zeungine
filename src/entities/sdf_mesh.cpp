@@ -17,7 +17,7 @@ void generate_mesh_from_sdf(const Entity& entity,
 							std::vector<uint32_t>& out_indices)
 {
 	grid3d G;
-	G.generate_grid_from_fn(-2.0, -2.0, -2.0, 2.0, 2.0, 2.0, 0.025, 0.025, 0.025, [&](double x, double y, double z)  -> double {
+	G.generate_grid_from_fn(-2.0, -2.0, -2.0, 2.0, 2.0, 2.0, 0.1, 0.1, 0.1, [&](double x, double y, double z)  -> double {
 		return entity(glm::vec3(x, y, z));
 	});
 	MC33 MC;
