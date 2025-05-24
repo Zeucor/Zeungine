@@ -356,7 +356,7 @@ void FreetypeFont::stringToScene(const std::string_view string, glm::vec3 positi
 									glyph.position = characterPosition;
 									glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
 									assert(glyph.meshInfos.size());
-									// glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
+									glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
 									glyph.VALUE = codepoint;
 									glyph.refreshMeshes();
 								}
@@ -507,7 +507,7 @@ void FreetypeFont::stringToEntity(const std::string_view string, glm::vec3 posit
 									glyph.position = characterPosition;
 									glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
 									assert(glyph.meshInfos.size());
-									// glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
+									glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
 									glyph.VALUE = codepoint;
 									glyph.refreshMeshes();
 								}
