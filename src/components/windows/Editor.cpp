@@ -4,6 +4,7 @@
 #include <zg/entities/ui/Layout.hpp>
 #include <zg/entities/Plane.hpp>
 #include <zg/TimingFunction.hpp>
+#include <zg/fonts/freetype/Freetype.hpp>
 using namespace zg::components::windows;
 using namespace zg;
 SceneCreateInfo EditorSceneFactory()
@@ -19,6 +20,16 @@ SceneCreateInfo EditorSceneFactory()
             scene.clearColor = {0, 0, 0, 0};
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
 
+            auto& robotoFile = scene.template make<std::shared_ptr<zgfilesystem::File>>("RobotoFile", std::make_shared<zgfilesystem::File>(
+                zgfilesystem::File::getProgramDirectoryPath() / "fonts" / "Roboto" / "Roboto-Regular.ttf",
+                enums::EFileLocation::Absolute,
+                "r"
+            ));
+            auto& robotoFont = scene.template make<std::shared_ptr<fonts::freetype::FreetypeFont>>("RobotoFont", std::make_shared<fonts::freetype::FreetypeFont>(
+                window.iRenderer,
+                *robotoFile
+            ));
+
             // main H Layout
             auto hLayout_size = glm::vec3(2, 2, 1);
             auto hLayout_info = entities::ui::LayoutFactory("HLayout", entities::ui::LayoutDimension::Horizontal, {0, 0, 0}, hLayout_size, window.iRenderer, true);
@@ -33,15 +44,32 @@ SceneCreateInfo EditorSceneFactory()
             auto& vLayout_1 = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(vLayout_1_tuple);
 
             // top "window" panel
-            glm::vec3 plane_2_size(0.5, 0.5, 1);
-            auto plane_2_position = std::any_cast<glm::vec3>(vLayout_1.template setData<glm::vec3>("GetSubPosition", plane_2_size));
-            auto plane_2_to_be_panel = entities::PlaneFactory(glm::vec4(0.3, 0.3, 0.3, 0.88), "Window Panel", plane_2_position, rotate_identity, plane_2_size);
-            auto plane_2_tuple = vLayout_1.addChild(plane_2_to_be_panel);
-            auto plane_2_ID = std::get<KEY_ID_VECTOR_ID_INDEX>(plane_2_tuple);
-            auto& plane_2 = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(plane_2_tuple);
-            plane_2.template make<bool>("Showing", true);
-            plane_2.template make<float>("AnimationT", 0.f);
-            plane_2.template make<std::shared_ptr<bool>>("AnimationRunning", std::shared_ptr<bool>{});
+            glm::vec3 window_panel_size(0.5, 0.5, 1);
+            auto window_panel_position = std::any_cast<glm::vec3>(vLayout_1.template setData<glm::vec3>("GetSubPosition", window_panel_size));
+            auto window_panel_to_be_panel = entities::PlaneFactory(glm::vec4(0.3, 0.3, 0.3, 0.88), "Window Panel", window_panel_position, rotate_identity, window_panel_size);
+            auto window_panel_tuple = vLayout_1.addChild(window_panel_to_be_panel);
+            auto window_panel_ID = std::get<KEY_ID_VECTOR_ID_INDEX>(window_panel_tuple);
+            auto& window_panel = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_panel_tuple);
+            window_panel.template make<bool>("Showing", true);
+            window_panel.template make<float>("AnimationT", 0.f);
+            window_panel.template make<std::shared_ptr<bool>>("AnimationRunning", std::shared_ptr<bool>{});
+            
+            auto& titleGlyphIDs = window_panel.template make<std::vector<size_t>>("TitleGlyphIDs");
+            auto& titleCursorIndex = window_panel.template make<int64_t>("TitleCursorIndex");
+            auto& titleCursorID = window_panel.template make<size_t>("TitleCursorID");
+            auto& robotoFontRef = *robotoFont;
+            std::string titleString("Window: ");
+            titleString += window.title;
+            auto& titleFontSize = window_panel.template make<float>("TitleFontSize", 42.f);
+            auto& titleLineHeight = window_panel.template make<float>("TitleLineHeight", 0.0f);
+            auto titleSize = robotoFontRef.stringSize(titleString, titleFontSize, titleLineHeight, {0, 0});
+            glm::vec3 titleScale(2.f / window.windowWidth / 2.f, 2.f / window.windowHeight / 2.f, 1);
+            auto scaledSize = titleSize * glm::vec2(titleScale);
+            robotoFontRef.stringToEntity(titleString, glm::vec3{-window_panel_size.x, (window_panel_size.y / 2.f) - scaledSize.y, 0.1}, {1,1,1,1}, rotate_identity,
+										titleScale, titleFontSize, titleLineHeight, scaledSize,
+												enums::EBreakStyle::None, scene, window_panel,
+												titleGlyphIDs, titleCursorIndex,
+												titleCursorID);
 
             // middle "spacer" panel
             glm::vec3 plane_3_size(0.0, 1.0, 1);
@@ -86,8 +114,8 @@ SceneCreateInfo EditorSceneFactory()
                 SCENE_INDEX_STACK = scene.INDEX_STACK,
                 plane_1_ID,
                 start_1_pos = plane_1_position,
-                plane_2_ID,
-                start_2_pos = plane_2_position,
+                window_panel_ID,
+                start_2_pos = window_panel_position,
                 plane_4_ID,
                 start_4_pos = plane_4_position
             ](const auto& key, auto pressed) {
@@ -127,7 +155,7 @@ SceneCreateInfo EditorSceneFactory()
                 {
                 case '1':
                 {
-                    animatePanel(window, plane_2_ID, start_2_pos, glm::vec3(0.0, 0.5, 0));
+                    animatePanel(window, window_panel_ID, start_2_pos, glm::vec3(0.0, 0.5, 0));
                     break;
                 };
                 case '2':
