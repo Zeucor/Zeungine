@@ -94,8 +94,16 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
         entity.template make<std::shared_ptr<vp::Projection>>("Projection", projection);
     };
     layout_info.preUpdateFunction = [layoutDimension](auto& entity) {
-        for (auto& child : entity.children)
-            child.skipRender = false;
+        std::function<void(Entity&, bool)> setSkip;
+        setSkip = [&](auto& entity, bool skip) {
+            for (auto& child : entity.children)
+            {
+                child.skipRender = skip;
+                if (child.typeName != "Layout")
+                    setSkip(child, skip);
+            }
+        };
+        setSkip(entity, false);
         auto childDrawList = entity.getChildDrawList();
         auto& scene = Registry::GetSingleton().getScene(entity.INDEX_STACK);
         auto& oldOpaqueHash = entity.template getData<size_t>("oldOpaqueHash");
@@ -112,8 +120,7 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
             drawPair.second->render(*drawPair.first);
         }
         framebufferRef.unbind();
-        for (auto& child : entity.children)
-            child.skipRender = true;
+        setSkip(entity, true);
     };
     return layout_info;
 }
