@@ -15,5 +15,6 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/hash.hpp>
 inline static float ZG_PI = acos(-1);
+inline static float ZG_PI_2 = ZG_PI * 2.f;
 using uvec = glm::vec<4, uint8_t>;
 #define rotate_identity {1, 0, 0, 0}
