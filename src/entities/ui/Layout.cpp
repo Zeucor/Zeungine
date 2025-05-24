@@ -17,6 +17,7 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
     auto color_texture = std::make_shared<textures::Texture>(irenderer, glm::ivec4(texSize.x, texSize.y, 1, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true);
     auto depth_texture = std::make_shared<textures::Texture>(irenderer, glm::ivec4(texSize.x, texSize.y, 1, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true);
     auto layout_info = entities::PlaneFactory(color_texture, name + "Plane", position, rotate_identity, size);
+    layout_info.typeName = "Layout";
     layout_info.dataMap = {
         {"ColorTexture", color_texture},
         {"DepthTexture", depth_texture},
