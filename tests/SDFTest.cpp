@@ -94,8 +94,10 @@ SceneCreateInfo SDFSceneFactory()
             auto& sdf_rgy = SDFRegistry::GetSingleton();
             auto sdf_iter = sdf_rgy.begin();
             auto sdf_end = sdf_rgy.end();
-            for (;sdf_iter != sdf_end; ++sdf_iter)
+            auto count = 0;
+            for (;sdf_iter != sdf_end && count < 5; ++sdf_iter)
             {
+                ++count;
                 auto& key = sdf_iter->first;
                 auto sdf_mesh = entities::sdf_mesh_factory(key, key, spot(12), rotate_identity, {6,6,6}, color(), commonShaderConstants);
                 scene.addEntity(sdf_mesh);
