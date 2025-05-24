@@ -24,7 +24,7 @@ if(NOT mc33_POPULATED)
     FetchContent_Populate(mc33)
 endif()
 
-file(GLOB MC33_SOURCES "${mc33_SOURCE_DIR}/source/*.cpp")
+set(MC33_SOURCES "${mc33_SOURCE_DIR}/source/libMC33++.cpp")
 add_library(mc33 STATIC ${MC33_SOURCES})
 target_include_directories(mc33 PRIVATE "${mc33_SOURCE_DIR}/source")
 target_include_directories(mc33 PRIVATE "${mc33_SOURCE_DIR}/include")
