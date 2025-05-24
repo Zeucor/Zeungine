@@ -11,7 +11,7 @@ PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
 #endif
 static const uint32_t GL_KEYCODES[] = {
 	0,	27, 49, 50, 51, 52, 53, 54,					 55, 56, 57, 48, 45, 61, 8,	 9,	 81, 87, 69, 82, 84, 89, 85, 73,
-	79, 80, 91, 93, 10, 0,	65, 83,					 68, 70, 71, 72, 74, 75, 76, 59, 39, 96, 0,	 92, 90, 88, 67, 86,
+	79, 80, 91, 93, 10, KEYCODE_CTRL,	65, 83,					 68, 70, 71, 72, 74, 75, 76, 59, 39, 96, KEYCODE_SHIFT,	 92, 90, 88, 67, 86,
 	66, 78, 77, 44, 46, 47, 0,	0,					 0,	 32, 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 KEYCODE_HOME,
 	0,	0,	0,	0,	0,	0,	0,	KEYCODE_END, 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,
 	0,	0,	0,	0,	0,	0,	0,	0,					 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,	 0,
@@ -101,6 +101,19 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			glWindow->handleMouseMove(x, y);
 			break;
 		};
+	case WM_SYSKEYDOWN:
+	case WM_SYSKEYUP:
+		if (wParam == VK_MENU ||
+			wParam == VK_LMENU ||
+			wParam == VK_RMENU)
+		{
+			glWindow->handleKey(KEYCODE_ALT, glWindow->mod, msg == WM_SYSKEYDOWN);
+		}
+		else
+		{
+			return DefWindowProc(hwnd, msg, wParam, lParam);
+		}
+		break;
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 		{
