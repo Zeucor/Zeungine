@@ -276,7 +276,7 @@ std::vector<glm::vec3> zg::entities::NDCurve::getVertices(const std::vector<glm:
             for (int j = 0; j < circleSegments; ++j)
             {
                 float angle = (float)j / (float)circleSegments * glm::two_pi<float>();
-                glm::vec3 offset = radius * (cos(angle) * normal_frame + sin(angle) * B);
+                glm::vec3 offset = radius * ((float)cos(angle) * normal_frame + (float)sin(angle) * B);
                 vertices.push_back(center + offset);
             }
         }
