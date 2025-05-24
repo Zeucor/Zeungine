@@ -24,14 +24,14 @@ build_dependencies_static() {
     cd cmake/Dependencies
 
     echo " -- Starting Zeungine Dependencies Debug/STATIC Configure"
-    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC
+    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC -D LINK_SYS_OPENSSL=ON
     echo " -- Starting Zeungine Dependencies Debug/STATIC Build"
     cmake --build build-debug --config Debug
     echo " -- Starting Zeungine Dependencies Debug/STATIC Install"
     sudo cmake --install build-debug --config Debug
 
     echo " -- Starting Zeungine Dependencies Release/STATIC Configure"
-    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC
+    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC -D LINK_SYS_OPENSSL=ON
     echo " -- Starting Zeungine Dependencies Release/STATIC Build"
     cmake --build build-release --config Release
     echo " -- Starting Zeungine Dependencies Release/STATIC Install"
@@ -44,14 +44,14 @@ build_dependencies_shared() {
     cd cmake/Dependencies
 
     echo " -- Starting Zeungine Dependencies Debug/SHARED Configure"
-    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=SHARED
+    cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=SHARED -D LINK_SYS_OPENSSL=ON
     echo " -- Starting Zeungine Dependencies Debug/SHARED Build"
     cmake --build build-debug --config Debug
     echo " -- Starting Zeungine Dependencies Debug/SHARED Install"
     sudo cmake --install build-debug --config Debug
 
     echo " -- Starting Zeungine Dependencies Release/SHARED Configure"
-    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED
+    cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED -D LINK_SYS_OPENSSL=ON
     echo " -- Starting Zeungine Dependencies Release/SHARED Build"
     cmake --build build-release --config Release
     echo " -- Starting Zeungine Dependencies Release/SHARED Install"
@@ -64,7 +64,7 @@ build_headers() {
     cd cmake/Headers
 
     echo " -- Starting zeungine Headers Configure"
-    cmake -B build -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED
+    cmake -B build -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED -D LINK_SYS_OPENSSL=ON
     echo " -- Starting zeungine Headers Install"
     sudo cmake --install build
 
