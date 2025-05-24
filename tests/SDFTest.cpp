@@ -37,7 +37,7 @@ int main()
     auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
     window.runOnThread([](auto& window){
         window.addScene(SDFSceneFactory());
-        // window.attachComponent(components::windows::EditorFactory());
+        window.attachComponent(components::windows::EditorFactory());
     });
     window.addKeyPressHandler('q', [&](auto pressed){
         if (!pressed)
