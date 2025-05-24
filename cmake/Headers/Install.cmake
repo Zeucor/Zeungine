@@ -18,6 +18,7 @@ set(rtmidi_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/r
 set(tinyfiledialogs_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/tinyfiledialogs-src")
 set(tracy_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/tracy-src")
 set(cgal_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/cgal-install")
+set(mc33_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/mc33-src")
 
 set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")
 set(CPACK_COMPONENT_HEADERS_GROUP "Zeungine")
@@ -33,6 +34,11 @@ set(CPACK_COMPONENT_CMAKECONFIG_GROUP "Zeungine")
 install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ../Targets.cmake DESTINATION ${ZG_SHR_INSTALL_PREFIX}
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT cmakeconfig)
+
+# mc33
+install(FILES ${mc33_SOURCE_DIR}/include/MC33.h DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
+    COMPONENT headers)
 
 # cgal
 install(DIRECTORY ${cgal_SOURCE_DIR}/include/CGAL

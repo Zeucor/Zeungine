@@ -6,6 +6,7 @@
 #include <zg/Registry.hpp>
 #include <zg/crypto/vector.hpp>
 #include <zg/entities/SDF.hpp>
+#include <zg/physics/AABB.hpp>
 using namespace zg;
 std::unordered_map<std::string, size_t> childKeyCounts;
 Entity::Entity(const EntityCreateInfo& info) :
@@ -47,6 +48,8 @@ Entity::Entity(const EntityCreateInfo& info) :
 	addToBVH(info.addToBVH)
 {
 	ZGZoneScoped;
+	if (onAddedFunction)
+		onAddedFunction(*this);
 	for (auto& meshInfo : info.meshInfos)
 		meshIDs.push_back(Registry::GetSingleton().addMesh(meshInfo, *this));
 	for (auto& childInfo : info.childrenInfos)
@@ -102,7 +105,6 @@ Entity::~Entity()
 	children.clear();
 	for (auto& meshID : meshIDs)
 		Registry::GetSingleton().deRefMesh(meshID);
-	detachAllComponents();
 }
 Entity& Entity::operator=(const Entity& other)
 {
@@ -194,10 +196,16 @@ float BoxSDF(const glm::vec3& p) {
 float PlaneXYSDF(const glm::vec3& p) {
     return p.z;
 }
-K::FT Entity::operator()(K::Point_3 p_cgal) const
+float PlaneXZSDF(const glm::vec3& p) {
+    return p.y;
+}
+float PlaneYZSDF(const glm::vec3& p) {
+    return p.x;
+}
+float Entity::operator()(glm::vec3 p) const
 {
-	glm::vec3 p(p_cgal.x(), p_cgal.y(), p_cgal.z());
-	float res = 0.0;
+	// glm::vec3 p(p_cgal.x(), p_cgal.y(), p_cgal.z());
+	float res = (std::numeric_limits<float>::max)();
 	for (auto& meshInfo : meshInfos)
 	{
         float current_sdf = (std::numeric_limits<float>::max)();
@@ -205,8 +213,14 @@ K::FT Entity::operator()(K::Point_3 p_cgal) const
 			case ShapeType::Box:
 				current_sdf = BoxSDF(p);
 				break;
-			case ShapeType::Plane:
+			case ShapeType::PlaneXY:
 				current_sdf = PlaneXYSDF(p);
+				break;
+			case ShapeType::PlaneXZ:
+				current_sdf = PlaneXZSDF(p);
+				break;
+			case ShapeType::PlaneYZ:
+				current_sdf = PlaneYZSDF(p);
 				break;
 			case ShapeType::SDF:
 			{
@@ -235,27 +249,91 @@ K::FT Entity::operator()(K::Point_3 p_cgal) const
 	}
 	return res;
 }
-K::Sphere_3 Entity::get_suggested_bounding_sphere(float multiplier) const
-{
-    std::vector<K::Point_3> points;
+// K::Sphere_3 Entity::getSuggestedBoundingSphere(float multiplier) const
+// {
+//     std::vector<glm::vec3> points;
 
+//     for (auto& meshInfo : meshInfos)
+//     {
+//         switch (meshInfo.shapeType) {
+//             case ShapeType::PlaneXY:
+//             case ShapeType::PlaneXZ:
+//             case ShapeType::PlaneYZ:
+//             case ShapeType::SDF:
+//             case ShapeType::Box:
+//             {
+// 			_box_sphere:
+//                 float half_extent = 0.5f;
+//                 points.push_back(glm::vec3( half_extent,  half_extent,  half_extent) * scale);
+//                 points.push_back(glm::vec3(-half_extent,  half_extent,  half_extent) * scale);
+//                 points.push_back(glm::vec3( half_extent, -half_extent,  half_extent) * scale);
+//                 points.push_back(glm::vec3( half_extent,  half_extent, -half_extent) * scale);
+//                 points.push_back(glm::vec3(-half_extent, -half_extent,  half_extent) * scale);
+//                 points.push_back(glm::vec3(-half_extent,  half_extent, -half_extent) * scale);
+//                 points.push_back(glm::vec3( half_extent, -half_extent, -half_extent) * scale);
+//                 points.push_back(glm::vec3(-half_extent, -half_extent, -half_extent) * scale);
+//                 break;
+//             }
+//             case ShapeType::Mesh:
+//             {
+// 				if (meshInfo.meta_int > -1)
+// 					goto _box_sphere;
+// 				auto minfo = meshInfo.info(*this);
+// 				auto& vertices = minfo.vertices;
+// 				points.reserve(vertices.size());
+// 				for (auto& v : vertices)
+// 					points.push_back(glm::vec3(v.x, v.y, v.z) * scale);
+//                 break;
+//             }
+//             default:
+//                 break;
+//         }
+//     }
+
+//     if (points.empty()) {
+//         return K::Sphere_3(K::Point_3(0,0,0), 0.0);
+//     }
+
+// 	std::vector<K::Point_3> kpoints;
+// 	kpoints.reserve(points.size());
+// 	for (auto& p : points)
+// 		kpoints.push_back(K::Point_3(p.x, p.y, p.z));
+//     CGAL::Min_sphere_d<CGAL::Min_sphere_annulus_d_traits_3<K>> min_sphere(kpoints.begin(), kpoints.end());
+
+//     K::Point_3 center = min_sphere.center();
+//     K::FT squared_radius = min_sphere.squared_radius();
+
+//     double radius_double = std::sqrt(CGAL::to_double(squared_radius));
+//     double scaled_radius_double = radius_double * multiplier;
+//     if (scaled_radius_double < 0.0) scaled_radius_double = 0.0;
+
+//     K::FT scaled_squared_radius = K::FT(scaled_radius_double) * K::FT(scaled_radius_double);
+    
+//     return K::Sphere_3(center, scaled_squared_radius);
+// }
+glm::vec3 Entity::getBoundingSize() const
+{
+	physics::AABB aabb;
+    std::vector<glm::vec3> points;
     for (auto& meshInfo : meshInfos)
     {
         switch (meshInfo.shapeType) {
-            case ShapeType::Plane:
+            case ShapeType::PlaneXY:
+            case ShapeType::PlaneXZ:
+            case ShapeType::PlaneYZ:
             case ShapeType::SDF:
             case ShapeType::Box:
             {
 			_box_sphere:
                 float half_extent = 0.5f;
-                points.push_back(K::Point_3( half_extent,  half_extent,  half_extent));
-                points.push_back(K::Point_3(-half_extent,  half_extent,  half_extent));
-                points.push_back(K::Point_3( half_extent, -half_extent,  half_extent));
-                points.push_back(K::Point_3( half_extent,  half_extent, -half_extent));
-                points.push_back(K::Point_3(-half_extent, -half_extent,  half_extent));
-                points.push_back(K::Point_3(-half_extent,  half_extent, -half_extent));
-                points.push_back(K::Point_3( half_extent, -half_extent, -half_extent));
-                points.push_back(K::Point_3(-half_extent, -half_extent, -half_extent));
+                points.push_back(glm::vec3( half_extent,  half_extent,  half_extent) * scale);
+                points.push_back(glm::vec3(-half_extent,  half_extent,  half_extent) * scale);
+                points.push_back(glm::vec3( half_extent, -half_extent,  half_extent) * scale);
+                points.push_back(glm::vec3( half_extent,  half_extent, -half_extent) * scale);
+                points.push_back(glm::vec3(-half_extent, -half_extent,  half_extent) * scale);
+                points.push_back(glm::vec3(-half_extent,  half_extent, -half_extent) * scale);
+                points.push_back(glm::vec3( half_extent, -half_extent, -half_extent) * scale);
+                points.push_back(glm::vec3(-half_extent, -half_extent, -half_extent) * scale);
                 break;
             }
             case ShapeType::Mesh:
@@ -266,30 +344,18 @@ K::Sphere_3 Entity::get_suggested_bounding_sphere(float multiplier) const
 				auto& vertices = minfo.vertices;
 				points.reserve(vertices.size());
 				for (auto& v : vertices)
-					points.push_back(K::Point_3(v.x, v.y, v.z));
+					points.push_back(glm::vec3(v.x, v.y, v.z) * scale);
                 break;
             }
             default:
                 break;
         }
     }
-
-    if (points.empty()) {
-        return K::Sphere_3(K::Point_3(0,0,0), 0.0);
-    }
-
-    CGAL::Min_sphere_d<CGAL::Min_sphere_annulus_d_traits_3<K>> min_sphere(points.begin(), points.end());
-
-    K::Point_3 center = min_sphere.center();
-    K::FT squared_radius = min_sphere.squared_radius();
-
-    double radius_double = std::sqrt(CGAL::to_double(squared_radius));
-    double scaled_radius_double = radius_double * multiplier;
-    if (scaled_radius_double < 0.0) scaled_radius_double = 0.0;
-
-    K::FT scaled_squared_radius = K::FT(scaled_radius_double) * K::FT(scaled_radius_double);
-    
-    return K::Sphere_3(center, scaled_squared_radius);
+	for (auto& p : points)
+	{
+		aabb.encompass(p);
+	}
+	return aabb._max - aabb._min;
 }
 void Entity::reMeshhash()
 {
@@ -299,32 +365,89 @@ void Entity::reMeshhash()
 void Entity::update()
 {
 	ZGZoneScoped;
+	auto childrenData = children.data();
+	auto childrenSize = children.size();
+	for (size_t index = 0; index < childrenSize; ++index)
+		childrenData[index].update();
 	if (preUpdateFunction)
 		preUpdateFunction(*this);
 	auto componentsData = m_components.data();
 	auto componentsSize = m_components.size();
 	for (size_t index = 0; index < componentsSize; ++index)
 		componentsData[index].onUpdate();
-	auto childrenData = children.data();
-	auto childrenSize = children.size();
-	for (size_t index = 0; index < childrenSize; ++index)
-		childrenData[index].update();
 }
 void Entity::render()
 {
 	ZGZoneScoped;
+	auto childrenData = children.data();
+	auto childrenSize = children.size();
+	for (size_t index = 0; index < childrenSize; ++index)
+		childrenData[index].render();
 	if (preRenderFunction && !preRenderFunction(*this))
 		return;
-	for (auto& meshID : meshIDs)
+	if (!skipRender)
 	{
-		auto& mesh = Registry::GetSingleton().getMesh(meshID);
-		mesh.uid = ID;
-		mesh.render(*this);
+		for (auto& meshID : meshIDs)
+		{
+			auto& mesh = Registry::GetSingleton().getMesh(meshID);
+			mesh.render(*this);
+		}
 	}
-	// auto childrenData = children.data();
-	// auto childrenSize = children.size();
-	// for (size_t index = 0; index < childrenSize; ++index)
-	// 	childrenData[index].render();
+}
+size_t Entity::getChildDrawCount()
+{
+	size_t c = 0;
+	auto childrenSize = children.size();
+	auto childrenData = children.data();
+	std::function<void(Entity&)> countEntity;
+	countEntity = [&](auto& entity)
+	{
+		if (!entity.skipRender)
+		{
+			for (auto& meshID : entity.meshIDs)
+			{
+				c++;
+			}
+		}
+		for (auto& child : entity.children)
+			countEntity(child);
+	};
+	for (size_t i = 0; i < childrenSize; ++i)
+	{
+		auto& child = childrenData[i];
+		countEntity(child);
+	}
+	return c;
+}
+std::vector<std::pair<Entity*, Mesh*>> Entity::getChildDrawList()
+{
+	auto size = getChildDrawCount();
+	std::vector<std::pair<Entity*, Mesh*>> drawList;
+	drawList.resize(size);
+	auto drawListData = drawList.data();
+	std::function<void(Entity&)> addEntity;
+	size_t index = 0;
+	addEntity = [&](auto& entity)
+	{
+		if (!entity.skipRender)
+		{
+			for (auto& meshID : entity.meshIDs)
+			{
+				auto& mesh = Registry::GetSingleton().getMesh(meshID);
+				drawListData[index++] = {&entity, &mesh};
+			}
+		}
+		for (auto& child : entity.children)
+			addEntity(child);
+	};
+	auto childrenSize = children.size();
+	auto childrenData = children.data();
+	for (size_t i = 0; i < childrenSize; ++i)
+	{
+		auto& child = childrenData[i];
+		addEntity(child);
+	}
+	return drawList;
 }
 void Entity::postRender()
 {
@@ -346,13 +469,17 @@ glm::mat4& Entity::getModelMatrix()
 	glm::mat4 rotMat = glm::mat4_cast(rotation);
 	glm::mat4 transMat = glm::translate(identity, position);
 	glm::mat4 localModel = transMat * rotMat * scaleMat;
-	model = localModel;
-	Entity* parentEntity = 0;
-	if (Registry::GetSingleton().getNthParentEntity(INDEX_STACK, parentEntity))
-	{
-		model = parentEntity->getModelMatrix() * model;
-	}
-	return model;
+    model = localModel;
+    Entity* parentEntity = nullptr;
+    if (Registry::GetSingleton().getNthParentEntity(INDEX_STACK, parentEntity) && parentEntity != nullptr)
+    {
+        glm::mat4 parentIdentity = glm::mat4(1.0f);
+        glm::mat4 parentRotMat = glm::mat4_cast(parentEntity->rotation);
+        glm::mat4 parentTransMat = glm::translate(parentIdentity, parentEntity->position);
+        glm::mat4 parentTransformWithoutScale = parentTransMat * parentRotMat;
+        model = parentTransformWithoutScale * model;
+    }
+    return model;
 }
 KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const EntityCreateInfo& childCreateInfo)
 {
@@ -380,6 +507,7 @@ void Entity::removeChild(size_t ID)
 	auto& child = *childIter;
 	if (child.onRemovedFunction)
 		child.onRemovedFunction(child);
+	child.detachAllComponents();
 	children.erase(childIter);
 	auto& idEntities = Registry::GetSingleton().idEntities;
 	auto idIter = idEntities.find(ID);

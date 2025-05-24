@@ -135,10 +135,13 @@ void zg::shaders::register_zg_shader_hooks()
   float meta_float;
   vec4 meta_vec4;
 };
+const int SHAPE_TYPE_NONE = 0;
 const int SHAPE_TYPE_BOX = 1;
-const int SHAPE_TYPE_PLANE = 2;
-const int SHAPE_TYPE_SDF = 3;
-const int SHAPE_TYPE_MESH = 4;
+const int SHAPE_TYPE_SDF = 2;
+const int SHAPE_TYPE_MESH = 3;
+const int SHAPE_TYPE_PLANE_XZ = 4;
+const int SHAPE_TYPE_PLANE_XY = 5;
+const int SHAPE_TYPE_PLANE_YZ = 6;
 struct Material {
   vec4 albedo;
   int type; // 0 = albedo, 1 = uv2, 2 = uv3
@@ -153,8 +156,10 @@ vec4 get_box_color(int vertex_id, in Entity entity, in Material material);
 vec3 get_box_uv3(int vertex_id, in Entity entity, in Material material);
 vec3 get_plane_vertex_xz(int vertex_id);
 vec3 get_plane_normal_xz(int vertex_id);
+vec3 get_plane_normal_yz(int vertex_id);
 vec3 get_plane_vertex_xy(int vertex_id);
 vec3 get_plane_normal_xy(int vertex_id);
+vec3 get_plane_normal_yz(int vertex_id);
 vec4 get_plane_color(int vertex_id, in Entity entity, in Material material);
 vec2 get_plane_uv2(int vertex_id, in Entity entity, in Material material);
 vec3 get_mesh_vertex(int vertex_id, in Entity entity, in Material material);
@@ -417,7 +422,8 @@ vec3 get_entity_uv3(int vertex_id, in Entity entity, in Material material);
   });
   sf.addHook(ShaderType::Vertex, "postMain", "Shape", [](auto& shader, const auto& constants) -> std::string
   {
-    return R"(
+    std::string string;
+    string += R"(
 Material get_material(in Entity entity)
 {
   int material_index = entity.material_index;
@@ -449,11 +455,139 @@ vec4 get_color(int vertex_id, in Entity entity, in Material material)
   return material.albedo;
   // return vec4(material.type, material.type, material.type, 1);
 }
+vec2 get_box_uv2(int vertex_id)
+{
+    // These UV coordinates correspond to the 8 unique corners (v0-v7)
+    // as defined in get_box_vertex, projected onto a 2D face.
+    // Each face covers the UV range from (0,0) to (1,1).
+
+    switch (vertex_id)
+    {
+        // Front face (-Z) - Triangles: (v0,v1,v2), (v1,v3,v2)
+        // Mapping (X, Y) to (U, V)
+        case 0:  return vec2(0.0, 0.0); // Corresponds to v0 (-0.5, -0.5, -0.5) -> bottom-left
+        case 1:  return vec2(1.0, 0.0); // Corresponds to v1 ( 0.5, -0.5, -0.5) -> bottom-right
+        case 2:  return vec2(0.0, 1.0); // Corresponds to v2 (-0.5,  0.5, -0.5) -> top-left
+        case 3:  return vec2(1.0, 0.0); // Corresponds to v1 ( 0.5, -0.5, -0.5) -> bottom-right
+        case 4:  return vec2(1.0, 1.0); // Corresponds to v3 ( 0.5,  0.5, -0.5) -> top-right
+        case 5:  return vec2(0.0, 1.0); // Corresponds to v2 (-0.5,  0.5, -0.5) -> top-left
+
+        // Back face (+Z) - Triangles: (v5,v4,v7), (v4,v6,v7)
+        // Mapping (-X, Y) to (U, V) for consistent front-facing texture.
+        // Or if looking from outside, X goes from 0.5 to -0.5, Y from -0.5 to 0.5
+        // (1-x) for U mapping X from 0.5 to -0.5 to 0 to 1
+        case 6:  return vec2(0.0, 0.0); // Corresponds to v5 ( 0.5, -0.5,  0.5) -> relative bottom-left on texture if Z+ is "front"
+        case 7:  return vec2(1.0, 0.0); // Corresponds to v4 (-0.5, -0.5,  0.5) -> relative bottom-right
+        case 8:  return vec2(0.0, 1.0); // Corresponds to v7 ( 0.5,  0.5,  0.5) -> relative top-left
+        case 9:  return vec2(1.0, 0.0); // Corresponds to v4 (-0.5, -0.5,  0.5) -> relative bottom-right
+        case 10: return vec2(1.0, 1.0); // Corresponds to v6 (-0.5,  0.5,  0.5) -> relative top-right
+        case 11: return vec2(0.0, 1.0); // Corresponds to v7 ( 0.5,  0.5,  0.5) -> relative top-left
+
+        // Left face (-X) - Triangles: (v4,v0,v6), (v0,v2,v6)
+        // Mapping (Z, Y) to (U, V)
+        case 12: return vec2(0.0, 0.0); // Corresponds to v4 (-0.5, -0.5,  0.5) -> bottom-left
+        case 13: return vec2(1.0, 0.0); // Corresponds to v0 (-0.5, -0.5, -0.5) -> bottom-right
+        case 14: return vec2(0.0, 1.0); // Corresponds to v6 (-0.5,  0.5,  0.5) -> top-left
+        case 15: return vec2(1.0, 0.0); // Corresponds to v0 (-0.5, -0.5, -0.5) -> bottom-right
+        case 16: return vec2(1.0, 1.0); // Corresponds to v2 (-0.5,  0.5, -0.5) -> top-right
+        case 17: return vec2(0.0, 1.0); // Corresponds to v6 (-0.5,  0.5,  0.5) -> top-left
+
+        // Right face (+X) - Triangles: (v1,v5,v3), (v5,v7,v3)
+        // Mapping (-Z, Y) to (U, V) for consistent front-facing texture.
+        case 18: return vec2(0.0, 0.0); // Corresponds to v1 ( 0.5, -0.5, -0.5) -> bottom-left
+        case 19: return vec2(1.0, 0.0); // Corresponds to v5 ( 0.5, -0.5,  0.5) -> bottom-right
+        case 20: return vec2(0.0, 1.0); // Corresponds to v3 ( 0.5,  0.5, -0.5) -> top-left
+        case 21: return vec2(1.0, 0.0); // Corresponds to v5 ( 0.5, -0.5,  0.5) -> bottom-right
+        case 22: return vec2(1.0, 1.0); // Corresponds to v7 ( 0.5,  0.5,  0.5) -> top-right
+        case 23: return vec2(0.0, 1.0); // Corresponds to v3 ( 0.5,  0.5, -0.5) -> top-left
+
+        // Top face (+Y) - Triangles: (v2,v3,v6), (v3,v7,v6)
+        // Mapping (X, -Z) to (U, V) assuming standard top-down view (positive Z is "down" on texture)
+        case 24: return vec2(0.0, 0.0); // Corresponds to v2 (-0.5,  0.5, -0.5) -> bottom-left (relative to texture)
+        case 25: return vec2(1.0, 0.0); // Corresponds to v3 ( 0.5,  0.5, -0.5) -> bottom-right
+        case 26: return vec2(0.0, 1.0); // Corresponds to v6 (-0.5,  0.5,  0.5) -> top-left
+        case 27: return vec2(1.0, 0.0); // Corresponds to v3 ( 0.5,  0.5, -0.5) -> bottom-right
+        case 28: return vec2(1.0, 1.0); // Corresponds to v7 ( 0.5,  0.5,  0.5) -> top-right
+        case 29: return vec2(0.0, 1.0); // Corresponds to v6 (-0.5,  0.5,  0.5) -> top-left
+
+        // Bottom face (-Y) - Triangles: (v4,v5,v0), (v5,v1,v0)
+        // Mapping (X, Z) to (U, V) assuming standard bottom-up view
+        case 30: return vec2(0.0, 0.0); // Corresponds to v4 (-0.5, -0.5,  0.5) -> bottom-left
+        case 31: return vec2(1.0, 0.0); // Corresponds to v5 ( 0.5, -0.5,  0.5) -> bottom-right
+        case 32: return vec2(0.0, 1.0); // Corresponds to v0 (-0.5, -0.5, -0.5) -> top-left
+        case 33: return vec2(1.0, 0.0); // Corresponds to v5 ( 0.5, -0.5,  0.5) -> bottom-right
+        case 34: return vec2(1.0, 1.0); // Corresponds to v1 ( 0.5, -0.5, -0.5) -> top-right
+        case 35: return vec2(0.0, 1.0); // Corresponds to v0 (-0.5, -0.5, -0.5) -> top-left
+
+        default: return vec2(0.0, 0.0);
+    }
+}
+
+vec2 get_plane_uv2_xz(int vertex_id)
+{
+    switch (vertex_id)
+    {
+        case 0: return vec2(0.0, 0.0); // Corresponds to (-0.5, -0.5) in XZ
+        case 1: return vec2(1.0, 0.0); // Corresponds to ( 0.5, -0.5) in XZ
+        case 2: return vec2(0.0, 1.0); // Corresponds to (-0.5,  0.5) in XZ
+        case 3: return vec2(0.0, 1.0); // Corresponds to (-0.5,  0.5) in XZ
+        case 4: return vec2(1.0, 0.0); // Corresponds to ( 0.5, -0.5) in XZ
+        case 5: return vec2(1.0, 1.0); // Corresponds to ( 0.5,  0.5) in XZ
+        default: return vec2(0.0, 0.0);
+    }
+}
+
+vec2 get_plane_uv2_xy(int vertex_id)
+{
+    switch (vertex_id)
+    {
+        case 2: return vec2(0.0, 0.0); // Corresponds to (-0.5, -0.5) in XY
+        case 1: return vec2(1.0, 0.0); // Corresponds to ( 0.5, -0.5) in XY
+        case 0: return vec2(0.0, 1.0); // Corresponds to (-0.5,  0.5) in XY
+        case 5: return vec2(0.0, 1.0); // Corresponds to (-0.5,  0.5) in XY
+        case 4: return vec2(1.0, 0.0); // Corresponds to ( 0.5, -0.5) in XY
+        case 3: return vec2(1.0, 1.0); // Corresponds to ( 0.5,  0.5) in XY
+        default: return vec2(0.0, 0.0);
+    }
+}
+
+vec2 get_plane_uv2_yz(int vertex_id)
+{
+    switch (vertex_id)
+    {
+        case 0: return vec2(0.0, 0.0); // Corresponds to (-0.5, -0.5) in YZ (Y as U, Z as V)
+        case 1: return vec2(1.0, 0.0); // Corresponds to ( 0.5, -0.5) in YZ
+        case 2: return vec2(0.0, 1.0); // Corresponds to (-0.5,  0.5) in YZ
+        case 3: return vec2(0.0, 1.0); // Corresponds to (-0.5,  0.5) in YZ
+        case 4: return vec2(1.0, 0.0); // Corresponds to ( 0.5, -0.5) in YZ
+        case 5: return vec2(1.0, 1.0); // Corresponds to ( 0.5,  0.5) in YZ
+        default: return vec2(0.0, 0.0);
+    }
+}
+vec2 get_mesh_uv2(int vertex_id, in Entity entity, in Material material)
+{
+  return EntityUV2s.data[entity.uv2_offset + vertex_id];
+}
 vec2 get_uv2(int vertex_id, in Entity entity, in Material material)
 {
-  if (material.type != 1)
-    return vec2(0, 0);
-  return EntityUV2s.data[entity.uv2_offset + vertex_id];
+  switch (entity.shape_type)
+  {
+  case SHAPE_TYPE_BOX:
+    return get_box_uv2(vertex_id);
+  case SHAPE_TYPE_PLANE_XZ:
+    return get_plane_uv2_xz(vertex_id);
+  case SHAPE_TYPE_PLANE_XY:
+    return get_plane_uv2_xy(vertex_id);
+  case SHAPE_TYPE_PLANE_YZ:
+    return get_plane_uv2_yz(vertex_id);
+  case SHAPE_TYPE_SDF:
+  {
+    return vec2(0.0);
+  }
+  case SHAPE_TYPE_MESH:
+    return get_mesh_uv2(vertex_id, entity, material);
+  }
+  return vec2(0.0);
 }
 vec3 get_uv3(int vertex_id, in Entity entity, in Material material)
 {
@@ -571,12 +705,12 @@ vec3 get_plane_vertex_xz(int vertex_id)
 {
   switch (vertex_id)
   {
-    case 0: return vec3(-1.0, 0.0, -1.0);
-    case 1: return vec3( 1.0, 0.0, -1.0);
-    case 2: return vec3(-1.0, 0.0,  1.0);
-    case 3: return vec3(-1.0, 0.0,  1.0);
-    case 4: return vec3( 1.0, 0.0, -1.0);
-    case 5: return vec3( 1.0, 0.0,  1.0);
+    case 0: return vec3(-0.5, 0.0, -0.5);
+    case 1: return vec3( 0.5, 0.0, -0.5);
+    case 2: return vec3(-0.5, 0.0,  0.5);
+    case 3: return vec3(-0.5, 0.0,  0.5);
+    case 4: return vec3( 0.5, 0.0, -0.5);
+    case 5: return vec3( 0.5, 0.0,  0.5);
     default: return vec3(0.0, 0.0, 0.0);
   }
 }
@@ -584,22 +718,39 @@ vec3 get_plane_vertex_xy(int vertex_id)
 {
   switch (vertex_id)
   {
-    case 0: return vec3(-0.5, -0.5, 0.0);
+    case 2: return vec3(-0.5, -0.5, 0.0);
     case 1: return vec3( 0.5, -0.5, 0.0);
-    case 2: return vec3(-0.5,  0.5, 0.0);
-    case 3: return vec3(-0.5,  0.5, 0.0);
+    case 0: return vec3(-0.5,  0.5, 0.0);
+    case 5: return vec3(-0.5,  0.5, 0.0);
     case 4: return vec3( 0.5, -0.5, 0.0);
-    case 5: return vec3( 0.5,  0.5, 0.0);
+    case 3: return vec3( 0.5,  0.5, 0.0);
+    default: return vec3(0.0, 0.0, 0.0);
+  }
+}
+vec3 get_plane_vertex_yz(int vertex_id)
+{
+  switch (vertex_id)
+  {
+    case 0: return vec3( 0.0, -0.5, -0.5);
+    case 1: return vec3( 0.0, -0.5, 0.5);
+    case 2: return vec3( 0.0,  0.5, -0.5);
+    case 3: return vec3( 0.0,  0.5, -0.5);
+    case 4: return vec3( 0.0, -0.5, 0.5);
+    case 5: return vec3( 0.0,  0.5, 0.5);
     default: return vec3(0.0, 0.0, 0.0);
   }
 }
 vec3 get_plane_normal_xy(int vertex_id)
 {
-  return vec3(0.0, 0.0, 1.0);
+  return vec3(0, 0, 1);
 }
 vec3 get_plane_normal_xz(int vertex_id)
 {
-    return vec3(0, 1, 0);
+  return vec3(0, 1, 0);
+}
+vec3 get_plane_normal_yz(int vertex_id)
+{
+  return vec3(1, 0, 0);
 }
 vec2 get_plane_uv2(int vertex_id, in Entity entity, in Material material)
 {
@@ -627,14 +778,6 @@ vec3 get_mesh_normal(int vertex_id, in Entity entity, in Material material)
   vec3 normal = normalize(cross(edge1, edge2));
   return normal;
 }
-vec2 get_mesh_uv2(int vertex_id, in Entity entity, in Material material)
-{
-  if (material.type == 2)
-  {
-    return get_uv2(vertex_id, entity, material);
-  }
-  return vec2(0, 0);
-}
 int get_entity_id()
 {
   return gl_InstanceIndex;
@@ -645,8 +788,12 @@ vec3 get_entity_vertex(int vertex_id, in Entity entity, in Material material)
   {
   case SHAPE_TYPE_BOX:
     return get_box_vertex(vertex_id);
-  case SHAPE_TYPE_PLANE:
+  case SHAPE_TYPE_PLANE_XZ:
     return get_plane_vertex_xz(vertex_id);
+  case SHAPE_TYPE_PLANE_XY:
+    return get_plane_vertex_xy(vertex_id);
+  case SHAPE_TYPE_PLANE_YZ:
+    return get_plane_vertex_yz(vertex_id);
   case SHAPE_TYPE_SDF:
   {
     // vec3 plane_vertex = get_plane_vertex_xy(vertex_id) * 5.0; // Local quad in XY plane
@@ -664,10 +811,23 @@ vec3 get_entity_vertex(int vertex_id, in Entity entity, in Material material)
     vec3 vertex_local = get_plane_vertex_xy(vertex_id) * 1.0;
     // float scaleZ = length(InstanceModels.data[gl_InstanceIndex][2].xyz);
     vertex_local.z = 0.5;
+)";
+    auto constants_end = constants.end();
+    if (std::find(constants.begin(), constants_end, "View") == constants_end)
+    {
+      string += R"(  return vertex_local;
+)";
+    }
+    else
+    {
+      string += R"(
     mat4 viewMatrix = InstanceViews.data[gl_InstanceIndex];
     mat3 viewRotationInverse = transpose(mat3(viewMatrix));
     vec3 vertex_rot = viewRotationInverse * vertex_local;
     return vertex_rot;
+)";
+    }
+  string += R"(
   }
   case SHAPE_TYPE_MESH:
     return get_mesh_vertex(vertex_id, entity, material);
@@ -680,8 +840,12 @@ vec3 get_entity_normal(int vertex_id, in Entity entity, in Material material)
   {
   case SHAPE_TYPE_BOX:
     return get_box_normal(vertex_id);
-  case SHAPE_TYPE_PLANE:
+  case SHAPE_TYPE_PLANE_XZ:
     return get_plane_normal_xz(vertex_id);
+  case SHAPE_TYPE_PLANE_XY:
+    return get_plane_normal_xy(vertex_id);
+  case SHAPE_TYPE_PLANE_YZ:
+    return get_plane_normal_yz(vertex_id);
   case SHAPE_TYPE_SDF:
     return get_plane_normal_xy(vertex_id);
   case SHAPE_TYPE_MESH:
@@ -702,6 +866,7 @@ vec3 get_entity_uv3(int vertex_id, in Entity entity, in Material material)
   return get_uv3(vertex_id, entity, material);
 }
 )";
+    return string;
   });
   sf.addHook(ShaderType::Geometry, "preLayout", "Position", [](auto &shader, const auto &constants)->std::string
   {
@@ -777,10 +942,13 @@ vec3 get_entity_uv3(int vertex_id, in Entity entity, in Material material)
   int meta_float;
   vec4 meta_vec4;
 };
+const int SHAPE_TYPE_NONE = 0;
 const int SHAPE_TYPE_BOX = 1;
-const int SHAPE_TYPE_PLANE = 2;
-const int SHAPE_TYPE_SDF = 3;
-const int SHAPE_TYPE_MESH = 4;
+const int SHAPE_TYPE_SDF = 2;
+const int SHAPE_TYPE_MESH = 3;
+const int SHAPE_TYPE_PLANE_XZ = 4;
+const int SHAPE_TYPE_PLANE_XY = 5;
+const int SHAPE_TYPE_PLANE_YZ = 6;
 struct Material {
   vec4 albedo;
   int type; // 0 = albedo, 1 = uv2, 2 = uv3
@@ -1132,7 +1300,7 @@ vec3 get_entity_normal(in Entity entity, in Material material);
   {
     std::string string;
     string += R"(  vec4 entity_color = vec4(0, 0, 0, 0);
-  if (entity.shape_type == 3) {
+  if (entity.shape_type == SHAPE_TYPE_SDF) {
     entity_color = get_entity_color(entity, material);
   }
   else {
@@ -1331,22 +1499,31 @@ vec3 unProjectToView(in vec3 win, in mat4 inverseProjection, in vec4 viewport)
 }
 vec4 sdf_get_color_shape(in Entity entity, vec4 baseColor)
 {
+)";
+  auto constants_end = constants.end();
+  if (std::find(constants.begin(), constants_end, "View") == constants_end)
+  {
+    string += "  return vec4(0);\n";
+  }
+  else
+  {
+    string += R"(
   vec2 screenCoord = gl_FragCoord.xy;
   mat4 inverseProjection = InverseInstanceProjections.data[inID];
   mat4 inverseView = InverseInstanceViews.data[inID];
   mat4 projection = InstanceProjections.data[inID];
   mat4 view = InstanceViews.data[inID];
-
+  
   // // Transform the fragment position to view space
   // vec4 fragPosView = view * vec4(inFragPosition.xyz, 1.0);
-
+  
   // // Nudge it closer to the camera by half a unit along the view Z-axis
   // fragPosView.z += 3.0; // Adjust this value as needed
-
+  
   // // Transform the nudged view-space point back to world space
   // vec4 rayOriginWorld4 = inverseView * fragPosView;
   // rayOriginWorld4.xyz / rayOriginWorld4.w; // Perspective divide
-
+  
   // Calculate the ray direction as before
   vec3 nearPointView = unProjectToView(vec3(screenCoord, 0.0), inverseProjection, Viewport.size);
   vec3 farPointView = unProjectToView(vec3(screenCoord, 0.99999), inverseProjection, Viewport.size);
@@ -1380,11 +1557,21 @@ vec4 sdf_get_color_shape(in Entity entity, vec4 baseColor)
     return baseColor;
   }
   discard;
+)";
+  }
+  string += R"(
 }
 vec4 get_color(in Entity entity, in Material material)
 {
-  switch (entity.shape_type) {
-    case 3:
+)";
+  if (std::find_if(constants.begin(), constants_end, [](auto& constant) {
+    return constant == "UV2" || constant == "UV3";
+  }) != constants_end)
+  {
+    string += "  vec4 inColor = texture(ColorTexture, inUV);\n";
+  }
+  string += R"(  switch (entity.shape_type) {
+    case SHAPE_TYPE_SDF:
       return sdf_get_color_shape(entity, inColor);
     default:
       return inColor;
@@ -1393,12 +1580,23 @@ vec4 get_color(in Entity entity, in Material material)
 }
 vec3 get_normal(in Entity entity, in Material material)
 {
+)";
+  if (std::find(constants.begin(), constants_end, "Normal") == constants_end)
+  {
+    string += "  return vec3(0, 0, 1);\n";
+  }
+  else
+  {
+    string += R"(
   switch (entity.shape_type) {
-    case 3:
+    case SHAPE_TYPE_SDF:
       return modNormal;
     default:
       return inNormal;
   }
+)";
+  }
+  string += R"(
 }
 int get_entity_id()
 {

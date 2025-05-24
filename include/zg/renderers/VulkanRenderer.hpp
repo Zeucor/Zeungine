@@ -211,6 +211,7 @@ namespace zg
 		PFN_vkCmdBindVertexBuffers _vkCmdBindVertexBuffers;
 		PFN_vkCmdBindIndexBuffer _vkCmdBindIndexBuffer;
 		PFN_vkCmdBindDescriptorSets _vkCmdBindDescriptorSets;
+		PFN_vkCmdDraw _vkCmdDraw;
 		PFN_vkCmdDrawIndexed _vkCmdDrawIndexed;
 		PFN_vkCreateDescriptorPool _vkCreateDescriptorPool;
 		PFN_vkAllocateDescriptorSets _vkAllocateDescriptorSets;
@@ -262,6 +263,7 @@ namespace zg
 		std::vector<VkCommandBuffer> commandBuffers;
 		VkCommandBuffer* commandBuffer;
 		std::map<size_t, std::pair<VkBuffer, VkDeviceMemory>> drawBuffers;
+		std::map<size_t, std::pair<VkBuffer, VkDeviceMemory>> countBuffers;
 		VkBuffer countBuffer = 0;
 		VkDeviceMemory countBufferMemory = 0;
 		std::shared_ptr<textures::Framebuffer> currentFramebuffer;

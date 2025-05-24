@@ -38,6 +38,8 @@ namespace zg
         Mesh(const MeshCreateInfo& info, Entity& entity);
         Mesh(const Mesh& other);
         Mesh& operator=(const Mesh& other);
+		uint32_t getIndicesSize(ShapeType shapeType);
+		uint32_t getVerticesSize(ShapeType shapeType);
         void render(Entity& entity);
 		template <typename T>
 		static void flipUVsY(std::vector<T>& uvs)

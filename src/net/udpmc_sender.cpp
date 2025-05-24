@@ -13,7 +13,11 @@ using namespace zg::net;
 
 void sender_diagnose(bool condition, const char* msg) {
     if (!condition) {
-        std::cerr << "DIAGNOSE ERROR: " << msg << " failed. WSAGetLastError: " << WSAGetLastError() << std::endl;
+        std::cerr << "DIAGNOSE ERROR: " << msg << " failed.";
+#if defined(_WIN32)
+        std::cerr << " WSAGetLastError: " << WSAGetLastError();
+#endif
+		std::cerr << std::endl;
     }
 }
 udpmc_sender::udpmc_sender(const std::string& host, int port) : udp_ostream(setup(host, port))
@@ -27,7 +31,7 @@ streams::udp_streambuf::SocketPair udpmc_sender::setup(const std::string& host, 
 	{
 		throw std::runtime_error("Socket creation failed");
 	}
-    BOOL reuseAddr = TRUE;
+    bool reuseAddr = TRUE;
     sender_diagnose(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&reuseAddr, sizeof(reuseAddr)) >= 0, "Setting SO_REUSEADDR");
 
 	sockaddr_in group_addr{};

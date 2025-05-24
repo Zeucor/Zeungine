@@ -12,7 +12,7 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string nam
     });
     zg::MeshCreateInfo meshInfo{
         .name = "Plane",
-        .shapeType = ShapeType::Plane,
+        .shapeType = ShapeType::PlaneXY,
         .material = {
             color,
             0
@@ -38,26 +38,19 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(const std::shared_ptr<textures::
     const shaders::RuntimeConstants constants, zg::FRONTFACE frontFace)
 {
     auto mergedConstants = shaders::mergeConstants({
-        shaders::RuntimeConstants({"Shape", "UV2"}),
+        shaders::RuntimeConstants({"Shape", "UV2", "ColorTexture"}),
         shaders::common_zg_constants,
         constants
     });
     zg::MeshCreateInfo meshInfo{
         .name = "Plane",
-        .shapeType = ShapeType::Plane,
+        .shapeType = ShapeType::PlaneXY,
         .material = {
             glm::vec4(1),
             1
         },
         .info = [](auto&) -> MeshInfo {
-            return {
-                .uv2s = {
-                    {0, 0},
-                    {1, 0},
-                    {1, 1},
-                    {0, 1}
-                },
-            };
+            return { };
         },
         .keyedTextures = {
             {"ColorTexture", texture}

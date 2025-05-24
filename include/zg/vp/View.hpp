@@ -18,16 +18,11 @@ namespace zg::vp
     std::pair<UniqueIdentifier, std::map<UniqueIdentifier, ViewResizeHandler>> viewResizeHandlers;
     bool lookAtSet = false;
     glm::vec3 lookAt = glm::vec3(0);
-    bool dirty = true;
     float accumulatedPhi;
     float accumulatedTheta;
     bool running = true;
-    std::thread updateThread;
-    std::mutex updateMutex;
-    std::condition_variable updateCV;
     View(glm::vec3 position, glm::vec3 direction, glm::vec3 up);
     View(glm::vec3 position, glm::vec3 direction, glm::vec3 up, bool lookAtSet, glm::vec3 lookAt);
-    ~View();
     void update();
     void addPhiTheta(float addPhi, float addTheta);
     UniqueIdentifier addResizeHandler(const ViewResizeHandler &callback);

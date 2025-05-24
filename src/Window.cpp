@@ -284,7 +284,7 @@ void zg::Window::startWindow()
 				{
 					ZGZoneScopedN("p3:pp");
 					auto& scene = scenesData[index];
-					ppOutputs[index++] = scene.postProcessingPipeline.postProcess();
+					ppOutputs[index] = scene.postProcessingPipeline.postProcess();
 				}
 				index = 0;
 				mainFramebuffer->bind();
@@ -1012,8 +1012,8 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple zg::Window::addScene(const Sce
 		scene.onAttachedFunction(scene);
 	}
 	sortedScenes.push_back(scene.ID);
-	sortScenes();
 	Registry::GetSingleton().idScenes[scene.ID] = scene.INDEX_STACK;
+	sortScenes();
 	return {transaction.key, transaction.id, transaction.index, &scene};
 }
 bool zg::Window::removeScene(size_t ID)
@@ -1031,6 +1031,7 @@ bool zg::Window::removeScene(size_t ID)
 		ZGZoneScoped;
 		scene.onDetachedFunction(scene);
 	}
+	scene.detachAllComponents();
 	sceneZ -= 0.1f;
 	auto sortedSceneIter = std::find(sortedScenes.begin(), sortedScenes.end(), scene.ID);
 	sortedScenes.erase(sortedSceneIter);

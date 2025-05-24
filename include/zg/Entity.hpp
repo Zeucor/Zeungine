@@ -10,7 +10,7 @@
 #include "vp/Projection.hpp"
 #include "vp/View.hpp"
 #include "Mesh.hpp"
-#include "CGAL.hpp"
+// #include "CGAL.hpp"
 namespace zg
 {
 	struct Scene;
@@ -68,6 +68,7 @@ namespace zg
 		// some flags
 		bool affectedByShadows = true;
 		bool addToBVH = true;
+		bool skipRender = false;
 		// event handlers
 		std::unordered_map<Button, bool> buttons;
 		std::unordered_map<
@@ -97,8 +98,9 @@ namespace zg
 		Entity& operator=(const Entity& other);
 		void refreshMeshes();
 		Material& meshMaterial(size_t meshID);
-		K::FT operator()(K::Point_3 p_cgal) const;
-		K::Sphere_3 get_suggested_bounding_sphere(float multiplier = 1.5f) const;
+		float operator()(glm::vec3 p) const;
+		// K::Sphere_3 getSuggestedBoundingSphere(float multiplier = 1.5f) const;
+		glm::vec3 getBoundingSize() const;
 		
 	private:
 		void reMeshhash();
@@ -106,6 +108,8 @@ namespace zg
 	public:
 		void update();
 		void render();
+		size_t getChildDrawCount();
+		std::vector<std::pair<Entity*, Mesh*>> getChildDrawList();
 		void postRender();
 		glm::mat4& getModelMatrix();
 		KeyIDVector<std::string, Entity>::EmplaceBackTuple addChild(const EntityCreateInfo& childInfo);

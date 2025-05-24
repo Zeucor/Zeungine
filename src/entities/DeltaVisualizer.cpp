@@ -22,7 +22,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
 	auto color = glm::vec4(0.2f, 0.3f, 0.4f, 0.7f);
     MeshCreateInfo meshInfo{
         .name = "DeltaVisualizer",
-        .shapeType = ShapeType::Plane,
+        .shapeType = ShapeType::PlaneXY,
         .material = {
             color,
             0

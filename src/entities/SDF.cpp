@@ -543,13 +543,13 @@ float SphericalHarmonicsInspiredBlobSDF(vec3 p_local) {
 })";
     });
     sdf_rgy.register_c_sdf(box_frame_id, [](auto& entity, auto p) {
-       p = glm::abs(p  )-glm::vec3(0.5f, 0.5f, 0.5f);
-  glm::vec3 q = abs(p+0.1f)-0.1f;
+        p = glm::abs(p  )-glm::vec3(0.5f, 0.5f, 0.5f);
+        glm::vec3 q = abs(p+0.1f)-0.1f;
 
-  return (glm::min)((glm::min)(
-      glm::length((glm::max)(glm::vec3(p.x,q.y,q.z),0.0f))+(glm::min)((glm::max)(p.x,(glm::max)(q.y,q.z)),0.0f),
-      glm::length((glm::max)(glm::vec3(q.x,p.y,q.z),0.0f))+(glm::min)((glm::max)(q.x,(glm::max)(p.y,q.z)),0.0f)),
-      glm::length((glm::max)(glm::vec3(q.x,q.y,p.z),0.0f))+(glm::min)((glm::max)(q.x,(glm::max)(q.y,p.z)),0.0f));
+        return (glm::min)((glm::min)(
+            glm::length((glm::max)(glm::vec3(p.x,q.y,q.z),0.0f))+(glm::min)((glm::max)(p.x,(glm::max)(q.y,q.z)),0.0f),
+            glm::length((glm::max)(glm::vec3(q.x,p.y,q.z),0.0f))+(glm::min)((glm::max)(q.x,(glm::max)(p.y,q.z)),0.0f)),
+            glm::length((glm::max)(glm::vec3(q.x,q.y,p.z),0.0f))+(glm::min)((glm::max)(q.x,(glm::max)(q.y,p.z)),0.0f));
     });
     auto Horseshoe_id = sdf_rgy.register_sdf("Horseshoe", [](auto& shader, auto& constants) {
         return R"(float HorseshoeSDF(in vec3 p)
@@ -587,6 +587,232 @@ float SphericalHarmonicsInspiredBlobSDF(vec3 p_local) {
         glm::vec2 q = glm::vec2(glm::length((glm::max)(pxy,0.0f)) + (glm::min)(0.0f,(glm::max)(pxy.x,pxy.y)),p.z);
         glm::vec2 d = (glm::abs)(q) - w;
         return (glm::min)((glm::max)(d.x,d.y),0.0f) + glm::length((glm::max)(d,0.0f));
+    });
+    auto sine_wave_plane_id = sdf_rgy.register_sdf("SineWavePlane", [](auto& shader, auto& constants) {
+        return R"(float SineWavePlaneSDF(vec3 p_local) {
+    float amplitude = 0.1;
+    float frequency = 10.0;
+    return p_local.y - amplitude * sin(p_local.x * frequency);
+})";
+    });
+    sdf_rgy.register_c_sdf(sine_wave_plane_id, [](auto& entity, auto p) {
+        float amplitude = 0.1f;
+        float frequency = 10.0f;
+        return p.y - amplitude * glm::sin(p.x * frequency);
+    });
+
+    auto twisted_box_id = sdf_rgy.register_sdf("TwistedBox", [](auto& shader, auto& constants) {
+        return R"(float TwistedBoxSDF(vec3 p_local) {
+    float twist_amount = 5.0; // Adjust for more or less twist
+    float c = cos(twist_amount * p_local.y);
+    float s = sin(twist_amount * p_local.y);
+    vec3 twisted_p = vec3(p_local.x * c - p_local.z * s, p_local.y, p_local.x * s + p_local.z * c);
+    vec3 b = vec3(0.5); // Example size
+    vec3 q = abs(twisted_p) - b;
+    return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+})";
+    });
+    sdf_rgy.register_c_sdf(twisted_box_id, [](auto& entity, auto p) {
+        float twist_amount = 5.0f;
+        float c = glm::cos(twist_amount * p.y);
+        float s = glm::sin(twist_amount * p.y);
+        glm::vec3 twisted_p = glm::vec3(p.x * c - p.z * s, p.y, p.x * s + p.z * c);
+        glm::vec3 b = glm::vec3(0.5f);
+        glm::vec3 q = glm::abs(twisted_p) - b;
+        return glm::length((glm::max)(q, 0.0f)) + (glm::min)((glm::max)(q.x, (glm::max)(q.y, q.z)), 0.0f);
+    });
+
+    auto csg_sine_sphere_id = sdf_rgy.register_sdf("CSGSineSphere", [](auto& shader, auto& constants) {
+        return R"(float CSGSineSphereSDF(vec3 p_local) {
+    float r = 0.5;
+    float sphere_dist = length(p_local) - r;
+
+    // Use sine to create a "wave" and subtract it from the sphere
+    float wave_dist = 0.1 * sin(p_local.x * 15.0) + 0.1 * cos(p_local.z * 15.0);
+
+    return max(sphere_dist, -wave_dist); // Intersection for interesting cuts
+})";
+    });
+    sdf_rgy.register_c_sdf(csg_sine_sphere_id, [](auto& entity, auto p) {
+        float r = 0.5f;
+        float sphere_dist = glm::length(p) - r;
+        float wave_dist = 0.1f * glm::sin(p.x * 15.0f) + 0.1f * glm::cos(p.z * 15.0f);
+        return (glm::max)(sphere_dist, -wave_dist);
+    });
+
+    auto tangent_cone_id = sdf_rgy.register_sdf("TangentCone", [](auto& shader, auto& constants) {
+        return R"(float TangentConeSDF(vec3 p_local) {
+    // This is a simplified cone that uses tangent for its angle, showing an example usage
+    // A more robust cone SDF would use a dot product, but this demonstrates tangent
+    float angle = 0.8; // Controls the cone's "steepness"
+    float d = length(p_local.xz) * tan(angle) - p_local.y;
+    float r_cap = 0.5; // Radius of the base
+    float h = 1.0; // Height of the cone
+    
+    // Combining cone with plane caps
+    float cone_dist = max(d, -p_local.y); // Infinite cone base is p_local.y = 0
+    cone_dist = max(cone_dist, p_local.y - h); // Top cap
+    
+    // Smooth transition near the tip and base for visual effect (optional)
+    return cone_dist;
+})";
+    });
+    sdf_rgy.register_c_sdf(tangent_cone_id, [](auto& entity, auto p) {
+        float angle = 0.8f;
+        float d = glm::length(glm::vec2(p.x, p.z)) * glm::tan(angle) - p.y;
+        float r_cap = 0.5f;
+        float h = 1.0f;
+        float cone_dist = (glm::max)(d, -p.y);
+        cone_dist = (glm::max)(cone_dist, p.y - h);
+        return cone_dist;
+    });
+    auto menger_sponge_iter_id = sdf_rgy.register_sdf("MengerSpongeIter", [](auto& shader, auto& constants) {
+        return R"(float MengerSpongeIterSDF(vec3 p_local) {
+    vec3 p = p_local;
+    float d = length(p) - 1.0; // Start with a sphere or large box to enclose
+
+    for (int i = 0; i < 3; ++i) { // Number of iterations, adjust for complexity vs. performance
+        p = abs(p);
+        if (p.x < p.y) p.xy = p.yx;
+        if (p.x < p.z) p.xz = p.zx;
+        if (p.y < p.z) p.yz = p.zy;
+        
+        p = p * 3.0 - 1.0; // Scale and translate
+        
+        float da = max(abs(p.x), abs(p.y));
+        float db = max(da, abs(p.z));
+        float dc = dot(p, normalize(vec3(1.0))); // Optional: A different subtraction
+        
+        // This is a simplified Menger Sponge iteration logic
+        // Subtracting middle parts of each dimension
+        d = max(d, -db); // Remove central part for a box
+    }
+    
+    vec3 b = vec3(0.5); // Bounding box for visual effect, optional
+    vec3 q = abs(p_local) - b;
+    float box_dist = length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+
+    return max(d, box_dist); // Combine the fractal logic with a bounding box/sphere
+})";
+    });
+    sdf_rgy.register_c_sdf(menger_sponge_iter_id, [](auto& entity, auto p_local) {
+        glm::vec3 p = p_local;
+        float d = glm::length(p) - 1.0f; // Start with a sphere
+
+        for (int i = 0; i < 3; ++i) {
+            p = glm::abs(p);
+            // Sorting components for specific fractal types
+            if (p.x < p.y) std::swap(p.x, p.y);
+            if (p.x < p.z) std::swap(p.x, p.z);
+            if (p.y < p.z) std::swap(p.y, p.z);
+            
+            p = p * 3.0f - 1.0f;
+            
+            float da = (glm::max)(glm::abs(p.x), glm::abs(p.y));
+            float db = (glm::max)(da, glm::abs(p.z));
+            
+            d = (glm::max)(d, -db);
+        }
+        
+        glm::vec3 b = glm::vec3(0.5f);
+        glm::vec3 q = glm::abs(p_local) - b;
+        float box_dist = glm::length((glm::max)(q, 0.0f)) + (glm::min)((glm::max)(q.x, (glm::max)(q.y, q.z)), 0.0f);
+
+        return (glm::max)(d, box_dist);
+    });
+
+    auto heart_shape_id = sdf_rgy.register_sdf("HeartShape", [](auto& shader, auto& constants) {
+        return R"(float HeartShapeSDF(vec3 p_local) {
+    vec2 p = p_local.xy;
+    p.x = abs(p.x);
+    float a = p.x - 0.5;
+    float b = p.y + 0.5;
+    float c = 1.0 - p.x - p.y;
+    
+    // A classic heart shape formula, typically 2D, extended to 3D via extrusion or revolve
+    // This particular formula for heart is generally polynomial based
+    float f = pow(p.x*p.x + p.y*p.y - 1.0, 3.0) - p.x*p.x*p.y*p.y*p.y; // 2D Heart implicit
+    
+    // Extrude the 2D heart along Z for 3D SDF
+    float thickness = 0.2;
+    float dist2D = -f; // Invert for outside positive
+    
+    vec2 q = vec2(dist2D, abs(p_local.z) - thickness);
+    return length(max(q,0.0)) + min(max(q.x,q.y),0.0);
+})";
+    });
+    sdf_rgy.register_c_sdf(heart_shape_id, [](auto& entity, auto p_local) {
+        glm::vec2 p = glm::vec2(p_local.x, p_local.y);
+        p.x = glm::abs(p.x);
+        
+        float f = glm::pow(glm::pow(p.x, 2.0f) + glm::pow(p.y, 2.0f) - 1.0f, 3.0f) - glm::pow(p.x, 2.0f) * glm::pow(p.y, 3.0f);
+        
+        float thickness = 0.2f;
+        float dist2D = -f;
+        
+        glm::vec2 q = glm::vec2(dist2D, glm::abs(p_local.z) - thickness);
+        return glm::length((glm::max)(q, 0.0f)) + (glm::min)((glm::max)(q.x, q.y), 0.0f);
+    });
+
+    auto wavy_capsule_id = sdf_rgy.register_sdf("WavyCapsule", [](auto& shader, auto& constants) {
+        return R"(float WavyCapsuleSDF(vec3 p_local) {
+    vec3 a = vec3(0.0, -0.5, 0.0); // Start point of capsule segment
+    vec3 b = vec3(0.0, 0.5, 0.0);  // End point of capsule segment
+    float r = 0.3; // Radius of capsule
+
+    vec3 pa = p_local - a;
+    vec3 ba = b - a;
+    float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
+    float capsule_dist = length( pa - ba*h ) - r;
+
+    // Add a wavy deformation based on x and z
+    float wave_amplitude = 0.1;
+    float wave_frequency = 15.0;
+    float wavy_offset = wave_amplitude * (sin(p_local.x * wave_frequency) + cos(p_local.z * wave_frequency));
+    
+    // Apply the wave only to the distance, creating an interesting surface
+    return capsule_dist - wavy_offset;
+})";
+    });
+    sdf_rgy.register_c_sdf(wavy_capsule_id, [](auto& entity, auto p_local) {
+        glm::vec3 a = glm::vec3(0.0f, -0.5f, 0.0f);
+        glm::vec3 b = glm::vec3(0.0f, 0.5f, 0.0f);
+        float r = 0.3f;
+
+        glm::vec3 pa = p_local - a;
+        glm::vec3 ba = b - a;
+        float h = glm::clamp( glm::dot(pa, ba) / glm::dot(ba, ba), 0.0f, 1.0f );
+        float capsule_dist = glm::length( pa - ba * h ) - r;
+
+        float wave_amplitude = 0.1f;
+        float wave_frequency = 15.0f;
+        float wavy_offset = wave_amplitude * (glm::sin(p_local.x * wave_frequency) + glm::cos(p_local.z * wave_frequency));
+        
+        return capsule_dist - wavy_offset;
+    });
+
+    auto cross_shape_id = sdf_rgy.register_sdf("CrossShape", [](auto& shader, auto& constants) {
+        return R"(float CrossShapeSDF(vec3 p_local) {
+    vec3 p = abs(p_local);
+    vec3 b = vec3(0.2, 0.2, 0.8); // Dimensions of arms
+
+    // SDF for 3 intersecting boxes (a cross)
+    float d1 = length(max(abs(p) - b.zyx, 0.0)) + min(0.0, max(abs(p.x) - b.z, max(abs(p.y) - b.y, abs(p.z) - b.x)));
+    float d2 = length(max(abs(p) - b.xzy, 0.0)) + min(0.0, max(abs(p.x) - b.x, max(abs(p.y) - b.z, abs(p.z) - b.y)));
+    float d3 = length(max(abs(p) - b.yxz, 0.0)) + min(0.0, max(abs(p.x) - b.y, max(abs(p.y) - b.x, abs(p.z) - b.z)));
+
+    return min(min(d1, d2), d3);
+})";
+    });
+    sdf_rgy.register_c_sdf(cross_shape_id, [](auto& entity, auto p_local) {
+        glm::vec3 p = glm::abs(p_local);
+        glm::vec3 b = glm::vec3(0.2f, 0.2f, 0.8f); // Dimensions of arms
+
+        float d1 = glm::length((glm::max)(glm::abs(p) - glm::vec3(b.z, b.y, b.x), 0.0f)) + (glm::min)(0.0f, (glm::max)(glm::abs(p.x) - b.z, (glm::max)(glm::abs(p.y) - b.y, glm::abs(p.z) - b.x)));
+        float d2 = glm::length((glm::max)(glm::abs(p) - glm::vec3(b.x, b.z, b.y), 0.0f)) + (glm::min)(0.0f, (glm::max)(glm::abs(p.x) - b.x, (glm::max)(glm::abs(p.y) - b.z, glm::abs(p.z) - b.y)));
+        float d3 = glm::length((glm::max)(glm::abs(p) - glm::vec3(b.y, b.x, b.z), 0.0f)) + (glm::min)(0.0f, (glm::max)(glm::abs(p.x) - b.y, (glm::max)(glm::abs(p.y) - b.x, glm::abs(p.z) - b.z)));
+
+        return glm::min(glm::min(d1, d2), d3);
     });
     registered_zg_sdfs =  true;
 }

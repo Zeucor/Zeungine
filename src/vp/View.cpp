@@ -6,9 +6,9 @@ View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up) : position(
 														direction(glm::normalize(_direction)),
 														up(_up),
 														phi(atan2(this->direction.z, this->direction.x)),
-														theta(acos(glm::clamp(this->direction.y, -1.0f, 1.0f))),
-														updateThread(&View::update, this)
+														theta(acos(glm::clamp(this->direction.y, -1.0f, 1.0f)))
 {
+	update();
 }
 View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up, bool _lookAtSet, glm::vec3 _lookAt) : position(_position),
 														direction(glm::normalize(_direction)),
@@ -16,46 +16,22 @@ View::View(glm::vec3 _position, glm::vec3 _direction, glm::vec3 _up, bool _lookA
 														phi(atan2(this->direction.z, this->direction.x)),
 														theta(acos(glm::clamp(this->direction.y, -1.0f, 1.0f))),
 														lookAtSet(_lookAtSet),
-														lookAt(_lookAt),
-														updateThread(&View::update, this)
-{}
-View::~View()
+														lookAt(_lookAt)
 {
-	{
-		std::unique_lock lock(updateMutex);
-		running = false;
-	}
-	updateCV.notify_one();
-	if (updateThread.joinable())
-		updateThread.join();
+	update();
 }
 void View::update()
 {
-	while (true)
+	glm::mat4 newMatrix;
+	if (lookAtSet)
+		newMatrix = glm::lookAt(position, lookAt, up);
+	else
 	{
-		{
-			std::unique_lock lock(updateMutex);
-			updateCV.wait(lock, [&]()
-			{
-				return dirty || !running;
-			});
-		}
-		if (!running)
-			break;
-		glm::mat4 newMatrix;
-		if (lookAtSet)
-			newMatrix = glm::lookAt(position, lookAt, up);
-		else
-		{
-			auto _direction_ = direction;
-			newMatrix = glm::lookAt(position, position + _direction_, up);
-		}
-		{
-			std::unique_lock lock(updateMutex);
-			matrix = newMatrix;
-			dirty = false;
-		}
-		updateCV.notify_one();
+		auto _direction_ = direction;
+		newMatrix = glm::lookAt(position, position + _direction_, up);
+	}
+	{
+		matrix = newMatrix;
 	}
 }
 void View::addPhiTheta(float addPhi, float addTheta)
@@ -70,11 +46,7 @@ void View::addPhiTheta(float addPhi, float addTheta)
 	newDirection.y = cos(theta);
 	newDirection.z = sin(theta) * sin(phi);
 	direction = newDirection;
-	{
-		std::unique_lock lock(updateMutex);
-		dirty = true;
-	}
-	updateCV.notify_one();
+	update();
 }
 UniqueIdentifier View::addResizeHandler(const ViewResizeHandler &callback)
 {
@@ -131,9 +103,5 @@ void View::setDirty()
 {
 	phi = atan2(direction.z, direction.x);
 	theta = acos(glm::clamp(direction.y, -1.0f, 1.0f));
-	{
-		std::unique_lock lock(updateMutex);
-		dirty = true;
-	}
-	updateCV.notify_one();
+	update();
 }

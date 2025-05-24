@@ -7,6 +7,8 @@ namespace zg
 {
     struct FullscreenQuad : vaos::VAO
     {
+        glm::mat4 view = glm::mat4(1.0f);
+        glm::mat4 projection = glm::mat4(1.0f);
         glm::mat4 model = glm::mat4(1.0f);
         FullscreenQuad(const FullscreenQuad& other);
         FullscreenQuad(const std::vector<size_t*>& INDEX_STACK, const shaders::RuntimeConstants& constants);

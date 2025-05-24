@@ -1,5 +1,6 @@
 #include <zg/Window.hpp>
 #include <zg/Registry.hpp>
+#include <zg/crypto/Random.hpp>
 #include <zg/entities/SDF.hpp>
 #include <zg/entities/Cube.hpp>
 #include <zg/components/scenes/ViewMouseControl.hpp>
@@ -7,6 +8,7 @@
 #include <zg/shaders/ShaderFactory.hpp>
 #include <zg/entities/sdf_mesh.hpp>
 #include <zg/Spot.hpp>
+#include <zg/components/windows/Editor.hpp>
 using namespace zg;
 using namespace zg::shaders;
 SceneCreateInfo SDFSceneFactory();
@@ -35,6 +37,7 @@ int main()
     auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
     window.runOnThread([](auto& window){
         window.addScene(SDFSceneFactory());
+        // window.attachComponent(components::windows::EditorFactory());
     });
     window.addKeyPressHandler('q', [&](auto pressed){
         if (!pressed)
@@ -80,34 +83,67 @@ SceneCreateInfo SDFSceneFactory()
             // auto sphere_sdf_mesh  = entities::sdf_mesh_factory("Sphere", "Sphere", {7, 0, 0}, rotate_identity, {1, 1, 1}, glm::vec4(0, 0, 1, 1), commonShaderConstants);
             // scene.addEntity(sphere_sdf_mesh);
             Spot spot({1, 1, 1});
-            // auto sphere_sdf_mesh = entities::sdf_mesh_factory("Sphere", "Sphere", spot(2), rotate_identity, {1, 1, 1}, glm::vec4(0.944, 1.00, 0.440, 1.0), commonShaderConstants);
+            auto color = []() -> glm::vec4 {
+                return {
+                    zg::crypto::Random::value<float>(0.1f, 1.0f),
+                    zg::crypto::Random::value<float>(0.1f, 1.0f),
+                    zg::crypto::Random::value<float>(0.1f, 1.0f),
+                    1.f
+                };
+            };
+            auto& sdf_rgy = SDFRegistry::GetSingleton();
+            auto sdf_iter = sdf_rgy.begin();
+            auto sdf_end = sdf_rgy.end();
+            for (;sdf_iter != sdf_end; ++sdf_iter)
+            {
+                auto& key = sdf_iter->first;
+                auto sdf_mesh = entities::sdf_mesh_factory(key, key, spot(12), rotate_identity, {6,6,6}, color(), commonShaderConstants);
+                scene.addEntity(sdf_mesh);
+            }
+            // auto sphere_sdf_mesh = entities::sdf_mesh_factory("Sphere", "Sphere", spot(2), rotate_identity, {1, 1, 1}, color(), commonShaderConstants);
             // scene.addEntity(sphere_sdf_mesh);
-            auto torus_sdf_mesh  = entities::sdf_mesh_factory("Torus", "Torus", spot(4), rotate_identity, {3, 3, 3}, glm::vec4(.87, .13, .2, 1), commonShaderConstants);
-            scene.addEntity(torus_sdf_mesh);
-            // auto cylinder_sdf_mesh  = entities::sdf_mesh_factory("Cylinder", "Cylinder", spot(6), rotate_identity, {3, 3, 3}, glm::vec4(.97, .9, .4, 1), commonShaderConstants);
+            // auto torus_sdf_mesh  = entities::sdf_mesh_factory("Torus", "Torus", spot(4), rotate_identity, {3, 3, 3}, color(), commonShaderConstants);
+            // scene.addEntity(torus_sdf_mesh);
+            // auto cylinder_sdf_mesh  = entities::sdf_mesh_factory("Cylinder", "Cylinder", spot(6), rotate_identity, {3, 3, 3}, color(), commonShaderConstants);
             // scene.addEntity(cylinder_sdf_mesh);
-            // auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("RoundedCube", "RoundedCube", spot(2), rotate_identity, {1, 1, 1}, glm::vec4(.74, .64, .92, 1), commonShaderConstants);
+            // auto rounded_cube_sdf_mesh = entities::sdf_mesh_factory("RoundedCube", "RoundedCube", spot(2), rotate_identity, {1, 1, 1}, color(), commonShaderConstants);
             // scene.addEntity(rounded_cube_sdf_mesh);
-            // auto cone_sdf_mesh = entities::sdf_mesh_factory("Cone", "Cone", spot(8), rotate_identity, {4, 4, 4}, glm::vec4(.82, .9, .77, 1), commonShaderConstants);
+            // auto cone_sdf_mesh = entities::sdf_mesh_factory("Cone", "Cone", spot(8), rotate_identity, {4, 4, 4}, color(), commonShaderConstants);
             // scene.addEntity(cone_sdf_mesh);
-            // auto hexagonal_prism_sdf_mesh = entities::sdf_mesh_factory("HexagonalPrism", "HexagonalPrism", spot(8), rotate_identity, {4, 4, 4}, glm::vec4(.9, .8, .7, 1), commonShaderConstants);
+            // auto hexagonal_prism_sdf_mesh = entities::sdf_mesh_factory("HexagonalPrism", "HexagonalPrism", spot(8), rotate_identity, {4, 4, 4}, color(), commonShaderConstants);
             // scene.addEntity(hexagonal_prism_sdf_mesh);
-            // auto ellipsoid_sdf_mesh = entities::sdf_mesh_factory("Ellipsoid", "Ellipsoid", spot(8), rotate_identity, {4, 4, 4}, {0.7, 0.7, 0.9, 0.9}, commonShaderConstants);
+            // auto ellipsoid_sdf_mesh = entities::sdf_mesh_factory("Ellipsoid", "Ellipsoid", spot(8), rotate_identity, {4, 4, 4}, color(), commonShaderConstants);
             // scene.addEntity(ellipsoid_sdf_mesh);
-            // auto capsule_sdf_mesh = entities::sdf_mesh_factory("Capsule", "Capsule", spot(6), rotate_identity, {3, 3, 3}, {0.88, 0.78, 0.92, 1}, commonShaderConstants);
+            // auto capsule_sdf_mesh = entities::sdf_mesh_factory("Capsule", "Capsule", spot(6), rotate_identity, {3, 3, 3}, color(), commonShaderConstants);
             // scene.addEntity(capsule_sdf_mesh);
-            // auto flower_sdf_mesh = entities::sdf_mesh_factory("Flower", "Flower", spot(12), rotate_identity, {4, 4, 4}, {0.34, 0.88, 0.99, 1}, commonShaderConstants);
+            // auto flower_sdf_mesh = entities::sdf_mesh_factory("Flower", "Flower", spot(12), rotate_identity, {4, 4, 4}, color(), commonShaderConstants);
             // scene.addEntity(flower_sdf_mesh);
-            // auto WobblySphere_sdf_mesh = entities::sdf_mesh_factory("WobblySphere", "WobblySphere", spot(6), rotate_identity, {4, 4, 4}, {0.34, 0.88, 0.99, 1}, commonShaderConstants);
-            // scene.addEntity(WobblySphere_sdf_mesh);
-            auto HelixoidDonut_sdf_mesh = entities::sdf_mesh_factory("HelixoidDonut", "HelixoidDonut", spot(4), rotate_identity, {3, 3, 3}, {0.34, 0.88, 0.99, 1}, commonShaderConstants);
-            scene.addEntity(HelixoidDonut_sdf_mesh);
-            auto BoxFrame_sdf_mesh = entities::sdf_mesh_factory("BoxFrame", "BoxFrame", spot(11), rotate_identity, {8, 8, 8}, {0.84 / 2.f, 0.45 / 2.f, 0.95 / 2.f, 1}, commonShaderConstants);
-            scene.addEntity(BoxFrame_sdf_mesh);
-            // auto Horseshoe_sdf_mesh = entities::sdf_mesh_factory("Horseshoe", "Horseshoe", spot(12), rotate_identity, {8, 8, 8}, {tanh(1.00), tanh(0.989), tanh(0.770), 1}, commonShaderConstants);
+            // // auto WobblySphere_sdf_mesh = entities::sdf_mesh_factory("WobblySphere", "WobblySphere", spot(6), rotate_identity, {4, 4, 4}, color(), commonShaderConstants);
+            // // scene.addEntity(WobblySphere_sdf_mesh);
+            // // auto HelixoidDonut_sdf_mesh = entities::sdf_mesh_factory("HelixoidDonut", "HelixoidDonut", spot(4), rotate_identity, {3, 3, 3}, color(), commonShaderConstants);
+            // // scene.addEntity(HelixoidDonut_sdf_mesh);
+            // auto BoxFrame_sdf_mesh = entities::sdf_mesh_factory("BoxFrame", "BoxFrame", spot(10), rotate_identity, {8, 8, 8}, color(), commonShaderConstants);
+            // scene.addEntity(BoxFrame_sdf_mesh);
+            // auto Horseshoe_sdf_mesh = entities::sdf_mesh_factory("Horseshoe", "Horseshoe", spot(12), rotate_identity, {8, 8, 8}, color(), commonShaderConstants);
             // scene.addEntity(Horseshoe_sdf_mesh);
-            // auto SphericalHarmonicsInspiredBlob_sdf_mesh = entities::sdf_mesh_factory("SphericalHarmonicsInspiredBlob", "SphericalHarmonicsInspiredBlob", spot(6), rotate_identity, {4, 4, 4}, {0.34, 0.88, 0.99, 1}, commonShaderConstants);
+            // auto SphericalHarmonicsInspiredBlob_sdf_mesh = entities::sdf_mesh_factory("SphericalHarmonicsInspiredBlob", "SphericalHarmonicsInspiredBlob", spot(6), rotate_identity, {4, 4, 4}, color(), commonShaderConstants);
             // scene.addEntity(SphericalHarmonicsInspiredBlob_sdf_mesh);
+            // auto SineWavePlane_sdf_mesh = entities::sdf_mesh_factory("SineWavePlane", "SineWavePlane", spot(7), rotate_identity, {5.8,5.8,5.8}, color(), commonShaderConstants);
+            // scene.addEntity(SineWavePlane_sdf_mesh);
+            // auto TwistedBox_sdf_mesh = entities::sdf_mesh_factory("TwistedBox", "TwistedBox", spot(7), rotate_identity, {5.8,5.8,5.8}, color(), commonShaderConstants);
+            // scene.addEntity(TwistedBox_sdf_mesh);
+            // auto CSGSineSphere_sdf_mesh = entities::sdf_mesh_factory("CSGSineSphere", "CSGSineSphere", spot(7), rotate_identity, {5.8,5.8,5.8}, color(), commonShaderConstants);
+            // scene.addEntity(CSGSineSphere_sdf_mesh);
+            // auto TangentCone_sdf_mesh = entities::sdf_mesh_factory("TangentCone", "TangentCone", spot(7), rotate_identity, {5.8,5.8,5.8}, color(), commonShaderConstants);
+            // scene.addEntity(TangentCone_sdf_mesh);
+            // auto MengerSpongeIter_sdf_mesh = entities::sdf_mesh_factory("MengerSpongeIter", "MengerSpongeIter", spot(7), rotate_identity, {6,6,6}, color(), commonShaderConstants);
+            // scene.addEntity(MengerSpongeIter_sdf_mesh);
+            // auto HeartShape_sdf_mesh = entities::sdf_mesh_factory("HeartShape", "HeartShape", spot(7), rotate_identity, {6,6,6}, color(), commonShaderConstants);
+            // scene.addEntity(HeartShape_sdf_mesh);
+            // auto WavyCapsule_sdf_mesh = entities::sdf_mesh_factory("WavyCapsule", "WavyCapsule", spot(7), rotate_identity, {6,6,6}, color(), commonShaderConstants);
+            // scene.addEntity(WavyCapsule_sdf_mesh);
+            // auto CrossShape_sdf_mesh = entities::sdf_mesh_factory("CrossShape", "CrossShape", spot(7), rotate_identity, {6,6,6}, color(), commonShaderConstants);
+            // scene.addEntity(CrossShape_sdf_mesh);
             // auto cube2Info = entities::CubeFactory("Cube", {14, 0, 0}, rotate_identity, {1, 1, 1}, {1, 1, 0, 1}, commonShaderConstants);
             // scene.addEntity(cube2Info);
             scene.attachComponent(components::scenes::ViewMouseControlFactory());

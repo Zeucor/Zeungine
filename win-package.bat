@@ -84,13 +84,13 @@ goto :EOF
 :build_dependencies_static
 cd cmake\Dependencies
 echo " -- Starting zegndeps Debug/STATIC Configure"
-cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC -Wno-dev
+cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=STATIC -Wno-dev -G "Visual Studio 17 2022"
 echo " -- Starting zegndeps Debug/STATIC Build"
 cmake --build build-debug --config Debug
 echo " -- Starting zegndeps Debug/STATIC Install"
 cmake --install build-debug --config Debug
 echo " -- Starting zegndeps Release/STATIC Configure"
-cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC -Wno-dev
+cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=STATIC -Wno-dev -G "Visual Studio 17 2022"
 echo " -- Starting zegndeps Release/STATIC Build"
 cmake --build build-release --config Release
 echo " -- Starting zegndeps Release/STATIC Install"
@@ -101,13 +101,13 @@ goto :EOF
 :build_dependencies_shared
 cd cmake\Dependencies
 echo " -- Starting zegndeps Debug/SHARED Configure"
-cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=SHARED -Wno-dev
+cmake -B build-debug -D CMAKE_BUILD_TYPE=Debug -D ZG_TYPE=SHARED -Wno-dev -G "Visual Studio 17 2022"
 echo " -- Starting zegndeps Debug/SHARED Build"
 cmake --build build-debug --config Debug
 echo " -- Starting zegndeps Debug/SHARED Install"
 cmake --install build-debug --config Debug
 echo " -- Starting zegndeps Release/SHARED Configure"
-cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED -Wno-dev
+cmake -B build-release -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED -Wno-dev -G "Visual Studio 17 2022"
 echo " -- Starting zegndeps Release/SHARED Build"
 cmake --build build-release --config Release
 echo " -- Starting zegndeps Release/SHARED Install"
@@ -118,7 +118,7 @@ goto :EOF
 :build_headers
 cd cmake\Headers
 echo " -- Starting zeungine Headers Configure"
-cmake -B build -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED -Wno-dev
+cmake -B build -D CMAKE_BUILD_TYPE=Release -D ZG_TYPE=SHARED -Wno-dev -G "Visual Studio 17 2022"
 echo " -- Starting zeungine Headers Install"
 cmake --install build --config Release
 cd ..\..

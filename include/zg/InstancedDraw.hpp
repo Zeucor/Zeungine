@@ -53,6 +53,7 @@ namespace zg
 #define SHADER_BATCH_DIRECTIONAL_LIGHT 1
 #define SHADER_BATCH_POINT_LIGHT 2
 #define SHADER_BATCH_SPOT_LIGHT 3
+#define SHADER_BATCH_LAYOUT 4
     struct InstancedDraw
     {
     private:

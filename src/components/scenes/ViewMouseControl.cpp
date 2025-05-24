@@ -23,8 +23,12 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseContro
 			int* count = new int();
 			component.template make<UniqueIdentifier>("mouseMoveID",
 				window.addMouseMoveHandler(
-					[&, centerBox, center, count](glm::vec2 coords)mutable
+					[centerBox, center, count, componentID = component.ID, SCENE_INDEX_STACK = scene.INDEX_STACK](glm::vec2 coords)mutable
 					{
+						auto& scene = Registry::GetSingleton().getScene(SCENE_INDEX_STACK);
+						auto& window = Registry::GetSingleton().getWindow(SCENE_INDEX_STACK);
+						auto& component = scene.getComponentByID(componentID);
+						auto& lastPosition = component.template getData<glm::vec2>("LastPosition");
 						auto diff = coords - lastPosition;
 						if (!diff.x && !diff.y)
 							return;

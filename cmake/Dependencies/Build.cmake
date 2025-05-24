@@ -14,6 +14,25 @@ endif()
 
 #New Dependency Declarations to the top!
 
+# MC33++
+message(STATUS "FetchContent: mc33")
+FetchContent_Declare(mc33
+    GIT_REPOSITORY https://github.com/ZeunO8/MC33_cpp_library.git
+    GIT_TAG main)
+FetchContent_GetProperties(mc33)
+if(NOT mc33_POPULATED)
+    FetchContent_Populate(mc33)
+endif()
+
+file(GLOB MC33_SOURCES "${mc33_SOURCE_DIR}/source/*.cpp")
+add_library(mc33 STATIC ${MC33_SOURCES})
+target_include_directories(mc33 PRIVATE "${mc33_SOURCE_DIR}/source")
+target_include_directories(mc33 PRIVATE "${mc33_SOURCE_DIR}/include")
+set_target_properties(mc33 PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(mc33 PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(mc33 PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(mc33 PROPERTIES MINSIZEREL_POSTFIX "")
+
 # CGAL
 message(STATUS "FetchContent: CGAL")
 FetchContent_Declare(cgal
@@ -153,6 +172,10 @@ endif()
 set(TTF2MESH_SOURCES ${ttf2mesh_SOURCE_DIR}/ttf2mesh.c)
 add_library(ttf2mesh STATIC ${TTF2MESH_SOURCES})
 target_include_directories(ttf2mesh PRIVATE ${ttf2mesh_SOURCE_DIR})
+set_target_properties(ttf2mesh PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(ttf2mesh PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(ttf2mesh PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(ttf2mesh PROPERTIES MINSIZEREL_POSTFIX "")
 
 # miniaudio
 message(STATUS "FetchContent: miniaudio")
@@ -168,6 +191,10 @@ endif()
 set(MINIAUDIO_SOURCES ${miniaudio_SOURCE_DIR}/miniaudio.c)
 add_library(miniaudio STATIC ${MINIAUDIO_SOURCES})
 target_include_directories(miniaudio PRIVATE ${miniaudio_SOURCE_DIR})
+set_target_properties(miniaudio PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(miniaudio PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(miniaudio PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(miniaudio PROPERTIES MINSIZEREL_POSTFIX "")
 
 # lunasvg & plutovg combined lib
 message(STATUS "FetchContent: lunasvg")
@@ -197,6 +224,10 @@ target_include_directories(svg PRIVATE ${lunasvg_SOURCE_DIR}/include)
 target_include_directories(svg PRIVATE ${plutovg_SOURCE_DIR}/include)
 target_compile_definitions(svg PRIVATE LUNASVG_BUILD_STATIC)
 target_compile_definitions(svg PRIVATE PLUTOVG_BUILD_STATIC)
+set_target_properties(svg PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(svg PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(svg PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(svg PROPERTIES MINSIZEREL_POSTFIX "")
 
 # combined spirvheaders, spirv-tools, glslang & shaderc
 message(STATUS "FetchContent: sprivheaders")
@@ -297,6 +328,10 @@ target_include_directories(glsl PRIVATE include)
 target_include_directories(glsl PRIVATE include/spirv)
 target_compile_definitions(glsl PRIVATE ENABLE_HLSL)
 target_compile_definitions(glsl PRIVATE ENABLE_OPT)
+set_target_properties(glsl PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(glsl PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(glsl PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(glsl PROPERTIES MINSIZEREL_POSTFIX "")
 
 # Jolt
 message(STATUS "FetchContent: jolt")
@@ -312,6 +347,10 @@ file(GLOB_RECURSE JOLT_SOURCES ${jolt_SOURCE_DIR}/Jolt/*.c ${jolt_SOURCE_DIR}/Jo
 add_library(jolt STATIC ${JOLT_SOURCES})
 
 target_include_directories(jolt PRIVATE ${jolt_SOURCE_DIR})
+set_target_properties(jolt PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(jolt PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(jolt PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(jolt PROPERTIES MINSIZEREL_POSTFIX "")
 
 # zstd
 message(STATUS "FetchContent: zstd")
@@ -331,6 +370,10 @@ file(GLOB ZSTD_DICTBUILDER_SOURCES ${zstd_SOURCE_DIR}/lib/dictBuilder/*.c)
 add_library(zstd STATIC ${ZSTD_COMMON_SOURCES} ${ZSTD_COMPRESS_SOURCES} ${ZSTD_DECOMPRESS_SOURCES} ${ZSTD_DICTBUILDER_SOURCES})
 
 target_include_directories(zstd PRIVATE ${zstd_SOURCE_DIR}/lib)
+set_target_properties(zstd PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(zstd PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(zstd PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(zstd PROPERTIES MINSIZEREL_POSTFIX "")
 
 # zlib
 message(STATUS "FetchContent: zlib")
@@ -363,6 +406,10 @@ set(ZLIB_SOURCES
 add_library(zlib STATIC ${ZLIB_SOURCES})
 target_include_directories(zlib PRIVATE ${zlib_SOURCE_DIR})
 configure_file(${zlib_SOURCE_DIR}/zconf.h.cmakein ${zlib_SOURCE_DIR}/zconf.h)
+set_target_properties(zlib PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(zlib PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(zlib PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(zlib PROPERTIES MINSIZEREL_POSTFIX "")
 
 # bzip2
 message(STATUS "FetchContent: bzip2")
@@ -390,6 +437,10 @@ set(BZIP2_SOURCES
 
 add_library(bzip2 STATIC ${BZIP2_SOURCES})
 target_include_directories(bzip2 PRIVATE ${bzip2_SOURCE_DIR})
+set_target_properties(bzip2 PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(bzip2 PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(bzip2 PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(bzip2 PROPERTIES MINSIZEREL_POSTFIX "")
 
 # lzma
 message(STATUS "FetchContent: lzma")
@@ -486,6 +537,10 @@ target_include_directories(lzma PRIVATE
     "${lzma_SOURCE_DIR}/liblzma/rangecoder"
     "${lzma_SOURCE_DIR}/liblzma/simple"
     "${lzma_SOURCE_DIR}")
+set_target_properties(lzma PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(lzma PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(lzma PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(lzma PROPERTIES MINSIZEREL_POSTFIX "")
 
 # Boost
 message(STATUS "FetchContent: boost")
@@ -634,6 +689,10 @@ add_library(png STATIC ${PNG_SOURCES})
 target_include_directories(png PRIVATE ${png_SOURCE_DIR})
 target_include_directories(png PRIVATE ${zlib_SOURCE_DIR})
 configure_file(${png_SOURCE_DIR}/scripts/pnglibconf.h.prebuilt ${png_SOURCE_DIR}/pnglibconf.h)
+set_target_properties(png PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(png PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(png PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(png PROPERTIES MINSIZEREL_POSTFIX "")
 
 # OpenSSL
 if(NOT LINK_SYS_OPENSSL)
@@ -849,6 +908,10 @@ FetchContent_Declare(glm
     GIT_REPOSITORY https://github.com/icaven/glm.git
     GIT_TAG master)
 FetchContent_MakeAvailable(glm)
+set_target_properties(glm PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(glm PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(glm PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(glm PROPERTIES MINSIZEREL_POSTFIX "")
 
 # STB
 message(STATUS "FetchContent: stb")

@@ -23,6 +23,12 @@
 #include "InstancedDraw.hpp"
 namespace zg
 {
+	enum class SceneDrawMode
+	{
+		Single,
+		Instanced,
+		MultiInstanced
+	};
 	struct SceneCreateInfo;
 	struct Scene
 			: DataStorage<Scene>,
@@ -35,6 +41,7 @@ namespace zg
 		std::vector<size_t*> INDEX_STACK;
 		float z = 0.0f;
 		IRenderer* iRenderer = 0;
+		SceneDrawMode drawMode = SceneDrawMode::MultiInstanced;
 		std::string name;
 		glm::vec4 clearColor = glm::vec4(0);
 		std::shared_ptr<vp::Projection> projectionPointer;

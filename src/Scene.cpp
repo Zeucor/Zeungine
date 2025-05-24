@@ -193,7 +193,6 @@ Scene& Scene::operator=(const Scene& other)
 Scene::~Scene()
 {
 	ZGZoneScopedN("Scene::destructor");
-	detachAllComponents();
 	for (auto& entity : entities)
 		if (entity.onRemovedFunction)
 			entity.onRemovedFunction(entity);
@@ -263,8 +262,6 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 	auto& entity = entities.commitTransaction(transaction, usingInfo);
 	Registry::GetSingleton().idEntities[entity.ID] = entity.INDEX_STACK;
 	postAddEntity(entity);
-	if (entity.onAddedFunction)
-		entity.onAddedFunction(entity);
 	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	if (callOnEntityAdded && window.onEntityAdded)
 		window.onEntityAdded(entity);
@@ -280,6 +277,7 @@ bool Scene::removeEntity(size_t ID)
 	instancedDraw.removeEntity(entity);
 	if (entity.onRemovedFunction)
 		entity.onRemovedFunction(entity);
+	entity.detachAllComponents();
 	preRemoveEntity(entity);
 	entities.erase(entityIter);
 	auto& idEntities = Registry::GetSingleton().idEntities;
@@ -418,27 +416,46 @@ void Scene::render()
 void Scene::renderEntities()
 {
 	ZGZoneScoped;
-	auto& framebufferRef = *framebuffer;
-	framebufferRef.bind();
+	textures::Framebuffer *fb_poin = 0;
+	if (framebuffer)
+	{
+		fb_poin = framebuffer.get();
+	}
+	if (fb_poin)
+		fb_poin->bind();
 	auto transparentDrawList = getTransparentDrawList();
 	auto opaqueDrawList = getOpaqueDrawList();
-	instancedDraw.drawMulti(
-		SHADER_BATCH_MAIN,
-		*this,
-		opaqueDrawList,
-		transparentDrawList,
-		oldOpaqueHash,
-		oldTransparentHash,
-		0,
-		{},
-		shaderSets
-	);
-	// for (auto& ep : transparentDrawList)
-	// {
-	// 	ep.second->uid = ep.first->ID;
-	// 	ep.second->render(*ep.first);
-	// }
-	framebufferRef.unbind();
+	switch (drawMode)
+	{
+	case SceneDrawMode::Single:
+		for (auto& drawPair : opaqueDrawList)
+		{
+			drawPair.second->render(*drawPair.first);
+		}
+		for (auto& drawPair : transparentDrawList)
+		{
+			drawPair.second->render(*drawPair.first);
+		}
+		break;
+	case SceneDrawMode::Instanced:
+		instancedDraw.draw(*this, opaqueDrawList, transparentDrawList, oldOpaqueHash, oldTransparentHash, 0);
+		break;
+	case SceneDrawMode::MultiInstanced:
+		instancedDraw.drawMulti(
+			SHADER_BATCH_MAIN,
+			*this,
+			opaqueDrawList,
+			transparentDrawList,
+			oldOpaqueHash,
+			oldTransparentHash,
+			0,
+			{},
+			shaderSets
+		);
+		break;
+	}
+	if (fb_poin)
+		fb_poin->unbind();
 }
 void Scene::postRender()
 {
@@ -744,27 +761,30 @@ size_t Scene::getTransparentDrawCount()
 	std::function<void(Entity&)> countEntity;
 	countEntity = [&](auto& entity)
 	{
-		for (auto& meshID : entity.meshIDs)
+		if (!entity.skipRender)
 		{
-			bool addMesh = false;
-			if (entity.isTransparent)
+			for (auto& meshID : entity.meshIDs)
 			{
-				addMesh = true;
-			}
-			else
-			{
-				auto& mesh = Registry::GetSingleton().getMesh(meshID);
-				for (auto& keyedPair : mesh.info.keyedTextures)
+				bool addMesh = false;
+				if (entity.isTransparent)
 				{
-					if (keyedPair.second->isTransparent)
+					addMesh = true;
+				}
+				else
+				{
+					auto& mesh = Registry::GetSingleton().getMesh(meshID);
+					for (auto& keyedPair : mesh.info.keyedTextures)
 					{
-						addMesh = true;
-						break;
+						if (keyedPair.second->isTransparent)
+						{
+							addMesh = true;
+							break;
+						}
 					}
 				}
+				if (addMesh)
+					c++;
 			}
-			if (addMesh)
-				c++;
 		}
 		for (auto& child : entity.children)
 			countEntity(child);
@@ -784,28 +804,31 @@ size_t Scene::getOpaqueDrawCount()
 	std::function<void(Entity&)> countEntity;
 	countEntity = [&](auto& entity)
 	{
-		bool addMesh = true;
-		for (auto& meshID : entity.meshIDs)
+		if (!entity.skipRender)
 		{
-			if (entity.isTransparent)
+			bool addMesh = true;
+			for (auto& meshID : entity.meshIDs)
 			{
-				addMesh = false;
-				break;
-			}
-			else
-			{
-				auto& mesh = Registry::GetSingleton().getMesh(meshID);
-				for (auto& keyedPair : mesh.info.keyedTextures)
+				if (entity.isTransparent)
 				{
-					if (keyedPair.second->isTransparent)
+					addMesh = false;
+					break;
+				}
+				else
+				{
+					auto& mesh = Registry::GetSingleton().getMesh(meshID);
+					for (auto& keyedPair : mesh.info.keyedTextures)
 					{
-						addMesh = false;
-						break;
+						if (keyedPair.second->isTransparent)
+						{
+							addMesh = false;
+							break;
+						}
 					}
 				}
+				if (addMesh)
+					c++;
 			}
-			if (addMesh)
-				c++;
 		}
 		for (auto& child : entity.children)
 			countEntity(child);
@@ -831,28 +854,31 @@ std::vector<std::pair<Entity*, Mesh*>>& Scene::getTransparentDrawList()
 	size_t index = 0;
 	addEntity = [&](auto& entity)
 	{
-		for (auto& meshID : entity.meshIDs)
+		if (!entity.skipRender)
 		{
-			auto& mesh = Registry::GetSingleton().getMesh(meshID);
-			bool addMesh = false;
-			if (entity.isTransparent)
+			for (auto& meshID : entity.meshIDs)
 			{
-				addMesh = true;
-			}
-			else
-			{
-				for (auto& keyedPair : mesh.info.keyedTextures)
+				auto& mesh = Registry::GetSingleton().getMesh(meshID);
+				bool addMesh = false;
+				if (entity.isTransparent)
 				{
-					if (keyedPair.second->isTransparent)
+					addMesh = true;
+				}
+				else
+				{
+					for (auto& keyedPair : mesh.info.keyedTextures)
 					{
-						addMesh = true;
-						break;
+						if (keyedPair.second->isTransparent)
+						{
+							addMesh = true;
+							break;
+						}
 					}
 				}
-			}
-			if (addMesh)
-			{
-				transparentDrawListData[index++] = {&entity, &mesh};
+				if (addMesh)
+				{
+					transparentDrawListData[index++] = {&entity, &mesh};
+				}
 			}
 		}
 		for (auto& child : entity.children)
@@ -889,28 +915,31 @@ std::vector<std::pair<Entity*, Mesh*>>& Scene::getOpaqueDrawList()
 	size_t index = 0;
 	addEntity = [&](auto& entity)
 	{
-		for (auto& meshID : entity.meshIDs)
+		if (!entity.skipRender)
 		{
-			auto& mesh = Registry::GetSingleton().getMesh(meshID);
-			bool addMesh = true;
-			if (entity.isTransparent)
+			for (auto& meshID : entity.meshIDs)
 			{
-				addMesh = false;
-				break;
-			}
-			else
-			{
-				for (auto& keyedPair : mesh.info.keyedTextures)
+				auto& mesh = Registry::GetSingleton().getMesh(meshID);
+				bool addMesh = true;
+				if (entity.isTransparent)
 				{
-					if (keyedPair.second->isTransparent)
+					addMesh = false;
+					break;
+				}
+				else
+				{
+					for (auto& keyedPair : mesh.info.keyedTextures)
 					{
-						addMesh = false;
-						break;
+						if (keyedPair.second->isTransparent)
+						{
+							addMesh = false;
+							break;
+						}
 					}
 				}
+				if (addMesh)
+					opaqueDrawListData[index++] = {&entity, &mesh};
 			}
-			if (addMesh)
-				opaqueDrawListData[index++] = {&entity, &mesh};
 		}
 		for (auto& child : entity.children)
 			addEntity(child);

@@ -384,6 +384,7 @@ void VulkanRenderer::setupPFNs()
 	VK_INSTANCE(_vkCmdBindVertexBuffers, PFN_vkCmdBindVertexBuffers, "vkCmdBindVertexBuffers");
 	VK_INSTANCE(_vkCmdBindIndexBuffer, PFN_vkCmdBindIndexBuffer, "vkCmdBindIndexBuffer");
 	VK_INSTANCE(_vkCmdBindDescriptorSets, PFN_vkCmdBindDescriptorSets, "vkCmdBindDescriptorSets");
+	VK_INSTANCE(_vkCmdDraw, PFN_vkCmdDraw, "vkCmdDraw");
 	VK_INSTANCE(_vkCmdDrawIndexed, PFN_vkCmdDrawIndexed, "vkCmdDrawIndexed");
 	VK_INSTANCE(_vkCreateDescriptorPool, PFN_vkCreateDescriptorPool, "vkCreateDescriptorPool");
 	VK_INSTANCE(_vkAllocateDescriptorSets, PFN_vkAllocateDescriptorSets, "vkAllocateDescriptorSets");
@@ -1205,8 +1206,11 @@ void VulkanRenderer::destroy()
 		_vkDestroyBuffer(device, drawPair.second.first, 0);
 		_vkFreeMemory(device, drawPair.second.second, 0);
 	}
-	_vkDestroyBuffer(device, countBuffer, 0);
-	_vkFreeMemory(device, countBufferMemory, 0);
+	for (auto& countPair : countBuffers)
+	{
+		_vkDestroyBuffer(device, countPair.second.first, 0);
+		_vkFreeMemory(device, countPair.second.second, 0);
+	}
 	if (fallbackToSwiftshader)
 	{
 		_vkUnmapMemory(device, stagingBufferMemory);
@@ -2859,82 +2863,48 @@ void VulkanRenderer::updateElementsVAO(const vaos::VAO& vao, const std::string_v
 void VulkanRenderer::drawVAO(const vaos::VAO &vao, shaders::Shader* shaderPointer)
 {
 	ZGZoneScoped;
-	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto vaoHash = vao.getVAOuHash();
-	auto& shader = *((vaos::VAO&)vao).addShader(shaderPointer);
-	auto& shaderImpl = *(VulkanShaderImpl*)(shader.rendererData);
-	if (vaoImpl.vertexBuffer == VK_NULL_HANDLE)
-	{
-		return;
-	}
-	VkBuffer vertexBuffers[] = {vaoImpl.vertexBuffer};
-	VkDeviceSize offsets[] = {0};
-	_vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
-	_vkCmdBindIndexBuffer(*commandBuffer, vaoImpl.indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
-	_vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
-													 &vaoImpl.getDescriptorSet(vaoHash), 0, 0);
-	auto& indices = vao.indiceCount;
-	if (!indices)
-	{
-		return;
-	}
-	_vkCmdDrawIndexed(*commandBuffer, indices, 1, 0, 0, 0);
+	drawVAOInstanced(vao, shaderPointer, 1);
 }
 void VulkanRenderer::drawVAOInstanced(const vaos::VAO &vao, shaders::Shader* shaderPointer, size_t instanceCount)
 {
 	ZGZoneScoped;
-	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto vaoHash = vao.getVAOuHash();
-	auto& shader = *((vaos::VAO&)vao).addShader(shaderPointer);
-	auto& shaderImpl = *(VulkanShaderImpl*)(shader.rendererData);
-	if (vaoImpl.vertexBuffer == VK_NULL_HANDLE)
-	{
-		return;
-	}
-	VkBuffer vertexBuffers[] = {vaoImpl.vertexBuffer};
-	VkDeviceSize offsets[] = {0};
-	_vkCmdBindVertexBuffers(*commandBuffer, 0, 1, vertexBuffers, offsets);
-	_vkCmdBindIndexBuffer(*commandBuffer, vaoImpl.indiceBuffer, 0, VK_INDEX_TYPE_UINT32);
-	_vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
-													 &vaoImpl.getDescriptorSet(vaoHash), 0, 0);
-	auto& indices = vao.indiceCount;
-	if (!indices)
-	{
-		return;
-	}
-	_vkCmdDrawIndexed(*commandBuffer, indices, instanceCount, 0, 0, 0);
+	std::vector<DrawIndirectCommand> commands(1, DrawIndirectCommand{
+		.vertexCount = vao.vertexCount,
+		.instanceCount = uint32_t(instanceCount),
+		.firstVertex = 0,
+		.firstInstance = 0
+	});
+	drawMultiInstanced(shaderPointer, vao, commands);
 }
 void VulkanRenderer::drawMultiInstanced(shaders::Shader* shader, const vaos::VAO& vao, const std::vector<DrawIndirectCommand>& commands)
 {
 	ZGZoneScoped;
-	VkBuffer drawBuffer;
-	VkDeviceMemory drawBufferMemory;
 	auto drawsSize = commands.size();
 	auto drawBufferSize = sizeof(VkDrawIndirectCommand) * drawsSize;
-	auto drawBufferIter = drawBuffers.find(drawBufferSize);
-	if (drawBufferIter == drawBuffers.end())
+	auto& shaderHash = shader->hash;
+	auto& shaderImpl = *(VulkanShaderImpl*)(shader->rendererData);
+	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
+	auto vaoHash = vao.getVAOuHash();
+	auto bufferHash = (shaderHash << 1) ^ (vaoHash << 2);
+	auto& drawBufferPair = drawBuffers[bufferHash];
+	if (!drawBufferPair.first)
 	{
 		createBuffer(
 			drawBufferSize,
 			VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			drawBuffer,
-			drawBufferMemory
+			drawBufferPair.first,
+			drawBufferPair.second
 		);
-		drawBuffers[drawBufferSize] = {drawBuffer, drawBufferMemory};
 	}
-	else
-	{
-		drawBuffer = drawBufferIter->second.first;
-		drawBufferMemory = drawBufferIter->second.second;
-	}
-	if (!countBuffer)
+	auto& countBufferPair = countBuffers[bufferHash];
+	if (!countBufferPair.first)
 		createBuffer(
 			sizeof(uint32_t),
 			VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			countBuffer,
-			countBufferMemory
+			countBufferPair.first,
+			countBufferPair.second
 		);
 	std::vector<VkDrawIndirectCommand> i_commands(drawsSize, VkDrawIndirectCommand{});
 	auto i_commands_data = i_commands.data();
@@ -2949,26 +2919,23 @@ void VulkanRenderer::drawMultiInstanced(shaders::Shader* shader, const vaos::VAO
 		i_command.firstInstance = v_command.firstInstance;
 	}
 	void* drawBufferData;
-	_vkMapMemory(device, drawBufferMemory, 0, VK_WHOLE_SIZE, 0, &drawBufferData);
+	_vkMapMemory(device, drawBufferPair.second, 0, VK_WHOLE_SIZE, 0, &drawBufferData);
 	memcpy(drawBufferData, i_commands_data, drawsSize * sizeof(VkDrawIndirectCommand));
-	_vkUnmapMemory(device, drawBufferMemory);
+	_vkUnmapMemory(device, drawBufferPair.second);
 
 	uint32_t drawCount = static_cast<uint32_t>(drawsSize);
 	void* countBufferData;
-	_vkMapMemory(device, countBufferMemory, 0, VK_WHOLE_SIZE, 0, &countBufferData);
+	_vkMapMemory(device, countBufferPair.second, 0, VK_WHOLE_SIZE, 0, &countBufferData);
 	memcpy(countBufferData, &drawCount, sizeof(uint32_t));
-	_vkUnmapMemory(device, countBufferMemory);
+	_vkUnmapMemory(device, countBufferPair.second);
 
-	auto& shaderImpl = *(VulkanShaderImpl*)(shader->rendererData);
-	auto& vaoImpl = *(VulkanVAOImpl*)vao.rendererData;
-	auto vaoHash = vao.getVAOuHash();
 	_vkCmdBindDescriptorSets(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderImpl.pipelineLayout, 0, 1,
 													 &vaoImpl.getDescriptorSet(vaoHash), 0, 0);
 	_vkCmdDrawIndirectCount(
 		*commandBuffer,
-		drawBuffer,
+		drawBufferPair.first,
 		0,
-		countBuffer,
+		countBufferPair.first,
 		0,
 		drawCount,
 		sizeof(VkDrawIndirectCommand)

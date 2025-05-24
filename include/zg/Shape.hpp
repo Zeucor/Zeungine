@@ -8,13 +8,17 @@ namespace zg
     {
         NoShape = 0,
         Box = 1,
-        Plane = 2,
-        SDF = 3,
-        Mesh = 4
+        SDF = 2,
+        Mesh = 3,
+        PlaneXZ = 4,
+        PlaneXY = 5,
+        PlaneYZ = 6,
     };
     inline static std::unordered_map<ShapeType, uint32_t> shapeVerticeCounts = {
         { ShapeType::Box, 36 },
-        { ShapeType::Plane, 6 },
+        { ShapeType::PlaneXZ, 6 },
+        { ShapeType::PlaneXY, 6 },
+        { ShapeType::PlaneYZ, 6 },
         { ShapeType::SDF, 6 }
     };
     struct GLEntity

@@ -5,15 +5,21 @@
 using namespace zg;
 FullscreenQuad::FullscreenQuad(const FullscreenQuad& other):
     vaos::VAO(other),
+    view(other.view),
+    projection(other.projection),
     model(other.model)
 {
-    generateQuad();
 };
 FullscreenQuad::FullscreenQuad(const std::vector<size_t*>& INDEX_STACK, const shaders::RuntimeConstants& constants):
-    vaos::VAO(INDEX_STACK, zg::mergeVectors({ "UV2", "Position", "Model" }, constants), 6, 4),
-    model(glm::translate(glm::vec3(0, 0, -(0.1 * (INDEX_STACK.size() > 1 ? *INDEX_STACK[1] : *INDEX_STACK[0])))))
+    vaos::VAO(INDEX_STACK, zg::mergeVectors({ "Viewport", "Shape", "UV2", "Position", "Normal", "Model", "View", "Projection" }, constants), 6, 6),
+    model(
+        glm::scale(glm::translate(glm::vec3(0, 0, -(0.1 * (INDEX_STACK.size() > 1 ? *INDEX_STACK[1] : *INDEX_STACK[0])))), glm::vec3(2, 2, 1)))
 {
-    generateQuad();
+    auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
+    vp::View _view({0, 0, 2}, {0, 0, -1}, {0, 1, 0});
+    view = _view.matrix;
+    vp::Projection _projection(window, {2, 2}, 0.1f, 10.f);
+    projection = _projection.matrix;
 }
 FullscreenQuad& FullscreenQuad::operator=(const FullscreenQuad& other)
 {
@@ -22,23 +28,43 @@ FullscreenQuad& FullscreenQuad::operator=(const FullscreenQuad& other)
 }
 void FullscreenQuad::generateQuad()
 {
-    std::vector<uint32_t> indices;
-	if (vaoIRenderer->frontFace == zg::COUNTERCLOCKWISE)
-		indices = {
-			2,	1,	0,	0,	3,	2, // Front face
-		};
-	else
-		indices = {
-			0,	1,	2,	2,	3,	0, // Front face
-		};
-    glm::vec2 size(2, 2);
-    std::vector<glm::vec3> vertices({{
-        {-size.x / 2, -size.y / 2, 0},	 {size.x / 2, -size.y / 2, 0},
-        {size.x / 2, size.y / 2, 0},		 {-size.x / 2, size.y / 2, 0} // Front
-    }});
-    updateIndices(indices);
-    updateElements("Position", vertices);
-	std::vector<glm::vec2> uv2s({
+}
+void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared_ptr<zg::textures::Texture>>>& inputTextures, bool shaderAlreadyBound)
+{
+	auto shader = addShader();
+    if (!shaderAlreadyBound)
+    	shader->bind(*this);
+    auto& window = Registry::GetSingleton().getWindow(VAO_INDEX_STACK);
+    shader->setBlock("Viewport", *this, window.viewport, 16);
+	shader->setSSBO("InstanceModels", *this, &model, sizeof(glm::mat4));
+    auto inversemodel = glm::inverse(model);
+	shader->setSSBO("InverseInstanceModels", *this, &inversemodel, sizeof(glm::mat4));
+	shader->setSSBO("InstanceViews", *this, &view, sizeof(glm::mat4));
+    auto inverseview = glm::inverse(view);
+	shader->setSSBO("InverseInstanceViews", *this, &inverseview, sizeof(glm::mat4));
+	shader->setSSBO("InstanceProjections", *this, &projection, sizeof(glm::mat4));
+    auto inverseprojection = glm::inverse(projection);
+	shader->setSSBO("InverseInstanceProjections", *this, &inverseprojection, sizeof(glm::mat4));
+    GLEntity gl_entity{
+        .shape_type = int32_t(ShapeType::PlaneXY),
+        .material_index = 0,
+        .vertex_offset = 0,
+        .padding = 0,
+        .uv2_offset = 0,
+        .uv3_offset = 0,
+        .meta_int = 0,
+        .meta_float = 0.f,
+        .meta_vec4 = glm::vec4(0)
+    };
+    shader->setSSBO("Entities", *this, &gl_entity, sizeof(GLEntity) * 1);
+    Material material{
+        .albedo = glm::vec4(1),
+        .type = 1
+    };
+    shader->setSSBO("Materials", *this, &material, sizeof(Material) * 1);
+    glm::vec4 vec(0);
+    shader->setSSBO("MeshPositions", *this, &vec, sizeof(glm::vec4) * 1);
+	static std::vector<glm::vec2> uv2s({
         {0, 1},
         {1, 1},
         {1, 0},
@@ -46,16 +72,8 @@ void FullscreenQuad::generateQuad()
     });
 	bool flipUVs = (vaoIRenderer->renderer == RENDERER_VULKAN || vaoIRenderer->renderer == RENDERER_METAL);
     zg::Mesh::flipUVsY(uv2s);
-    updateElements("UV2", uv2s);
-}
-void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared_ptr<zg::textures::Texture>>>& inputTextures, bool shaderAlreadyBound)
-{
-	auto shader = addShader();
-    if (!shaderAlreadyBound)
-    	shader->bind(*this);
-	shader->setSSBO("InstanceModels", *this, &model, sizeof(glm::mat4));
-    auto inversemodel = glm::inverse(model);
-	shader->setSSBO("InverseInstanceModels", *this, &inversemodel, sizeof(glm::mat4));
+    shader->setSSBO("EntityUV2s", *this, uv2s.data(), sizeof(glm::vec2) * uv2s.size());
+    shader->setSSBO("EntityUV3s", *this, &vec, sizeof(glm::vec4) * 1);
     uint32_t unit = 0;
     auto constantsBegin = vaoConstants.begin();
     auto constantsEnd = vaoConstants.end();
@@ -68,7 +86,7 @@ void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared
         if (found_iter != constantsEnd)
             shader->setTexture(pair.first, *this, *pair.second, unit++);
     }
-	drawVAO();
+	drawVAO(shader);
 	shader->unbind();
 }
 template <>

@@ -10,7 +10,7 @@ namespace zg::physics
 	template <size_t N = 3>
 	struct AABB
 	{
-		enum class Overlaps
+		enum class Overlaps : uint32_t
 		{
 			None = 0,
 			Right = 1,

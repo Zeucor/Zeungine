@@ -143,7 +143,6 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
                 return;
 
             zg::vp::View& view = *scene.viewPointer;
-            view.updateMutex.lock();
             glm::vec3& viewPosition = view.position;
             glm::vec3& viewDirection = view.direction;
             glm::vec3 targetBasePosition = entity.position;
@@ -159,7 +158,6 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             offset = yawQuat * pitchQuat * offset;
             viewPosition = lookAtTarget + offset;
             viewDirection = glm::normalize(lookAtTarget - viewPosition);
-            view.updateMutex.unlock();
             view.setDirty();
 
             // --- Update Entity Yaw Rotation ---

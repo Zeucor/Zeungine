@@ -68,13 +68,6 @@ void DirectionalLightShadow::update()
 	static glm::vec2 projectionDimensions = {64, 64};
 	vp::Projection _projection(window, projectionDimensions, directionalLight.nearPlane, directionalLight.farPlane);
 	vp::View _view(directionalLight.position, directionalLight.direction, directionalLight.up, lookAtSet, lookAt);
-	{
-		std::unique_lock lock(_view.updateMutex);
-		_view.updateCV.wait(lock, [&]
-		{
-			return !_view.dirty;
-		});
-	}
 	projection = _projection.matrix;
 	inverseProjection = glm::inverse(projection);
 	view = _view.matrix;

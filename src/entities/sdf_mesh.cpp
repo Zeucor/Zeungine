@@ -4,87 +4,42 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <zg/CGAL.hpp>
+#include "MC33.h"
+// #include <zg/CGAL.hpp>
 #include <zg/entities/SDF.hpp>
 #include <zg/entities/sdf_mesh.hpp>
 #include <zg/glm.hpp>
 #include <zg/system/Budget.hpp>
 using namespace zg;
 using namespace zg::entities;
-namespace params = CGAL::parameters;
-template <typename SDF_Functor_Type>
-void generate_mesh_from_sdf(const SDF_Functor_Type& sdf_functor, const K::Sphere_3& cgal_bounding_sphere,
-														std::vector<glm::vec3>& out_vertices, std::vector<uint32_t>& out_indices)
+void generate_mesh_from_sdf(const Entity& entity,
+							std::vector<glm::vec3>& out_vertices,
+							std::vector<uint32_t>& out_indices)
 {
-	Mesh_domain domain = Mesh_domain::create_implicit_mesh_domain(sdf_functor, cgal_bounding_sphere);
-	#if defined(NDEBUG)
-	#define FACET_ANGLE 30
-	#define FACET_SIZE 0.025
-	#define FACET_DISTANCE 0.25
-	#define CELL_RADIUS_EDGE_RATIO 2.0
-	#define CELL_SIZE 0.1
-	#else
-	#define FACET_ANGLE 30
-	#define FACET_SIZE 0.025
-	#define FACET_DISTANCE 0.50
-	#define CELL_RADIUS_EDGE_RATIO 2.5
-	#define CELL_SIZE 0.2
-	#endif
-	Mesh_criteria criteria(
-		params::facet_angle(FACET_ANGLE).facet_size(FACET_SIZE).facet_distance(FACET_DISTANCE).cell_radius_edge_ratio(CELL_RADIUS_EDGE_RATIO).cell_size(CELL_SIZE));
-
-	C3t3 c3t3 = CGAL::make_mesh_3<C3t3>(domain, criteria);
-
+	grid3d G;
+	G.generate_grid_from_fn(-2.0, -2.0, -2.0, 2.0, 2.0, 2.0, 0.025, 0.025, 0.025, [&](double x, double y, double z)  -> double {
+		return entity(glm::vec3(x, y, z));
+	});
+	MC33 MC;
+  	MC.set_grid3d(G);
+	surface S;
+	MC.calculate_isosurface(S, 0.0);
+	auto vertices_count = S.get_num_vertices();
+	auto triangle_count = S.get_num_triangles();
 	std::unordered_map<glm::vec3, uint32_t> vertex_to_index;
-    auto vertices_count = c3t3.number_of_vertices_in_complex();
 	vertex_to_index.reserve(vertices_count);
     out_vertices.reserve(vertices_count);
-    out_indices.reserve(c3t3.number_of_facets_in_complex() * 3);
-
-	auto to_glm = [](const auto& p) -> glm::vec3 { return glm::vec3((float)p.x(), (float)p.y(), (float)p.z()); };
-
-	auto to_cgal = [](const auto& p) -> K::Point_3 { return K::Point_3(p.x, p.y, p.z); };
-
-    std::array<uint32_t, 3> triangle_indices;
+    out_indices.reserve(triangle_count * 3);
     std::array<uint32_t, 3> final_indices;
-    std::array<Vertex_handle, 4> vh;
-    std::array<int, 3> indices;
-	for (auto fit = c3t3.facets_in_complex_begin(); fit != c3t3.facets_in_complex_end(); ++fit)
+    std::array<uint32_t, 3> triangle_indices;
+	std::array<glm::vec3, 3> triangle;
+	for (size_t i = 0; i < triangle_count; i++)
 	{
-		auto cell = fit->first;
-		int opposite = fit->second;
-
-		for (int i = 0; i < 4; ++i)
-		{
-			vh[i] = cell->vertex(i);
-		}
-
-		for (int i = 0, j = 0; i < 4; ++i)
-		{
-			if (i != opposite)
-			{
-				indices[j++] = i;
-			}
-		}
-
-		auto p0 = to_glm(vh[indices[0]]->point());
-		auto p1 = to_glm(vh[indices[1]]->point());
-		auto p2 = to_glm(vh[indices[2]]->point());
-
-		auto centroid = (p0 + p1 + p2) / 3.0f;
-		auto normal = glm::normalize(glm::cross(p1 - p0, p2 - p0));
-		auto sdf_grad = glm::normalize(glm::vec3(
-			(sdf_functor(to_cgal(centroid + glm::vec3(1e-3f, 0, 0))) - sdf_functor(to_cgal(centroid - glm::vec3(1e-3f, 0, 0)))) /
-				(2e-3f),
-			(sdf_functor(to_cgal(centroid + glm::vec3(0, 1e-3f, 0))) - sdf_functor(to_cgal(centroid - glm::vec3(0, 1e-3f, 0)))) /
-				(2e-3f),
-			(sdf_functor(to_cgal(centroid + glm::vec3(0, 0, 1e-3f))) - sdf_functor(to_cgal(centroid - glm::vec3(0, 0, 1e-3f)))) /
-				(2e-3f)));
-
-		bool flip = glm::dot(normal, sdf_grad) < 0.0f;
-
-		std::array<glm::vec3, 3> triangle = {p0, p1, p2};
-
+		auto tri = S.getTriangle(i);
+		auto v_0 = (glm::vec3*)S.getVertex(tri[0]);
+		auto v_1 = (glm::vec3*)S.getVertex(tri[1]);
+		auto v_2 = (glm::vec3*)S.getVertex(tri[2]);
+		triangle = { *v_0, *v_1, *v_2 };
 		for (int i = 0; i < 3; ++i)
 		{
 			auto iter = vertex_to_index.find(triangle[i]);
@@ -100,21 +55,12 @@ void generate_mesh_from_sdf(const SDF_Functor_Type& sdf_functor, const K::Sphere
 				triangle_indices[i] = iter->second;
 			}
 		}
-
-		if (flip)
-		{
-			final_indices[0] = triangle_indices[1];
-			final_indices[1] = triangle_indices[2];
-			final_indices[2] = triangle_indices[0];
-		}
-		else
-		{
-			final_indices[0] = triangle_indices[2];
-			final_indices[1] = triangle_indices[1];
-			final_indices[2] = triangle_indices[0];
-		}
+		final_indices[0] = triangle_indices[0];
+		final_indices[1] = triangle_indices[1];
+		final_indices[2] = triangle_indices[2];
         out_indices.insert(out_indices.end(), final_indices.begin(), final_indices.end());
 	}
+	return;
 }
 EntityCreateInfo zg::entities::sdf_mesh_factory(const std::string& sdf_key, const std::string& name, glm::vec3 position,
 																								glm::quat rotation, glm::vec3 scale, glm::vec4 color,
@@ -131,7 +77,7 @@ EntityCreateInfo zg::entities::sdf_mesh_factory(const std::string& sdf_key, cons
             std::vector<glm::vec3> vertices;
             std::vector<uint32_t> indices;
             auto before = SYS_CLOCK::now();
-            generate_mesh_from_sdf(entity, entity.get_suggested_bounding_sphere(), vertices, indices);
+            generate_mesh_from_sdf(entity,/*entity.getSuggestedBoundingSphere(),*/ vertices, indices);
             auto after = SYS_CLOCK::now();
             auto diff_count = (after - before).count();
             // diff_dur
