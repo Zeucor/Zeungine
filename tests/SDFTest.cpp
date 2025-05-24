@@ -25,8 +25,8 @@ int main()
     register_zg_sdfs();
     WindowCreateInfo windowInfo{
         .title = "SDF Test",
-        .windowWidth = 1920,
-        .windowHeight = 1080,
+        .windowWidth = 640,
+        .windowHeight = 480,
         .windowX = 0,
         .windowY = 0,
         .borderless = true,
