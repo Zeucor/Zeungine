@@ -25,10 +25,10 @@ int main()
     register_zg_sdfs();
     WindowCreateInfo windowInfo{
         .title = "SDF Test",
-        .windowWidth = 640,
-        .windowHeight = 480,
-        .windowX = 0,
-        .windowY = 0,
+        .windowWidth = 1366,
+        .windowHeight = 768,
+        .windowX = (1920 / 2) - (1366 / 2),
+        .windowY = (1080 / 2) - (768 / 2),
         .borderless = true,
         .vsync = false,
         .framerate = 250
