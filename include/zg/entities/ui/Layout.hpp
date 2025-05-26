@@ -103,7 +103,7 @@ namespace zg::entities::ui
             CURRENT_ID_STACK.push_back(panel_ID);
             return *this;
         };
-        LayoutBuilder& add_text(const std::string& text)
+        LayoutBuilder& add_text(const std::string& text, float fontSize = 42.f)
         {
             auto& entity = get_entity();
             auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
@@ -113,15 +113,15 @@ namespace zg::entities::ui
             auto& textCursorIndex = entity.template make<int64_t>(textKey + "CursorIndex");
             auto& textCursorID = entity.template make<size_t>(textKey + "CursorID");
             auto& font = *host.template getData<std::shared_ptr<fonts::freetype::FreetypeFont>>("Font");
-            auto& textFontSize = entity.template make<float>(textKey + "FontSize", 42.f);
+            auto& textFontSize = entity.template make<float>(textKey + "FontSize", fontSize);
             auto& textLineHeight = entity.template make<float>(textKey + "LineHeight", 0.0f);
-            auto textSize = font.stringSize(text, textFontSize, textLineHeight, {0, 0});
-            glm::vec3 textScale(1);
+            auto textSize = font.stringSize(text, textFontSize * 2.f, textLineHeight, {0, 0});
+            glm::vec3 textScale(0.5f, 0.5f, 1.f);
             glm::vec2 scaledSize(textSize);
             if (isNDCSizing)
             {
-                textScale = {2.f / window.windowWidth / 2.f, 2.f / window.windowHeight / 2.f, 1};
-                scaledSize = textSize * glm::vec2(textScale) ;
+                textScale = {(2.f / window.windowWidth / 2.f) * 0.5f, (2.f / window.windowHeight / 2.f) * 0.5f, 1.f};
+                scaledSize = textSize * glm::vec2(textScale);
             }
             auto entity_size = entity.getBoundingSize();
             glm::vec3 new_position(-entity_size.x / 2.f, entity_size.y / 2.f, 0.2);
@@ -135,7 +135,7 @@ namespace zg::entities::ui
             new_position.x -= (scaledSize.x / 2.f);
             new_position.y -= scaledSize.y / 2.f;
             font.stringToHost(text, new_position, {1,1,1,1}, rotate_identity,
-										textScale, textFontSize, textLineHeight, scaledSize + glm::vec2(0.001, 0.001),
+										textScale, textFontSize * 2.f, textLineHeight, scaledSize + glm::vec2(0.001, 0.001),
 												zg::enums::EBreakStyle::None, backing_entity,
 												textGlyphIDs, textCursorIndex,
 												textCursorID);

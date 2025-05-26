@@ -65,8 +65,10 @@ SceneCreateInfo EditorSceneFactory()
                     animatePanel(window, entity.ID, start_position, glm::vec3(0.0, 0.5, 0));
                 })
                 .add_layout("Window Panel Layout", LayoutDimension::Vertical, {1.0, 0.5, 1}, textures::BlendState::Text)
-                .add_text("Window: " + window.title)
-                .add_text("W: " + std::to_string(uint32_t(window.windowWidth)) + ", H: " + std::to_string(uint32_t(window.windowHeight)))
+                .add_text("Window: " + window.title, 40.f)
+                .add_text("W: " + std::to_string(uint32_t(window.windowWidth)) + ", H: " + std::to_string(uint32_t(window.windowHeight)), 28.f)
+                .add_text("Borderless: " + std::to_string(window.borderless), 28.f)
+                .add_text("Target FPS: " + std::to_string(window.framerate), 28.f)
                 .move_up_stack() // above panel layout
                 .move_up_stack() // above panel
                 .add_layout("Spacer Layout", LayoutDimension::Vertical, {0.01, 1.0, 1})
@@ -81,8 +83,11 @@ SceneCreateInfo EditorSceneFactory()
                         return;
                     animatePanel(window, entity.ID, start_position, glm::vec3(0.0, -0.5, 0));
                 })
-                .move_up_stack() // above scene graph panel
-                .move_up_stack() // above scene graph
+                .add_layout("Scene Panel Layout", LayoutDimension::Vertical, {1.5, 0.5, 1}, textures::BlendState::Text)
+                .add_text("Scene Graph", 40.f)
+                .move_up_stack() // above scene panel layout
+                .move_up_stack() // above scene panel
+                .move_up_stack() // above scene layout
                 .move_up_stack() // next root horizontal
                 .add_layout("Entity Layout", LayoutDimension::Vertical, {0.5, 2, 1})
                 .add_panel("Entity Panel", {0.5, 2, 1}, {0.3, 0.3, 0.3, 0.32})
@@ -93,7 +98,9 @@ SceneCreateInfo EditorSceneFactory()
                     if (!ctrlPressed)
                         return;
                     animatePanel(window, entity.ID, start_position, glm::vec3(0.5, 0.0, 0));
-                });
+                })
+                .add_layout("Entity Panel Layout", LayoutDimension::Vertical, {0.5, 2, 1}, textures::BlendState::Text)
+                .add_text("Entity Graph", 40.f);
 
             // Setup HView / VView  ✅
             //  Add Panels          ✅
