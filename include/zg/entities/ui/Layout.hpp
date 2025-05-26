@@ -107,7 +107,7 @@ namespace zg::entities::ui
         {
             auto& entity = get_entity();
             auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
-            auto& textCount = entity.getData<size_t>("TextCount");
+            auto& textCount = entity.template getData<size_t>("TextCount");
             auto textKey = "Text[" + std::to_string(++textCount) + "]";
             auto& textGlyphIDs = entity.template make<std::vector<size_t>>(textKey + "GlyphIDs");
             auto& textCursorIndex = entity.template make<int64_t>(textKey + "CursorIndex");
