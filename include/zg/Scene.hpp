@@ -128,6 +128,7 @@ namespace zg
 		size_t getOpaqueDrawCount();
 		TransparentDrawList& getTransparentDrawList();
 		OpaqueDrawList& getOpaqueDrawList();
+		void resetRenderedThisPassAllEntities();
 	private:
 		std::unordered_map<std::string, std::function<void(Scene&, shaders::Shader&, Mesh&)>> shaderSets = {
 			{"Lighting", [](auto& scene, auto& shader, auto& mesh) {

@@ -32,13 +32,18 @@ size_t ShaderManager::hashConstants(const RuntimeConstants& constants, IRenderer
   auto hash = crypto::hashVector(constants);
 	size_t render_pass = 0;
 	auto& vulkanRenderer = *dynamic_cast<VulkanRenderer*>(iRenderer);
+  const textures::BlendState* blend_state_pointer = 0;
 	if (vulkanRenderer.currentFramebufferImpl)
 	{
 		render_pass = size_t(vulkanRenderer.currentFramebufferImpl->renderPass);
+    blend_state_pointer = &vulkanRenderer.currentFramebufferImpl->zgFramebuffer->blendState;
 	}
 	else
 	{
 		render_pass = size_t(vulkanRenderer.renderPass);
+    blend_state_pointer = &vulkanRenderer.defaultBlendState;
 	}
-  return (hash << 3) ^ (render_pass << 1);
+  return (hash << 3) ^ (render_pass << 1) ^ (size_t(blend_state_pointer->alphaOp) << 2) ^ (size_t(blend_state_pointer->colorOp) << 4)
+   ^ (size_t(blend_state_pointer->srcColor) << 5) ^ (size_t(blend_state_pointer->srcAlpha) << 6) ^ (size_t(blend_state_pointer->dstColor) << 7)
+   ^ (size_t(blend_state_pointer->dstAlpha) << 8);
 }

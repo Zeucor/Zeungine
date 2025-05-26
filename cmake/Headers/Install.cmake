@@ -40,11 +40,6 @@ install(FILES ${mc33_SOURCE_DIR}/include/MC33.h DESTINATION ${ZG_INC_INSTALL_PRE
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT headers)
 
-# cgal
-install(DIRECTORY ${cgal_SOURCE_DIR}/include/CGAL
-    DESTINATION ${ZG_INC_INSTALL_PREFIX} COMPONENT headers
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.tcc")
-
 # tracy
 if(ENABLE_TRACY)
     install(DIRECTORY ${tracy_SOURCE_DIR}/public/client

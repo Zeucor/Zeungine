@@ -73,7 +73,7 @@ Scene::Scene(const SceneCreateInfo& info) :
 				{keyedTextures[0].second, textures::Framebuffer::AttachmentType::Color},
 				{keyedTextures[1].second, textures::Framebuffer::AttachmentType::Depth}
 			};
-			framebuffer = std::make_shared<textures::Framebuffer>(window.iRenderer, attachments);
+			framebuffer = std::make_shared<textures::Framebuffer>(window.iRenderer, attachments, textures::BlendState::Layout);
 		}
 		break;
 	case 1:
@@ -104,7 +104,7 @@ Scene::Scene(const SceneCreateInfo& info) :
 		break;
 	case 2:
 		framebuffer =
-			std::make_shared<textures::Framebuffer>(iRenderer, generateTexturesFromAttachments(info.frameBufferAttachments));
+			std::make_shared<textures::Framebuffer>(iRenderer, generateTexturesFromAttachments(info.frameBufferAttachments), textures::BlendState::Layout);
 		break;
 	}
 	framebuffer->sceneID = ID;
@@ -317,26 +317,6 @@ void Scene::preRender()
 		prePreRenderFunction(*this);
 	auto entitiesData = entities.data();
 	auto entitiesSize = entities.size();
-	std::function<void(Entity&, shaders::Shader&, const std::function<void(Mesh&, shaders::Shader&)>)> drawEntity;
-	drawEntity = [&](auto& entity, auto& shader, auto setShader)
-	{
-		ZGZoneScoped;
-		if (!entity.affectedByShadows)
-			return;
-		for (auto& meshID : entity.meshIDs)
-		{
-			ZGZoneScoped;
-			auto& mesh = Registry::GetSingleton().getMesh(meshID);
-			mesh.uid = entity.ID;
-			shader.bind(mesh);
-			setShader(mesh, shader);
-			shader.setSSBO("InstanceModels", mesh, &entity.getModelMatrix(), sizeof(glm::mat4));
-			mesh.drawVAO(&shader);
-			shader.unbind();
-		}
-		for (auto& child : entity.children)
-			drawEntity(child, shader, setShader);
-	};
 	for (auto& directionalLightShadow : directionalLightShadows)
 	{
 		ZGZoneScoped;
@@ -352,6 +332,7 @@ void Scene::preRender()
 			{"View", directionalLightShadow.view}
 		});
 		directionalLightShadow.framebuffer->unbind();
+		resetRenderedThisPassAllEntities();
 	}
 	// for (auto& spotLightShadow : spotLightShadows)
 	// {
@@ -748,7 +729,7 @@ Serial& deserialize(Serial& serial, Scene& scene)
 			serial >> attachmentType;
 			textureAttachmentPairs.emplace_back(scene.keyedTextures[i].second, attachmentType);
 		}
-		scene.framebuffer = std::make_shared<zg::textures::Framebuffer>(scene.iRenderer, textureAttachmentPairs);
+		scene.framebuffer = std::make_shared<zg::textures::Framebuffer>(scene.iRenderer, textureAttachmentPairs, textures::BlendState::Layout);
 	}
 	serial >> scene.fsq >> scene.viewPointer;
 	return serial;
@@ -761,7 +742,7 @@ size_t Scene::getTransparentDrawCount()
 	std::function<void(Entity&)> countEntity;
 	countEntity = [&](auto& entity)
 	{
-		if (!entity.skipRender)
+		if (!entity.skipRender && ((!entity.renderedThisPass && entity.renderOncePerPass) || !entity.renderOncePerPass))
 		{
 			for (auto& meshID : entity.meshIDs)
 			{
@@ -804,7 +785,7 @@ size_t Scene::getOpaqueDrawCount()
 	std::function<void(Entity&)> countEntity;
 	countEntity = [&](auto& entity)
 	{
-		if (!entity.skipRender)
+		if (!entity.skipRender && ((!entity.renderedThisPass && entity.renderOncePerPass) || !entity.renderOncePerPass))
 		{
 			bool addMesh = true;
 			for (auto& meshID : entity.meshIDs)
@@ -854,7 +835,7 @@ std::vector<std::pair<Entity*, Mesh*>>& Scene::getTransparentDrawList()
 	size_t index = 0;
 	addEntity = [&](auto& entity)
 	{
-		if (!entity.skipRender)
+		if (!entity.skipRender && ((!entity.renderedThisPass && entity.renderOncePerPass) || !entity.renderOncePerPass))
 		{
 			for (auto& meshID : entity.meshIDs)
 			{
@@ -878,6 +859,7 @@ std::vector<std::pair<Entity*, Mesh*>>& Scene::getTransparentDrawList()
 				if (addMesh)
 				{
 					transparentDrawListData[index++] = {&entity, &mesh};
+					entity.renderedThisPass = true;
 				}
 			}
 		}
@@ -915,7 +897,7 @@ std::vector<std::pair<Entity*, Mesh*>>& Scene::getOpaqueDrawList()
 	size_t index = 0;
 	addEntity = [&](auto& entity)
 	{
-		if (!entity.skipRender)
+		if (!entity.skipRender && ((!entity.renderedThisPass && entity.renderOncePerPass) || !entity.renderOncePerPass))
 		{
 			for (auto& meshID : entity.meshIDs)
 			{
@@ -938,7 +920,10 @@ std::vector<std::pair<Entity*, Mesh*>>& Scene::getOpaqueDrawList()
 					}
 				}
 				if (addMesh)
+				{
 					opaqueDrawListData[index++] = {&entity, &mesh};
+					entity.renderedThisPass = true;
+				}
 			}
 		}
 		for (auto& child : entity.children)
@@ -950,4 +935,19 @@ std::vector<std::pair<Entity*, Mesh*>>& Scene::getOpaqueDrawList()
 		addEntity(entity);
 	}
 	return opaqueDrawList;
+}
+void Scene::resetRenderedThisPassAllEntities()
+{
+	std::function<void(Entity&)> reset;
+	reset = [&](auto& entity) {
+		entity.renderedThisPass = false;
+		for (auto& child : entity.children)
+		{
+			reset(child);
+		}
+	};
+	for (auto& entity : entities)
+	{
+		reset(entity);
+	}
 }

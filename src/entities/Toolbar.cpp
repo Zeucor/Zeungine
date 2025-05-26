@@ -37,7 +37,7 @@ using namespace zg::entities;
 // 	float imageSizePlane = imageSize / svgScale;
 // 	// Close Button
 // 	xButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (NDCHeight / 4)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(1, 0, 0, 1));
-// 	addChild(xButton);
+// 	addEntity(xButton);
 // 	auto closeCircleLinePath = (std::filesystem::path(executableDirectory) / "icons" / "Remix" / "System" / "close-circle-line.svg").string();
 // 	auto closeCircleBitmap = images::SVGRasterize({closeCircleLinePath, enums::EFileLocation::Absolute, "r"}, {imageSize, imageSize});
 // 	xButtonTexture = std::make_shared<textures::Texture>(
@@ -57,7 +57,7 @@ using namespace zg::entities;
 // 		glm::vec2(imageSizePlane / window.windowWidth, imageSizePlane / window.windowHeight),
 // 		*xButtonTexture
 // 	);
-// 	xButton->addChild(xButtonImage);
+// 	xButton->addEntity(xButtonImage);
 // 	xButtonImage->addToBVH = false;
 // 	xButtonLeftMousePressID = xButton->addMousePressHandler(0, [&](auto pressed)
 // 															{ window.close(); });
@@ -73,7 +73,7 @@ using namespace zg::entities;
 // 		} });
 // 	// max Button
 // 	maxButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (xButton->size.x)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
-// 	addChild(maxButton);
+// 	addEntity(maxButton);
 // 	auto fullscreenLinePath = (std::filesystem::path(executableDirectory) / "icons" / "Remix" / "Media" / "fullscreen-line.svg").string();
 // 	auto fullscreenBitmap = images::SVGRasterize({fullscreenLinePath, enums::EFileLocation::Absolute, "r"}, {imageSize, imageSize});
 // 	maxButtonTexture = std::make_shared<textures::Texture>(
@@ -93,7 +93,7 @@ using namespace zg::entities;
 // 		glm::vec2(imageSizePlane / window.windowWidth, imageSizePlane / window.windowHeight),
 // 		*maxButtonTexture
 // 	);
-// 	maxButton->addChild(maxButtonPlane);
+// 	maxButton->addEntity(maxButtonPlane);
 // 	maxButtonPlane->addToBVH = false;
 // 	maxButtonLeftMousePressID = maxButton->addMousePressHandler(0, [&](auto pressed)
 // 																{ window.maximize(); });
@@ -109,7 +109,7 @@ using namespace zg::entities;
 // 		} });
 // 	// _ Button
 // 	minButton = std::make_shared<Plane>(window, scene, glm::vec3(toolButtonsX = (toolButtonsX - (maxButton->size.x)), -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2.f, NDCHeight), glm::vec4(0.4f, 0.4f, 0.4f, 1));
-// 	addChild(minButton);
+// 	addEntity(minButton);
 // 	auto skipDownLinePath = (std::filesystem::path(executableDirectory) / "icons" / "Remix" / "Arrows" / "skip-down-line.svg").string();
 // 	auto skipDownBitmap = images::SVGRasterize({skipDownLinePath, enums::EFileLocation::Absolute, "r"}, {imageSize, imageSize});
 // 	minButtonTexture = std::make_shared<textures::Texture>(
@@ -129,7 +129,7 @@ using namespace zg::entities;
 // 		glm::vec2(imageSizePlane / window.windowWidth, imageSizePlane / window.windowHeight),
 // 		*minButtonTexture
 // 	);
-// 	minButton->addChild(minButtonPlane);
+// 	minButton->addEntity(minButtonPlane);
 // 	minButtonPlane->addToBVH = false;
 // 	minButtonLeftMousePressID = minButton->addMousePressHandler(0, [&](auto pressed)
 // 															{ window.minimize(); });
@@ -146,7 +146,7 @@ using namespace zg::entities;
 // 	// icon
 // 	iconTexture.reset(new textures::Texture(window, {128, 128, 1, 0}, std::string_view("images/zeungine-icon.png")));
 // 	icon = std::make_shared<Plane>(window, scene, glm::vec3(NDCHeight / 4, -NDCHeight / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec2(NDCHeight / 2, NDCHeight), *iconTexture);
-// 	addChild(icon);
+// 	addEntity(icon);
 // 	//
 // 	float toolOptionsX = NDCHeight / 1.5;
 // 	float padding = NDCHeight / 10;
@@ -165,7 +165,7 @@ using namespace zg::entities;
 // 		glm::vec3(1),
 // 		fileTextSize,
 // 		color);
-// 	fileID = addChild(file);
+// 	fileID = addEntity(file);
 // 	fileTextView = std::make_shared<TextView>(
 // 		window,
 // 		scene,
@@ -187,7 +187,7 @@ using namespace zg::entities;
 // 			return NDCHeight * window.windowHeight * 0.5f / 2.f;
 // 		});
 // 	fileTextView->addToBVH = false;
-// 	file->addChild(fileTextView);
+// 	file->addEntity(fileTextView);
 // 	fileDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-file->size.x / 2, -file->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
 // 	filePressID = file->addMousePressHandler(0, [&](auto pressed)
 // 											 {
@@ -196,11 +196,11 @@ using namespace zg::entities;
 // 			if (fileDropdownID)
 // 			{
 // 				scene.bvh->removeEntity(scene, *fileDropdown);
-// 				file->removeChild(fileDropdownID);
+// 				file->removeEntity(fileDropdownID);
 // 			}
 // 			else
 // 			{
-// 				fileDropdownID = file->addChild(fileDropdown);
+// 				fileDropdownID = file->addEntity(fileDropdown);
 // 				std::vector<size_t> entityIDs({ID, fileID, fileDropdownID});
 // 				scene.postAddEntity(fileDropdown, entityIDs);
 // 				if (editDropdownID)
@@ -238,7 +238,7 @@ using namespace zg::entities;
 // 		glm::vec3(1),
 // 		editTextSize,
 // 		color);
-// 	editID = addChild(edit);
+// 	editID = addEntity(edit);
 // 	editTextView = std::make_shared<TextView>(
 // 		window,
 // 		scene,
@@ -259,7 +259,7 @@ using namespace zg::entities;
 // 			return NDCHeight * window.windowHeight * 0.5f / 2.f;
 // 		});
 // 	editTextView->addToBVH = false;
-// 	edit->addChild(editTextView);
+// 	edit->addEntity(editTextView);
 // 	editDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-edit->size.x / 2, -edit->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
 // 	editDropdown->addOption("Undo", []() {
 
@@ -295,11 +295,11 @@ using namespace zg::entities;
 // 			if (editDropdownID)
 // 			{
 // 				scene.bvh->removeEntity(scene, *editDropdown);
-// 				edit->removeChild(editDropdownID);
+// 				edit->removeEntity(editDropdownID);
 // 			}
 // 			else
 // 			{
-// 				editDropdownID = edit->addChild(editDropdown);
+// 				editDropdownID = edit->addEntity(editDropdown);
 // 				std::vector<size_t> entityIDs({ID, editID, editDropdownID});
 // 				scene.postAddEntity(editDropdown, entityIDs);
 // 				if (fileDropdownID)
@@ -337,7 +337,7 @@ using namespace zg::entities;
 // 		glm::vec3(1),
 // 		helpTextSize,
 // 		color);
-// 	helpID = addChild(help);
+// 	helpID = addEntity(help);
 // 	helpTextView = std::make_shared<TextView>(
 // 		window,
 // 		scene,
@@ -359,7 +359,7 @@ using namespace zg::entities;
 // 			return NDCHeight * window.windowHeight * 0.5f / 2.f;
 // 		});
 // 	helpTextView->addToBVH = false;
-// 	help->addChild(helpTextView);
+// 	help->addEntity(helpTextView);
 // 	helpDropdown = std::make_shared<DropdownMenu>(window, scene, glm::vec3(-help->size.x / 2, -help->size.y / 2, 0.1), glm::vec3(0), glm::vec3(1), glm::vec4(0, 0, 0, 1), font);
 // 	helpDropdown->addOption("Documentation", []() {
 
@@ -383,11 +383,11 @@ using namespace zg::entities;
 // 			if (helpDropdownID)
 // 			{
 // 				scene.bvh->removeEntity(scene, *helpDropdown);
-// 				help->removeChild(helpDropdownID);
+// 				help->removeEntity(helpDropdownID);
 // 			}
 // 			else
 // 			{
-// 				helpDropdownID = help->addChild(helpDropdown);
+// 				helpDropdownID = help->addEntity(helpDropdown);
 // 				std::vector<size_t> entityIDs({ID, helpID, helpDropdownID});
 // 				scene.postAddEntity(helpDropdown, entityIDs);
 // 				if (fileDropdownID)

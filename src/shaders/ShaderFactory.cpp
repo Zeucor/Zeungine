@@ -1319,7 +1319,9 @@ vec3 get_entity_normal(in Entity entity, in Material material);
     std::string string("  vec4 sampled = texture(ColorTexture, inUV);\n");
     if (std::find(constants.begin(), constants.end(), "TextColor") != constants.end())
     {
-      string += "  FragColor = vec4(textColor.value.r, textColor.value.g, textColor.value.b, sampled.a * textColor.value.a);";
+      string += R"(  if (sampled.a <= 0.1)
+    discard;
+  FragColor = vec4(textColor.value.r, textColor.value.g, textColor.value.b, sampled.a * textColor.value.a);)";
     }
     else
     {

@@ -60,7 +60,7 @@ static std::unordered_map<shaders::ShaderType, VkShaderStageFlagBits> stageStage
 	{shaders::ShaderType::Compute, VK_SHADER_STAGE_COMPUTE_BIT},
 };
 static std::unordered_map<textures::Texture::Format, VkFormat> textureFormat_Format = {
-	{textures::Texture::Format::RGBA8, VK_FORMAT_R8G8B8A8_SRGB},
+	{textures::Texture::Format::RGBA8, VK_FORMAT_R8G8B8A8_UNORM},
 	{textures::Texture::Format::Depth, VK_FORMAT_D32_SFLOAT},
 	{textures::Texture::Format::DepthStencil, VK_FORMAT_D32_SFLOAT_S8_UINT},
 	{textures::Texture::Format::Stencil, VK_FORMAT_R8_UINT}};
@@ -80,7 +80,7 @@ static std::unordered_map<textures::Texture::Format, VkImageAspectFlags> texture
 	{textures::Texture::Format::DepthStencil, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT},
 	{textures::Texture::Format::Stencil, VK_IMAGE_ASPECT_STENCIL_BIT}};
 // static std::unordered_map<EFramebufferAttachmentType, VkFormat> attachmentType_Format = {
-// 	{EFramebufferAttachmentType::Color, VK_FORMAT_R8G8B8A8_SRGB},
+// 	{EFramebufferAttachmentType::Color, VK_FORMAT_R8G8B8A8_UNORM},
 // 	{EFramebufferAttachmentType::Depth, VK_FORMAT_D32_SFLOA_S8_UINTT},
 // 	{EFramebufferAttachmentType::DepthStencil, VK_FORMAT_D32_SFLOAT_S8_UINT}
 // };
@@ -901,7 +901,7 @@ VkSurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<VkS
 {
 	for (auto& availableFormat : availableFormats)
 	{
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB)
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM)
 		{
 			return availableFormat;
 		}
@@ -1854,13 +1854,19 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 	colorBlendAttachment.colorWriteMask =
 		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	colorBlendAttachment.blendEnable = VK_TRUE;
-	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+	textures::BlendState* blend_state_pointer = 0;
+	if (currentFramebufferImpl)
+		blend_state_pointer = &currentFramebufferImpl->zgFramebuffer->blendState;
+	else
+		blend_state_pointer = &defaultBlendState;
+	auto& blend_state = *blend_state_pointer;
+	colorBlendAttachment.blendEnable = blend_state.enable;
+	colorBlendAttachment.srcColorBlendFactor = (VkBlendFactor)blend_state.srcColor;
+	colorBlendAttachment.dstColorBlendFactor = (VkBlendFactor)blend_state.dstColor;
+	colorBlendAttachment.colorBlendOp = (VkBlendOp)blend_state.colorOp;
+	colorBlendAttachment.srcAlphaBlendFactor = (VkBlendFactor)blend_state.srcAlpha;
+	colorBlendAttachment.dstAlphaBlendFactor = (VkBlendFactor)blend_state.dstAlpha;
+	colorBlendAttachment.alphaBlendOp = (VkBlendOp)blend_state.alphaOp;
 	VkPipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	colorBlending.logicOpEnable = VK_FALSE;

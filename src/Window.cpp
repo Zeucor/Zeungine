@@ -224,6 +224,12 @@ void zg::Window::startWindow()
 	mainFramebuffer = std::make_shared<textures::Framebuffer>(iRenderer, std::vector<textures::Framebuffer::TextureAttachmentPair>{
 		{mainColorTexture, textures::Framebuffer::AttachmentType::Color}//,
 		// {mainDepthTexture, textures::Framebuffer::AttachmentType::Depth}
+	}, textures::BlendState{
+		.enable = true,
+		.srcColor = textures::BlendFactor::SrcAlpha,
+		.dstColor = textures::BlendFactor::OneMinusSrcAlpha,
+		.srcAlpha = textures::BlendFactor::SrcAlpha,
+		.dstAlpha = textures::BlendFactor::OneMinusSrcAlpha
 	});
 	postProcessingPipeline.textureRegistry.registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorTexture);
 	// postProcessingPipeline.textureRegistry.registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthTexture);

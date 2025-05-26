@@ -27,6 +27,7 @@
 #include <shaderc/shaderc.hpp>
 #include <vulkan/vulkan.h>
 #include <zg/SharedLibrary.hpp>
+#include <zg/textures/BlendState.hpp>
 namespace zg
 {
 	namespace textures
@@ -258,6 +259,7 @@ namespace zg
 		std::shared_ptr<textures::Framebuffer> mainFramebuffer;
 		std::vector<VkImageView> swapChainImageViews;
 		std::vector<VkFramebuffer> swapChainFramebuffers;
+		textures::BlendState defaultBlendState = textures::BlendState::MainFramebuffer;
 		VkRenderPass renderPass;
 		VkCommandPool commandPool;
 		std::vector<VkCommandBuffer> commandBuffers;

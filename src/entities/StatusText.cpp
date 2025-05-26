@@ -64,7 +64,7 @@ using namespace zg::entities;
 // 			return NDCHeight * this->window.windowHeight * 0.5f / 1.5f;
 // 		});
 // 	textView->addToBVH = false;
-// 	addChild(textView);
+// 	addEntity(textView);
 // 	addToBVH = false;
 // }
 // void StatusText::setColor(glm::vec4 newColor)

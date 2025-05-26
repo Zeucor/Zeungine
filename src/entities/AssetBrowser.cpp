@@ -27,7 +27,7 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 	iconPlane = std::make_shared<entities::Plane>(
 // 		window, scene, position + glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y / 2.0f, 0.1), glm::vec3(0),
 // 		glm::vec3(1), iconPlaneSize, *iconTexture);
-// 	addChild(iconPlane);
+// 	addEntity(iconPlane);
 // 	// name
 // 	auto name = path.filename().string();
 // 	float nameFontSize = window.windowHeight / 50;
@@ -42,7 +42,7 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 		position +
 // 			glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y - (nameLineHeight / 2 / window.windowHeight / 0.5), 0.1),
 // 		glm::vec3(0), glm::vec3(1), nameScaledSize, *nameTexture);
-// 	addChild(namePlane);
+// 	addEntity(namePlane);
 // }
 // std::filesystem::path Asset::determineIconPath(const std::filesystem::path& extension)
 // {
@@ -70,7 +70,7 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 	iconPlane = std::make_shared<entities::Plane>(
 // 		window, scene, position + glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y / 2.0f, 0.1), glm::vec3(0),
 // 		glm::vec3(1), iconPlaneSize, *iconTexture);
-// 	addChild(iconPlane);
+// 	addEntity(iconPlane);
 // 	// name
 // 	auto name = path.filename().string();
 // 	float nameFontSize = window.windowHeight / 50;
@@ -85,7 +85,7 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 		position +
 // 			glm::vec3(iconPlaneSize.x / 2.0f, -iconPlaneSize.y - (nameLineHeight / 2 / window.windowHeight / 0.5), 0.1),
 // 		glm::vec3(0), glm::vec3(1), nameScaledSize, *nameTexture);
-// 	addChild(namePlane);
+// 	addEntity(namePlane);
 // }
 // std::filesystem::path Folder::determineIconPath()
 // {
@@ -118,7 +118,7 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 	pathSplit = items;
 // 	textures.clear();
 // 	for (auto& texturePlane : texturePlanes)
-// 		removeChild(texturePlane->ID);
+// 		removeEntity(texturePlane->ID);
 // 	texturePlanes.clear();
 // 	auto pathSplitSize = pathSplit.size();
 // 	glm::vec3 currentPosition(0, (-lineHeight / 2) / window.windowHeight / 0.5, 0.1);
@@ -140,7 +140,7 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 			*arrowTexture);
 // 		texturePlanes.push_back(arrowPlane);
 // 		currentPosition.x += arrowPlane->size.x / 2;
-// 		addChild(arrowPlane);
+// 		addEntity(arrowPlane);
 // 	};
 // 	addChevron();
 // 	for (int32_t i = 0; i < pathSplitSize; ++i)
@@ -159,7 +159,7 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 			*partTexture);
 // 		texturePlanes.push_back(partPlane);
 // 		currentPosition.x += partPlane->size.x / 2;
-// 		addChild(partPlane);
+// 		addEntity(partPlane);
 // 		if (i < pathSplitSize - 1)
 // 			addChevron();
 // 	}
@@ -188,14 +188,14 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // {
 // 	auto assetPosition = getNextPosition();
 // 	auto asset = std::make_shared<Asset>(window, scene, glm::vec3(assetPosition, 0.1), assetPath, font);
-// 	addChild(asset);
+// 	addEntity(asset);
 // 	return asset->ID;
 // }
 // size_t AssetGrid::addFolder(const std::filesystem::path& folderPath, fonts::freetype::FreetypeFont& font)
 // {
 // 	auto folderPosition = getNextPosition();
 // 	auto folder = std::make_shared<Folder>(window, scene, glm::vec3(folderPosition, 0.1), folderPath, font);
-// 	addChild(folder);
+// 	addEntity(folder);
 // 	return folder->ID;
 // }
 // glm::vec2 AssetGrid::getNextPosition()
@@ -259,12 +259,12 @@ static std::filesystem::path programDirectoryPath = zgfilesystem::File::getProgr
 // 	}
 // 	// breadcrumbs
 // 	breadcrumbs = std::make_shared<Breadcrumbs>(window, scene, width, font, glm::vec3(0, 0, 0.1), projectDirectory);
-// 	addChild(breadcrumbs);
+// 	addEntity(breadcrumbs);
 // 	// asset grid
 // 	assetGrid = std::make_shared<AssetGrid>(window, scene, width / window.windowWidth / 0.5f,
 // 																					(height - breadcrumbs->lineHeight) / window.windowHeight / 0.5f,
 // 																					glm::vec3(0.f, -breadcrumbs->lineHeight / window.windowHeight / 0.5f, 0.1f));
-// 	addChild(assetGrid);
+// 	addEntity(assetGrid);
 // 	// assets
 // 	auto& assetGridRef = *assetGrid;
 // 	for (auto& entry : directory.entries)

@@ -39,7 +39,7 @@ using namespace zg::entities;
 // 		sizeYTotal += childItem.size.y;
 // 	}
 // 	auto dropdownItem = std::make_shared<DropdownItem>(window, scene, glm::vec3(0, -sizeYTotal, 0.5), glm::vec3(0), glm::vec3(1), glm::vec4(0.1, 0.1, 0.1, 1), name, handler, font);
-// 	addChild(dropdownItem);
+// 	addEntity(dropdownItem);
 // 	sizeYTotal += dropdownItem->size.y;
 // 	float sizeXMax = 0;
 // 	for (auto &child : children)
@@ -125,7 +125,7 @@ using namespace zg::entities;
 // 			return this->window.windowHeight / 32.f;
 // 		});
 // 	textView->addToBVH = false;
-// 	addChild(textView);
+// 	addEntity(textView);
 // 	setSize({TextSize.x, TextSize.y});
 // 	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
 // 										{

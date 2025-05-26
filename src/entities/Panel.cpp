@@ -69,11 +69,11 @@ using namespace zg::entities;
 // 			return this->window.windowHeight / 36.f;
 // 		});
 // 	titleTextView->addToBVH = false;
-// 	addChild(titleTextView);
+// 	addEntity(titleTextView);
 // };
 // void PanelMenu::addPanelEntity(const std::shared_ptr<Entity> &entity, bool alignSizeX)
 // {
-// 	addChild(entity);
+// 	addEntity(entity);
 // 	scene.postAddEntity(entity);
 // 	if (alignSizeX)
 // 	{
@@ -102,7 +102,7 @@ using namespace zg::entities;
 // void PanelMenu::removePanelEntity(const std::shared_ptr<Entity> &entity)
 // {
 // 	scene.preRemoveEntity(entity);
-// 	removeChild(entity->ID);
+// 	removeEntity(entity->ID);
 // }
 // float PanelMenu::getSizeYTotal()
 // {
@@ -196,7 +196,7 @@ using namespace zg::entities;
 // 			return this->window.windowHeight / 30.f;
 // 		});
 // 	textView->addToBVH = false;
-// 	addChild(textView);
+// 	addEntity(textView);
 // 	PanelItem::setSize({(panelWidth - indent) / (window.windowWidth / 2), TextSize.y, 0});
 // 	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
 // 										{

@@ -30,12 +30,12 @@ using namespace zg::entities;
 // 	static const auto indent = 16.f;
 // 	auto panelItem = std::make_shared<Tab>(window, scene, glm::vec3(sizeXTotal, 0, 0.1), glm::vec3(0), glm::vec3(1),
 // 																				 color, name, font, height, handler, active, *this, iconFile);
-// 	addChild(panelItem);
+// 	addEntity(panelItem);
 // 	scene.postAddEntity(panelItem);
 // 	setSize();
 // 	return panelItem->ID;
 // };
-// void TabsBar::removeTab(size_t ID) { removeChild(ID); }
+// void TabsBar::removeTab(size_t ID) { removeEntityy(ID); }
 // void TabsBar::setColor(glm::vec4 color)
 // {
 // 	colors = {color, color, color, color};
@@ -101,7 +101,7 @@ using namespace zg::entities;
 // 		*iconTexture,
 // 		shaders::RuntimeConstants()
 // 	);
-// 	addChild(iconPlane);
+// 	addEntity(iconPlane);
 // 	float LineHeight = 0;
 // 	auto TextSize = font.stringSize(text, fontSize, LineHeight, {0, 0});
 // 	TextSize.y /= window.windowHeight * 0.5f;
@@ -111,7 +111,7 @@ using namespace zg::entities;
 // 		glm::vec4(1, 1, 1, 1), text, TextSize, font, fontSize, true, glm::vec2(0, 0), enums::EBreakStyle::None, TextView::RepositionHandler(),
 // 		TextView::RepositionHandler(), [&] { return NDCHeight * this->window.windowHeight * 0.5f / 1.5f; });
 // 	textView->addToBVH = false;
-// 	addChild(textView);
+// 	addEntity(textView);
 // 	setSize({TextSize.x + padding / window.windowWidth / 2 + iconPlane->size.x, height / window.windowHeight / 0.5});
 // 	mouseHoverID = addMouseHoverHandler(
 // 		[&, color](const auto& hovered)

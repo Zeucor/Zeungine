@@ -10,7 +10,6 @@
 #include "vp/Projection.hpp"
 #include "vp/View.hpp"
 #include "Mesh.hpp"
-// #include "CGAL.hpp"
 namespace zg
 {
 	struct Scene;
@@ -69,6 +68,8 @@ namespace zg
 		bool affectedByShadows = true;
 		bool addToBVH = true;
 		bool skipRender = false;
+		bool renderOncePerPass = true;
+		bool renderedThisPass = false;
 		// event handlers
 		std::unordered_map<Button, bool> buttons;
 		std::unordered_map<
@@ -108,12 +109,18 @@ namespace zg
 	public:
 		void update();
 		void render();
-		size_t getChildDrawCount();
-		std::vector<std::pair<Entity*, Mesh*>> getChildDrawList();
+		size_t getOpaqueChildDrawCount();
+		std::vector<std::pair<Entity*, Mesh*>> getOpaqueChildDrawList();
+		size_t getTransparentChildDrawCount();
+		std::vector<std::pair<Entity*, Mesh*>> getTransparentChildDrawList();
 		void postRender();
 		glm::mat4& getModelMatrix();
-		KeyIDVector<std::string, Entity>::EmplaceBackTuple addChild(const EntityCreateInfo& childInfo);
-		void removeChild(size_t ID);
+		std::tuple<glm::vec3, glm::quat, glm::vec3, glm::vec3, glm::vec4> decomposeModel();
+		glm::vec3 getModelPosition();
+		glm::quat getModelRotation();
+		glm::vec3 getModelScale();
+		KeyIDVector<std::string, Entity>::EmplaceBackTuple addEntity(const EntityCreateInfo& childInfo);
+		void removeEntity(size_t ID);
 		UniqueIdentifier addMousePressHandler(const Button& button, const MousePressHandler& callback);
 		void removeMousePressHandler(const Button& button, UniqueIdentifier& id);
 		UniqueIdentifier addMouseMoveHandler(const MouseMoveHandler& callback);

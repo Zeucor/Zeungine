@@ -33,36 +33,6 @@ set_target_properties(mc33 PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(mc33 PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(mc33 PROPERTIES MINSIZEREL_POSTFIX "")
 
-# CGAL
-message(STATUS "FetchContent: CGAL")
-FetchContent_Declare(cgal
-    GIT_REPOSITORY https://github.com/ZeunO8/cgal.git
-    GIT_TAG 5.6.x-branch)
-FetchContent_GetProperties(cgal)
-if(NOT cgal_POPULATED)
-    FetchContent_Populate(cgal)
-endif()
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -B ${CMAKE_BINARY_DIR}/_deps/cgal-build -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D CMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/_deps/cgal-install -D CGAL_CMAKE_EXACT_NT_BACKEND=BOOST_BACKEND
-    WORKING_DIRECTORY ${cgal_SOURCE_DIR}
-    RESULT_VARIABLE cgal_ConfigureResult)
-if(cgal_ConfigureResult)
-    message(FATAL_ERROR "cgal-configure: ${cgal_ConfigureResult}")
-else()
-    message(STATUS "cgal-configure: success")
-endif()
-add_custom_target(cgal ALL
-    COMMAND ${CMAKE_COMMAND} --build .
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/cgal-build
-    COMMENT "Building CGAL"
-)
-add_custom_target(cgal_install ALL
-    DEPENDS cgal
-    COMMAND ${CMAKE_COMMAND} --install .
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/_deps/cgal-build
-    COMMENT "Installing CGAL"
-)
-
 # tracy
 if(ENABLE_TRACY)
     message(STATUS "FetchContent: tracy")
@@ -641,6 +611,18 @@ FetchContent_Declare(brotli
     GIT_REPOSITORY https://github.com/google/brotli.git
     GIT_TAG v1.1.0)
 FetchContent_MakeAvailable(brotli)
+set_target_properties(brotlidec PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(brotlidec PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(brotlidec PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(brotlidec PROPERTIES MINSIZEREL_POSTFIX "")
+set_target_properties(brotlienc PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(brotlienc PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(brotlienc PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(brotlienc PROPERTIES MINSIZEREL_POSTFIX "")
+set_target_properties(brotlicommon PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(brotlicommon PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(brotlicommon PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(brotlicommon PROPERTIES MINSIZEREL_POSTFIX "")
 
 # harfbuzz
 message(STATUS "FetchContent: harfbuzz")
@@ -648,6 +630,10 @@ FetchContent_Declare(harfbuzz
     GIT_REPOSITORY https://github.com/harfbuzz/harfbuzz.git
     GIT_TAG 11.0.0)
 FetchContent_MakeAvailable(harfbuzz)
+set_target_properties(harfbuzz PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(harfbuzz PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(harfbuzz PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(harfbuzz PROPERTIES MINSIZEREL_POSTFIX "")
 
 # png
 message(STATUS "FetchContent: png")
@@ -919,3 +905,8 @@ FetchContent_Declare(stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
     GIT_TAG master)
 FetchContent_MakeAvailable(stb)
+
+set_target_properties(zlibstatic PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(zlibstatic PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(zlibstatic PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(zlibstatic PROPERTIES MINSIZEREL_POSTFIX "")

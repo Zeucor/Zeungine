@@ -132,7 +132,7 @@ using namespace zg::entities;
 // 	{
 // 		auto &entity = *it;
 // 		if (!entity->ID)
-// 			addChild(entity);
+// 			addEntity(entity);
 // 		entity->forceReposition();
 // 	}
 // 	auto removeStart = end;
@@ -141,7 +141,7 @@ using namespace zg::entities;
 // 	{
 // 		auto &entity = *it;
 // 		if (entity->ID)
-// 			removeChild(entity->ID);
+// 			removeEntity(entity->ID);
 // 	}
 // 	if (start != consoleTextViews.rbegin())
 // 	{
@@ -151,10 +151,10 @@ using namespace zg::entities;
 // 		{
 // 			auto &entity = *it;
 // 			if (entity->ID)
-// 				removeChild(entity->ID);
+// 				removeEntity(entity->ID);
 // 		}
 // 		auto &entity = *removeEnd;
 // 		if (entity->ID)
-// 			removeChild(entity->ID);
+// 			removeEntity(entity->ID);
 // 	}
 // }

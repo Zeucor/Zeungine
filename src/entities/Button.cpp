@@ -60,7 +60,7 @@ using namespace zg::entities;
 // 			return this->size.y * this->window.windowHeight * 0.5f / 1.2f;
 // 		});
 // 	textView->addToBVH = false;
-// 	addChild(textView);
+// 	addEntity(textView);
 // 	setSize(this->size);
 // 	mouseHoverID = addMouseHoverHandler([&, color](const auto &hovered)
 // 										{

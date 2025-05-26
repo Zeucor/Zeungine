@@ -53,7 +53,7 @@ Entity::Entity(const EntityCreateInfo& info) :
 	for (auto& meshInfo : info.meshInfos)
 		meshIDs.push_back(Registry::GetSingleton().addMesh(meshInfo, *this));
 	for (auto& childInfo : info.childrenInfos)
-		addChild(childInfo);
+		addEntity(childInfo);
 }
 Entity::Entity(const Entity& other) :
 	ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>(other),
@@ -249,68 +249,6 @@ float Entity::operator()(glm::vec3 p) const
 	}
 	return res;
 }
-// K::Sphere_3 Entity::getSuggestedBoundingSphere(float multiplier) const
-// {
-//     std::vector<glm::vec3> points;
-
-//     for (auto& meshInfo : meshInfos)
-//     {
-//         switch (meshInfo.shapeType) {
-//             case ShapeType::PlaneXY:
-//             case ShapeType::PlaneXZ:
-//             case ShapeType::PlaneYZ:
-//             case ShapeType::SDF:
-//             case ShapeType::Box:
-//             {
-// 			_box_sphere:
-//                 float half_extent = 0.5f;
-//                 points.push_back(glm::vec3( half_extent,  half_extent,  half_extent) * scale);
-//                 points.push_back(glm::vec3(-half_extent,  half_extent,  half_extent) * scale);
-//                 points.push_back(glm::vec3( half_extent, -half_extent,  half_extent) * scale);
-//                 points.push_back(glm::vec3( half_extent,  half_extent, -half_extent) * scale);
-//                 points.push_back(glm::vec3(-half_extent, -half_extent,  half_extent) * scale);
-//                 points.push_back(glm::vec3(-half_extent,  half_extent, -half_extent) * scale);
-//                 points.push_back(glm::vec3( half_extent, -half_extent, -half_extent) * scale);
-//                 points.push_back(glm::vec3(-half_extent, -half_extent, -half_extent) * scale);
-//                 break;
-//             }
-//             case ShapeType::Mesh:
-//             {
-// 				if (meshInfo.meta_int > -1)
-// 					goto _box_sphere;
-// 				auto minfo = meshInfo.info(*this);
-// 				auto& vertices = minfo.vertices;
-// 				points.reserve(vertices.size());
-// 				for (auto& v : vertices)
-// 					points.push_back(glm::vec3(v.x, v.y, v.z) * scale);
-//                 break;
-//             }
-//             default:
-//                 break;
-//         }
-//     }
-
-//     if (points.empty()) {
-//         return K::Sphere_3(K::Point_3(0,0,0), 0.0);
-//     }
-
-// 	std::vector<K::Point_3> kpoints;
-// 	kpoints.reserve(points.size());
-// 	for (auto& p : points)
-// 		kpoints.push_back(K::Point_3(p.x, p.y, p.z));
-//     CGAL::Min_sphere_d<CGAL::Min_sphere_annulus_d_traits_3<K>> min_sphere(kpoints.begin(), kpoints.end());
-
-//     K::Point_3 center = min_sphere.center();
-//     K::FT squared_radius = min_sphere.squared_radius();
-
-//     double radius_double = std::sqrt(CGAL::to_double(squared_radius));
-//     double scaled_radius_double = radius_double * multiplier;
-//     if (scaled_radius_double < 0.0) scaled_radius_double = 0.0;
-
-//     K::FT scaled_squared_radius = K::FT(scaled_radius_double) * K::FT(scaled_radius_double);
-    
-//     return K::Sphere_3(center, scaled_squared_radius);
-// }
 glm::vec3 Entity::getBoundingSize() const
 {
 	physics::AABB aabb;
@@ -394,19 +332,33 @@ void Entity::render()
 		}
 	}
 }
-size_t Entity::getChildDrawCount()
+size_t Entity::getOpaqueChildDrawCount()
 {
+	auto& rgy = Registry::GetSingleton();
 	size_t c = 0;
 	auto childrenSize = children.size();
 	auto childrenData = children.data();
 	std::function<void(Entity&)> countEntity;
 	countEntity = [&](auto& entity)
 	{
-		if (!entity.skipRender)
+		if (!entity.isTransparent && !entity.skipRender && ((!entity.renderedThisPass && entity.renderOncePerPass) || !entity.renderOncePerPass))
 		{
 			for (auto& meshID : entity.meshIDs)
 			{
-				c++;
+				auto& mesh = rgy.getMesh(meshID);
+				bool meshIsTransparent = false;
+				for (auto& keyedPair : mesh.info.keyedTextures)
+				{
+					if (keyedPair.second->isTransparent)
+					{
+						meshIsTransparent = true;
+						break;
+					}
+				}
+				if (!meshIsTransparent)
+				{
+					c++;
+				}
 			}
 		}
 		for (auto& child : entity.children)
@@ -419,9 +371,10 @@ size_t Entity::getChildDrawCount()
 	}
 	return c;
 }
-std::vector<std::pair<Entity*, Mesh*>> Entity::getChildDrawList()
+std::vector<std::pair<Entity*, Mesh*>> Entity::getOpaqueChildDrawList()
 {
-	auto size = getChildDrawCount();
+	auto& rgy = Registry::GetSingleton();
+	auto size = getOpaqueChildDrawCount();
 	std::vector<std::pair<Entity*, Mesh*>> drawList;
 	drawList.resize(size);
 	auto drawListData = drawList.data();
@@ -429,12 +382,25 @@ std::vector<std::pair<Entity*, Mesh*>> Entity::getChildDrawList()
 	size_t index = 0;
 	addEntity = [&](auto& entity)
 	{
-		if (!entity.skipRender)
+		if (!entity.isTransparent && !entity.skipRender && ((!entity.renderedThisPass && entity.renderOncePerPass) || !entity.renderOncePerPass))
 		{
 			for (auto& meshID : entity.meshIDs)
 			{
-				auto& mesh = Registry::GetSingleton().getMesh(meshID);
-				drawListData[index++] = {&entity, &mesh};
+				auto& mesh = rgy.getMesh(meshID);
+				bool meshIsTransparent = false;
+				for (auto& keyedPair : mesh.info.keyedTextures)
+				{
+					if (keyedPair.second->isTransparent)
+					{
+						meshIsTransparent = true;
+						break;
+					}
+				}
+				if (!meshIsTransparent)
+				{
+					drawListData[index++] = {&entity, &mesh};
+					entity.renderedThisPass = true;
+				}
 			}
 		}
 		for (auto& child : entity.children)
@@ -449,11 +415,112 @@ std::vector<std::pair<Entity*, Mesh*>> Entity::getChildDrawList()
 	}
 	return drawList;
 }
+size_t Entity::getTransparentChildDrawCount()
+{
+	auto& rgy = Registry::GetSingleton();
+	size_t c = 0;
+	auto childrenSize = children.size();
+	auto childrenData = children.data();
+	std::function<void(Entity&)> countEntity;
+	countEntity = [&](auto& entity)
+	{
+		if (!entity.skipRender && ((!entity.renderedThisPass && entity.renderOncePerPass) || !entity.renderOncePerPass))
+		{
+			for (auto& meshID : entity.meshIDs)
+			{
+				auto& mesh = rgy.getMesh(meshID);
+				bool meshIsTransparent = false;
+				for (auto& keyedPair : mesh.info.keyedTextures)
+				{
+					if (keyedPair.second->isTransparent)
+					{
+						meshIsTransparent = true;
+						break;
+					}
+				}
+				if (meshIsTransparent || entity.isTransparent)
+				{
+					c++;
+				}
+			}
+		}
+		for (auto& child : entity.children)
+			countEntity(child);
+	};
+	for (size_t i = 0; i < childrenSize; ++i)
+	{
+		auto& child = childrenData[i];
+		countEntity(child);
+	}
+	return c;
+}
+std::vector<std::pair<Entity*, Mesh*>> Entity::getTransparentChildDrawList()
+{
+	auto& rgy = Registry::GetSingleton();
+	auto size = getTransparentChildDrawCount();
+	std::vector<std::pair<Entity*, Mesh*>> drawList;
+	drawList.resize(size);
+	auto drawListData = drawList.data();
+	std::function<void(Entity&)> addEntity;
+	size_t index = 0;
+	addEntity = [&](auto& entity)
+	{
+		if (!entity.skipRender && ((!entity.renderedThisPass && entity.renderOncePerPass) || !entity.renderOncePerPass))
+		{
+			for (auto& meshID : entity.meshIDs)
+			{
+				auto& mesh = rgy.getMesh(meshID);
+				bool meshIsTransparent = false;
+				for (auto& keyedPair : mesh.info.keyedTextures)
+				{
+					if (keyedPair.second->isTransparent)
+					{
+						meshIsTransparent = true;
+						break;
+					}
+				}
+				if (meshIsTransparent || entity.isTransparent)
+				{
+					drawListData[index++] = {&entity, &mesh};
+					entity.renderedThisPass = true;
+				}
+			}
+		}
+		for (auto& child : entity.children)
+			addEntity(child);
+	};
+	auto childrenSize = children.size();
+	auto childrenData = children.data();
+	for (size_t i = 0; i < childrenSize; ++i)
+	{
+		auto& child = childrenData[i];
+		addEntity(child);
+	}
+	if (drawList.size())
+	{
+		auto& scene = rgy.getScene(drawList.front().first->INDEX_STACK);
+		ZGZoneScoped;
+		std::sort(drawList.begin(), drawList.end(), [&](auto& a, auto& b)
+		{
+			auto& ACameraPosition = a.first->viewPointer ? a.first->viewPointer->position : scene.viewPointer->position;
+			auto& BCameraPosition = b.first->viewPointer ? b.first->viewPointer->position : scene.viewPointer->position;
+			auto A_model_tuple = a.first->decomposeModel();
+			auto B_model_tuple = b.first->decomposeModel();
+			auto distA = glm::distance(std::get<0>(A_model_tuple), ACameraPosition);
+			auto distB = glm::distance(std::get<0>(B_model_tuple), BCameraPosition);
+			return distA > distB;
+		});
+	}
+	return drawList;
+}
 void Entity::postRender()
 {
 	ZGZoneScoped;
-	// for (auto& meshID : meshIDs)
-	// 	Registry::GetSingleton().getMesh(meshID).setTexturesThisPass = false;
+	renderedThisPass = false;
+	auto childrenSize = children.size();
+	auto childrenData = children.data();
+	for (size_t i = 0; i < childrenSize; ++i)
+		childrenData[i].postRender();
 }
 glm::mat4& Entity::getModelMatrix()
 {
@@ -473,15 +540,34 @@ glm::mat4& Entity::getModelMatrix()
     Entity* parentEntity = nullptr;
     if (Registry::GetSingleton().getNthParentEntity(INDEX_STACK, parentEntity) && parentEntity != nullptr)
     {
+		auto parent_model_tuple = parentEntity->decomposeModel();
         glm::mat4 parentIdentity = glm::mat4(1.0f);
-        glm::mat4 parentRotMat = glm::mat4_cast(parentEntity->rotation);
-        glm::mat4 parentTransMat = glm::translate(parentIdentity, parentEntity->position);
+        glm::mat4 parentRotMat = glm::mat4_cast(std::get<1>(parent_model_tuple));
+        glm::mat4 parentTransMat = glm::translate(parentIdentity, std::get<0>(parent_model_tuple));
         glm::mat4 parentTransformWithoutScale = parentTransMat * parentRotMat;
         model = parentTransformWithoutScale * model;
     }
     return model;
 }
-KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const EntityCreateInfo& childCreateInfo)
+std::tuple<glm::vec3, glm::quat, glm::vec3, glm::vec3, glm::vec4> Entity::decomposeModel()
+{
+	std::tuple<glm::vec3, glm::quat, glm::vec3, glm::vec3, glm::vec4> tuple;
+	glm::decompose(getModelMatrix(), std::get<2>(tuple), std::get<1>(tuple), std::get<0>(tuple), std::get<3>(tuple), std::get<4>(tuple));
+	return tuple;
+}
+glm::vec3 Entity::getModelPosition()
+{
+	return std::get<0>(decomposeModel());
+}
+glm::quat Entity::getModelRotation()
+{
+	return std::get<1>(decomposeModel());
+}
+glm::vec3 Entity::getModelScale()
+{
+	return std::get<2>(decomposeModel());
+}
+KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addEntity(const EntityCreateInfo& childCreateInfo)
 {
 	ZGZoneScoped;
 	auto usingInfo = childCreateInfo;
@@ -496,7 +582,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addChild(const Entity
 		childEntity.onAddedFunction(childEntity);
 	return {transaction.key, transaction.id, transaction.index, &childEntity};
 }
-void Entity::removeChild(size_t ID)
+void Entity::removeEntity(size_t ID)
 {
 	ZGZoneScoped;
 	auto childIter = children.find_id(ID);

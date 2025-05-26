@@ -71,12 +71,12 @@ using namespace zg::entities;
 // 			return (this->fontSize = ((this->NDCHeight * this->window.windowHeight / 2.f) / 5.5f));
 // 		});
 // 	titleTextView->addToBVH = false;
-// 	addChild(titleTextView);
+// 	addEntity(titleTextView);
 // 	for (const auto &child : children)
 // 	{
 // 		child->position.x -= dialogSize.x / 2;
 // 		child->position.y += dialogSize.y / 2;
-// 		addChild(child);
+// 		addEntity(child);
 // 	}
 // 	setSize(dialogSize);
 // };

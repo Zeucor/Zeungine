@@ -168,14 +168,14 @@ using namespace zg::entities;
 // {
 // 	if (activeTextView && activeTextView != showTextView)
 // 	{
-// 		removeChild(activeTextView->ID);
+// 		removeEntity(activeTextView->ID);
 // 	}
 // 	else if (activeTextView)
 // 	{
 // 		return;
 // 	}
 // 	activeTextView = showTextView;
-// 	addChild(activeTextView);
+// 	addEntity(activeTextView);
 // };
 // char Input::getShiftedChar(const char &key, bool shiftPressed)
 // {
@@ -219,7 +219,7 @@ using namespace zg::entities;
 // 		activeInput->active = false;
 // 		activeInput->setColor(activeInput->inactiveColor);
 // 		if (activeInput->cursorPlane->ID)
-// 			activeInput->removeChild(activeInput->cursorPlane->ID);
+// 			activeInput->removeEntity(activeInput->cursorPlane->ID);
 // 		activeInput = 0;
 // 	}
 // };
@@ -302,7 +302,7 @@ using namespace zg::entities;
 // 	{
 // 	_showPlaceholder:
 // 		showTextView(placeholderTextView);
-// 		removeChild(cursorPlane->ID);
+// 		removeEntity(cursorPlane->ID);
 // 	}
 // 	else
 // 	{
@@ -347,7 +347,7 @@ using namespace zg::entities;
 // 		cursorPlanePosition.x = glm::clamp(cursorPlanePosition.x, 0.0f, inputWidthNDCMinusPadding + (NDCPadding / 2));
 // 		if (!cursorPlane->ID)
 // 		{
-// 			addChild(cursorPlane);
+// 			addEntity(cursorPlane);
 // 		}
 // 		// auto &uvs = textViewRef.uvs;
 // 		// if (textViewSizeBeforeNDC.x <= inputSizeBeforeNDCMinusPadding.x)

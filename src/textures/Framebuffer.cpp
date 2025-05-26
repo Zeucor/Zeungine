@@ -4,8 +4,8 @@
 #include <zg/textures/FramebufferFactory.hpp>
 #include <zg/textures/Texture.hpp>
 using namespace zg::textures;
-Framebuffer::Framebuffer(IRenderer* iRenderer, const std::vector<TextureAttachmentPair>& textureAttachmentPairs) :
-	iRenderer(iRenderer), textureAttachmentPairs(textureAttachmentPairs)
+Framebuffer::Framebuffer(IRenderer* iRenderer, const std::vector<TextureAttachmentPair>& textureAttachmentPairs, const BlendState& blendState) :
+	iRenderer(iRenderer), textureAttachmentPairs(textureAttachmentPairs), blendState(blendState)
 {
 	FramebufferFactory::initFramebuffer(*this);
 }

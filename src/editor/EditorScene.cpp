@@ -311,7 +311,7 @@ using namespace zg::strings;
 // 	// 												 addEntity(newProjectDialog);
 // 	// 												 activeDialog = newProjectDialog;
 // 	// 												 bvh->removeEntity(*this, *toolbar->fileDropdown);
-// 	// 												 toolbar->file->removeChild(toolbar->fileDropdownID);
+// 	// 												 toolbar->file->removeEntity(toolbar->fileDropdownID);
 // 	// 											 });
 // 	// fileDropdown.addOption("Open Project",
 // 	// 											 [&]()
@@ -319,7 +319,7 @@ using namespace zg::strings;
 // 	// 												 addEntity(openProjectDialog);
 // 	// 												 activeDialog = openProjectDialog;
 // 	// 												 bvh->removeEntity(*this, *toolbar->fileDropdown);
-// 	// 												 toolbar->file->removeChild(toolbar->fileDropdownID);
+// 	// 												 toolbar->file->removeEntity(toolbar->fileDropdownID);
 // 	// 											 });
 // 	// fileDropdown.addOption("Save", []() {
 

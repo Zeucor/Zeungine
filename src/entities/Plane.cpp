@@ -17,7 +17,8 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string nam
             color,
             0
         },
-        .info = [](auto&) -> MeshInfo {
+        .info = [a = color.a](auto& entity) -> MeshInfo {
+            ((Entity&)entity).isTransparent = (a < 1.f);
             return  {};
         },
         .constants = mergedConstants

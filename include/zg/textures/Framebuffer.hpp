@@ -1,6 +1,7 @@
 #pragma once
 #include <zg/glm.hpp>
 #include "../common.hpp"
+#include "BlendState.hpp"
 namespace zg
 {
 	struct Window;
@@ -23,6 +24,7 @@ namespace zg::textures
 		using TextureAttachmentPair = std::pair<std::shared_ptr<Texture>, AttachmentType>;
 		IRenderer* iRenderer = 0;
 		std::vector<TextureAttachmentPair> textureAttachmentPairs;
+		BlendState blendState;
 		glm::vec4 clearColor = glm::vec4(0);
 		size_t sceneID = 0;
 		void* rendererData = 0;
@@ -98,7 +100,7 @@ namespace zg::textures
 			}
 			return 0;
 		}
-		Framebuffer(IRenderer* iRenderer, const std::vector<TextureAttachmentPair>& textureAttachmentPairs);
+		Framebuffer(IRenderer* iRenderer, const std::vector<TextureAttachmentPair>& textureAttachmentPairs, const BlendState& blendState = {});
 		~Framebuffer();
 		void bind() const;
 		void unbind();

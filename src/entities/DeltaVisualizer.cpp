@@ -74,7 +74,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
 					auto curveInfo = zg::entities::NDParametricCurveFactory<2>(
 						glm::vec3(0, 0, 0.15), {1, 0, 0, 0}, glm::vec3(1), glm::vec4(1, 1, 1, 1), constants, "Delta Visualizer Curve", size.y / 128.f,
 						curvePoints);
-					auto curve_tuple = entity.addChild(curveInfo);
+					auto curve_tuple = entity.addEntity(curveInfo);
                     curveID = std::get<KEY_ID_VECTOR_ID_INDEX>(curve_tuple);
                     return;
 				}
@@ -129,12 +129,12 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
                 auto& scene = Registry::GetSingleton().getScene(entity.INDEX_STACK);
                 auto deltaTextPosition = glm::vec3((size.x / 2.f) - (lastDeltaTextSize.x * lastDeltaTextScale.x),
                 (-size.y / 3.f) - (lastDeltaTextSize.y * lastDeltaTextScale.y), 0.15);
-				robotoRegular.stringToEntity(
+				robotoRegular.stringToHost(
 					lastDeltaTextString,
 					deltaTextPosition,
 					glm::vec4(0.369, 0.760, 0.564, 1), glm::quat(1, 0, 0, 0), lastDeltaTextScale, lastDeltaTextFontsize,
 					lastDeltaTextLineheight, lastDeltaTextSize * (glm::vec2(lastDeltaTextScale) + glm::vec2(1e-3f)),
-					lastDeltaTextBreakstyle, scene, entity, lastDeltaTextEntities, lastDeltaTextCursorIndex, lastDeltaTextCursor);
+					lastDeltaTextBreakstyle, entity, lastDeltaTextEntities, lastDeltaTextCursorIndex, lastDeltaTextCursor);
                 // update thisYText
                 std::string thisYTextString = "Y: " + std::to_string(thisY);
                 float thisYTextFontsize = 42, thisYTextLineheight = 0;
@@ -147,12 +147,12 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
                                                                         thisYTextBounds, thisYTextBreakstyle);
                 auto yTextPosition = glm::vec3((size.x / 2.f) - (thisYTextSize.x * thisYTextScale.x),
                 deltaTextPosition.y - (thisYTextSize.y * thisYTextScale.y), 0.15);
-                robotoRegular.stringToEntity(
+                robotoRegular.stringToHost(
                     thisYTextString,
                     yTextPosition,
                     glm::vec4(0.369, 0.760, 0.564, 1), glm::quat(1, 0, 0, 0), thisYTextScale, thisYTextFontsize,
                     thisYTextLineheight, thisYTextSize * (glm::vec2(thisYTextScale) + glm::vec2(1e-3f)),
-                    thisYTextBreakstyle, scene, entity, thisYTextEntities, thisYTextCursorIndex, thisYTextCursor);
+                    thisYTextBreakstyle, entity, thisYTextEntities, thisYTextCursorIndex, thisYTextCursor);
 			}
         },
         .onAddedFunction = [constants, targetDeltaPointer, currentDeltaPointer, size, frontFace](auto& entity)
@@ -201,22 +201,22 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
             //                                             glm::vec3(0, 1.0, -0.1), angle, glm::vec3(1),
             //                                             glm::vec2(5.1, 2.0f), 0.06f,
             //                                             constants);
-            // entity.addChild(frameCreateInfo);
+            // entity.addEntity(frameCreateInfo);
             auto medianCreateInfo = entities::PlaneFactory(glm::vec4(0.208, 0.990, 0.586, 1.f), "Window Curve Median",
                                                         glm::vec3(0, 0, 0.05), angle,
                                                         glm::vec3(size.x, size.y / 32.f, 1.f),
                                                         constants);
-            entity.addChild(medianCreateInfo);
+            entity.addEntity(medianCreateInfo);
             auto overworkCreateInfo = entities::PlaneFactory(glm::vec4(0.868, 0.960, 0.0384, 1.f), "Window Curve Overwork",
                                                             glm::vec3(0, (size.y / 3.f) - (size.y / 64.f), 0.05), angle,
                                                             glm::vec3(size.x, size.y / 32.f, 1.f),
                                                             constants);
-            entity.addChild(overworkCreateInfo);
+            entity.addEntity(overworkCreateInfo);
             auto underworkCreateInfo = entities::PlaneFactory(glm::vec4(0.700, 0.715, 1.00, 1.f), "Window Curve Underwork",
                                                             glm::vec3(0, (-size.y / 3.f) + (size.y / 64.f), 0.05), angle,
                                                             glm::vec3(size.x, size.y / 32.f, 1.f),
                                                             constants);
-            entity.addChild(underworkCreateInfo);
+            entity.addEntity(underworkCreateInfo);
             //
             std::string frametimeString = "Frametime: " + std::to_string(*targetDeltaPointer);
             float frametimeFontsize = 42, frametimeLineheight = 0;
@@ -226,15 +226,15 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
             auto frametimeSize = robotoRegular.stringSize(frametimeString, frametimeFontsize, frametimeLineheight,
                                                                                                         frametimeBounds, frametimeBreakstyle);
             auto& scene = Registry::GetSingleton().getScene(entity.INDEX_STACK);
-            robotoRegular.stringToEntity(
+            robotoRegular.stringToHost(
                 frametimeString,
                 glm::vec3((size.x / 2.f) - (frametimeSize.x * frametimeScale.x),
                                     ((frametimeLineheight * frametimeScale.y) / 2.f), +0.15),
                 glm::vec4(0.869, 0.860, 0.864, 1), angle, frametimeScale, frametimeFontsize, frametimeLineheight,
-                frametimeSize * (glm::vec2(frametimeScale) + glm::vec2(1e-3f)), frametimeBreakstyle, scene, entity,
+                frametimeSize * (glm::vec2(frametimeScale) + glm::vec2(1e-3f)), frametimeBreakstyle, entity,
                 frametimeEntities, frametimeCursorIndex, frametimeCursor);
             auto currentPointInfo = entities::PlaneFactory(glm::vec4(0.9, 0.2, 0.4, 1), "Delta Visualizer Current Point", glm::vec3(0), glm::quat(1, 0, 0, 0), glm::vec3(size.x / 25.f, size.x / 25.f, 1.f), constants, frontFace);
-            auto currentPoint_tuple = entity.addChild(currentPointInfo);
+            auto currentPoint_tuple = entity.addEntity(currentPointInfo);
             currentPoint = std::get<KEY_ID_VECTOR_ID_INDEX>(currentPoint_tuple);
         },
         .onRemovedFunction = [](auto& entity)

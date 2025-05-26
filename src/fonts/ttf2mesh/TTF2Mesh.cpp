@@ -447,7 +447,7 @@ _addGlyph:
 					// {
 					// 	return colors;
 					// };
-                    auto glyph_tuple = entity.addChild(info);
+                    auto glyph_tuple = entity.addEntity(info);
 					existingAndUpdatedGlyphIDs.push_back(std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
 					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
 					glyph.VALUE = codepoint;
@@ -462,7 +462,7 @@ _addGlyph:
 				auto& glyphID = existingAndUpdatedGlyphIDs[iterator.index];
 				if (glyphID)
 				{
-					entity.removeChild(glyphID);
+					entity.removeEntity(glyphID);
 					glyphID = 0;
 				}
 			}
@@ -485,7 +485,7 @@ _addGlyph:
 	codepointIndex = iterator.getCurrentCodepointIndex();
 	for (auto i = existingAndUpdatedGlyphIDs.size() - 1; i >= codepointIndex; i--)
 	{
-		entity.removeChild(existingAndUpdatedGlyphIDs.back());
+		entity.removeEntity(existingAndUpdatedGlyphIDs.back());
 		existingAndUpdatedGlyphIDs.erase(existingAndUpdatedGlyphIDs.end() - 1);
 	}
 	// if (cursorIndex == codepointIndex + 1)

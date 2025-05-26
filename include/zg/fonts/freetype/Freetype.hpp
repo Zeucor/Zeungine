@@ -43,14 +43,10 @@ namespace zg::fonts::freetype
 												 enums::EBreakStyle breakStyle = enums::EBreakStyle::None,
 												 const std::shared_ptr<textures::Framebuffer>& framebufferPointer = {},
 												 const std::shared_ptr<Scene>& scenePointer = {});
-		void stringToScene(const std::string_view string, glm::vec3 position, glm::vec4 color, glm::quat _rotation,
-											 glm::vec3 _scale, float fontSize, float& lineHeight, glm::vec2 bounds,
-											 enums::EBreakStyle breakStyle, Scene& scene,
-											 std::vector<size_t>& existingAndUpdatedGlyphIDs, int64_t cursorIndex,
-											 size_t& cursor);
-		void stringToEntity(const std::string_view string, glm::vec3 position, glm::vec4 color, glm::quat _rotation,
+		template <typename HostT>
+		void stringToHost(const std::string_view string, glm::vec3 position, glm::vec4 color, glm::quat _rotation,
 												glm::vec3 _scale, float fontSize, float& lineHeight, glm::vec2 bounds,
-												enums::EBreakStyle breakStyle, Scene& scene, Entity& entity,
+												enums::EBreakStyle breakStyle, HostT& host,
 												std::vector<size_t>& existingAndUpdatedGlyphIDs, int64_t cursorIndex,
 												size_t& cursor);
 		FreetypeCharacter& getCharacter(float codepoint, float fontSize);
