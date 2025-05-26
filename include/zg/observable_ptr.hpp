@@ -1,5 +1,5 @@
 #pragma once
-#include <malloc.h>
+#include <cstdlib>
 #include <functional>
 #include <utility>
 #include <iostream>
