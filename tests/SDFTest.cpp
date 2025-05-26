@@ -31,7 +31,7 @@ int main()
         .windowY = 0,
         .borderless = true,
         .vsync = false,
-        .framerate = 200
+        .framerate = 250
     };
     auto window_tuple = Registry::GetSingleton().addWindow(windowInfo);
     auto& window = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(window_tuple);
