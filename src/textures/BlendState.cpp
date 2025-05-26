@@ -21,3 +21,10 @@ BlendState BlendState::Text = {
     BlendFactor::SrcAlpha,
     BlendFactor::OneMinusSrcAlpha
 };
+BlendState BlendState::SrcAlpha = {
+    true,
+    textures::BlendFactor::SrcAlpha,
+    textures::BlendFactor::OneMinusSrcAlpha,
+    textures::BlendFactor::SrcAlpha,
+    textures::BlendFactor::OneMinusSrcAlpha
+};

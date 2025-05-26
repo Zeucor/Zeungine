@@ -85,8 +85,6 @@ namespace zg
 		virtual void preBeginRenderPass() = 0;
 		virtual void beginRenderPass() = 0;
 		virtual void postRenderPass() = 0;
-		virtual void beginMainFramebuffer() = 0;
-		virtual void postMainFramebuffer() = 0;
 		virtual void clearColor(glm::vec4 color) = 0;
 		virtual void clear() = 0;
 		virtual void viewport(glm::ivec4 vp) const = 0;

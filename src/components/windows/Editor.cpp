@@ -143,7 +143,8 @@ SceneCreateInfo EditorSceneFactory()
         .onDetachedFunction = [](auto& scene) {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             window.removeAnyKeyPressHandler(scene.template getData<size_t>("KeyPressID"));
-        }
+        },
+        .blendState = textures::BlendState::Layout
     };
     return info;
 }

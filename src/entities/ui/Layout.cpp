@@ -118,7 +118,8 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
                         child.projectionPointer = projection;
                 }
                 child.skipRender = skip;
-                setSkip(child, skip);
+                if (child.typeName != "Layout")
+                    setSkip(child, skip);
             }
         };
         auto& scene = Registry::GetSingleton().getScene(entity.INDEX_STACK);

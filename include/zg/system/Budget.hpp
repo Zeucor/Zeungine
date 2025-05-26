@@ -322,7 +322,7 @@ namespace zg::budget
 		{
 			__now = NANO_TIMEPOINT_CAST(SYS_CLOCK::now());
 			auto mod = (__now.time_since_epoch().count() % m_budgetCountNs);
-			auto nsQuantized = (mod > 2'000'000) ? SecondsDuration(m_budgetCountNs - mod) : SecondsDuration(0);
+			auto nsQuantized = SecondsDuration(m_budgetCountNs - mod);
 			m_IsZgBudget = nsQuantized;
 			m_IsNextBudgetWakeAtTimePoint = NANO_TIMEPOINT_CAST(__now + m_IsZgBudget);
 			return __now;

@@ -73,7 +73,7 @@ Scene::Scene(const SceneCreateInfo& info) :
 				{keyedTextures[0].second, textures::Framebuffer::AttachmentType::Color},
 				{keyedTextures[1].second, textures::Framebuffer::AttachmentType::Depth}
 			};
-			framebuffer = std::make_shared<textures::Framebuffer>(window.iRenderer, attachments, textures::BlendState::Layout);
+			framebuffer = std::make_shared<textures::Framebuffer>(window.iRenderer, attachments, info.blendState);
 		}
 		break;
 	case 1:
@@ -104,7 +104,7 @@ Scene::Scene(const SceneCreateInfo& info) :
 		break;
 	case 2:
 		framebuffer =
-			std::make_shared<textures::Framebuffer>(iRenderer, generateTexturesFromAttachments(info.frameBufferAttachments), textures::BlendState::Layout);
+			std::make_shared<textures::Framebuffer>(iRenderer, generateTexturesFromAttachments(info.frameBufferAttachments), info.blendState);
 		break;
 	}
 	framebuffer->sceneID = ID;
@@ -729,7 +729,7 @@ Serial& deserialize(Serial& serial, Scene& scene)
 			serial >> attachmentType;
 			textureAttachmentPairs.emplace_back(scene.keyedTextures[i].second, attachmentType);
 		}
-		scene.framebuffer = std::make_shared<zg::textures::Framebuffer>(scene.iRenderer, textureAttachmentPairs, textures::BlendState::Layout);
+		scene.framebuffer = std::make_shared<zg::textures::Framebuffer>(scene.iRenderer, textureAttachmentPairs, textures::BlendState::SrcAlpha);
 	}
 	serial >> scene.fsq >> scene.viewPointer;
 	return serial;

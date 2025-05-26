@@ -224,13 +224,7 @@ void zg::Window::startWindow()
 	mainFramebuffer = std::make_shared<textures::Framebuffer>(iRenderer, std::vector<textures::Framebuffer::TextureAttachmentPair>{
 		{mainColorTexture, textures::Framebuffer::AttachmentType::Color}//,
 		// {mainDepthTexture, textures::Framebuffer::AttachmentType::Depth}
-	}, textures::BlendState{
-		.enable = true,
-		.srcColor = textures::BlendFactor::SrcAlpha,
-		.dstColor = textures::BlendFactor::OneMinusSrcAlpha,
-		.srcAlpha = textures::BlendFactor::SrcAlpha,
-		.dstAlpha = textures::BlendFactor::OneMinusSrcAlpha
-	});
+	}, textures::BlendState::SrcAlpha);
 	postProcessingPipeline.textureRegistry.registerOutput((std::numeric_limits<float>::lowest)(), "ColorTexture", mainColorTexture);
 	// postProcessingPipeline.textureRegistry.registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthTexture);
 	runRunnables();
@@ -258,26 +252,6 @@ void zg::Window::startWindow()
 				updateMouse();
 				update();
 			}
-			// auto childWindowsSize = childWindows.size();
-			// auto childWindowsData = childWindows.data();
-			// for (size_t index = 0; index < childWindowsSize; ++index)
-			// {
-			// 	auto& childWindow = childWindowsData[index];
-			// 	if (childWindow.minimized)
-			// 		continue;
-			// 	childWindow.render();
-			// 	framebudget.tick();
-			// }
-			// iRendererRef.beginMainFramebuffer();
-			// for (size_t index = 0; index < childWindowsSize; ++index)
-			// {
-			// 	auto& childWindow = childWindowsData[index];
-			// 	if (childWindow.minimized)
-			// 		continue;
-			// 	framebudget.tick();
-			// 	childWindow.framebufferPlane->render();
-			// }
-			// iRendererRef.postMainFramebuffer();
 			{
 				ZGZoneScopedN("mainLoop:renderPass");
 				preRender();

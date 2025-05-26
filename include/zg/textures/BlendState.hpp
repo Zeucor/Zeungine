@@ -43,5 +43,6 @@ namespace zg::textures
         static BlendState MainFramebuffer;
         static BlendState Layout;
         static BlendState Text;
+		static BlendState SrcAlpha;
 	};
 }

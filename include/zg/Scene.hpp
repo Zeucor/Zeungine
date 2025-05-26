@@ -21,6 +21,7 @@
 #include "FullscreenQuad.hpp"
 #include "PostProcessingPipeline.hpp"
 #include "InstancedDraw.hpp"
+#include "textures/BlendState.hpp"
 namespace zg
 {
 	enum class SceneDrawMode
@@ -215,5 +216,6 @@ namespace zg
 		size_t ID;
 		size_t* INDEX;
 		std::vector<size_t*> INDEX_STACK;
+		textures::BlendState blendState = textures::BlendState::SrcAlpha;
 	};
 } // namespace zg
