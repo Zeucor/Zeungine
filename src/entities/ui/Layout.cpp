@@ -16,12 +16,12 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
     );
     auto color_texture = std::make_shared<textures::Texture>(irenderer, glm::ivec4(texSize.x, texSize.y, 1, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true);
     color_texture->isTransparent = true;
-    auto depth_texture = std::make_shared<textures::Texture>(irenderer, glm::ivec4(texSize.x, texSize.y, 1, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true);
+    // auto depth_texture = std::make_shared<textures::Texture>(irenderer, glm::ivec4(texSize.x, texSize.y, 1, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true);
     auto layout_info = entities::PlaneFactory(color_texture, name + "Plane", position, rotate_identity, size);
     layout_info.typeName = "Layout";
     layout_info.dataMap = {
         {"ColorTexture", color_texture},
-        {"DepthTexture", depth_texture},
+        // {"DepthTexture", depth_texture},
         {"oldOpaqueHash", (size_t)0},
         {"oldTransparentHash", (size_t)0}
     };
@@ -81,10 +81,10 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
     };
     layout_info.onAddedFunction = [size, blendState](auto& entity) mutable {
         auto& color_texture = entity.template getData<std::shared_ptr<textures::Texture>>("ColorTexture");
-        auto& depth_texture = entity.template getData<std::shared_ptr<textures::Texture>>("DepthTexture");
+        // auto& depth_texture = entity.template getData<std::shared_ptr<textures::Texture>>("DepthTexture");
         std::vector<textures::Framebuffer::TextureAttachmentPair> textureAttachmentPairs({
-            {color_texture, textures::Framebuffer::AttachmentType::Color},
-            {depth_texture, textures::Framebuffer::AttachmentType::Depth}
+            {color_texture, textures::Framebuffer::AttachmentType::Color}//,
+            // {depth_texture, textures::Framebuffer::AttachmentType::Depth}
         });
         auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
         auto framebuffer = std::make_shared<textures::Framebuffer>(window.iRenderer, textureAttachmentPairs, blendState);
