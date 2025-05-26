@@ -25,15 +25,50 @@ if(NOT msdf_atlas_gen_POPULATED)
     FetchContent_Populate(msdf_atlas_gen)
 endif()
 
+
+# Generate msdfgen-config.h
+set(MSDFGEN_CONFIG_IN_PATH "${msdf_atlas_gen_SOURCE_DIR}/msdfgen/cmake/msdfgen-config.h.in")
+set(MSDFGEN_CONFIG_OUT_PATH "${msdf_atlas_gen_SOURCE_DIR}/msdfgen/msdfgen-config.h")
+if(BUILD_SHARED_LIBS AND WIN32)
+    set(MSDFGEN_PUBLIC_MACRO_VALUE " __declspec(dllimport)")
+else()
+    set(MSDFGEN_PUBLIC_MACRO_VALUE "")
+endif()
+set(MSDFGEN_ADDITIONAL_DEFINES "")
+set(MSDFGEN_VERSION "1.12.0")
+set(MSDFGEN_VERSION_MAJOR "1")
+set(MSDFGEN_VERSION_MINOR "12")
+set(MSDFGEN_VERSION_REVISION "0")
+string(TIMESTAMP MSDFGEN_COPYRIGHT_YEAR "%Y")
+set(MSDFGEN_ADDITIONAL_DEFINES "${MSDFGEN_ADDITIONAL_DEFINES}\n#define MSDFGEN_USE_CPP11")
+set(MSDFGEN_ADDITIONAL_DEFINES "${MSDFGEN_ADDITIONAL_DEFINES}\n#define MSDFGEN_EXTENSIONS")
+set(MSDFGEN_ADDITIONAL_DEFINES "${MSDFGEN_ADDITIONAL_DEFINES}\n#define MSDFGEN_DISABLE_SVG")
+set(MSDFGEN_ADDITIONAL_DEFINES "${MSDFGEN_ADDITIONAL_DEFINES}\n#define MSDFGEN_USE_LIBPNG")
+configure_file(${MSDFGEN_CONFIG_IN_PATH} ${MSDFGEN_CONFIG_OUT_PATH})
+
 file(GLOB MSDF_ATLAS_GEN_SOURCES "${msdf_atlas_gen_SOURCE_DIR}/msdf-atlas-gen/*.cpp")
+
 add_library(msdf_atlas_gen STATIC ${MSDF_ATLAS_GEN_SOURCES})
+
 target_include_directories(msdf_atlas_gen PRIVATE "${msdf_atlas_gen_SOURCE_DIR}/msdf-atlas-gen")
 target_include_directories(msdf_atlas_gen PRIVATE "${msdf_atlas_gen_SOURCE_DIR}/msdfgen")
+target_include_directories(msdf_atlas_gen PRIVATE "${msdf_atlas_gen_SOURCE_DIR}/artery-font-format")
+target_include_directories(msdf_atlas_gen PRIVATE "${msdf_atlas_gen_SOURCE_DIR}")
+
 set_target_properties(msdf_atlas_gen PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(msdf_atlas_gen PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(msdf_atlas_gen PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(msdf_atlas_gen PROPERTIES MINSIZEREL_POSTFIX "")
 
+file(GLOB MSDFGEN_SOURCES "${msdf_atlas_gen_SOURCE_DIR}/msdfgen/core/*.cpp" "${msdf_atlas_gen_SOURCE_DIR}/msdfgen/ext/*.cpp")
+
+add_library(msdfgen STATIC ${MSDFGEN_SOURCES})
+
+target_include_directories(msdfgen PRIVATE "${msdf_atlas_gen_SOURCE_DIR}")
+set_target_properties(msdfgen PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(msdfgen PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(msdfgen PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(msdfgen PROPERTIES MINSIZEREL_POSTFIX "")
 
 # MC33++
 
@@ -727,6 +762,11 @@ set_target_properties(png PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(png PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(png PROPERTIES MINSIZEREL_POSTFIX "")
 
+# msdf_atlas_gen
+
+target_include_directories(msdf_atlas_gen PRIVATE "${png_SOURCE_DIR}")
+target_include_directories(msdfgen PRIVATE "${png_SOURCE_DIR}")
+
 # OpenSSL
 
 if(NOT LINK_SYS_OPENSSL)
@@ -930,6 +970,10 @@ set_target_properties(freetype PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(freetype PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(freetype PROPERTIES MINSIZEREL_POSTFIX "")
+
+# msdfgen
+
+target_include_directories(msdfgen PRIVATE ${freetype_SOURCE_DIR}/include)
 
 # BVH
 

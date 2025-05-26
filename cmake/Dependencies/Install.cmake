@@ -51,7 +51,7 @@ set(ZG_TARGETS_TO_INSTALL
     ttf2mesh assimp
     rtmidi
     tinyfiledialogs
-    mc33 msdf_atlas_gen
+    mc33 msdfgen msdf_atlas_gen
 )
 if(ENABLE_TRACY)
     set(ZG_TARGET_TO_INSTALL

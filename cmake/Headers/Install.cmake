@@ -20,6 +20,7 @@ set(tracy_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/tr
 set(cgal_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/cgal-install")
 set(mc33_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/mc33-src")
 set(msdf_atlas_gen_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/msdf_atlas_gen-src")
+set(png_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/png-src")
 
 set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")
 set(CPACK_COMPONENT_HEADERS_GROUP "Zeungine")
@@ -36,17 +37,28 @@ install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ..
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT CMakeConfig)
 
+# png
+install(FILES ${png_SOURCE_DIR}/png.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
+    COMPONENT Headers)
 # msdf_atlas_gen
+
 install(FILES ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/msdfgen.h ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/msdfgen-ext.h
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT Headers)
 
+install(FILES ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/msdfgen-config.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}/msdfgen
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
+    COMPONENT Headers)
+
 install(DIRECTORY ${msdf_atlas_gen_SOURCE_DIR}/msdf-atlas-gen
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
-    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT Headers
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ)
 
 # mc33
 install(FILES ${mc33_SOURCE_DIR}/include/MC33.h DESTINATION ${ZG_INC_INSTALL_PREFIX}
