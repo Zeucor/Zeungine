@@ -65,10 +65,10 @@ SceneCreateInfo EditorSceneFactory()
                     animatePanel(window, entity.ID, start_position, glm::vec3(0.0, 0.5, 0));
                 })
                 .add_layout("Window Panel Layout", LayoutDimension::Vertical, {1.0, 0.5, 1}, textures::BlendState::Text)
-                .add_text("Window: " + window.title, 40.f)
-                .add_text("W: " + std::to_string(uint32_t(window.windowWidth)) + ", H: " + std::to_string(uint32_t(window.windowHeight)), 28.f)
-                .add_text("Borderless: " + std::to_string(window.borderless), 28.f)
-                .add_text("Target FPS: " + std::to_string(window.framerate), 28.f)
+                .add_text("Window: " + window.title, 42.f)
+                .add_text("W: " + std::to_string(uint32_t(window.windowWidth)) + ", H: " + std::to_string(uint32_t(window.windowHeight)), 32.f)
+                .add_text("Borderless: " + std::to_string(window.borderless), 32.f)
+                .add_text("Target FPS: " + std::to_string(window.framerate), 32.f)
                 .move_up_stack() // above panel layout
                 .move_up_stack() // above panel
                 .add_layout("Spacer Layout", LayoutDimension::Vertical, {0.01, 1.0, 1})
