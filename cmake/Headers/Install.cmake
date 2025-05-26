@@ -19,6 +19,7 @@ set(tinyfiledialogs_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-releas
 set(tracy_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/tracy-src")
 set(cgal_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/cgal-install")
 set(mc33_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/mc33-src")
+set(msdf_atlas_gen_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/msdf_atlas_gen-src")
 
 set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")
 set(CPACK_COMPONENT_HEADERS_GROUP "Zeungine")
@@ -34,6 +35,18 @@ set(CPACK_COMPONENT_CMAKECONFIG_GROUP "Zeungine")
 install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ../Targets.cmake DESTINATION ${ZG_SHR_INSTALL_PREFIX}
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT CMakeConfig)
+
+# msdf_atlas_gen
+install(FILES ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/msdfgen.h ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/msdfgen-ext.h
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
+    COMPONENT Headers)
+
+install(DIRECTORY ${msdf_atlas_gen_SOURCE_DIR}/msdf-atlas-gen
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
+    COMPONENT Headers
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 
 # mc33
 install(FILES ${mc33_SOURCE_DIR}/include/MC33.h DESTINATION ${ZG_INC_INSTALL_PREFIX}

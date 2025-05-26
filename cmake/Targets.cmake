@@ -22,6 +22,9 @@ zg_setup_target(rtmidi STATIC
 zg_setup_target(mc33 STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" mc33 mc33 "${STATIC_ZG_LIB_SUFFIX}" ON)
+zg_setup_target(msdf_atlas_gen STATIC
+	"${ZG_LIB_INSTALL_PREFIX_ABS}"
+	"${ZG_LIB_PREFIX}" msdf_atlas_gen msdf_atlas_gen "${STATIC_ZG_LIB_SUFFIX}" ON)
 zg_setup_target(tinyfiledialogs STATIC
 	"${ZG_LIB_INSTALL_PREFIX_ABS}"
 	"${ZG_LIB_PREFIX}" tinyfiledialogs tinyfiledialogs "${STATIC_ZG_LIB_SUFFIX}" ON)

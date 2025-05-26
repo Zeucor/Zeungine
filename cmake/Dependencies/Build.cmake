@@ -14,7 +14,29 @@ endif()
 
 #New Dependency Declarations to the top!
 
+# msdf-atlas-gen
+
+message(STATUS "FetchContent: msdf_atlas_gen")
+FetchContent_Declare(msdf_atlas_gen
+    GIT_REPOSITORY https://github.com/Chlumsky/msdf-atlas-gen.git
+    GIT_TAG master)
+FetchContent_GetProperties(msdf_atlas_gen)
+if(NOT msdf_atlas_gen_POPULATED)
+    FetchContent_Populate(msdf_atlas_gen)
+endif()
+
+file(GLOB MSDF_ATLAS_GEN_SOURCES "${msdf_atlas_gen_SOURCE_DIR}/msdf-atlas-gen/*.cpp")
+add_library(msdf_atlas_gen STATIC ${MSDF_ATLAS_GEN_SOURCES})
+target_include_directories(msdf_atlas_gen PRIVATE "${msdf_atlas_gen_SOURCE_DIR}/msdf-atlas-gen")
+target_include_directories(msdf_atlas_gen PRIVATE "${msdf_atlas_gen_SOURCE_DIR}/msdfgen")
+set_target_properties(msdf_atlas_gen PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(msdf_atlas_gen PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(msdf_atlas_gen PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(msdf_atlas_gen PROPERTIES MINSIZEREL_POSTFIX "")
+
+
 # MC33++
+
 message(STATUS "FetchContent: mc33")
 FetchContent_Declare(mc33
     GIT_REPOSITORY https://github.com/ZeunO8/MC33_cpp_library.git
