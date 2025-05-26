@@ -905,8 +905,3 @@ FetchContent_Declare(stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
     GIT_TAG master)
 FetchContent_MakeAvailable(stb)
-
-set_target_properties(zlibstatic PROPERTIES DEBUG_POSTFIX "")
-set_target_properties(zlibstatic PROPERTIES RELEASE_POSTFIX "")
-set_target_properties(zlibstatic PROPERTIES RELWITHDEBINFO_POSTFIX "")
-set_target_properties(zlibstatic PROPERTIES MINSIZEREL_POSTFIX "")
