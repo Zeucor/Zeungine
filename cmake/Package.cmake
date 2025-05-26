@@ -23,7 +23,7 @@ function(crossplatform_cpack_helper
     WINDOWS_PREFERRED_INSTALL_ROOT      # i.e. C:
     WINDOWS_UNINSTALL_NAME              # i.e. ${TARGET_NAME}-uninstaller
     MACOS_BUNDLE_ID                     # i.e. com.projectorg.projectname
-    COMPONENTS_ALL                      # i.e. core tool-is headers cmakeconfig dependencies
+    COMPONENTS_ALL                      # i.e. core tool-is headers CMakeConfig dependencies
 )
     set(CPACK_OUTPUT_FILE_PREFIX "${OUTPUT_DIRECTORY}")
     if(DEB)

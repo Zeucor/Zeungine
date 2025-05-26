@@ -22,5 +22,5 @@ crossplatform_cpack_helper(
     "C:"                                             # WINDOWS_PREFERRED_INSTALL_ROOT
     "zeungine-headers-uninstaller"                   # WINDOWS_UNINSTALL_NAME
     ""                                               # MACOS_BUNDLE_ID
-    "headers cmakeconfig"
+    "headers CMakeConfig"
 )

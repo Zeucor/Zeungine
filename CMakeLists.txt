@@ -18,12 +18,11 @@ if(ZG_INSTALL)
 endif()
 if(ZG_PACKAGE)
     include(CPackComponent)
-    cpack_add_component(core)
-    # cpack_add_component(zedit)
-    cpack_add_component(headers)
-    cpack_add_component(cmakeconfig)
-    cpack_add_component(dependencies)
-    cpack_add_component(tests)
+    cpack_add_component(Core)
+    cpack_add_component(Headers)
+    cpack_add_component(CMakeConfig)
+    cpack_add_component(Dependencies)
+    cpack_add_component(Tests)
     include(cmake/Package.cmake)
     crossplatform_cpack_helper(
         ${CMAKE_SOURCE_DIR}/releases
@@ -41,13 +40,13 @@ if(ZG_PACKAGE)
         "Zeucor"
         "Zeun"
         "Zeun"
-        "libgl1-mesa-dri,libx11-6,libvulkan1,libxrandr2,libxfixes3,libxkbcommon-x11-0,libsecret-1-0,libglib2.0-dev,libdrm-dev"
+        "libgl1-mesa-dri,libx11-6,libssl-dev,libvulkan1,libxrandr2,libxfixes3,libxkbcommon-x11-0,libsecret-1-0,libglib2.0-dev,libdrm-dev"
         ""
         "Development/Tools"
         "Program Files\\\\Zeungine"
         "C:"
         "zeungine-uninstaller"
         "dev.zeucor.zeungine"
-        "core;zedit;headers;cmakeconfig;dependencies;tests")
+        "Core;Headers;CMakeConfig;Dependencies;Tests")
     # set(CPACK_NSIS_MENU_LINKS "Release/STATIC/zedit.exe" "ZEdit")
 endif()

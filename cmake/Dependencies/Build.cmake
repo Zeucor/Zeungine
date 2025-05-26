@@ -34,6 +34,7 @@ set_target_properties(mc33 PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(mc33 PROPERTIES MINSIZEREL_POSTFIX "")
 
 # tracy
+
 if(ENABLE_TRACY)
     message(STATUS "FetchContent: tracy")
     set(USE_WAYLAND OFF)
@@ -65,6 +66,8 @@ if(ENABLE_TRACY)
     )
 endif()
 
+# tinyfiledialogs
+
 message(STATUS "FetchContent: tinyfiledialogs")
 FetchContent_Declare(
     tinyfiledialogs
@@ -83,6 +86,8 @@ set_target_properties(tinyfiledialogs PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(tinyfiledialogs PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(tinyfiledialogs PROPERTIES MINSIZEREL_POSTFIX "")
 
+# rtmidi
+
 message(STATUS "FetchContent: rtmidi")
 set(RTMIDI_BUILD_STATIC_LIBS ON)
 set(RTMIDI_BUILD_TESTING OFF)
@@ -97,6 +102,8 @@ set_target_properties(rtmidi PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(rtmidi PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(rtmidi PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(rtmidi PROPERTIES MINSIZEREL_POSTFIX "")
+
+# V-HACD
 
 message(STATUS "FetchContent: V-HACD")
 FetchContent_Declare(
@@ -128,6 +135,8 @@ SET_TARGET_PROPERTIES(assimp PROPERTIES OUTPUT_NAME assimp)
 set_target_properties(assimp PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(assimp PROPERTIES RELEASE_POSTFIX "")
 
+# ttf2mesh
+
 message(STATUS "FetchContent: ttf2mesh")
 FetchContent_Declare(
     ttf2mesh
@@ -148,6 +157,7 @@ set_target_properties(ttf2mesh PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(ttf2mesh PROPERTIES MINSIZEREL_POSTFIX "")
 
 # miniaudio
+
 message(STATUS "FetchContent: miniaudio")
 FetchContent_Declare(
     miniaudio
@@ -167,6 +177,7 @@ set_target_properties(miniaudio PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(miniaudio PROPERTIES MINSIZEREL_POSTFIX "")
 
 # lunasvg & plutovg combined lib
+
 message(STATUS "FetchContent: lunasvg")
 FetchContent_Declare(lunasvg
     GIT_REPOSITORY https://github.com/ZeunO8/lunasvg.git
@@ -200,6 +211,7 @@ set_target_properties(svg PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(svg PROPERTIES MINSIZEREL_POSTFIX "")
 
 # combined spirvheaders, spirv-tools, glslang & shaderc
+
 message(STATUS "FetchContent: sprivheaders")
 FetchContent_Declare(spirvheaders
     GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers.git
@@ -210,6 +222,7 @@ if(NOT spirvheaders_POPULATED)
 endif()
 
 # spriv-tools
+
 message(STATUS "FetchContent: spirvtools")
 FetchContent_Declare(spirvtools
     GIT_REPOSITORY https://github.com/ZeunO8/SPIRV-Tools.git
@@ -230,6 +243,7 @@ file(GLOB SPIRV_TOOLS_SOURCES
     "${spirvtools_SOURCE_DIR}/source/*.cpp")
 
 # glslang
+
 message(STATUS "FetchContent: glslang")
 FetchContent_Declare(glslang
     GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
@@ -259,6 +273,7 @@ file(GLOB GLSLANG_SOURCES
     "${glslang_SOURCE_DIR}/SPIRV/CInterface*.cpp")
 
 # shaderc
+
 message(STATUS "FetchContent: shaderc")
 FetchContent_Declare(shaderc
     GIT_REPOSITORY https://github.com/ZeunO8/shaderc.git
@@ -304,6 +319,7 @@ set_target_properties(glsl PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(glsl PROPERTIES MINSIZEREL_POSTFIX "")
 
 # Jolt
+
 message(STATUS "FetchContent: jolt")
 FetchContent_Declare(jolt
     GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
@@ -323,6 +339,7 @@ set_target_properties(jolt PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(jolt PROPERTIES MINSIZEREL_POSTFIX "")
 
 # zstd
+
 message(STATUS "FetchContent: zstd")
 FetchContent_Declare(zstd
     GIT_REPOSITORY https://github.com/facebook/zstd.git
@@ -346,6 +363,7 @@ set_target_properties(zstd PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(zstd PROPERTIES MINSIZEREL_POSTFIX "")
 
 # zlib
+
 message(STATUS "FetchContent: zlib")
 FetchContent_Declare(zlib
     GIT_REPOSITORY https://github.com/ZeunO8/zlib.git
@@ -382,6 +400,7 @@ set_target_properties(zlib PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(zlib PROPERTIES MINSIZEREL_POSTFIX "")
 
 # bzip2
+
 message(STATUS "FetchContent: bzip2")
 FetchContent_Declare(bzip2
     GIT_REPOSITORY https://github.com/centricular/bzip2.git
@@ -413,6 +432,7 @@ set_target_properties(bzip2 PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(bzip2 PROPERTIES MINSIZEREL_POSTFIX "")
 
 # lzma
+
 message(STATUS "FetchContent: lzma")
 FetchContent_Declare(lzma
     GIT_REPOSITORY https://github.com/ZeunO8/lzma.git
@@ -513,6 +533,7 @@ set_target_properties(lzma PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(lzma PROPERTIES MINSIZEREL_POSTFIX "")
 
 # Boost
+
 message(STATUS "FetchContent: boost")
 FetchContent_Declare(boost
     GIT_REPOSITORY https://github.com/boostorg/boost
@@ -594,6 +615,7 @@ set_target_properties(boost PROPERTIES MINSIZEREL_POSTFIX "")
 # target_include_directories(boost PRIVATE ${MPI_C_INCLUDE_DIRS})
 
 # ExprTK
+
 message(STATUS "FetchContent: exprtk")
 FetchContent_Declare(exprtk
     GIT_REPOSITORY https://github.com/ArashPartow/exprtk.git
@@ -604,6 +626,7 @@ if(NOT exprtk_POPULATED)
 endif()
 
 # brotli
+
 message(STATUS "FetchContent: brotli")
 set(BROTLI_BUNDLED_MODE ON)
 set(BROTLI_DISABLE_TESTS ON)
@@ -625,6 +648,7 @@ set_target_properties(brotlicommon PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(brotlicommon PROPERTIES MINSIZEREL_POSTFIX "")
 
 # harfbuzz
+
 message(STATUS "FetchContent: harfbuzz")
 FetchContent_Declare(harfbuzz
     GIT_REPOSITORY https://github.com/harfbuzz/harfbuzz.git
@@ -636,6 +660,7 @@ set_target_properties(harfbuzz PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(harfbuzz PROPERTIES MINSIZEREL_POSTFIX "")
 
 # png
+
 message(STATUS "FetchContent: png")
 set(PNG_TESTS OFF)
 FetchContent_Declare(png
@@ -681,6 +706,7 @@ set_target_properties(png PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(png PROPERTIES MINSIZEREL_POSTFIX "")
 
 # OpenSSL
+
 if(NOT LINK_SYS_OPENSSL)
     message(STATUS "FetchContent: openssl")
     FetchContent_Declare(openssl
@@ -780,6 +806,7 @@ endif()
 # FetchContent_MakeAvailable(swiftshader)
 
 # FFmpeg
+
 message(STATUS "FetchContent: ffmpeg")
 FetchContent_Declare(ffmpeg
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
@@ -870,6 +897,7 @@ if(BUILD_FFMPEG)
 endif()
 
 # Freetype
+
 message(STATUS "FetchContent: freetype")
 set(SKIP_INSTALL_ALL ON CACHE BOOL "Disable installation for fetched content" FORCE)
 FetchContent_Declare(freetype
@@ -882,6 +910,7 @@ set_target_properties(freetype PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(freetype PROPERTIES MINSIZEREL_POSTFIX "")
 
 # BVH
+
 message(STATUS "FetchContent: bvh")
 FetchContent_Declare(bvh
     GIT_REPOSITORY https://github.com/ZeunO8/bvh.git
@@ -889,6 +918,7 @@ FetchContent_Declare(bvh
 FetchContent_MakeAvailable(bvh)
 
 # glm
+
 message(STATUS "FetchContent: glm")
 FetchContent_Declare(glm
     GIT_REPOSITORY https://github.com/icaven/glm.git
@@ -900,6 +930,7 @@ set_target_properties(glm PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(glm PROPERTIES MINSIZEREL_POSTFIX "")
 
 # STB
+
 message(STATUS "FetchContent: stb")
 FetchContent_Declare(stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
