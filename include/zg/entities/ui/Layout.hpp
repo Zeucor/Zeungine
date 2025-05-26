@@ -115,12 +115,14 @@ namespace zg::entities::ui
             auto& font = *host.template getData<std::shared_ptr<fonts::freetype::FreetypeFont>>("Font");
             auto& textFontSize = entity.template make<float>(textKey + "FontSize", fontSize);
             auto& textLineHeight = entity.template make<float>(textKey + "LineHeight", 0.0f);
-            auto textSize = font.stringSize(text, textFontSize * 2.f, textLineHeight, {0, 0});
-            glm::vec3 textScale(0.5f, 0.5f, 1.f);
+            auto textMultiplier = 4.f;
+            auto textSize = font.stringSize(text, textFontSize * textMultiplier, textLineHeight, {0, 0});
+            auto textScaler = 1.f / textMultiplier;
+            glm::vec3 textScale(textScaler, textScaler, 1.f);
             glm::vec2 scaledSize(textSize);
             if (isNDCSizing)
             {
-                textScale = {(2.f / window.windowWidth / 2.f) * 0.5f, (2.f / window.windowHeight / 2.f) * 0.5f, 1.f};
+                textScale = {(2.f / window.windowWidth / 2.f) * textScaler, (2.f / window.windowHeight / 2.f) * textScaler, 1.f};
                 scaledSize = textSize * glm::vec2(textScale);
             }
             auto entity_size = entity.getBoundingSize();
@@ -135,7 +137,7 @@ namespace zg::entities::ui
             new_position.x -= (scaledSize.x / 2.f);
             new_position.y -= scaledSize.y / 2.f;
             font.stringToHost(text, new_position, {1,1,1,1}, rotate_identity,
-										textScale, textFontSize * 2.f, textLineHeight, scaledSize + glm::vec2(0.001, 0.001),
+										textScale, textFontSize * textMultiplier, textLineHeight, scaledSize + glm::vec2(0.001, 0.001),
 												zg::enums::EBreakStyle::None, backing_entity,
 												textGlyphIDs, textCursorIndex,
 												textCursorID);
