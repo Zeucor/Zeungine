@@ -22,11 +22,11 @@ void Projection::update()
   {
     if (window.iRenderer->renderer == RENDERER_VULKAN)
     {
-      matrix = glm::infinitePerspectiveRH_ZO(glm::radians(fov), (float)window.windowWidth / window.windowHeight, nearPlane);
+      matrix = glm::infinitePerspectiveRH_ZO(glm::radians(fov), (const float&)window.windowWidth / (const float&)window.windowHeight, nearPlane);
     }
     else
     {
-      matrix = glm::infinitePerspectiveRH_NO(glm::radians(fov), (float)window.windowWidth / window.windowHeight, nearPlane);
+      matrix = glm::infinitePerspectiveRH_NO(glm::radians(fov), (const float&)window.windowWidth / (const float&)window.windowHeight, nearPlane);
     }
   }
   else

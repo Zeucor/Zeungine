@@ -46,8 +46,8 @@ SceneComponentCreateInfo components::scenes::EdgeDetectionFactory() {
                     auto& depthSensitivity = component.template getData<float>("internal_depthSensitivity");
 
 
-                    auto screenWidth = shader.iRenderer->platformWindowPointer->renderWindowPointer->windowWidth;
-                    auto screenHeight = shader.iRenderer->platformWindowPointer->renderWindowPointer->windowHeight;
+                    auto& screenWidth = *shader.iRenderer->platformWindowPointer->renderWindowPointer->windowWidth;
+                    auto& screenHeight = *shader.iRenderer->platformWindowPointer->renderWindowPointer->windowHeight;
                     glm::vec2 inverseScreenSize = (screenWidth > 0 && screenHeight > 0) ? glm::vec2(1.0f / screenWidth, 1.0f / screenHeight) : glm::vec2(0.0f);
 
                     // UBO structure remains the same

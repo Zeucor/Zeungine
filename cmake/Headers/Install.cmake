@@ -21,6 +21,7 @@ set(cgal_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/cga
 set(mc33_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/mc33-src")
 set(msdf_atlas_gen_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/msdf_atlas_gen-src")
 set(png_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/png-src")
+set(harfbuzz_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/harfbuzz-src")
 
 set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")
 set(CPACK_COMPONENT_HEADERS_GROUP "Zeungine")
@@ -37,11 +38,21 @@ install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ..
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT CMakeConfig)
 
+# harfbuzz
+
+file(GLOB HARFBUZZ_HEADERS "${harfbuzz_SOURCE_DIR}/src/*.h" "${harfbuzz_SOURCE_DIR}/src/*.hh")
+install(FILES ${HARFBUZZ_HEADERS}
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}/harfbuzz
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
+    COMPONENT Headers)
+
 # png
+
 install(FILES ${png_SOURCE_DIR}/png.h
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT Headers)
+
 # msdf_atlas_gen
 
 install(FILES ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/msdfgen.h ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/msdfgen-ext.h
@@ -55,6 +66,18 @@ install(FILES ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/msdfgen-config.h
     COMPONENT Headers)
 
 install(DIRECTORY ${msdf_atlas_gen_SOURCE_DIR}/msdf-atlas-gen
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    COMPONENT Headers
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ)
+
+install(DIRECTORY ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/core
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    COMPONENT Headers
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+    PERMISSIONS WORLD_READ OWNER_READ GROUP_READ)
+
+install(DIRECTORY ${msdf_atlas_gen_SOURCE_DIR}/msdfgen/ext
     DESTINATION ${ZG_INC_INSTALL_PREFIX}
     COMPONENT Headers
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"

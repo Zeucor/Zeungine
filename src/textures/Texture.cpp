@@ -7,42 +7,46 @@
 using namespace zg::textures;
 Texture::Texture(IRenderer* iRenderer, const glm::ivec4& size, const void* data, const Format& format, const Type& type,
 								 const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling,
-								 AddressMode addressMode) :
+								 AddressMode addressMode, bool flip) :
 		iRenderer(iRenderer), size(size), format(format), type(type), filterType(filterType),
 		isFramebufferAttachment(isFramebufferAttachment),
     multisampling(multisampling),
-	addressMode(addressMode)
+	addressMode(addressMode),
+	flip(flip)
 {
 	TextureFactory::initTexture(*this, data);
 	isTransparent = testIsTransparent(data); // TODO: run this check in other constructors
 }
 Texture::Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::vector<void*> datas, const Format& format,
 								 const Type& type, const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling,
-								 AddressMode addressMode) :
+								 AddressMode addressMode, bool flip) :
 		iRenderer(iRenderer), size(size), format(format), type(type), filterType(filterType),
 		isFramebufferAttachment(isFramebufferAttachment),
     multisampling(multisampling),
-	addressMode(addressMode)
+	addressMode(addressMode),
+	flip(flip)
 {
 	TextureFactory::initTexture(*this, datas);
 }
 Texture::Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::string_view path, const Format& format,
 								 const Type& type, const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling,
-								 AddressMode addressMode) :
+								 AddressMode addressMode, bool flip) :
 		iRenderer(iRenderer), size(size), format(format), type(type), filterType(filterType),
 		isFramebufferAttachment(isFramebufferAttachment),
     multisampling(multisampling),
-	addressMode(addressMode)
+	addressMode(addressMode),
+	flip(flip)
 {
 	TextureFactory::initTexture(*this, path);
 }
 Texture::Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::vector<std::string_view>& paths,
 								 const Format& format, const Type& type, const FilterType& filterType, bool isFramebufferAttachment, Multisampling multisampling,
-								 AddressMode addressMode) :
+								 AddressMode addressMode, bool flip) :
 		iRenderer(iRenderer), size(size), format(format), type(type), filterType(filterType),
 		isFramebufferAttachment(isFramebufferAttachment),
     multisampling(multisampling),
-	addressMode(addressMode)
+	addressMode(addressMode),
+	flip(flip)
 {
 	TextureFactory::initTexture(*this, paths);
 }

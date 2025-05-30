@@ -332,7 +332,7 @@ void InstancedDraw::drawMulti(
         removeUnusedMeshes(uv3s_index_size_map, uv3s);
         auto& projection = *scene.projectionPointer;
         shader.setBlock("CameraPosition", firstMesh, scene.viewPointer->position, 16);
-        shader.setBlock("Viewport", firstMesh, glm::vec4(0, 0, window.windowWidth, window.windowHeight), 16);
+        shader.setBlock("Viewport", firstMesh, glm::vec4(0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight), 16);
         shader.setBlock("Time", firstMesh, scene.updateTime, 4);
 		float nearFar[2] = {
 			projection.nearPlane,

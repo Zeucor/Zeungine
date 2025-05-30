@@ -16,9 +16,9 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseContro
 			auto iRenderer = window.iRenderer;
             auto& deadZonePercent = component.template make<float>("DeadZonePercent", 0.1f);
             auto& lastPosition = component.template make<glm::vec2>("LastPosition", 0.0f, 0.0f);
-			glm::vec2 center = {window.windowWidth / 2.0f, window.windowHeight / 2.0f};
-			float boxHalfWidth = window.windowWidth * (deadZonePercent * 0.5f);
-			float boxHalfHeight = window.windowHeight * (deadZonePercent * 0.5f);
+			glm::vec2 center = {(const float&)window.windowWidth / 2.0f, (const float&)window.windowHeight / 2.0f};
+			float boxHalfWidth = (const float&)window.windowWidth * (deadZonePercent * 0.5f);
+			float boxHalfHeight = (const float&)window.windowHeight * (deadZonePercent * 0.5f);
 			physics::AABB<2> centerBox(glm::vec2(center.x - boxHalfWidth, center.y - boxHalfHeight),
 																		glm::vec2(center.x + boxHalfWidth, center.y + boxHalfHeight));
 			int* count = new int();

@@ -9,7 +9,7 @@ BlendState BlendState::MainFramebuffer = {
 };
 BlendState BlendState::Layout = {
     true,
-    BlendFactor::SrcColor,
+    BlendFactor::One,
     BlendFactor::One,
     BlendFactor::One,
     BlendFactor::One

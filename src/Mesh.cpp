@@ -56,9 +56,10 @@ uint32_t Mesh::getIndicesSize(ShapeType shapeType)
 {
 	switch (shapeType)
 	{
-	case ShapeType::PlaneXY:
-	case ShapeType::PlaneXZ:
-	case ShapeType::PlaneYZ:
+	case ShapeType::PlaneXY_Center:
+	case ShapeType::PlaneXZ_Center:
+	case ShapeType::PlaneYZ_Center:
+	case ShapeType::PlaneXY_BottomLeft:
 	case ShapeType::SDF:
 		return 6;
 	case ShapeType::Box:
@@ -72,9 +73,10 @@ uint32_t Mesh::getVerticesSize(ShapeType shapeType)
 {
 	switch (shapeType)
 	{
-	case ShapeType::PlaneXY:
-	case ShapeType::PlaneXZ:
-	case ShapeType::PlaneYZ:
+	case ShapeType::PlaneXY_Center:
+	case ShapeType::PlaneXZ_Center:
+	case ShapeType::PlaneYZ_Center:
+	case ShapeType::PlaneXY_BottomLeft:
 	case ShapeType::SDF:
 		return 6;
 	case ShapeType::Box:
@@ -115,7 +117,7 @@ void Mesh::render(Entity& entity)
 		shader->setSSBO("InstanceProjections", *this, &projection_matrix, sizeof(glm::mat4));
 		auto inverse_projection_matrix = glm::inverse(projection_matrix);
 		shader->setSSBO("InverseInstanceProjections", *this, &inverse_projection_matrix, sizeof(glm::mat4));
-		shader->setBlock("Viewport", *this, window.viewport, 16);
+		shader->setBlock("Viewport", *this, *window.viewport, 16);
 		shader->setBlock("Time", *this, scene.updateTime, 4);
 		float nearFar[2] = {
 			projection.nearPlane,
@@ -126,10 +128,10 @@ void Mesh::render(Entity& entity)
         GLEntity gl_entity{
 			.shape_type = int32_t(meshInfo.shapeType),
 			.material_index = 0,
-			.vertex_offset = 0,
+			.vertex_offset = vertices.empty() ? -1 : 0,
 			.padding = 0,
-			.uv2_offset = 0,
-			.uv3_offset = 0,
+			.uv2_offset = uv2s.empty() ? -1 : 0,
+			.uv3_offset = uv3s.empty() ? -1 : 0,
 			.meta_int = meshInfo.meta_int,
 			.meta_float = entity.meta_float,
 			.meta_vec4 = entity.meta_vec4
@@ -171,6 +173,16 @@ void Mesh::render(Entity& entity)
 		{
 			glm::vec4 vec(0);
 			shader->setSSBO("EntityUV3s", *this, &vec, sizeof(glm::vec4) * 1);
+		}
+		auto constants_begin = vaoConstants.begin();
+		auto constants_end = vaoConstants.end();
+		for (auto& pairPair : entity.runtimeConstantValueShaderSetters)
+		{
+			auto& key = pairPair.first;
+			auto& pair = pairPair.second;
+			if (std::find(constants_begin, constants_end, key) == constants_end)
+				continue;
+			pair.second(*this, *shader, *pair.first);
 		}
 	}
 	auto keyedTexturesSize = meshInfo.keyedTextures.size();

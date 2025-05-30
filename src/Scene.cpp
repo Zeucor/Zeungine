@@ -65,8 +65,8 @@ Scene::Scene(const SceneCreateInfo& info) :
 	{
 	case 0:
 		keyedTextures = {
-			{"ColorTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 1, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true)},
-			{"DepthTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 1, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true)}
+			{"ColorTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4((const float&)window.windowWidth, (const float&)window.windowHeight, 1, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true)},
+			{"DepthTexture", std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4((const float&)window.windowWidth, (const float&)window.windowHeight, 1, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true)}
 		};
 		{
 			std::vector<textures::Framebuffer::TextureAttachmentPair> attachments{
@@ -193,9 +193,6 @@ Scene& Scene::operator=(const Scene& other)
 Scene::~Scene()
 {
 	ZGZoneScopedN("Scene::destructor");
-	for (auto& entity : entities)
-		if (entity.onRemovedFunction)
-			entity.onRemovedFunction(entity);
 	dataMap.clear();
 	getDataFunctionMap.clear();
 	setDataFunctionMap.clear();
@@ -244,7 +241,7 @@ Scene::generateTexturesFromAttachments(const std::vector<textures::Framebuffer::
 			type = textures::Texture::Type::UnsignedByte;
 		}
 		keyedTextures.push_back({key,
-			std::make_shared<textures::Texture>(iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 1, 0),
+			std::make_shared<textures::Texture>(iRenderer, glm::ivec4((const float&)window.windowWidth, (const float&)window.windowHeight, 1, 0),
 																					(const void*)0, format, type, textures::Texture::FilterType::Linear)});
 		textureAttachmentPairs.push_back({keyedTextures[keyedTextures.size() - 1].second, attachment});
 	}
@@ -275,8 +272,7 @@ bool Scene::removeEntity(size_t ID)
 		return false;
 	auto& entity = *entityIter;
 	instancedDraw.removeEntity(entity);
-	if (entity.onRemovedFunction)
-		entity.onRemovedFunction(entity);
+	entity.onRemove();
 	entity.detachAllComponents();
 	preRemoveEntity(entity);
 	entities.erase(entityIter);
@@ -385,7 +381,7 @@ void Scene::preRender()
 	// 	iRenderer->viewPointerport({0, 0, framebuffer.texture.size.x, framebuffer.texture.size.y});
 	// }
 	// else
-	// 	iRenderer->viewPointerport({0, 0, window.windowWidth, window.windowHeight});
+	// 	iRenderer->viewPointerport({0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight});
 	// iRenderer->clearColor(clearColor);
 	// iRenderer->clear();
 #endif
@@ -513,8 +509,8 @@ void Scene::hookMouseEvents()
 					return;
 				auto& _bvh = *bvh;
 				auto& screenCoord = (window).mouseCoords;
-				auto ray = _bvh.mouseCoordToRay(window.windowHeight, screenCoord,
-																				{0, 0, window.windowWidth, window.windowHeight}, projectionPointer->matrix,
+				auto ray = _bvh.mouseCoordToRay((const float&)window.windowHeight, screenCoord,
+																				{0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight}, projectionPointer->matrix,
 																				viewPointer->matrix, projectionPointer->nearPlane, projectionPointer->farPlane);
 				auto primID = _bvh.trace(ray);
 				if (primID == raytracing::invalidID)
@@ -532,7 +528,7 @@ void Scene::hookMouseEvents()
 			if (!useBVH)
 				return;
 			auto& _bvh = *bvh;
-			auto ray = _bvh.mouseCoordToRay(window.windowHeight, coords, {0, 0, window.windowWidth, window.windowHeight},
+			auto ray = _bvh.mouseCoordToRay((const float&)window.windowHeight, coords, {0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight},
 																			projectionPointer->matrix, viewPointer->matrix, projectionPointer->nearPlane,
 																			projectionPointer->farPlane);
 			auto primID = _bvh.trace(ray);
@@ -950,4 +946,9 @@ void Scene::resetRenderedThisPassAllEntities()
 	{
 		reset(entity);
 	}
+}
+void Scene::onRemove()
+{
+	for (auto& entity : entities)
+		entity.onRemove();
 }

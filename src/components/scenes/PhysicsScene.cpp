@@ -101,7 +101,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::Physics
 			auto& mPhysicsSystem = component.template getData<JPH::PhysicsSystem*>("mPhysicsSystem");
 			auto& mTempAllocator = component.template getData<JPH::TempAllocatorImpl*>("mTempAllocator");
 			auto& mJobSystem = component.template getData<JPH::JobSystemThreadPool*>("mJobSystem");
-			mPhysicsSystem->Update(window.deltaTime, 1, mTempAllocator, mJobSystem);
+			mPhysicsSystem->Update(*window.lastFrameDeltaTime, 1, mTempAllocator, mJobSystem);
 
 			auto& rigidBodiesJoltID =
 				component.template getData<std::unordered_map<size_t, JPH::BodyID>>("rigidBodiesJoltID");

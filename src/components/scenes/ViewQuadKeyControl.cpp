@@ -24,9 +24,9 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 					{
 						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
 						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
-						scene.viewPointer->position.x += scene.viewPointer->direction.x * force * window.deltaTime;
-						scene.viewPointer->position.y += scene.viewPointer->direction.y * force * window.deltaTime;
-						scene.viewPointer->position.z += scene.viewPointer->direction.z * force * window.deltaTime;
+						scene.viewPointer->position.x += scene.viewPointer->direction.x * force * *window.lastFrameDeltaTime;
+						scene.viewPointer->position.y += scene.viewPointer->direction.y * force * *window.lastFrameDeltaTime;
+						scene.viewPointer->position.z += scene.viewPointer->direction.z * force * *window.lastFrameDeltaTime;
 						scene.viewPointer->setDirty();
 					}));
 			component.template make<UniqueIdentifier>(
@@ -37,9 +37,9 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 					{
 						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
 						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
-						scene.viewPointer->position.x -= scene.viewPointer->direction.x * force * window.deltaTime;
-						scene.viewPointer->position.y -= scene.viewPointer->direction.y * force * window.deltaTime;
-						scene.viewPointer->position.z -= scene.viewPointer->direction.z * force * window.deltaTime;
+						scene.viewPointer->position.x -= scene.viewPointer->direction.x * force * *window.lastFrameDeltaTime;
+						scene.viewPointer->position.y -= scene.viewPointer->direction.y * force * *window.lastFrameDeltaTime;
+						scene.viewPointer->position.z -= scene.viewPointer->direction.z * force * *window.lastFrameDeltaTime;
 						scene.viewPointer->setDirty();
 					}));
 			component.template make<UniqueIdentifier>(
@@ -54,9 +54,9 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 							glm::normalize(glm::cross(scene.viewPointer->direction, worldUp));
 						glm::vec3 up =
 							glm::normalize(glm::cross(right, scene.viewPointer->direction));
-						scene.viewPointer->position.x -= right.x * force * window.deltaTime;
-						scene.viewPointer->position.y -= right.y * force * window.deltaTime;
-						scene.viewPointer->position.z -= right.z * force * window.deltaTime;
+						scene.viewPointer->position.x -= right.x * force * *window.lastFrameDeltaTime;
+						scene.viewPointer->position.y -= right.y * force * *window.lastFrameDeltaTime;
+						scene.viewPointer->position.z -= right.z * force * *window.lastFrameDeltaTime;
 						scene.viewPointer->setDirty();
 					}));
 			component.template make<UniqueIdentifier>(
@@ -71,9 +71,9 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 							glm::normalize(glm::cross(scene.viewPointer->direction, worldUp));
 						glm::vec3 up =
 							glm::normalize(glm::cross(right, scene.viewPointer->direction));
-						scene.viewPointer->position.x += right.x * force * window.deltaTime;
-						scene.viewPointer->position.y += right.y * force * window.deltaTime;
-						scene.viewPointer->position.z += right.z * force * window.deltaTime;
+						scene.viewPointer->position.x += right.x * force * *window.lastFrameDeltaTime;
+						scene.viewPointer->position.y += right.y * force * *window.lastFrameDeltaTime;
+						scene.viewPointer->position.z += right.z * force * *window.lastFrameDeltaTime;
 						scene.viewPointer->setDirty();
 					}));
 		},

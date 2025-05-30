@@ -56,9 +56,9 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             		currentPitch = std::clamp(currentPitch, minPitch, maxPitch);
         
             		// Conditional Warp Logic
-            		glm::vec2 center = {window.windowWidth / 2.0f, window.windowHeight / 2.0f};
-            		float boxHalfWidth = window.windowWidth * (deadZonePercent * 0.5f);
-            		float boxHalfHeight = window.windowHeight * (deadZonePercent * 0.5f);
+            		glm::vec2 center = {(const float&)window.windowWidth / 2.0f, (const float&)window.windowHeight / 2.0f};
+            		float boxHalfWidth = (const float&)window.windowWidth * (deadZonePercent * 0.5f);
+            		float boxHalfHeight = (const float&)window.windowHeight * (deadZonePercent * 0.5f);
             		zg::physics::AABB<2> centerBox(glm::vec2(center.x - boxHalfWidth, center.y - boxHalfHeight),
             																	 glm::vec2(center.x + boxHalfWidth, center.y + boxHalfHeight));
         
@@ -109,7 +109,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
                 				window.iPlatformWindow->hidePointer();
             
                 			// Initialize lastPosition and warp pointer
-                			glm::vec2 center = {window.windowWidth / 2.0f, window.windowHeight / 2.0f};
+                			glm::vec2 center = {(const float&)window.windowWidth / 2.0f, (const float&)window.windowHeight / 2.0f};
                 			lastPosition = center;
                 			window.warpPointer(center);
                 		}

@@ -6,6 +6,9 @@
 #include <zg/entities/Plane.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/strings/Utf8Iterator.hpp>
+#include <zg/fonts/FontContext.hpp>
+#include <zg/fonts/ParseFontEscapes.hpp>
+#include <zg/Escapes.hpp>
 using namespace zg::fonts::freetype;
 FT_Library FreetypeFont::freetypeLibrary;
 bool FreetypeFont::freetypeLoaded = ([]()
@@ -46,10 +49,11 @@ void FreetypeFont::FT_PRINT_AND_THROW_ERROR(const FT_Error& error, const std::st
 		throw std::runtime_error(errorString);
 	}
 };
-FreetypeCharacter::FreetypeCharacter(IRenderer* iRenderer, const FreetypeFont& freeTypeFont, float codepoint, float fontSize)
+FreetypeCharacter::FreetypeCharacter(IRenderer* iRenderer, const FreetypeFont& freeTypeFont, FT_UInt glyph_index,
+																		 float fontSize, bool msdf):
+	glyphIndex(glyph_index)
 {
-	auto& face = *freeTypeFont.facePointer.get();
-	glyphIndex = FT_Get_Char_Index(face, codepoint);
+	auto& face = freeTypeFont.fontHandlePointer->face;
 	FT_Set_Pixel_Sizes(face, 0, fontSize);
 	auto loadCharCode = FT_Load_Glyph(face, glyphIndex, FT_LOAD_RENDER | FT_RENDER_MODE_NORMAL | FT_LOAD_COLOR);
 	if (loadCharCode)
@@ -58,470 +62,646 @@ FreetypeCharacter::FreetypeCharacter(IRenderer* iRenderer, const FreetypeFont& f
 	}
 	size = {face->glyph->bitmap.width, face->glyph->bitmap.rows};
 	bearing = {face->glyph->bitmap_left, face->glyph->bitmap_top};
+	advance = face->glyph->advance.x;
 	auto& renderer = iRenderer->renderer;
 	if (size.x == 0 || size.y == 0)
 	{
-		goto _setAdvance;
+		return;
 	}
+	if (msdf)
 	{
-		auto flipY = (renderer == RENDERER_GL || renderer == RENDERER_EGL);
-		uint64_t imgSize = size.x * size.y * 4;
-		std::shared_ptr<uint8_t[]> rgbaImg(new uint8_t[imgSize]);
-		auto rgbaImgPointer = rgbaImg.get();
-		for (int64_t imgY = flipY ? size.y - 1 : 0, rgbaImgY = 0; flipY ? imgY >= 0 : imgY < size.y;
-				 flipY ? imgY-- : imgY++, rgbaImgY++)
+		msdfgen::Shape shape;
+		double advance = 0.0;
+		if (msdfgen::loadGlyph(shape, (msdfgen::FontHandle*)(freeTypeFont.fontHandlePointer), msdfgen::GlyphIndex(glyphIndex),
+													 msdfgen::FONT_SCALING_EM_NORMALIZED, &advance))
 		{
-			for (uint64_t imgX = 0; imgX < size.x; imgX++)
+			shape.normalize();
+			msdfgen::edgeColoringSimple(shape, 3.);
+			static constexpr auto msdf_size = 64;
+			static constexpr auto msdf_width = msdf_size;
+			static constexpr auto msdf_height = msdf_size;
+			static constexpr auto autoFrame = true;
+			static constexpr auto scaleSpecified = false;
+			static constexpr auto scanlinePass = true;
+			static constexpr auto explicitErrorCorrectionMode = false;
+			msdfgen::FillRule fillRule = msdfgen::FILL_NONZERO;
+			msdfgen::Range range(1);
+			msdfgen::Range px_range(2);
+			msdfgen::Vector2 translate;
+			msdfgen::Vector2 scale = 1;
+			enum
 			{
-				rgbaImgPointer[((rgbaImgY * (uint64_t)size.x + imgX) * 4) + 0] = 255;
-				rgbaImgPointer[((rgbaImgY * (uint64_t)size.x + imgX) * 4) + 1] = 255;
-				rgbaImgPointer[((rgbaImgY * (uint64_t)size.x + imgX) * 4) + 2] = 255;
-				rgbaImgPointer[((rgbaImgY * (uint64_t)size.x + imgX) * 4) + 3] =
-					face->glyph->bitmap.buffer[(imgY * face->glyph->bitmap.pitch + imgX)];
-				continue;
+				RANGE_UNIT,
+				RANGE_PX
+			} rangeMode = RANGE_PX;
+			enum
+			{
+				NO_PREPROCESS,
+				WINDING_PREPROCESS,
+				FULL_PREPROCESS
+			} geometryPreproc =
+				(
+#ifdef MSDFGEN_USE_SKIA
+					FULL_PREPROCESS
+#else
+					NO_PREPROCESS
+#endif
+				);
+			double avgScale = .5 * (scale.x + scale.y);
+			msdfgen::Shape::Bounds bounds = {};
+			if (autoFrame)
+				bounds = shape.getBounds();
+			if (autoFrame)
+			{
+				double l = bounds.l, b = bounds.b, r = bounds.r, t = bounds.t;
+				msdfgen::Vector2 frame(msdf_width, msdf_height);
+				if (!scaleSpecified)
+				{
+					if (rangeMode == RANGE_UNIT)
+						l += range.lower, b += range.lower, r -= range.lower, t -= range.lower;
+					else
+						frame += 2 * px_range.lower;
+				}
+				if (l >= r || b >= t)
+					l = 0, b = 0, r = 1, t = 1;
+				if (frame.x <= 0 || frame.y <= 0)
+					throw std::runtime_error("Cannot fit the specified pixel range.");
+				msdfgen::Vector2 dims(r - l, t - b);
+				if (scaleSpecified)
+					translate = .5 * (frame / scale - dims) - msdfgen::Vector2(l, b);
+				else
+				{
+					if (dims.x * frame.y < dims.y * frame.x)
+					{
+						translate.set(.5 * (frame.x / frame.y * dims.y - dims.x) - l, -b);
+						scale = avgScale = frame.y / dims.y;
+					}
+					else
+					{
+						translate.set(-l, .5 * (frame.y / frame.x * dims.x - dims.y) - b);
+						scale = avgScale = frame.x / dims.x;
+					}
+				}
+				if (rangeMode == RANGE_PX && !scaleSpecified)
+					translate -= px_range.lower / scale;
 			}
+			if (rangeMode == RANGE_PX)
+				range = px_range / (std::min)(scale.x, scale.y);
+			msdfgen::Bitmap<float, 4> mtsdf(msdf_width, msdf_height);
+			msdfgen::SDFTransformation transformation(msdfgen::Projection(scale, translate), range);
+			msdfgen::MSDFGeneratorConfig generatorConfig;
+			generatorConfig.overlapSupport = geometryPreproc == NO_PREPROCESS;
+			msdfgen::MSDFGeneratorConfig postErrorCorrectionConfig(generatorConfig);
+			if (scanlinePass)
+			{
+				if (explicitErrorCorrectionMode &&
+						generatorConfig.errorCorrection.distanceCheckMode != msdfgen::ErrorCorrectionConfig::DO_NOT_CHECK_DISTANCE)
+				{
+					const char* fallbackModeName = "unknown";
+					switch (generatorConfig.errorCorrection.mode)
+					{
+					case msdfgen::ErrorCorrectionConfig::DISABLED:
+						fallbackModeName = "disabled";
+						break;
+					case msdfgen::ErrorCorrectionConfig::INDISCRIMINATE:
+						fallbackModeName = "distance-fast";
+						break;
+					case msdfgen::ErrorCorrectionConfig::EDGE_PRIORITY:
+						fallbackModeName = "auto-fast";
+						break;
+					case msdfgen::ErrorCorrectionConfig::EDGE_ONLY:
+						fallbackModeName = "edge-fast";
+						break;
+					}
+					fprintf(stderr, "Selected error correction mode not compatible with scanline pass, falling back to %s.\n",
+									fallbackModeName);
+				}
+				generatorConfig.errorCorrection.mode = msdfgen::ErrorCorrectionConfig::DISABLED;
+				postErrorCorrectionConfig.errorCorrection.distanceCheckMode =
+					msdfgen::ErrorCorrectionConfig::DO_NOT_CHECK_DISTANCE;
+			}
+			msdfgen::generateMTSDF(mtsdf, shape, transformation, generatorConfig);
+			msdfgen::distanceSignCorrection(mtsdf, shape, transformation, fillRule);
+			msdfgen::msdfErrorCorrection(mtsdf, shape, transformation, postErrorCorrectionConfig);
+			auto bitmap_bytes = mtsdf.operator const float*();
+			texturePointer.reset(new textures::Texture(
+				iRenderer, {msdf_width, msdf_height, 1, 0}, (const void*)bitmap_bytes, textures::Texture::Format::RGBA32F,
+				textures::Texture::Type::Float, textures::Texture::FilterType::Nearest, false,
+				textures::Texture::Multisampling::x1, textures::Texture::AddressMode::ClampToEdge, false));
+			double left   = (bounds.l + translate.x) * scale.x;
+			double bottom = (bounds.b + translate.y) * scale.y;
+			double right  = (bounds.r + translate.x) * scale.x;
+			double top    = (bounds.t + translate.y) * scale.y;
+			double uv_min_x = left / msdf_width;
+			double uv_max_x = right / msdf_width;
+			double uv_min_y = top / msdf_height;
+			double uv_max_y = bottom / msdf_height;
+			uv2s = {
+				glm::vec2(uv_min_x, uv_min_y), glm::vec2(uv_max_x, uv_max_y), glm::vec2(uv_min_x, uv_max_y),
+				glm::vec2(uv_max_x, uv_min_y), glm::vec2(uv_max_x, uv_max_y), glm::vec2(uv_min_x, uv_min_y),
+			};
+#ifdef MSDF_RENDER_TEST_GLYPH
+			int testWidth = 1024;
+			int testHeight = 1024;
+			msdfgen::Bitmap<float, 4> render(testWidth, testHeight);
+			msdfgen::renderSDF(render, mtsdf, avgScale * range);
+			msdfgen::savePng(render, ("glyph-" + std::to_string(codepoint) + ".png").c_str());
+#endif
 		}
-		texturePointer.reset(new textures::Texture(iRenderer, {size.x, size.y, 1, 0}, rgbaImgPointer,
-																							 textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
-																							 textures::Texture::FilterType::Linear));
 	}
-_setAdvance:
-	advance = face->glyph->advance.x;
+	else
+	{
+		auto flipY = (renderer == RENDERER_VULKAN);
+		texturePointer.reset(new textures::Texture(iRenderer, {size.x, size.y, 1, 0}, face->glyph->bitmap.buffer,
+							textures::Texture::Format::R8, textures::Texture::Type::UnsignedByte,
+							textures::Texture::FilterType::Nearest, false, DEFAULT_TEXTURE_MULTISAMPLING, TEXTURE_CLAMP_EDGE, flipY));
+	}
 };
 FreetypeFont::FreetypeFont(IRenderer* iRenderer, interfaces::IFile& fontFile) :
-		facePointer(new FT_Face,
-								[](FT_Face* pointer)
-								{
-									FT_Done_Face(*pointer);
-									delete pointer;
-								}),
-		iRenderer(iRenderer), fontPath(fontFile.filePath)
+		fontHandlePointer(new msdfgen::FontHandle), fontFileBytes(fontFile.toBytes()), iRenderer(iRenderer),
+		fontPath(fontFile.filePath)
 {
-	fontFileBytes = fontFile.toBytes();
 	auto fontFileSize = fontFile.size();
-	auto actualFacePointer = facePointer.get();
-	FT_PRINT_AND_THROW_ERROR(
-		FT_New_Memory_Face(freetypeLibrary, (uint8_t*)fontFileBytes.get(), fontFileSize, 0, actualFacePointer),
-		fontPath.string());
-	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(*actualFacePointer, FT_ENCODING_UNICODE), fontPath.string());
-	hasKerning = FT_HAS_KERNING(*actualFacePointer);
+	auto& face = fontHandlePointer->face;
+	FT_PRINT_AND_THROW_ERROR(FT_New_Memory_Face(freetypeLibrary, (uint8_t*)fontFileBytes.get(), fontFileSize, 0, &face),
+													 fontPath.string());
+	FT_PRINT_AND_THROW_ERROR(FT_Select_Charmap(face, FT_ENCODING_UNICODE), fontPath.string());
+	hasKerning = FT_HAS_KERNING(face);
+	hbFont = hb_ft_font_create(face, 0);
+	if (!hbFont)
+	{
+		throw std::runtime_error("Error: Could not create HarfBuzz font from FreeType face.");
+	}
 };
-float ftTextureScale = 1.f;
-const glm::vec2 FreetypeFont::stringSize(const std::string_view string, float fontSize, float& lineHeight,
-																				 glm::vec2 bounds, enums::EBreakStyle breakStyle)
+FreetypeFont::~FreetypeFont()
 {
-	strings::Utf8Iterator iterator(string, 0);
-	const unsigned long& stringSize = string.size();
-	auto scaledBounds = bounds;
-	auto& face = *facePointer.get();
-	FT_Set_Pixel_Sizes(face, 0, fontSize);
-	if (lineHeight == 0)
+	if (hbFont)
 	{
-		lineHeight = face->size->metrics.height / 64.f;
+		hb_font_destroy(hbFont);
 	}
-	glm::vec2 currentPosition = {0, lineHeight};
-	float startX = currentPosition.x;
-	glm::vec2 size = {0, 0};
-	if (bounds.x)
+	FT_Done_Face(fontHandlePointer->face);
+	delete fontHandlePointer;
+}
+float FreetypeFont::calculateSegmentWidth(const std::string_view segment, float fontSize) const
+{
+	auto& face = fontHandlePointer->face;
+	if (segment.empty())
 	{
-		size.x = bounds.x;
+		return 0.0f;
 	}
-	float advanceX = 0;
-	auto advanceLine = [&]()
+	if (FT_Set_Pixel_Sizes(face, 0, fontSize))
 	{
-		currentPosition.y += lineHeight;
-		size.y = currentPosition.y;
-		currentPosition.x = 0;
-		advanceX = 0;
-	};
-	for (; iterator.index < stringSize;)
+		throw std::runtime_error("Warning: Could not set font pixel size for segment width calculation.");
+	}
+
+	hb_buffer_t* hb_buffer = hb_buffer_create();
+	if (!hb_buffer)
 	{
-		advanceX = 0;
-		unsigned long codepoint = *iterator;
-		if (codepoint == 10)
+		throw std::runtime_error("Error: Could not create HarfBuzz buffer for segment.");
+	}
+
+	hb_buffer_add_utf8(hb_buffer, segment.data(), static_cast<int>(segment.length()), 0,
+										 static_cast<int>(segment.length()));
+
+	hb_buffer_set_direction(hb_buffer, HB_DIRECTION_LTR);
+	hb_buffer_set_script(hb_buffer, HB_SCRIPT_LATIN);
+	hb_buffer_set_language(hb_buffer, hb_language_from_string("en", -1));
+
+	hb_shape(hbFont, hb_buffer, nullptr, 0);
+
+	int total_advance_x = 0;
+	unsigned int glyph_count;
+	hb_glyph_position_t* glyph_pos = hb_buffer_get_glyph_positions(hb_buffer, &glyph_count);
+
+	for (unsigned int i = 0; i < glyph_count; ++i)
+	{
+		total_advance_x += glyph_pos[i].x_advance;
+	}
+
+	hb_buffer_destroy(hb_buffer);
+
+	return static_cast<float>(total_advance_x) / 64.0f;
+}
+float ftTextureScale = 1.f;
+const glm::vec2 FreetypeFont::stringSize(const std::string_view raw_string, float fontSize, float& lineHeight,
+																				 glm::vec2 bounds, enums::EBreakStyle breakStyle, bool msdf)
+{
+	auto parsed_pair = fonts::parseFontEscapes(raw_string);
+	auto& string = parsed_pair.first;
+	auto& face = fontHandlePointer->face;
+	if (FT_Set_Pixel_Sizes(face, 0, fontSize))
+	{
+		throw std::runtime_error("Error: Could not set font pixel size to " + std::to_string(fontSize) + ".");
+	}
+	hb_ft_font_changed(hbFont);
+	lineHeight = static_cast<float>(face->size->metrics.height) / 64.0f;
+	if (lineHeight <= 0.0f)
+	{
+		lineHeight = fontSize * 1.2f;
+	}
+
+	if (string.empty())
+	{
+		return glm::vec2(0.0f, 0.0f);
+	}
+
+	float max_total_width = 0.0f;
+	float current_line_width = 0.0f;
+	float total_height = lineHeight;
+
+	if (breakStyle == enums::EBreakStyle::None || bounds.x <= 0)
+	{
+		max_total_width = calculateSegmentWidth(string, fontSize);
+		return glm::vec2(max_total_width, total_height);
+	}
+
+	size_t current_str_pos = 0;
+
+	while (current_str_pos < string.length())
+	{
+		size_t next_delimiter_pos = string.find_first_of(" \t\n\r", current_str_pos);
+		size_t word_end_pos = (next_delimiter_pos == std::string_view::npos) ? string.length() : next_delimiter_pos;
+
+		std::string_view word_view = string.substr(current_str_pos, word_end_pos - current_str_pos);
+		float word_width = calculateSegmentWidth(word_view, fontSize);
+
+		bool has_newline_in_word = false;
+		if (word_view.find('\n') != std::string_view::npos || word_view.find('\r') != std::string_view::npos)
 		{
-			advanceLine();
+			has_newline_in_word = true;
+		}
+		
+		if ((current_line_width + word_width > bounds.x && current_line_width > 0) || has_newline_in_word)
+		{
+			max_total_width = std::max(max_total_width, current_line_width);
+			total_height += lineHeight;
+			current_line_width = 0.0f;
+		}
+
+		current_line_width += word_width;
+
+		if (next_delimiter_pos != std::string_view::npos)
+		{
+			size_t space_start_pos = next_delimiter_pos;
+			size_t non_space_after_space = string.find_first_not_of(" \t\n\r", space_start_pos);
+			size_t space_end_pos = (non_space_after_space == std::string_view::npos) ? string.length() : non_space_after_space;
+
+			std::string_view space_view = string.substr(space_start_pos, space_end_pos - space_start_pos);
+			float space_width = calculateSegmentWidth(space_view, fontSize);
+			
+			bool has_newline_in_space = (space_view.find('\n') != std::string_view::npos || space_view.find('\r') != std::string_view::npos);
+
+			if ((current_line_width + space_width > bounds.x && current_line_width > 0) || has_newline_in_space)
+			{
+				max_total_width = std::max(max_total_width, current_line_width);
+				
+				size_t newline_count = 0;
+				for (char c : space_view)
+				{
+					if (c == '\n') newline_count++;
+				}
+				if (newline_count > 0)
+				{
+					total_height += (newline_count * lineHeight);
+				}
+				else if (current_line_width > 0)
+				{
+					total_height += lineHeight;
+				}
+				
+				current_line_width = 0.0f;
+			}
+			current_line_width += space_width;
+
+			current_str_pos = space_end_pos;
 		}
 		else
 		{
-			auto& character = getCharacter(codepoint, fontSize);
-			advanceX = (character.advance >> 6);
-			addNextKerning(fontSize, character.glyphIndex, iterator, advanceX, 1);
+			current_str_pos = word_end_pos;
 		}
-		if (scaledBounds.x > 0 &&
-				shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, scaledBounds.x, 1, startX, fontSize))
-		{
-			advanceLine();
-		}
-		currentPosition.x += advanceX;
-		if (!bounds.x)
-		{
-			size.x = (glm::max)(size.x, currentPosition.x);
-		}
-		++iterator;
 	}
-	size.y = currentPosition.y;
-	return size;
-};
-void FreetypeFont::stringToTexture(const std::string_view string, glm::vec4 color, float fontSize, float& lineHeight,
-																	 glm::vec2 textureSize, std::shared_ptr<textures::Texture>& pTexture,
-																	 const int64_t& cursorIndex, glm::vec3& cursorPosition, enums::EBreakStyle breakStyle,
-																	 const std::shared_ptr<textures::Framebuffer>& pFramebuffer,
-																	 const std::shared_ptr<Scene>& scenePointer)
-{
-	glm::ivec2 scaledSize = textureSize * ftTextureScale;
-	if (!pTexture || pTexture->size.x != scaledSize.x || pTexture->size.y != scaledSize.y)
-	{
-		pTexture.reset(new textures::Texture(iRenderer, glm::ivec4(scaledSize.x, scaledSize.y, 1, 0), 0,
-																							 textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte,
-																							 textures::Texture::FilterType::Linear));
-	}
-	if (!pFramebuffer)
-	{
-		auto attachments = std::vector<textures::Framebuffer::TextureAttachmentPair>(
-			{{pTexture, textures::Framebuffer::AttachmentType::Color}});
-		((std::shared_ptr<textures::Framebuffer>&)pFramebuffer) =
-			std::make_shared<textures::Framebuffer>(iRenderer, attachments, textures::BlendState::Text);
-	}
-	if (!scenePointer)
-	{
-		SceneCreateInfo sceneCreateInfo{.name = "Text Scene",
-																		.cameraPosition = glm::vec3(scaledSize.x / 2.f, scaledSize.y / 2.f, 50),
-																		.cameraDirection = glm::vec3(0, 0, -1),
-																		.projectionType = vp::Projection::TYPE::Orthographic,
-																		.orthoSize = glm::vec2(scaledSize),
-																		.framebuffer = pFramebuffer,
-																		.drawColorToWindowPlane = false,
-																		.useBVH = false};
-		((std::shared_ptr<Scene>&)scenePointer) = std::make_shared<Scene>(sceneCreateInfo);
-	}
-	auto& scene = *scenePointer;
-	strings::Utf8Iterator iterator(string, 0);
-	const uint64_t& stringSize = string.size();
-	auto& face = *facePointer.get();
-	FT_Set_Pixel_Sizes(face, 0, fontSize);
-	if (lineHeight == 0)
-	{
-		lineHeight = face->size->metrics.height / 64.f;
-	}
-	float descender = face->size->metrics.descender / 64.f;
-	glm::vec3 currentPosition = {0, scaledSize.y - descender - lineHeight, 25.f};
-	float startX = currentPosition.x;
-	auto advanceLine = [&]()
-	{
-		currentPosition.y -= lineHeight;
-		currentPosition.x = 0;
-	};
-	FreetypeCharacter* characterPointer = 0;
-	float advanceX = 0;
-	uint64_t codepointIndex = 0;
-	if (cursorIndex == 0)
-	{
-		cursorPosition = currentPosition;
-	}
-	for (; iterator.index < stringSize;)
-	{
-		advanceX = 0;
-		characterPointer = 0;
-		uint64_t codepoint = *iterator;
-		if (codepoint == 10)
-		{
-			advanceLine();
-			++iterator;
-			continue;
-		}
-		characterPointer = &getCharacter(codepoint, fontSize * ftTextureScale);
-		advanceX = (characterPointer->advance >> 6);
-		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, scaledSize.x, 1, startX, fontSize))
-		{
-			advanceLine();
-		}
-		if (characterPointer)
-		{
-			if (characterPointer->size.x != 0 && characterPointer->size.y != 0)
-			{
-				glm::vec3 characterPosition = currentPosition;
-				characterPosition.x = currentPosition.x + characterPointer->bearing.x + (characterPointer->size.x / 2.f);
-				characterPosition.y = (currentPosition.y - (characterPointer->size.y - characterPointer->bearing.y)) +
-					(characterPointer->size.y / 2.f);
-				auto planeInfo = entities::PlaneFactory(
-					characterPointer->texturePointer,
-					"Glyph " + std::string(1, codepoint),
-					characterPosition,
-					glm::quat(1, 0, 0, 0),
-					glm::vec3(characterPointer->size, 1.f)
-				);
-				scene.addEntity(planeInfo);
-			}
-			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX, 1);
-		}
-	_advance:
-		currentPosition.x += advanceX;
-		codepointIndex = iterator.getCurrentCodepointIndex();
-		if (cursorIndex == codepointIndex + 1)
-		{
-			cursorPosition = currentPosition;
-			cursorPosition /= ftTextureScale;
-		}
-		++iterator;
-	}
-	codepointIndex = iterator.getCurrentCodepointIndex();
-	if (cursorIndex == codepointIndex + 1)
-	{
-		cursorPosition = currentPosition;
-		cursorPosition /= ftTextureScale;
-	}
-	scene.clearColor = glm::vec4(0);
-	scene.render();
-	return;
-}
-template <typename HostT>
-void FreetypeFont::stringToHost(const std::string_view string, glm::vec3 position, glm::vec4 color,
-																	glm::quat _rotation, glm::vec3 _scale, float fontSize, float& lineHeight,
-																	glm::vec2 bounds, enums::EBreakStyle breakStyle, HostT& host,
-																	std::vector<size_t>& existingAndUpdatedGlyphIDs, int64_t cursorIndex, size_t& cursor)
-{
-	auto& scene = Registry::GetSingleton().getScene(host.INDEX_STACK);
-	strings::Utf8Iterator iterator(string, 0);
-	const uint64_t& stringSize = string.size();
-	auto& face = *facePointer.get();
-	FT_Set_Pixel_Sizes(face, 0, fontSize);
-	if (lineHeight == 0)
-	{
-		lineHeight = face->size->metrics.height / 64.f;
-	}
-	float descender = face->size->metrics.descender / 64.f;
-	auto currentPosition = position;
-	float startX = currentPosition.x;
-	auto advanceLine = [&]()
-	{
-		currentPosition.y -= lineHeight;
-		currentPosition.x = position.x;
-	};
-	FreetypeCharacter* characterPointer = 0;
-	float advanceX = 0;
-	uint64_t codepointIndex = 0;
-	if (!cursor)
-	{
+	
+	max_total_width = std::max(max_total_width, current_line_width);
 
-		// cursor = std::make_shared<entities::Plane>(window, scene, glm::vec3(0), glm::vec3(0), glm::vec3(1),
-		// 																					 glm::vec2(3, lineHeight), color);
-	}
-	// auto& cursorRef = Registry::GetSingleton().getEntity(cursor);
-	// if (cursorIndex == 0)
-	// {
-	// 	cursorRef.position = currentPosition;
-	// }
-	for (; iterator.index < stringSize;)
+	return glm::vec2(max_total_width, total_height);
+};
+template <typename HostT>
+void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 position, glm::quat _rotation,
+								glm::vec3 _scale, float fontSize, float& lineHeight, glm::vec2 bounds,
+								enums::EBreakStyle breakStyle, HostT& host,
+								std::vector<size_t>& existingAndUpdatedGlyphIDs, int64_t cursorIndex, size_t& cursor,
+								bool msdf)
+{
+	auto [string, ctx_fn_map] = fonts::parseFontEscapes(raw_string);
+	auto ctx_fn_map_end = ctx_fn_map.end();
+	shaders::RuntimeConstants constants;
+	if (msdf)
 	{
-		codepointIndex = iterator.getCurrentCodepointIndex();
-		advanceX = 0;
-		characterPointer = 0;
-		uint64_t codepoint = *iterator;
-		if (codepoint == 10)
-		{
-			advanceLine();
-			++iterator;
-			continue;
-		}
-		characterPointer = &getCharacter(codepoint, fontSize * ftTextureScale);
-		advanceX = (characterPointer->advance >> 6) * _scale.x;
-		if (shouldAdvanceLine(iterator, currentPosition, advanceX, breakStyle, bounds.x, _scale.x, startX, fontSize))
-		{
-			advanceLine();
-		}
-		if (characterPointer)
-		{
-			if (characterPointer->size.x != 0 && characterPointer->size.y != 0)
+		constants.push_back("MSDF");
+	}
+	else
+	{
+		constants.push_back("TextColor");
+	}
+	auto& rgy = Registry::GetSingleton();
+	auto& scene = rgy.getScene(host.INDEX_STACK);
+	auto& face = fontHandlePointer->face;
+	if (FT_Set_Pixel_Sizes(face, 0, fontSize))
+	{
+		throw std::runtime_error("Error: Could not set font pixel size to " + std::to_string(fontSize) + ".");
+	}
+	hb_ft_font_changed(hbFont);
+
+	lineHeight = static_cast<float>(face->size->metrics.height) / 64.0f;
+	if (lineHeight <= 0.0f)
+	{
+		lineHeight = fontSize * 1.2f;
+	}
+
+	hb_buffer_t* hb_buffer = hb_buffer_create();
+	if (!hb_buffer)
+	{
+		throw std::runtime_error("Error: Could not create HarfBuzz buffer.");
+	}
+
+	std::vector<size_t> new_glyph_entity_ids_for_string_indices(string.length(), 0);
+
+	glm::vec4 foreground_color(1);
+	glm::vec4 background_color(0);
+	glm::vec3 current_pen_position = position;
+	float start_line_x = position.x;
+	FontContext ctx{
+        fontSize,
+		fontSize,
+        lineHeight,
+        position.x,
+        position.y,
+		start_line_x,
+        foreground_color,
+        background_color,
+		foreground_color,
+        background_color,
+		[&](auto& ctx){
+			if (FT_Set_Pixel_Sizes(face, 0, ctx.fontSize))
 			{
-				glm::vec3 characterPosition = currentPosition;
-				characterPosition.x =
-					currentPosition.x + ((characterPointer->bearing.x + (characterPointer->size.x / 2.f)) * _scale.x);
-				characterPosition.y =
-					(currentPosition.y - ((characterPointer->size.y - characterPointer->bearing.y) * _scale.y)) +
-					((characterPointer->size.y / 2.f) * _scale.y);
-				if (iterator.index < existingAndUpdatedGlyphIDs.size())
+				throw std::runtime_error("Error: Could not set font pixel size to " + std::to_string(fontSize) + ".");
+			}
+			hb_ft_font_changed(hbFont);
+		}
+	};
+
+	size_t segment_start_char_idx = 0;
+
+	size_t codepoint_index = 0;
+
+	auto shorten_segment_to_escapes = [&](auto& line_start_char_idx, auto& line_end_char_idx) -> bool
+	{
+		for (size_t index = line_start_char_idx + 1; index < line_end_char_idx; ++index)
+		{
+			auto ctx_fn_iter = ctx_fn_map.find(index);
+			if (ctx_fn_iter != ctx_fn_map_end)
+			{
+				line_end_char_idx = index;
+				return true;
+			}
+		}
+		return false;
+	};
+
+	while (segment_start_char_idx < string.length())
+	{
+		size_t line_start_char_idx = segment_start_char_idx;
+		float current_line_width_for_wrap = 0.0f;
+		size_t line_end_char_idx = line_start_char_idx;
+
+		if (breakStyle == enums::EBreakStyle::None || bounds.x <= 0)
+		{
+			segment_start_char_idx = line_end_char_idx = string.length();
+		}
+		else
+		{
+			size_t temp_segment_char_idx = segment_start_char_idx;
+			while (temp_segment_char_idx < string.length())
+			{
+				size_t next_delimiter_pos = string.find_first_of(" \t\n\r", temp_segment_char_idx);
+				size_t word_end_char_pos = (next_delimiter_pos == std::string_view::npos) ? string.length() : next_delimiter_pos;
+
+				std::string_view word_view = string.substr(temp_segment_char_idx, word_end_char_pos - temp_segment_char_idx);
+				float word_width = calculateSegmentWidth(word_view, fontSize);
+
+				bool has_newline_in_word = (word_view.find('\n') != std::string_view::npos || word_view.find('\r') != std::string_view::npos);
+
+				if ((current_line_width_for_wrap + word_width > bounds.x && current_line_width_for_wrap > 0) || has_newline_in_word)
 				{
-					auto& glyphID = existingAndUpdatedGlyphIDs[iterator.index];
-					if (!glyphID)
+					break;
+				}
+
+				current_line_width_for_wrap += word_width;
+				temp_segment_char_idx = word_end_char_pos;
+
+				if (next_delimiter_pos != std::string_view::npos)
+				{
+					size_t space_start_char_pos = next_delimiter_pos;
+					size_t non_space_after_space = string.find_first_not_of(" \t\n\r", space_start_char_pos);
+					size_t space_end_char_pos = (non_space_after_space == std::string_view::npos) ? string.length() : non_space_after_space;
+
+					std::string_view space_view = string.substr(space_start_char_pos, space_end_char_pos - space_start_char_pos);
+					float space_width = calculateSegmentWidth(space_view, fontSize);
+
+					bool has_newline_in_space = (space_view.find('\n') != std::string_view::npos || space_view.find('\r') != std::string_view::npos);
+
+					if ((current_line_width_for_wrap + space_width > bounds.x && current_line_width_for_wrap > 0) || has_newline_in_space)
 					{
-						goto _addGlyph;
+						break;
 					}
-					else 
+					current_line_width_for_wrap += space_width;
+					temp_segment_char_idx = space_end_char_pos;
+				}
+				line_end_char_idx = temp_segment_char_idx;
+			}
+			segment_start_char_idx = line_end_char_idx;
+		}
+
+		bool dont_advance_line = shorten_segment_to_escapes(line_start_char_idx, line_end_char_idx);
+		segment_start_char_idx = line_end_char_idx;
+
+		auto current_line_text = string.substr(line_start_char_idx, line_end_char_idx - line_start_char_idx);
+
+		hb_buffer_clear_contents(hb_buffer);
+		hb_buffer_add_utf8(hb_buffer, current_line_text.data(), static_cast<int>(current_line_text.length()), 0, static_cast<int>(current_line_text.length()));
+		hb_buffer_set_direction(hb_buffer, HB_DIRECTION_LTR);
+		hb_buffer_set_script(hb_buffer, HB_SCRIPT_LATIN);
+		hb_buffer_set_language(hb_buffer, hb_language_from_string("en", -1));
+		hb_shape(hbFont, hb_buffer, nullptr, 0);
+
+		unsigned int glyph_count;
+		hb_glyph_info_t* glyph_info = hb_buffer_get_glyph_infos(hb_buffer, &glyph_count);
+		hb_glyph_position_t* glyph_pos = hb_buffer_get_glyph_positions(hb_buffer, &glyph_count);
+
+		for (unsigned int i = 0; i < glyph_count; ++i)
+		{
+			auto ctx_fn_iter = ctx_fn_map.find(codepoint_index);
+			if (ctx_fn_iter != ctx_fn_map_end)
+				for (auto& fnPair : ctx_fn_iter->second)
+					fnPair.second(ctx);
+			auto& c_glyph_info = glyph_info[i];
+			FT_UInt glyph_index = c_glyph_info.codepoint;
+			unsigned int cluster_in_line = glyph_info[i].cluster;
+			unsigned int original_string_cluster_index = line_start_char_idx + cluster_in_line;
+
+			FreetypeCharacter* characterPointer = &getCharacter(glyph_index, ctx.fontSize * ftTextureScale, msdf);
+			
+			float c_advance = static_cast<float>(characterPointer->advance >> 6);
+			float x_offset = ceilf(static_cast<float>(glyph_pos[i].x_offset) / 64.0f);
+			float y_offset = ceilf(static_cast<float>(glyph_pos[i].y_offset) / 64.0f);
+			float x_advance = static_cast<float>(glyph_pos[i].x_advance) / 64.0f;
+
+			if (characterPointer->texturePointer)
+			{
+				glm::vec3 characterPosition{0};
+				
+				characterPosition.x = ctx.x + (characterPointer->bearing.x * _scale.x);
+				
+				characterPosition.y = ctx.y - (characterPointer->size.y - characterPointer->bearing.y) * _scale.y;
+				characterPosition.z = position.z;
+
+				if (original_string_cluster_index < new_glyph_entity_ids_for_string_indices.size())
+				{
+					size_t entity_id_to_use = 0;
+					if (original_string_cluster_index < existingAndUpdatedGlyphIDs.size())
 					{
-						auto& glyph = Registry::GetSingleton().getEntity(glyphID);
-						if (glyph.VALUE.has_value())
+						entity_id_to_use = existingAndUpdatedGlyphIDs[original_string_cluster_index];
+					}
+
+					if (!entity_id_to_use)
+					{
+						auto glyphCreateInfo = entities::PlaneFactory(
+							characterPointer->texturePointer, "Glyph_" + std::to_string(original_string_cluster_index),
+							characterPosition, _rotation,
+							glm::vec3(characterPointer->size, 1.f) * _scale, characterPointer->uv2s, constants,
+							entities::PlaneType::XY_BottomLeft
+						);
+						if (!msdf)
 						{
-							try
-							{
-								auto glyphValue = glyph.template getValue<uint64_t>();
-								if (glyphValue != codepoint)
-								{
-									glyph.position = characterPosition;
-									glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
-									assert(glyph.meshInfos.size());
-									glyph.meshInfos[0].keyedTextures[0].second = characterPointer->texturePointer;
-									glyph.VALUE = codepoint;
-									glyph.refreshMeshes();
-								}
-							}
-							catch (...) {}
+							glyphCreateInfo.runtimeConstantValueShaderSetters = {
+								{ "TextColor", ValueSetterPair{
+									zg::observable_ptr(new std::any(ctx.foreground_color)),
+									[](auto& mesh, auto& shader, const auto& value)
+									{
+										shader.setBlock("TextColor", mesh, std::any_cast<const glm::vec4&>(value), sizeof(glm::vec4));
+									}
+								} }
+							};
+						}
+						auto glyph_tuple = host.addEntity(glyphCreateInfo);
+						entity_id_to_use = std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple);
+						auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
+						glyph.VALUE = static_cast<uint64_t>(glyph_index);
+					}
+					else
+					{
+						auto& glyph = rgy.getEntity(entity_id_to_use);
+						if (glyph.VALUE.has_value() && glyph.template getValue<uint64_t>() != static_cast<uint64_t>(glyph_index))
+						{
+							glyph.VALUE = static_cast<uint64_t>(glyph_index);
+							glyph.setTexture(0, 0, characterPointer->texturePointer);
+							std::any_cast<glm::vec4&>((*glyph.runtimeConstantValueShaderSetters["TextColor"].first)) = ctx.foreground_color;
 						}
 						if (glyph.position != characterPosition)
 						{
 							glyph.position = characterPosition;
 						}
+						if (glyph.scale != glm::vec3(characterPointer->size, 1.f) * _scale)
+						{
+							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
+						}
+					}
+					new_glyph_entity_ids_for_string_indices[original_string_cluster_index] = entity_id_to_use;
+
+					size_t next_cluster_original_index = string.length();
+					for (unsigned int j = i + 1; j < glyph_count; ++j)
+					{
+						if (glyph_info[j].cluster != cluster_in_line)
+						{
+							next_cluster_original_index = line_start_char_idx + glyph_info[j].cluster;
+							break;
+						}
+					}
+
+					for (size_t char_idx_in_cluster = original_string_cluster_index + 1;
+							char_idx_in_cluster < next_cluster_original_index && char_idx_in_cluster < string.length();
+							++char_idx_in_cluster)
+					{
+						new_glyph_entity_ids_for_string_indices[char_idx_in_cluster] = 0;
 					}
 				}
-				else
-				{
-_addGlyph:
-					auto glyphCreateInfo = entities::PlaneFactory(characterPointer->texturePointer, "Glyph " + std::string(1, (char)codepoint), characterPosition, _rotation, glm::vec3(characterPointer->size, 1.f) * _scale);
-					auto glyph_tuple = host.addEntity(glyphCreateInfo);
-					existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + codepointIndex, std::get<KEY_ID_VECTOR_ID_INDEX>(glyph_tuple));
-					auto& glyph = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(glyph_tuple);
-					glyph.VALUE = codepoint;
-				}
 			}
-			else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
-			{
-				existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + codepointIndex, 0);
-			}
-			else
-			{
-				auto& glyphID = existingAndUpdatedGlyphIDs[iterator.index];
-				if (glyphID)
-				{
-					host.removeEntity(glyphID);
-					glyphID = 0;
-				}
-			}
-			addNextKerning(fontSize, characterPointer->glyphIndex, iterator, advanceX, _scale.x);
+			ctx.x += (x_advance) * _scale.x;
+			codepoint_index++;
 		}
-		else if (iterator.index >= existingAndUpdatedGlyphIDs.size())
+
+		if (dont_advance_line)
+			continue;
+
+		ctx.y -= lineHeight;
+		ctx.x = start_line_x;
+		codepoint_index++;
+
+		if (line_end_char_idx < string.length())
 		{
-			existingAndUpdatedGlyphIDs.insert(existingAndUpdatedGlyphIDs.begin() + codepointIndex, 0);
+			std::string_view trailing_segment = string.substr(line_end_char_idx, segment_start_char_idx - line_end_char_idx);
+			size_t newline_count = 0;
+			for (char c : trailing_segment)
+			{
+				if (c == '\n') newline_count++;
+			}
+			if (newline_count > 0)
+			{
+				ctx.y -= (newline_count - 1) * lineHeight;
+			}
 		}
-	_advance:
-		currentPosition.x += advanceX;
-		// if (cursorIndex == codepointIndex + 1)
-		// {
-		// 	cursorRef.position = currentPosition;
-		// 	cursorRef.position /= ftTextureScale;
-		// }
-		++iterator;
 	}
-	codepointIndex = iterator.getCurrentCodepointIndex();
-	for (auto i = existingAndUpdatedGlyphIDs.size() - 1; i >= codepointIndex; i--)
+
+	for (size_t i = 0; i < existingAndUpdatedGlyphIDs.size(); ++i)
 	{
-		host.removeEntity(existingAndUpdatedGlyphIDs.back());
-		existingAndUpdatedGlyphIDs.erase(existingAndUpdatedGlyphIDs.end() - 1);
+		size_t old_entity_id = existingAndUpdatedGlyphIDs[i];
+		size_t new_entity_id = (i < new_glyph_entity_ids_for_string_indices.size()) ? new_glyph_entity_ids_for_string_indices[i] : 0;
+
+		if (old_entity_id != 0 && old_entity_id != new_entity_id)
+		{
+			host.removeEntity(old_entity_id);
+		}
 	}
-	// if (cursorIndex == codepointIndex + 1)
-	// {
-	// 	cursorRef.position = currentPosition;
-	// 	cursorRef.position /= ftTextureScale;
-	// }
-	return;
+	for (size_t i = new_glyph_entity_ids_for_string_indices.size(); i < existingAndUpdatedGlyphIDs.size(); ++i)
+	{
+		if (existingAndUpdatedGlyphIDs[i] != 0)
+		{
+			host.removeEntity(existingAndUpdatedGlyphIDs[i]);
+		}
+	}
+	
+	existingAndUpdatedGlyphIDs = new_glyph_entity_ids_for_string_indices;
+
+	hb_buffer_destroy(hb_buffer);
 }
-template void zg::fonts::freetype::FreetypeFont::stringToHost<zg::Scene>(const std::string_view, glm::vec3, glm::vec4,
-																	glm::quat, glm::vec3, float, float&,
-																	glm::vec2, zg::enums::EBreakStyle, zg::Scene&,
-																	std::vector<size_t>&, int64_t, size_t&);
-template void zg::fonts::freetype::FreetypeFont::stringToHost<zg::Entity>(const std::string_view, glm::vec3, glm::vec4,
-																	glm::quat, glm::vec3, float, float&,
-																	glm::vec2, zg::enums::EBreakStyle, zg::Entity&,
-																	std::vector<size_t>&, int64_t, size_t&);
-FreetypeCharacter& FreetypeFont::getCharacter(float codepoint, float fontSize)
+template void zg::fonts::freetype::FreetypeFont::stringToHost<zg::Scene>(const std::string_view, glm::vec3,
+																		glm::quat, glm::vec3, float, float&, glm::vec2,
+																		zg::enums::EBreakStyle, zg::Scene&,
+																		std::vector<size_t>&, int64_t, size_t&, bool);
+template void zg::fonts::freetype::FreetypeFont::stringToHost<zg::Entity>(const std::string_view, glm::vec3,
+																		glm::quat, glm::vec3, float, float&,
+																		glm::vec2, zg::enums::EBreakStyle,
+																		zg::Entity&, std::vector<size_t>&, int64_t,
+																		size_t&, bool);
+FreetypeCharacter& FreetypeFont::getCharacter(FT_UInt glyph_index, float fontSize, bool msdf)
 {
-	auto& fontSizes = codepointFontSizeCharacters[codepoint];
+	auto& map = msdf ? glyphIndexFontSizeMSDFCharacters : glyphIndexFontSizeCharacters;
+	auto& fontSizes = map[glyph_index];
 	auto iter = fontSizes.find(fontSize);
 	if (iter == fontSizes.end())
 	{
-		auto iter2 = fontSizes.insert({fontSize, {iRenderer, *this, codepoint, fontSize}});
+		auto iter2 = fontSizes.insert({fontSize, {iRenderer, *this, glyph_index, fontSize, msdf}});
 		return iter2.first->second;
 	}
 	return iter->second;
-}
-void FreetypeFont::addNextKerning(float fontSize, FT_UInt currentGlyphIndex, zg::strings::Utf8Iterator iterator,
-																	float& advanceX, float scaleX)
-{
-	if (hasKerning && iterator.hasNextCodepoint())
-	{
-		auto& face = *facePointer.get();
-		auto nextIterator = iterator + 1;
-		uint64_t nextCodepoint = *nextIterator;
-		if (nextCodepoint != 10)
-		{
-			auto& nextCharacter = getCharacter(nextCodepoint, fontSize * ftTextureScale);
-			FT_Vector kerning;
-			FT_Get_Kerning(face, currentGlyphIndex, nextCharacter.glyphIndex, FT_KERNING_DEFAULT, &kerning);
-			if (!FT_IS_SCALABLE(face))
-			{
-				advanceX += ((kerning.x)) * scaleX;
-			}
-			else
-			{
-				advanceX += (((float)(kerning.x) / (float)(1 << 6))) * scaleX;
-			}
-		}
-	}
-}
-float FreetypeFont::shouldAdvanceLine(zg::strings::Utf8Iterator iterator, glm::vec2 currentPosition, float advanceX,
-																			enums::EBreakStyle breakStyle, float boundsX, float scaleX, float startX,
-																			float fontSize)
-{
-	if ((currentPosition.x + advanceX) > (boundsX + startX))
-		return true;
-	switch (breakStyle)
-	{
-	case enums::EBreakStyle::None:
-		return false;
-	case enums::EBreakStyle::Word:
-		{
-			bool breakAt = false;
-			while (true)
-			{
-				++iterator;
-				auto codepoint = *iterator;
-				if (codepoint == 0 || codepoint == 32 || codepoint == 10 || codepoint == 13 || codepoint == 9)
-					break;
-				auto& character = getCharacter(codepoint, fontSize);
-				advanceX += (character.advance >> 6) * scaleX;
-				if ((currentPosition.x + advanceX) > (boundsX + startX))
-				{
-					breakAt = true;
-				}
-			}
-			if (breakAt)
-			{
-				return true;
-			}
-			return false;
-		}
-	case enums::EBreakStyle::WordHyphen:
-		{
-			bool breakAt = false;
-			while (true)
-			{
-				++iterator;
-				auto codepoint = *iterator;
-				if (codepoint == 0 || codepoint == 32 || codepoint == 10 || codepoint == 13 || codepoint == 9 ||
-						codepoint == 45)
-					break;
-				auto& character = getCharacter(codepoint, fontSize);
-				advanceX += (character.advance >> 6) * scaleX;
-				if ((currentPosition.x + advanceX) > (boundsX + startX))
-				{
-					breakAt = true;
-				}
-			}
-			if (breakAt)
-			{
-				return true;
-			}
-			return false;
-		}
-	}
-	throw std::runtime_error("unsupported breakStyle");
 }

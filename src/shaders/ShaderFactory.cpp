@@ -139,9 +139,10 @@ const int SHAPE_TYPE_NONE = 0;
 const int SHAPE_TYPE_BOX = 1;
 const int SHAPE_TYPE_SDF = 2;
 const int SHAPE_TYPE_MESH = 3;
-const int SHAPE_TYPE_PLANE_XZ = 4;
-const int SHAPE_TYPE_PLANE_XY = 5;
-const int SHAPE_TYPE_PLANE_YZ = 6;
+const int SHAPE_TYPE_PLANE_XZ_CENTER = 4;
+const int SHAPE_TYPE_PLANE_XY_CENTER = 5;
+const int SHAPE_TYPE_PLANE_YZ_CENTER = 6;
+const int SHAPE_TYPE_PLANE_XY_BOTTOM_LEFT = 7;
 struct Material {
   vec4 albedo;
   int type; // 0 = albedo, 1 = uv2, 2 = uv3
@@ -154,10 +155,10 @@ vec3 get_box_vertex(int vertex_id);
 vec3 get_box_normal(int vertex_id);
 vec4 get_box_color(int vertex_id, in Entity entity, in Material material);
 vec3 get_box_uv3(int vertex_id, in Entity entity, in Material material);
-vec3 get_plane_vertex_xz(int vertex_id);
+vec3 get_plane_vertex_xz_center(int vertex_id);
 vec3 get_plane_normal_xz(int vertex_id);
 vec3 get_plane_normal_yz(int vertex_id);
-vec3 get_plane_vertex_xy(int vertex_id);
+vec3 get_plane_vertex_xy_center(int vertex_id);
 vec3 get_plane_normal_xy(int vertex_id);
 vec3 get_plane_normal_yz(int vertex_id);
 vec4 get_plane_color(int vertex_id, in Entity entity, in Material material);
@@ -523,7 +524,7 @@ vec2 get_box_uv2(int vertex_id)
     }
 }
 
-vec2 get_plane_uv2_xz(int vertex_id)
+vec2 get_plane_uv2_xz_center(int vertex_id)
 {
     switch (vertex_id)
     {
@@ -537,7 +538,7 @@ vec2 get_plane_uv2_xz(int vertex_id)
     }
 }
 
-vec2 get_plane_uv2_xy(int vertex_id)
+vec2 get_plane_uv2_xy_center(int vertex_id)
 {
     switch (vertex_id)
     {
@@ -551,7 +552,21 @@ vec2 get_plane_uv2_xy(int vertex_id)
     }
 }
 
-vec2 get_plane_uv2_yz(int vertex_id)
+vec2 get_plane_uv2_xy_bottom_left(int vertex_id)
+{
+    switch (vertex_id)
+    {
+        case 0: return vec2(0.0, 1.0);
+        case 1: return vec2(1.0, 0.0);
+        case 2: return vec2(0.0, 0.0);
+        case 3: return vec2(1.0, 1.0);
+        case 4: return vec2(1.0, 0.0);
+        case 5: return vec2(0.0, 1.0);
+      default: return vec2(0.0, 0.0);
+    }
+}
+
+vec2 get_plane_uv2_yz_center(int vertex_id)
 {
     switch (vertex_id)
     {
@@ -570,16 +585,20 @@ vec2 get_mesh_uv2(int vertex_id, in Entity entity, in Material material)
 }
 vec2 get_uv2(int vertex_id, in Entity entity, in Material material)
 {
+  if (entity.uv2_offset != -1)
+    return get_mesh_uv2(vertex_id, entity, material);
   switch (entity.shape_type)
   {
   case SHAPE_TYPE_BOX:
     return get_box_uv2(vertex_id);
-  case SHAPE_TYPE_PLANE_XZ:
-    return get_plane_uv2_xz(vertex_id);
-  case SHAPE_TYPE_PLANE_XY:
-    return get_plane_uv2_xy(vertex_id);
-  case SHAPE_TYPE_PLANE_YZ:
-    return get_plane_uv2_yz(vertex_id);
+  case SHAPE_TYPE_PLANE_XZ_CENTER:
+    return get_plane_uv2_xz_center(vertex_id);
+  case SHAPE_TYPE_PLANE_XY_CENTER:
+    return get_plane_uv2_xy_center(vertex_id);
+  case SHAPE_TYPE_PLANE_XY_BOTTOM_LEFT:
+    return get_plane_uv2_xy_bottom_left(vertex_id);
+  case SHAPE_TYPE_PLANE_YZ_CENTER:
+    return get_plane_uv2_yz_center(vertex_id);
   case SHAPE_TYPE_SDF:
   {
     return vec2(0.0);
@@ -701,7 +720,7 @@ vec3 get_box_uv3(int vertex_id, in Entity entity, in Material material)
   }
   return vec3(0, 0, 0);
 }
-vec3 get_plane_vertex_xz(int vertex_id)
+vec3 get_plane_vertex_xz_center(int vertex_id)
 {
   switch (vertex_id)
   {
@@ -714,7 +733,7 @@ vec3 get_plane_vertex_xz(int vertex_id)
     default: return vec3(0.0, 0.0, 0.0);
   }
 }
-vec3 get_plane_vertex_xy(int vertex_id)
+vec3 get_plane_vertex_xy_center(int vertex_id)
 {
   switch (vertex_id)
   {
@@ -727,7 +746,7 @@ vec3 get_plane_vertex_xy(int vertex_id)
     default: return vec3(0.0, 0.0, 0.0);
   }
 }
-vec3 get_plane_vertex_yz(int vertex_id)
+vec3 get_plane_vertex_yz_center(int vertex_id)
 {
   switch (vertex_id)
   {
@@ -738,6 +757,19 @@ vec3 get_plane_vertex_yz(int vertex_id)
     case 4: return vec3( 0.0, -0.5, 0.5);
     case 5: return vec3( 0.0,  0.5, 0.5);
     default: return vec3(0.0, 0.0, 0.0);
+  }
+}
+vec3 get_plane_vertex_xy_bottom_left(int vertex_id)
+{
+  switch (vertex_id)
+  {
+    case 0: return vec3(0.0, 1.0, 0.0);
+    case 1: return vec3(1.0, 0.0, 0.0);
+    case 2: return vec3(0.0, 0.0, 0.0);
+    case 3: return vec3(1.0, 1.0, 0.0);
+    case 4: return vec3(1.0, 0.0, 0.0);
+    case 5: return vec3(0.0, 1.0, 0.0);
+   default: return vec3(0.0, 0.0, 0.0);
   }
 }
 vec3 get_plane_normal_xy(int vertex_id)
@@ -788,15 +820,17 @@ vec3 get_entity_vertex(int vertex_id, in Entity entity, in Material material)
   {
   case SHAPE_TYPE_BOX:
     return get_box_vertex(vertex_id);
-  case SHAPE_TYPE_PLANE_XZ:
-    return get_plane_vertex_xz(vertex_id);
-  case SHAPE_TYPE_PLANE_XY:
-    return get_plane_vertex_xy(vertex_id);
-  case SHAPE_TYPE_PLANE_YZ:
-    return get_plane_vertex_yz(vertex_id);
+  case SHAPE_TYPE_PLANE_XZ_CENTER:
+    return get_plane_vertex_xz_center(vertex_id);
+  case SHAPE_TYPE_PLANE_XY_CENTER:
+    return get_plane_vertex_xy_center(vertex_id);
+  case SHAPE_TYPE_PLANE_YZ_CENTER:
+    return get_plane_vertex_yz_center(vertex_id);
+  case SHAPE_TYPE_PLANE_XY_BOTTOM_LEFT:
+    return get_plane_vertex_xy_bottom_left(vertex_id);
   case SHAPE_TYPE_SDF:
   {
-    // vec3 plane_vertex = get_plane_vertex_xy(vertex_id) * 5.0; // Local quad in XY plane
+    // vec3 plane_vertex = get_plane_vertex_xy_center(vertex_id) * 5.0; // Local quad in XY plane
     // mat4 modelMatrix = InstanceModels.data[gl_InstanceIndex];
     // mat4 inverseModelMatrix = InverseInstanceModels.data[gl_InstanceIndex];
     // mat4 viewMatrix = InstanceViews.data[gl_InstanceIndex];
@@ -808,7 +842,7 @@ vec3 get_entity_vertex(int vertex_id, in Entity entity, in Material material)
     // vec3 desired_world_pos = desired_world_pos_homogenous.xyz / desired_world_pos_homogenous.w;
     // vec4 inPosition_homogenous = inverseModelMatrix * vec4(desired_world_pos, 1.0);
     // return inPosition_homogenous.xyz / inPosition_homogenous.w;
-    vec3 vertex_local = get_plane_vertex_xy(vertex_id) * 1.0;
+    vec3 vertex_local = get_plane_vertex_xy_center(vertex_id) * 1.0;
     // float scaleZ = length(InstanceModels.data[gl_InstanceIndex][2].xyz);
     vertex_local.z = 0.5;
 )";
@@ -840,11 +874,11 @@ vec3 get_entity_normal(int vertex_id, in Entity entity, in Material material)
   {
   case SHAPE_TYPE_BOX:
     return get_box_normal(vertex_id);
-  case SHAPE_TYPE_PLANE_XZ:
+  case SHAPE_TYPE_PLANE_XZ_CENTER:
     return get_plane_normal_xz(vertex_id);
-  case SHAPE_TYPE_PLANE_XY:
+  case SHAPE_TYPE_PLANE_XY_CENTER:
     return get_plane_normal_xy(vertex_id);
-  case SHAPE_TYPE_PLANE_YZ:
+  case SHAPE_TYPE_PLANE_YZ_CENTER:
     return get_plane_normal_yz(vertex_id);
   case SHAPE_TYPE_SDF:
     return get_plane_normal_xy(vertex_id);
@@ -946,9 +980,10 @@ const int SHAPE_TYPE_NONE = 0;
 const int SHAPE_TYPE_BOX = 1;
 const int SHAPE_TYPE_SDF = 2;
 const int SHAPE_TYPE_MESH = 3;
-const int SHAPE_TYPE_PLANE_XZ = 4;
-const int SHAPE_TYPE_PLANE_XY = 5;
-const int SHAPE_TYPE_PLANE_YZ = 6;
+const int SHAPE_TYPE_PLANE_XZ_CENTER = 4;
+const int SHAPE_TYPE_PLANE_XY_CENTER = 5;
+const int SHAPE_TYPE_PLANE_YZ_CENTER = 6;
+const int SHAPE_TYPE_PLANE_XY_BOTTOM_LEFT = 7;
 struct Material {
   vec4 albedo;
   int type; // 0 = albedo, 1 = uv2, 2 = uv3
@@ -1258,9 +1293,9 @@ vec3 get_entity_normal(in Entity entity, in Material material);
     auto& sf = ShaderFactory::GetSingleton();
     auto bindingIndex = sf.currentBindingIndex++;
     shader.addUBO(ShaderType::Fragment, "TextColor", bindingIndex, sizeof(glm::vec4));
-    return "layout(binding = " + std::to_string(bindingIndex) + ") uniform TextColor {\n"
+    return "layout(binding = " + std::to_string(bindingIndex) + ") uniform TextColorBuffer {\n"
     "  vec4 value;\n"
-    "} textColor;";
+    "} TextColor;";
   });
   sf.addHook(ShaderType::Fragment, "preMain", "Fog", [](auto& shader, const auto& constants)-> std::string
   {
@@ -1290,6 +1325,11 @@ vec3 get_entity_normal(in Entity entity, in Material material);
     return
       "float calculatePointLightShadowFactor(in vec3 fragPos, in samplerCube shadowMap, in vec3 lightPos, in float nearPlane, in float farPlane, in vec3 normal, in vec3 lightDir);";
   });
+  sf.addHook(ShaderType::Fragment, "preMain", "MSDF", [](auto& shader, const auto& constants)-> std::string
+  {
+    return R"(float median(float r, float g, float b);
+float screenPxRange();)";
+  });
   sf.addHook(ShaderType::Fragment, "preInMain", "Shape", [](auto& shader, const auto& constants) -> std::string
   {
     return R"(  int entity_id = get_entity_id();
@@ -1317,11 +1357,24 @@ vec3 get_entity_normal(in Entity entity, in Material material);
   sf.addHook(ShaderType::Fragment, "preInMain", "ColorTexture", [](auto& shader, const auto& constants)-> std::string
   {
     std::string string("  vec4 sampled = texture(ColorTexture, inUV);\n");
-    if (std::find(constants.begin(), constants.end(), "TextColor") != constants.end())
+    auto constants_begin = constants.begin();
+    auto constants_end = constants.end();
+    if (std::find(constants_begin, constants_end, "TextColor") != constants_end)
     {
       string += R"(  if (sampled.a <= 0.1)
     discard;
-  FragColor = vec4(textColor.value.r, textColor.value.g, textColor.value.b, sampled.a * textColor.value.a);)";
+  FragColor = vec4(TextColor.value.r, TextColor.value.g, TextColor.value.b, sampled.r * TextColor.value.a);)";
+    }
+    else if (std::find(constants_begin, constants_end, "MSDF") != constants_end)
+    {
+      string += R"(  float sd_msdf = median(sampled.r, sampled.g, sampled.b);
+  float sd_tsdf = sampled.a;
+  float blendRange = 0.5 / screenPxRange();
+  float blendFactor = smoothstep(0.5 - blendRange, 0.5 + blendRange, sd_msdf);
+  float sd = mix(sd_msdf, sd_tsdf, blendFactor);
+  float screenPxDistance = screenPxRange()*(sd - 0.5);
+  float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
+  FragColor = mix(vec4(0, 0, 0, 0), vec4(1, 1, 1, 1), opacity);)";
     }
     else
     {
@@ -1726,6 +1779,18 @@ vec3 get_entity_normal(in Entity entity, in Material material)
       "  float bias = 0.005;\n" +
       "  return (currentDepth - bias) > closestDepth ? 1.0 : 0.0;\n" +
       "}";
+  });
+  sf.addHook(ShaderType::Fragment, "postMain", "MSDF", [](auto& shader, const auto& constants)-> std::string
+  {
+    return R"(float median(float r, float g, float b) {
+  return max(min(r, g), min(max(r, g), b));
+}
+float pxRange = 2.0;
+float screenPxRange() {
+    vec2 unitRange = vec2(pxRange)/vec2(textureSize(ColorTexture, 0));
+    vec2 screenTexSize = vec2(1.0)/fwidth(inUV);
+    return max(0.5*dot(unitRange, screenTexSize), 1.0);
+})";
   });
   registered_zg_shader_hooks = true;
 }

@@ -47,6 +47,10 @@ namespace zg
          */
         Registry();
         /**
+         * @brief destructor (calls windows.onRemove)
+         */
+        ~Registry();
+        /**
          * Gets a Window from the registry using the windows index stack
          */
         Window& getWindow(const std::vector<size_t*>& INDEX_STACK);
@@ -60,6 +64,11 @@ namespace zg
          * *value can become degenerate if adding multiple windows/scenes/entities, so use ID (stacks) instead
          */
         WindowKeyIDVector::EmplaceBackTuple addWindow(const WindowCreateInfo& createInfo);
+        /**
+         * @brief removes a window given its ID
+         * @return bool true if removed
+         */
+        bool removeWindow(size_t ID);
         /**
          * Gets a Window component by ID
          */
@@ -108,13 +117,38 @@ namespace zg
          */
         size_t addMesh(const MeshCreateInfo& info, Entity& entity);
         /**
-         * Gets a Mesh from the registry using the meshes ID
+         * @brief Gets a Mesh from the registry using the meshes ID
          */
         Mesh& getMesh(size_t ID);
         /**
-         * Dereferences a mesh from an entity (used internally)
-         * Returns true if mesh was destroyed
+         * @brief Dereferences a mesh from an entity (used internally)
+         * @return true if mesh was destroyed
          */
         bool deRefMesh(size_t ID);
+
+        /**
+         * @brief Gets a value by T
+         */
+        template <typename T>
+        T& getT(size_t ID)
+        {
+            if constexpr (std::is_same_v<T, Window>)
+            {
+                return getWindow(ID);
+            }
+            else if constexpr (std::is_same_v<T, Scene>)
+            {
+                return getScene(ID);
+            }
+            else if constexpr (std::is_same_v<T, Entity>)
+            {
+                return getEntity(ID);
+            }
+            else if constexpr (std::is_same_v<T, Mesh>)
+            {
+                return getMesh(ID);
+            }
+            throw std::runtime_error("Unsupported type T");
+        }
     };
 }

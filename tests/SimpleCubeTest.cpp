@@ -272,7 +272,7 @@ SceneCreateInfo SphereFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& cubes = scene.template getData<std::vector<size_t>>("CubeIDs");
             auto& initialSphericalCoords = scene.template getData<std::vector<glm::vec2>>("InitialSphericalCoords");
@@ -389,7 +389,7 @@ SceneCreateInfo CubeGridFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& cubes = scene.template getData<std::vector<size_t>>("CubeIDs");
             auto& initialPositions = scene.template getData<std::vector<glm::vec3>>("InitialPositions");
@@ -488,7 +488,7 @@ SceneCreateInfo RandomCubesFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& cubes = scene.template getData<std::vector<size_t>>("CubeIDs");
             auto& initialRotations = scene.template getData<std::vector<glm::vec3>>("InitialRotations");
@@ -581,7 +581,7 @@ SceneCreateInfo SpiralFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& cubes = scene.template getData<std::vector<size_t>>("CubeIDs");
             auto cubesSize = cubes.size();
@@ -666,7 +666,7 @@ SceneCreateInfo WaveformGridFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& cubes = scene.template getData<std::vector<size_t>>("CubeIDs");
             auto& initialPositions = scene.template getData<std::vector<glm::vec2>>("InitialGridPositions");
@@ -780,7 +780,7 @@ SceneCreateInfo RingFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& cubes = scene.template getData<std::vector<size_t>>("CubeIDs");
             auto& initialAngles = scene.template getData<std::vector<float>>("InitialAngles");
@@ -851,13 +851,13 @@ SceneCreateInfo FountainFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& particles = scene.template getData<std::vector<FountainParticle>>("Particles");
             auto& emissionTimer = scene.template getData<float>("emissionTimer");
 
             // Emit new particles based on emission rate
-            emissionTimer += window.deltaTime;
+            emissionTimer += *window.deltaTime;
             while (emissionTimer >= 1.0f / FOUNTAIN_EMISSION_RATE && particles.size() < NUM_FOUNTAIN_PARTICLES) {
                 emissionTimer -= 1.0f / FOUNTAIN_EMISSION_RATE;
 
@@ -897,13 +897,13 @@ SceneCreateInfo FountainFactory()
                 auto& cube = Registry::GetSingleton().getEntity(particle.entityID);
 
                 // Apply gravity to velocity
-                particle.velocity.y += FOUNTAIN_GRAVITY * window.deltaTime;
+                particle.velocity.y += FOUNTAIN_GRAVITY * *window.deltaTime;
 
                 // Update position
-                cube.position += particle.velocity * (float)window.deltaTime;
+                cube.position += particle.velocity * (float)*window.deltaTime;
 
                 // Update lifetime
-                particle.lifetime += window.deltaTime;
+                particle.lifetime += *window.deltaTime;
 
                 // Remove particle if lifetime exceeded
                 if (particle.lifetime >= FOUNTAIN_PARTICLE_LIFETIME) {
@@ -1011,7 +1011,7 @@ SceneCreateInfo DNAHelixFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& cubes = scene.template getData<std::vector<size_t>>("CubeIDs");
             auto& initialHelixParams = scene.template getData<std::vector<glm::vec2>>("InitialHelixParams");
@@ -1126,7 +1126,7 @@ SceneCreateInfo SwarmFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& swarmCubes = scene.template getData<std::vector<SwarmCube>>("SwarmCubes");
             float halfBoxSize = SWARM_BOUNDING_BOX_SIZE * 0.5f;
@@ -1141,7 +1141,7 @@ SceneCreateInfo SwarmFactory()
                     zg::crypto::Random::value<float>(-1.0f, 1.0f),
                     zg::crypto::Random::value<float>(-1.0f, 1.0f),
                     zg::crypto::Random::value<float>(-1.0f, 1.0f)
-                ) * SWARM_RANDOMNESS * (float)window.deltaTime;
+                ) * SWARM_RANDOMNESS * (float)*window.deltaTime;
 
                 // Normalize velocity and apply speed
                 if (glm::length(swarmCube.velocity) > 0.0f) {
@@ -1161,7 +1161,7 @@ SceneCreateInfo SwarmFactory()
                 if (cube.position.z > halfBoxSize || cube.position.z < -halfBoxSize) swarmCube.velocity.z *= -1.0f;
 
                 // Update position
-                cube.position += swarmCube.velocity * (float)window.deltaTime;
+                cube.position += swarmCube.velocity * (float)*window.deltaTime;
 
                  // Subtle color change based on time or position
                  float color_factor = glm::sin(deltaTimeCounter * 0.5f + glm::length(cube.position) * 0.05f) * 0.1f + 0.9f;
@@ -1242,7 +1242,7 @@ SceneCreateInfo TorusFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& cubes = scene.template getData<std::vector<size_t>>("CubeIDs");
             auto& initialTorusParams = scene.template getData<std::vector<glm::vec2>>("InitialTorusParams");
@@ -1318,13 +1318,13 @@ SceneCreateInfo FallingCubesFactory()
         {
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
             auto& deltaTimeCounter = scene.template getData<float>("deltaTimeCounter");
-            deltaTimeCounter += window.deltaTime;
+            deltaTimeCounter += *window.deltaTime;
 
             auto& fallingCubes = scene.template getData<std::vector<FallingCube>>("FallingCubes");
             auto& spawnTimer = scene.template getData<float>("spawnTimer");
 
             // Spawn new cubes based on spawn rate
-            spawnTimer += window.deltaTime;
+            spawnTimer += *window.deltaTime;
             while (spawnTimer >= 1.0f / FALLING_CUBE_SPAWN_RATE && fallingCubes.size() < NUM_FALLING_CUBES) {
                 spawnTimer -= 1.0f / FALLING_CUBE_SPAWN_RATE;
 
@@ -1367,10 +1367,10 @@ SceneCreateInfo FallingCubesFactory()
                 auto& cube = Registry::GetSingleton().getEntity(fallingCube.entityID);
 
                 // Apply gravity to velocity
-                fallingCube.velocity.y += FALLING_GRAVITY * window.deltaTime;
+                fallingCube.velocity.y += FALLING_GRAVITY * *window.deltaTime;
 
                 // Update position
-                cube.position += fallingCube.velocity * (float)window.deltaTime;
+                cube.position += fallingCube.velocity * (float)*window.deltaTime;
 
                 // Remove cube if below despawn height
                 if (cube.position.y < FALLING_CUBE_DESPAWN_HEIGHT) {

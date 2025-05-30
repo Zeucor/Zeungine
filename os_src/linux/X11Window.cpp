@@ -130,13 +130,13 @@ void X11Window::init(Window &renderWindow)
 	{
 		return;
 	}
-	if (!renderWindow.title.empty())
+	if (!(*renderWindow.title).empty())
 	{
-		XStoreName(display, window, renderWindow.title.c_str());
+		XStoreName(display, window, (*renderWindow.title).c_str());
 		XClassHint *classHint = XAllocClassHint();
 		if (classHint)
 		{
-			classHint->res_name = classHint->res_class = (char *)renderWindow.title.c_str();
+			classHint->res_name = classHint->res_class = (char *)(*renderWindow.title).c_str();
 			XSetClassHint(display, window, classHint);
 			XFree(classHint);
 		}

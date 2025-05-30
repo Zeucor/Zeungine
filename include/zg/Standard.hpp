@@ -27,6 +27,7 @@
 #include <vector>
 #include <zg/enums/EFileLocation.hpp>
 #include <zg/interfaces/IFile.hpp>
+#include <zg/observable_ptr.hpp>
 #include <zg/queue.hpp>
 #if defined(_WIN32)
 #include <windows.h>

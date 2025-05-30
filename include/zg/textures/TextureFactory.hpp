@@ -34,5 +34,7 @@ namespace zg::textures
 		static void midInitTexture(const Texture &texture, const std::vector<images::ImageLoader::ImagePair> &images);
 		static void postInitTexture(const Texture &texture);
 		static void destroyTexture(Texture &texture);
+		static std::pair<int, size_t> getChannelsSizeOfType(const Texture& texture);
+		static void flipTextureDataY(const Texture& texture, void* data);
 	};
 } // namespace zg::textures

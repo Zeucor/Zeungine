@@ -21,7 +21,7 @@ Entity::Entity(const EntityCreateInfo& info) :
 	name(info.name),
 	position(info.position),
 	rotation(info.rotation),
-	scale(info.scale),
+	scale(true, info.scale),
 	meshInfos(info.meshInfos),
 	children(
 		[](const auto& entity) { return entity.name; },
@@ -44,14 +44,15 @@ Entity::Entity(const EntityCreateInfo& info) :
 	preUpdateFunction(info.preUpdateFunction), preRenderFunction(info.preRenderFunction),
 	postRenderFunction(info.postRenderFunction),
 	onAddedFunction(info.onAddedFunction),
-	onRemovedFunction(info.onRemovedFunction),
-	addToBVH(info.addToBVH)
+	onRemoveFunctionMap(info.onRemoveFunctionMap),
+	addToBVH(info.addToBVH),
+	runtimeConstantValueShaderSetters(info.runtimeConstantValueShaderSetters)
 {
 	ZGZoneScoped;
-	if (onAddedFunction)
-		onAddedFunction(*this);
 	for (auto& meshInfo : info.meshInfos)
 		meshIDs.push_back(Registry::GetSingleton().addMesh(meshInfo, *this));
+	if (onAddedFunction)
+		onAddedFunction(*this);
 	for (auto& childInfo : info.childrenInfos)
 		addEntity(childInfo);
 }
@@ -87,7 +88,8 @@ Entity::Entity(const Entity& other) :
 	preRenderFunction(other.preRenderFunction),
 	postRenderFunction(other.postRenderFunction),
 	onAddedFunction(other.onAddedFunction),
-	onRemovedFunction(other.onRemovedFunction)
+	onRemoveFunctionMap(other.onRemoveFunctionMap),
+	runtimeConstantValueShaderSetters(other.runtimeConstantValueShaderSetters)
 {
 	ZGZoneScoped;
 	{
@@ -99,9 +101,6 @@ Entity::Entity(const Entity& other) :
 Entity::~Entity()
 {
 	ZGZoneScoped;
-	for (auto& child : children)
-		if (child.onRemovedFunction)
-			child.onRemovedFunction(child);
 	children.clear();
 	for (auto& meshID : meshIDs)
 		Registry::GetSingleton().deRefMesh(meshID);
@@ -149,8 +148,9 @@ Entity& Entity::operator=(const Entity& other)
 	preRenderFunction = other.preRenderFunction;
 	postRenderFunction = other.postRenderFunction;
 	onAddedFunction = other.onAddedFunction;
-	onRemovedFunction = other.onRemovedFunction;
+	onRemoveFunctionMap = other.onRemoveFunctionMap;
 	isTransparent = other.isTransparent;
+	runtimeConstantValueShaderSetters = other.runtimeConstantValueShaderSetters;
 	return *this;
 }
 void Entity::refreshMeshes()
@@ -162,7 +162,7 @@ void Entity::refreshMeshes()
 	auto meshIDsData = meshIDs.data();
 	for (size_t index = 0; index < meshInfosSize; ++index)
 	{
-		auto meshID = index < meshIDsSize ? meshIDsData[index] : 0;
+		size_t meshID = index < meshIDsSize ? meshIDsData[index] : 0;
 		auto& meshInfo = meshInfosData[index];
 		auto newSubMeshID = Registry::GetSingleton().addMesh(meshInfo, *this);
 		if (Registry::GetSingleton().deRefMesh(meshID))
@@ -193,13 +193,13 @@ float BoxSDF(const glm::vec3& p) {
     glm::vec3 q = glm::abs(p) - halfExtents;
     return glm::length((glm::max)(q, 0.0f)) + (glm::min)((glm::max)(q.x, q.y, q.z), 0.0f);
 }
-float PlaneXYSDF(const glm::vec3& p) {
+float PlaneXY_Center_SDF(const glm::vec3& p) {
     return p.z;
 }
-float PlaneXZSDF(const glm::vec3& p) {
+float PlaneXZ_Center_SDF(const glm::vec3& p) {
     return p.y;
 }
-float PlaneYZSDF(const glm::vec3& p) {
+float PlaneYZ_Center_SDF(const glm::vec3& p) {
     return p.x;
 }
 float Entity::operator()(glm::vec3 p) const
@@ -213,14 +213,15 @@ float Entity::operator()(glm::vec3 p) const
 			case ShapeType::Box:
 				current_sdf = BoxSDF(p);
 				break;
-			case ShapeType::PlaneXY:
-				current_sdf = PlaneXYSDF(p);
+			case ShapeType::PlaneXY_Center:
+			case ShapeType::PlaneXY_BottomLeft:
+				current_sdf = PlaneXY_Center_SDF(p);
 				break;
-			case ShapeType::PlaneXZ:
-				current_sdf = PlaneXZSDF(p);
+			case ShapeType::PlaneXZ_Center:
+				current_sdf = PlaneXZ_Center_SDF(p);
 				break;
-			case ShapeType::PlaneYZ:
-				current_sdf = PlaneYZSDF(p);
+			case ShapeType::PlaneYZ_Center:
+				current_sdf = PlaneYZ_Center_SDF(p);
 				break;
 			case ShapeType::SDF:
 			{
@@ -253,25 +254,26 @@ glm::vec3 Entity::getBoundingSize() const
 {
 	physics::AABB aabb;
     std::vector<glm::vec3> points;
+	auto& scale_ref = *scale;
     for (auto& meshInfo : meshInfos)
     {
         switch (meshInfo.shapeType) {
-            case ShapeType::PlaneXY:
-            case ShapeType::PlaneXZ:
-            case ShapeType::PlaneYZ:
+            case ShapeType::PlaneXY_Center:
+            case ShapeType::PlaneXZ_Center:
+            case ShapeType::PlaneYZ_Center:
             case ShapeType::SDF:
             case ShapeType::Box:
             {
 			_box_sphere:
                 float half_extent = 0.5f;
-                points.push_back(glm::vec3( half_extent,  half_extent,  half_extent) * scale);
-                points.push_back(glm::vec3(-half_extent,  half_extent,  half_extent) * scale);
-                points.push_back(glm::vec3( half_extent, -half_extent,  half_extent) * scale);
-                points.push_back(glm::vec3( half_extent,  half_extent, -half_extent) * scale);
-                points.push_back(glm::vec3(-half_extent, -half_extent,  half_extent) * scale);
-                points.push_back(glm::vec3(-half_extent,  half_extent, -half_extent) * scale);
-                points.push_back(glm::vec3( half_extent, -half_extent, -half_extent) * scale);
-                points.push_back(glm::vec3(-half_extent, -half_extent, -half_extent) * scale);
+                points.push_back(glm::vec3( half_extent,  half_extent,  half_extent) * scale_ref);
+                points.push_back(glm::vec3(-half_extent,  half_extent,  half_extent) * scale_ref);
+                points.push_back(glm::vec3( half_extent, -half_extent,  half_extent) * scale_ref);
+                points.push_back(glm::vec3( half_extent,  half_extent, -half_extent) * scale_ref);
+                points.push_back(glm::vec3(-half_extent, -half_extent,  half_extent) * scale_ref);
+                points.push_back(glm::vec3(-half_extent,  half_extent, -half_extent) * scale_ref);
+                points.push_back(glm::vec3( half_extent, -half_extent, -half_extent) * scale_ref);
+                points.push_back(glm::vec3(-half_extent, -half_extent, -half_extent) * scale_ref);
                 break;
             }
             case ShapeType::Mesh:
@@ -282,7 +284,7 @@ glm::vec3 Entity::getBoundingSize() const
 				auto& vertices = minfo.vertices;
 				points.reserve(vertices.size());
 				for (auto& v : vertices)
-					points.push_back(glm::vec3(v.x, v.y, v.z) * scale);
+					points.push_back(glm::vec3(v.x, v.y, v.z) * scale_ref);
                 break;
             }
             default:
@@ -532,7 +534,7 @@ glm::mat4& Entity::getModelMatrix()
 	}
 	updateTime = scene.updateTime;
 	glm::mat4 identity = glm::mat4(1.0f);
-	glm::mat4 scaleMat = glm::scale(identity, scale);
+	glm::mat4 scaleMat = glm::scale(identity, *scale);
 	glm::mat4 rotMat = glm::mat4_cast(rotation);
 	glm::mat4 transMat = glm::translate(identity, position);
 	glm::mat4 localModel = transMat * rotMat * scaleMat;
@@ -591,8 +593,7 @@ void Entity::removeEntity(size_t ID)
 		return;
 	}
 	auto& child = *childIter;
-	if (child.onRemovedFunction)
-		child.onRemovedFunction(child);
+	child.onRemove();
 	child.detachAllComponents();
 	children.erase(childIter);
 	auto& idEntities = Registry::GetSingleton().idEntities;
@@ -744,4 +745,20 @@ void Entity::setOrientation(glm::quat newOrientation)
 		rotation = newOrientation;
 	}
 	return;
+}
+void Entity::setTexture(size_t meshIndex, size_t textureIndex, const std::shared_ptr<textures::Texture>& new_texture, bool refresh_meshes)
+{
+	ZGZoneScoped;
+	meshInfos[meshIndex].keyedTextures[textureIndex].second = new_texture;
+	if (refresh_meshes)
+		refreshMeshes();
+}
+void Entity::onRemove()
+{
+	for (auto& child : children)
+		child.onRemove();
+	for (auto& pair : onRemoveFunctionMap)
+	{
+		pair.second(*this);
+	}
 }

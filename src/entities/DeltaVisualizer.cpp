@@ -22,7 +22,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
 	auto color = glm::vec4(0.2f, 0.3f, 0.4f, 0.7f);
     MeshCreateInfo meshInfo{
         .name = "DeltaVisualizer",
-        .shapeType = ShapeType::PlaneXY,
+        .shapeType = ShapeType::PlaneXY_Center,
         .material = {
             color,
             0
@@ -131,8 +131,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
                 (-size.y / 3.f) - (lastDeltaTextSize.y * lastDeltaTextScale.y), 0.15);
 				robotoRegular.stringToHost(
 					lastDeltaTextString,
-					deltaTextPosition,
-					glm::vec4(0.369, 0.760, 0.564, 1), glm::quat(1, 0, 0, 0), lastDeltaTextScale, lastDeltaTextFontsize,
+					deltaTextPosition, glm::quat(1, 0, 0, 0), lastDeltaTextScale, lastDeltaTextFontsize,
 					lastDeltaTextLineheight, lastDeltaTextSize * (glm::vec2(lastDeltaTextScale) + glm::vec2(1e-3f)),
 					lastDeltaTextBreakstyle, entity, lastDeltaTextEntities, lastDeltaTextCursorIndex, lastDeltaTextCursor);
                 // update thisYText
@@ -149,8 +148,7 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
                 deltaTextPosition.y - (thisYTextSize.y * thisYTextScale.y), 0.15);
                 robotoRegular.stringToHost(
                     thisYTextString,
-                    yTextPosition,
-                    glm::vec4(0.369, 0.760, 0.564, 1), glm::quat(1, 0, 0, 0), thisYTextScale, thisYTextFontsize,
+                    yTextPosition, glm::quat(1, 0, 0, 0), thisYTextScale, thisYTextFontsize,
                     thisYTextLineheight, thisYTextSize * (glm::vec2(thisYTextScale) + glm::vec2(1e-3f)),
                     thisYTextBreakstyle, entity, thisYTextEntities, thisYTextCursorIndex, thisYTextCursor);
 			}
@@ -230,19 +228,21 @@ zg::EntityCreateInfo zg::entities::DeltaVisualizerFactory(glm::vec2 size, long d
                 frametimeString,
                 glm::vec3((size.x / 2.f) - (frametimeSize.x * frametimeScale.x),
                                     ((frametimeLineheight * frametimeScale.y) / 2.f), +0.15),
-                glm::vec4(0.869, 0.860, 0.864, 1), angle, frametimeScale, frametimeFontsize, frametimeLineheight,
+                angle, frametimeScale, frametimeFontsize, frametimeLineheight,
                 frametimeSize * (glm::vec2(frametimeScale) + glm::vec2(1e-3f)), frametimeBreakstyle, entity,
                 frametimeEntities, frametimeCursorIndex, frametimeCursor);
-            auto currentPointInfo = entities::PlaneFactory(glm::vec4(0.9, 0.2, 0.4, 1), "Delta Visualizer Current Point", glm::vec3(0), glm::quat(1, 0, 0, 0), glm::vec3(size.x / 25.f, size.x / 25.f, 1.f), constants, frontFace);
+            auto currentPointInfo = entities::PlaneFactory(glm::vec4(0.9, 0.2, 0.4, 1), "Delta Visualizer Current Point", glm::vec3(0), glm::quat(1, 0, 0, 0), glm::vec3(size.x / 25.f, size.x / 25.f, 1.f), constants, entities::PlaneType::XY_Center, frontFace);
             auto currentPoint_tuple = entity.addEntity(currentPointInfo);
             currentPoint = std::get<KEY_ID_VECTOR_ID_INDEX>(currentPoint_tuple);
         },
-        .onRemovedFunction = [](auto& entity)
-        {
-            auto& robotoFilePointer = entity.template getData<zgfilesystem::File*>("RobotoFile" );
-            auto& robotoRegularPointer = entity.template getData<zg::fonts::freetype::FreetypeFont*>("RobotoRegularFont");
-            delete robotoFilePointer;
-            delete robotoRegularPointer;
+        .onRemoveFunctionMap = {
+            { "DestroyFont", [](auto& entity)
+            {
+                auto& robotoFilePointer = entity.template getData<zgfilesystem::File*>("RobotoFile" );
+                auto& robotoRegularPointer = entity.template getData<zg::fonts::freetype::FreetypeFont*>("RobotoRegularFont");
+                delete robotoFilePointer;
+                delete robotoRegularPointer;
+            } }
         },
         .meshInfos = {meshInfo}
     };

@@ -4,9 +4,14 @@
 #include <string>
 using namespace zg;
 Registry::Registry():
-    windows([](auto& window) { return window.title; }),
+    windows([](auto& window) { return *window.title; }),
     meshes([](auto& mesh) { return mesh.hash; })
 {}
+Registry::~Registry()
+{
+    for (auto& window : windows)
+        window.onRemove();
+}
 /**
  * Gets a Window from the registry by the Window ID
  */
@@ -43,6 +48,19 @@ Registry::WindowKeyIDVector::EmplaceBackTuple Registry::addWindow(const WindowCr
     auto& window = windows.commitTransaction(transaction, usingInfo);
     idWindows[window.ID] = window.INDEX_STACK;
     return {transaction.key, transaction.id, transaction.index, &window};
+}
+bool Registry::removeWindow(size_t ID)
+{
+    auto idIter = idWindows.find(ID);
+    if (idIter == idWindows.end())
+        return false;
+    auto& stack = idIter->second;
+    if (stack.empty())
+        return false;
+    auto win_iter = windows.begin() + *stack[0];
+    windows.erase(win_iter);
+    idWindows.erase(idIter);
+    return true;
 }
 components::windows::WindowComponent& Registry::getWindowComponent(size_t ID)
 {
@@ -150,14 +168,15 @@ size_t Registry::hashMeshCreateInfo(const MeshCreateInfo& info, Entity& entity)
         mesh_info_iter = info.entity_id_mesh_infos.find(entity.ID);
     }
     auto& meshInfo = mesh_info_iter->second;
-    finalHash = (std::hash<uint32_t>{}(uint32_t(info.shapeType)) + 1) << ++shift;
+    finalHash = ((std::hash<uint32_t>{}(uint32_t(info.shapeType)) + 1) << ++shift);
+    finalHash ^= ((zg::crypto::hashVector(info.constants) + 1) << ++shift);
     if (meshInfo.indices.empty() || meshInfo.vertices.empty())
         goto _textureHash;
     {
         auto indiceHash = crypto::hashVector(meshInfo.indices);
         auto verticeHash = crypto::hashVector(meshInfo.vertices);
-        finalHash ^= indiceHash << ++shift;
-        finalHash ^= verticeHash << ++shift;
+        finalHash ^= (indiceHash << ++shift);
+        finalHash ^= (verticeHash << ++shift);
     }
 _textureHash:
     for (auto& keyedPair : info.keyedTextures)

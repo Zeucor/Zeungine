@@ -2,8 +2,16 @@
 #include <zg/Mesh.hpp>
 #include <zg/utilities.hpp>
 using namespace zg;
-zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string name, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-    const shaders::RuntimeConstants constants, zg::FRONTFACE frontFace)
+zg::EntityCreateInfo zg::entities::PlaneFactory(
+    glm::vec4 color,
+    std::string name,
+    glm::vec3 position,
+    glm::quat rotation,
+    glm::vec3 scale,
+    const shaders::RuntimeConstants constants,
+	PlaneType planeType,
+    zg::FRONTFACE frontFace
+)
 {
     auto mergedConstants = shaders::mergeConstants({
         shaders::RuntimeConstants({"Shape", "Color"}),
@@ -12,7 +20,7 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string nam
     });
     zg::MeshCreateInfo meshInfo{
         .name = "Plane",
-        .shapeType = ShapeType::PlaneXY,
+        .shapeType = (ShapeType)planeType,
         .material = {
             color,
             0
@@ -35,8 +43,17 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(glm::vec4 color, std::string nam
     };
     return info;
 }
-zg::EntityCreateInfo zg::entities::PlaneFactory(const std::shared_ptr<textures::Texture>& texture, std::string name, glm::vec3 position, glm::quat rotation, glm::vec3 scale,
-    const shaders::RuntimeConstants constants, zg::FRONTFACE frontFace)
+zg::EntityCreateInfo zg::entities::PlaneFactory(
+    const std::shared_ptr<textures::Texture>& texture,
+    std::string name,
+    glm::vec3 position,
+    glm::quat rotation,
+    glm::vec3 scale,
+    const std::vector<glm::vec2>& uv2s,
+    const shaders::RuntimeConstants constants,
+	PlaneType planeType,
+    zg::FRONTFACE frontFace
+)
 {
     auto mergedConstants = shaders::mergeConstants({
         shaders::RuntimeConstants({"Shape", "UV2", "ColorTexture"}),
@@ -45,13 +62,15 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(const std::shared_ptr<textures::
     });
     zg::MeshCreateInfo meshInfo{
         .name = "Plane",
-        .shapeType = ShapeType::PlaneXY,
+        .shapeType = (ShapeType)planeType,
         .material = {
             glm::vec4(1),
             1
         },
-        .info = [](auto&) -> MeshInfo {
-            return { };
+        .info = [uv2s](auto&) -> MeshInfo {
+            return MeshInfo{ 
+                .uv2s = uv2s
+            };
         },
         .keyedTextures = {
             {"ColorTexture", texture}

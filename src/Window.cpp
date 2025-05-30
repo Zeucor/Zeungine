@@ -31,11 +31,11 @@ zg::Window::Window(const WindowCreateInfo& info) :
 	ID(info.ID),
 	INDEX(info.INDEX),
 	INDEX_STACK(info.INDEX_STACK),
-	title(info.title), childWindows([](auto& childWindow) { return childWindow.title; }), windowWidth(info.windowWidth),
-	windowHeight(info.windowHeight), windowX(info.windowX), windowY(info.windowY),
-	scenes([](auto& scene) { return scene.name; }), deltaTime(1.0 / info.framerate), borderless(info.borderless),
-	framerate(info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)),
-	framebudget(frameduration), systemFonts(*this), postProcessingPipeline(INDEX_STACK)
+	title(true, info.title), childWindows([](auto& childWindow) { return *childWindow.title; }), windowWidth(true, info.windowWidth),
+	windowHeight(true, info.windowHeight), windowX(true, info.windowX), windowY(true, info.windowY),
+	scenes([](auto& scene) { return scene.name; }), deltaTime(true, 1.0 / info.framerate), borderless(info.borderless),
+	framerate(true, info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(*deltaTime * NANOSECONDS::den)),
+	framebudget(frameduration, 1, true, false), systemFonts(*this), postProcessingPipeline(INDEX_STACK)
 {
 	setViewport();
 	ZGZoneScoped;
@@ -61,13 +61,13 @@ zg::Window::Window(const zg::Window& other) :
 	ID(other.ID),
 	INDEX(other.INDEX),
 	INDEX_STACK(other.INDEX_STACK),
-		title(other.title), childWindows(other.childWindows), windowWidth(other.windowWidth),
-		windowHeight(other.windowHeight), windowX(other.windowX), windowY(other.windowY), scenes(other.scenes),
-		deltaTime(1.0 / other.framerate), borderless(other.borderless), framerate(other.framerate), vsync(other.vsync),
-		frameduration(NANOSECONDS_DURATION(deltaTime * NANOSECONDS::den)), framebudget(frameduration), systemFonts(*this),
-		postProcessingPipeline(INDEX_STACK),
-		mainColorTexture(other.mainColorTexture),// mainDepthTexture(other.mainDepthTexture),
-		mainFramebuffer(other.mainFramebuffer)
+	title(other.title), childWindows(other.childWindows), windowWidth(other.windowWidth),
+	windowHeight(other.windowHeight), windowX(other.windowX), windowY(other.windowY), scenes(other.scenes),
+	deltaTime(other.deltaTime), borderless(other.borderless), framerate(other.framerate), vsync(other.vsync),
+	frameduration(NANOSECONDS_DURATION(*deltaTime * NANOSECONDS::den)), framebudget(frameduration, 1, true, false), systemFonts(*this),
+	postProcessingPipeline(INDEX_STACK),
+	mainColorTexture(other.mainColorTexture),// mainDepthTexture(other.mainDepthTexture),
+	mainFramebuffer(other.mainFramebuffer)
 {
 	setViewport();
 	ZGZoneScoped;
@@ -219,7 +219,7 @@ void zg::Window::startWindow()
 	iRendererRef.init();
 	iPlatformWindowRef.postInit();
 	fullscreenQuad = std::make_unique<FullscreenQuad>(INDEX_STACK, zg::shaders::RuntimeConstants({"ColorTexture"}));
-	mainColorTexture = std::make_shared<textures::Texture>(iRenderer, glm::ivec4(windowWidth, windowHeight, 1, 0), (const void*)0, textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
+	mainColorTexture = std::make_shared<textures::Texture>(iRenderer, glm::ivec4(*windowWidth, *windowHeight, 1, 0), (const void*)0, DEFAULT_TEXTURE_FORMAT, DEFAULT_TEXTURE_TYPE, DEFAULT_TEXTURE_FILTERTYPE, true, DEFAULT_TEXTURE_MULTISAMPLING);
 	// mainDepthTexture = std::make_shared<textures::Texture>(iRenderer, glm::ivec4(windowWidth, windowHeight, 1, 0), (const void*)0, textures::Texture::Format::Depth, textures::Texture::Type::Float, textures::Texture::FilterType::Linear, true, textures::Texture::Multisampling::x1);
 	mainFramebuffer = std::make_shared<textures::Framebuffer>(iRenderer, std::vector<textures::Framebuffer::TextureAttachmentPair>{
 		{mainColorTexture, textures::Framebuffer::AttachmentType::Color}//,
@@ -229,14 +229,13 @@ void zg::Window::startWindow()
 	// postProcessingPipeline.textureRegistry.registerOutput((std::numeric_limits<float>::lowest)(), "DepthTexture", mainDepthTexture);
 	runRunnables();
 	iPlatformWindowRef.disableKeyAutoRepeat();
-	std::vector<std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>>> ppOutputs;
 	while (true)
 	{
 		ZGZoneScopedN("window:mainLoop");
 		{
 			ZGZoneScopedN("mainLoop:budgetBegin");
 			auto _now = framebudget.begin();
-			updateDeltaTime(_now, false);
+			updateDeltaTime(_now, true);
 		}
 		{
 			{
@@ -292,8 +291,7 @@ void zg::Window::startWindow()
 			}
 			{
 				ZGZoneScopedN("mainLoop:budgetEnd");
-				auto _now = framebudget.end();
-				updateDeltaTime(_now, true);
+				framebudget.end();
 			}
 		}
 		ZGFrameMark;
@@ -304,39 +302,6 @@ void zg::Window::startWindow()
 			framebudget.sleep();
 		}
 	}
-_exit:
-	for (auto& pair : shutdownHandlers)
-	{
-		ZGZoneScopedN("shutdownHandler");
-		pair.second(*this);
-	}
-	iPlatformWindowRef.enableKeyAutoRepeat();
-	audioEngine.stop();
-	audioEngine.clearPipeline();
-	childWindows.clear();
-	{
-		auto scenesSize = scenes.size();
-		auto scenesData = scenes.data();
-		for (size_t i = 0; i < scenesSize; ++i)
-		{
-			ZGZoneScoped;
-			scenesData[i].detachAllComponents();
-		}
-	}
-	scenes.clear();
-	mainColorTexture.reset();
-	// mainDepthTexture.reset();
-	mainFramebuffer.reset();
-	fullscreenQuad.reset();
-	ppOutputs.clear();
-	postProcessingPipeline.cleanup();
-	detachAllComponents();
-    delete iRenderer->shaderContext;
-    iRendererRef.destroy();
-	delete iRenderer;
-	iPlatformWindowRef.destroy();
-	delete iPlatformWindow;
-	zg::Entity::cleanupSerialize();
 }
 void zg::Window::updateKeyboard()
 {
@@ -428,8 +393,8 @@ void zg::Window::maximize()
 		ZGZoneScoped;
 		maximized = true;
 		iPlatformWindow->maximize();
-		oldXY.x = windowX;
-		oldXY.y = windowY;
+		oldXY.x = *windowX;
+		oldXY.y = *windowY;
 		setXY(0, 0);
 	}
 }
@@ -479,7 +444,7 @@ void zg::Window::setWidthHeight(float width, float height)
 }
 void zg::Window::setViewport()
 {
-	viewport = {0, 0, windowWidth, windowHeight};
+	viewport = {0, 0, *windowWidth, *windowHeight};
 }
 void zg::Window::mouseCapture(bool capture)
 {
@@ -798,8 +763,8 @@ void zg::Window::handleMouseMove(uint32_t x, uint32_t y)
 			ZGZoneScoped;
 			continue;
 		}
-		auto childX = x - childWindow.windowX;
-		auto childY = childWindow.windowHeight - (window.windowHeight - y - childWindow.windowY);
+		auto childX = x - *childWindow.windowX;
+		auto childY = *childWindow.windowHeight - ((const float&)window.windowHeight - y - *childWindow.windowY);
 		childWindow.newMouseCoords.x = childX, childWindow.newMouseCoords.y = childY;
 		childWindow.mouseMoved = true;
 		hadChildFocus = true;
@@ -985,6 +950,7 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple zg::Window::addScene(const Sce
 	usingInfo.ID = transaction.id;
 	usingInfo.INDEX = transaction.index;
 	auto& scene = scenes.commitTransaction(transaction, usingInfo);
+	Registry::GetSingleton().idScenes[scene.ID] = scene.INDEX_STACK;
 	sceneZ = (scene.z = (sceneZ + 0.1f));
 	if (scene.onAttachedFunction)
 	{
@@ -992,7 +958,6 @@ KeyIDVector<std::string, Scene>::EmplaceBackTuple zg::Window::addScene(const Sce
 		scene.onAttachedFunction(scene);
 	}
 	sortedScenes.push_back(scene.ID);
-	Registry::GetSingleton().idScenes[scene.ID] = scene.INDEX_STACK;
 	sortScenes();
 	return {transaction.key, transaction.id, transaction.index, &scene};
 }
@@ -1011,6 +976,7 @@ bool zg::Window::removeScene(size_t ID)
 		ZGZoneScoped;
 		scene.onDetachedFunction(scene);
 	}
+	scene.onRemove();
 	scene.detachAllComponents();
 	sceneZ -= 0.1f;
 	auto sortedSceneIter = std::find(sortedScenes.begin(), sortedScenes.end(), scene.ID);
@@ -1070,6 +1036,16 @@ void zg::Window::updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTi
 		ZGZoneScoped;
 		auto duration = now - lastFrameTime;
 		lastFrameDeltaTime = duration.count() / 1'000'000'000.0L;
+		auto& totalDeltaThisPeriodRef = *totalDeltaThisPeriod;
+		totalDeltaThisPeriodRef += *lastFrameDeltaTime;
+		((size_t&)totalFramesThisPeriod)++;
+		static constexpr auto update_divider = 8.0;
+		if (totalDeltaThisPeriodRef >= (1.0 / update_divider))
+		{
+			totalFramesLastPeriod = (*totalFramesThisPeriod) * update_divider;
+			totalFramesThisPeriod = size_t(0);
+			totalDeltaThisPeriod = long double(0.0L);
+		}
 	}
 	lastFrameTime = now;
 };
@@ -1107,4 +1083,41 @@ uint32_t zg::Window::getScreenRefreshRate(uint32_t screenNum)
 	MacOSWindow::getCurrentScreenModes();
 #endif
 	return modes.size() >= screenNum ? modes[screenNum - 1].refreshRate : 60;
+}
+void Window::onRemove()
+{
+	for (auto& scene : scenes)
+		scene.onRemove();
+	for (auto& pair : shutdownHandlers)
+	{
+		ZGZoneScopedN("shutdownHandler");
+		pair.second(*this);
+	}
+	iPlatformWindow->enableKeyAutoRepeat();
+	audioEngine.stop();
+	audioEngine.clearPipeline();
+	childWindows.clear();
+	{
+		auto scenesSize = scenes.size();
+		auto scenesData = scenes.data();
+		for (size_t i = 0; i < scenesSize; ++i)
+		{
+			ZGZoneScoped;
+			scenesData[i].detachAllComponents();
+		}
+	}
+	scenes.clear();
+	mainColorTexture.reset();
+	// mainDepthTexture.reset();
+	mainFramebuffer.reset();
+	fullscreenQuad.reset();
+	ppOutputs.clear();
+	postProcessingPipeline.cleanup();
+	detachAllComponents();
+    delete iRenderer->shaderContext;
+    iRenderer->destroy();
+	delete iRenderer;
+	iPlatformWindow->destroy();
+	delete iPlatformWindow;
+	zg::Entity::cleanupSerialize();
 }

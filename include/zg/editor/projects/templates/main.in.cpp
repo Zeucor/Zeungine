@@ -16,19 +16,19 @@ MainScene::MainScene(Window& _window):
 	addEntity(cube);
 	upKeyID = window.addKeyUpdateHandler(KEYCODE_UP, [&]
 	{
-		cube->position.y += 7 * window.deltaTime;
+		cube->position.y += 7 * *window.lastFrameDeltaTime;
 	});
 	downKeyID = window.addKeyUpdateHandler(KEYCODE_DOWN, [&]
 	{
-		cube->position.y -= 7 * window.deltaTime;
+		cube->position.y -= 7 * *window.lastFrameDeltaTime;
 	});
 	leftKeyID = window.addKeyUpdateHandler(KEYCODE_LEFT, [&]
 	{
-		cube->position.x -= 7 * window.deltaTime;
+		cube->position.x -= 7 * *window.lastFrameDeltaTime;
 	});
 	rightKeyID = window.addKeyUpdateHandler(KEYCODE_RIGHT, [&]
 	{
-		cube->position.x += 7 * window.deltaTime;
+		cube->position.x += 7 * *window.lastFrameDeltaTime;
 	});
 }
 MainScene::~MainScene()

@@ -41,7 +41,7 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::FXAAFac
                         subpixQuality
                     };
                     shader.setBlock("FXAAValues", vao, values);
-                    glm::vec2 inverseScreenSize(1.f / shader.iRenderer->platformWindowPointer->renderWindowPointer->windowWidth, 1.f / shader.iRenderer->platformWindowPointer->renderWindowPointer->windowHeight);
+                    glm::vec2 inverseScreenSize(1.f / *shader.iRenderer->platformWindowPointer->renderWindowPointer->windowWidth, 1.f / *shader.iRenderer->platformWindowPointer->renderWindowPointer->windowHeight);
                     shader.setBlock("InverseScreenSize", vao, inverseScreenSize);
                 },
                 .staticOnAttached = []()

@@ -70,6 +70,16 @@ set_target_properties(msdfgen PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(msdfgen PROPERTIES RELWITHDEBINFO_POSTFIX "")
 set_target_properties(msdfgen PROPERTIES MINSIZEREL_POSTFIX "")
 
+add_executable(msdfgenx "${msdf_atlas_gen_SOURCE_DIR}/msdfgen/main.cpp")
+target_link_libraries(msdfgenx PRIVATE msdfgen)
+target_include_directories(msdfgenx PRIVATE "${msdf_atlas_gen_SOURCE_DIR}")
+target_include_directories(msdfgenx PRIVATE "${msdf_atlas_gen_SOURCE_DIR}/msdfgen")
+target_compile_definitions(msdfgenx PRIVATE MSDFGEN_STANDALONE)
+set_target_properties(msdfgenx PROPERTIES DEBUG_POSTFIX "")
+set_target_properties(msdfgenx PROPERTIES RELEASE_POSTFIX "")
+set_target_properties(msdfgenx PROPERTIES RELWITHDEBINFO_POSTFIX "")
+set_target_properties(msdfgenx PROPERTIES MINSIZEREL_POSTFIX "")
+
 # MC33++
 
 message(STATUS "FetchContent: mc33")
@@ -707,10 +717,36 @@ set_target_properties(brotlicommon PROPERTIES MINSIZEREL_POSTFIX "")
 # harfbuzz
 
 message(STATUS "FetchContent: harfbuzz")
+set(HB_HAVE_FREETYPE ON)
 FetchContent_Declare(harfbuzz
     GIT_REPOSITORY https://github.com/harfbuzz/harfbuzz.git
     GIT_TAG 11.0.0)
-FetchContent_MakeAvailable(harfbuzz)
+FetchContent_GetProperties(harfbuzz)
+if(NOT harfbuzz_POPULATED)
+    FetchContent_Populate(harfbuzz)
+endif()
+file(
+    GLOB_RECURSE
+    HB_SOURCES
+    "${harfbuzz_SOURCE_DIR}/src/harfbuzz.cc"
+)
+add_library(harfbuzz STATIC ${HB_SOURCES})
+target_compile_definitions(harfbuzz PRIVATE HAVE_FREETYPE=1)
+include (CheckIncludeFile)
+include (CheckIncludeFiles)
+check_include_file(unistd.h HAVE_UNISTD_H)
+if (${HAVE_UNISTD_H})
+  target_compile_definitions(harfbuzz PRIVATE HAVE_UNISTD_H)
+endif ()
+check_include_file(sys/mman.h HAVE_SYS_MMAN_H)
+if (${HAVE_SYS_MMAN_H})
+  target_compile_definitions(harfbuzz PRIVATE HAVE_SYS_MMAN_H)
+endif ()
+check_include_file(stdbool.h HAVE_STDBOOL_H)
+if (${HAVE_STDBOOL_H})
+  target_compile_definitions(harfbuzz PRIVATE HAVE_STDBOOL_H)
+endif ()
+target_include_directories(harfbuzz PRIVATE "${harfbuzz_SOURCE_DIR}/src")
 set_target_properties(harfbuzz PROPERTIES DEBUG_POSTFIX "")
 set_target_properties(harfbuzz PROPERTIES RELEASE_POSTFIX "")
 set_target_properties(harfbuzz PROPERTIES RELWITHDEBINFO_POSTFIX "")
@@ -974,6 +1010,7 @@ set_target_properties(freetype PROPERTIES MINSIZEREL_POSTFIX "")
 # msdfgen
 
 target_include_directories(msdfgen PRIVATE ${freetype_SOURCE_DIR}/include)
+target_include_directories(harfbuzz PRIVATE ${freetype_SOURCE_DIR}/include)
 
 # BVH
 
@@ -1002,3 +1039,5 @@ FetchContent_Declare(stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
     GIT_TAG master)
 FetchContent_MakeAvailable(stb)
+
+target_link_libraries(msdfgenx PRIVATE png freetype zlib)

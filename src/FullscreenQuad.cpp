@@ -35,7 +35,7 @@ void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared
     if (!shaderAlreadyBound)
     	shader->bind(*this);
     auto& window = Registry::GetSingleton().getWindow(VAO_INDEX_STACK);
-    shader->setBlock("Viewport", *this, window.viewport, 16);
+    shader->setBlock("Viewport", *this, *window.viewport, 16);
 	shader->setSSBO("InstanceModels", *this, &model, sizeof(glm::mat4));
     auto inversemodel = glm::inverse(model);
 	shader->setSSBO("InverseInstanceModels", *this, &inversemodel, sizeof(glm::mat4));
@@ -46,12 +46,12 @@ void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared
     auto inverseprojection = glm::inverse(projection);
 	shader->setSSBO("InverseInstanceProjections", *this, &inverseprojection, sizeof(glm::mat4));
     GLEntity gl_entity{
-        .shape_type = int32_t(ShapeType::PlaneXY),
+        .shape_type = int32_t(ShapeType::PlaneXY_Center),
         .material_index = 0,
-        .vertex_offset = 0,
+        .vertex_offset = -1,
         .padding = 0,
-        .uv2_offset = 0,
-        .uv3_offset = 0,
+        .uv2_offset = -1,
+        .uv3_offset = -1,
         .meta_int = 0,
         .meta_float = 0.f,
         .meta_vec4 = glm::vec4(0)
@@ -63,16 +63,19 @@ void FullscreenQuad::render(const std::vector<std::pair<std::string, std::shared
     };
     shader->setSSBO("Materials", *this, &material, sizeof(Material) * 1);
     glm::vec4 vec(0);
+    glm::vec2 vec2(0);
     shader->setSSBO("MeshPositions", *this, &vec, sizeof(glm::vec4) * 1);
-	static std::vector<glm::vec2> uv2s({
-        {0, 1},
-        {1, 1},
-        {1, 0},
-        {0, 0}
-    });
-	bool flipUVs = (vaoIRenderer->renderer == RENDERER_VULKAN || vaoIRenderer->renderer == RENDERER_METAL);
-    zg::Mesh::flipUVsY(uv2s);
-    shader->setSSBO("EntityUV2s", *this, uv2s.data(), sizeof(glm::vec2) * uv2s.size());
+	// static std::vector<glm::vec2> uv2s({
+    //     glm::vec2(0.0, 0.0),
+    //     glm::vec2(1.0, 1.0),
+    //     glm::vec2(0.0, 1.0),
+    //     glm::vec2(1.0, 0.0),
+    //     glm::vec2(1.0, 1.0),
+    //     glm::vec2(0.0, 0.0)
+    // });
+	// bool flipUVs = (vaoIRenderer->renderer == RENDERER_VULKAN || vaoIRenderer->renderer == RENDERER_METAL);
+    // zg::Mesh::flipUVsY(uv2s);
+    shader->setSSBO("EntityUV2s", *this, &vec2, sizeof(glm::vec2) * 1);
     shader->setSSBO("EntityUV3s", *this, &vec, sizeof(glm::vec4) * 1);
     uint32_t unit = 0;
     auto constantsBegin = vaoConstants.begin();

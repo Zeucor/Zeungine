@@ -53,7 +53,8 @@ namespace zg
 			{
 				return;
 			}
-			auto deltaTime = window.deltaTime;
+			auto deltaTime = *window.lastFrameDeltaTime;
+			// std::cout << "deltaTime: " << *window.deltaTime << ", lastFrameDeltaTime: " << *window.lastFrameDeltaTime << std::endl;
 			auto& duration_seconds_current_ref = *duration_seconds_current;
 			auto t = duration_seconds_current_ref / duration_seconds;
 			*value_pointer = TimingFunction<T>(start, finish, t, easing);

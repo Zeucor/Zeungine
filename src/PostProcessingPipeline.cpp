@@ -57,7 +57,7 @@ PostProcessingPipeline::addStage(float floatingIndex, const PostProcessingStageC
 		}
 		auto textureFilterType = textures::Texture::FilterType::Linear;
 		auto texture =
-			std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4(window.windowWidth, window.windowHeight, 1, 0),
+			std::make_shared<textures::Texture>(window.iRenderer, glm::ivec4((const float&)window.windowWidth, (const float&)window.windowHeight, 1, 0),
 																					(const void*)0, textureFormat, textureType, textureFilterType, true, textures::Texture::Multisampling::x1, addressMode);
         textureRegistry.registerOutput(floatingIndex, key, texture);
 		attachments.push_back({texture, attachmentType});

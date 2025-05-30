@@ -97,7 +97,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			GetCursorPos(&pt);
 			ScreenToClient(hwnd, &pt);
 			auto x = pt.x;
-			auto y = glWindow->windowHeight - pt.y;
+			auto y = *glWindow->windowHeight - pt.y;
 			glWindow->handleMouseMove(x, y);
 			break;
 		};
@@ -143,7 +143,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	case WM_SIZE:
 		{
 			int32_t width = LOWORD(lParam), height = HIWORD(lParam);
-			if (width != 0 && width != glWindow->windowWidth && height != 0 && height != glWindow->windowHeight)
+			if (width != 0 && width != *glWindow->windowWidth && height != 0 && height != *glWindow->windowHeight)
 				glWindow->resize({width, height});
 			break;
 		};
@@ -203,7 +203,7 @@ void WIN32Window::init(Window& renderWindow)
 	wc.style = CS_VREDRAW | CS_HREDRAW;
 	wc.lpfnWndProc = gl_wndproc;
 	wc.hInstance = hInstance;
-	wc.lpszClassName = renderWindow.title.c_str();
+	wc.lpszClassName = (*renderWindow.title).c_str();
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	RegisterClassEx(&wc);
 	dpiScale = 1.0f;
@@ -211,15 +211,15 @@ void WIN32Window::init(Window& renderWindow)
 	int32_t dpi = GetDeviceCaps(screen, LOGPIXELSX);
 	ReleaseDC(NULL, screen);
 	dpiScale = dpi / 96.0f;
-	int adjustedWidth = renderWindow.windowWidth, adjustedHeight = renderWindow.windowHeight;
+	int adjustedWidth = (float&)renderWindow.windowWidth, adjustedHeight = (float&)renderWindow.windowHeight;
 	auto wsStyle = WS_OVERLAPPEDWINDOW;
 	RECT desiredRect = {0, 0, adjustedWidth, adjustedHeight};
 	AdjustWindowRectEx(&desiredRect, wsStyle, FALSE, WS_EX_APPWINDOW);
 	adjustedWidth = desiredRect.right - desiredRect.left;
 	adjustedHeight = desiredRect.bottom - desiredRect.top;
-	hwnd = CreateWindowEx(WS_EX_APPWINDOW, renderWindow.title.c_str(), renderWindow.title.c_str(), wsStyle,
-												renderWindow.windowX == -1 ? CW_USEDEFAULT : renderWindow.windowX,
-												renderWindow.windowY == -1 ? CW_USEDEFAULT : renderWindow.windowY, adjustedWidth,
+	hwnd = CreateWindowEx(WS_EX_APPWINDOW, (*renderWindow.title).c_str(), (*renderWindow.title).c_str(), wsStyle,
+												(float&)renderWindow.windowX == -1 ? CW_USEDEFAULT : (float&)renderWindow.windowX,
+												(float&)renderWindow.windowY == -1 ? CW_USEDEFAULT : (float&)renderWindow.windowY, adjustedWidth,
 												adjustedHeight, 0, NULL, hInstance, renderWindowPointer);
 
 	if (hwnd == NULL)
@@ -232,12 +232,12 @@ void WIN32Window::init(Window& renderWindow)
 										WS_MAXIMIZEBOX);
 		SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) & ~WS_EX_STATICEDGE);
 		UINT flags = SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW;
-		if (renderWindow.windowX == -1 && renderWindow.windowY == -1)
+		if ((float&)renderWindow.windowX == -1 && (float&)renderWindow.windowY == -1)
 			flags |= SWP_NOMOVE;
 		SetWindowPos(hwnd, HWND_TOPMOST,
-								 (renderWindow.windowX == -1 ? 0 : renderWindow.windowX), // Use explicit or default X position
-								 (renderWindow.windowY == -1 ? 0 : renderWindow.windowY), renderWindow.windowWidth,
-								 renderWindow.windowHeight, flags);
+								 ((float&)renderWindow.windowX == -1 ? 0 : (float&)renderWindow.windowX), // Use explicit or default X position
+								 ((float&)renderWindow.windowY == -1 ? 0 : (float&)renderWindow.windowY), (float&)renderWindow.windowWidth,
+								 (float&)renderWindow.windowHeight, flags);
 	}
 	hDeviceContext = GetDC(hwnd);
 	SetupPixelFormat(hDeviceContext);
@@ -285,8 +285,8 @@ void WIN32Window::warpPointer(glm::vec2 coords)
 	{
 		if (currentWindow->parentWindow)
 		{
-			pt.x += currentWindow->windowX;
-			pt.y += currentWindow->windowY;
+			pt.x += (const float&)currentWindow->windowX;
+			pt.y += (const float&)currentWindow->windowY;
 		}
 		currentWindow = currentWindow->parentWindow;
 	}
@@ -360,10 +360,10 @@ void WIN32Window::hidePointer()
 }
 void WIN32Window::setXY()
 {
-	auto& windowX = renderWindowPointer->windowX;
-	auto& windowY = renderWindowPointer->windowY;
-	auto& windowWidth = renderWindowPointer->windowWidth;
-	auto& windowHeight = renderWindowPointer->windowHeight;
+	auto& windowX = *renderWindowPointer->windowX;
+	auto& windowY = *renderWindowPointer->windowY;
+	auto& windowWidth = *renderWindowPointer->windowWidth;
+	auto& windowHeight = *renderWindowPointer->windowHeight;
 	UINT flags = SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW;
 	if (windowX == -1 && windowY == -1)
 		flags |= SWP_NOMOVE;
@@ -372,10 +372,10 @@ void WIN32Window::setXY()
 }
 void WIN32Window::setWidthHeight()
 {
-	auto& windowX = renderWindowPointer->windowX;
-	auto& windowY = renderWindowPointer->windowY;
-	auto& windowWidth = renderWindowPointer->windowWidth;
-	auto& windowHeight = renderWindowPointer->windowHeight;
+	auto& windowX = *renderWindowPointer->windowX;
+	auto& windowY = *renderWindowPointer->windowY;
+	auto& windowWidth = *renderWindowPointer->windowWidth;
+	auto& windowHeight = *renderWindowPointer->windowHeight;
 	float adjustedWidth = windowWidth, adjustedHeight = windowHeight;
 	auto wsStyle = WS_OVERLAPPEDWINDOW;
 	RECT desiredRect = {0, 0, (LONG)windowWidth, (LONG)windowHeight};

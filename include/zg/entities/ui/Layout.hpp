@@ -43,9 +43,16 @@ namespace zg::entities::ui
             host(host),
             isNDCSizing(isNDCSizing)
         {};
-        LayoutBuilder& add_layout(const std::string& name, LayoutDimension dimension, glm::vec3 size, const textures::BlendState& blendState = textures::BlendState::Layout)
+        LayoutBuilder& add_layout
+        (
+            const std::string& name,
+            LayoutDimension dimension, glm::vec3 size,
+            const textures::BlendState& blendState = textures::BlendState::Layout,
+            bool resizable = false
+        )
         {
             auto& window = Registry::GetSingleton().getWindow(host.INDEX_STACK);
+            size_t qChildIndex = 0;
             if (CURRENT_ID_STACK.size() == 0)
             {
                 auto layout_tuple = host.addEntity(
@@ -58,13 +65,19 @@ namespace zg::entities::ui
                 );
                 auto& layout = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(layout_tuple);
                 layout.template make<size_t>("TextCount", 0);
+                layout.template make<size_t>("qChildIndex", qChildIndex);
+                layout.template make<bool>("Resizable", resizable);
+                layout.template make<glm::vec3>("OriginalSize", size);
             }
             else
             {
+                bool isLayout = false;
                 auto& entity = get_entity();
                 glm::vec3 new_position(0);
+                qChildIndex = entity.children.size();
                 if (entity.typeName == "Layout")
                 {
+                    isLayout = true;
                     new_position = std::any_cast<glm::vec3>(entity.template setData<glm::vec3>("GetSubPosition", size));
                 }
                 auto layout_tuple = entity.addEntity(LayoutFactory(name, dimension, new_position, size, window.iRenderer, isNDCSizing, blendState));
@@ -73,8 +86,20 @@ namespace zg::entities::ui
                         layout_tuple
                     )
                 );
+                auto& index = *std::get<KEY_ID_VECTOR_INDEX_INDEX>(layout_tuple);
                 auto& layout = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(layout_tuple);
                 layout.template make<size_t>("TextCount", 0);
+                layout.template make<size_t>("qChildIndex", qChildIndex);
+                layout.template make<bool>("Resizable", resizable);
+                layout.template make<glm::vec3>("OriginalSize", size);
+                if (isLayout)
+                {
+                    // layout.scale.observe([entity_ID = entity.ID, index](auto& old_scale, auto& new_scale) {
+                    //     auto& rgy = Registry::GetSingleton(); 
+                    //     auto& entity = rgy.getEntity(entity_ID);
+                    //     // entity.template setData<bool>("Relayout", true);
+                    // });
+                }
             }
             return *this;
         }
@@ -115,14 +140,14 @@ namespace zg::entities::ui
             auto& font = *host.template getData<std::shared_ptr<fonts::freetype::FreetypeFont>>("Font");
             auto& textFontSize = entity.template make<float>(textKey + "FontSize", fontSize);
             auto& textLineHeight = entity.template make<float>(textKey + "LineHeight", 0.0f);
-            auto textMultiplier = 4.f;
-            auto textSize = font.stringSize(text, textFontSize * textMultiplier, textLineHeight, {0, 0});
+            auto textMultiplier = 1.f;
+            auto textSize = font.stringSize(text, textFontSize * textMultiplier, textLineHeight, {0, 0}, enums::EBreakStyle::None, false);
             auto textScaler = 1.f / textMultiplier;
             glm::vec3 textScale(textScaler, textScaler, 1.f);
             glm::vec2 scaledSize(textSize);
             if (isNDCSizing)
             {
-                textScale = {(2.f / window.windowWidth / 2.f) * textScaler, (2.f / window.windowHeight / 2.f) * textScaler, 1.f};
+                textScale = {(2.f / (const float&)window.windowWidth / 2.f) * textScaler, (2.f / (const float&)window.windowHeight / 2.f) * textScaler, 1.f};
                 scaledSize = textSize * glm::vec2(textScale);
             }
             auto entity_size = entity.getBoundingSize();
@@ -135,16 +160,136 @@ namespace zg::entities::ui
             auto& backing_entity = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(entity.addEntity(backing_entity_info));
             new_position = {0, 0, 0};
             new_position.x -= (scaledSize.x / 2.f);
-            new_position.y -= scaledSize.y / 2.f;
-            font.stringToHost(text, new_position, {1,1,1,1}, rotate_identity,
+            new_position.y -= (scaledSize.y / 2.f);
+            new_position.y -= (font.fontHandlePointer->face->size->metrics.descender / 64.0f);
+            font.stringToHost(text, new_position, rotate_identity,
 										textScale, textFontSize * textMultiplier, textLineHeight, scaledSize + glm::vec2(0.001, 0.001),
 												zg::enums::EBreakStyle::None, backing_entity,
 												textGlyphIDs, textCursorIndex,
-												textCursorID);
+												textCursorID, false);
             return *this;
         }
-        LayoutBuilder& add_bound_text(const zg::observable_ptr<std::string>& text_observable)
+        template <typename T, typename D>
+        LayoutBuilder& add_observed_T(zg::observable_ptr<T, D>& observable, float fontSize = 42.f)
         {
+            return add_observed_T_formatted([](auto& val) {
+                return std::to_string(val);
+            }, observable, fontSize);
+        }
+        template <typename T, typename D, typename F>
+        LayoutBuilder& add_observed_T_formatted(F formatter, zg::observable_ptr<T, D>& observable, float fontSize = 42.f)
+        {
+            auto& entity = get_entity();
+            auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
+            auto& textCount = entity.template getData<size_t>("TextCount");
+            auto textKey = "Text[" + std::to_string(++textCount) + "]";
+            auto& textGlyphIDs = entity.template make<std::vector<size_t>>(textKey + "GlyphIDs");
+            auto& textCursorIndex = entity.template make<int64_t>(textKey + "CursorIndex");
+            auto& textCursorID = entity.template make<size_t>(textKey + "CursorID");
+            auto& font = *host.template getData<std::shared_ptr<fonts::freetype::FreetypeFont>>("Font");
+            auto& textFontSize = entity.template make<float>(textKey + "FontSize", fontSize);
+            auto& textLineHeight = entity.template make<float>(textKey + "LineHeight", 0.0f);
+            auto& backing_entity_ID = entity.template make<size_t>(textKey + "BackingEntityID", 0);
+            static constexpr auto textMultiplier = 1.f;
+            auto backing_index = entity.children.size();
+            auto observer_ID = observable.observe(
+            [
+                formatter,
+                IDNDCSizing = this->isNDCSizing,
+                host_ID = host.ID,
+                entity_ID = entity.ID,
+                backing_entity_ID, textKey,
+                backing_index
+            ]
+            (const auto& old_value, const auto& new_value)
+            {
+                std::string text = formatter(new_value);
+                auto& rgy = Registry::GetSingleton();
+                auto& entity = rgy.getEntity(entity_ID);
+                auto& window = rgy.getWindow(entity.INDEX_STACK);
+                auto& textGlyphIDs = entity.template getData<std::vector<size_t>>(textKey + "GlyphIDs");
+                auto& textCursorIndex = entity.template getData<int64_t>(textKey + "CursorIndex");
+                auto& textCursorID = entity.template getData<size_t>(textKey + "CursorID");
+                auto& font = *rgy.getT<HostT>(host_ID).template getData<std::shared_ptr<fonts::freetype::FreetypeFont>>("Font");
+                auto& textFontSize = entity.template getData<float>(textKey + "FontSize");
+                auto& textLineHeight = entity.template getData<float>(textKey + "LineHeight");
+                auto& backing_entity_ID = entity.template getData<size_t>(textKey + "BackingEntityID");
+                auto textSize = font.stringSize(text, textFontSize * textMultiplier, textLineHeight, {0, 0}, enums::EBreakStyle::None, false);
+                auto textScaler = 1.f / textMultiplier;
+                glm::vec3 textScale(textScaler, textScaler, 1.f);
+                glm::vec2 scaledSize(textSize);
+                if (IDNDCSizing)
+                {
+                    textScale = {(2.f / (const float&)window.windowWidth / 2.f) * textScaler, (2.f / (const float&)window.windowHeight / 2.f) * textScaler, 1.f};
+                    scaledSize = textSize * glm::vec2(textScale);
+                }
+                auto entity_size = entity.getBoundingSize();
+                glm::vec3 new_position(-entity_size.x / 2.f, entity_size.y / 2.f, 0.2);
+                bool isLayout = false;
+                bool just_created_backing_entity = false;
+                if (!backing_entity_ID)
+                {
+                    if ((isLayout = (entity.typeName == "Layout")))
+                    {
+                        std::pair<glm::vec3, size_t> sizeIPair(glm::vec3(scaledSize, 1.f), backing_index);
+                        new_position = std::any_cast<glm::vec3>(entity.template setData<std::pair<glm::vec3, size_t>>("GetSubPositionI", sizeIPair));
+                    }
+                    auto backing_entity_info = PlaneFactory(glm::vec4(0, 0, 0, 0), textKey + "Backing Plane", new_position, rotate_identity, glm::vec3(scaledSize, 1));
+                    auto backing_entity_tuple = entity.addEntity(backing_entity_info);
+                    backing_entity_ID = std::get<KEY_ID_VECTOR_ID_INDEX>(backing_entity_tuple);
+                    just_created_backing_entity = true;
+                }
+                auto& backing_entity = rgy.getEntity(backing_entity_ID);
+                if (just_created_backing_entity)
+                {
+                    if (isLayout)
+                    {
+                        backing_entity.scale.observe(
+                        [
+                            backing_entity_ID,
+                            entity_ID = entity.ID
+                        ]
+                        (auto& old_scale, auto& new_scale)
+                        {
+                            auto& rgy = Registry::GetSingleton();
+                            auto& core_layout = rgy.getEntity(entity_ID);
+                            auto& backing_entity = rgy.getEntity(backing_entity_ID);
+                            auto& dimension = core_layout.template getData<LayoutDimension>("LayoutDimension");
+                            switch (dimension)
+                            {
+                            case LayoutDimension::Vertical:
+                                backing_entity.position.x += ((new_scale.x - old_scale.x) / 2.f);
+                                break;
+                            }
+                        //     core_layout.template setData<bool>("FitLayoutToChildren", true);
+                        });
+                    }
+                }
+                else
+                {
+                    backing_entity.scale = glm::vec3(scaledSize, 1);
+                }
+                new_position = {0, 0, 0};
+                new_position.x -= (scaledSize.x / 2.f);
+                new_position.y -= (scaledSize.y / 2.f);
+                new_position.y -= (font.fontHandlePointer->face->size->metrics.descender / 64.0f);
+                font.stringToHost(text, new_position, rotate_identity,
+                                            textScale, textFontSize * textMultiplier, textLineHeight, scaledSize + glm::vec2(0.001, 0.001),
+                                                    zg::enums::EBreakStyle::None, backing_entity,
+                                                    textGlyphIDs, textCursorIndex,
+                                                    textCursorID, false);
+            }, true);
+            entity.onRemoveFunctionMap[textKey + "Observer"] = [observer_ID, observable](auto& entity) mutable {
+                observable.remove_observer(observer_ID);
+            };
+            return *this;
+        }
+        LayoutBuilder& fit_layout_to_children()
+        {
+            auto& entity = get_entity();
+            if (entity.typeName != "Layout")
+                throw std::runtime_error("Current entity is not a layout");
+            entity.template setData<bool>("FitLayoutToChildren", true);
             return *this;
         }
         LayoutBuilder& move_up_stack()

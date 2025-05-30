@@ -14,7 +14,9 @@ namespace zg::textures
 	{
 		enum Format
 		{
-			RGB8 = 1,
+			R8 = 1,
+			RG8,
+			RGB8,
 			RGBA8,
 			RGBA32F,
 			Depth,
@@ -51,35 +53,41 @@ namespace zg::textures
 			Repeat
 		};
 		IRenderer* iRenderer = 0;
-		glm::ivec4 size;
+		glm::ivec4 size = glm::ivec4(0);
 		std::vector<std::pair<size_t, std::shared_ptr<char>>> datas;
-		Format format;
-		Type type;
-		FilterType filterType;
+		Format format = RGBA8;
+		Type type = UnsignedByte;
+		FilterType filterType = Linear;
 		void* rendererData = 0;
 		bool isFramebufferAttachment = false;
-		Multisampling multisampling;
+		Multisampling multisampling = x1;
 		bool isTransparent = false;
-		AddressMode addressMode;
+		AddressMode addressMode = Repeat;
+		bool flip = false;
+		Texture() = default;
 		explicit Texture(IRenderer* iRenderer, const glm::ivec4& size, const void* data, const Format& format = RGBA8,
 										 const Type& type = UnsignedByte, const FilterType& filterType = Linear,
 										 bool isFramebufferAttachment = false, Multisampling multisampling = x1,
-										 AddressMode addressMode = AddressMode::Repeat);
+										 AddressMode addressMode = AddressMode::Repeat,
+										bool flip = false);
 		explicit Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::vector<void*> datas,
 										 const Format& format = RGBA8, const Type& type = UnsignedByte,
 										 const FilterType& filterType = Linear, bool isFramebufferAttachment = false,
 										 Multisampling multisampling = x1,
-										 AddressMode addressMode = AddressMode::Repeat);
+										 AddressMode addressMode = AddressMode::Repeat,
+										bool flip = false);
 		explicit Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::string_view path,
 										 const Format& format = RGBA8, const Type& type = UnsignedByte,
 										 const FilterType& filterType = Linear, bool isFramebufferAttachment = false,
 										 Multisampling multisampling = x1,
-										 AddressMode addressMode = AddressMode::Repeat);
+										 AddressMode addressMode = AddressMode::Repeat,
+										bool flip = false);
 		explicit Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::vector<std::string_view>& paths,
 										 const Format& format = RGBA8, const Type& type = UnsignedByte,
 										 const FilterType& filterType = Linear, bool isFramebufferAttachment = false,
 										 Multisampling multisampling = x1,
-										 AddressMode addressMode = AddressMode::Repeat);
+										 AddressMode addressMode = AddressMode::Repeat,
+										bool flip = false);
 		~Texture();
 		void bind() const;
 		void unbind() const;
@@ -96,3 +104,11 @@ namespace zg::textures
 	};
 #endif
 } // namespace zg::textures
+#define DEFAULT_TEXTURE_FORMAT zg::textures::Texture::Format::RGBA8
+#define DEFAULT_TEXTURE_TYPE zg::textures::Texture::Type::UnsignedByte
+#define DEFAULT_TEXTURE_FILTERTYPE zg::textures::Texture::FilterType::Linear
+#define DEFAULT_TEXTURE_MULTISAMPLING zg::textures::Texture::Multisampling::x1
+#define DEFAULT_TEXTURE_ADDRESS_MODE zg::textures::Texture::AddressMode::Repeat
+#define TEXTURE_CLAMP_EDGE zg::textures::Texture::AddressMode::ClampToEdge
+#define TEXTURE_REPEAT zg::textures::Texture::AddressMode::Repeat
+#define TEXTURE_CLAMP_BORDER zg::textures::Texture::AddressMode::ClampToBorder

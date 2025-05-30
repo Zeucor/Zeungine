@@ -121,7 +121,7 @@ zg::components::entities::EntityComponentCreateInfo zg::components::entities::Ri
 											<< std::endl;
 						return bodyIDAny;
 					}
-					JPH::ScaledShapeSettings scaledSettings(baseShape, ToJolt<glm::vec3, JPH::Vec3>(entity.scale));
+					JPH::ScaledShapeSettings scaledSettings(baseShape, ToJolt<glm::vec3, JPH::Vec3>(*entity.scale));
 					auto result = scaledSettings.Create();
 					if (result.HasError())
 					{

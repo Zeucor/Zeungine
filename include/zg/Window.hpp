@@ -26,6 +26,7 @@ namespace zg
 		struct Plane;
 	}
 	struct Scene;
+	struct Registry;
 #define KEYCODE_UP 17
 #define KEYCODE_DOWN 18
 #define KEYCODE_RIGHT 19
@@ -46,18 +47,19 @@ namespace zg
 struct WindowCreateInfo;
 	struct Window : ComponentHolder<Window, components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>
 	{
+		friend Registry;
 		size_t ID = 0;
 		size_t* INDEX = 0;
 		std::vector<size_t*> INDEX_STACK;
-		std::string title;
+		observable_ptr<std::string> title;
 		IPlatformWindow* iPlatformWindow;
 		IRenderer* iRenderer;
-		float windowWidth;
-		float windowHeight;
-		glm::vec4 viewport = glm::vec4(0);
-		float windowX;
-		float windowY;
-		uint32_t framerate = 60;
+		observable_ptr<float> windowWidth;
+		observable_ptr<float> windowHeight;
+		observable_ptr<glm::vec4> viewport = observable_ptr<glm::vec4>(true, glm::vec4(0));
+		observable_ptr<float> windowX;
+		observable_ptr<float> windowY;
+		observable_ptr<uint32_t> framerate = observable_ptr<uint32_t>(true, uint32_t(60));
 		float sceneZ = 0.0f;
 		std::vector<size_t> sortedScenes;
 #if defined(_WIN32) || defined(__linux__)
@@ -83,8 +85,12 @@ struct WindowCreateInfo;
 		zg::KeyIDVector<std::string, Scene> scenes;
 		bool open = true;
 		NANO_TIMEPOINT lastFrameTime;
-		long double deltaTime;
-		long double lastFrameDeltaTime;
+		observable_ptr<long double> deltaTime;
+		observable_ptr<long double> lastFrameDeltaTime;
+		observable_ptr<long double> lastTotalDeltaTIme;
+		observable_ptr<long double> totalDeltaThisPeriod;
+		observable_ptr<size_t> totalFramesThisPeriod;
+		observable_ptr<size_t> totalFramesLastPeriod;
 		bool justWarpedPointer = false;
 		bool borderless = false;
 		bool minimized = false;
@@ -117,6 +123,7 @@ struct WindowCreateInfo;
 		std::shared_ptr<textures::Framebuffer> mainFramebuffer;
 		PostProcessingPipeline postProcessingPipeline;
 		std::unique_ptr<FullscreenQuad> fullscreenQuad;
+		std::vector<std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>>> ppOutputs;
 		// when adding new members remember to add to operator=
 
 		Window(const WindowCreateInfo& info);
@@ -185,6 +192,8 @@ struct WindowCreateInfo;
 		void resize(glm::vec2 newSize);
 		void registerOnEntityAddedFunction(const OnEntityAddedFunction& function);
 		static uint32_t getScreenRefreshRate(uint32_t screenNum);
+	protected:
+		void onRemove();
 	};
 	struct WindowCreateInfo
 	{

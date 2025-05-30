@@ -100,8 +100,8 @@ SceneComponentCreateInfo zg::components::scenes::BloomFactory()
                     auto& Quality = component.template getData<float>("Quality");
                     auto& Size = component.template getData<float>("Size");
                     float blur[6] = {
-                        shader.iRenderer->platformWindowPointer->renderWindowPointer->windowWidth,
-                        shader.iRenderer->platformWindowPointer->renderWindowPointer->windowHeight,
+                        *shader.iRenderer->platformWindowPointer->renderWindowPointer->windowWidth,
+                        *shader.iRenderer->platformWindowPointer->renderWindowPointer->windowHeight,
                         Pi2,
                         Directions,
                         Quality,

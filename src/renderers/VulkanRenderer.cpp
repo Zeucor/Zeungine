@@ -59,23 +59,39 @@ static std::unordered_map<shaders::ShaderType, VkShaderStageFlagBits> stageStage
 	{shaders::ShaderType::Fragment, VK_SHADER_STAGE_FRAGMENT_BIT},
 	{shaders::ShaderType::Compute, VK_SHADER_STAGE_COMPUTE_BIT},
 };
-static std::unordered_map<textures::Texture::Format, VkFormat> textureFormat_Format = {
-	{textures::Texture::Format::RGBA8, VK_FORMAT_R8G8B8A8_UNORM},
-	{textures::Texture::Format::Depth, VK_FORMAT_D32_SFLOAT},
-	{textures::Texture::Format::DepthStencil, VK_FORMAT_D32_SFLOAT_S8_UINT},
-	{textures::Texture::Format::Stencil, VK_FORMAT_R8_UINT}};
+static std::map<std::pair<textures::Texture::Format, textures::Texture::Type>, VkFormat> textureFormatType_Format = {
+	{{textures::Texture::Format::R8, textures::Texture::Type::UnsignedByte}, VK_FORMAT_R8_UNORM},
+	{{textures::Texture::Format::RG8, textures::Texture::Type::UnsignedByte}, VK_FORMAT_R8G8_UNORM},
+	{{textures::Texture::Format::RGB8, textures::Texture::Type::UnsignedByte}, VK_FORMAT_R8G8B8_UNORM},
+	{{textures::Texture::Format::RGBA8, textures::Texture::Type::UnsignedByte}, VK_FORMAT_R8G8B8A8_UNORM},
+	{{textures::Texture::Format::RGBA32F, textures::Texture::Type::Float}, VK_FORMAT_R32G32B32A32_SFLOAT},
+	{{textures::Texture::Format::Depth, textures::Texture::Type::Float}, VK_FORMAT_D32_SFLOAT},
+	{{textures::Texture::Format::DepthStencil, textures::Texture::Type::Float}, VK_FORMAT_D32_SFLOAT_S8_UINT},
+	{{textures::Texture::Format::Stencil, textures::Texture::Type::UnsignedByte}, VK_FORMAT_R8_UINT}};
 static std::unordered_map<textures::Texture::Format, VkImageLayout> textureFormat_imageLayout = {
+	{textures::Texture::Format::R8, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
+	{textures::Texture::Format::RG8, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
+	{textures::Texture::Format::RGB8, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
 	{textures::Texture::Format::RGBA8, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
+	{textures::Texture::Format::RGBA32F, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL},
 	{textures::Texture::Format::Depth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL},
 	{textures::Texture::Format::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL},
 	{textures::Texture::Format::Stencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}};
 static std::unordered_map<textures::Texture::Format, VkImageLayout> textureFormat_descriptor_imageLayout = {
+	{textures::Texture::Format::R8, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
+	{textures::Texture::Format::RG8, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
+	{textures::Texture::Format::RGB8, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
 	{textures::Texture::Format::RGBA8, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
+	{textures::Texture::Format::RGBA32F, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL},
 	{textures::Texture::Format::Depth, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL},
 	{textures::Texture::Format::DepthStencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL},
 	{textures::Texture::Format::Stencil, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL}};
 static std::unordered_map<textures::Texture::Format, VkImageAspectFlags> textureFormat_imageAspect = {
+	{textures::Texture::Format::R8, VK_IMAGE_ASPECT_COLOR_BIT},
+	{textures::Texture::Format::RG8, VK_IMAGE_ASPECT_COLOR_BIT},
+	{textures::Texture::Format::RGB8, VK_IMAGE_ASPECT_COLOR_BIT},
 	{textures::Texture::Format::RGBA8, VK_IMAGE_ASPECT_COLOR_BIT},
+	{textures::Texture::Format::RGBA32F, VK_IMAGE_ASPECT_COLOR_BIT},
 	{textures::Texture::Format::Depth, VK_IMAGE_ASPECT_DEPTH_BIT},
 	{textures::Texture::Format::DepthStencil, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT},
 	{textures::Texture::Format::Stencil, VK_IMAGE_ASPECT_STENCIL_BIT}};
@@ -209,7 +225,7 @@ void VulkanRenderer::createInstance()
 	}
 	VkApplicationInfo appInfo{};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	appInfo.pApplicationName = platformWindowPointer->renderWindowPointer->title.c_str();
+	appInfo.pApplicationName = (*platformWindowPointer->renderWindowPointer->title).c_str();
 	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	appInfo.pEngineName = "Zeungine";
 	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -913,7 +929,7 @@ VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPrese
 	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	for (auto& availablePresentMode : availablePresentModes)
 	{
-		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR && !renderWindow.vsync)
+		if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR && !renderWindow.vsync)
 		{
 			return availablePresentMode;
 		}
@@ -922,13 +938,13 @@ VkPresentModeKHR VulkanRenderer::chooseSwapPresentMode(const std::vector<VkPrese
 			return availablePresentMode;
 		}
 	}
-	return VK_PRESENT_MODE_IMMEDIATE_KHR;
+	return VK_PRESENT_MODE_MAILBOX_KHR;
 }
 VkExtent2D VulkanRenderer::chooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities)
 {
 	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
-	VkExtent2D actualExtent = {static_cast<uint32_t>(renderWindow.windowWidth),
-														 static_cast<uint32_t>(renderWindow.windowHeight)};
+	VkExtent2D actualExtent = {static_cast<uint32_t>((const float&)renderWindow.windowWidth),
+														 static_cast<uint32_t>((const float&)renderWindow.windowHeight)};
 	actualExtent.width =
 		std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
 	actualExtent.height =
@@ -1146,7 +1162,7 @@ void VulkanRenderer::createImageStagingBuffer()
 	auto& renderWindow = *platformWindowPointer->renderWindowPointer;
 	VkBufferCreateInfo bufferCreateInfo{};
 	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferCreateInfo.size = renderWindow.windowWidth * renderWindow.windowHeight * 4; // RGBA8
+	bufferCreateInfo.size = (const float&)renderWindow.windowWidth * (const float&)renderWindow.windowHeight * 4; // RGBA8
 	bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	if (!VKcheck("vkCreateBuffer", _vkCreateBuffer(device, &bufferCreateInfo, 0, &stagingBuffer)))
@@ -2284,14 +2300,14 @@ void VulkanRenderer::bindTexture(const textures::Texture& texture)
 	if (textureImpl.layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
 	{
 		VkFormat format;
-		if (texture.format == textures::Texture::Format::RGBA8)
-		{
-			format = textureFormat_Format[texture.format];
-		}
-		else if (texture.format == textures::Texture::Format::Depth ||
+		if (texture.format == textures::Texture::Format::Depth ||
 						 texture.format == textures::Texture::Format::DepthStencil)
 		{
 			format = findDepthFormat(texture.format);
+		}
+		else
+		{
+			format = textureFormatType_Format[{texture.format, texture.type}];
 		}
 		auto aspectMask = textureFormat_imageAspect[texture.format];
 		transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -2599,8 +2615,8 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 	VkImageAspectFlags aspectMask = 0;
 
 	// --- Determine Format ---
-	auto formatIt = textureFormat_Format.find(texture.format);
-	if (formatIt != textureFormat_Format.end())
+	auto formatIt = textureFormatType_Format.find({texture.format, texture.type});
+	if (formatIt != textureFormatType_Format.end())
 	{
 		format = formatIt->second;
 	}
@@ -2632,7 +2648,11 @@ void VulkanRenderer::preInitTexture(textures::Texture& texture)
 	// Determine based on format and intended use (framebuffer attachment or general texture)
 	switch (texture.format)
 	{
+	case zg::textures::Texture::Format::R8:
+	case zg::textures::Texture::Format::RG8:
+	case zg::textures::Texture::Format::RGB8:
 	case zg::textures::Texture::Format::RGBA8:
+	case zg::textures::Texture::Format::RGBA32F:
 		tiling = VK_IMAGE_TILING_OPTIMAL;
 		if (texture.isFramebufferAttachment)
 		{ // Check the boolean flag
@@ -2776,17 +2796,18 @@ void VulkanRenderer::midInitTexture(const textures::Texture& texture,
 		return;
 	}
 	VkFormat format;
-	if (texture.format == textures::Texture::Format::RGBA8)
-	{
-		format = textureFormat_Format[texture.format];
-	}
-	else if (texture.format == textures::Texture::Format::Depth ||
+	auto [channels, sizeoftype] = textures::TextureFactory::getChannelsSizeOfType(texture);
+	if (texture.format == textures::Texture::Format::Depth ||
 					 texture.format == textures::Texture::Format::DepthStencil)
 	{
 		format = findDepthFormat(texture.format);
 	}
+	else
+	{
+		format = textureFormatType_Format[{texture.format, texture.type}];
+	}
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
-	VkDeviceSize imageSize = texture.size.x * texture.size.y * 4;
+	VkDeviceSize imageSize = texture.size.x * texture.size.y * channels * sizeoftype;
 	VkBuffer _stagingBuffer;
 	VkDeviceMemory _stagingBufferMemory;
 	createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -3345,8 +3366,8 @@ void VulkanRenderer::getCurrentImageToBitmap()
 	region.imageSubresource.mipLevel = 0;
 	region.imageSubresource.baseArrayLayer = 0;
 	region.imageSubresource.layerCount = 1;
-	region.imageExtent.width = renderWindow.windowWidth;
-	region.imageExtent.height = renderWindow.windowHeight;
+	region.imageExtent.width = (const float&)renderWindow.windowWidth;
+	region.imageExtent.height = (const float&)renderWindow.windowHeight;
 	region.imageExtent.depth = 1;
 	_vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer, 1, &region);
 	endSingleTimeCommands(commandBuffer);
