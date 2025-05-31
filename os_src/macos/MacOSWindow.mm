@@ -62,9 +62,9 @@ void MacOSWindow::init(Window &renderWindow)
 			[NSApplication sharedApplication];
 			[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 		}
-		int32_t windowX = renderWindow.windowX == -1 ? 128 : renderWindow.windowX,
-				windowY = renderWindow.windowY == -1 ? 128 : renderWindow.windowY;
-		NSRect rect = NSMakeRect(windowX, windowY, renderWindow.windowWidth, renderWindow.windowHeight);
+		int32_t windowX = (const float&)renderWindow.windowX == -1 ? 128 : (const float&)renderWindow.windowX,
+				windowY = (const float&)renderWindow.windowY == -1 ? 128 : (const float&)renderWindow.windowY;
+		NSRect rect = NSMakeRect(windowX, windowY, (const float&)renderWindow.windowWidth, (const float&)renderWindow.windowHeight);
 		NSWindow *window = [[NSWindow alloc] initWithContentRect:rect
 							styleMask:(NSWindowStyleMaskTitled |
 										NSWindowStyleMaskClosable |
@@ -82,8 +82,8 @@ void MacOSWindow::init(Window &renderWindow)
 		NSMenu *mainMenu = [[NSMenu alloc] initWithTitle:nsTitle];
 		[NSApp setMainMenu:mainMenu];
 	}
-	nsImage = [[NSImage alloc] initWithSize:NSMakeSize(renderWindow.windowWidth, renderWindow.windowHeight)];
-	NSRect rect = NSMakeRect(0, 0, renderWindow.windowWidth, renderWindow.windowHeight);
+	nsImage = [[NSImage alloc] initWithSize:NSMakeSize((const float&)renderWindow.windowWidth, (const float&)renderWindow.windowHeight)];
+	NSRect rect = NSMakeRect(0, 0, (const float&)renderWindow.windowWidth, (const float&)renderWindow.windowHeight);
 	nsImageView = [[NSImageView alloc] initWithFrame:rect];
 	[(NSView*)nsView addSubview:(NSImageView *)nsImageView];
 }
@@ -229,22 +229,25 @@ void VulkanRenderer::swapBuffers()
 		@autoreleasepool
 		{
 			unsigned char* bitmapData = (unsigned char*)vulkanRenderer.bitmap;
-			for (int i = 0; i < macWindow.renderWindowPointer->windowWidth * macWindow.renderWindowPointer->windowHeight; ++i)
+			auto w = (const float&)(macWindow.renderWindowPointer->windowWidth);
+			auto h = (const float&)(macWindow.renderWindowPointer->windowHeight);
+			auto wh = w * h;
+			for (int i = 0; i < xy; ++i)
 			{
 				unsigned char temp = bitmapData[i * 4 + 0];
 				bitmapData[i * 4 + 0] = bitmapData[i * 4 + 2];
 				bitmapData[i * 4 + 2] = temp;
 			}
 			NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:&bitmapData
-																						pixelsWide:macWindow.renderWindowPointer->windowWidth
-																						pixelsHigh:macWindow.renderWindowPointer->windowHeight
+																						pixelsWide:w
+																						pixelsHigh:h
 																					bitsPerSample:8
 																					samplesPerPixel:4
 																						hasAlpha:YES
 																						isPlanar:NO
 																					colorSpaceName:NSDeviceRGBColorSpace
 																						bitmapFormat:0
-																						bytesPerRow:macWindow.renderWindowPointer->windowWidth * 4
+																						bytesPerRow:w * 4
 																						bitsPerPixel:32];
 			if (bitmapRep == nil)
 			{
