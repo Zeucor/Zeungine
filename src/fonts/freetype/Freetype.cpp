@@ -393,7 +393,6 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 								bool msdf)
 {
 	auto [string, ctx_fn_map] = fonts::parseFontEscapes(raw_string);
-	auto ctx_fn_map_end = ctx_fn_map.end();
 	shaders::RuntimeConstants constants;
 	if (msdf)
 	{
@@ -459,7 +458,7 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 		for (size_t index = line_start_char_idx + 1; index < line_end_char_idx; ++index)
 		{
 			auto ctx_fn_iter = ctx_fn_map.find(index);
-			if (ctx_fn_iter != ctx_fn_map_end)
+			if (ctx_fn_iter != ctx_fn_map.end())
 			{
 				line_end_char_idx = index;
 				return true;
@@ -523,6 +522,14 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 		}
 
 		bool dont_advance_line = shorten_segment_to_escapes(line_start_char_idx, line_end_char_idx);
+		
+		auto er_ctx_fn_iter = ctx_fn_map.find(codepoint_index);
+		if (er_ctx_fn_iter != ctx_fn_map.end())
+		{
+			for (auto& fnPair : er_ctx_fn_iter->second)
+				fnPair.second(ctx);
+			ctx_fn_map.erase(er_ctx_fn_iter);
+		}
 		segment_start_char_idx = line_end_char_idx;
 
 		auto current_line_text = string.substr(line_start_char_idx, line_end_char_idx - line_start_char_idx);
@@ -541,9 +548,12 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 		for (unsigned int i = 0; i < glyph_count; ++i)
 		{
 			auto ctx_fn_iter = ctx_fn_map.find(codepoint_index);
-			if (ctx_fn_iter != ctx_fn_map_end)
+			if (ctx_fn_iter != ctx_fn_map.end())
+			{
 				for (auto& fnPair : ctx_fn_iter->second)
 					fnPair.second(ctx);
+				ctx_fn_map.erase(ctx_fn_iter);
+			}
 			auto& c_glyph_info = glyph_info[i];
 			FT_UInt glyph_index = c_glyph_info.codepoint;
 			unsigned int cluster_in_line = glyph_info[i].cluster;
