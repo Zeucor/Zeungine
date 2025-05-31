@@ -208,6 +208,10 @@ namespace zg
             observe_map_ref.erase(iter);
             return true;
         }
+        void notify()
+        {
+            notify(*old_ptr, *ptr);
+        }
         private:
         void notify(const T& old_value, const T& new_value)
         {

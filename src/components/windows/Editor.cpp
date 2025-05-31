@@ -85,9 +85,15 @@ SceneCreateInfo EditorSceneFactory(Window& window)
                         string += Escapes::FG_BrightGreen;
                     else
                         string += Escapes::FG_Green;
-                    string += std::to_string(fps);
-                    return (Escapes::SmallerFont + Escapes::Color({1, 1, 1}) + "FPS:" + Escapes::ResetAttr + " " + string);
-                }, window.totalFramesLastPeriod, 20.f)
+                    {
+                        std::ostringstream stream;
+                        stream.setf(std::ios::fixed, std::ios::floatfield);
+                        stream << std::setprecision(2);
+                        stream << fps;
+                        string += stream.str();
+                    }
+                    return (Escapes::SmallerFont + Escapes::Color({1, 1, 1}) + "FPS: " + Escapes::ResetAttr + string);
+                }, window.fps, 14.f)
                 // .fit_layout_to_children()
                 // .move_up_stack() // above window instant framerate
                 .move_up_stack() // above panel layout

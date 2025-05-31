@@ -60,6 +60,9 @@ struct WindowCreateInfo;
 		observable_ptr<float> windowX;
 		observable_ptr<float> windowY;
 		observable_ptr<uint32_t> framerate = observable_ptr<uint32_t>(true, uint32_t(60));
+		observable_ptr<long double> smoothedDeltaTime;
+		observable_ptr<long double> smoothingFactor;
+		observable_ptr<float> fps = observable_ptr<float>(new float(0.0f));
 		float sceneZ = 0.0f;
 		std::vector<size_t> sortedScenes;
 #if defined(_WIN32) || defined(__linux__)

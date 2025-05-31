@@ -34,7 +34,10 @@ zg::Window::Window(const WindowCreateInfo& info) :
 	title(true, info.title), childWindows([](auto& childWindow) { return *childWindow.title; }), windowWidth(true, info.windowWidth),
 	windowHeight(true, info.windowHeight), windowX(true, info.windowX), windowY(true, info.windowY),
 	scenes([](auto& scene) { return scene.name; }), deltaTime(true, 1.0 / info.framerate), borderless(info.borderless),
-	framerate(true, info.framerate), vsync(info.vsync), frameduration(NANOSECONDS_DURATION(*deltaTime * NANOSECONDS::den)),
+	framerate(true, info.framerate),
+	smoothedDeltaTime(true, 1.0 / info.framerate),
+    smoothingFactor(true, 0.05),
+	vsync(info.vsync), frameduration(NANOSECONDS_DURATION(*deltaTime * NANOSECONDS::den)),
 	framebudget(frameduration, 1, true, false), systemFonts(*this), postProcessingPipeline(INDEX_STACK)
 {
 	setViewport();
@@ -63,7 +66,10 @@ zg::Window::Window(const zg::Window& other) :
 	INDEX_STACK(other.INDEX_STACK),
 	title(other.title), childWindows(other.childWindows), windowWidth(other.windowWidth),
 	windowHeight(other.windowHeight), windowX(other.windowX), windowY(other.windowY), scenes(other.scenes),
-	deltaTime(other.deltaTime), borderless(other.borderless), framerate(other.framerate), vsync(other.vsync),
+	deltaTime(other.deltaTime), borderless(other.borderless), framerate(other.framerate),
+	smoothedDeltaTime(other.smoothedDeltaTime),
+    smoothingFactor(other.smoothingFactor),
+	vsync(other.vsync),
 	frameduration(NANOSECONDS_DURATION(*deltaTime * NANOSECONDS::den)), framebudget(frameduration, 1, true, false), systemFonts(*this),
 	postProcessingPipeline(INDEX_STACK),
 	mainColorTexture(other.mainColorTexture),// mainDepthTexture(other.mainDepthTexture),
@@ -88,6 +94,8 @@ zg::Window& zg::Window::operator=(const zg::Window& other)
 	windowX = other.windowX;
 	windowY = other.windowY;
 	framerate = other.framerate;
+	smoothedDeltaTime = other.smoothedDeltaTime;
+    smoothingFactor = other.smoothingFactor;
 #if defined(_WIN32) || defined(__linux__)
 	windowThread = other.windowThread;
 #endif
@@ -1035,16 +1043,23 @@ void zg::Window::updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTi
 	{
 		ZGZoneScoped;
 		auto duration = now - lastFrameTime;
-		lastFrameDeltaTime = duration.count() / 1'000'000'000.0L;
-		auto& totalDeltaThisPeriodRef = *totalDeltaThisPeriod;
-		totalDeltaThisPeriodRef += *lastFrameDeltaTime;
-		((size_t&)totalFramesThisPeriod)++;
-		static constexpr auto update_divider = 8.0;
-		if (totalDeltaThisPeriodRef >= (1.0 / update_divider))
+		auto& lastFrameDeltaTime_ref = *lastFrameDeltaTime;
+		auto& smoothingFactor_ref = *smoothingFactor;
+		auto& smoothedDeltaTime_ref = *smoothedDeltaTime;
+		auto& totalDeltaThisPeriod_ref = *totalDeltaThisPeriod;
+		auto& totalFramesThisPeriod_ref = *totalFramesThisPeriod;
+		lastFrameDeltaTime_ref = duration.count() / 1'000'000'000.0L;
+		smoothedDeltaTime_ref = (1.0L - smoothingFactor_ref) * smoothedDeltaTime_ref + smoothingFactor_ref * lastFrameDeltaTime_ref;
+		totalDeltaThisPeriod_ref += *lastFrameDeltaTime;
+		totalFramesThisPeriod_ref++;
+		static constexpr auto update_divider = 4.0;
+		if (totalDeltaThisPeriod_ref >= (1.0 / update_divider))
 		{
-			totalFramesLastPeriod = (*totalFramesThisPeriod) * update_divider;
+			fps = 1.0f / smoothedDeltaTime_ref;
+			totalFramesLastPeriod = totalFramesThisPeriod_ref * update_divider;
 			totalFramesThisPeriod = size_t(0);
 			totalDeltaThisPeriod = long double(0.0L);
+			smoothedDeltaTime.notify();
 		}
 	}
 	lastFrameTime = now;
