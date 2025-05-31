@@ -232,7 +232,7 @@ void VulkanRenderer::swapBuffers()
 			auto w = (const float&)(macWindow.renderWindowPointer->windowWidth);
 			auto h = (const float&)(macWindow.renderWindowPointer->windowHeight);
 			auto wh = w * h;
-			for (int i = 0; i < xy; ++i)
+			for (int i = 0; i < wh; ++i)
 			{
 				unsigned char temp = bitmapData[i * 4 + 0];
 				bitmapData[i * 4 + 0] = bitmapData[i * 4 + 2];
