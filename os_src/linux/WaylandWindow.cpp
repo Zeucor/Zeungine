@@ -115,7 +115,7 @@ void pointer_handle_motion(void *data, struct wl_pointer *pointer, uint32_t time
 	auto &waylandWindow = *static_cast<WaylandWindow *>(data);
 	double sx_float = wl_fixed_to_double(sx);
 	double sy_float = wl_fixed_to_double(sy);
-	waylandWindow.renderWindowPointer->handleMouseMove(sx_float, sy_float);
+	waylandWindow.renderWindowPointer->queueEvent(EVENT_MOUSE_MOVE, glm::vec2(sx_float, sy_float));
 }
 
 void pointer_handle_button(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button,

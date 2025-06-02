@@ -188,7 +188,7 @@ bool MacOSWindow::pollMessages()
 					NSPoint location = [event locationInWindow];
 					auto x = location.x;
 					auto y = location.y;
-					renderWindowPointer->handleMouseMove(x, y);
+					renderWindowPointer->queueEvent(EVENT_MOUSE_MOVE, glm::vec2(x, y));
 					break;
 				}
 				case NSEventTypeLeftMouseDragged:

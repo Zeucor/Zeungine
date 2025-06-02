@@ -217,7 +217,7 @@ bool X11Window::pollMessages()
 		case ButtonPress:
 		{
 			auto button = event.xbutton.button - 1;
-			renderWindowPointer->handleMousePress(button, true);
+			renderWindowPointer->queueEvent(EVENT_MOUSE_PRESS, true, button);
 			break;
 		};
 		case ButtonRelease:
@@ -227,7 +227,7 @@ bool X11Window::pollMessages()
 			{
 				break;
 			}
-			renderWindowPointer->handleMousePress(button, false);
+			renderWindowPointer->queueEvent(EVENT_MOUSE_PRESS, false, button);
 			break;
 		};
 		case MotionNotify:
@@ -347,7 +347,7 @@ bool X11Window::pollMessages()
 	{
 		auto x = pointerXY.x;
 		auto y = renderWindowPointer->windowHeight - pointerXY.y;
-		renderWindowPointer->handleMouseMove(x, y);
+		renderWindowPointer->queueEvent(EVENT_MOUSE_MOVE, glm::vec2(x, y));
 	}
 	for (auto &buttonTuple : buttons)
 	{
