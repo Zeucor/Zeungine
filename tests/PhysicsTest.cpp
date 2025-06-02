@@ -89,10 +89,10 @@ int main()
 		window.addScene(PhysicsSceneFactory());
 		window.addScene(HUDSceneFactory());
 	});
-	window.addKeyPressHandler(27, [&](auto pressed) {
-		if (pressed)
-			window.close();
-	});
+	// window.addKeyPressHandler(27, [&](auto pressed) {
+	// 	if (pressed)
+	// 		window.close();
+	// });
 	window.run();
 	return 0;
 }
@@ -172,48 +172,48 @@ SceneCreateInfo PhysicsSceneFactory()
 			// scene.attachComponent(components::scenes::DepthFogFactory());
 			// cube controls
 			{
-				std::function<void()> onFrontTickFunction = [toxy_index_stack, toxy_rb_ID]()
-				{
-					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
-					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
-					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, 20));
-				};
-				std::function<void()> onBackTickFunction = [toxy_index_stack, toxy_rb_ID]()
-				{
-					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
-					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
-					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, -20));
-				};
-				std::function<void()> onLeftTickFunction = [toxy_index_stack, toxy_rb_ID]()
-				{
-					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
-					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
-					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(20, 0, 0));
-				};
-				std::function<void()> onRightTickFunction = [toxy_index_stack, toxy_rb_ID]()
-				{
-					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
-					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
-					toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(-20, 0, 0));
-				};
-				std::function<void()> onSpaceTickFunction = [toxy_index_stack, floor_index_stack, floor_rb_ID, toxy_rb_ID]()
-				{
-					auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
-					auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID);
-					auto& floor = Registry::GetSingleton().getEntity(floor_index_stack);
-					auto& floor_rb = floor.getComponentByID(floor_rb_ID);
-					physics::CollisionManifold* ManifoldPointer = 0;
-					auto collidingMask = toxy_rb.template getData<size_t>("CollidingMask");
-					if (collidingMask & 1 || collidingMask & 2)
-					{
-						toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 250, 0));
-					}
-				};
-				/*fID = */window.addKeyUpdateHandler(f, onFrontTickFunction);
-				/*bID = */window.addKeyUpdateHandler(b, onBackTickFunction);
-				/*lID = */window.addKeyUpdateHandler(l, onLeftTickFunction);
-				/*rID = */window.addKeyUpdateHandler(r, onRightTickFunction);
-				/*sID = */window.addKeyUpdateHandler(s, onSpaceTickFunction);
+				// std::function<void()> onFrontTickFunction = [toxy_index_stack, toxy_rb_ID]()
+				// {
+				// 	auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
+				// 	auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
+				// 	toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, 20));
+				// };
+				// std::function<void()> onBackTickFunction = [toxy_index_stack, toxy_rb_ID]()
+				// {
+				// 	auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
+				// 	auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
+				// 	toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 0, -20));
+				// };
+				// std::function<void()> onLeftTickFunction = [toxy_index_stack, toxy_rb_ID]()
+				// {
+				// 	auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
+				// 	auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
+				// 	toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(20, 0, 0));
+				// };
+				// std::function<void()> onRightTickFunction = [toxy_index_stack, toxy_rb_ID]()
+				// {
+				// 	auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
+				// 	auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID); 
+				// 	toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(-20, 0, 0));
+				// };
+				// std::function<void()> onSpaceTickFunction = [toxy_index_stack, floor_index_stack, floor_rb_ID, toxy_rb_ID]()
+				// {
+				// 	auto& toxy = Registry::GetSingleton().getEntity(toxy_index_stack);
+				// 	auto& toxy_rb = toxy.getComponentByID(toxy_rb_ID);
+				// 	auto& floor = Registry::GetSingleton().getEntity(floor_index_stack);
+				// 	auto& floor_rb = floor.getComponentByID(floor_rb_ID);
+				// 	physics::CollisionManifold* ManifoldPointer = 0;
+				// 	auto collidingMask = toxy_rb.template getData<size_t>("CollidingMask");
+				// 	if (collidingMask & 1 || collidingMask & 2)
+				// 	{
+				// 		toxy_rb.template setData<glm::vec3>("applyLocalForceToCenter", glm::vec3(0, 250, 0));
+				// 	}
+				// };
+				// /*fID = */window.addKeyUpdateHandler(f, onFrontTickFunction);
+				// /*bID = */window.addKeyUpdateHandler(b, onBackTickFunction);
+				// /*lID = */window.addKeyUpdateHandler(l, onLeftTickFunction);
+				// /*rID = */window.addKeyUpdateHandler(r, onRightTickFunction);
+				// /*sID = */window.addKeyUpdateHandler(s, onSpaceTickFunction);
 			}
             zgfilesystem::File fontFile(
 				zgfilesystem::File::getProgramDirectoryPath() / "fonts" / "Cal Sans" / "CalSans-Regular.ttf",

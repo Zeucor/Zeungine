@@ -77,6 +77,7 @@ namespace zg
 		FRONTFACE frontFace = DEFAULTFRONTFACE;
 		CULLMODE cullMode = CULLMODE::BACK;
 		ShaderContext* shaderContext = 0;
+		bool summingDraw = true;
 		IRenderer();
 		virtual ~IRenderer() = default;
 		virtual void init() = 0;

@@ -278,17 +278,17 @@ bool X11Window::pollMessages()
 					keycode = keycodeIter->second;
 			}
 			auto keypress = event.type == KeyPress;
-			renderWindowPointer->handleKey(keycode, mod, keypress);
+			renderWindowPointer->queueEvent(EVENT_KEY_PRESS, keypress, keycode);
 			break;
 		};
 		case FocusIn:
 		{
-			renderWindowPointer->callFocusHandler(true);
+			renderWindowPointer->queueFocusEvent(true);
 			break;
 		};
 		case FocusOut:
 		{
-			renderWindowPointer->callFocusHandler(false);
+			renderWindowPointer->queueFocusEvent(false);
 			break;
 		};
 		case ConfigureNotify:

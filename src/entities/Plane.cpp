@@ -89,3 +89,60 @@ zg::EntityCreateInfo zg::entities::PlaneFactory(
     };
     return info;
 }   
+std::vector<glm::vec3> zg::entities::getPlaneVertices(PlaneType planeType)
+{
+    switch (planeType)
+    {
+        case PlaneType::XZ_Center:
+        {
+            return {
+                glm::vec3(-0.5, 0.0, -0.5),
+                glm::vec3( 0.5, 0.0, -0.5),
+                glm::vec3(-0.5, 0.0,  0.5),
+                glm::vec3(-0.5, 0.0,  0.5),
+                glm::vec3( 0.5, 0.0, -0.5),
+                glm::vec3( 0.5, 0.0,  0.5)
+            };
+        }
+        case PlaneType::XY_Center:
+        {
+            return {
+                glm::vec3(-0.5,  0.5, 0.0),
+                glm::vec3( 0.5, -0.5, 0.0),
+                glm::vec3(-0.5, -0.5, 0.0),
+                glm::vec3( 0.5,  0.5, 0.0),
+                glm::vec3( 0.5, -0.5, 0.0),
+                glm::vec3(-0.5,  0.5, 0.0)
+            };
+        }
+        case PlaneType::YZ_Center:
+        {
+            return {
+                glm::vec3( 0.0, -0.5, -0.5),
+                glm::vec3( 0.0, -0.5, 0.5),
+                glm::vec3( 0.0,  0.5, -0.5),
+                glm::vec3( 0.0,  0.5, -0.5),
+                glm::vec3( 0.0, -0.5, 0.5),
+                glm::vec3( 0.0,  0.5, 0.5)
+            };
+        }
+        case PlaneType::XY_BottomLeft:
+        {
+            return {
+                glm::vec3(0.0, 1.0, 0.0),
+                glm::vec3(1.0, 0.0, 0.0),
+                glm::vec3(0.0, 0.0, 0.0),
+                glm::vec3(1.0, 1.0, 0.0),
+                glm::vec3(1.0, 0.0, 0.0),
+                glm::vec3(0.0, 1.0, 0.0)
+            };
+        }
+    }
+    return {};
+}
+std::vector<uint32_t> zg::entities::getPlaneIndices(PlaneType planeType)
+{
+    return {
+        0, 1, 2, 3, 4, 5
+    };
+}

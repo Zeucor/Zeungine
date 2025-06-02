@@ -5,9 +5,10 @@
 #include <thread>
 #include <condition_variable>
 #include <mutex>
+#include <zg/EventExecutor.hpp>
 namespace zg::vp
 {
-  struct View
+  struct View : EventExecutor
   {
     glm::vec3 position;
     glm::vec3 direction;
@@ -15,7 +16,6 @@ namespace zg::vp
     glm::mat4 matrix;
     float phi;
     float theta;
-    std::pair<UniqueIdentifier, std::map<UniqueIdentifier, ViewResizeHandler>> viewResizeHandlers;
     bool lookAtSet = false;
     glm::vec3 lookAt = glm::vec3(0);
     float accumulatedPhi;
@@ -25,9 +25,6 @@ namespace zg::vp
     View(glm::vec3 position, glm::vec3 direction, glm::vec3 up, bool lookAtSet, glm::vec3 lookAt);
     void update();
     void addPhiTheta(float addPhi, float addTheta);
-    UniqueIdentifier addResizeHandler(const ViewResizeHandler &callback);
-    void removeResizeHandler(UniqueIdentifier &id);
-    void callResizeHandler(glm::vec2 newSize);
     void setDirty();
   };
 }

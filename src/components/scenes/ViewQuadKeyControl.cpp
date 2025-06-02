@@ -14,79 +14,70 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewQuadKeyCont
 			auto& b = (component.template make<char>("b", keyScheme == KeyScheme::UDLRSH ? KEYCODE_DOWN : 's'));
 			auto& l = (component.template make<char>("l", keyScheme == KeyScheme::UDLRSH ? KEYCODE_LEFT : 'a'));
 			auto& r = (component.template make<char>("r", keyScheme == KeyScheme::UDLRSH ? KEYCODE_RIGHT : 'd'));
+			std::unordered_map<char, glm::vec3> keyDirections = {
+				{ f, {0, 0, 1} },
+				{ b, {0, 0,-1} },
+				{ l, {-1,0, 0} },
+				{ r, {1, 0, 0} }
+			};
+			component.template make<std::unordered_map<char, bool>>("KeysPressed");
+			component.template make<glm::vec3>("CurrentDirection", glm::vec3(0));
 			auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
 			auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
-			component.template make<UniqueIdentifier>(
-				"fID",
-				window.addKeyUpdateHandler(
-					f,
-					[HOST_INDEX_STACK = component.HOST_INDEX_STACK, force]()
+			component.template make<size_t>(
+				"KeyID",
+				window.registerHandler(EVENT_KEY_PRESS, [
+					keyDirections,
+					f, b, l, r,
+					HOST_INDEX_STACK = component.HOST_INDEX_STACK,
+					component_ID = component.ID
+				](auto& event) {
+					auto key = event.getValue();
+					if (key != f && key != b && key != l && key != r)
+						return;
+					auto& pressed = event.template castData<bool>();
+					auto& rgy = Registry::GetSingleton();
+					auto& scene = rgy.getScene(HOST_INDEX_STACK);
+					auto& component = scene.getComponentByID(component_ID);
+					auto& keysPressed = component.template getData<std::unordered_map<char, bool>>("KeysPressed");
+					auto& keyPressed = keysPressed[key];
+					if (keyPressed != pressed)
 					{
-						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
-						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
-						scene.viewPointer->position.x += scene.viewPointer->direction.x * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->position.y += scene.viewPointer->direction.y * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->position.z += scene.viewPointer->direction.z * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->setDirty();
-					}));
-			component.template make<UniqueIdentifier>(
-				"bID",
-				window.addKeyUpdateHandler(
-					b,
-					[HOST_INDEX_STACK = component.HOST_INDEX_STACK, force]()
-					{
-						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
-						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
-						scene.viewPointer->position.x -= scene.viewPointer->direction.x * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->position.y -= scene.viewPointer->direction.y * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->position.z -= scene.viewPointer->direction.z * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->setDirty();
-					}));
-			component.template make<UniqueIdentifier>(
-				"lID",
-				window.addKeyUpdateHandler(l,
-					[HOST_INDEX_STACK = component.HOST_INDEX_STACK, force]()
-					{
-						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
-						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
-						glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-						glm::vec3 right =
-							glm::normalize(glm::cross(scene.viewPointer->direction, worldUp));
-						glm::vec3 up =
-							glm::normalize(glm::cross(right, scene.viewPointer->direction));
-						scene.viewPointer->position.x -= right.x * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->position.y -= right.y * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->position.z -= right.z * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->setDirty();
-					}));
-			component.template make<UniqueIdentifier>(
-				"rID",
-				window.addKeyUpdateHandler(r,
-					[HOST_INDEX_STACK = component.HOST_INDEX_STACK, force]()
-					{
-						auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
-						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
-						glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-						glm::vec3 right =
-							glm::normalize(glm::cross(scene.viewPointer->direction, worldUp));
-						glm::vec3 up =
-							glm::normalize(glm::cross(right, scene.viewPointer->direction));
-						scene.viewPointer->position.x += right.x * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->position.y += right.y * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->position.z += right.z * force * *window.lastFrameDeltaTime;
-						scene.viewPointer->setDirty();
-					}));
+						auto& currentDirection = component.template getData<glm::vec3>("CurrentDirection");
+						auto addDirection_iter = keyDirections.find(key);
+						if (addDirection_iter == keyDirections.end())
+							return;
+						auto addDirection = addDirection_iter->second;
+						if (!pressed)
+							addDirection *= -1.f;
+						currentDirection += addDirection;
+						keyPressed = pressed;
+					}
+				})
+			);
 		},
 		.onDetachedFunction = [](auto& component) {
 			auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
-			auto& f = component.template getData<char>("f");
-			auto& b = component.template getData<char>("b");
-			auto& l = component.template getData<char>("l");
-			auto& r = component.template getData<char>("r");
-			window.removeKeyUpdateHandler(f, component.template getData<UniqueIdentifier>("fID"));
-			window.removeKeyUpdateHandler(b, component.template getData<UniqueIdentifier>("bID"));
-			window.removeKeyUpdateHandler(l, component.template getData<UniqueIdentifier>("lID"));
-			window.removeKeyUpdateHandler(r, component.template getData<UniqueIdentifier>("rID"));
+			window.deregisterHandler(EVENT_KEY_PRESS, component.template getData<size_t>("KeyID"));
+		},
+		.onUpdateFunction = [force](auto& component) {
+			auto& rgy = Registry::GetSingleton();
+			auto& scene = rgy.getScene(component.HOST_INDEX_STACK);
+			auto& window = rgy.getWindow(component.HOST_INDEX_STACK);
+			auto& currentDirection = component.template getData<glm::vec3>("CurrentDirection");
+			auto& view = *scene.viewPointer;
+			auto& viewDirection = view.direction;
+			auto& viewUp = view.up;
+			auto& viewPosition = view.position;
+			glm::vec3 forward = glm::normalize(viewDirection);
+			glm::vec3 right = glm::normalize(glm::cross(forward, viewUp));
+			glm::vec3 up = glm::normalize(viewUp);
+			glm::vec3 calculatedDirection = 
+				currentDirection.x * right + 
+				currentDirection.y * up + 
+				currentDirection.z * forward;
+			viewPosition += calculatedDirection * force * ((float)((const long double&)window.lastFrameDeltaTime));
+			view.setDirty();
 		}
 	};
 	return info;

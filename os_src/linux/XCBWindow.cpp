@@ -176,7 +176,7 @@ bool XCBWindow::pollMessages()
 						break;
 					}
 				}
-				window.handleKey(keycode, mod, pressed);
+				window.queueEvent(EVENT_KEY_PRESS, pressed, keycode);
 				break;
 			}
 		case XCB_CLIENT_MESSAGE:
@@ -211,11 +211,11 @@ bool XCBWindow::pollMessages()
 				break;
 			}
 		case XCB_FOCUS_IN:
-			window.callFocusHandler(true);
+			window.queueFocusEvent(true);
 			break;
 
 		case XCB_FOCUS_OUT:
-			window.callFocusHandler(false);
+			window.queueFocusEvent(false);
 			break;
 		case XCB_DESTROY_NOTIFY:
 			free(event);

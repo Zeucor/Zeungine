@@ -32,4 +32,6 @@ namespace zg::entities
 		PlaneType planeType = PlaneType::XY_Center,
 		zg::FRONTFACE frontFace = zg::IRenderer::DEFAULTFRONTFACE
 	);
+	std::vector<glm::vec3> getPlaneVertices(PlaneType planeType);
+	std::vector<uint32_t> getPlaneIndices(PlaneType planeType);
 }

@@ -79,6 +79,28 @@ namespace zg
 			m_Mutex->unlock();
 			return value;
 		}
+		template <typename... Args>
+		ValueT& commitTransactionKey(Transaction& transaction, const KeyT& key, Args&... args)
+		{
+			if (transaction.committed)
+			{
+				m_Mutex->unlock();
+				throw std::runtime_error("Cannot commit a transaction more than once");
+			}
+			if (transaction.rolledback)
+			{
+				m_Mutex->unlock();
+				throw std::runtime_error("Cannot commit a transaction after it has been rolled back");
+			}
+			auto& value = m_Values.emplace_back(args...);
+			assert(m_Values.size() - 1 == *transaction.index);
+			transaction.key = key;
+			m_IDKeyMap.emplace(transaction.id, transaction.key);
+			auto key_indexit = m_KeyIndexMap.emplace(transaction.key, transaction.index);
+			transaction.committed = true;
+			m_Mutex->unlock();
+			return value;
+		}
 		void rollback(Transaction& transaction)
 		{
 			if (transaction.committed)
@@ -394,6 +416,18 @@ namespace zg
 				++(*this);
 				return tmp;
 			}
+			key_iterator& operator--()
+			{
+				--map_iter;
+				return *this;
+			}
+
+			key_iterator operator--(int)
+			{
+				key_iterator tmp = *this;
+				--(*this);
+				return tmp;
+			}
 			key_iterator operator+(int32_t amount) const
 			{
 				key_iterator tmp = *this;
@@ -475,6 +509,18 @@ namespace zg
 			{
 				const_key_iterator tmp = *this;
 				++(*this);
+				return tmp;
+			}
+			const_key_iterator& operator--()
+			{
+				--map_iter;
+				return *this;
+			}
+
+			const_key_iterator operator--(int)
+			{
+				const_key_iterator tmp = *this;
+				--(*this);
 				return tmp;
 			}
 			const_key_iterator operator+(int32_t amount) const

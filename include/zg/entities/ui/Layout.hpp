@@ -1,8 +1,7 @@
 #pragma once
-#include <zg/Entity.hpp>
-#include <zg/observable_ptr.hpp>
 #include <zg/fonts/freetype/Freetype.hpp>
 #include <zg/textures/BlendState.hpp>
+#include <zg/Window.hpp>
 namespace zg::entities::ui
 {
     enum class LayoutDimension
@@ -12,11 +11,13 @@ namespace zg::entities::ui
         Depth = 4
     };
     EntityCreateInfo LayoutFactory(const std::string& name, LayoutDimension layoutDimension, glm::vec3 position, glm::vec3 size, IRenderer* irenderer, bool isNDCSize = true, const textures::BlendState& blendState = textures::BlendState::Layout);
+    glm::vec3 LayoutGetSubPositionI(Entity& entity, glm::vec3 size, size_t index);
     template <typename HostT>
     struct LayoutBuilder
     {
     private:
         std::vector<size_t> CURRENT_ID_STACK;
+        std::unordered_map<std::string, zg::observable_ptr<glm::vec3>> keySizes;
         HostT& host;
         bool isNDCSizing;
         Entity& get_entity()
@@ -56,7 +57,7 @@ namespace zg::entities::ui
             if (CURRENT_ID_STACK.size() == 0)
             {
                 auto layout_tuple = host.addEntity(
-                    LayoutFactory(name, dimension, {0, 0, 0}, size, window.iRenderer, isNDCSizing, blendState)
+                    LayoutFactory(name, dimension, {size.x / 2.f, size.y / 2.f, 0}, size, window.iRenderer, isNDCSizing, blendState)
                 );
                 CURRENT_ID_STACK.push_back(
                     std::get<KEY_ID_VECTOR_ID_INDEX>(
@@ -68,6 +69,7 @@ namespace zg::entities::ui
                 layout.template make<size_t>("qChildIndex", qChildIndex);
                 layout.template make<bool>("Resizable", resizable);
                 layout.template make<glm::vec3>("OriginalSize", size);
+                keySizes.emplace(name, layout.scale);
             }
             else
             {
@@ -78,7 +80,7 @@ namespace zg::entities::ui
                 if (entity.typeName == "Layout")
                 {
                     isLayout = true;
-                    new_position = std::any_cast<glm::vec3>(entity.template setData<glm::vec3>("GetSubPosition", size));
+                    new_position = LayoutGetSubPositionI(entity, size, entity.children.size());
                 }
                 auto layout_tuple = entity.addEntity(LayoutFactory(name, dimension, new_position, size, window.iRenderer, isNDCSizing, blendState));
                 CURRENT_ID_STACK.push_back(
@@ -92,6 +94,7 @@ namespace zg::entities::ui
                 layout.template make<size_t>("qChildIndex", qChildIndex);
                 layout.template make<bool>("Resizable", resizable);
                 layout.template make<glm::vec3>("OriginalSize", size);
+                keySizes.emplace(name, layout.scale);
                 if (isLayout)
                 {
                     // layout.scale.observe([entity_ID = entity.ID, index](auto& old_scale, auto& new_scale) {
@@ -103,10 +106,36 @@ namespace zg::entities::ui
             }
             return *this;
         }
+        template <typename F>
+        LayoutBuilder& add_layout_with(
+            const std::string& name,
+            LayoutDimension dimension, glm::vec3 size,
+            F f,
+            const textures::BlendState& blendState = textures::BlendState::Layout,
+            bool resizable = false)
+        {
+            add_layout(name, dimension, size, blendState, resizable);
+            f(*this);
+            if (resizable)
+                fit_layout_to_children();
+            return move_up_stack();
+        }
         LayoutBuilder& set_position(glm::vec3 position)
         {
             auto& entity = get_entity();
             entity.position = position;
+            return *this;
+        }
+        const glm::vec3& get_size(const std::string& key) const
+        {
+            auto size_iter = keySizes.find(key);
+            if (size_iter == keySizes.end())
+                throw std::runtime_error("Key not found");
+            return *size_iter->second;
+        }
+        LayoutBuilder& add_size(const std::string& key, glm::vec3 size)
+        {
+            keySizes.emplace(key, new glm::vec3(size));
             return *this;
         }
         LayoutBuilder& add_panel(const std::string& name, glm::vec3 size, glm::vec4 color)
@@ -115,7 +144,7 @@ namespace zg::entities::ui
             glm::vec3 new_position(0);
             if (entity.typeName == "Layout")
             {
-                new_position = std::any_cast<glm::vec3>(entity.template setData<glm::vec3>("GetSubPosition", size));
+                new_position = LayoutGetSubPositionI(entity, size, entity.children.size());
             }
             auto to_be_panel = entities::PlaneFactory(color, name, new_position, rotate_identity, size);
             auto panel_tuple = entity.addEntity(to_be_panel);
@@ -154,7 +183,7 @@ namespace zg::entities::ui
             glm::vec3 new_position(-entity_size.x / 2.f, entity_size.y / 2.f, 0.2);
             if (entity.typeName == "Layout")
             {
-                new_position = std::any_cast<glm::vec3>(entity.template setData<glm::vec3>("GetSubPosition", glm::vec3(scaledSize, 1.f)));
+                new_position = LayoutGetSubPositionI(entity, glm::vec3(scaledSize, 1.f), entity.children.size());
             }
             auto backing_entity_info = PlaneFactory(glm::vec4(0, 0, 0, 0), textKey + "Backing Plane", new_position, rotate_identity, glm::vec3(scaledSize, 1));
             auto& backing_entity = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(entity.addEntity(backing_entity_info));
@@ -229,46 +258,17 @@ namespace zg::entities::ui
                 bool just_created_backing_entity = false;
                 if (!backing_entity_ID)
                 {
-                    if ((isLayout = (entity.typeName == "Layout")))
-                    {
-                        std::pair<glm::vec3, size_t> sizeIPair(glm::vec3(scaledSize, 1.f), backing_index);
-                        new_position = std::any_cast<glm::vec3>(entity.template setData<std::pair<glm::vec3, size_t>>("GetSubPositionI", sizeIPair));
-                    }
                     auto backing_entity_info = PlaneFactory(glm::vec4(0, 0, 0, 0), textKey + "Backing Plane", new_position, rotate_identity, glm::vec3(scaledSize, 1));
                     auto backing_entity_tuple = entity.addEntity(backing_entity_info);
                     backing_entity_ID = std::get<KEY_ID_VECTOR_ID_INDEX>(backing_entity_tuple);
                     just_created_backing_entity = true;
                 }
                 auto& backing_entity = rgy.getEntity(backing_entity_ID);
-                if (just_created_backing_entity)
-                {
-                    if (isLayout)
-                    {
-                        backing_entity.scale.observe(
-                        [
-                            backing_entity_ID,
-                            entity_ID = entity.ID
-                        ]
-                        (auto& old_scale, auto& new_scale)
-                        {
-                            auto& rgy = Registry::GetSingleton();
-                            auto& core_layout = rgy.getEntity(entity_ID);
-                            auto& backing_entity = rgy.getEntity(backing_entity_ID);
-                            auto& dimension = core_layout.template getData<LayoutDimension>("LayoutDimension");
-                            switch (dimension)
-                            {
-                            case LayoutDimension::Vertical:
-                                backing_entity.position.x += ((new_scale.x - old_scale.x) / 2.f);
-                                break;
-                            }
-                        //     core_layout.template setData<bool>("FitLayoutToChildren", true);
-                        });
-                    }
-                }
-                else
+                if (!just_created_backing_entity)
                 {
                     backing_entity.scale = glm::vec3(scaledSize, 1);
                 }
+                entity.template setData<bool>("FitLayoutToChildren", true);
                 new_position = {0, 0, 0};
                 new_position.x -= (scaledSize.x / 2.f);
                 new_position.y -= (scaledSize.y / 2.f);
@@ -311,7 +311,8 @@ namespace zg::entities::ui
             auto& entity = get_entity();
             auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
             auto original_position = entity.position;
-            window.addKeyPressHandler(key, [entity_ID = entity.ID, handler, original_position](auto pressed) {
+            window.registerHandler(EVENT_KEY_PRESS, [entity_ID = entity.ID, handler, original_position](auto& event) {
+                auto& pressed = event.template castData<bool>();
                 auto& rgy = Registry::GetSingleton();
                 auto& entity = rgy.getEntity(entity_ID);
                 auto& window = rgy.getWindow(entity.INDEX_STACK);

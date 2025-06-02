@@ -11,6 +11,7 @@
 #include "vp/View.hpp"
 #include "Mesh.hpp"
 #include "observable_ptr.hpp"
+#include "EventExecutor.hpp"
 namespace zg
 {
 	struct Scene;
@@ -19,7 +20,8 @@ namespace zg
 	using ValueSetterPair = std::pair<zg::observable_ptr<std::any>, std::function<void(Mesh&, shaders::Shader&, const std::any&)>>;
 	struct Entity :
 		ComponentHolder<Entity, components::entities::EntityComponent, components::entities::EntityComponentCreateInfo>,
-		DataStorage<Entity>
+		DataStorage<Entity>,
+		EventExecutor
 	{
 		friend Scene;
 		friend Window;
@@ -62,6 +64,7 @@ namespace zg
 		glm::vec3 position;
 		glm::quat rotation;
 		observable_ptr<glm::vec3> scale;
+		observable_ptr<bool> isDirty =  observable_ptr<bool>(true, true);
 		glm::mat4 model;
 		// view/projection overrides
 		std::shared_ptr<vp::Projection> projectionPointer;
@@ -72,15 +75,6 @@ namespace zg
 		bool skipRender = false;
 		bool renderOncePerPass = true;
 		bool renderedThisPass = false;
-		// event handlers
-		std::unordered_map<Button, bool> buttons;
-		std::unordered_map<
-			Button,
-			std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MousePressHandler>>
-		> mousePressHandlers;
-		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseMoveHandler>> mouseMoveHandlers;
-		using MouseHoverHandler = std::function<void(bool)>;
-		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseHoverHandler>> mouseHoverHandlers;
 		long double updateTime;
 		// settable functions
 		std::function<void(Entity&)> preUpdateFunction;
@@ -125,15 +119,15 @@ namespace zg
 		glm::vec3 getModelScale();
 		KeyIDVector<std::string, Entity>::EmplaceBackTuple addEntity(const EntityCreateInfo& childInfo);
 		void removeEntity(size_t ID);
-		UniqueIdentifier addMousePressHandler(const Button& button, const MousePressHandler& callback);
-		void removeMousePressHandler(const Button& button, UniqueIdentifier& id);
-		UniqueIdentifier addMouseMoveHandler(const MouseMoveHandler& callback);
-		void removeMouseMoveHandler(UniqueIdentifier& id);
-		UniqueIdentifier addMouseHoverHandler(const MouseHoverHandler& callback);
-		void removeMouseHoverHandler(UniqueIdentifier& id);
-		void callMousePressHandler(const Button& button, bool pressed);
-		void callMouseMoveHandler(glm::vec2 coords);
-		void callMouseHoverHandler(bool hovered);
+		// UniqueIdentifier addMousePressHandler(const Button& button, const MousePressHandler& callback);
+		// void removeMousePressHandler(const Button& button, UniqueIdentifier& id);
+		// UniqueIdentifier addMouseMoveHandler(const MouseMoveHandler& callback);
+		// void removeMouseMoveHandler(UniqueIdentifier& id);
+		// UniqueIdentifier addMouseHoverHandler(const MouseHoverHandler& callback);
+		// void removeMouseHoverHandler(UniqueIdentifier& id);
+		// void callMousePressHandler(const Button& button, bool pressed);
+		// void callMouseMoveHandler(glm::vec2 coords);
+		// void callMouseHoverHandler(bool hovered);
 		void setPosition(glm::vec3 newPosition);
 		void setOrientation(glm::quat newOrientation);
 		void setTexture(size_t meshIndex, size_t textureIndex, const std::shared_ptr<textures::Texture>& new_texture, bool refresh_meshes = true);

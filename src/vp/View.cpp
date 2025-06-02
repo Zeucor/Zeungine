@@ -48,34 +48,6 @@ void View::addPhiTheta(float addPhi, float addTheta)
 	direction = newDirection;
 	update();
 }
-UniqueIdentifier View::addResizeHandler(const ViewResizeHandler &callback)
-{
-	auto id = ++viewResizeHandlers.first;
-	viewResizeHandlers.second[id] = callback;
-	return id;
-}
-void View::removeResizeHandler(UniqueIdentifier &id)
-{
-	auto &handlers = viewResizeHandlers.second;
-	auto handlerIter = handlers.find(id);
-	if (handlerIter == handlers.end())
-	{
-		return;
-	}
-	handlers.erase(handlerIter);
-	id = 0;
-}
-void View::callResizeHandler(glm::vec2 newSize)
-{
-	auto &handlersMap = viewResizeHandlers.second;
-	std::vector<ViewResizeHandler> handlersCopy;
-	for (const auto &pair : handlersMap)
-		handlersCopy.push_back(pair.second);
-	for (auto &handler : handlersCopy)
-	{
-		handler(newSize);
-	}
-}
 template<>
 Serial& serialize(Serial& serial, const std::shared_ptr<zg::vp::View>& viewPointer)
 {

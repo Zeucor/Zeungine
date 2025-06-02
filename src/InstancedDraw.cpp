@@ -326,6 +326,11 @@ void InstancedDraw::drawMulti(
                 firstInstance
             });
             firstInstance += batchEntitiesSize;
+            if (window.iRenderer->summingDraw)
+            {
+                window.summingDrawCount += batchEntitiesSize;
+                window.summingTriangleCount += triangle_count / 3;
+            }
         }
         removeUnusedMeshes(position_index_size_map, positions);
         removeUnusedMeshes(uv2s_index_size_map, uv2s);

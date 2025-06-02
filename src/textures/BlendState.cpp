@@ -17,9 +17,9 @@ BlendState BlendState::Layout = {
 BlendState BlendState::Text = {
     true,
     BlendFactor::SrcAlpha,
-    BlendFactor::OneMinusSrcColor,
-    BlendFactor::SrcAlpha,
-    BlendFactor::OneMinusSrcAlpha
+    BlendFactor::OneMinusSrcAlpha,
+    BlendFactor::One,
+    BlendFactor::One
 };
 BlendState BlendState::SrcAlpha = {
     true,

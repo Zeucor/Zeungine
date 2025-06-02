@@ -90,6 +90,8 @@ void Mesh::render(Entity& entity)
 {
 	uid = entity.ID;
 	auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
+	if (window.iRenderer->summingDraw)
+		window.summingDrawCount += 1;
 	auto shader = addShader();
 	shader->bind(*this);
 	size_t ID_index = -1;
@@ -100,6 +102,8 @@ void Mesh::render(Entity& entity)
 			break;
 	}
 	auto& meshInfo = entity.meshInfos[ID_index];
+	if (window.iRenderer->summingDraw)
+		window.summingTriangleCount += getIndicesSize(meshInfo.shapeType) / 3;
 	auto& scene = Registry::GetSingleton().getScene(entity.INDEX_STACK);
 	{
 		scene.meshPreRender(*this);

@@ -30,7 +30,6 @@ using namespace zg::entities;
 // 	resizeID = window.addResizeHandler([&](auto newSize) { forceUpdate(); });
 // 	setTextColor(textColor);
 // }
-// TextView::~TextView() { window.removeResizeHandler(resizeID); }
 // void TextView::preUpdate()
 // {
 // 	if (oldText != text)

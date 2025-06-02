@@ -74,12 +74,12 @@ static void keyboard_handle_enter(void *data, wl_keyboard *keyboard, uint32_t se
 								  wl_array *keys)
 {
 	auto &waylandWindow = *static_cast<WaylandWindow *>(data);
-	waylandWindow.renderWindowPointer->callFocusHandler(true);
+	waylandWindow.renderWindowPointer->queueFocusEvent(true);
 }
 static void keyboard_handle_leave(void *data, wl_keyboard *keyboard, uint32_t serial, wl_surface *surface)
 {
 	auto &waylandWindow = *static_cast<WaylandWindow *>(data);
-	waylandWindow.renderWindowPointer->callFocusHandler(false);
+	waylandWindow.renderWindowPointer->queueFocusEvent(false);
 }
 static void keyboard_keymap(void *data, wl_keyboard *wl_keyboard, uint32_t format, int32_t fd, uint32_t size) {}
 static void keyboard_key(void *data, wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time, uint32_t key,

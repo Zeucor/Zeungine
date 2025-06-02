@@ -35,13 +35,13 @@ using namespace zg;
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
 	auto& renderWindow = *macOSWindowPointer->renderWindowPointer;
-	renderWindow.callFocusHandler(true);
+	renderWindow.queueFocusEvent(true);
 	CGAssociateMouseAndMouseCursorPosition(YES);
 }
 - (void)windowDidResignKey:(NSNotification *)notification
 {
 	auto& renderWindow = *macOSWindowPointer->renderWindowPointer;
-	renderWindow.callFocusHandler(false);
+	renderWindow.queueFocusEvent(false);
 	CGAssociateMouseAndMouseCursorPosition(NO);
 }
 - (BOOL)windowShouldClose:(id)sender
@@ -180,7 +180,7 @@ bool MacOSWindow::pollMessages()
 					{
 						keycode = [characters characterAtIndex:0];
 					}
-					renderWindowPointer->handleKey(keycode, mod, pressed);
+					renderWindowPointer->queueEvent(EVENT_KEY_PRESS, pressed, keycode);
 					break;
 				}
 				case NSEventTypeMouseMoved:

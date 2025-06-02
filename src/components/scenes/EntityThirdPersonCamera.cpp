@@ -24,8 +24,9 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             auto& lastPosition = component.template make<glm::vec2>("LastPosition", 0.0f, 0.0f);
             auto& deadZonePercent = component.template make<float>("DeadZonePercent", 0.1f);
             auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
-            mouseMoveID = window.addMouseMoveHandler([HOST_INDEX_STACK = component.HOST_INDEX_STACK, componentID = component.ID](glm::vec2 coords)
+            mouseMoveID = window.registerHandler(EVENT_MOUSE_MOVE, [HOST_INDEX_STACK = component.HOST_INDEX_STACK, componentID = component.ID](auto& event)
             	{
+                    auto& coords = event.template castData<glm::vec2>();
                     auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
                     auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
                     auto& component = scene.getComponentByID(componentID);
@@ -73,63 +74,58 @@ zg::components::scenes::SceneComponentCreateInfo zg::components::scenes::EntityT
             		}
             	});
             focusID =
-                window.addFocusHandler([entityIndexStack, HOST_INDEX_STACK = component.HOST_INDEX_STACK, componentID = component.ID](bool focused)
-                	{
-                        auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
-                        auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
-                        auto& component = scene.getComponentByID(componentID);
-                        auto& entity = Registry::GetSingleton().getEntity(entityIndexStack);
-                		if (focused)
-                		{
-                            auto& currentYaw = component.template getData<float>("CurrentYaw");
-                            auto& currentPitch = component.template getData<float>("CurrentPitch");
-                            auto& lastPosition = component.template getData<glm::vec2>("LastPosition");
-                			// Sync camera yaw FROM entity when gaining focus
-                			glm::quat currentEntityRot = entity.rotation;
-            
-                			// --- Get current entity yaw using forward vector on focus ---
-                			glm::mat4 currentRotMat = glm::mat4_cast(currentEntityRot);
-                			// IMPORTANT: Assumes model's forward is +Z. Adjust index [2] if needed.
-                			glm::vec3 currentForward = glm::normalize(glm::vec3(currentRotMat[2]));
-                			float currentEntityYawRad = atan2(currentForward.x, currentForward.z);
-                			// -----------------------------------------------------------
-            
-                			// Convert entity yaw to degrees and set camera yaw
-                			// Relationship: CameraYaw = EntityYaw + 180 degrees (approx)
-                			currentYaw = glm::degrees(currentEntityYawRad) + 180.0f;
-            
-                			// Normalize camera yaw to [0, 360)
-                			currentYaw = fmod(currentYaw, 360.0f);
-                			if (currentYaw < 0.0f)
-                			{
-                				currentYaw += 360.0f;
-                			}
-            
-                			if (window.iPlatformWindow)
-                				window.iPlatformWindow->hidePointer();
-            
-                			// Initialize lastPosition and warp pointer
-                			glm::vec2 center = {(const float&)window.windowWidth / 2.0f, (const float&)window.windowHeight / 2.0f};
-                			lastPosition = center;
-                			window.warpPointer(center);
-                		}
-                		else
-                		{
-                			if (window.iPlatformWindow)
-                				window.iPlatformWindow->showPointer();
-                		}
-                	}
-                
-                );
+                window.registerHandler(EVENT_FOCUS, [entityIndexStack, HOST_INDEX_STACK = component.HOST_INDEX_STACK, componentID = component.ID](auto& event) {
+                    auto& focused = event.template castData<bool>();
+                    auto& scene = Registry::GetSingleton().getScene(HOST_INDEX_STACK);
+                    auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
+                    auto& component = scene.getComponentByID(componentID);
+                    auto& entity = Registry::GetSingleton().getEntity(entityIndexStack);
+                    if (focused)
+                    {
+                        auto& currentYaw = component.template getData<float>("CurrentYaw");
+                        auto& currentPitch = component.template getData<float>("CurrentPitch");
+                        auto& lastPosition = component.template getData<glm::vec2>("LastPosition");
+                        // Sync camera yaw FROM entity when gaining focus
+                        glm::quat currentEntityRot = entity.rotation;
+        
+                        // --- Get current entity yaw using forward vector on focus ---
+                        glm::mat4 currentRotMat = glm::mat4_cast(currentEntityRot);
+                        // IMPORTANT: Assumes model's forward is +Z. Adjust index [2] if needed.
+                        glm::vec3 currentForward = glm::normalize(glm::vec3(currentRotMat[2]));
+                        float currentEntityYawRad = atan2(currentForward.x, currentForward.z);
+                        // -----------------------------------------------------------
+        
+                        // Convert entity yaw to degrees and set camera yaw
+                        // Relationship: CameraYaw = EntityYaw + 180 degrees (approx)
+                        currentYaw = glm::degrees(currentEntityYawRad) + 180.0f;
+        
+                        // Normalize camera yaw to [0, 360)
+                        currentYaw = fmod(currentYaw, 360.0f);
+                        if (currentYaw < 0.0f)
+                        {
+                            currentYaw += 360.0f;
+                        }
+        
+                        if (window.iPlatformWindow)
+                            window.iPlatformWindow->hidePointer();
+        
+                        // Initialize lastPosition and warp pointer
+                        glm::vec2 center = {(const float&)window.windowWidth / 2.0f, (const float&)window.windowHeight / 2.0f};
+                        lastPosition = center;
+                        window.warpPointer(center);
+                    }
+                    else
+                    {
+                        if (window.iPlatformWindow)
+                            window.iPlatformWindow->showPointer();
+                    }
+                });
         },
         .onDetachedFunction = [](auto& component)
         {
-            auto& mouseMoveID = component.template getData<UniqueIdentifier>("MouseMoveID");
-            auto& focusID = component.template getData<UniqueIdentifier>("FocusID");
-            auto& scene = Registry::GetSingleton().getScene(component.HOST_INDEX_STACK);
             auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
-            window.removeMouseMoveHandler(mouseMoveID);
-            window.removeFocusHandler(focusID);
+            window.deregisterHandler(EVENT_MOUSE_MOVE, component.template getData<UniqueIdentifier>("MouseMoveID"));
+            window.deregisterHandler(EVENT_FOCUS, component.template getData<UniqueIdentifier>("FocusID"));
         },
         .onUpdateFunction = [entityIndexStack = entity.INDEX_STACK](auto& component)
         {

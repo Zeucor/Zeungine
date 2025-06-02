@@ -2,6 +2,8 @@
 #include <zg/Entity.hpp>
 #include <zg/Scene.hpp>
 #include <zg/raytracing/BVH.hpp>
+#include <zg/entities/Plane.hpp>
+#include <zg/entities/Cube.hpp>
 using namespace zg::raytracing;
 static constexpr bool shouldPermute = true;
 BVH::BVH() : executor(threadPool), config(getDefaultConfig()) {}
@@ -147,17 +149,32 @@ void BVH::addEntity(Entity& entity)
 {
 	if (entity.addToBVH)
 	{
+		size_t meshIndex = 0;
 		for (auto& meshID : entity.meshIDs)
 		{
 			auto& mesh = Registry::GetSingleton().getMesh(meshID);
-			auto indiceCount = mesh.indices.size();
-			if (!indiceCount)
-				return;
-			auto& indices = mesh.indices;
-			auto& vertices = mesh.vertices;
+			auto& m_indices = mesh.indices;
+			auto& m_vertices = mesh.vertices;
+			std::vector<uint32_t> t_indices;
+			std::vector<glm::vec3> t_vertices;
+			auto p_indices = &m_indices;
+			auto p_vertices = &m_vertices;
+			if (m_indices.empty())
+			{
+				if (uint32_t(mesh.info.shapeType) >= 4 && uint32_t(mesh.info.shapeType) <= 7)
+				{
+					t_indices = entities::getPlaneIndices((entities::PlaneType)mesh.info.shapeType);
+					t_vertices = entities::getPlaneVertices((entities::PlaneType)mesh.info.shapeType);
+				}
+				p_indices = &t_indices;
+				p_vertices = &t_vertices;
+			}
+			auto& indices = *p_indices;
+			auto& vertices = *p_vertices;
 			auto indicesData = indices.data();
 			auto verticesData = vertices.data();
 			auto& model = entity.getModelMatrix();
+			auto indiceCount = indices.size();
 			for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
 			{
 				auto i0 = indicesData[i + 0];
@@ -169,19 +186,17 @@ void BVH::addEntity(Entity& entity)
 				v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
 				v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
 				v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
-				addTriangle({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, {entity.ID, mesh.ID}});
+				addTriangle({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, {entity.ID, meshIndex}});
 			}
+			meshIndex++;
 		}
-	}
-	for (auto& child : entity.children)
-	{
-		addEntity(child);
 	}
 }
 void BVH::updateEntity(Entity& entity)
 {
 	if (entity.addToBVH)
 	{
+		size_t meshIndex = 0;
 		for (auto& meshID : entity.meshIDs)
 		{
 			auto& mesh = Registry::GetSingleton().getMesh(meshID);
@@ -204,10 +219,26 @@ void BVH::updateEntity(Entity& entity)
 				}
 			}
 			auto indiceCount = mesh.indices.size();
-			if (!indiceCount)
+			auto& m_indices = mesh.indices;
+			auto& m_vertices = mesh.vertices;
+			std::vector<uint32_t> t_indices;
+			std::vector<glm::vec3> t_vertices;
+			auto p_indices = &m_indices;
+			auto p_vertices = &m_vertices;
+			if (m_indices.empty())
+			{
+				if (uint32_t(mesh.info.shapeType) >= 4 && uint32_t(mesh.info.shapeType) <= 7)
+				{
+					t_indices = entities::getPlaneIndices((entities::PlaneType)mesh.info.shapeType);
+					t_vertices = entities::getPlaneVertices((entities::PlaneType)mesh.info.shapeType);
+				}
+				p_indices = &t_indices;
+				p_vertices = &t_vertices;
+			}
+			auto& meshIndices = *p_indices;
+			auto& meshVertices = *p_vertices;
+			if (meshIndices.empty())
 				return;
-			auto& meshIndices = mesh.indices;
-			auto& meshVertices = mesh.vertices;
 			auto indicesData = meshIndices.data();
 			auto verticesData = meshVertices.data();
 			auto& model = entity.getModelMatrix();
@@ -223,20 +254,16 @@ void BVH::updateEntity(Entity& entity)
 				v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
 				v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
 				v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
-				triangles[triangleID] = {{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, {entity.ID, mesh.ID}};
+				triangles[triangleID] = {{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}, {entity.ID, meshIndex}};
 			}
+			meshIndex++;
 		}
-	}
-	for (auto& child : entity.children)
-	{
-		updateEntity(child);
 	}
 	built = false;
 	changed = true;
 }
 void BVH::removeEntity(Scene& scene, Entity& entity)
 {
-	// auto start = std::chrono::high_resolution_clock::now();
 	if (entity.addToBVH)
 	{
 		size_t removalIndex = 0;
@@ -253,15 +280,6 @@ void BVH::removeEntity(Scene& scene, Entity& entity)
 																	 }),
 										triangles.end());
 	}
-	auto childrenData = entity.children.data();
-	auto childrenSize = entity.children.size();
-	for (size_t index = 0; index < childrenSize; ++index)
-	{
-		removeEntity(scene, childrenData[index]);
-	}
-	// auto end = std::chrono::high_resolution_clock::now();
-	// auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	// std::cout << "Remove Entity: " << duration.count() << " microseconds" << std::endl;
 	changed = true;
 	built = false;
 }

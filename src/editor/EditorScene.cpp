@@ -219,7 +219,6 @@ using namespace zg::strings;
 // };
 // EditorScene::~EditorScene()
 // {
-// 	// viewPointer->removeResizeHandler(resizeID);
 // 	// gameWindowBorder->removeMouseHoverHandler(gameWindowBorderHoverID);
 // 	// gameWindowBorder->removeMousePressHandler(0, gameWindowBorderPressID);
 // };

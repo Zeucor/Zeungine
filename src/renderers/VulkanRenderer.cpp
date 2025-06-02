@@ -427,6 +427,10 @@ void VulkanRenderer::setupPFNs()
 	VK_INSTANCE(_vkDeviceWaitIdle, PFN_vkDeviceWaitIdle, "vkDeviceWaitIdle");
 	VK_INSTANCE(_vkDestroyShaderModule, PFN_vkDestroyShaderModule, "vkDestroyShaderModule");
 	VK_INSTANCE(_vkCmdDrawIndirectCount, PFN_vkCmdDrawIndirectCount, "vkCmdDrawIndirectCount");
+	VK_INSTANCE(_vkCreateEvent, PFN_vkCreateEvent, "vkCreateEvent");
+	VK_INSTANCE(_vkDestroyEvent, PFN_vkDestroyEvent, "vkDestroyEvent");
+	VK_INSTANCE(_vkCmdSetEvent, PFN_vkCmdSetEvent, "vkCmdSetEvent");
+	VK_INSTANCE(_vkCmdWaitEvents, PFN_vkCmdWaitEvents, "vkCmdWaitEvents");
 }
 #ifndef NDEBUG
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -1838,9 +1842,9 @@ bool VulkanRenderer::compileProgram(shaders::Shader& shader)
 	if (currentFramebufferImpl)
 	{
 		textures::Texture* textureP = 0;
-		textureP = (textures::Texture*)currentFramebufferImpl->zgFramebuffer->getColorTexture();
+		textureP = (textures::Texture*)currentFramebufferImpl->zgFramebuffer->getColorTexture().get();
 		if (!textureP)
-			textureP = (textures::Texture*)currentFramebufferImpl->zgFramebuffer->getDepthTexture();
+			textureP = (textures::Texture*)currentFramebufferImpl->zgFramebuffer->getDepthTexture().get();
 		samples = TextureMultisamplingToSampleCountBit(textureP->multisampling);
 		if (samples > maxMSAASamples)
 			samples = maxMSAASamples;
@@ -2026,12 +2030,80 @@ void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 	((VulkanFramebufferImpl*)currentFramebufferImpl)->zgFramebuffer = (zg::textures::Framebuffer*)&framebuffer;
 }
 void VulkanRenderer::unbindFramebuffer(const textures::Framebuffer& framebuffer)
-{
+{	
 	_vkCmdEndRenderPass(*commandBuffer);
+	
 	transitionColorLayoutForReading(framebuffer);
 	transitionDepthLayoutForReading(framebuffer);
 	transitionColorResolveLayoutForReading(framebuffer);
 	transitionDepthResolveLayoutForReading(framebuffer);
+	
+	auto& framebufferImpl = *static_cast<VulkanFramebufferImpl*>(framebuffer.rendererData);
+
+	if (framebuffer.hasColorAttachment())
+	{
+		auto color_tex = framebuffer.getColorTexture();
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(color_tex->rendererData);
+
+		_vkCmdSetEvent(*commandBuffer, framebufferImpl.event, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+		
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = textureImpl.layout;
+		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = textureImpl.textureImage;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+
+		_vkCmdWaitEvents(
+			*commandBuffer,
+			1, &framebufferImpl.event,
+			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+			0, nullptr,
+			0, nullptr,
+			1, &barrier
+		);
+	}
+	if (framebuffer.hasDepthAttachment())
+	{
+		auto depth_tex = framebuffer.getDepthTexture();
+		auto& textureImpl = *static_cast<VulkanTextureImpl*>(depth_tex->rendererData);
+
+		_vkCmdSetEvent(*commandBuffer, framebufferImpl.event, VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT);
+		
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.oldLayout = textureImpl.layout;
+		barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = textureImpl.textureImage;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+
+		_vkCmdWaitEvents(
+			*commandBuffer,
+			1, &framebufferImpl.event,
+			VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+			0, nullptr,
+			0, nullptr,
+			1, &barrier
+		);
+	}
 	currentFramebufferImpl = 0;
 }
 void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
@@ -2043,6 +2115,10 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 	framebuffer.rendererData = new VulkanFramebufferImpl();
 	auto& framebufferImpl = *static_cast<VulkanFramebufferImpl*>(framebuffer.rendererData);
 	framebufferImpl.zgFramebuffer = &framebuffer;
+	VkEventCreateInfo eventCreateInfo{};
+	eventCreateInfo.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
+	eventCreateInfo.flags = 0;
+	_vkCreateEvent(device, &eventCreateInfo, 0, &framebufferImpl.event);
 	size_t renderPassHash = 0;
 	auto combine_hash = [&](size_t seed, auto val)
 	{ return seed ^ (std::hash<decltype(val)>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2)); };
@@ -2290,28 +2366,38 @@ void VulkanRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer)
 {
 	auto& framebufferImpl = *(VulkanFramebufferImpl*)framebuffer.rendererData;
 	destroyAtRenderPassEndOrDestroy(
-		[&, renderPass = framebufferImpl.renderPass, framebuffer = framebufferImpl.framebuffer]
-		{ _vkDestroyFramebuffer(device, framebuffer, 0); });
+		[
+			&,
+			renderPass = framebufferImpl.renderPass,
+			framebuffer = framebufferImpl.framebuffer,
+			event = framebufferImpl.event
+		]
+		{
+			_vkDestroyFramebuffer(device, framebuffer, 0);
+			_vkDestroyEvent(device, event, 0);
+		});
 	delete &framebufferImpl;
 }
 void VulkanRenderer::bindTexture(const textures::Texture& texture)
 {
 	auto& textureImpl = *(VulkanTextureImpl*)texture.rendererData;
-	if (textureImpl.layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	if (textureImpl.layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 	{
 		VkFormat format;
+		VkImageLayout newLayout;
 		if (texture.format == textures::Texture::Format::Depth ||
 						 texture.format == textures::Texture::Format::DepthStencil)
 		{
 			format = findDepthFormat(texture.format);
+			newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 		}
 		else
 		{
 			format = textureFormatType_Format[{texture.format, texture.type}];
+			newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		}
 		auto aspectMask = textureFormat_imageAspect[texture.format];
-		transitionImageLayout(textureImpl, textureImpl.textureImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-													VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, aspectMask);
+		transitionImageLayout(textureImpl, textureImpl.textureImage, format, textureImpl.layout, newLayout, aspectMask);
 	}
 }
 void VulkanRenderer::unbindTexture(const textures::Texture& texture) {}
@@ -2455,8 +2541,9 @@ void VulkanRenderer::prepareImageBarrier(VkCommandBuffer commandBuffer, VkImage 
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	barrier.oldLayout = oldLayout;
 	barrier.newLayout = newLayout;
-	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	auto quefam = findQueueFamilies(physicalDevice);
+	barrier.srcQueueFamilyIndex = quefam.graphicsFamily;
+	barrier.dstQueueFamilyIndex = quefam.graphicsFamily;
 	barrier.image = image;
 	barrier.subresourceRange.aspectMask = aspectMask;
 	barrier.subresourceRange.baseMipLevel = 0;
@@ -3547,7 +3634,7 @@ bool zg::VKcheck(const char* fn, VkResult result)
 void VulkanRenderer::transitionDepthLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
 	ZGZoneScoped;
-	auto shadowMapTexture = framebuffer.getDepthTexture();
+	auto shadowMapTexture = framebuffer.getDepthTexture().get();
 	if (shadowMapTexture && shadowMapTexture->rendererData)
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(shadowMapTexture->rendererData);
@@ -3575,7 +3662,7 @@ void VulkanRenderer::transitionDepthLayoutForWriting(const textures::Framebuffer
 void VulkanRenderer::transitionDepthLayoutForReading(const textures::Framebuffer& framebuffer)
 {
 	ZGZoneScoped;
-	auto shadowMapTexture = framebuffer.getDepthTexture();
+	auto shadowMapTexture = framebuffer.getDepthTexture().get();
 	if (shadowMapTexture && shadowMapTexture->rendererData)
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(shadowMapTexture->rendererData);
@@ -3618,7 +3705,7 @@ void VulkanRenderer::transitionDepthLayoutForReading(const textures::Framebuffer
 void VulkanRenderer::transitionColorLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
 	ZGZoneScoped;
-	auto colorTexture = framebuffer.getColorTexture();
+	auto colorTexture = framebuffer.getColorTexture().get();
 	if (colorTexture && colorTexture->rendererData)
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(colorTexture->rendererData);
@@ -3644,7 +3731,7 @@ void VulkanRenderer::transitionColorLayoutForWriting(const textures::Framebuffer
 void VulkanRenderer::transitionColorLayoutForReading(const textures::Framebuffer& framebuffer)
 {
 	ZGZoneScoped;
-	auto colorTexture = framebuffer.getColorTexture();
+	auto colorTexture = framebuffer.getColorTexture().get();
 	if (colorTexture && colorTexture->rendererData && !framebuffer.hasColorResolveAttachment())
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(colorTexture->rendererData);
@@ -3654,7 +3741,7 @@ void VulkanRenderer::transitionColorLayoutForReading(const textures::Framebuffer
 void VulkanRenderer::transitionColorResolveLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
 	ZGZoneScoped;
-	auto colorResolveTexture = framebuffer.getColorResolveTexture();
+	auto colorResolveTexture = framebuffer.getColorResolveTexture().get();
 	if (colorResolveTexture && colorResolveTexture->rendererData)
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(colorResolveTexture->rendererData);
@@ -3680,7 +3767,7 @@ void VulkanRenderer::transitionColorResolveLayoutForWriting(const textures::Fram
 void VulkanRenderer::transitionColorResolveLayoutForReading(const textures::Framebuffer& framebuffer)
 {
 	ZGZoneScoped;
-	auto colorResolveTexture = framebuffer.getColorResolveTexture();
+	auto colorResolveTexture = framebuffer.getColorResolveTexture().get();
 	if (colorResolveTexture && colorResolveTexture->rendererData)
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(colorResolveTexture->rendererData);
@@ -3690,7 +3777,7 @@ void VulkanRenderer::transitionColorResolveLayoutForReading(const textures::Fram
 void VulkanRenderer::transitionDepthResolveLayoutForWriting(const textures::Framebuffer& framebuffer)
 {
 	ZGZoneScoped;
-	auto depthResolveTexture = framebuffer.getDepthResolveTexture();
+	auto depthResolveTexture = framebuffer.getDepthResolveTexture().get();
 	if (depthResolveTexture && depthResolveTexture->rendererData)
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(depthResolveTexture->rendererData);
@@ -3716,7 +3803,7 @@ void VulkanRenderer::transitionDepthResolveLayoutForWriting(const textures::Fram
 void VulkanRenderer::transitionDepthResolveLayoutForReading(const textures::Framebuffer& framebuffer)
 {
 	ZGZoneScoped;
-	auto depthResolveTexture = framebuffer.getDepthResolveTexture();
+	auto depthResolveTexture = framebuffer.getDepthResolveTexture().get();
 	if (depthResolveTexture && depthResolveTexture->rendererData)
 	{
 		auto& textureImpl = *static_cast<VulkanTextureImpl*>(depthResolveTexture->rendererData);

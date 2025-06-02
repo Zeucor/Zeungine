@@ -100,15 +100,6 @@ zg::Window& zg::Window::operator=(const zg::Window& other)
 	windowThread = other.windowThread;
 #endif
 	runnables = other.runnables;
-	keys = other.keys;
-	buttons = other.buttons;
-	keyPressHandlers = other.keyPressHandlers;
-	keyUpdateHandlers = other.keyUpdateHandlers;
-	anyKeyPressHandlers = other.anyKeyPressHandlers;
-	mousePressHandlers = other.mousePressHandlers;
-	mouseMoveHandlers = other.mouseMoveHandlers;
-	viewResizeHandlers = other.viewResizeHandlers;
-	focusHandlers = other.focusHandlers;
 	preSwapbuffersOnceoffs = other.preSwapbuffersOnceoffs;
 	scenes = other.scenes;
 	open = other.open;
@@ -167,8 +158,11 @@ void zg::Window::update()
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
 	{
+		if (scenesData[index].name == "Editor Scene")
+			iRenderer->summingDraw = false;
 		ZGZoneScopedN("scene:update");
 		scenesData[index].update();
+		iRenderer->summingDraw = true;
 	}
 }
 void zg::Window::preRender()
@@ -178,14 +172,15 @@ void zg::Window::preRender()
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
 	{
+		if (scenesData[index].name == "Editor Scene")
+			iRenderer->summingDraw = false;
 		ZGZoneScopedN("scene:preRender");
 		scenesData[index].preRender();
+		iRenderer->summingDraw = true;
 	}
 	if (!isChildWindow)
 		return;
 	runRunnables();
-	updateKeyboard();
-	updateMouse();
 	auto& framebufferRef = *framebuffer;
 	framebufferRef.bind();
 }
@@ -197,8 +192,11 @@ void zg::Window::render()
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
 	{
+		if (scenesData[index].name == "Editor Scene")
+			iRenderer->summingDraw = false;
 		ZGZoneScopedN("scene:render");
 		scenesData[index].render();
+		iRenderer->summingDraw = true;
 	}
 };
 void zg::Window::postRender()
@@ -208,8 +206,11 @@ void zg::Window::postRender()
 	auto scenesSize = scenes.size();
 	for (size_t index = 0; index < scenesSize; ++index)
 	{
+		if (scenesData[index].name == "Editor Scene")
+			iRenderer->summingDraw = false;
 		ZGZoneScopedN("scene:postRender");
 		scenesData[index].postRender();
+		iRenderer->summingDraw = true;
 	}
 	if (!isChildWindow)
 		return;
@@ -253,10 +254,9 @@ void zg::Window::startWindow()
 					framebudget.sleep();
 					break;
 				}
+				processEvents();
 				iRendererRef.preBeginRenderPass();
 				runRunnables();
-				updateKeyboard();
-				updateMouse();
 				update();
 			}
 			{
@@ -311,53 +311,6 @@ void zg::Window::startWindow()
 		}
 	}
 }
-void zg::Window::updateKeyboard()
-{
-	ZGZoneScoped;
-	for (unsigned int i = 0; i < 256; ++i)
-	{
-		ZGZoneScoped;
-		auto& pressed = windowKeys[i];
-		if (keys[i] != pressed)
-		{
-			ZGZoneScoped;
-			callKeyPressHandler(i, pressed);
-			callAnyKeyPressHandler(i, pressed);
-		}
-		if (pressed)
-		{
-			ZGZoneScoped;
-			callKeyUpdateHandler(i);
-		}
-	}
-}
-void zg::Window::updateMouse()
-{
-	ZGZoneScoped;
-	for (unsigned int i = MinMouseButtonIndex; i < MaxMouseButtonIndex; ++i)
-	{
-		ZGZoneScoped;
-	_checkPressed:
-		auto& pressed = windowButtons[i];
-		if (buttons[i] != pressed)
-		{
-			ZGZoneScoped;
-			callMousePressHandler(i, pressed);
-			if ((i == 3 || i == 4) && pressed)
-			{
-				ZGZoneScoped;
-				windowButtons[i] = false;
-				goto _checkPressed;
-			}
-		}
-	}
-	if (mouseMoved)
-	{
-		ZGZoneScoped;
-		callMouseMoveHandler(newMouseCoords);
-		mouseMoved = false;
-	}
-}
 void zg::Window::close()
 {
 	ZGZoneScoped;
@@ -379,11 +332,6 @@ void zg::Window::minimize()
 		return;
 	}
 	iPlatformWindow->minimize();
-	buttons.clear();
-	for (unsigned i = 0; i <= MaxMouseButtonIndex; ++i)
-	{
-		windowButtons[i] = false;
-	}
 }
 void zg::Window::maximize()
 {
@@ -466,447 +414,10 @@ zg::Window& zg::Window::createChildWindow(const WindowCreateInfo& info)
 	usingInfo.isChildWindow = true;
 	return *std::get<KEY_ID_VECTOR_VALUE_INDEX>(childWindows.emplace_back(usingInfo));
 }
-
-// Keyboard
-UniqueIdentifier zg::Window::addKeyPressHandler(Key key, const KeyPressHandler& callback)
+void zg::Window::queueFocusEvent(bool focused)
 {
 	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto& handlersPair = keyPressHandlers[key];
-	auto id = ++handlersPair.first;
-	handlersPair.second[id] = callback;
-	return id;
-};
-void zg::Window::removeKeyPressHandler(Key key, UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto& handlersPair = keyPressHandlers[key];
-	auto handlerIter = handlersPair.second.find(id);
-	if (handlerIter == handlersPair.second.end())
-	{
-		ZGZoneScoped;
-		return;
-	}
-	handlersPair.second.erase(handlerIter);
-	id = 0;
-};
-UniqueIdentifier zg::Window::addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto& handlersPair = keyUpdateHandlers[key];
-	auto id = ++handlersPair.first;
-	handlersPair.second[id] = callback;
-	return id;
-};
-void zg::Window::removeKeyUpdateHandler(Key key, UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto handlersIter = keyUpdateHandlers.find(key);
-	if (handlersIter == keyUpdateHandlers.end())
-	{
-		ZGZoneScoped;
-		return;
-	}
-	auto& handlers = handlersIter->second.second;
-	auto handlerIter = handlers.find(id);
-	if (handlerIter == handlers.end())
-	{
-		ZGZoneScoped;
-		return;
-	}
-	handlers.erase(handlerIter);
-	id = 0;
-};
-void zg::Window::callKeyPressHandler(Key key, int pressed)
-{
-	ZGZoneScoped;
-	keys[key] = pressed;
-	{
-		std::vector<KeyPressHandler> handlersCopy;
-		{
-			// std::lock_guard lock(handlersMutex);
-			auto handlersIter = keyPressHandlers.find(key);
-			if (handlersIter == keyPressHandlers.end())
-			{
-				ZGZoneScoped;
-				return;
-			}
-			auto& handlersMap = handlersIter->second.second;
-			for (const auto& pair : handlersMap)
-			{
-				ZGZoneScoped;
-				handlersCopy.push_back(pair.second);
-			}
-		}
-		for (auto& handler : handlersCopy)
-		{
-			ZGZoneScoped;
-			handler(!!pressed);
-		}
-	}
-};
-void zg::Window::callKeyUpdateHandler(Key key)
-{
-	ZGZoneScoped;
-	std::vector<KeyUpdateHandler> handlersCopy;
-	{
-		// std::lock_guard lock(handlersMutex);
-		auto handlersIter = keyUpdateHandlers.find(key);
-		if (handlersIter == keyUpdateHandlers.end())
-		{
-			ZGZoneScoped;
-			return;
-		}
-		auto& handlersMap = handlersIter->second.second;
-		for (const auto& pair : handlersMap)
-		{
-			ZGZoneScoped;
-			handlersCopy.push_back(pair.second);
-		}
-	}
-	for (auto& handler : handlersCopy)
-	{
-		ZGZoneScoped;
-		handler();
-	}
-};
-UniqueIdentifier zg::Window::addAnyKeyPressHandler(const AnyKeyPressHandler& callback)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto id = ++anyKeyPressHandlers.first;
-	anyKeyPressHandlers.second[id] = callback;
-	return id;
-};
-void zg::Window::removeAnyKeyPressHandler(UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto& handlers = anyKeyPressHandlers.second;
-	auto handlerIter = handlers.find(id);
-	if (handlerIter == handlers.end())
-	{
-		ZGZoneScoped;
-		return;
-	}
-	handlers.erase(handlerIter);
-	id = 0;
-};
-void zg::Window::callAnyKeyPressHandler(Key key, bool pressed)
-{
-	ZGZoneScoped;
-	std::vector<AnyKeyPressHandler> handlersCopy;
-	{
-		ZGZoneScoped;
-		// std::lock_guard lock(handlersMutex);
-		auto& handlersMap = anyKeyPressHandlers.second;
-		for (const auto& pair : handlersMap)
-		{
-			ZGZoneScoped;
-			handlersCopy.push_back(pair.second);
-		}
-	}
-	for (auto& handler : handlersCopy)
-	{
-		ZGZoneScoped;
-		handler(key, pressed);
-	}
-}
-void zg::Window::handleKey(Key key, int32_t mod, bool pressed)
-{
-	ZGZoneScoped;
-	auto& window = *dynamic_cast<Window*>(this);
-	bool hadChildFocus = false;
-	auto childWindowsSize = childWindows.size();
-	auto childWindowsData = childWindows.data();
-	for (size_t index = 0; index < childWindowsSize; ++index)
-	{
-		ZGZoneScoped;
-		auto& childWindow = childWindowsData[index];
-		if (childWindow.minimized)
-		{
-			ZGZoneScoped;
-			continue;
-		}
-		if (!childWindow.focused)
-		{
-			ZGZoneScoped;
-			continue;
-		}
-		childWindow.mod = mod;
-		childWindow.windowKeys[key] = pressed;
-		hadChildFocus = true;
-		break;
-	}
-	if (!hadChildFocus)
-	{
-		ZGZoneScoped;
-		window.mod = mod;
-		window.windowKeys[key] = pressed;
-	}
-}
-// Mouse
-UniqueIdentifier zg::Window::addMousePressHandler(Button button, const MousePressHandler& callback)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto& handlersPair = mousePressHandlers[button];
-	auto id = ++handlersPair.first;
-	handlersPair.second[id] = callback;
-	return id;
-};
-void zg::Window::removeMousePressHandler(Button button, UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto& handlersPair = mousePressHandlers[button];
-	auto handlerIter = handlersPair.second.find(id);
-	if (handlerIter == handlersPair.second.end())
-	{
-		ZGZoneScoped;
-		return;
-	}
-	handlersPair.second.erase(handlerIter);
-	id = 0;
-};
-UniqueIdentifier zg::Window::addMouseMoveHandler(const MouseMoveHandler& callback)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto id = ++mouseMoveHandlers.first;
-	mouseMoveHandlers.second[id] = callback;
-	return id;
-};
-void zg::Window::removeMouseMoveHandler(UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto& handlers = mouseMoveHandlers.second;
-	auto handlerIter = handlers.find(id);
-	if (handlerIter == handlers.end())
-	{
-		ZGZoneScoped;
-		return;
-	}
-	handlers.erase(handlerIter);
-	id = 0;
-};
-void zg::Window::callMousePressHandler(Button button, bool pressed)
-{
-	ZGZoneScoped;
-	buttons[button] = pressed;
-	{
-		ZGZoneScoped;
-		std::vector<MousePressHandler> handlersCopy;
-		{
-			ZGZoneScoped;
-			// std::lock_guard lock(handlersMutex);
-			auto handlersIter = mousePressHandlers.find(button);
-			if (handlersIter == mousePressHandlers.end())
-			{
-				ZGZoneScoped;
-				return;
-			}
-			auto& handlersMap = handlersIter->second.second;
-			for (const auto& pair : handlersMap)
-			{
-				ZGZoneScoped;
-				handlersCopy.push_back(pair.second);
-			}
-		}
-		for (auto& handler : handlersCopy)
-		{
-			ZGZoneScoped;
-			handler(!!pressed);
-		}
-	}
-}
-void zg::Window::callMouseMoveHandler(glm::vec2 coords)
-{
-	ZGZoneScoped;
-	if (coords == mouseCoords)
-	{
-		ZGZoneScoped;
-		return;
-	}
-	mouseCoords = coords;
-	std::vector<MouseMoveHandler> handlersCopy;
-	{
-		ZGZoneScoped;
-		// std::lock_guard lock(handlersMutex);
-		auto& handlersMap = mouseMoveHandlers.second;
-		for (const auto& pair : handlersMap)
-		{
-			ZGZoneScoped;
-			handlersCopy.push_back(pair.second);
-		}
-	}
-	for (auto& handler : handlersCopy)
-	{
-		ZGZoneScoped;
-		handler(coords);
-	}
-}
-void zg::Window::handleMouseMove(uint32_t x, uint32_t y)
-{
-	ZGZoneScoped;
-	auto& window = *dynamic_cast<Window*>(this);
-	bool hadChildFocus = false;
-	auto childWindowsSize = childWindows.size();
-	auto childWindowsData = childWindows.data();
-	for (size_t index = 0; index < childWindowsSize; ++index)
-	{
-		ZGZoneScoped;
-		auto& childWindow = childWindowsData[index];
-		if (childWindow.minimized)
-		{
-			ZGZoneScoped;
-			continue;
-		}
-		if (!childWindow.focused)
-		{
-			ZGZoneScoped;
-			continue;
-		}
-		auto childX = x - *childWindow.windowX;
-		auto childY = *childWindow.windowHeight - ((const float&)window.windowHeight - y - *childWindow.windowY);
-		childWindow.newMouseCoords.x = childX, childWindow.newMouseCoords.y = childY;
-		childWindow.mouseMoved = true;
-		hadChildFocus = true;
-		break;
-	}
-	if (!hadChildFocus)
-	{
-		ZGZoneScoped;
-		window.newMouseCoords.y = y, window.newMouseCoords.x = x;
-		window.mouseMoved = true;
-	}
-}
-void zg::Window::handleMousePress(Button button, bool pressed)
-{
-	ZGZoneScoped;
-	auto& window = *dynamic_cast<Window*>(this);
-	bool hadChildFocus = false;
-	auto childWindowsSize = childWindows.size();
-	auto childWindowsData = childWindows.data();
-	for (size_t index = 0; index < childWindowsSize; ++index)
-	{
-		ZGZoneScoped;
-		auto& childWindow = childWindowsData[index];
-		if (childWindow.minimized)
-		{
-			ZGZoneScoped;
-			continue;
-		}
-		if (!childWindow.focused)
-		{
-			ZGZoneScoped;
-			continue;
-		}
-		childWindow.windowButtons[button] = pressed;
-		hadChildFocus = true;
-		break;
-	}
-	if (!hadChildFocus)
-	{
-		ZGZoneScoped;
-		window.windowButtons[button] = pressed;
-	}
-}
-// resize
-UniqueIdentifier zg::Window::addResizeHandler(const ViewResizeHandler& callback)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto id = ++viewResizeHandlers.first;
-	viewResizeHandlers.second[id] = callback;
-	return id;
-};
-void zg::Window::removeResizeHandler(UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto& handlers = viewResizeHandlers.second;
-	auto handlerIter = handlers.find(id);
-	if (handlerIter == handlers.end())
-	{
-		ZGZoneScoped;
-		return;
-	}
-	handlers.erase(handlerIter);
-	id = 0;
-};
-void zg::Window::callResizeHandler(glm::vec2 newSize)
-{
-	ZGZoneScoped;
-	std::vector<ViewResizeHandler> handlersCopy;
-	{
-		ZGZoneScoped;
-		// std::lock_guard lock(handlersMutex);
-		auto& handlersMap = viewResizeHandlers.second;
-		for (const auto& pair : handlersMap)
-		{
-			ZGZoneScoped;
-			handlersCopy.push_back(pair.second);
-		}
-	}
-	for (auto& handler : handlersCopy)
-	{
-		ZGZoneScoped;
-		handler(newSize);
-	}
-};
-// focus
-UniqueIdentifier zg::Window::addFocusHandler(const FocusHandler& callback)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto id = ++focusHandlers.first;
-	focusHandlers.second[id] = callback;
-	return id;
-}
-void zg::Window::removeFocusHandler(UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	// std::lock_guard lock(handlersMutex);
-	auto& handlers = focusHandlers.second;
-	auto handlerIter = handlers.find(id);
-	if (handlerIter == handlers.end())
-	{
-		ZGZoneScoped;
-		return;
-	}
-	handlers.erase(handlerIter);
-	id = 0;
-}
-void zg::Window::callFocusHandler(bool focused)
-{
-	ZGZoneScoped;
-	if (this->focused == focused)
-	{
-		ZGZoneScoped;
-		return;
-	}
-	std::vector<FocusHandler> handlersCopy;
-	{
-		ZGZoneScoped;
-		// std::lock_guard lock(handlersMutex);
-		auto& handlersMap = focusHandlers.second;
-		for (const auto& pair : handlersMap)
-		{
-			ZGZoneScoped;
-			handlersCopy.push_back(pair.second);
-		}
-	}
-	this->focused = focused;
-	for (auto& handler : handlersCopy)
-	{
-		ZGZoneScoped;
-		handler(focused);
-	}
+	queueEvent(EVENT_FOCUS, focused);
 }
 // onceoffs
 void zg::Window::addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff)
@@ -927,26 +438,6 @@ void zg::Window::callPreSwapbuffersOnceoff()
 	auto onceoff = preSwapbuffersOnceoffs.front();
 	preSwapbuffersOnceoffs.pop();
 	onceoff();
-}
-size_t zg::Window::addShutdownHandler(const ShutdownHandler& handler)
-{
-	ZGZoneScoped;
-	auto ID = GlobalUID::GetNew();
-	shutdownHandlers[ID] = handler;
-	return ID;
-}
-bool zg::Window::removeShutdownHandler(size_t& ID)
-{
-	ZGZoneScoped;
-	auto iter = shutdownHandlers.find(ID);
-	if (iter == shutdownHandlers.end())
-	{
-		ZGZoneScoped;
-		return false;
-	}
-	shutdownHandlers.erase(iter);
-	ID = 0;
-	return true;
 }
 KeyIDVector<std::string, Scene>::EmplaceBackTuple zg::Window::addScene(const SceneCreateInfo& info)
 {
@@ -1061,6 +552,10 @@ void zg::Window::updateDeltaTime(NANO_TIMEPOINT now, bool updateLastFrameDeltaTi
 			totalDeltaThisPeriod = long double(0.0L);
 			smoothedDeltaTime.notify();
 		}
+		drawCount = summingDrawCount;
+		summingDrawCount = 0;
+		triangleCount = summingTriangleCount;
+		summingTriangleCount = 0;
 	}
 	lastFrameTime = now;
 };
@@ -1078,7 +573,7 @@ void zg::Window::resize(glm::vec2 newSize)
 		ZGZoneScoped;
 		scenesData[index].resize(newSize);
 	}
-	callResizeHandler(newSize);
+	queueEvent(EVENT_RESIZE, newSize);
 };
 void zg::Window::registerOnEntityAddedFunction(const OnEntityAddedFunction& function)
 {
@@ -1103,11 +598,8 @@ void Window::onRemove()
 {
 	for (auto& scene : scenes)
 		scene.onRemove();
-	for (auto& pair : shutdownHandlers)
-	{
-		ZGZoneScopedN("shutdownHandler");
-		pair.second(*this);
-	}
+	queueEvent(EVENT_SHUTDOWN, true);
+	processEvents();
 	iPlatformWindow->enableKeyAutoRepeat();
 	audioEngine.stop();
 	audioEngine.clearPipeline();

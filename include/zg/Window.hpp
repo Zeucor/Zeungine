@@ -15,6 +15,7 @@
 #include "Scene.hpp"
 #include "PostProcessingPipeline.hpp"
 #include "FullscreenQuad.hpp"
+#include "EventExecutor.hpp"
 namespace zg
 {
 	namespace shaders
@@ -45,7 +46,9 @@ namespace zg
 #define KEYCODE_SUPER 0x88
 #define LAST_UNDEFINED_ASCII_IN_RANGE 0x9F
 struct WindowCreateInfo;
-	struct Window : ComponentHolder<Window, components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>
+	struct Window :
+		ComponentHolder<Window, components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>,
+		EventExecutor
 	{
 		friend Registry;
 		size_t ID = 0;
@@ -63,6 +66,10 @@ struct WindowCreateInfo;
 		observable_ptr<long double> smoothedDeltaTime;
 		observable_ptr<long double> smoothingFactor;
 		observable_ptr<float> fps = observable_ptr<float>(new float(0.0f));
+		size_t summingDrawCount = 0;
+		observable_ptr<size_t> drawCount = observable_ptr<size_t>(new size_t(0)); 
+		size_t summingTriangleCount = 0;
+		observable_ptr<size_t> triangleCount = observable_ptr<size_t>(new size_t(0)); 
 		float sceneZ = 0.0f;
 		std::vector<size_t> sortedScenes;
 #if defined(_WIN32) || defined(__linux__)
@@ -72,18 +79,6 @@ struct WindowCreateInfo;
 		std::recursive_mutex handlersMutex;
 		std::recursive_mutex renderMutex;
 		std::queue<Runnable> runnables;
-		std::unordered_map<Key, bool> keys;
-		std::unordered_map<Button, bool> buttons;
-		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyPressHandler>>> keyPressHandlers;
-		std::unordered_map<Key, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, KeyUpdateHandler>>>
-			keyUpdateHandlers;
-		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, AnyKeyPressHandler>> anyKeyPressHandlers;
-		std::unordered_map<Button, std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MousePressHandler>>>
-			mousePressHandlers;
-		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, MouseMoveHandler>> mouseMoveHandlers;
-		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, ViewResizeHandler>> viewResizeHandlers;
-		std::pair<UniqueIdentifier, std::map<UniqueIdentifier, FocusHandler>> focusHandlers;
-		std::map<size_t, ShutdownHandler> shutdownHandlers;
 		zg::td::queue<PreSwapbuffersOnceoff> preSwapbuffersOnceoffs;
 		zg::KeyIDVector<std::string, Scene> scenes;
 		bool open = true;
@@ -138,8 +133,6 @@ struct WindowCreateInfo;
 		void render();
 		void postRender();
 		void startWindow();
-		void updateKeyboard();
-		void updateMouse();
 		void close();
 		void minimize();
 		void maximize();
@@ -150,40 +143,11 @@ struct WindowCreateInfo;
 		void setViewport();
 		void mouseCapture(bool capture);
 		Window& createChildWindow(const WindowCreateInfo& info);
-		// Keyboard
-		UniqueIdentifier addKeyPressHandler(Key key, const KeyPressHandler& callback);
-		void removeKeyPressHandler(Key key, UniqueIdentifier& id);
-		UniqueIdentifier addKeyUpdateHandler(Key key, const KeyUpdateHandler& callback);
-		void removeKeyUpdateHandler(Key key, UniqueIdentifier& id);
-		UniqueIdentifier addAnyKeyPressHandler(const AnyKeyPressHandler& callback);
-		void removeAnyKeyPressHandler(UniqueIdentifier& id);
-		void callKeyPressHandler(Key key, int pressed);
-		void callKeyUpdateHandler(Key key);
-		void callAnyKeyPressHandler(Key key, bool pressed);
-		void handleKey(Key key, int32_t mod, bool pressed);
-		// Mouse
-		UniqueIdentifier addMousePressHandler(Button button, const MousePressHandler& callback);
-		void removeMousePressHandler(Button button, UniqueIdentifier& id);
-		UniqueIdentifier addMouseMoveHandler(const MouseMoveHandler& callback);
-		void removeMouseMoveHandler(UniqueIdentifier& id);
-		void callMousePressHandler(Button button, bool pressed);
-		void callMouseMoveHandler(glm::vec2 coords);
-		void handleMouseMove(uint32_t x, uint32_t y);
-		void handleMousePress(Button button, bool pressed);
-		// resize
-		UniqueIdentifier addResizeHandler(const ViewResizeHandler& callback);
-		void removeResizeHandler(UniqueIdentifier& id);
-		void callResizeHandler(glm::vec2 newSize);
 		// focus
-		UniqueIdentifier addFocusHandler(const FocusHandler& callback);
-		void removeFocusHandler(UniqueIdentifier& id);
-		void callFocusHandler(bool focused);
+		void queueFocusEvent(bool focused);
 		// preSwapbuffers
 		void addPreSwapbuffersOnceoff(const PreSwapbuffersOnceoff& onceoff);
 		void callPreSwapbuffersOnceoff();
-		// shutdown
-		size_t addShutdownHandler(const ShutdownHandler& handler);
-		bool removeShutdownHandler(size_t& ID);
 		// scene
 		KeyIDVector<std::string, Scene>::EmplaceBackTuple  addScene(const SceneCreateInfo& info);
 		bool removeScene(size_t ID);

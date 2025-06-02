@@ -24,10 +24,13 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseContro
 			int* count = new int();
 			component.template make<bool>("AltPressed", false);
 			window.iPlatformWindow->hidePointer();
-			component.template make<size_t>("AltPressID", window.addKeyPressHandler(KEYCODE_ALT, [
+			component.template make<size_t>("AltPressID", window.registerHandler(EVENT_KEY_PRESS, [
 				SCENE_INDEX_STACK = scene.INDEX_STACK,
 				component_ID = component.ID
-			](auto pressed) {
+			](auto& event) {
+				if (event.getValue() != KEYCODE_ALT)
+					return;
+				auto& pressed = event.template castData<bool>();
 				auto& scene = Registry::GetSingleton().getScene(SCENE_INDEX_STACK);
 				auto& component = scene.getComponentByID(component_ID);
 				auto& altPressed = component.template getData<bool>("AltPressed");
@@ -42,10 +45,11 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseContro
 					window.iPlatformWindow->hidePointer();
 				}
 			}));
-			component.template make<UniqueIdentifier>("mouseMoveID",
-				window.addMouseMoveHandler(
-					[centerBox, center, count, componentID = component.ID, SCENE_INDEX_STACK = scene.INDEX_STACK](glm::vec2 coords)mutable
+			component.template make<UniqueIdentifier>("MouseMoveID",
+				window.registerHandler(EVENT_MOUSE_MOVE,
+					[centerBox, center, count, componentID = component.ID, SCENE_INDEX_STACK = scene.INDEX_STACK](auto& event)mutable
 					{
+						auto& coords = event.template castData<glm::vec2>();
 						auto& scene = Registry::GetSingleton().getScene(SCENE_INDEX_STACK);
 						auto& window = Registry::GetSingleton().getWindow(SCENE_INDEX_STACK);
 						auto& component = scene.getComponentByID(componentID);
@@ -67,10 +71,11 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseContro
 					}
 				)
 			);
-			component.template make<UniqueIdentifier>("focusID",
-				window.addFocusHandler(
-					[HOST_INDEX_STACK = component.HOST_INDEX_STACK](bool focused)
+			component.template make<UniqueIdentifier>("FocusID",
+				window.registerHandler(EVENT_FOCUS,
+					[HOST_INDEX_STACK = component.HOST_INDEX_STACK](auto& event)
 					{
+						auto& focused = event.template castData<bool>();
 						auto& window = Registry::GetSingleton().getWindow(HOST_INDEX_STACK);
 						if (focused)
 							window.iPlatformWindow->hidePointer();
@@ -83,8 +88,9 @@ components::scenes::SceneComponentCreateInfo components::scenes::ViewMouseContro
 		.onDetachedFunction = [](auto& component)
 		{
 			auto& window = Registry::GetSingleton().getWindow(component.HOST_INDEX_STACK);
-			window.removeMouseMoveHandler(component.template getData<UniqueIdentifier>("mouseMoveID"));
-			window.removeFocusHandler(component.template getData<UniqueIdentifier>("focusID"));
+			window.deregisterHandler(EVENT_KEY_PRESS, component.template getData<UniqueIdentifier>("AltPressID"));
+			window.deregisterHandler(EVENT_MOUSE_MOVE, component.template getData<UniqueIdentifier>("MouseMoveID"));
+			window.deregisterHandler(EVENT_FOCUS, component.template getData<UniqueIdentifier>("FocusID"));
 		}
 	};
 	return info;

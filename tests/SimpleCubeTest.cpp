@@ -183,21 +183,21 @@ int main()
     });
 
     // Add a key press handler for the right arrow key to switch scenes
-    window.addKeyPressHandler(KEYCODE_RIGHT, [&](auto pressed) {
-        if (!pressed)
-            return;
-        nextScene();
-    });
+    // window.addKeyPressHandler(KEYCODE_RIGHT, [&](auto pressed) {
+    //     if (!pressed)
+    //         return;
+    //     nextScene();
+    // });
     
-    window.addKeyPressHandler('q',
-        [&](auto pressed)
-        {
-            if (pressed)
-            {
-                window.close();
-            }
-        }
-    );
+    // window.addKeyPressHandler('q',
+    //     [&](auto pressed)
+    //     {
+    //         if (pressed)
+    //         {
+    //             window.close();
+    //         }
+    //     }
+    // );
 
     // Start the window's main loop
     window.run();

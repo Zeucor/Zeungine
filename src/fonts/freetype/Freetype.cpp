@@ -242,12 +242,12 @@ FreetypeFont::~FreetypeFont()
 	FT_Done_Face(fontHandlePointer->face);
 	delete fontHandlePointer;
 }
-float FreetypeFont::calculateSegmentWidth(const std::string_view segment, float fontSize) const
+std::pair<float, uint32_t> FreetypeFont::calculateSegmentWidth(const std::string_view segment, float fontSize) const
 {
 	auto& face = fontHandlePointer->face;
 	if (segment.empty())
 	{
-		return 0.0f;
+		return {0.0f, 0};
 	}
 	if (FT_Set_Pixel_Sizes(face, 0, fontSize))
 	{
@@ -280,111 +280,173 @@ float FreetypeFont::calculateSegmentWidth(const std::string_view segment, float 
 
 	hb_buffer_destroy(hb_buffer);
 
-	return static_cast<float>(total_advance_x) / 64.0f;
+	return {static_cast<float>(total_advance_x) / 64.0f, glyph_count};
 }
 float ftTextureScale = 1.f;
+bool shorten_segment_to_escapes(auto& ctx_fn_map, auto& line_start_char_idx, auto& line_end_char_idx)
+{
+	for (size_t index = line_start_char_idx + 1; index < line_end_char_idx; ++index)
+	{
+		auto ctx_fn_iter = ctx_fn_map.find(index);
+		if (ctx_fn_iter != ctx_fn_map.end())
+		{
+			line_end_char_idx = index;
+			return true;
+		}
+	}
+	return false;
+}
 const glm::vec2 FreetypeFont::stringSize(const std::string_view raw_string, float fontSize, float& lineHeight,
 																				 glm::vec2 bounds, enums::EBreakStyle breakStyle, bool msdf)
 {
-	auto parsed_pair = fonts::parseFontEscapes(raw_string);
-	auto& string = parsed_pair.first;
-	auto& face = fontHandlePointer->face;
-	if (FT_Set_Pixel_Sizes(face, 0, fontSize))
-	{
-		throw std::runtime_error("Error: Could not set font pixel size to " + std::to_string(fontSize) + ".");
-	}
-	hb_ft_font_changed(hbFont);
-	lineHeight = static_cast<float>(face->size->metrics.height) / 64.0f;
-	if (lineHeight <= 0.0f)
-	{
-		lineHeight = fontSize * 1.2f;
-	}
+    auto parsed_pair = fonts::parseFontEscapes(raw_string);
+    auto& string = parsed_pair.first;
+    auto& ctx_fn_map = parsed_pair.second;
+    auto& face = fontHandlePointer->face;
+    if (FT_Set_Pixel_Sizes(face, 0, fontSize))
+    {
+        throw std::runtime_error("Error: Could not set font pixel size to " + std::to_string(fontSize) + ".");
+    }
+    hb_ft_font_changed(hbFont);
 
-	if (string.empty())
-	{
-		return glm::vec2(0.0f, 0.0f);
-	}
+    lineHeight = static_cast<float>(face->size->metrics.height) / 64.0f;
+    if (lineHeight <= 0.0f)
+    {
+        lineHeight = fontSize * 1.2f;
+    }
 
-	float max_total_width = 0.0f;
-	float current_line_width = 0.0f;
-	float total_height = lineHeight;
+    glm::vec4 foreground_color(1);
+    glm::vec4 background_color(0);
+    glm::vec3 position(0);
+    float start_line_x = position.x;
+    FontContext ctx{
+        fontSize,
+        fontSize,
+        lineHeight,
+        position.x,
+        position.y,
+        start_line_x,
+        foreground_color,
+        background_color,
+        foreground_color,
+        background_color,
+        [&](auto& ctx){
+            if (FT_Set_Pixel_Sizes(face, 0, ctx.fontSize))
+            {
+                throw std::runtime_error("Error: Could not set font pixel size to " + std::to_string(fontSize) + ".");
+            }
+            hb_ft_font_changed(hbFont);
+        }
+    };
 
-	if (breakStyle == enums::EBreakStyle::None || bounds.x <= 0)
-	{
-		max_total_width = calculateSegmentWidth(string, fontSize);
-		return glm::vec2(max_total_width, total_height);
-	}
+    if (auto esc_iter = ctx_fn_map.find(0); esc_iter != ctx_fn_map.end())
+    {
+        for (auto& esc : esc_iter->second)
+        {
+            esc.second(ctx);
+        }
+    }
 
-	size_t current_str_pos = 0;
+    if (string.empty())
+    {
+        return glm::vec2(0.0f, 0.0f);
+    }
 
-	while (current_str_pos < string.length())
-	{
-		size_t next_delimiter_pos = string.find_first_of(" \t\n\r", current_str_pos);
-		size_t word_end_pos = (next_delimiter_pos == std::string_view::npos) ? string.length() : next_delimiter_pos;
+    size_t codepoint_index = 0;
+    size_t segment_start_char_idx = 0;
+    float max_total_width = 0.0f;
+    glm::vec2 size(0.0f, lineHeight);
 
-		std::string_view word_view = string.substr(current_str_pos, word_end_pos - current_str_pos);
-		float word_width = calculateSegmentWidth(word_view, fontSize);
+    hb_buffer_t* buffer = hb_buffer_create();
+	float line_size_x = 0.0;
+    while (segment_start_char_idx < string.length())
+    {
+        size_t line_start_char_idx = segment_start_char_idx;
+        size_t line_end_char_idx = string.length();
 
-		bool has_newline_in_word = false;
-		if (word_view.find('\n') != std::string_view::npos || word_view.find('\r') != std::string_view::npos)
-		{
-			has_newline_in_word = true;
-		}
-		
-		if ((current_line_width + word_width > bounds.x && current_line_width > 0) || has_newline_in_word)
-		{
-			max_total_width = std::max(max_total_width, current_line_width);
-			total_height += lineHeight;
-			current_line_width = 0.0f;
-		}
+        bool shortened = shorten_segment_to_escapes(ctx_fn_map, line_start_char_idx, line_end_char_idx);
 
-		current_line_width += word_width;
+        auto current_line_text = string.substr(line_start_char_idx, line_end_char_idx - line_start_char_idx);
 
-		if (next_delimiter_pos != std::string_view::npos)
-		{
-			size_t space_start_pos = next_delimiter_pos;
-			size_t non_space_after_space = string.find_first_not_of(" \t\n\r", space_start_pos);
-			size_t space_end_pos = (non_space_after_space == std::string_view::npos) ? string.length() : non_space_after_space;
+        if (auto er_ctx_fn_iter = ctx_fn_map.find(codepoint_index); er_ctx_fn_iter != ctx_fn_map.end())
+        {
+            for (auto& fnPair : er_ctx_fn_iter->second)
+            {
+                fnPair.second(ctx);
+            }
+            ctx_fn_map.erase(er_ctx_fn_iter);
+        }
 
-			std::string_view space_view = string.substr(space_start_pos, space_end_pos - space_start_pos);
-			float space_width = calculateSegmentWidth(space_view, fontSize);
-			
-			bool has_newline_in_space = (space_view.find('\n') != std::string_view::npos || space_view.find('\r') != std::string_view::npos);
+        if (breakStyle == enums::EBreakStyle::None || bounds.x <= 0)
+        {
+            auto [segment_width, glyph_count] = calculateSegmentWidth(current_line_text, ctx.fontSize);
+            line_size_x += segment_width;
+			size.x = (std::max)(size.x, line_size_x);
+            segment_start_char_idx = line_end_char_idx;
+            codepoint_index += glyph_count;
+            continue;
+        }
 
-			if ((current_line_width + space_width > bounds.x && current_line_width > 0) || has_newline_in_space)
-			{
-				max_total_width = std::max(max_total_width, current_line_width);
-				
-				size_t newline_count = 0;
-				for (char c : space_view)
-				{
-					if (c == '\n') newline_count++;
-				}
-				if (newline_count > 0)
-				{
-					total_height += (newline_count * lineHeight);
-				}
-				else if (current_line_width > 0)
-				{
-					total_height += lineHeight;
-				}
-				
-				current_line_width = 0.0f;
-			}
-			current_line_width += space_width;
+        float current_line_width = 0.0f;
+        size_t current_str_pos = 0;
 
-			current_str_pos = space_end_pos;
-		}
-		else
-		{
-			current_str_pos = word_end_pos;
-		}
-	}
-	
-	max_total_width = std::max(max_total_width, current_line_width);
+        while (current_str_pos < current_line_text.length())
+        {
+            size_t next_delim = current_line_text.find_first_of(" \t\n\r", current_str_pos);
+            size_t word_end = (next_delim == std::string_view::npos) ? current_line_text.length() : next_delim;
+            std::string_view word = current_line_text.substr(current_str_pos, word_end - current_str_pos);
 
-	return glm::vec2(max_total_width, total_height);
-};
+            auto [word_width, word_glyph_count] = calculateSegmentWidth(word, ctx.fontSize);
+			auto sum_glyph_count = word_glyph_count;
+            bool has_newline = word.find_first_of("\n\r") != std::string_view::npos;
+
+            if ((current_line_width + word_width > bounds.x && current_line_width > 0) || has_newline)
+            {
+                max_total_width = std::max(max_total_width, current_line_width);
+                size.y += lineHeight;
+				line_size_x = 0.0;
+                current_line_width = 0.0f;
+            }
+            current_line_width += word_width;
+
+            if (next_delim != std::string_view::npos)
+            {
+                size_t space_start = next_delim;
+                size_t after_space = current_line_text.find_first_not_of(" \t\n\r", space_start);
+                size_t space_end = (after_space == std::string_view::npos) ? current_line_text.length() : after_space;
+                std::string_view space = current_line_text.substr(space_start, space_end - space_start);
+
+                auto [space_width, space_glyph_count] = calculateSegmentWidth(space, ctx.fontSize);
+				sum_glyph_count += space_glyph_count;
+                bool space_newline = space.find_first_of("\n\r") != std::string_view::npos;
+
+                if ((current_line_width + space_width > bounds.x && current_line_width > 0) || space_newline)
+                {
+                    max_total_width = std::max(max_total_width, current_line_width);
+                    int newline_count = std::count(space.begin(), space.end(), '\n');
+                    size.y += (newline_count > 0 ? newline_count : 1) * lineHeight;
+					line_size_x = 0.0;
+                    current_line_width = 0.0f;
+                }
+                current_line_width += space_width;
+                current_str_pos = space_end;
+            }
+            else
+            {
+                current_str_pos = word_end;
+            }
+
+            codepoint_index += sum_glyph_count;
+        }
+
+        segment_start_char_idx = line_end_char_idx;
+        size.x = std::max(size.x, current_line_width);
+    }
+
+    hb_buffer_destroy(buffer);
+
+    return size;
+}
 template <typename HostT>
 void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 position, glm::quat _rotation,
 								glm::vec3 _scale, float fontSize, float& lineHeight, glm::vec2 bounds,
@@ -453,20 +515,6 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 
 	size_t codepoint_index = 0;
 
-	auto shorten_segment_to_escapes = [&](auto& line_start_char_idx, auto& line_end_char_idx) -> bool
-	{
-		for (size_t index = line_start_char_idx + 1; index < line_end_char_idx; ++index)
-		{
-			auto ctx_fn_iter = ctx_fn_map.find(index);
-			if (ctx_fn_iter != ctx_fn_map.end())
-			{
-				line_end_char_idx = index;
-				return true;
-			}
-		}
-		return false;
-	};
-
 	while (segment_start_char_idx < string.length())
 	{
 		size_t line_start_char_idx = segment_start_char_idx;
@@ -486,7 +534,7 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 				size_t word_end_char_pos = (next_delimiter_pos == std::string_view::npos) ? string.length() : next_delimiter_pos;
 
 				std::string_view word_view = string.substr(temp_segment_char_idx, word_end_char_pos - temp_segment_char_idx);
-				float word_width = calculateSegmentWidth(word_view, fontSize);
+				auto [word_width, word_glyph_count] = calculateSegmentWidth(word_view, fontSize);
 
 				bool has_newline_in_word = (word_view.find('\n') != std::string_view::npos || word_view.find('\r') != std::string_view::npos);
 
@@ -505,7 +553,7 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 					size_t space_end_char_pos = (non_space_after_space == std::string_view::npos) ? string.length() : non_space_after_space;
 
 					std::string_view space_view = string.substr(space_start_char_pos, space_end_char_pos - space_start_char_pos);
-					float space_width = calculateSegmentWidth(space_view, fontSize);
+					auto [space_width, space_glyph_count] = calculateSegmentWidth(space_view, fontSize);
 
 					bool has_newline_in_space = (space_view.find('\n') != std::string_view::npos || space_view.find('\r') != std::string_view::npos);
 
@@ -521,7 +569,7 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 			segment_start_char_idx = line_end_char_idx;
 		}
 
-		bool dont_advance_line = shorten_segment_to_escapes(line_start_char_idx, line_end_char_idx);
+		bool dont_advance_line = shorten_segment_to_escapes(ctx_fn_map, line_start_char_idx, line_end_char_idx);
 		
 		auto er_ctx_fn_iter = ctx_fn_map.find(codepoint_index);
 		if (er_ctx_fn_iter != ctx_fn_map.end())
@@ -615,7 +663,6 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 						{
 							glyph.VALUE = static_cast<uint64_t>(glyph_index);
 							glyph.setTexture(0, 0, characterPointer->texturePointer);
-							std::any_cast<glm::vec4&>((*glyph.runtimeConstantValueShaderSetters["TextColor"].first)) = ctx.foreground_color;
 						}
 						if (glyph.position != characterPosition)
 						{
@@ -625,6 +672,9 @@ void FreetypeFont::stringToHost(const std::string_view raw_string, glm::vec3 pos
 						{
 							glyph.scale = glm::vec3(characterPointer->size, 1.f) * _scale;
 						}
+						auto& glyph_color = std::any_cast<glm::vec4&>((*glyph.runtimeConstantValueShaderSetters["TextColor"].first));
+						if (glyph_color != ctx.foreground_color)
+							glyph_color = ctx.foreground_color;
 					}
 					new_glyph_entity_ids_for_string_indices[original_string_cluster_index] = entity_id_to_use;
 

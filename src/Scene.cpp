@@ -127,6 +127,8 @@ Scene::Scene(const Scene& other) :
 	name(other.name),
 	clearColor(other.clearColor),
 	projectionPointer(other.projectionPointer), entities(other.entities),
+	unobservedEntitiesCount(other.unobservedEntitiesCount),
+	entitiesCount(other.entitiesCount),
 	pointLights(other.pointLights), directionalLights(other.directionalLights),
 	spotLights(other.spotLights), spotLightShadows(other.spotLightShadows),
 	pointLightShadows(other.pointLightShadows), directionalLightShadows(other.directionalLightShadows),
@@ -134,7 +136,9 @@ Scene::Scene(const Scene& other) :
 	framebuffer(other.framebuffer),
 	fsq(other.fsq),
 	postProcessingPipeline(other.postProcessingPipeline),
-	// bvh(other.bvh)
+	currentClickedEntityID(other.currentClickedEntityID),
+	currentHoveredEntityID(other.currentHoveredEntityID),
+	bvh(other.bvh),
 	mousePressIDs(other.mousePressIDs),
 	mouseMoveID(other.mouseMoveID),
 	viewPointer(other.viewPointer),
@@ -147,10 +151,6 @@ Scene::Scene(const Scene& other) :
 	postPostRenderFunction(other.postPostRenderFunction)
 {
 	ZGZoneScopedN("Scene::constructor");
-	if (useBVH)
-	{
-		bvh = std::make_shared<raytracing::BVH>();
-	}
 	hookMouseEvents();
 }
 Scene& Scene::operator=(const Scene& other)
@@ -166,6 +166,8 @@ Scene& Scene::operator=(const Scene& other)
 	clearColor = other.clearColor;
 	projectionPointer = other.projectionPointer;
 	entities = other.entities;
+	unobservedEntitiesCount = other.unobservedEntitiesCount;
+	entitiesCount = other.entitiesCount;
 	pointLights = other.pointLights;
 	directionalLights = other.directionalLights;
 	spotLights = other.spotLights;
@@ -178,6 +180,7 @@ Scene& Scene::operator=(const Scene& other)
 	postProcessingPipeline = other.postProcessingPipeline;
 	unhookMouseEvents();
 	hookMouseEvents();
+	currentClickedEntityID = other.currentClickedEntityID;
 	currentHoveredEntityID = other.currentHoveredEntityID;
 	viewPointer = other.viewPointer;
 	useBVH = other.useBVH;
@@ -262,6 +265,7 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Scene::addEntity(const Entity
 	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	if (callOnEntityAdded && window.onEntityAdded)
 		window.onEntityAdded(entity);
+	unobservedEntitiesCount = unobservedEntitiesCount + 1;
 	return {transaction.key, transaction.id, transaction.index, &entity};
 }
 bool Scene::removeEntity(size_t ID)
@@ -280,11 +284,13 @@ bool Scene::removeEntity(size_t ID)
 	auto idIter = idEntities.find(ID);
 	if (idIter != idEntities.end())
 		idEntities.erase(idIter);
+	unobservedEntitiesCount = unobservedEntitiesCount - 1;
 	return true;
 }
 void Scene::update()
 {
 	ZGZoneScoped;
+	entitiesCount = unobservedEntitiesCount;
 	sceneIsAt = SYS_CLOCK::now();
 	updateTime = (sceneIsAt - sceneFirstEncountered).count() / 10'000'000.0;
 	if (preUpdateFunction)
@@ -313,6 +319,7 @@ void Scene::preRender()
 		prePreRenderFunction(*this);
 	auto entitiesData = entities.data();
 	auto entitiesSize = entities.size();
+	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	for (auto& directionalLightShadow : directionalLightShadows)
 	{
 		ZGZoneScoped;
@@ -451,7 +458,8 @@ void Scene::meshPreRender(Mesh& mesh)
 void Scene::resize(glm::vec2 newSize)
 {
 	ZGZoneScoped;
-	viewPointer->callResizeHandler(newSize);
+	viewPointer->queueEvent(EVENT_RESIZE, newSize);
+	viewPointer->processEvents();
 	// projectionPointer->orthoSize = newSize;
 	// projectionPointer->update();
 	if (framebuffer)
@@ -479,7 +487,7 @@ void Scene::preRemoveEntity(Entity& entity)
 	if (useBVH)
 		bvh->removeEntity(*this, entity);
 }
-std::pair<Entity&, Mesh&> Scene::findEntityAndMeshByPrimID(const size_t& primID)
+std::pair<size_t, size_t> Scene::findEntityAndMeshByPrimID(const size_t& primID)
 {
 	ZGZoneScoped;
 	if (!useBVH)
@@ -487,12 +495,12 @@ std::pair<Entity&, Mesh&> Scene::findEntityAndMeshByPrimID(const size_t& primID)
 	auto& _bvh = *bvh;
 	auto& tri = _bvh.triangles[_bvh.bvh.prim_ids[primID]];
 	auto& entityMeshID = tri.userData;
-	if (!entityMeshID.first || !entityMeshID.second)
+	if (!entityMeshID.first)
 	{
 		throw std::runtime_error("Ohmy now, we always set tri IDs, so this should logically never happen");
 	}
 	auto& entity = Registry::GetSingleton().getEntity(entityMeshID.first);
-	return {entity, Registry::GetSingleton().getMesh(entityMeshID.second)};
+	return {entity.ID, entity.meshIDs[entityMeshID.second]};
 }
 void Scene::hookMouseEvents()
 {
@@ -500,11 +508,14 @@ void Scene::hookMouseEvents()
 	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	for (unsigned int button = MinMouseButtonIndex; button < MaxMouseButton; ++button)
 	{
-		mousePressIDs[button] = window.addMousePressHandler(
-			button,
-			[&, button](auto pressed)
+		mousePressIDs[button] = window.registerHandler(EVENT_MOUSE_PRESS,
+			[&, button](auto& event)
 			{
 				ZGZoneScoped;
+				auto pressed_button = event.getValue();
+				if (pressed_button != button)
+					return;
+				auto& pressed = event.template castData<bool>();
 				if (!useBVH)
 					return;
 				auto& _bvh = *bvh;
@@ -515,16 +526,19 @@ void Scene::hookMouseEvents()
 				auto primID = _bvh.trace(ray);
 				if (primID == raytracing::invalidID)
 				{
+					currentClickedEntityID = 0;
 					return;
 				}
 				auto foundEntityMesh = findEntityAndMeshByPrimID(primID);
-				foundEntityMesh.first.callMousePressHandler(button, pressed);
+				currentClickedEntityID = foundEntityMesh.first;
+				Registry::GetSingleton().getEntity(foundEntityMesh.first).queueEvent(EVENT_MOUSE_PRESS, pressed, button);
 			});
 	}
-	mouseMoveID = window.addMouseMoveHandler(
-		[&](auto coords)
+	mouseMoveID = window.registerHandler(EVENT_MOUSE_MOVE,
+		[&](auto& event)
 		{
 			ZGZoneScoped;
+			auto& coords = event.template castData<glm::vec2>();
 			if (!useBVH)
 				return;
 			auto& _bvh = *bvh;
@@ -532,28 +546,25 @@ void Scene::hookMouseEvents()
 																			projectionPointer->matrix, viewPointer->matrix, projectionPointer->nearPlane,
 																			projectionPointer->farPlane);
 			auto primID = _bvh.trace(ray);
+			auto& rgy = Registry::GetSingleton();
 			if (primID == raytracing::invalidID)
 			{
-				if (currentHoveredEntityID)
+				if (*currentHoveredEntityID)
 				{
-					auto& currentHoveredEntity = Registry::GetSingleton().getEntity(currentHoveredEntityID);
-					currentHoveredEntity.callMouseHoverHandler(false);
+					auto& currentHoveredEntity = rgy.getEntity(*currentHoveredEntityID);
+					currentHoveredEntity.queueEvent(EVENT_MOUSE_HOVER, false);
 					currentHoveredEntityID = 0;
 				}
 				return;
 			}
 			auto foundEntityMesh = findEntityAndMeshByPrimID(primID);
-			if (currentHoveredEntityID != foundEntityMesh.first.ID)
+			auto& entity = rgy.getEntity(foundEntityMesh.first);
+			if (*currentHoveredEntityID != foundEntityMesh.first)
 			{
-				if (currentHoveredEntityID)
-				{
-					auto& currentHoveredEntity = Registry::GetSingleton().getEntity(currentHoveredEntityID);
-					currentHoveredEntity.callMouseHoverHandler(false);
-				}
-				currentHoveredEntityID = foundEntityMesh.first.ID;
-				foundEntityMesh.first.callMouseHoverHandler(true);
+				currentHoveredEntityID = foundEntityMesh.first;
+				entity.queueEvent(EVENT_MOUSE_HOVER, true);
 			}
-			foundEntityMesh.first.callMouseMoveHandler(coords);
+			entity.queueEvent(EVENT_MOUSE_MOVE, coords);
 		});
 }
 void Scene::unhookMouseEvents()
@@ -562,9 +573,9 @@ void Scene::unhookMouseEvents()
 	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
 	for (unsigned int button = MinMouseButtonIndex; button <= MaxMouseButtonIndex; ++button)
 	{
-		window.removeMousePressHandler(button, mousePressIDs[button]);
+		window.deregisterHandler(EVENT_MOUSE_PRESS, mousePressIDs[button]);
 	}
-	window.removeMouseMoveHandler(mouseMoveID);
+	window.deregisterHandler(EVENT_MOUSE_MOVE, mouseMoveID);
 }
 zg::Entity& Scene::getEntityByName(const std::string& name)
 {

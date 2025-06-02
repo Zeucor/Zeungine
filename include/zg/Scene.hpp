@@ -47,6 +47,8 @@ namespace zg
 		glm::vec4 clearColor = glm::vec4(0);
 		std::shared_ptr<vp::Projection> projectionPointer;
 		KeyIDVector<std::string, Entity> entities;
+		size_t unobservedEntitiesCount = 0;
+		zg::observable_ptr<size_t> entitiesCount;
 		std::vector<lights::PointLight> pointLights;
 		std::vector<lights::DirectionalLight> directionalLights;
 		std::vector<lights::SpotLight> spotLights;
@@ -60,7 +62,8 @@ namespace zg
 		std::shared_ptr<raytracing::BVH> bvh;
 		std::array<UniqueIdentifier, MaxMouseButton> mousePressIDs;
 		UniqueIdentifier mouseMoveID;
-		size_t currentHoveredEntityID = 0;
+		zg::observable_ptr<size_t> currentClickedEntityID;
+		zg::observable_ptr<size_t> currentHoveredEntityID;
 		std::shared_ptr<vp::View> viewPointer;
 		bool useBVH = true;
 		long double updateTime = 0;
@@ -120,7 +123,7 @@ namespace zg
 		void resize(glm::vec2 newSize);
 		void postAddEntity(Entity& entity);
 		void preRemoveEntity(Entity& entity);
-		std::pair<Entity&, Mesh&> findEntityAndMeshByPrimID(const size_t& primID);
+		std::pair<size_t, size_t> findEntityAndMeshByPrimID(const size_t& primID);
 		void hookMouseEvents();
 		void unhookMouseEvents();
 		zg::Entity& getEntityByName(const std::string& name);

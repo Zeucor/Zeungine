@@ -63,6 +63,7 @@ namespace zg
 		uint32_t attachmentsSize;
 		uint32_t width;
 		uint32_t height;
+		VkEvent event;
 	};
 	struct VulkanVAOImpl
 	{
@@ -238,6 +239,10 @@ namespace zg
 		PFN_vkDeviceWaitIdle _vkDeviceWaitIdle;
 		PFN_vkDestroyShaderModule _vkDestroyShaderModule;
 		PFN_vkCmdDrawIndirectCount _vkCmdDrawIndirectCount;
+		PFN_vkCreateEvent _vkCreateEvent;
+		PFN_vkDestroyEvent _vkDestroyEvent;
+		PFN_vkCmdSetEvent _vkCmdSetEvent;
+		PFN_vkCmdWaitEvents _vkCmdWaitEvents;
 		size_t allocatedMemoryBytes = 0;
 		std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 		VkInstance instance;

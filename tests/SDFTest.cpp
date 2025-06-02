@@ -39,7 +39,10 @@ int main()
         window.addScene(SDFSceneFactory());
         window.attachComponent(components::windows::EditorFactory());
     });
-    window.addKeyPressHandler('q', [&](auto pressed){
+    window.registerHandler(EVENT_KEY_PRESS, [&](auto& event) {
+        if (event.getValue() != 'q')
+            return;
+        auto& pressed = event.template castData<bool>();
         if (!pressed)
             return;
         window.close();
@@ -95,7 +98,7 @@ SceneCreateInfo SDFSceneFactory()
             auto sdf_iter = sdf_rgy.begin();
             auto sdf_end = sdf_rgy.end();
             auto count = 0;
-            for (;sdf_iter != sdf_end && count < 5; ++sdf_iter)
+            for (;sdf_iter != sdf_end && count < 3; ++sdf_iter)
             {
                 ++count;
                 auto& key = sdf_iter->first;
@@ -151,17 +154,17 @@ SceneCreateInfo SDFSceneFactory()
             scene.attachComponent(components::scenes::ViewMouseControlFactory());
             scene.attachComponent(components::scenes::ViewQuadKeyControlFactory(components::scenes::KeyScheme::WSADSC, 8));
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
-            scene.template make<size_t>("rID", window.addKeyPressHandler('r', [&, SCENE_INDEX_STACK = scene.INDEX_STACK](auto pressed){
-                if (!pressed)
-                    return;
-                auto& scene = Registry::GetSingleton().getScene(SCENE_INDEX_STACK);
-                scene.viewPointer->direction = glm::normalize(glm::vec3(-1, -1, -1));
-                scene.viewPointer->setDirty();
-            }));
+            // scene.template make<size_t>("rID", window.addKeyPressHandler('r', [&, SCENE_INDEX_STACK = scene.INDEX_STACK](auto pressed){
+            //     if (!pressed)
+            //         return;
+            //     auto& scene = Registry::GetSingleton().getScene(SCENE_INDEX_STACK);
+            //     scene.viewPointer->direction = glm::normalize(glm::vec3(-1, -1, -1));
+            //     scene.viewPointer->setDirty();
+            // }));
         },
         .onDetachedFunction = [](auto& scene){
             auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
-            window.removeKeyPressHandler('r', scene.template getData<size_t>("rID"));
+            // window.removeKeyPressHandler('r', scene.template getData<size_t>("rID"));
         },
         .preUpdateFunction = [](auto& scene){
             // std::cout << "scene.view.direction: " << glm::to_string(scene.viewPointer->direction) << std::endl;

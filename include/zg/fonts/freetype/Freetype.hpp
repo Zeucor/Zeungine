@@ -45,7 +45,7 @@ namespace zg::fonts::freetype
 		/*add member variables in serial order*/
 		FreetypeFont(IRenderer* iRenderer, interfaces::IFile& fontFile);
 		~FreetypeFont();
-		float calculateSegmentWidth(const std::string_view segment, float fontSize) const;
+		std::pair<float, uint32_t> calculateSegmentWidth(const std::string_view segment, float fontSize) const;
 		const glm::vec2 stringSize(const std::string_view string, float fontSize, float& lineHeight, glm::vec2 bounds,
 									enums::EBreakStyle breakStyle = enums::EBreakStyle::None, bool msdf = false);
 		template <typename HostT>

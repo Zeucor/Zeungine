@@ -49,6 +49,9 @@ Entity::Entity(const EntityCreateInfo& info) :
 	runtimeConstantValueShaderSetters(info.runtimeConstantValueShaderSetters)
 {
 	ZGZoneScoped;
+	scale.observe([entity_ID = this->ID](auto& old_scale, auto& new_scale) {
+		Registry::GetSingleton().getEntity(entity_ID).isDirty = true;
+	});
 	for (auto& meshInfo : info.meshInfos)
 		meshIDs.push_back(Registry::GetSingleton().addMesh(meshInfo, *this));
 	if (onAddedFunction)
@@ -76,10 +79,6 @@ Entity::Entity(const Entity& other) :
 	viewPointer(other.viewPointer),
 	affectedByShadows(other.affectedByShadows),
 	addToBVH(other.addToBVH),
-	buttons(other.buttons),
-	mousePressHandlers(other.mousePressHandlers),
-	mouseMoveHandlers(other.mouseMoveHandlers),
-	mouseHoverHandlers(other.mouseHoverHandlers),
 	meshIDs(other.meshIDs),
 	meshInfos(other.meshInfos),
 	children(other.children),
@@ -127,10 +126,6 @@ Entity& Entity::operator=(const Entity& other)
 	viewPointer = other.viewPointer;
 	affectedByShadows = other.affectedByShadows;
 	addToBVH = other.addToBVH;
-	buttons = other.buttons;
-	mousePressHandlers = other.mousePressHandlers;
-	mouseMoveHandlers = other.mouseMoveHandlers;
-	mouseHoverHandlers = other.mouseHoverHandlers;
 	{
 		std::lock_guard meshIDLock(Registry::GetSingleton().meshIDMutex);
 		for (auto& meshID : meshIDs)
@@ -181,6 +176,7 @@ void Entity::refreshMeshes()
 			meshIDsData = meshIDs.data();
 		}
 	}
+	isDirty = true;
 }
 Material& Entity::meshMaterial(size_t meshID)
 {
@@ -519,6 +515,7 @@ void Entity::postRender()
 {
 	ZGZoneScoped;
 	renderedThisPass = false;
+	isDirty = false;
 	auto childrenSize = children.size();
 	auto childrenData = children.data();
 	for (size_t i = 0; i < childrenSize; ++i)
@@ -579,9 +576,13 @@ KeyIDVector<std::string, Entity>::EmplaceBackTuple Entity::addEntity(const Entit
 	usingInfo.ID = transaction.id;
 	usingInfo.INDEX = transaction.index;
 	auto& childEntity = children.commitTransaction(transaction, usingInfo);
-	Registry::GetSingleton().idEntities[childEntity.ID] = childEntity.INDEX_STACK;
+	auto& rgy = Registry::GetSingleton();
+	rgy.idEntities[childEntity.ID] = childEntity.INDEX_STACK;
 	if (childEntity.onAddedFunction)
 		childEntity.onAddedFunction(childEntity);
+	auto& scene = rgy.getScene(INDEX_STACK);
+	scene.postAddEntity(childEntity);
+	scene.unobservedEntitiesCount = scene.unobservedEntitiesCount + 1;
 	return {transaction.key, transaction.id, transaction.index, &childEntity};
 }
 void Entity::removeEntity(size_t ID)
@@ -592,131 +593,19 @@ void Entity::removeEntity(size_t ID)
 	{
 		return;
 	}
+	auto& rgy = Registry::GetSingleton();
+	auto& scene = rgy.getScene(INDEX_STACK);
 	auto& child = *childIter;
+	scene.preRemoveEntity(child);
 	child.onRemove();
 	child.detachAllComponents();
 	children.erase(childIter);
-	auto& idEntities = Registry::GetSingleton().idEntities;
+	auto& idEntities = rgy.idEntities;
 	auto idIter = idEntities.find(ID);
+	scene.unobservedEntitiesCount = scene.unobservedEntitiesCount - 1;
 	if (idIter != idEntities.end())
 	{
 		idEntities.erase(idIter);
-	}
-}
-// Mouse
-UniqueIdentifier Entity::addMousePressHandler(const Button& button, const MousePressHandler& callback)
-{
-	ZGZoneScoped;
-	std::lock_guard lock(handlersMutex);
-	auto& handlersPair = mousePressHandlers[button];
-	auto id = ++handlersPair.first;
-	handlersPair.second[id] = callback;
-	return id;
-}
-void Entity::removeMousePressHandler(const Button& button, UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	std::lock_guard lock(handlersMutex);
-	auto& handlersPair = mousePressHandlers[button];
-	auto handlerIter = handlersPair.second.find(id);
-	if (handlerIter == handlersPair.second.end())
-	{
-		return;
-	}
-	handlersPair.second.erase(handlerIter);
-	id = 0;
-}
-UniqueIdentifier Entity::addMouseMoveHandler(const MouseMoveHandler& callback)
-{
-	ZGZoneScoped;
-	std::lock_guard lock(handlersMutex);
-	auto id = ++mouseMoveHandlers.first;
-	mouseMoveHandlers.second[id] = callback;
-	return id;
-}
-void Entity::removeMouseMoveHandler(UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	std::lock_guard lock(handlersMutex);
-	auto& handlers = mouseMoveHandlers.second;
-	auto handlerIter = handlers.find(id);
-	if (handlerIter == handlers.end())
-	{
-		return;
-	}
-	handlers.erase(handlerIter);
-	id = 0;
-}
-UniqueIdentifier Entity::addMouseHoverHandler(const MouseHoverHandler& callback)
-{
-	ZGZoneScoped;
-	std::lock_guard lock(handlersMutex);
-	auto id = ++mouseHoverHandlers.first;
-	mouseHoverHandlers.second[id] = callback;
-	return id;
-}
-void Entity::removeMouseHoverHandler(UniqueIdentifier& id)
-{
-	ZGZoneScoped;
-	std::lock_guard lock(handlersMutex);
-	auto& handlers = mouseHoverHandlers.second;
-	auto handlerIter = handlers.find(id);
-	if (handlerIter == handlers.end())
-	{
-		return;
-	}
-	handlers.erase(handlerIter);
-	id = 0;
-}
-void Entity::callMousePressHandler(const Button& button, bool pressed)
-{
-	ZGZoneScoped;
-	buttons[button] = pressed;
-	{
-		auto handlersIter = mousePressHandlers.find(button);
-		if (handlersIter == mousePressHandlers.end())
-			return;
-		auto& handlersMap = handlersIter->second.second;
-		std::vector<MousePressHandler> handlersCopy;
-		{
-			std::lock_guard lock(handlersMutex);
-			for (const auto& pair : handlersMap)
-				handlersCopy.push_back(pair.second);
-		}
-		for (auto& handler : handlersCopy)
-		{
-			handler(!!pressed);
-		}
-	}
-}
-void Entity::callMouseMoveHandler(glm::vec2 coords)
-{
-	ZGZoneScoped;
-	std::vector<MouseMoveHandler> handlersCopy;
-	{
-		auto& handlersMap = mouseMoveHandlers.second;
-		std::lock_guard lock(handlersMutex);
-		for (const auto& pair : handlersMap)
-			handlersCopy.push_back(pair.second);
-	}
-	for (auto& handler : handlersCopy)
-	{
-		handler(coords);
-	}
-}
-void Entity::callMouseHoverHandler(bool hovered)
-{
-	ZGZoneScoped;
-	std::vector<MouseHoverHandler> handlersCopy;
-	{
-		auto& handlersMap = mouseHoverHandlers.second;
-		std::lock_guard lock(handlersMutex);
-		for (const auto& pair : handlersMap)
-			handlersCopy.push_back(pair.second);
-	}
-	for (auto& handler : handlersCopy)
-	{
-		handler(hovered);
 	}
 }
 void Entity::setPosition(glm::vec3 newPosition)
@@ -752,9 +641,13 @@ void Entity::setTexture(size_t meshIndex, size_t textureIndex, const std::shared
 	meshInfos[meshIndex].keyedTextures[textureIndex].second = new_texture;
 	if (refresh_meshes)
 		refreshMeshes();
+	else
+		isDirty = true;
 }
 void Entity::onRemove()
 {
+	auto& scene = Registry::GetSingleton().getScene(INDEX_STACK);
+	scene.preRemoveEntity(*this);
 	for (auto& child : children)
 		child.onRemove();
 	for (auto& pair : onRemoveFunctionMap)

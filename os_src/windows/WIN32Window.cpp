@@ -70,14 +70,14 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 					break;
 				};
 			}
-			glWindow->handleMousePress(button, pressed);
+			glWindow->queueEvent(EVENT_MOUSE_PRESS, pressed, button);
 			break;
 		};
 	case WM_MOUSEWHEEL:
 		{
 			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam); // This gives the scroll amount
 			auto wheelButton = zDelta > 0 ? 3 : 4; // Wheel scrolled up or down
-			glWindow->handleMousePress(wheelButton, true);
+			glWindow->queueEvent(EVENT_MOUSE_PRESS, true, wheelButton);
 			break;
 		};
 	case WM_XBUTTONDOWN:
@@ -88,7 +88,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			if (xButton == -1)
 				throw std::runtime_error("Invalid XButton");
 			auto pressed = msg == WM_XBUTTONDOWN;
-			glWindow->handleMousePress(xButton, pressed);
+			glWindow->queueEvent(EVENT_MOUSE_PRESS, pressed, xButton);
 			break;
 		};
 	case WM_MOUSEMOVE:
@@ -98,7 +98,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			ScreenToClient(hwnd, &pt);
 			auto x = pt.x;
 			auto y = *glWindow->windowHeight - pt.y;
-			glWindow->handleMouseMove(x, y);
+			glWindow->queueEvent(EVENT_MOUSE_MOVE, glm::vec2(x, y));
 			break;
 		};
 	case WM_SYSKEYDOWN:
@@ -107,7 +107,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			wParam == VK_LMENU ||
 			wParam == VK_RMENU)
 		{
-			glWindow->handleKey(KEYCODE_ALT, glWindow->mod, msg == WM_SYSKEYDOWN);
+			glWindow->queueEvent(EVENT_KEY_PRESS, msg == WM_SYSKEYDOWN, KEYCODE_ALT);
 		}
 		else
 		{
@@ -134,7 +134,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			{
 				keycode = translatedChar[0];
 			}
-			glWindow->handleKey(keycode, mod, keypress);
+			glWindow->queueEvent(EVENT_KEY_PRESS, keypress, keycode);
 		}
 		break;
 	case WM_DESTROY:
@@ -149,12 +149,12 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 		};
 	case WM_SETFOCUS:
 		{
-			glWindow->callFocusHandler(true);
+			glWindow->queueFocusEvent(true);
 			break;
 		};
 	case WM_KILLFOCUS:
 		{
-			glWindow->callFocusHandler(false);
+			glWindow->queueFocusEvent(false);
 			break;
 		};
 	default:
@@ -360,7 +360,8 @@ void WIN32Window::hidePointer()
 }
 void WIN32Window::setXY()
 {
-	auto& windowX = *renderWindowPointer->windowX;
+	auto& windowX = *
+	renderWindowPointer->windowX;
 	auto& windowY = *renderWindowPointer->windowY;
 	auto& windowWidth = *renderWindowPointer->windowWidth;
 	auto& windowHeight = *renderWindowPointer->windowHeight;

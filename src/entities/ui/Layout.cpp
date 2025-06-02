@@ -4,6 +4,7 @@
 #include <zg/Registry.hpp>
 #include <zg/Scene.hpp>
 #include <zg/interfaces/IPlatformWindow.hpp>
+#include <zg/textures/Framebuffer.hpp>
 #include <zg/Window.hpp>
 using namespace zg::entities::ui;
 using namespace zg;
@@ -11,12 +12,13 @@ void layout_ensure_framebuffer(Window& window, Entity& entity, glm::vec3 size, b
 {
     if (!size.x || !size.y)
         return;
+    glm::ivec3 isize(size);
     auto& color_texture = entity.template getData<std::shared_ptr<textures::Texture>>("ColorTexture");
-    if (color_texture && color_texture->size.x == size.x && color_texture->size.y == size.y)
+    if (color_texture && color_texture->size.x == isize.x && color_texture->size.y == isize.y)
         return;
     glm::vec2 texSize(
-        isNDCSize ? (size.x * ((const float&)window.windowWidth / 2.f)) : size.x,
-        isNDCSize ? (size.y * ((const float&)window.windowHeight / 2.f)) : size.y
+        std::ceil(isNDCSize ? (size.x * ((const float&)window.windowWidth / 2.f)) : size.x),
+        std::ceil(isNDCSize ? (size.y * ((const float&)window.windowHeight / 2.f)) : size.y)
     );
     color_texture = std::make_shared<textures::Texture>(
         window.iRenderer,
@@ -24,25 +26,82 @@ void layout_ensure_framebuffer(Window& window, Entity& entity, glm::vec3 size, b
         (const void*)0,
         DEFAULT_TEXTURE_FORMAT,
         DEFAULT_TEXTURE_TYPE,
-        DEFAULT_TEXTURE_FILTERTYPE,
+        textures::Texture::Nearest,
         true,
         DEFAULT_TEXTURE_MULTISAMPLING,
         TEXTURE_CLAMP_EDGE
     );
-    entity.setTexture(0, 0, color_texture);
-    std::vector<textures::Framebuffer::TextureAttachmentPair> textureAttachmentPairs({
+    std::vector<textures::Framebuffer::TextureAttachmentPair> textureAPair({
         {color_texture, textures::Framebuffer::AttachmentType::Color}
     });
     auto& blendState = entity.template getData<textures::BlendState>("BlendState");
-    auto framebuffer = std::make_shared<textures::Framebuffer>(window.iRenderer, textureAttachmentPairs, blendState);
+    auto framebuffer = std::make_shared<textures::Framebuffer>(window.iRenderer, textureAPair, blendState);
     auto entity_model_tuple = entity.decomposeModel();
     auto view = std::make_shared<vp::View>(std::get<0>(entity_model_tuple) + glm::vec3(0, 0, 5), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
-    auto projection = std::make_shared<vp::Projection>(window, glm::vec2(size));
+    auto projection = std::make_shared<vp::Projection>(window, texSize);
     entity.template make<std::shared_ptr<textures::Framebuffer>>("Framebuffer", framebuffer);
     entity.template make<std::shared_ptr<vp::View>>("View", view);
     entity.template make<std::shared_ptr<vp::Projection>>("Projection", projection);
 }
-        
+
+glm::vec3 zg::entities::ui::LayoutGetSubPositionI(Entity& entity, glm::vec3 size, size_t index)
+{
+    auto entitySize = entity.template getData<bool>("Resizable") ?
+        std::any_cast<glm::vec3>(entity.template setData<bool>("GetDimensionSize", true)) :
+        entity.getBoundingSize();
+    auto layoutDimension = entity.template getData<LayoutDimension>("LayoutDimension");
+    glm::vec3 position(-(entitySize.x / 2.f), (entitySize.y / 2.f), -(entitySize.z / 2.f));
+    size_t count = 0;
+    for (auto& child : entity.children)
+    {
+        if (count >= index)
+            break;
+        ++count;
+        auto childSize = child.getBoundingSize();
+        switch (layoutDimension)
+        {
+        case LayoutDimension::Horizontal:
+            position.x += childSize.x;
+            break;
+        case LayoutDimension::Vertical:
+            position.y -= childSize.y;
+            break;
+        case LayoutDimension::Depth:
+            position.z += childSize.z;
+            break;
+        }
+    }
+    switch (layoutDimension)
+    {
+    case LayoutDimension::Horizontal:
+        position.x += (size.x / 2.f);
+        break;
+    case LayoutDimension::Vertical:
+        position.y -= (size.y / 2.f);
+        break;
+    case LayoutDimension::Depth:
+        position.z += (size.z / 2.f);
+        break;
+    }
+    switch (layoutDimension)
+    {
+    case LayoutDimension::Horizontal:
+        // if LayoutAlignment == Center
+        // position.y -= (size.y / 2.f);
+        position.y -= (entitySize.y / 2.f);
+        position.z = entity.position.z + 0.1;
+        break;
+    case LayoutDimension::Vertical:
+        position.x += (size.x / 2.f);
+        position.z = entity.position.z + 0.1;
+        break;
+    case LayoutDimension::Depth:
+        position.y -= (size.y / 2.f);
+        position.x += (size.x / 2.f);
+        break;
+    }
+    return position;
+};        
 EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, LayoutDimension layoutDimension, glm::vec3 position, glm::vec3 size, IRenderer* irenderer, bool isNDCSize, const textures::BlendState& blendState)
 {
     auto& window = *irenderer->platformWindowPointer->renderWindowPointer;
@@ -60,112 +119,6 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
         {"GetSubSize", [](const auto& nAny, auto& entity) -> std::any {
             return entity.getBoundingSize() / std::any_cast<const glm::vec3&>(nAny);
         } },
-        {"GetSubPosition", [layoutDimension](const auto& sizeAny, auto& entity) -> std::any {
-            const auto& size = std::any_cast<const glm::vec3&>(sizeAny);
-            auto entitySize = entity.getBoundingSize();
-            glm::vec3 position(-(entitySize.x / 2.f), (entitySize.y / 2.f), -(entitySize.z / 2.f));
-            for (auto& child : entity.children)
-            {
-                auto childSize = child.getBoundingSize();
-                switch (layoutDimension)
-                {
-                case LayoutDimension::Horizontal:
-                    position.x += childSize.x;
-                    break;
-                case LayoutDimension::Vertical:
-                    position.y -= childSize.y;
-                    break;
-                case LayoutDimension::Depth:
-                    position.z += childSize.z;
-                    break;
-                }
-            }
-            switch (layoutDimension)
-            {
-            case LayoutDimension::Horizontal:
-                position.x += (size.x / 2.f);
-                break;
-            case LayoutDimension::Vertical:
-                position.y -= (size.y / 2.f);
-                break;
-            case LayoutDimension::Depth:
-                position.z += (size.z / 2.f);
-                break;
-            }
-            switch (layoutDimension)
-            {
-            case LayoutDimension::Horizontal:
-                position.y -= (size.y / 2.f);
-                position.z = entity.position.z + 0.1;
-                break;
-            case LayoutDimension::Vertical:
-                position.x += (size.x / 2.f);
-                position.z = entity.position.z + 0.1;
-                break;
-            case LayoutDimension::Depth:
-                position.y -= (size.y / 2.f);
-                position.x += (size.x / 2.f);
-                break;
-            }
-            return position;
-        } },
-        {"GetSubPositionI", [layoutDimension](const auto& sizeIAny, auto& entity) -> std::any {
-            const auto& sizeIPair = std::any_cast<const std::pair<glm::vec3, size_t>&>(sizeIAny);
-            const auto& size = sizeIPair.first;
-            const auto& index = sizeIPair.second;
-            auto entitySize = entity.getBoundingSize();
-            glm::vec3 position(-(entitySize.x / 2.f), (entitySize.y / 2.f), -(entitySize.z / 2.f));
-            size_t count = 0;
-            for (auto& child : entity.children)
-            {
-                if (count >= index)
-                    break;
-                ++count;
-                auto childSize = child.getBoundingSize();
-                switch (layoutDimension)
-                {
-                case LayoutDimension::Horizontal:
-                    position.x += childSize.x;
-                    break;
-                case LayoutDimension::Vertical:
-                    position.y -= childSize.y;
-                    break;
-                case LayoutDimension::Depth:
-                    position.z += childSize.z;
-                    break;
-                }
-            }
-            switch (layoutDimension)
-            {
-            case LayoutDimension::Horizontal:
-                position.x += (size.x / 2.f);
-                break;
-            case LayoutDimension::Vertical:
-                position.y -= (size.y / 2.f);
-                break;
-            case LayoutDimension::Depth:
-                position.z += (size.z / 2.f);
-                break;
-            }
-            switch (layoutDimension)
-            {
-            case LayoutDimension::Horizontal:
-                // if LayoutAlignment == Center
-                // position.y -= (size.y / 2.f);
-                position.y -= (entitySize.y / 2.f);
-                position.z = entity.position.z + 0.1;
-                break;
-            case LayoutDimension::Vertical:
-                position.x += (size.x / 2.f);
-                position.z = entity.position.z + 0.1;
-                break;
-            case LayoutDimension::Depth:
-                position.y -= (size.y / 2.f);
-                position.x += (size.x / 2.f);
-                break;
-            }
-            return position;
-        } },
         { "Relayout", [](auto& boolAny, auto& entity) -> std::any {
             auto& bool_val = std::any_cast<const bool&>(boolAny);
             if (!bool_val)
@@ -180,8 +133,7 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
                         relayout_position_children_fn(child);
 
                     }
-                    std::pair<glm::vec3, size_t> sizeIPair(child.getBoundingSize(), index++);
-                    child.position = std::any_cast<glm::vec3>(entity.template setData<std::pair<glm::vec3, size_t>>("GetSubPositionI", sizeIPair));
+                    child.position = LayoutGetSubPositionI(entity, child.getBoundingSize(), index++);
                 }
             };
             relayout_position_children_fn(entity);
@@ -204,7 +156,12 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
             auto& dimension = entity.template getData<LayoutDimension>("LayoutDimension");
             for (auto& child : entity.children)
             {
-                auto c_size = child.getBoundingSize();
+                auto c_size = (child.typeName != "Layout") ?
+                    child.getBoundingSize() :
+                    (child.template getData<bool>("Resizable") ?
+                        std::any_cast<glm::vec3>(child.template setData<bool>("GetDimensionSize", true)) :
+                        child.getBoundingSize()
+                    );
                 switch (dimension)
                 {
                 case LayoutDimension::Horizontal:
@@ -224,65 +181,34 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
                     break;
                 }
             }
-            return total_size;
+            return glm::ceil(total_size);
         } },
         { "FitLayoutToChildren", [](const auto& boolAny, auto& entity) -> std::any {
             auto& bool_val = std::any_cast<const bool&>(boolAny);
             if (!bool_val)
                 return false;
-            entity.scale = std::any_cast<glm::vec3>(entity.template setData<bool>("GetDimensionSize", true));
+            entity.scale = entity.template getData<bool>("Resizable") ?
+                std::any_cast<glm::vec3>(entity.template setData<bool>("GetDimensionSize", true)) :
+                *entity.scale;
             Entity* parent_entity = 0, *last_parent_entity = 0;
             size_t n_parent = 1;
             auto& rgy = Registry::GetSingleton();
             if (!rgy.getNthParentEntity(entity.INDEX_STACK, parent_entity, n_parent))
                 return true;
-            last_parent_entity = parent_entity;
-            auto qChildIndex = entity.template getData<size_t>("qChildIndex");
-            bool foundParentEntity = false;
-            while (parent_entity)
+            // last_parent_entity = parent_entity;
+            entity.template setData<bool>("EnsureFramebuffer", true);
+            size_t qi = 0;
+            for (auto& child : entity.children)
             {
-                for (;
-                    (foundParentEntity = (rgy.getNthParentEntity(entity.INDEX_STACK, parent_entity, n_parent))) &&
-                    parent_entity->typeName != "Layout";
-                    n_parent++
-                ) { }
-                if (!foundParentEntity || !parent_entity)
-                    break;
-                last_parent_entity = parent_entity;
-                n_parent++;
-                auto& parent_entity_ref = *parent_entity;
-                auto resizable = parent_entity_ref.template getData<bool>("Resizable");
-                auto dimensionSize = std::any_cast<glm::vec3>(parent_entity_ref.template setData<bool>("GetDimensionSize", true));
-                auto originalSize = parent_entity_ref.template getData<glm::vec3>("OriginalSize");
-                parent_entity_ref.scale = (resizable) ?
-                    dimensionSize :
-                    (glm::max)(originalSize, glm::clamp(dimensionSize, glm::vec3(0), originalSize));
-                auto parent_entity_ref_children_size = parent_entity_ref.children.size();
-                for (
-                    auto q___childIndex = 0;
-                    q___childIndex < parent_entity_ref_children_size;
-                    q___childIndex++
-                )
-                {
-                    auto& child = *(parent_entity_ref.children.begin() + q___childIndex);
-                    auto child_boundingSize = child.getBoundingSize();
-
-                    if (q___childIndex >= qChildIndex)
-                    {
-                        std::pair<glm::vec3, size_t> sizeIPair(child_boundingSize, q___childIndex);
-                        child.position = std::any_cast<glm::vec3>(parent_entity_ref.template setData<std::pair<glm::vec3, size_t>>("GetSubPositionI", sizeIPair));
-                    }
-                }
-                qChildIndex = 0;
+                child.position = LayoutGetSubPositionI(entity, child.getBoundingSize(), qi++);
+                continue;
             }
-            std::function<void(Entity&)> ensureLayoutFramebuffers;
-            ensureLayoutFramebuffers = [&](auto& entity) {
-                if (entity.typeName == "Layout")
-                    entity.template setData<bool>("EnsureFramebuffer", true);
-                for (auto& child : entity.children)
-                    ensureLayoutFramebuffers(child);
-            };
-            ensureLayoutFramebuffers(*last_parent_entity);
+            auto qEntityIndex = entity.template getData<size_t>("qChildIndex");
+            auto entity_boundingSize = entity.getBoundingSize();
+            auto& parent_entity_ref = *parent_entity;
+            if (parent_entity_ref.typeName != "Layout")
+                return true;
+            parent_entity_ref.template setData<bool>("FitLayoutToChildren", true);
             return true;
         } }
     };
@@ -291,6 +217,23 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
         layout_ensure_framebuffer(window, entity, size, isNDCSize);
     };
     layout_info.preUpdateFunction = [layoutDimension](auto& entity) {
+        bool anyChildrenDirty = false;
+        std::function<bool(Entity&)> setAnyChildrenDirty;
+        setAnyChildrenDirty = [&](auto& entity) -> bool {
+            for (auto& child : entity.children)
+            {
+                if (*child.isDirty)
+                {
+                    anyChildrenDirty = true;
+                    return true;
+                }
+                if (setAnyChildrenDirty(child))
+                    return true;
+            }
+            return false;
+        };
+        if (entity.children.size() && !setAnyChildrenDirty(entity))
+            return;
 		auto entity_model_tuple = entity.decomposeModel();
         auto& view = entity.template getData<std::shared_ptr<vp::View>>("View");
         if (!view)
@@ -327,6 +270,19 @@ EntityCreateInfo zg::entities::ui::LayoutFactory(const std::string& name, Layout
             return;
         auto& framebufferRef = *framebuffer;
         framebufferRef.bind();
+        // try
+        // {
+        //     if (!entity.template getData<std::shared_ptr<textures::Texture>>("ColorTexture"))
+        //         throw "";
+        // }
+        // catch (...)
+        // {
+        //     entity.template make<std::shared_ptr<textures::Texture>>("ColorTexture", framebufferRef.getColorTexture());
+        // }
+        // if (framebufferRef.drawnOnce())
+        entity.setTexture(0, 0, framebufferRef.getColorTexture());
+        // else
+        //     entity.setTexture(0, 0, entity.template getData<std::shared_ptr<textures::Texture>>("ColorTexture"));
         setSkip(entity, false);
         auto opaqueChildDrawList = entity.getOpaqueChildDrawList();
         auto transparentChildDrawList = entity.getTransparentChildDrawList();

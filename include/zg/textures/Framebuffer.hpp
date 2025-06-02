@@ -56,46 +56,46 @@ namespace zg::textures
 				return pair.second == AttachmentType::DepthResolve;
 			}) != textureAttachmentPairs.end();
 		}
-		const Texture* getColorTexture() const
+		std::shared_ptr<Texture> getColorTexture() const
 		{
 			for (auto& pair : textureAttachmentPairs)
 			{
 				if (pair.second == AttachmentType::Color)
 				{
-					return pair.first.get();
+					return pair.first;
 				}
 			}
 			return 0;
 		}
-		const Texture* getColorResolveTexture() const
+		std::shared_ptr<Texture> getColorResolveTexture() const
 		{
 			for (auto& pair : textureAttachmentPairs)
 			{
 				if (pair.second == AttachmentType::ColorResolve)
 				{
-					return pair.first.get();
+					return pair.first;
 				}
 			}
 			return 0;
 		}
-		const Texture* getDepthTexture() const
+		std::shared_ptr<Texture> getDepthTexture() const
 		{
 			for (auto& pair : textureAttachmentPairs)
 			{
 				if (pair.second == AttachmentType::Depth)
 				{
-					return pair.first.get();
+					return pair.first;
 				}
 			}
 			return 0;
 		}
-		const Texture* getDepthResolveTexture() const
+		std::shared_ptr<Texture> getDepthResolveTexture() const
 		{
 			for (auto& pair : textureAttachmentPairs)
 			{
 				if (pair.second == AttachmentType::DepthResolve)
 				{
-					return pair.first.get();
+					return pair.first;
 				}
 			}
 			return 0;
