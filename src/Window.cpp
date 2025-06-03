@@ -61,6 +61,8 @@ zg::Window::Window(const WindowCreateInfo& info) :
 	// }
 }
 zg::Window::Window(const zg::Window& other) :
+	ComponentHolder<Window, components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>(other),
+	EventExecutor(other),
 	ID(other.ID),
 	INDEX(other.INDEX),
 	INDEX_STACK(other.INDEX_STACK),
@@ -83,6 +85,8 @@ zg::Window::Window(const zg::Window& other) :
 zg::Window& zg::Window::operator=(const zg::Window& other)
 {
 	ZGZoneScoped;
+	((ComponentHolder<Window, components::windows::WindowComponent, components::windows::WindowComponentCreateInfo>&)*this) = other;
+	((EventExecutor&)*this) = other;
 	ID = other.ID;
 	INDEX = other.INDEX;
 	INDEX_STACK = other.INDEX_STACK;

@@ -22,6 +22,7 @@
 #include "PostProcessingPipeline.hpp"
 #include "InstancedDraw.hpp"
 #include "textures/BlendState.hpp"
+#include "EventExecutor.hpp"
 namespace zg
 {
 	enum class SceneDrawMode
@@ -31,9 +32,10 @@ namespace zg
 		MultiInstanced
 	};
 	struct SceneCreateInfo;
-	struct Scene
-			: DataStorage<Scene>,
-				ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>
+	struct Scene :
+		DataStorage<Scene>,
+		ComponentHolder<Scene, components::scenes::SceneComponent, components::scenes::SceneComponentCreateInfo>,
+		EventExecutor
 	{
 		SYS_CLOCK::time_point sceneFirstEncountered;
 		SYS_CLOCK::time_point sceneIsAt;
@@ -60,8 +62,8 @@ namespace zg
 		std::shared_ptr<FullscreenQuad> fsq;
 		PostProcessingPipeline postProcessingPipeline;
 		std::shared_ptr<raytracing::BVH> bvh;
-		std::array<UniqueIdentifier, MaxMouseButton> mousePressIDs;
-		UniqueIdentifier mouseMoveID;
+		size_t mousePressID;
+		size_t mouseMoveID;
 		zg::observable_ptr<size_t> currentClickedEntityID;
 		zg::observable_ptr<size_t> currentHoveredEntityID;
 		std::shared_ptr<vp::View> viewPointer;

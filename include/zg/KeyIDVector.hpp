@@ -231,7 +231,8 @@ namespace zg
 					size_t count = 0;
 					while (count < DuplicateKeyReKeyAttemps)
 					{
-						key = m_DuplicateKeyFunction(key);
+						auto new_key = m_DuplicateKeyFunction(key);
+						key = new_key;
 						if (m_KeyIndexMap.find(key) == m_KeyIndexMap.end())
 							goto _return_key;
 						count++;
@@ -253,7 +254,8 @@ namespace zg
 					size_t count = 0;
 					while (count < DuplicateKeyReKeyAttemps)
 					{
-						key = m_DuplicateKeyFunction(key);
+						auto new_key = m_DuplicateKeyFunction(key);
+						key = new_key;
 						if (m_KeyIndexMap.find(key) == m_KeyIndexMap.end())
 							goto _return_key;
 						count++;

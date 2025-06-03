@@ -571,10 +571,7 @@ void Scene::unhookMouseEvents()
 {
 	ZGZoneScoped;
 	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
-	for (unsigned int button = MinMouseButtonIndex; button <= MaxMouseButtonIndex; ++button)
-	{
-		window.deregisterHandler(EVENT_MOUSE_PRESS, mousePressIDs[button]);
-	}
+	window.deregisterHandler(EVENT_MOUSE_PRESS, mousePressID);
 	window.deregisterHandler(EVENT_MOUSE_MOVE, mouseMoveID);
 }
 zg::Entity& Scene::getEntityByName(const std::string& name)

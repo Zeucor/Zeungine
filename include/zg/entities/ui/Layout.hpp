@@ -311,7 +311,10 @@ namespace zg::entities::ui
             auto& entity = get_entity();
             auto& window = Registry::GetSingleton().getWindow(entity.INDEX_STACK);
             auto original_position = entity.position;
-            window.registerHandler(EVENT_KEY_PRESS, [entity_ID = entity.ID, handler, original_position](auto& event) {
+            window.registerHandler(EVENT_KEY_PRESS, [key, entity_ID = entity.ID, handler, original_position](auto& event) {
+                auto pressed_key = event.getValue();
+                if (pressed_key != key)
+                    return;
                 auto& pressed = event.template castData<bool>();
                 auto& rgy = Registry::GetSingleton();
                 auto& entity = rgy.getEntity(entity_ID);
