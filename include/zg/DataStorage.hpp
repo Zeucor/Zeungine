@@ -42,36 +42,6 @@ namespace zg
 		{
 			setDataFunctionMap[name] = function;
 		}
-		template <typename T>
-		const T& getData(const std::string& name) const
-		{
-			auto iter = getDataFunctionMap.find(name);
-			if (iter != getDataFunctionMap.end())
-			{
-				return std::any_cast<T&>(iter->second(dynamic_cast<HostT&>((DataStorage<HostT>&)*this)));
-			}
-			auto iter2 = dataMap.find(name);
-			if (iter2 != dataMap.end())
-			{
-				return std::any_cast<const T&>(iter2->second);
-			}
-			throw std::runtime_error("Could not find data with name");
-		}
-		template <typename T>
-		T& getData(const std::string& name)
-		{
-			auto iter = getDataFunctionMap.find(name);
-			if (iter != getDataFunctionMap.end())
-			{
-				return std::any_cast<T&>(iter->second(dynamic_cast<HostT&>(*this)));
-			}
-			auto iter2 = dataMap.find(name);
-			if (iter2 != dataMap.end())
-			{
-				return std::any_cast<T&>(iter2->second);
-			}
-			throw std::runtime_error("Could not find data with name");
-		}
 		const std::any& getDataReturnAny(const std::string& name) const
 		{
 			auto iter = getDataFunctionMap.find(name);
@@ -101,6 +71,16 @@ namespace zg
 			throw std::runtime_error("Could not find data with name");
 		}
 		template <typename T>
+		const T& getData(const std::string& name) const
+		{
+			return std::any_cast<const T&>(getDataReturnAny(name));
+		}
+		template <typename T>
+		T& getData(const std::string& name)
+		{
+			return std::any_cast<T&>(getDataReturnAny(name));
+		}
+		template <typename T>
 		std::any setData(const std::string& name, const T& value)
 		{
 			auto iter = setDataFunctionMap.find(name);
@@ -113,18 +93,18 @@ namespace zg
 			return any;
 		}
 		template <typename T, typename... Args>
-		T& make(const std::string& name, Args&&... args)
-		{
-			auto& any = dataMap[name];
-			any = std::make_any<T>(args...);
-			return std::any_cast<T&>(any);
-		}
-		template <typename T, typename... Args>
 		std::any& makeReturnAny(const std::string& name, Args&&... args)
 		{
 			auto& any = dataMap[name];
-			any = std::make_any<T>(args...);
+			any = std::any(T(std::forward<Args>(args)...));
 			return any;
+		}
+		template <typename T, typename... Args>
+		T& make(const std::string& name, Args&&... args)
+		{
+			auto& any = dataMap[name];
+			any = std::any(T(std::forward<Args>(args)...));
+			return std::any_cast<T&>(any);
 		}
 	};
 } // namespace zg
