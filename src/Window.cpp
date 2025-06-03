@@ -38,12 +38,11 @@ zg::Window::Window(const WindowCreateInfo& info) :
 	smoothedDeltaTime(true, 1.0 / info.framerate),
     smoothingFactor(true, 0.05),
 	vsync(info.vsync), frameduration(NANOSECONDS_DURATION(*deltaTime * NANOSECONDS::den)),
-	framebudget(frameduration, 1, true, false), systemFonts(*this), postProcessingPipeline(INDEX_STACK)
+	framebudget(frameduration, 1, true, false), systemFonts(*this), postProcessingPipeline(INDEX_STACK),
+	viewportResized(std::make_shared<bool>(false))
 {
 	setViewport();
 	ZGZoneScoped;
-	memset(windowKeys, 0, 256 * sizeof(bool));
-	memset(windowButtons, 0, 7 * sizeof(bool));
 	// if (info.isChildWindow)
 	// {
 	// 	NDCFramebufferPlane = info.NDCFramebufferPlane;
@@ -75,12 +74,11 @@ zg::Window::Window(const zg::Window& other) :
 	frameduration(NANOSECONDS_DURATION(*deltaTime * NANOSECONDS::den)), framebudget(frameduration, 1, true, false), systemFonts(*this),
 	postProcessingPipeline(INDEX_STACK),
 	mainColorTexture(other.mainColorTexture),// mainDepthTexture(other.mainDepthTexture),
-	mainFramebuffer(other.mainFramebuffer)
+	mainFramebuffer(other.mainFramebuffer),
+	viewportResized(other.viewportResized)
 {
 	setViewport();
 	ZGZoneScoped;
-	memset(windowKeys, 0, 256 * sizeof(int));
-	memset(windowButtons, 0, 7 * sizeof(int));
 }
 zg::Window& zg::Window::operator=(const zg::Window& other)
 {
@@ -136,6 +134,7 @@ zg::Window& zg::Window::operator=(const zg::Window& other)
 	mainColorTexture = other.mainColorTexture;
 	// mainDepthTexture = other.mainDepthTexture;
 	mainFramebuffer = other.mainFramebuffer;
+	viewportResized = other.viewportResized;
 	return *this;
 }
 void zg::Window::run()
@@ -572,6 +571,7 @@ void zg::Window::resize(glm::vec2 newSize)
 		windowHeight = newSize.y;
 	auto scenesSize = scenes.size();
 	auto scenesData = scenes.data();
+	(*viewportResized) = true;
 	for (size_t index = 0; index < scenesSize; ++index)
 	{
 		ZGZoneScoped;

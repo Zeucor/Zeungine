@@ -120,6 +120,7 @@ struct WindowCreateInfo;
 		PostProcessingPipeline postProcessingPipeline;
 		std::unique_ptr<FullscreenQuad> fullscreenQuad;
 		std::vector<std::vector<std::pair<std::string, std::shared_ptr<textures::Texture>>>> ppOutputs;
+		std::shared_ptr<bool> viewportResized;
 		// when adding new members remember to add to operator=
 
 		Window(const WindowCreateInfo& info);
