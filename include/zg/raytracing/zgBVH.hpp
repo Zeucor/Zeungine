@@ -8,7 +8,6 @@ constexpr int RAY_PACKET_WIDTH = 16;
 #include <intrin.h>
 #include <limits>
 #include <vector>
-#include <zg/KeyIDVector.hpp>
 #include <zg/glm.hpp>
 #include <zg/Entity.hpp>
 #include <zg/entities/Cube.hpp>
