@@ -161,28 +161,33 @@ void BVH::addEntity(Entity& entity)
 			auto p_vertices = &m_vertices;
 			if (m_indices.empty())
 			{
-				if (uint32_t(mesh.info.shapeType) >= 4 && uint32_t(mesh.info.shapeType) <= 7)
+				if (mesh.info.shapeType >= ShapeType::PlaneXZ_Center && mesh.info.shapeType <= ShapeType::PlaneXY_BottomLeft)
 				{
 					t_indices = entities::getPlaneIndices((entities::PlaneType)mesh.info.shapeType);
 					t_vertices = entities::getPlaneVertices((entities::PlaneType)mesh.info.shapeType);
+				}
+				else if (mesh.info.shapeType == ShapeType::Box)
+				{
+					t_indices = entities::getCubeIndices();
+					t_vertices = entities::getCubeVertices();
 				}
 				p_indices = &t_indices;
 				p_vertices = &t_vertices;
 			}
 			auto& indices = *p_indices;
 			auto& vertices = *p_vertices;
-			auto indicesData = indices.data();
-			auto verticesData = vertices.data();
+			auto indices_data = indices.data();
+			auto vertices_data = vertices.data();
 			auto& model = entity.getModelMatrix();
 			auto indiceCount = indices.size();
 			for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
 			{
-				auto i0 = indicesData[i + 0];
-				auto i1 = indicesData[i + 1];
-				auto i2 = indicesData[i + 2];
-				auto v0 = verticesData[i0];
-				auto v1 = verticesData[i1];
-				auto v2 = verticesData[i2];
+				auto i0 = indices_data[i + 0];
+				auto i1 = indices_data[i + 1];
+				auto i2 = indices_data[i + 2];
+				auto v0 = vertices_data[i0];
+				auto v1 = vertices_data[i1];
+				auto v2 = vertices_data[i2];
 				v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
 				v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
 				v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
@@ -205,7 +210,7 @@ void BVH::updateEntity(Entity& entity)
 			auto trianglesSize = triangles.size();
 			for (size_t i = 0; i < trianglesSize; ++i)
 			{
-				if (triangles[i].userData.first == entity.ID && triangles[i].userData.second == mesh.ID)
+				if (triangles[i].userData.first == entity.ID && triangles[i].userData.second == meshIndex)
 				{
 					++indicesCount;
 				}
@@ -213,7 +218,7 @@ void BVH::updateEntity(Entity& entity)
 			indices.reserve(indicesCount);
 			for (size_t i = 0; i < trianglesSize; ++i)
 			{
-				if (triangles[i].userData.first == entity.ID && triangles[i].userData.second == mesh.ID)
+				if (triangles[i].userData.first == entity.ID && triangles[i].userData.second == meshIndex)
 				{
 					indices.push_back(i);
 				}
@@ -227,10 +232,15 @@ void BVH::updateEntity(Entity& entity)
 			auto p_vertices = &m_vertices;
 			if (m_indices.empty())
 			{
-				if (uint32_t(mesh.info.shapeType) >= 4 && uint32_t(mesh.info.shapeType) <= 7)
+				if (mesh.info.shapeType >= ShapeType::PlaneXZ_Center && mesh.info.shapeType <= ShapeType::PlaneXY_BottomLeft)
 				{
 					t_indices = entities::getPlaneIndices((entities::PlaneType)mesh.info.shapeType);
 					t_vertices = entities::getPlaneVertices((entities::PlaneType)mesh.info.shapeType);
+				}
+				else if (mesh.info.shapeType == ShapeType::Box)
+				{
+					t_indices = entities::getCubeIndices();
+					t_vertices = entities::getCubeVertices();
 				}
 				p_indices = &t_indices;
 				p_vertices = &t_vertices;
@@ -239,18 +249,19 @@ void BVH::updateEntity(Entity& entity)
 			auto& meshVertices = *p_vertices;
 			if (meshIndices.empty())
 				return;
-			auto indicesData = meshIndices.data();
-			auto verticesData = meshVertices.data();
+			auto indices_size = meshIndices.size();
+			auto indices_data = meshIndices.data();
+			auto vertices_data = meshVertices.data();
 			auto& model = entity.getModelMatrix();
-			for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
+			for (size_t i = 0, c = 0; i < indices_size; c++, i += 3)
 			{
 				auto& triangleID = indices[c];
-				auto i0 = indicesData[i + 0];
-				auto i1 = indicesData[i + 1];
-				auto i2 = indicesData[i + 2];
-				auto v0 = verticesData[i0];
-				auto v1 = verticesData[i1];
-				auto v2 = verticesData[i2];
+				auto i0 = indices_data[i + 0];
+				auto i1 = indices_data[i + 1];
+				auto i2 = indices_data[i + 2];
+				auto v0 = vertices_data[i0];
+				auto v1 = vertices_data[i1];
+				auto v2 = vertices_data[i2];
 				v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
 				v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
 				v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
