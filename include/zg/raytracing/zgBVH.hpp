@@ -3,11 +3,16 @@
 #include <algorithm>
 #include <cstdint>
 constexpr int RAY_PACKET_WIDTH = 16;
+// #undef __AVX__
+// #undef __AVX512__
 #include <intrin.h>
 #include <limits>
 #include <vector>
 #include <zg/KeyIDVector.hpp>
 #include <zg/glm.hpp>
+#include <zg/Entity.hpp>
+#include <zg/entities/Cube.hpp>
+#include <zg/entities/Plane.hpp>
 namespace std
 {
 	template <typename UserDataT>
@@ -45,6 +50,7 @@ namespace zg::exp::raytracing
 			__m512i triangleIndex;
 			__mmask16 hitMask;
 			UserDataT data[RAY_PACKET_WIDTH];
+			glm::vec2 uv[RAY_PACKET_WIDTH];
 		};
 
 		struct AABB
@@ -53,6 +59,11 @@ namespace zg::exp::raytracing
 			glm::vec3 max;
 
 			AABB()
+			{
+				reset();
+			}
+
+			void reset()
 			{
 				min = glm::vec3(std::numeric_limits<float>::max());
 				max = glm::vec3(-std::numeric_limits<float>::max());
@@ -174,6 +185,42 @@ namespace zg::exp::raytracing
 			UserDataT data;
 			glm::vec3 centroid;
 			AABB bounds;
+			int mesh_index = -1;
+			TriangleWithData& update(const TriangleT& tri)
+			{
+				triangle = tri;
+				const auto& v0 = triangle[0];
+				const auto& v1 = triangle[1];
+				const auto& v2 = triangle[2];
+				centroid = ((v0 + v1 + v2) / 3.0f);
+				bounds.reset();
+				bounds.expand(v0);
+				bounds.expand(v1);
+				bounds.expand(v2);
+				return *this;
+			}
+			glm::vec2 get_texture_uv(glm::vec2 bary_uv, const std::array<glm::vec2, 3>& tri_uvs)
+			{
+				// Extract barycentric coordinates u and v
+				float u = bary_uv.x;
+				float v = bary_uv.y;
+
+				// Calculate the third barycentric coordinate w
+				// w = 1 - u - v
+				float w = 1.0f - u - v;
+
+				// Interpolate the texture UV coordinates
+				// The formula for barycentric interpolation is:
+				// P = w * A + u * B + v * C
+				// Where A, B, C are the attributes (in this case, UV coordinates) of the triangle vertices.
+				// In many graphics contexts, the barycentric coordinates u, v, w map to the
+				// influence of vertices B, C, A respectively.
+				// So, tri_uvs[0] is often associated with w (vertex A),
+				// tri_uvs[1] with u (vertex B), and tri_uvs[2] with v (vertex C).
+				glm::vec2 interpolated_uv = (tri_uvs[0] * w) + (tri_uvs[1] * u) + (tri_uvs[2] * v);
+
+				return interpolated_uv;
+			}
 		};
 
 		struct StackNode
@@ -182,7 +229,23 @@ namespace zg::exp::raytracing
 			float tMin, tMax;
 		};
 
-		BVH() : triangles([](auto& tri) -> TriangleKeyWrapper { return {tri.data, tri.centroid}; }) {}
+		BVH() = default;
+
+		BVH(const BVH& other):
+			triangles(other.triangles),
+			nodes(other.nodes),
+			built(other.built),
+			changed(other.changed)
+		{}
+
+		BVH& operator=(const BVH& other)
+		{
+			triangles = other.triangles;
+			nodes = other.nodes;
+			built = other.built;
+			changed = other.changed;
+			return *this;
+		}
 
 		void addTriangle(const TriangleT& tri, const UserDataT& data = UserDataT())
 		{
@@ -194,10 +257,218 @@ namespace zg::exp::raytracing
 			twd.bounds.expand(v1);
 			twd.bounds.expand(v2);
 			triangles.emplace_back(twd);
+			return;
+		}
+
+		TriangleWithData& getTriangle(int index)
+		{
+			if (index >= 0 && index < triangles.size())
+				return triangles[index];
+			throw std::range_error("index is out of bounds");
+		}
+
+		void addEntity(Entity& entity)
+		{
+			if (entity.addToBVH)
+			{
+				size_t meshIndex = 0;
+				for (auto& meshID : entity.meshIDs)
+				{
+					auto& mesh = Registry::GetSingleton().getMesh(meshID);
+					auto& m_indices = mesh.indices;
+					auto& m_vertices = mesh.vertices;
+					std::vector<uint32_t> t_indices;
+					std::vector<glm::vec3> t_vertices;
+					auto p_indices = &m_indices;
+					auto p_vertices = &m_vertices;
+					if (m_indices.empty())
+					{
+						if (mesh.info.shapeType >= ShapeType::PlaneXZ_Center && mesh.info.shapeType <= ShapeType::PlaneXY_BottomLeft)
+						{
+							t_indices = entities::getPlaneIndices((entities::PlaneType)mesh.info.shapeType);
+							t_vertices = entities::getPlaneVertices((entities::PlaneType)mesh.info.shapeType);
+						}
+						else if (mesh.info.shapeType == ShapeType::Box)
+						{
+							t_indices = entities::getCubeIndices();
+							t_vertices = entities::getCubeVertices();
+						}
+						p_indices = &t_indices;
+						p_vertices = &t_vertices;
+					}
+					auto& indices = *p_indices;
+					auto& vertices = *p_vertices;
+					auto indices_data = indices.data();
+					auto vertices_data = vertices.data();
+					auto& model = entity.getModelMatrix();
+					auto indiceCount = indices.size();
+					for (size_t i = 0, c = 0; i < indiceCount; c++, i += 3)
+					{
+						auto i0 = indices_data[i + 0];
+						auto i1 = indices_data[i + 1];
+						auto i2 = indices_data[i + 2];
+						auto v0 = vertices_data[i0];
+						auto v1 = vertices_data[i1];
+						auto v2 = vertices_data[i2];
+						v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
+						v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
+						v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
+						if constexpr (std::is_same_v<UserDataT, std::pair<size_t, size_t>>)
+							addTriangle({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}}, {entity.ID, meshIndex});
+						if constexpr (std::is_same_v<UserDataT, size_t>)
+							addTriangle({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}}, entity.ID);
+					}
+					meshIndex++;
+				}
+			}
+		}
+
+		void updateEntity(Entity& entity)
+		{
+			if (entity.addToBVH)
+			{
+				size_t meshIndex = 0;
+				for (auto& meshID : entity.meshIDs)
+				{
+					auto& mesh = Registry::GetSingleton().getMesh(meshID);
+					std::vector<size_t> indices;
+					size_t indicesCount = 0;
+					auto triangles_size = triangles.size();
+					auto triangles_data = triangles.data();
+					for (size_t i = 0; i < triangles_size; ++i)
+					{
+						if constexpr (std::is_same_v<UserDataT, std::pair<size_t, size_t>>)
+						{
+						if (triangles_data[i].data.first == entity.ID && triangles_data[i].data.second == meshIndex)
+								++indicesCount;
+						}
+						else if constexpr (std::is_same_v<UserDataT, size_t>)
+						{
+							if (triangles_data[i].data == entity.ID)
+								++indicesCount;
+						}
+					}
+					indices.reserve(indicesCount);
+					for (size_t i = 0; i < triangles_size; ++i)
+					{
+						if constexpr (std::is_same_v<UserDataT, std::pair<size_t, size_t>>)
+						{
+						if (triangles_data[i].data.first == entity.ID && triangles_data[i].data.second == meshIndex)
+								indices.push_back(i);
+						}
+						else if constexpr (std::is_same_v<UserDataT, size_t>)
+						{
+							if (triangles_data[i].data == entity.ID)
+								indices.push_back(i);
+						}
+					}
+					auto indiceCount = mesh.indices.size();
+					auto& m_indices = mesh.indices;
+					auto& m_vertices = mesh.vertices;
+					std::vector<uint32_t> t_indices;
+					std::vector<glm::vec3> t_vertices;
+					auto p_indices = &m_indices;
+					auto p_vertices = &m_vertices;
+					if (m_indices.empty())
+					{
+						if (mesh.info.shapeType >= ShapeType::PlaneXZ_Center && mesh.info.shapeType <= ShapeType::PlaneXY_BottomLeft)
+						{
+							t_indices = entities::getPlaneIndices((entities::PlaneType)mesh.info.shapeType);
+							t_vertices = entities::getPlaneVertices((entities::PlaneType)mesh.info.shapeType);
+						}
+						else if (mesh.info.shapeType == ShapeType::Box)
+						{
+							t_indices = entities::getCubeIndices();
+							t_vertices = entities::getCubeVertices();
+						}
+						p_indices = &t_indices;
+						p_vertices = &t_vertices;
+					}
+					auto& meshIndices = *p_indices;
+					auto& meshVertices = *p_vertices;
+					if (meshIndices.empty())
+						return;
+					auto indices_size = meshIndices.size();
+					auto indices_data = meshIndices.data();
+					auto vertices_data = meshVertices.data();
+					auto& model = entity.getModelMatrix();
+					for (size_t i = 0, c = 0; i < indices_size; c++, i += 3)
+					{
+						auto& triangleID = indices[c];
+						auto i0 = indices_data[i + 0];
+						auto i1 = indices_data[i + 1];
+						auto i2 = indices_data[i + 2];
+						auto v0 = vertices_data[i0];
+						auto v1 = vertices_data[i1];
+						auto v2 = vertices_data[i2];
+						v0 = glm::vec3(model * glm::vec4(v0, 1.0f));
+						v1 = glm::vec3(model * glm::vec4(v1, 1.0f));
+						v2 = glm::vec3(model * glm::vec4(v2, 1.0f));
+						if constexpr (std::is_same_v<UserDataT, std::pair<size_t, size_t>>)
+							triangles_data[triangleID].update({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}});
+						if constexpr (std::is_same_v<UserDataT, size_t>)
+							triangles_data[triangleID].update({{v0.x, v0.y, v0.z}, {v1.x, v1.y, v1.z}, {v2.x, v2.y, v2.z}});
+					}
+					meshIndex++;
+				}
+			}
+			built = false;
+			changed = true;
+		}
+		void removeEntity(Scene& scene, Entity& entity)
+		{
+			if (entity.addToBVH)
+			{
+				size_t removalIndex = 0;
+				auto entityID = entity.ID;
+				triangles.erase(
+					std::remove_if(
+						triangles.begin(),
+						triangles.end(),
+						[&](const auto& triangle) -> bool
+						{
+							if constexpr (std::is_same_v<UserDataT, std::pair<size_t, size_t>>)
+							{
+								if (triangle.data.first == entityID)
+								{
+									removalIndex++;
+									return true;
+								}
+							}
+							else if constexpr (std::is_same_v<UserDataT, size_t>)
+							{
+								if (triangle.data == entityID)
+								{
+									removalIndex++;
+									return true;
+								}
+							}
+							return false;
+						}
+					),
+					triangles.end()
+				);
+			}
+			changed = true;
+			built = false;
 		}
 
 		void build()
 		{
+			{
+				std::unique_lock lock(build_mutex);
+				if (building)
+				{
+					build_cv.wait(lock, [&]() {
+						return !building && built;
+					});
+					return;
+				}
+				else
+				{
+					building = true;
+				}
+			}
 			nodes.clear();
 			auto triangles_size = triangles.size();
 			std::vector<int> indices(triangles_size);
@@ -214,6 +485,13 @@ namespace zg::exp::raytracing
 				std::rotate(nodes.begin(), nodes.begin() + rootIndex, nodes.begin() + rootIndex + 1);
 				fixNodeIndices(0);
 			}
+			{
+				std::unique_lock lock(build_mutex);
+				building = false;
+				built = true;
+				changed = false;
+			}
+			build_cv.notify_all();
 		}
 
 		bool intersect_glm(
@@ -221,9 +499,12 @@ namespace zg::exp::raytracing
 			const glm::vec3& dir,
 			float& outT,
 			int& outIndex,
-			UserDataT& outData
+			UserDataT& outData,
+			glm::vec2& uv
 		) const
 		{
+			if (!built && changed)
+				build();
 			glm::vec3 invDir = 1.0f / dir;
 			glm::ivec3 sign = glm::lessThan(invDir, glm::vec3(0.0f));
 			float closestT = std::numeric_limits<float>::max();
@@ -232,7 +513,7 @@ namespace zg::exp::raytracing
 			int stackPtr = 1;
 			stack[0] = {0, 0.0f, closestT};
 			auto nodesData = nodes.data();
-			auto trianglesData = triangles.data();
+			auto triangles_data = triangles.data();
 
 			while (stackPtr > 0)
 			{
@@ -242,7 +523,7 @@ namespace zg::exp::raytracing
 					continue;
 				if (node.triangleIndex >= 0)
 				{
-					const auto& t = trianglesData[node.triangleIndex];
+					const auto& t = triangles_data[node.triangleIndex];
 					const auto& v0 = t.triangle[0];
 					const auto& v1 = t.triangle[1];
 					const auto& v2 = t.triangle[2];
@@ -268,6 +549,8 @@ namespace zg::exp::raytracing
 						outT = tHit;
 						outIndex = node.triangleIndex;
 						outData = t.data;
+						uv.x = u;
+						uv.y = v;
 						hit = true;
 					}
 				}
@@ -285,6 +568,8 @@ namespace zg::exp::raytracing
 			PacketHitInfo& outHit
 		) const
 		{
+			if (!built && changed)
+				build();
 			for (auto i = 0; i < RAY_PACKET_WIDTH; i++)
 				outHit.triangleIndex.m512i_i32[i] = -1;
 			bool hit = false;
@@ -292,14 +577,16 @@ namespace zg::exp::raytracing
 			{
 				glm::vec3 origin(rays.originX.m512_f32[i], rays.originY.m512_f32[i], rays.originZ.m512_f32[i]);
 				glm::vec3 direction(rays.dirX.m512_f32[i], rays.dirY.m512_f32[i], rays.dirZ.m512_f32[i]);
-				if (intersect_glm(origin, direction, outHit.t.m512_f32[i], outHit.triangleIndex.m512i_i32[i], outHit.data[i]) && !hit)
+				if (intersect_glm(origin, direction, outHit.t.m512_f32[i], outHit.triangleIndex.m512i_i32[i], outHit.data[i], outHit.uv[i]) && !hit)
 					hit = true;
 			}
 			return hit;
 		}
 
-		bool intersect(const glm::vec3& origin, const glm::vec3& dir, float& outT, int& outIndex, UserDataT& outData) const
+		bool intersect(const glm::vec3& origin, const glm::vec3& dir, float& outT, int& outIndex, UserDataT& outData, glm::vec2& uv) const
 		{
+			if (!built && changed)
+				build();
 #ifdef __AVX__
 			__m128 orgX = _mm_set1_ps(origin.x);
 			__m128 orgY = _mm_set1_ps(origin.y);
@@ -318,7 +605,7 @@ namespace zg::exp::raytracing
 			stack[0] = {0, 0.0f, closestT};
 
 			auto nodesData = nodes.data();
-			auto trianglesData = triangles.data();
+			auto triangles_data = triangles.data();
 
 			while (stackPtr > 0)
 			{
@@ -330,7 +617,7 @@ namespace zg::exp::raytracing
 
 				if (node.triangleIndex >= 0)
 				{
-					const auto& t = trianglesData[node.triangleIndex];
+					const auto& t = triangles_data[node.triangleIndex];
 					auto v0 = t.triangle[0];
 					auto v1 = t.triangle[1];
 					auto v2 = t.triangle[2];
@@ -387,6 +674,8 @@ namespace zg::exp::raytracing
 						outT = thitf;
 						outIndex = node.triangleIndex;
 						outData = t.data;
+						uv.x = u.m128_f32[0];
+						uv.y = v.m128_f32[0];
 						hit = true;
 					}
 					continue;
@@ -410,6 +699,8 @@ namespace zg::exp::raytracing
 
 		bool intersect_packet(const RayPacket& rays, PacketHitInfo& outHit)
 		{
+			if (!built && changed)
+				build();
 #ifdef __AVX512__
 			__m512 packet_tMin_overall = _mm512_set1_ps(0.0f);
 			StackNode stack[64];
@@ -542,6 +833,23 @@ namespace zg::exp::raytracing
 
 						// Update the overall hitMask for the packet
 						outHit.hitMask = _kor_mask16(outHit.hitMask, t_final_mask);
+
+						alignas(64) float u_lanes[RAY_PACKET_WIDTH];
+						alignas(64) float v_lanes[RAY_PACKET_WIDTH];
+						_mm512_store_ps(u_lanes, u);
+						_mm512_store_ps(v_lanes, v);
+
+						// Iterate through the lanes (rays) and update uv for those that hit
+						for (int i = 0; i < RAY_PACKET_WIDTH; ++i)
+						{
+							// Check if the i-th bit in t_final_mask is set
+							if ((t_final_mask >> i) & 1)
+							{
+								outHit.uv[i].x = u_lanes[i];
+								outHit.uv[i].y = v_lanes[i];
+							}
+							outHit.data[i] = tri.data;
+						}
 					}
 					// After processing a leaf, continue to the next node in the stack
 					continue;
@@ -575,17 +883,21 @@ namespace zg::exp::raytracing
 #endif
 		}
 
-
 	private:
-		KeyIDVector<TriangleKeyWrapper, TriangleWithData> triangles;
+		std::vector<TriangleWithData> triangles;
 		std::vector<BVHNode> nodes;
+		bool built = false;
+		bool changed = false;
+		bool building = false;
+		std::mutex build_mutex;
+		std::condition_variable build_cv;
 
 		int buildRecursive(std::vector<int>& indices)
 		{
 			AABB nodeBounds;
-			auto trianglesData = triangles.data();
+			auto triangles_data = triangles.data();
 			for (int i : indices)
-				nodeBounds.expand(trianglesData[i].bounds);
+				nodeBounds.expand(triangles_data[i].bounds);
 
 			int currentIndex = (int)nodes.size();
 			nodes.emplace_back();
@@ -600,14 +912,14 @@ namespace zg::exp::raytracing
 
 			AABB centroidBounds;
 			for (int i : indices)
-				centroidBounds.expand(trianglesData[i].centroid);
+				centroidBounds.expand(triangles_data[i].centroid);
 
 			glm::vec3 extents = centroidBounds.max - centroidBounds.min;
 			int axis = (extents.y > extents.x) ? 1 : 0;
 			axis = (extents.z > extents[axis]) ? 2 : axis;
 
 			std::sort(indices.begin(), indices.end(),
-								[&](int a, int b) { return trianglesData[a].centroid[axis] < trianglesData[b].centroid[axis]; });
+								[&](int a, int b) { return triangles_data[a].centroid[axis] < triangles_data[b].centroid[axis]; });
 
 			size_t mid = indices.size() / 2;
 			std::vector<int> left(indices.begin(), indices.begin() + mid);
