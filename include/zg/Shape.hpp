@@ -4,7 +4,7 @@
 #include <zg/Singleton.hpp>
 namespace zg
 {
-    enum class ShapeType
+    enum class ShapeType : uint64_t
     {
         NoShape = 0,
         Box = 1,
