@@ -20,3 +20,8 @@
 #define ATTO_TIMEPOINT_CAST std::chrono::time_point_cast<CHRONO_ATTOSECONDS>
 #define QUEUE_PAIR std::pair<NANO_TIMEPOINT, NANOSECONDS_DURATION>
 #define QUEUE std::queue<QUEUE_PAIR>
+#include <string>
+namespace zg
+{
+    std::string ns_to_s_string(size_t ns);
+}
