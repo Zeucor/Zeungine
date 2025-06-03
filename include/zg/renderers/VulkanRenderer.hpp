@@ -313,6 +313,7 @@ namespace zg
 		QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 		void createLogicalDevice();
 		void createSwapChain();
+		void recreateSwapChain();
 		SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 		VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);

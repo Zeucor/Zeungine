@@ -876,6 +876,14 @@ void VulkanRenderer::createSwapChain()
 	swapChainExtent = extent;
 	return;
 }
+void VulkanRenderer::recreateSwapChain()
+{
+    vkDeviceWaitIdle(device);
+    destroySwapChain();
+    createSwapChain();
+    createImageViews();
+    createFramebuffers();
+}
 SwapChainSupportDetails VulkanRenderer::querySwapChainSupport(VkPhysicalDevice device)
 {
 	SwapChainSupportDetails details;
