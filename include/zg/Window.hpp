@@ -95,8 +95,6 @@ struct WindowCreateInfo;
 		bool maximized = false;
 		bool focused = false;
 		OnEntityAddedFunction onEntityAdded;
-		bool windowKeys[256];
-		bool windowButtons[7];
 		bool mouseMoved = false;
 		glm::vec2 mouseCoords;
 		glm::vec2 newMouseCoords;
