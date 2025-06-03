@@ -14,6 +14,15 @@ endif()
 
 #New Dependency Declarations to the top!
 
+message(STATUS "FetchContent: rectpack2D")
+FetchContent_Declare(rectpack2D
+    GIT_REPOSITORY https://github.com/TeamHypersomnia/rectpack2D.git
+    GIT_TAG master)
+FetchContent_GetProperties(rectpack2D)
+if(NOT rectpack2D_POPULATED)
+    FetchContent_Populate(rectpack2D)
+endif()
+
 # msdf-atlas-gen
 
 message(STATUS "FetchContent: msdf_atlas_gen")

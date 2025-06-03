@@ -22,6 +22,7 @@ set(mc33_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/mc3
 set(msdf_atlas_gen_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/msdf_atlas_gen-src")
 set(png_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/png-src")
 set(harfbuzz_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/harfbuzz-src")
+set(rectpack2D_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../Dependencies/build-release/_deps/rectpack2D-src")
 
 set(CPACK_COMPONENT_HEADERS_DESCRIPTION "Zeungine Core & Dependency Headers")
 set(CPACK_COMPONENT_HEADERS_GROUP "Zeungine")
@@ -37,6 +38,14 @@ set(CPACK_COMPONENT_CMAKECONFIG_GROUP "Zeungine")
 install(FILES ../ZeungineConfig.cmake ../PlatformSetup.cmake ../Options.cmake ../Targets.cmake DESTINATION ${ZG_SHR_INSTALL_PREFIX}
     PERMISSIONS WORLD_READ OWNER_READ GROUP_READ
     COMPONENT CMakeConfig)
+
+# rectpack2D
+
+install(DIRECTORY ${rectpack2D_SOURCE_DIR}/src/rectpack2D
+    DESTINATION ${ZG_INC_INSTALL_PREFIX}
+    FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+    DIRECTORY_PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_EXECUTE WORLD_READ
+    COMPONENT Headers)
 
 # harfbuzz
 
