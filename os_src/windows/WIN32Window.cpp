@@ -134,6 +134,7 @@ static LRESULT CALLBACK gl_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 			{
 				keycode = translatedChar[0];
 			}
+			glWindow->mod = mod;
 			glWindow->queueEvent(EVENT_KEY_PRESS, keypress, keycode);
 		}
 		break;

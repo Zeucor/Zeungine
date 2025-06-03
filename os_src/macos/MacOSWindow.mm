@@ -180,6 +180,7 @@ bool MacOSWindow::pollMessages()
 					{
 						keycode = [characters characterAtIndex:0];
 					}
+					renderWindowPointer->mod = mod;
 					renderWindowPointer->queueEvent(EVENT_KEY_PRESS, pressed, keycode);
 					break;
 				}

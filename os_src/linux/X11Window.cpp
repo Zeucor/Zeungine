@@ -278,6 +278,7 @@ bool X11Window::pollMessages()
 					keycode = keycodeIter->second;
 			}
 			auto keypress = event.type == KeyPress;
+			renderWindowPointer->mod = mod;
 			renderWindowPointer->queueEvent(EVENT_KEY_PRESS, keypress, keycode);
 			break;
 		};

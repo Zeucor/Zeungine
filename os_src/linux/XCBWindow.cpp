@@ -176,6 +176,7 @@ bool XCBWindow::pollMessages()
 						break;
 					}
 				}
+				window.mod = mod;
 				window.queueEvent(EVENT_KEY_PRESS, pressed, keycode);
 				break;
 			}
