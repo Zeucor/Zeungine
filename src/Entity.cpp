@@ -79,6 +79,9 @@ Entity::Entity(const Entity& other) :
 	viewPointer(other.viewPointer),
 	affectedByShadows(other.affectedByShadows),
 	addToBVH(other.addToBVH),
+	skipRender(other.skipRender),
+	renderOncePerPass(other.renderOncePerPass),
+	renderedThisPass(other.renderedThisPass),
 	meshIDs(other.meshIDs),
 	meshInfos(other.meshInfos),
 	children(other.children),
@@ -126,6 +129,9 @@ Entity& Entity::operator=(const Entity& other)
 	viewPointer = other.viewPointer;
 	affectedByShadows = other.affectedByShadows;
 	addToBVH = other.addToBVH;
+	skipRender = other.skipRender;
+	renderOncePerPass = other.renderOncePerPass;
+	renderedThisPass = other.renderedThisPass;
 	{
 		std::lock_guard meshIDLock(Registry::GetSingleton().meshIDMutex);
 		for (auto& meshID : meshIDs)
