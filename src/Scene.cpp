@@ -139,8 +139,6 @@ Scene::Scene(const Scene& other) :
 	currentClickedEntityID(other.currentClickedEntityID),
 	currentHoveredEntityID(other.currentHoveredEntityID),
 	bvh(other.bvh),
-	mousePressIDs(other.mousePressIDs),
-	mouseMoveID(other.mouseMoveID),
 	viewPointer(other.viewPointer),
 	useBVH(other.useBVH),
 	updateTime(other.updateTime),
@@ -506,34 +504,29 @@ void Scene::hookMouseEvents()
 {
 	ZGZoneScoped;
 	auto& window = Registry::GetSingleton().getWindow(INDEX_STACK);
-	for (unsigned int button = MinMouseButtonIndex; button < MaxMouseButton; ++button)
-	{
-		mousePressIDs[button] = window.registerHandler(EVENT_MOUSE_PRESS,
-			[&, button](auto& event)
+	mousePressID = window.registerHandler(EVENT_MOUSE_PRESS,
+		[&](auto& event)
+		{
+			ZGZoneScoped;
+			auto button = event.getValue();
+			auto& pressed = event.template castData<bool>();
+			if (!useBVH)
+				return;
+			auto& _bvh = *bvh;
+			auto& screenCoord = (window).mouseCoords;
+			auto ray = _bvh.mouseCoordToRay((const float&)window.windowHeight, screenCoord,
+																			{0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight}, projectionPointer->matrix,
+																			viewPointer->matrix, projectionPointer->nearPlane, projectionPointer->farPlane);
+			auto primID = _bvh.trace(ray);
+			if (primID == raytracing::invalidID)
 			{
-				ZGZoneScoped;
-				auto pressed_button = event.getValue();
-				if (pressed_button != button)
-					return;
-				auto& pressed = event.template castData<bool>();
-				if (!useBVH)
-					return;
-				auto& _bvh = *bvh;
-				auto& screenCoord = (window).mouseCoords;
-				auto ray = _bvh.mouseCoordToRay((const float&)window.windowHeight, screenCoord,
-																				{0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight}, projectionPointer->matrix,
-																				viewPointer->matrix, projectionPointer->nearPlane, projectionPointer->farPlane);
-				auto primID = _bvh.trace(ray);
-				if (primID == raytracing::invalidID)
-				{
-					currentClickedEntityID = 0;
-					return;
-				}
-				auto foundEntityMesh = findEntityAndMeshByPrimID(primID);
-				currentClickedEntityID = foundEntityMesh.first;
-				Registry::GetSingleton().getEntity(foundEntityMesh.first).queueEvent(EVENT_MOUSE_PRESS, pressed, button);
-			});
-	}
+				currentClickedEntityID = 0;
+				return;
+			}
+			auto foundEntityMesh = findEntityAndMeshByPrimID(primID);
+			currentClickedEntityID = foundEntityMesh.first;
+			Registry::GetSingleton().getEntity(foundEntityMesh.first).queueEvent(EVENT_MOUSE_PRESS, pressed, button);
+		});
 	mouseMoveID = window.registerHandler(EVENT_MOUSE_MOVE,
 		[&](auto& event)
 		{
