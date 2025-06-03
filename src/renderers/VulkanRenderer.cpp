@@ -188,6 +188,7 @@ void VulkanRenderer::createContext(IPlatformWindow* platformWindowPointer)
 {
 	this->renderer = RENDERER_VULKAN;
 	this->platformWindowPointer = platformWindowPointer;
+	viewportResized = platformWindowPointer->renderWindowPointer->viewportResized;
 	createInstance();
 	setupPFNs();
 #ifndef NDEBUG
@@ -1402,7 +1403,13 @@ void VulkanRenderer::postRenderPass()
 #ifndef MACOS
 void VulkanRenderer::swapBuffers()
 {
-	if (!VKcheck("vkQueuePresentKHR", _vkQueuePresentKHR(presentQueue, &presentInfo)))
+	auto result = _vkQueuePresentKHR(presentQueue, &presentInfo);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || *viewportResized)
+	{
+		recreateSwapChain();
+		*viewportResized = false;
+	}
+	else if (result != VK_SUCCESS)
 	{
 		throw std::runtime_error("VulkanRenderer-vkQueuePresentKHR failed");
 	}

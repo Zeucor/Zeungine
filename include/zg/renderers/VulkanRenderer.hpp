@@ -290,6 +290,7 @@ namespace zg
 		void* bitmap = 0;
 		uint32_t swapBufferCount = 0;
 		std::vector<std::function<void()>> destroyAtRenderPassEndOrDestroyVector;
+		std::shared_ptr<bool> viewportResized;
 		VulkanRenderer();
 		~VulkanRenderer() override;
 		static GetProcAddrFunc doGetProcAddr();
