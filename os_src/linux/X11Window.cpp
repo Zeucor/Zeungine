@@ -364,12 +364,12 @@ bool X11Window::pollMessages()
 				continue;
 			if (!childWindow.focused)
 				continue;
-			childWindow.windowButtons[button] = pressed;
+			childWindow.queueEvent(EVENT_MOUSE_PRESS, pressed, button);
 			hadChildFocus = true;
 			break;
 		}
 		if (!hadChildFocus)
-			renderWindowPointer->windowButtons[button] = pressed;
+			renderWindowPointer->queueEvent(EVENT_MOUSE_PRESS, pressed, button);
 	}
 	return true;
 }
