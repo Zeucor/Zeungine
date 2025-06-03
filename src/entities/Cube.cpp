@@ -36,3 +36,106 @@ EntityCreateInfo entities::CubeFactory(std::string _name, glm::vec3 position, gl
 	};
 	return info;
 }
+std::vector<glm::vec3> zg::entities::getCubeVertices()
+{
+  // Define the 8 unique corners of the cube
+  glm::vec3 v0(-0.5, -0.5, -0.5); // NLL
+  glm::vec3 v1( 0.5, -0.5, -0.5); // NLR
+  glm::vec3 v2(-0.5,  0.5, -0.5); // NUL
+  glm::vec3 v3( 0.5,  0.5, -0.5); // NUR
+  glm::vec3 v4(-0.5, -0.5,  0.5); // FLL
+  glm::vec3 v5( 0.5, -0.5,  0.5); // FLR
+  glm::vec3 v6(-0.5,  0.5,  0.5); // FUL
+  glm::vec3 v7( 0.5,  0.5,  0.5); // FUR
+
+  return {
+    	v0,
+    	v1,
+    	v2,
+    	v1,
+    	v3,
+    	v2,
+
+		v5,
+		v4,
+		v7,
+		v4,
+		v6,
+		v7,
+		
+		v4,
+		v0,
+		v6,
+		v0,
+		v2,
+		v6,
+		
+		v1,
+		v5,
+		v3,
+		v5,
+		v7,
+		v3,
+
+		v2,
+		v3,
+		v6,
+		v3,
+		v7,
+		v6,
+		
+		v4,
+		v5,
+		v0,
+		v5,
+		v1,
+		v0
+	};
+}
+std::vector<uint32_t> zg::entities::getCubeIndices()
+{
+	return {
+		// Front
+		0,
+		1,
+		2,
+		3,
+		4,
+		5,
+		// Back
+		6,
+		7,
+		8,
+		9,
+		10,
+		11,
+		// Left
+		12,
+		13,
+		14,
+		15,
+		16,
+		17,
+		// Right
+		18,
+		19,
+		20,
+		21,
+		22,
+		23,
+		// Top
+		24,
+		25,
+		26,
+		27,
+		28,
+		29,
+		// Bottom
+		30,
+		31,
+		32,
+		33,
+		34,
+		35
+	};
+}
