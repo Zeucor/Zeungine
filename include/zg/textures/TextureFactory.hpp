@@ -36,5 +36,8 @@ namespace zg::textures
 		static void destroyTexture(Texture &texture);
 		static std::pair<int, size_t> getChannelsSizeOfType(const Texture& texture);
 		static void flipTextureDataY(const Texture& texture, void* data);
+		static void updateTexture(Texture& texture, const void* data);
+		static void updateTexture(Texture& texture, const std::string_view path);
+		static void updateTexture(Texture& texture, const std::vector<std::string_view>& paths);
 	};
 } // namespace zg::textures

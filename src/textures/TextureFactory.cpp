@@ -44,6 +44,7 @@ void TextureFactory::initTexture(Texture& texture, const void* data)
 		flipTextureDataY(texture, (void*)data);
 	auto imageCount = texture.size.w > 0 ? 6 : texture.size.z;
 	std::vector<images::ImageLoader::ImagePair> imagePairs;
+	imagePairs.reserve(imageCount);
 	for (int i = 0; i < imageCount; i++)
 	{
 		imagePairs.push_back({{texture.size.x, texture.size.y}, {(uint8_t*)data, [](uint8_t*) {}}});
@@ -67,6 +68,7 @@ void TextureFactory::initTexture(Texture& texture, const std::vector<void*> data
 	preInitTexture(texture);
 	auto imageCount = texture.size.w > 0 ? 6 : texture.size.z;
 	std::vector<images::ImageLoader::ImagePair> imagePairs;
+	imagePairs.reserve(imageCount);
 	for (int i = 0; i < imageCount; i++)
 	{
 		if (texture.flip)
@@ -99,6 +101,7 @@ void TextureFactory::initTexture(Texture& texture, const std::vector<std::string
 	if (!texture.iRenderer)
 		return;
 	std::vector<images::ImageLoader::ImagePair> imagePairs;
+	imagePairs.reserve(paths.size());
 	for (const auto& path : paths)
 	{
 		imagePairs.push_back(images::ImageLoader::load(path));
@@ -203,4 +206,53 @@ void TextureFactory::flipTextureDataY(const Texture& texture, void* data)
 			std::copy(temp_row_buffer.begin(), temp_row_buffer.end(), byte_data + bottom_row_global_offset);
 		}
 	}
-};
+}
+void TextureFactory::updateTexture(Texture& texture, const void* data)
+{
+	if (!texture.iRenderer)
+		return;
+	if (texture.flip)
+		flipTextureDataY(texture, (void*)data);
+	auto imageCount = texture.size.w > 0 ? 6 : texture.size.z;
+	std::vector<images::ImageLoader::ImagePair> imagePairs;
+	imagePairs.reserve(imageCount);
+	for (int i = 0; i < imageCount; i++)
+	{
+		imagePairs.push_back({{texture.size.x, texture.size.y}, {(uint8_t*)data, [](uint8_t*) {}}});
+		if (data)
+		{
+			auto [channels, sizeoftype] = getChannelsSizeOfType(texture);
+			auto bytessize = texture.size.x * texture.size.y * channels * sizeoftype;
+			char* chardata = (char*)malloc(bytessize);
+			memcpy(chardata, data, bytessize);
+			texture.datas.push_back(
+				std::pair<size_t, std::shared_ptr<char>>(bytessize, std::shared_ptr<char>(chardata, free)));
+		}
+	}
+	midInitTexture(texture, imagePairs);
+}
+void TextureFactory::updateTexture(Texture& texture, const std::string_view path)
+{
+	if (!texture.iRenderer)
+		return;
+	auto imagePair = images::ImageLoader::load(path);
+	midInitTexture(texture, {{imagePair}});
+}
+void TextureFactory::updateTexture(Texture& texture, const std::vector<std::string_view>& paths)
+{
+	if (!texture.iRenderer)
+		return;
+	std::vector<images::ImageLoader::ImagePair> imagePairs;
+	imagePairs.reserve(paths.size());
+	for (const auto& path : paths)
+	{
+		imagePairs.push_back(images::ImageLoader::load(path));
+	}
+	if (!texture.size.x || !texture.size.y && imagePairs.size())
+	{
+		auto firstImageSize = imagePairs[0].first;
+		texture.size.x = firstImageSize.x;
+		texture.size.y = firstImageSize.y;
+	}
+	midInitTexture(texture, imagePairs);
+}

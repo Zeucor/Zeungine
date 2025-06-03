@@ -53,9 +53,9 @@ Texture::Texture(IRenderer* iRenderer, const glm::ivec4& size, const std::vector
 Texture::~Texture() { TextureFactory::destroyTexture(*this); }
 void Texture::bind() const { iRenderer->bindTexture(*this); }
 void Texture::unbind() const { iRenderer->unbindTexture(*this); }
-void Texture::update(const void* data) {}
-void Texture::update(const std::string_view path) {}
-void Texture::update(const std::vector<std::string_view>& paths) {}
+void Texture::update(const void* data) { TextureFactory::updateTexture(*this, data); }
+void Texture::update(const std::string_view path) { TextureFactory::updateTexture(*this, path); }
+void Texture::update(const std::vector<std::string_view>& paths) { TextureFactory::updateTexture(*this, paths); }
 template <>
 Serial& serialize(Serial& serial, const std::pair<std::string, std::shared_ptr<Texture>>& pair)
 {
