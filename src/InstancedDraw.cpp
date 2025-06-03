@@ -30,7 +30,8 @@ void InstancedDraw::InstanceBatch::removeEntity(const size_t entity_ID)
 }
 void InstancedDraw::InstanceBatch::draw(Scene& scene, shaders::Shader* shaderPointer)
 {
-    auto& mesh = Registry::GetSingleton().getMesh(m_meshID);
+    auto& rgy = Registry::GetSingleton();
+    auto& mesh = rgy.getMesh(m_meshID);
     auto shader = mesh.addShader(shaderPointer);
     auto& shaderRef = *shader;
     shaderRef.bind(mesh);
@@ -48,6 +49,7 @@ void InstancedDraw::InstanceBatch::draw(Scene& scene, shaders::Shader* shaderPoi
 }
 void InstancedDraw::InstanceBatch::update_transforms()
 {
+    auto& rgy = Registry::GetSingleton();
     for (auto& transform_key : m_transform_keys)
     {
         auto& mvp_transforms_t_k = mvp_transforms[transform_key];
@@ -58,7 +60,7 @@ void InstancedDraw::InstanceBatch::update_transforms()
         for (size_t index = 0; index < entitiesSize; ++index)
         {
             auto& entityID = *entitiesIter;
-            mvp_transforms_t_k_data[index] = entity_mat4_transform_registry::get_value(transform_key, Registry::GetSingleton().getEntity(entityID));
+            mvp_transforms_t_k_data[index] = entity_mat4_transform_registry::get_value(transform_key, rgy.getEntity(entityID));
             ++entitiesIter;
         }
     }
@@ -124,12 +126,34 @@ void InstancedDraw::drawMulti(
     const std::unordered_map<std::string, std::function<void(Scene&, shaders::Shader&, Mesh&)>>& shaderSets
 )
 {
+    auto& rgy = Registry::GetSingleton();
     auto& shaderBatches = bID_shaderBatches[batchID];
-    auto& window = Registry::GetSingleton().getWindow(scene.INDEX_STACK);
+    auto& window = rgy.getWindow(scene.INDEX_STACK);
     for (auto& pair : opaqueDrawList)
         opaqueBatches.try_emplace(pair.second->ID, pair.second->ID).first->second.addEntity(pair.first->ID);
     for (auto& batch : opaqueBatches)
-        shaderBatches[Registry::GetSingleton().getMesh(batch.second.m_meshID).addShader(shaderPointer)].insert(batch.second.m_meshID);
+        shaderBatches[rgy.getMesh(batch.second.m_meshID).addShader(shaderPointer)].insert(batch.second.m_meshID);
+        
+    for (auto& shaderPair : shaderBatches)
+    {
+        std::vector<size_t> removeIDs;
+        removeIDs.reserve(shaderPair.second.size());
+        for (auto& meshID : shaderPair.second)
+        {
+            try
+            {
+                rgy.getMesh(meshID);
+            }
+            catch(const std::exception& e)
+            {
+                removeIDs.push_back(meshID);
+            }
+        }
+        for (auto& meshID : removeIDs)
+        {
+            shaderPair.second.erase(meshID);
+        }
+    }
     for (auto& shaderPair : shaderBatches)
     {
         auto& shader = *shaderPair.first;
@@ -157,7 +181,7 @@ void InstancedDraw::drawMulti(
         };
         entities.resize(totalShapes);
         auto& firstMeshID = *shaderPair.second.begin();
-        auto& firstMesh = Registry::GetSingleton().getMesh(firstMeshID);
+        auto& firstMesh = rgy.getMesh(firstMeshID);
         shader.bind(firstMesh);
         auto& firstBatch = opaqueBatches.try_emplace(firstMeshID, firstMeshID).first->second;
         auto& positions = firstBatch.positions;
@@ -202,7 +226,7 @@ void InstancedDraw::drawMulti(
         uint32_t i = 0;
         for (auto& meshID : shaderPair.second)
         {
-            auto& mesh = Registry::GetSingleton().getMesh(meshID);
+            auto& mesh = rgy.getMesh(meshID);
             auto& batch = opaqueBatches.try_emplace(meshID, meshID).first->second;
             batch.update_transforms();
             for (auto& t : batch.mvp_transforms)
@@ -289,7 +313,7 @@ void InstancedDraw::drawMulti(
             }
             for (auto& entityID : batch.entities)
             {
-                auto& entity = Registry::GetSingleton().getEntity(entityID);
+                auto& entity = rgy.getEntity(entityID);
                 auto& material = entity.meshMaterial(meshID);
                 auto material_index = find_material_index(material);
                 if (material_index == -1)
@@ -336,6 +360,10 @@ void InstancedDraw::drawMulti(
         removeUnusedMeshes(uv2s_index_size_map, uv2s);
         removeUnusedMeshes(uv3s_index_size_map, uv3s);
         auto& projection = *scene.projectionPointer;
+        // todo sum meshes into atlas
+        size_t unit = 0;
+        for (auto& keyedTexture : firstMesh.info.keyedTextures)
+            shader.setTexture(keyedTexture.first, firstMesh, *keyedTexture.second, unit++);
         shader.setBlock("CameraPosition", firstMesh, scene.viewPointer->position, 16);
         shader.setBlock("Viewport", firstMesh, glm::vec4(0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight), 16);
         shader.setBlock("Time", firstMesh, scene.updateTime, 4);
@@ -410,12 +438,13 @@ void InstancedDraw::drawMulti(
 }
 void InstancedDraw::addEntity(const Entity& entity)
 {
+    auto& rgy = Registry::GetSingleton();
     bool isTransparent = entity.isTransparent;
     if (isTransparent)
         goto _add;
     for (auto& meshID : entity.meshIDs)
     {
-        auto& mesh = Registry::GetSingleton().getMesh(meshID);
+        auto& mesh = rgy.getMesh(meshID);
         for (auto& keyedTexture : mesh.info.keyedTextures)
         {
             if (keyedTexture.second->isTransparent)
@@ -437,12 +466,13 @@ _add:
 }
 void InstancedDraw::removeEntity(const Entity& entity)
 {
+    auto& rgy = Registry::GetSingleton();
     bool isTransparent = entity.isTransparent;
     if (isTransparent)
         goto _add;
     for (auto& meshID : entity.meshIDs)
     {
-        auto& mesh = Registry::GetSingleton().getMesh(meshID);
+        auto& mesh = rgy.getMesh(meshID);
         for (auto& keyedTexture : mesh.info.keyedTextures)
         {
             if (keyedTexture.second->isTransparent)
