@@ -15,7 +15,7 @@ using namespace zg;
 using namespace zg::shaders;
 using namespace zg::crypto;
 template<typename TriangleT, typename UserDataT>
-using zgBVH = zg::exp::raytracing::BVH<TriangleT, UserDataT>;
+using zgBVH_t = zg::exp::raytracing::BVH<TriangleT, UserDataT>;
 using BVH = zg::raytracing::BVH;
 struct Triangle
 {
@@ -37,11 +37,12 @@ public:
         return vertices[index];
     }
 };
+using zgBVH = zgBVH_t<Triangle, std::pair<size_t, size_t>>;
 void testZGBVH();
 void testLBBVH();
 #define TRACE_AVX
-#define WINDOW_WIDTH 1920.f
-#define WINDOW_HEIGHT 1080.f
+#define WINDOW_WIDTH (1920.f / 2.f)
+#define WINDOW_HEIGHT (1080.f / 2.f)
 SceneCreateInfo BVHSceneFactory(Window& window);
 int main()
 {
@@ -78,7 +79,7 @@ void traceTexture(Scene& scene, std::shared_ptr<textures::Texture>& texture)
     auto& windowHeight = *window.windowHeight;
     auto rgba = new uint8_t[windowWidth * windowHeight * 4];
     memset(rgba, 0, windowWidth * windowHeight * 4);
-    auto& bvh = scene.template getData<zgBVH<Triangle, size_t>>("BVH");
+    auto& bvh = scene.template getData<zgBVH>("BVH");
     auto getRPointer = [&](size_t x, size_t y)
     {
         return &rgba[(y * (size_t)windowWidth + x) * 4];
@@ -104,9 +105,9 @@ void traceTexture(Scene& scene, std::shared_ptr<textures::Texture>& texture)
                 int outIndex;
                 size_t outData;
                 size_t ray_index = 0;
-                zgBVH<Triangle, size_t>::RayPacket packet;
+                zgBVH::RayPacket packet;
                 packet.validMask = 0xFFFF;
-                zgBVH<Triangle, size_t>::PacketHitInfo out_hit;
+                zgBVH::PacketHitInfo out_hit;
                 for (auto x_a = x; x_a < x + xDiv; x_a++)
                 {
                     for (auto y_a = y; y_a < y + yDiv; y_a++)
@@ -133,7 +134,26 @@ void traceTexture(Scene& scene, std::shared_ptr<textures::Texture>& texture)
                                         auto o_x = packet.originX.m512_f32[i];
                                         auto o_y = packet.originY.m512_f32[i];
                                         auto& vec = *(uvec*)getRPointer(o_x, o_y);
-                                        vec = ranvec;
+                                        auto& uv = out_hit.uv[i];
+                                        auto& data = out_hit.data[i];
+                                        auto& entity = rgy.getEntity(data.first);
+                                        auto& mesh = rgy.getMesh(entity.meshIDs[data.second]);
+                                        if (mesh.info.material.type == 0)
+                                        {
+                                            vec.r = uv.x * 255;
+                                            vec.g = uv.y * 255;
+                                            vec.b = 0;
+                                            vec.a = 255;
+                                            // vec = {0, 0, 255, 255};// mesh.info.material.albedo;
+                                        }
+                                        else
+                                        {
+                                            // auto& triangle = bvh.getTriangle(out_hit.triangleIndex.m512i_i32[i]);
+                                            // auto& indice = *(glm::ivec3*)&mesh.indices[triangle.mesh_index * 3];
+                                            // auto 
+                                            // triangle.get_texture_uv(uv);
+                                            // vec = {uv.x * 255, uv.y * 255, 0, 255};
+                                        }
                                     }
                                 }
                             }
@@ -188,52 +208,69 @@ SceneCreateInfo BVHSceneFactory(Window& window)
         .orthoSize = {*window.windowWidth, *window.windowHeight},
         .onAttachedFunction = [](auto& scene) {
             scene.clearColor = {0, 1, 0, 1};
-            auto& bvh = scene.template make<zgBVH<Triangle, size_t>>("BVH");
+            auto& bvh = scene.template make<zgBVH>("BVH");
             scene.template make<std::shared_ptr<system::ThreadPool>>("ThreadPool", std::make_shared<system::ThreadPool>());
             auto& rgy = Registry::GetSingleton();
             auto& window = rgy.getWindow(scene.INDEX_STACK);
             auto& windowWidth = *window.windowWidth;
             auto& windowHeight = *window.windowHeight;
-            float x_l = (windowWidth / 2.f) - (windowWidth / 4.f);
-            float x_r = (windowWidth / 2.f) + (windowWidth / 4.f);
-            float y_b = (windowHeight / 2.f) - (windowHeight / 4.f);
-            float y_t = (windowHeight / 2.f) + (windowHeight / 4.f);
-            bvh.addTriangle({
-                {x_l, y_b, 0},
-                {x_r, y_b, 0},
-                {x_l, y_t, 0}
-            }, 1);
-            bvh.addTriangle({
-                {x_r, y_t, 0},
-                {x_l, y_t, 0},
-                {x_r, y_b, 0}
-            }, 1);
-            bvh.build();
+
+            auto cubeInfo = entities::CubeFactory(
+                "Test Cube",
+                {windowWidth / 2.f, windowHeight / 2.f, -5},
+                rotate_identity, {windowWidth / 6.f, windowHeight / 6.f, ((windowWidth + windowHeight) / 4.f)},
+                {1, 0, 0, 1}
+            );
+            auto cube_tuple = scene.addEntity(cubeInfo);
+            auto cube_ID = std::get<KEY_ID_VECTOR_ID_INDEX>(cube_tuple);
+            scene.template make<size_t>("OutputPlaneID", cube_ID);
+            auto& cube = *std::get<KEY_ID_VECTOR_VALUE_INDEX>(cube_tuple);
+            bvh.addEntity(cube);
+            cube.skipRender = true;
+            window.registerHandler(EVENT_KEY_PRESS, [cube_ID, scene_ID = scene.ID](auto& event) {
+                auto& pressed = event.template castData<bool>();
+                if (!pressed)
+                    return;
+                auto& rgy = Registry::GetSingleton();
+                auto& scene = rgy.getScene(scene_ID);
+                auto& bvh = scene.template getData<zgBVH>("BVH");
+                auto& cube = rgy.getEntity(cube_ID);
+                glm::quat angle;
+                switch (event.getValue())
+                {
+                    case KEYCODE_LEFT:
+                    {
+                        angle = glm::angleAxis(glm::radians(360.f / 24.f), glm::vec3(0, 1, 0));
+                        break;
+                    }
+                    case KEYCODE_RIGHT:
+                    {
+                        angle = glm::angleAxis(-glm::radians(360.f / 24.f), glm::vec3(0, 1, 0));
+                        break;
+                    }
+                    case KEYCODE_UP:
+                    {
+                        angle = glm::angleAxis(glm::radians(360.f / 24.f), glm::vec3(0, 0, 1));
+                        break;
+                    }
+                    case KEYCODE_DOWN:
+                    {
+                        angle = glm::angleAxis(-glm::radians(360.f / 24.f), glm::vec3(0, 0, 1));
+                        break;
+                    }
+                    default: return;
+                }
+                cube.rotation *= angle;
+                bvh.updateEntity(cube);
+            });
             window.registerHandler(EVENT_MOUSE_PRESS, [scene_ID = scene.ID](auto& event) {
                 auto& pressed = event.template castData<bool>();
                 if (!pressed)
                     return;
                 auto& rgy = Registry::GetSingleton();
                 auto& scene = rgy.getScene(scene_ID);
-                auto& bvh = scene.template getData<zgBVH<Triangle, size_t>>("BVH");
-                auto& window = rgy.getWindow(scene.INDEX_STACK);
-                auto& windowWidth = *window.windowWidth;
-                auto& windowHeight = *window.windowHeight;
-                float x_l = (windowWidth / 2.f) - (windowWidth / 4.f);
-                float x_r = (windowWidth / 2.f) + (windowWidth / 4.f);
-                float y_b = (windowHeight / 2.f) + (windowHeight / 4.f);
-                float y_t = windowHeight;
-                bvh.addTriangle({
-                    {x_l, y_b, 0},
-                    {x_r, y_b, 0},
-                    {x_l, y_t, 0}
-                }, 1);
-                bvh.addTriangle({
-                    {x_r, y_t, 0},
-                    {x_l, y_t, 0},
-                    {x_r, y_b, 0}
-                }, 1);
-                bvh.build();
+                auto& bvh = scene.template getData<zgBVH>("BVH");
+                // add cubes
             });
             std::shared_ptr<textures::Texture> texture;
             traceTexture(scene, texture);
@@ -253,17 +290,17 @@ SceneCreateInfo BVHSceneFactory(Window& window)
 }
 void testZGBVH()
 {
-    zgBVH<Triangle, size_t> bvh;
+    zgBVH bvh;
     bvh.addTriangle({
         {0, 1, 0},
         {0, 0, 0},
         {1, 0, 0}
-    }, 1);
+    }, {1, 1});
     bvh.addTriangle({
         {1, 1, 0},
         {0, 1, 0},
         {1, 0, 0}
-    }, 1);
+    }, {1, 1});
     auto begin = SYS_CLOCK::now();
     bvh.build();
     auto end = SYS_CLOCK::now();
@@ -274,9 +311,9 @@ void testZGBVH()
     size_t outData;
     begin = SYS_CLOCK::now();
     size_t intersect = 0, no_intersect = 0;
-    zgBVH<Triangle, size_t>::RayPacket packet;
+    zgBVH::RayPacket packet;
     packet.validMask = 0xFFFF;
-    zgBVH<Triangle, size_t>::PacketHitInfo out_hit;
+    zgBVH::PacketHitInfo out_hit;
     size_t ray_index = 0;
     for (size_t x = 0; x < WINDOW_WIDTH; x++)
     {
