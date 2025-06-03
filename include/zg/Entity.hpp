@@ -119,15 +119,6 @@ namespace zg
 		glm::vec3 getModelScale();
 		KeyIDVector<std::string, Entity>::EmplaceBackTuple addEntity(const EntityCreateInfo& childInfo);
 		void removeEntity(size_t ID);
-		// UniqueIdentifier addMousePressHandler(const Button& button, const MousePressHandler& callback);
-		// void removeMousePressHandler(const Button& button, UniqueIdentifier& id);
-		// UniqueIdentifier addMouseMoveHandler(const MouseMoveHandler& callback);
-		// void removeMouseMoveHandler(UniqueIdentifier& id);
-		// UniqueIdentifier addMouseHoverHandler(const MouseHoverHandler& callback);
-		// void removeMouseHoverHandler(UniqueIdentifier& id);
-		// void callMousePressHandler(const Button& button, bool pressed);
-		// void callMouseMoveHandler(glm::vec2 coords);
-		// void callMouseHoverHandler(bool hovered);
 		void setPosition(glm::vec3 newPosition);
 		void setOrientation(glm::quat newOrientation);
 		void setTexture(size_t meshIndex, size_t textureIndex, const std::shared_ptr<textures::Texture>& new_texture, bool refresh_meshes = true);
