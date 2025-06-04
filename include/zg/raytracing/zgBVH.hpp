@@ -1,5 +1,4 @@
 #pragma once
-
 #include <algorithm>
 #include <cstdint>
 constexpr int RAY_PACKET_WIDTH = 16;
