@@ -463,15 +463,15 @@ void Scene::resize(glm::vec2 newSize)
 	// projectionPointer->update();
 	if (framebuffer)
 	{
+		textures::FramebufferFactory::destroyFramebuffer(*framebuffer);
 		for (auto& pair : framebuffer->textureAttachmentPairs)
 		{
 			auto& texture = *pair.first;
 			texture.size = {newSize.x, newSize.y, 1, 0};
-			textures::FramebufferFactory::destroyFramebuffer(*framebuffer);
 			textures::TextureFactory::destroyTexture(texture);
 			textures::TextureFactory::initTexture(texture, 0);
-			textures::FramebufferFactory::initFramebuffer(*framebuffer);
 		}
+		textures::FramebufferFactory::initFramebuffer(*framebuffer);
 	}
 }
 void Scene::postAddEntity(Entity& entity)
