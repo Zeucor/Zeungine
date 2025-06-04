@@ -52,10 +52,8 @@ void TextureFactory::initTexture(Texture& texture, const void* data)
 		{
 			auto [channels, sizeoftype] = getChannelsSizeOfType(texture);
 			auto bytessize = texture.size.x * texture.size.y * channels * sizeoftype;
-			char* chardata = (char*)malloc(bytessize);
-			memcpy(chardata, data, bytessize);
 			texture.datas.push_back(
-				std::pair<size_t, std::shared_ptr<char>>(bytessize, std::shared_ptr<char>(chardata, free)));
+				std::pair<size_t, std::shared_ptr<char>>(bytessize, std::shared_ptr<char>((char*)data, [](auto p){})));
 		}
 	}
 	midInitTexture(texture, imagePairs);
@@ -78,10 +76,8 @@ void TextureFactory::initTexture(Texture& texture, const std::vector<void*> data
 		{
 			auto [channels, sizeoftype] = getChannelsSizeOfType(texture);
 			auto bytessize = texture.size.x * texture.size.y * channels * sizeoftype;
-			char* chardata = (char*)malloc(bytessize);
-			memcpy(chardata, datas[i], bytessize);
 			texture.datas.push_back(
-				std::pair<size_t, std::shared_ptr<char>>(bytessize, std::shared_ptr<char>(chardata, free)));
+				std::pair<size_t, std::shared_ptr<char>>(bytessize, std::shared_ptr<char>((char*)datas[i], [](auto p){})));
 		}
 	}
 	midInitTexture(texture, imagePairs);
