@@ -76,10 +76,11 @@ void traceTexture(Scene& scene, std::shared_ptr<textures::Texture>& texture)
 {
     auto& rgy = Registry::GetSingleton();
     auto& window = rgy.getWindow(scene.INDEX_STACK);
-    auto& windowWidth = *window.windowWidth;
-    auto& windowHeight = *window.windowHeight;
+    auto windowWidth = (*window.windowWidth) / 2.f;
+    auto windowHeight = (*window.windowHeight) / 2.f;
     auto& rgba = scene.template getData<uint8_t*>("BVHRGBA");
-    memset(rgba, 0, windowWidth * windowHeight * 4);
+    auto rgba_byte_length = windowWidth * windowHeight * 4;
+    memset(rgba, 0, rgba_byte_length);
     auto& bvh = scene.template getData<zgBVH>("BVH");
     auto getRPointer = [&](size_t x, size_t y)
     {
@@ -95,7 +96,7 @@ void traceTexture(Scene& scene, std::shared_ptr<textures::Texture>& texture)
     auto& bvhProjection = scene.template getData<vp::Projection>("BVHProjection");
     auto& inverseProjection = bvhProjection.inverseMatrix;
     auto& inverseView = bvhView.inverseMatrix;
-    auto& viewport_ref = *window.viewport;
+    auto viewport_ref = (*window.viewport) / 2.f;
     for (size_t x = 0; x < windowWidth; x += xDiv)
     {
         for (size_t y = 0; y < windowHeight; y += yDiv)
@@ -109,9 +110,11 @@ void traceTexture(Scene& scene, std::shared_ptr<textures::Texture>& texture)
                 packet.validMask = 0xFFFF;
                 zgBVH::PacketHitInfo out_hit;
                 glm::vec2 out_coords[RAY_PACKET_WIDTH];
-                for (auto x_a = x; x_a < x + xDiv; x_a++)
+                auto x_max = glm::clamp(x + xDiv, 0.f, windowWidth);
+                auto y_max = glm::clamp(y + yDiv, 0.f, windowHeight);
+                for (auto x_a = x; x_a < x_max; x_a++)
                 {
-                    for (auto y_a = y; y_a < y + yDiv; y_a++)
+                    for (auto y_a = y; y_a < y_max; y_a++)
                     {
             			glm::vec2 screenCoord(x_a, (windowHeight - y_a) - 1);
 			            auto ray = zg::raytracing::mouseCoordToRayInverse<zg::exp::raytracing::Ray>(
@@ -232,7 +235,7 @@ SceneCreateInfo BVHSceneFactory(Window& window)
             auto& window = rgy.getWindow(scene.INDEX_STACK);
             auto& windowWidth = *window.windowWidth;
             auto& windowHeight = *window.windowHeight;
-            scene.template make<uint8_t*>("BVHRGBA", new uint8_t[windowWidth * windowHeight * 4]);
+            scene.template make<uint8_t*>("BVHRGBA", new uint8_t[(windowWidth / 2.f) * (windowHeight / 2.f) * 4]);
             
             auto& bvhView = scene.template make<vp::View>(
                 "BVHView",
