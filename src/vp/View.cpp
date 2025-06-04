@@ -33,6 +33,7 @@ void View::update()
 	{
 		matrix = newMatrix;
 	}
+	inverseMatrix = glm::inverse(matrix);
 }
 void View::addPhiTheta(float addPhi, float addTheta)
 {

@@ -75,9 +75,9 @@ zg::Window::Window(const zg::Window& other) :
 	postProcessingPipeline(INDEX_STACK),
 	mainColorTexture(other.mainColorTexture),// mainDepthTexture(other.mainDepthTexture),
 	mainFramebuffer(other.mainFramebuffer),
-	viewportResized(other.viewportResized)
+	viewportResized(other.viewportResized),
+	viewport(other.viewport)
 {
-	setViewport();
 	ZGZoneScoped;
 }
 zg::Window& zg::Window::operator=(const zg::Window& other)
@@ -92,7 +92,7 @@ zg::Window& zg::Window::operator=(const zg::Window& other)
 	iRenderer = other.iRenderer;
 	windowWidth = other.windowWidth;
 	windowHeight = other.windowHeight;
-	setViewport();
+	viewport = other.viewport;
 	windowX = other.windowX;
 	windowY = other.windowY;
 	framerate = other.framerate;
@@ -403,7 +403,7 @@ void zg::Window::setWidthHeight(float width, float height)
 }
 void zg::Window::setViewport()
 {
-	viewport = {0, 0, *windowWidth, *windowHeight};
+	viewport = glm::vec4(0, 0, *windowWidth, *windowHeight);
 }
 void zg::Window::mouseCapture(bool capture)
 {

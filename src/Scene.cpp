@@ -9,6 +9,7 @@
 #include <zg/textures/TextureFactory.hpp>
 #include <zg/vaos/VAO.hpp>
 #include <zg/Registry.hpp>
+#include <zg/raytracing/Ray.hpp>
 using namespace zg;
 std::unordered_map<std::string, size_t> entityKeyCounts;
 Scene::Scene(const SceneCreateInfo& info) :
@@ -514,7 +515,7 @@ void Scene::hookMouseEvents()
 				return;
 			auto& _bvh = *bvh;
 			auto& screenCoord = (window).mouseCoords;
-			auto ray = _bvh.mouseCoordToRay((const float&)window.windowHeight, screenCoord,
+			auto ray = zg::raytracing::mouseCoordToRay<zg::raytracing::Ray>((const float&)window.windowHeight, screenCoord,
 																			{0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight}, projectionPointer->matrix,
 																			viewPointer->matrix, projectionPointer->nearPlane, projectionPointer->farPlane);
 			auto primID = _bvh.trace(ray);
@@ -535,7 +536,7 @@ void Scene::hookMouseEvents()
 			if (!useBVH)
 				return;
 			auto& _bvh = *bvh;
-			auto ray = _bvh.mouseCoordToRay((const float&)window.windowHeight, coords, {0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight},
+			auto ray = zg::raytracing::mouseCoordToRay<zg::raytracing::Ray>((const float&)window.windowHeight, coords, {0, 0, (const float&)window.windowWidth, (const float&)window.windowHeight},
 																			projectionPointer->matrix, viewPointer->matrix, projectionPointer->nearPlane,
 																			projectionPointer->farPlane);
 			auto primID = _bvh.trace(ray);

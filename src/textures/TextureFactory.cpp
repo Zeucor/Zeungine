@@ -219,15 +219,10 @@ void TextureFactory::updateTexture(Texture& texture, const void* data)
 	for (int i = 0; i < imageCount; i++)
 	{
 		imagePairs.push_back({{texture.size.x, texture.size.y}, {(uint8_t*)data, [](uint8_t*) {}}});
-		if (data)
-		{
-			auto [channels, sizeoftype] = getChannelsSizeOfType(texture);
-			auto bytessize = texture.size.x * texture.size.y * channels * sizeoftype;
-			char* chardata = (char*)malloc(bytessize);
-			memcpy(chardata, data, bytessize);
-			texture.datas.push_back(
-				std::pair<size_t, std::shared_ptr<char>>(bytessize, std::shared_ptr<char>(chardata, free)));
-		}
+		auto [channels, sizeoftype] = getChannelsSizeOfType(texture);
+		auto bytessize = texture.size.x * texture.size.y * channels * sizeoftype;
+		texture.datas.push_back(
+			std::pair<size_t, std::shared_ptr<char>>(bytessize, std::shared_ptr<char>((char*)data, [](auto p){})));
 	}
 	midInitTexture(texture, imagePairs);
 }

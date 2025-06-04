@@ -42,6 +42,7 @@ void Projection::update()
   }
   if (window.iRenderer->renderer == RENDERER_VULKAN)
     matrix[1][1] *= -1.0f;
+  inverseMatrix = glm::inverse(matrix);
 }
 template<>
 Serial& serialize(Serial& serial, const std::shared_ptr<zg::vp::Projection>& projectionPointer)

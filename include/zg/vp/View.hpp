@@ -14,6 +14,7 @@ namespace zg::vp
     glm::vec3 direction;
     glm::vec3 up;
     glm::mat4 matrix;
+    glm::mat4 inverseMatrix;
     float phi;
     float theta;
     bool lookAtSet = false;
