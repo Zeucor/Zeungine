@@ -33,7 +33,7 @@ namespace zg::raytracing
     inline RayT mouseCoordToRay(uint32_t windowHeight, glm::vec2 screenCoord, glm::vec4 viewport, const glm::mat4& projection,
                                 const glm::mat4& view, float nearPlane, float farPlane)
     {
-        screenCoord.y = windowHeight - screenCoord.y;
+        screenCoord.y = (windowHeight - screenCoord.y) - 1;
         // Calculate inverse matrices separately
         glm::mat4 inverseProjection = glm::inverse(projection);
         glm::mat4 inverseView = glm::inverse(view);
@@ -63,7 +63,7 @@ namespace zg::raytracing
     inline RayT mouseCoordToRayInverse(uint32_t windowHeight, glm::vec2 screenCoord, glm::vec4 viewport, const glm::mat4& inverseProjection,
                                 const glm::mat4& inverseView, float nearPlane, float farPlane)
     {
-        screenCoord.y = windowHeight - screenCoord.y;
+        screenCoord.y = (windowHeight - screenCoord.y) - 1;
 
         // Unproject points to view space
         glm::vec3 nearPointView = unProjectToView(glm::vec3(screenCoord, 0.0), inverseProjection, viewport);
