@@ -1033,7 +1033,7 @@ FetchContent_MakeAvailable(bvh)
 
 message(STATUS "FetchContent: glm")
 FetchContent_Declare(glm
-    GIT_REPOSITORY https://github.com/icaven/glm.git
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG master)
 FetchContent_MakeAvailable(glm)
 set_target_properties(glm PROPERTIES DEBUG_POSTFIX "")
