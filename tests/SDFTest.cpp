@@ -29,7 +29,7 @@ int main()
         .windowHeight = 768,
         .windowX = (1920 / 2) - (1366 / 2),
         .windowY = (1080 / 2) - (768 / 2),
-        .borderless = true,
+        .borderless = false,
         .vsync = false,
         .framerate = 60
     };
