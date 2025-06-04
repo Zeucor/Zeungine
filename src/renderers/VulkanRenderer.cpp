@@ -1994,6 +1994,7 @@ void VulkanRenderer::destroyShader(shaders::Shader& shader)
 				_vkDestroyShaderModule(device, (VkShaderModule)shaderPair.second.second, 0);
 		});
 	delete &shaderImpl;
+	shader.rendererData = 0;
 }
 void VulkanRenderer::bindFramebuffer(const textures::Framebuffer& framebuffer)
 {
@@ -2392,6 +2393,7 @@ void VulkanRenderer::destroyFramebuffer(textures::Framebuffer& framebuffer)
 			_vkDestroyEvent(device, event, 0);
 		});
 	delete &framebufferImpl;
+	framebuffer.rendererData = 0;
 }
 void VulkanRenderer::bindTexture(const textures::Texture& texture)
 {
@@ -2949,6 +2951,7 @@ void VulkanRenderer::destroyTexture(textures::Texture& texture)
 			_vkFreeMemory(device, textureImageMemory, 0);
 		});
 	delete &textureImpl;
+	texture.rendererData = 0;
 }
 void VulkanRenderer::updateIndicesVAO(const vaos::VAO& vao, const std::vector<uint32_t>& indices)
 {
