@@ -2177,15 +2177,10 @@ void VulkanRenderer::initFramebuffer(zg::textures::Framebuffer& framebuffer)
 		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // Store results
 		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		if (framebufferImpl.width == 0 && framebufferImpl.height == 0 && texture.size.x > 0 && texture.size.y > 0)
+		if (framebufferImpl.width != texture.size.x || framebufferImpl.height != texture.size.y)
 		{
 			framebufferImpl.width = texture.size.x;
 			framebufferImpl.height = texture.size.y;
-		}
-		else if ((framebufferImpl.width != texture.size.x || framebufferImpl.height != texture.size.y) &&
-						 texture.size.x > 0 && texture.size.y > 0)
-		{
-			throw std::runtime_error("Framebuffer attachments have inconsistent dimensions!");
 		}
 		VkImageLayout subpassLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		attachment.format = textureImpl.format;
